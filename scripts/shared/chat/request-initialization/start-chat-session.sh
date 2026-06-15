@@ -34,6 +34,7 @@ if [ -z "${QUESTION// }" ] || [ "$QUESTION" = "new chat" ]; then
 fi
 
 STAMP="$(date +"%Y-%m-%d-%H-%M")"
+RAISED_AT_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 SLUG="$(echo "$QUESTION" \
   | tr '[:upper:]' '[:lower:]' \
@@ -77,9 +78,14 @@ layer: ${LAYER}
 mode: ${MODE}
 workflow: ${WORKFLOW}
 status: ready
+raised_at_utc: ${RAISED_AT_UTC}
+latest_commit_at_utc:
+latest_commit_sha:
+chat_duration:
+estimated_tokens:
 -->
 
-## First user request
+## Initial Intent
 
 ${QUESTION}
 
@@ -87,23 +93,51 @@ ${QUESTION}
 
 \`${BRANCH}\`
 
-## Session log
+## Session Log
 
 - Session started.
 - Branch created.
 - Commit log initialized.
 
-## Intended work
+## Questions Asked
 
-TBD
+- None recorded yet.
+
+## Issues Raised
+
+- None recorded yet.
+
+## Decisions Made
+
+- None recorded yet.
+
+## Activity Log
+
+### ${RAISED_AT_UTC} - Session started
+
+Initial intent: ${QUESTION}
 
 ## Commits
 
-TBD
+- None recorded yet.
 
-## Decisions / risks
+## ADR Disposition
 
-TBD
+ADR needed: unknown
+ADR path:
+Reason:
+
+## Session Metrics
+
+Raised at UTC: ${RAISED_AT_UTC}
+Latest commit at UTC:
+Latest commit SHA:
+Chat duration:
+Estimated tokens:
+
+## Notes
+
+- None recorded yet.
 EOF
 
 git add "$LOG_FILE"
