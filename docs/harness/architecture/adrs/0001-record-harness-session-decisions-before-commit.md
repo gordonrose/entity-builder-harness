@@ -30,6 +30,12 @@ updates rolling `latest_commit_*` metrics. The latest recorded commit is treated
 as the current session endpoint. No explicit "session complete" input is
 required.
 
+When `record-chat-commit.sh` leaves the current session log dirty, that expected
+bookkeeping update may be committed as its own checkpoint commit. The checkpoint
+flow stages and commits only `commitLogs/<session>/README.md`; it refuses to run
+when unrelated files are staged. Agents still need explicit user approval before
+creating the checkpoint commit.
+
 ## Consequences
 
 Harness architecture rationale becomes discoverable after each recorded commit.
@@ -39,3 +45,6 @@ record that no ADR is needed.
 
 The harness now has two commit responsibilities: prepare the session before each
 commit, then record the commit afterward so multi-commit chats remain accurate.
+If recording the commit dirties the session log, agents can preserve a clean
+working tree with a narrow session-log checkpoint instead of folding that
+bookkeeping into unrelated follow-up work.

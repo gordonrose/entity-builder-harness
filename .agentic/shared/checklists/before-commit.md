@@ -63,6 +63,16 @@ bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-imp
 Record every commit in the chat. The latest recorded commit is treated as the
 current endpoint for chat duration and session metrics.
 
+<!-- deterministic-check: allow reason="requires human approval before creating bookkeeping commit; script enforces narrow file scope" -->
+If `record-chat-commit.sh` leaves the session log dirty and the user approves a
+bookkeeping commit, run:
+
+```bash
+bash scripts/shared/git/checkpoint-chat-session-log.sh
+```
+
+This commit must contain only the current chat session log.
+
 ## Approval
 
 Do not commit without explicit user approval in the current chat.

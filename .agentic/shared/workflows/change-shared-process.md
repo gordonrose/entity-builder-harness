@@ -87,3 +87,14 @@ bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-imp
 This appends the commit to the session log and updates the rolling
 `latest_commit_*` session metrics. If a later commit happens in the same chat,
 record it the same way; the latest commit is the current session endpoint.
+
+<!-- deterministic-check: allow reason="requires human approval before creating bookkeeping commit; script enforces narrow file scope" -->
+If recording the commit leaves the current session log dirty, ask for explicit
+approval before creating a session-log checkpoint commit:
+
+```bash
+bash scripts/shared/git/checkpoint-chat-session-log.sh
+```
+
+The checkpoint commit is bookkeeping only and must contain no files except the
+current `commitLogs/<session>/README.md`.
