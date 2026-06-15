@@ -10,9 +10,11 @@ handoff, deployment, release, or context-preservation process.
 Before editing files:
 
 ```bash
-bash scripts/shared/git/dirty-worktree-check.sh
+bash scripts/shared/git/dirty-worktree-check.sh --allow-session-bookkeeping
 ```
 
+`bookkeeping-only` is acceptable after explicit write permission for the chat.
+<!-- deterministic-check: allow reason="workflow defines exact blocked response around dirty-worktree gate output" -->
 If dirty, respond exactly:
 
 ```txt
@@ -27,8 +29,12 @@ Do not edit files while blocked.
 - Keep `AGENTS.md` as a router; put procedure in shared workflows, checklists,
   gates, or scripts.
 - Prefer deterministic scripts for repeatable checks.
-- Do not commit, push, delete branches, or perform destructive actions without
-  explicit user approval.
+- Do not create a task commit, push, delete branches, rewrite history, discard
+  work, overwrite work, or perform destructive actions without explicit user
+  approval.
+- After explicit write permission for the chat, routine session bookkeeping may
+  be staged without another prompt when limited to the current chat session log
+  and `commitLogs/README.md`.
 - Preserve unrelated user changes in a dirty worktree.
 - Before any commit, complete the shared before-commit checklist.
 
@@ -88,13 +94,16 @@ This appends the commit to the session log and updates the rolling
 `latest_commit_*` session metrics. If a later commit happens in the same chat,
 record it the same way; the latest commit is the current session endpoint.
 
-<!-- deterministic-check: allow reason="requires human approval before creating bookkeeping commit; script enforces narrow file scope" -->
-If recording the commit leaves the current session log dirty, ask for explicit
-approval before creating a session-log checkpoint commit:
+<!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
+If recording a user-approved task commit leaves only session bookkeeping dirty,
+the prior chat write permission authorizes creating a session-log checkpoint
+commit without another prompt:
 
 ```bash
 bash scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
+<!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
 The checkpoint commit is bookkeeping only and must contain no files except the
-current chat session log and `commitLogs/README.md`.
+current chat session log and `commitLogs/README.md`. Stop and ask if any other
+path is staged, unstaged, or would be committed.

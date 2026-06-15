@@ -4,13 +4,14 @@ purpose: Govern changes to AGENTS.md, CLAUDE.md, .agentic structure, routing, wo
 
 required_gates:
   - id: dirty_worktree
-    script: scripts/shared/git/dirty-worktree-check.sh
+    script: scripts/shared/git/dirty-worktree-check.sh --allow-session-bookkeeping
 
 rules:
   - Keep AGENTS.md as a router only.
   - Prefer scripts over prose where checks can be deterministic.
   - Do not duplicate rules across AGENTS.md, workflows, skills, and gates.
   - Update relevant indexes when adding or moving harness files.
+  - Treat dirty worktree output of `bookkeeping-only` as acceptable after explicit write permission for the chat.
   - Stop if ownership of the rule is unclear.
 
 blocked_response_format: "Blocked: <reason>. Confirm proceed? Layer: harness. Mode: <mode>. Workflow: .agentic/harness/workflows/change-harness.md."

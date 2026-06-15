@@ -13,7 +13,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 4. Load the workflow listed in the session metadata.
 5. Follow that workflow’s required gates before editing files.
 6. Stop if repo state, branch state, task ownership, classification, or workflow choice is ambiguous.
-7. Never commit, push, delete branches, or perform destructive actions without explicit user approval.
+7. Follow shared git approval rules before commits or destructive actions; never push, delete branches, rewrite history, discard work, or overwrite work without explicit user approval.
 8. Default mode is read-only. Do not create, edit, move, delete, stage, commit, or format files unless the user explicitly grants write permission for this chat.
 
 ## Operating Layers

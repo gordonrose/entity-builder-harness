@@ -63,9 +63,9 @@ bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-imp
 Record every commit in the chat. The latest recorded commit is treated as the
 current endpoint for chat duration and session metrics.
 
-<!-- deterministic-check: allow reason="requires human approval before creating bookkeeping commit; script enforces narrow file scope" -->
-If `record-chat-commit.sh` leaves the session log dirty and the user approves a
-bookkeeping commit, run:
+<!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
+If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
+write permission for the chat authorizes the bookkeeping checkpoint commit:
 
 ```bash
 bash scripts/shared/git/checkpoint-chat-session-log.sh
@@ -73,8 +73,11 @@ bash scripts/shared/git/checkpoint-chat-session-log.sh
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
 This commit must contain only the current chat session log and
-`commitLogs/README.md`.
+`commitLogs/README.md`. Stop and ask if any other path is staged, unstaged, or
+would be committed.
 
 ## Approval
 
-Do not commit without explicit user approval in the current chat.
+Do not create a task commit without explicit user approval in the current chat.
+The only commit allowed by prior write permission alone is the narrow session
+bookkeeping checkpoint described above.
