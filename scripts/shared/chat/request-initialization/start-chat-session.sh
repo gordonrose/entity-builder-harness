@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+AGENTIC_ENV_FILE=".agentic/env.local"
+
+CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET="no"
+CHAT_CLEANUP_EMPTY_BRANCHES_SHELL_VALUE="${CHAT_CLEANUP_EMPTY_BRANCHES:-}"
+
+if [ "${CHAT_CLEANUP_EMPTY_BRANCHES+x}" = "x" ]; then
+  CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET="yes"
+fi
+
+if [ -f "$AGENTIC_ENV_FILE" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$AGENTIC_ENV_FILE"
+  set +a
+fi
+
+if [ "$CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET" = "yes" ]; then
+  CHAT_CLEANUP_EMPTY_BRANCHES="$CHAT_CLEANUP_EMPTY_BRANCHES_SHELL_VALUE"
+fi
+
 if [ $# -gt 0 ]; then
   QUESTION="$*"
 else
@@ -87,6 +107,25 @@ TBD
 EOF
 
 git add "$LOG_FILE"
+
+case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
+  apply)
+    echo "Cleaning up empty chat branches..."
+    bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
+    ;;
+  dry-run)
+    echo "Previewing empty chat branch cleanup..."
+    bash scripts/shared/git/cleanup-empty-chat-branches.sh --dry-run
+    ;;
+  0|false|no|skip)
+    echo "Skipping empty chat branch cleanup."
+    ;;
+  *)
+    echo "ERROR: invalid CHAT_CLEANUP_EMPTY_BRANCHES value: ${CHAT_CLEANUP_EMPTY_BRANCHES}" >&2
+    echo "Use apply, dry-run, skip, 0, false, or no." >&2
+    exit 2
+    ;;
+esac
 
 echo "Created branch: $BRANCH"
 echo "Created log: $LOG_FILE"

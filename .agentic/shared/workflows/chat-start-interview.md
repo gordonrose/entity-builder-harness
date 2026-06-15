@@ -44,6 +44,11 @@ If classification fails or returns `unknown` for layer or mode, ask exactly one 
 I cannot classify this safely yet. What layer and mode should this use?
 ```
 
+After the user answers, propose the classifier taxonomy change that would have avoided the miss.
+Name the words or patterns to add, the target taxonomy bucket, and the fixture to preserve it.
+Ask for write permission before updating classifier files.
+If the user corrects the proposal, use the corrected layer, mode, words, and fixture expectation.
+
 Do not edit files until the user answers.
 
 If classification returns a workflow path that does not exist, respond exactly:

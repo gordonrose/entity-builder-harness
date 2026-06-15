@@ -34,7 +34,7 @@ fi
 MODE="$(classify_mode)"
 
 case "$TASK" in
-  *chat*|*branch*|*branches*|*commit*|*worktree*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*cherry-pick*|*origin/main*|*github*)
+  *chat*|*branch*|*branches*|*commit*|*worktree*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
     echo "Layer: shared"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/shared/workflows/default.md"

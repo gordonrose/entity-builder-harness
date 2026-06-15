@@ -7,3 +7,4 @@ fix the failing tests	product	implementation
 what is the auth flow?	product	discovery
 use the existing chat start process	shared	execution
 explain capability resolution	harness	discovery
+i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation
