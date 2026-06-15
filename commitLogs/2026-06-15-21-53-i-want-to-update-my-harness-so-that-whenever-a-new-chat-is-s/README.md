@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-15T20:53:08Z
-latest_commit_at_utc: 2026-06-15T21:23:22Z
-latest_commit_sha: 140da35
-chat_duration: 1814s
-estimated_tokens: 998 estimated from session log
+latest_commit_at_utc: 2026-06-15T21:43:43Z
+latest_commit_sha: 01e6d8c
+chat_duration: 3035s
+estimated_tokens: 1445 estimated from session log
 -->
 
 ## Initial Intent
@@ -61,6 +61,11 @@ i want to update my harness so that whenever a new chat is started, commits that
   workflow, before-commit checklist, and referenced gate scripts exist, while
   prose remains responsible for the approval rule around merge/cherry-pick
   repair.
+- Decision: Add a deterministic-process drift gate for harness process commits.
+  Rationale: When harness updates add operational prose that could be handled
+  by a script or gate, the harness should flag it before commit and require the
+  agent to propose a scripted check or an explicit allow marker for
+  human-governed prose.
 
 ## Activity Log
 
@@ -102,6 +107,23 @@ Summary: Added an executable commit-prerequisite check, wired it into the
 before-commit preparation gate, and replaced duplicated prose checks in the
 workflow and checklist with the script invocation plus approval policy.
 
+
+### 2026-06-15T21:43:43Z - Commit recorded
+
+Commit: `01e6d8c`
+
+Message: script shared commit prerequisite checks
+
+Summary: Added check-commit-prerequisites.sh, replaced prerequisite prose with the script call, and wired it into chat session preparation before commit.
+
+ADR impact: No new ADR; this mechanizes the prerequisite branch-state workflow policy already recorded in the session.
+
+### 2026-06-15T21:42:00Z - Deterministic drift gate added
+
+Summary: Added ADR 0003 and a suggestion-only drift checker with staged,
+commit, path, and whole-harness modes. Wired staged checking into commit
+preparation so new process prose is reviewed before commit completion.
+
 ## Commits
 
 - Planned commit: add ADR for duplicate chat branch cleanup.
@@ -123,19 +145,30 @@ workflow and checklist with the script invocation plus approval policy.
   gate, and replace checklist/workflow file-existence prose with the executable
   check.
 
+
+- Commit: `01e6d8c`
+  Time UTC: 2026-06-15T21:43:43Z
+  Message: script shared commit prerequisite checks
+  Summary: Added check-commit-prerequisites.sh, replaced prerequisite prose with the script call, and wired it into chat session preparation before commit.
+  ADR impact: No new ADR; this mechanizes the prerequisite branch-state workflow policy already recorded in the session.
+- Planned commit: add deterministic process drift gate.
+  Summary: Add ADR 0003, create `check-deterministic-process-drift.sh`, wire
+  staged drift checking into commit preparation, and document broader audit
+  modes for harness process prose.
+
 ## ADR Disposition
 
-ADR needed: no
-ADR path:
-Reason: This commit mechanizes the prerequisite branch-state check already recorded in the shared commit workflow; no new architecture decision is introduced beyond that workflow policy.
+ADR needed: yes
+ADR path: docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md
+Reason: This change establishes a durable harness self-review policy for replacing scriptable operational prose with deterministic gates or explicit allow markers.
 
 ## Session Metrics
 
 Raised at UTC: 2026-06-15T20:53:08Z
-Latest commit at UTC: 2026-06-15T21:23:22Z
-Latest commit SHA: 140da35
-Chat duration: 1814s
-Estimated tokens: 998 estimated from session log
+Latest commit at UTC: 2026-06-15T21:43:43Z
+Latest commit SHA: 01e6d8c
+Chat duration: 3035s
+Estimated tokens: 1445 estimated from session log
 
 ## Notes
 

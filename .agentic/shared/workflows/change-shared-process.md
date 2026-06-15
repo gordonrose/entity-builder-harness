@@ -40,12 +40,28 @@ Run:
 bash scripts/shared/git/check-commit-prerequisites.sh
 ```
 
+<!-- deterministic-check: allow reason="requires human approval before merge or cherry-pick repair" -->
 If this reports missing workflow, checklist, or gate files, stop the task
 commit. Ask for explicit approval before merging or cherry-picking the
 shared-process commit that introduced the missing files, then rerun this
 workflow from the before-commit checklist.
 
 Do not bypass the gate just because it is missing on the current branch.
+
+## Deterministic Process Drift
+
+For commit-gate scope, run:
+
+```bash
+bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
+```
+
+For broader audits, run the same script with `--commit <sha>`, `--paths
+<path>...`, or `--all`.
+
+<!-- deterministic-check: allow reason="requires human review and approval before editing process prose" -->
+If the check flags scriptable process prose, propose the script or gate change
+for approval. Do not rewrite prose automatically.
 
 ## Before Commit
 

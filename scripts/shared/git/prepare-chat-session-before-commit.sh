@@ -2,6 +2,7 @@
 set -euo pipefail
 
 bash scripts/shared/git/check-commit-prerequisites.sh
+bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
 
 BRANCH="$(git branch --show-current)"
 
