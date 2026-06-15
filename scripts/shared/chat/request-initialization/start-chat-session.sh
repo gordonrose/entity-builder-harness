@@ -3,6 +3,9 @@ set -euo pipefail
 
 AGENTIC_ENV_FILE=".agentic/env.local"
 
+# shellcheck source=../session-log-paths.sh
+source "scripts/shared/chat/session-log-paths.sh"
+
 CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET="no"
 CHAT_CLEANUP_EMPTY_BRANCHES_SHELL_VALUE="${CHAT_CLEANUP_EMPTY_BRANCHES:-}"
 
@@ -43,7 +46,7 @@ SLUG="$(echo "$QUESTION" \
   | cut -c1-60)"
 
 BRANCH="chat/${STAMP}-${SLUG}"
-LOG_DIR="commitLogs/${STAMP}-${SLUG}"
+LOG_DIR="$(chat_log_grouped_dir_for_session "${STAMP}-${SLUG}")"
 LOG_FILE="${LOG_DIR}/README.md"
 
 CLASSIFICATION="$(bash scripts/shared/chat/request-initialization/classify-task.sh "$QUESTION" || true)"
@@ -140,8 +143,6 @@ Estimated tokens:
 - None recorded yet.
 EOF
 
-git add "$LOG_FILE"
-
 case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
   apply)
     echo "Cleaning up empty chat branches..."
@@ -160,6 +161,9 @@ case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
     exit 2
     ;;
 esac
+
+bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
+git add "$LOG_FILE" commitLogs/README.md
 
 echo "Created branch: $BRANCH"
 echo "Created log: $LOG_FILE"

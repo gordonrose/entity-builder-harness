@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=../chat/session-log-paths.sh
+source "scripts/shared/chat/session-log-paths.sh"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -23,17 +26,12 @@ ADR_IMPACT="${4:-covered by session ADR disposition}"
 
 BRANCH="$(git branch --show-current)"
 
-case "$BRANCH" in
-  chat/*)
-    SESSION_ID="${BRANCH#chat/}"
-    ;;
-  *)
-    echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
-    exit 1
-    ;;
-esac
+if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
+  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  exit 1
+fi
 
-LOG_FILE="commitLogs/${SESSION_ID}/README.md"
+LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 
 if [ ! -f "$LOG_FILE" ]; then
   echo "ERROR: missing chat log: $LOG_FILE" >&2
@@ -45,6 +43,19 @@ COMMIT_AT_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 metadata_value() {
   local key="$1"
   sed -n "/<!-- agentic-session/,/-->/s/^${key}: //p" "$LOG_FILE" | head -n 1
+}
+
+format_duration_seconds() {
+  local total_seconds="$1"
+  local days hours minutes seconds
+
+  days=$((total_seconds / 86400))
+  hours=$(((total_seconds % 86400) / 3600))
+  minutes=$(((total_seconds % 3600) / 60))
+  seconds=$((total_seconds % 60))
+
+  printf '%ss (%02d:%02d:%02d:%02d)\n' \
+    "$total_seconds" "$days" "$hours" "$minutes" "$seconds"
 }
 
 insert_section_entry() {
@@ -103,7 +114,7 @@ if [ -n "${RAISED_AT_UTC// }" ]; then
      COMMIT_SECONDS="$(date -u -d "$COMMIT_AT_UTC" +"%s" 2>/dev/null)"; then
     DURATION_SECONDS=$((COMMIT_SECONDS - RAISED_SECONDS))
     if [ "$DURATION_SECONDS" -ge 0 ]; then
-      CHAT_DURATION="${DURATION_SECONDS}s"
+      CHAT_DURATION="$(format_duration_seconds "$DURATION_SECONDS")"
     fi
   fi
 fi
@@ -186,5 +197,7 @@ awk \
   ' "$LOG_FILE" > "$tmp"
 
 mv "$tmp" "$LOG_FILE"
+
+bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
 
 echo "Recorded chat commit: $COMMIT_SHA"

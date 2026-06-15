@@ -97,4 +97,4 @@ bash scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
 The checkpoint commit is bookkeeping only and must contain no files except the
-current `commitLogs/<session>/README.md`.
+current chat session log and `commitLogs/README.md`.
