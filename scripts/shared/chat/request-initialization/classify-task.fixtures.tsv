@@ -1,10 +1,11 @@
-# task	expected_layer	expected_mode
-read only, how should we design modes?	harness	planning
-inspect the workflow files	harness	discovery
-run the existing branch cleanup capability	shared	execution
-update AGENTS.md routing rules	harness	implementation
-fix the failing tests	product	implementation
-what is the auth flow?	product	discovery
-use the existing chat start process	shared	execution
-explain capability resolution	harness	discovery
-i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation
+# task	expected_layer	expected_mode	expected_workflow
+read only, how should we design modes?	harness	planning	.agentic/harness/workflows/change-harness.md
+inspect the workflow files	harness	discovery	.agentic/harness/workflows/change-harness.md
+run the existing branch cleanup capability	shared	execution	.agentic/shared/workflows/change-shared-process.md
+update AGENTS.md routing rules	harness	implementation	.agentic/harness/workflows/change-harness.md
+fix the failing tests	product	implementation	.agentic/product/workflows/default.md
+what is the auth flow?	product	discovery	.agentic/product/workflows/default.md
+use the existing chat start process	shared	execution	.agentic/shared/workflows/change-shared-process.md
+explain capability resolution	harness	discovery	.agentic/harness/workflows/change-harness.md
+i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation	.agentic/shared/workflows/change-shared-process.md
+i'd like to update my harness so that whenever i commit something, it checks whether the decisions of the chat are worth codifying in a harness ADR	shared	implementation	.agentic/shared/workflows/change-shared-process.md

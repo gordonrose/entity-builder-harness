@@ -9,7 +9,7 @@ if [ ! -f "$FIXTURES" ]; then
   exit 2
 fi
 
-while IFS=$'\t' read -r TASK EXPECTED_LAYER EXPECTED_MODE; do
+while IFS=$'\t' read -r TASK EXPECTED_LAYER EXPECTED_MODE EXPECTED_WORKFLOW; do
   case "${TASK:-}" in
     ""|\#*)
       continue
@@ -19,11 +19,19 @@ while IFS=$'\t' read -r TASK EXPECTED_LAYER EXPECTED_MODE; do
   OUTPUT="$(bash scripts/shared/chat/request-initialization/classify-task.sh "$TASK" || true)"
   ACTUAL_LAYER="$(printf '%s\n' "$OUTPUT" | sed -n 's/^Layer: //p')"
   ACTUAL_MODE="$(printf '%s\n' "$OUTPUT" | sed -n 's/^Mode: //p')"
+  ACTUAL_WORKFLOW="$(printf '%s\n' "$OUTPUT" | sed -n 's/^Workflow: //p')"
 
   if [ "$ACTUAL_LAYER" != "$EXPECTED_LAYER" ] || [ "$ACTUAL_MODE" != "$EXPECTED_MODE" ]; then
     echo "FAIL: $TASK"
     echo "  expected: Layer=$EXPECTED_LAYER Mode=$EXPECTED_MODE"
     echo "  actual:   Layer=${ACTUAL_LAYER:-missing} Mode=${ACTUAL_MODE:-missing}"
+    FAILURES=$((FAILURES + 1))
+  fi
+
+  if [ -n "${EXPECTED_WORKFLOW:-}" ] && [ "$ACTUAL_WORKFLOW" != "$EXPECTED_WORKFLOW" ]; then
+    echo "FAIL: $TASK"
+    echo "  expected: Workflow=$EXPECTED_WORKFLOW"
+    echo "  actual:   Workflow=${ACTUAL_WORKFLOW:-missing}"
     FAILURES=$((FAILURES + 1))
   fi
 done < "$FIXTURES"

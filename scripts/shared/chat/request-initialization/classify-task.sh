@@ -37,7 +37,7 @@ case "$TASK" in
   *chat*|*branch*|*branches*|*commit*|*worktree*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
     echo "Layer: shared"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/shared/workflows/default.md"
+    echo "Workflow: .agentic/shared/workflows/change-shared-process.md"
     ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*capability*|*capabilities*|*skill*|*skills*|*agent*|*gate*|*gates*|*adapter*|*token*|*tokens*|*instruction*)
     echo "Layer: harness"
