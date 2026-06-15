@@ -1,0 +1,9 @@
+# task	expected_layer	expected_mode
+read only, how should we design modes?	harness	planning
+inspect the workflow files	harness	discovery
+run the existing branch cleanup capability	shared	execution
+update AGENTS.md routing rules	harness	implementation
+fix the failing tests	product	implementation
+what is the auth flow?	product	discovery
+use the existing chat start process	shared	execution
+explain capability resolution	harness	discovery

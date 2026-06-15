@@ -1,0 +1,81 @@
+classification_order:
+  - mixed
+  - shared
+  - harness
+  - product
+
+mode_order:
+  - implementation
+  - execution
+  - planning
+  - discovery
+  - unknown
+
+layers:
+  shared:
+    use_when:
+      - task changes chat startup
+      - task changes branch creation
+      - task changes git workflow
+      - task changes commit process
+      - task changes deployment/release process shared by all work
+      - task changes context compaction or handoff process
+    workflow_index: .agentic/shared/workflows/README.md
+
+  harness:
+    use_when:
+      - task changes AGENTS.md or CLAUDE.md
+      - task changes .agentic structure
+      - task changes agents, skills, workflows, gates, routing, model registry
+      - task changes vendor adapters for Codex, Claude, or Mistral
+      - task improves token usage or instruction loading
+    workflow_index: .agentic/harness/workflows/README.md
+
+  product:
+    use_when:
+      - task changes application source code
+      - task changes product discovery artefacts
+      - task changes frontend design system
+      - task changes business application behaviour
+      - task changes platform/auth/tenancy/data model
+      - task changes tests, CI, deployment for the product
+    workflow_index: .agentic/product/workflows/README.md
+
+  mixed:
+    use_when:
+      - task touches more than one layer
+      - task changes both harness and product code
+      - task changes shared process plus harness or product behaviour
+    rule: split into separate phases and plan around executing one workflow at a time
+
+modes:
+  discovery:
+    use_when:
+      - user asks for explanation, discussion, brainstorming, or conceptual guidance
+      - user asks a question without requesting edits
+      - user asks to inspect files, logs, repository state, runtime state, or configuration
+      - user asks what exists, where something lives, or why something is happening
+    default_action: read-only response or inspection
+
+  planning:
+    use_when:
+      - user asks for a proposal, architecture, implementation plan, migration plan, or ordered change list
+      - user asks how to build or change something before granting write permission
+    default_action: read-only planning
+
+  execution:
+    use_when:
+      - user asks to use an existing capability, workflow, gate, script, tool, or documented process
+      - requested action does not require creating or changing capabilities, workflows, gates, scripts, tools, documentation, or process rules
+    default_action: follow selected workflow gates before running the existing capability.
+
+  implementation:
+    use_when:
+      - user asks to create, edit, move, delete, format, or otherwise modify files
+      - user asks to add or change capabilities, workflows, gates, scripts, tools, documentation, or process rules
+    default_action: require explicit write permission for the current chat before editing
+
+  unknown:
+    use_when:
+      - mode cannot be classified with enough confidence
+    default_action: stop and ask one clarifying question

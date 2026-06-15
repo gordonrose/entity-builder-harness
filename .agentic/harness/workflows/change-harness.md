@@ -1,0 +1,16 @@
+name: change-harness
+layer: harness
+purpose: Govern changes to AGENTS.md, CLAUDE.md, .agentic structure, routing, workflows, skills, agents, gates, adapters, and instruction/token rules.
+
+required_gates:
+  - id: dirty_worktree
+    script: scripts/shared/git/dirty-worktree-check.sh
+
+rules:
+  - Keep AGENTS.md as a router only.
+  - Prefer scripts over prose where checks can be deterministic.
+  - Do not duplicate rules across AGENTS.md, workflows, skills, and gates.
+  - Update relevant indexes when adding or moving harness files.
+  - Stop if ownership of the rule is unclear.
+
+blocked_response_format: "Blocked: <reason>. Confirm proceed? Layer: harness. Mode: <mode>. Workflow: .agentic/harness/workflows/change-harness.md."
