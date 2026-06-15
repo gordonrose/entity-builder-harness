@@ -15,7 +15,7 @@ architecture decisions from a thin record or from transient chat context.
 ## Decision
 
 Harness and shared process commits must be preceded by structured session
-finalization. The session log records the initial intent, questions and
+preparation. The session log records the initial intent, questions and
 responses, issues and resolutions, decisions made, commit summaries, ADR
 disposition, and basic session metrics.
 
@@ -25,12 +25,17 @@ ADR disposition:
 - ADR needed, with a path under `docs/harness/architecture/adrs/`
 - ADR not needed, with a short reason
 
+After each commit, the harness records the commit in the session log and
+updates rolling `latest_commit_*` metrics. The latest recorded commit is treated
+as the current session endpoint. No explicit "session complete" input is
+required.
+
 ## Consequences
 
-Harness architecture rationale becomes discoverable after the chat ends.
+Harness architecture rationale becomes discoverable after each recorded commit.
 Commit-time ADR checks can use the session log as evidence instead of relying
 on memory. Small changes remain lightweight because the session can explicitly
 record that no ADR is needed.
 
-The harness now has one more pre-commit responsibility: keeping the session log
-current enough to explain the work being committed.
+The harness now has two commit responsibilities: prepare the session before each
+commit, then record the commit afterward so multi-commit chats remain accurate.

@@ -9,7 +9,7 @@ Use this before committing shared process or harness changes.
 - Issues raised during the chat are summarized with their resolutions, or
   explicitly recorded as none.
 - Decisions made during the chat are summarized, or explicitly recorded as none.
-- Commit summary is recorded before or immediately after the commit.
+- Commit summary is recorded before or immediately after each commit.
 
 ## ADR Disposition
 
@@ -22,10 +22,21 @@ Use this before committing shared process or harness changes.
 Run:
 
 ```bash
-bash scripts/shared/git/finalize-chat-session-before-commit.sh
+bash scripts/shared/git/prepare-chat-session-before-commit.sh
 ```
 
 Do not commit if the gate fails.
+
+## After Commit
+
+Run:
+
+```bash
+bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+```
+
+Record every commit in the chat. The latest recorded commit is treated as the
+current endpoint for chat duration and session metrics.
 
 ## Approval
 

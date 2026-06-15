@@ -79,7 +79,8 @@ mode: ${MODE}
 workflow: ${WORKFLOW}
 status: ready
 raised_at_utc: ${RAISED_AT_UTC}
-final_commit_at_utc:
+latest_commit_at_utc:
+latest_commit_sha:
 chat_duration:
 estimated_tokens:
 -->
@@ -129,7 +130,8 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: ${RAISED_AT_UTC}
-Final commit at UTC:
+Latest commit at UTC:
+Latest commit SHA:
 Chat duration:
 Estimated tokens:
 

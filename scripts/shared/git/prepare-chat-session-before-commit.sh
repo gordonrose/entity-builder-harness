@@ -27,11 +27,6 @@ fail() {
   FAILURES=$((FAILURES + 1))
 }
 
-metadata_value() {
-  local key="$1"
-  sed -n "/<!-- agentic-session/,/-->/s/^${key}: //p" "$LOG_FILE" | head -n 1
-}
-
 section_has_recorded_entry() {
   local section="$1"
 
@@ -99,66 +94,8 @@ case "$ADR_NEEDED" in
 esac
 
 if [ "$FAILURES" -gt 0 ]; then
-  echo "Chat session finalization failed." >&2
+  echo "Chat session is not ready for commit." >&2
   exit 1
 fi
 
-FINALIZED_AT_UTC="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-RAISED_AT_UTC="$(metadata_value "raised_at_utc")"
-CHAT_DURATION="unknown"
-
-if [ -n "${RAISED_AT_UTC// }" ]; then
-  if RAISED_SECONDS="$(date -u -d "$RAISED_AT_UTC" +"%s" 2>/dev/null)" &&
-     FINAL_SECONDS="$(date -u -d "$FINALIZED_AT_UTC" +"%s" 2>/dev/null)"; then
-    DURATION_SECONDS=$((FINAL_SECONDS - RAISED_SECONDS))
-    if [ "$DURATION_SECONDS" -ge 0 ]; then
-      CHAT_DURATION="${DURATION_SECONDS}s"
-    fi
-  fi
-fi
-
-if [ -n "${ESTIMATED_TOKENS:-}" ]; then
-  TOKEN_ESTIMATE="$ESTIMATED_TOKENS"
-else
-  CHAR_COUNT="$(wc -c < "$LOG_FILE" | tr -d ' ')"
-  TOKEN_ESTIMATE="$(( (CHAR_COUNT + 3) / 4 )) estimated from session log"
-fi
-
-tmp="$(mktemp)"
-
-awk \
-  -v finalized_at="$FINALIZED_AT_UTC" \
-  -v duration="$CHAT_DURATION" \
-  -v tokens="$TOKEN_ESTIMATE" '
-    /^final_commit_at_utc:/ {
-      print "final_commit_at_utc: " finalized_at
-      next
-    }
-    /^chat_duration:/ {
-      print "chat_duration: " duration
-      next
-    }
-    /^estimated_tokens:/ {
-      print "estimated_tokens: " tokens
-      next
-    }
-    /^Final commit at UTC:/ {
-      print "Final commit at UTC: " finalized_at
-      next
-    }
-    /^Chat duration:/ {
-      print "Chat duration: " duration
-      next
-    }
-    /^Estimated tokens:/ {
-      print "Estimated tokens: " tokens
-      next
-    }
-    {
-      print
-    }
-  ' "$LOG_FILE" > "$tmp"
-
-mv "$tmp" "$LOG_FILE"
-
-echo "Chat session finalized: $LOG_FILE"
+echo "Chat session is ready for commit: $LOG_FILE"

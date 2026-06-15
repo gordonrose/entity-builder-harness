@@ -37,10 +37,22 @@ Do not edit files while blocked.
 Run:
 
 ```bash
-bash scripts/shared/git/finalize-chat-session-before-commit.sh
+bash scripts/shared/git/prepare-chat-session-before-commit.sh
 ```
 
 This verifies that the session log records decisions and an ADR disposition,
-then records final session metrics.
+without marking the chat as complete.
 
-Do not commit if the finalization gate fails.
+Do not commit if the preparation gate fails.
+
+## After Commit
+
+Run:
+
+```bash
+bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+```
+
+This appends the commit to the session log and updates the rolling
+`latest_commit_*` session metrics. If a later commit happens in the same chat,
+record it the same way; the latest commit is the current session endpoint.

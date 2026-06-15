@@ -7,7 +7,7 @@ Usage:
   update-chat-log.sh question <asked-summary> <response-summary>
   update-chat-log.sh issue <issue-summary> <resolution-summary>
   update-chat-log.sh decision <decision-summary> <rationale-summary>
-  update-chat-log.sh commit-summary <commit-or-message> <summary>
+  update-chat-log.sh commit-summary <commit-or-message> <summary> [adr-impact]
   update-chat-log.sh adr-disposition needed <adr-path> <reason>
   update-chat-log.sh adr-disposition not-needed <reason>
 
@@ -201,17 +201,21 @@ Decision: $1
 Rationale: $2"
     ;;
   commit-summary)
-    if [ $# -ne 2 ]; then
+    if [ $# -lt 2 ] || [ $# -gt 3 ]; then
       usage >&2
       exit 2
     fi
+    ADR_IMPACT="${3:-covered by session ADR disposition}"
     insert_section_entry "## Commits" "- Commit: $1
-  Summary: $2"
+  Summary: $2
+  ADR impact: ${ADR_IMPACT}"
     insert_section_entry "## Activity Log" "### ${TIMESTAMP} - Commit summary
 
 Commit: $1
 
-Summary: $2"
+Summary: $2
+
+ADR impact: ${ADR_IMPACT}"
     ;;
   adr-disposition)
     if [ $# -lt 1 ]; then
