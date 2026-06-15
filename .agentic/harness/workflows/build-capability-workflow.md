@@ -8,6 +8,7 @@ This workflow may create artifacts for any target layer: `shared`, `harness`, or
 
 ## Goal
 
+<!-- deterministic-check: allow reason="requires human/model judgment to choose the smallest safe artifact set" -->
 Find an existing capability if one exists. If none exists, propose the smallest safe artifact set needed to satisfy the request.
 
 Do not create files until the user explicitly grants edit permission in the current chat.
@@ -32,6 +33,7 @@ Example:
 Task: update my harness so whenever I start a new chat, empty branches and commitLogs are cleaned up
 Layer: shared
 Workflow: .agentic/harness/workflows/build-capability.md
+```
 
 ## Step 2: Check Existing Artifacts
 
@@ -41,6 +43,11 @@ Before proposing a new artifact, inspect only the relevant layer folders:
 - `.agentic/<target-layer>/skills/`
 - `.agentic/<target-layer>/standards/`
 - `.agentic/<target-layer>/checklists/`
+- `.agentic/<target-layer>/templates/`
+- `.agentic/<target-layer>/examples/`
+- `.agentic/<target-layer>/evals/`
+- `.agentic/<target-layer>/hooks/`
+- `.agentic/<target-layer>/agents/`
 - `scripts/<target-layer>/`
 
 Do not scan unrelated layers unless the task clearly crosses layers.
@@ -51,19 +58,31 @@ Use this decision table:
 
 | Need | Artifact |
 |---|---|
-| deterministic action | script |
+| deterministic action or validation | script |
+| blocking safety or completion check | gate |
 | repeated ordered process | workflow |
 | reusable model procedure | skill |
-| quality rule | standard |
+| durable quality rule | standard |
 | completion/safety criteria | checklist |
+| lifecycle automation | hook |
+| behavior regression protection | eval |
+| reusable output/document shape | template |
+| canonical few-shot sample | example |
+| durable session state | session log |
+| durable architecture decision | ADR |
+| vendor-specific compatibility | adapter |
 | bounded review or execution role | agent |
 | coordination across multiple agents/workflows | orchestrator |
+
+For detailed placement rules, use
+`.agentic/harness/standards/agentic-artifact-standards.md`.
 
 Prefer fewer artifacts.
 
 Do not create an agent if a skill is enough.
 Do not create a workflow if a script plus checklist is enough.
 Do not create an orchestrator unless multiple independent workflows must be coordinated.
+Do not create vendor-specific adapters unless the vendor format adds necessary metadata, scoping, or enforcement.
 
 ## Step 4: Safety Rules
 
@@ -92,3 +111,4 @@ Safety gates:
 - <gate>
 
 Edit permission needed: yes
+```

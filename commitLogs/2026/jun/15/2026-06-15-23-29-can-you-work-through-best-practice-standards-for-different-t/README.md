@@ -9,10 +9,10 @@ mode: discovery
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-15T22:29:30Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-15T23:02:58Z
+latest_commit_sha: c9d3bee
+chat_duration: 2008s (00:00:33:28)
+estimated_tokens: 701 estimated from session log
 -->
 
 ## Initial Intent
@@ -59,9 +59,26 @@ Reviewed current harness structure and vendor practices, proposed an artifact
 ownership model, then implemented the standard, workflow decision table, and
 harness index update after user approval.
 
+
+### 2026-06-15T23:02:58Z - Commit recorded
+
+Commit: `c9d3bee`
+
+Message: Merge chat log grouping support
+
+Summary: Brought the prior chat-log grouping and metrics infrastructure into this session branch so the current chat log path and commit gates are available.
+
+ADR impact: none
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `c9d3bee`
+  Time UTC: 2026-06-15T23:02:58Z
+  Message: Merge chat log grouping support
+  Summary: Brought the prior chat-log grouping and metrics infrastructure into this session branch so the current chat log path and commit gates are available.
+  ADR impact: none
 
 ## ADR Disposition
 
@@ -73,10 +90,10 @@ not a durable architecture decision beyond the standard itself.
 ## Session Metrics
 
 Raised at UTC: 2026-06-15T22:29:30Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-15T23:02:58Z
+Latest commit SHA: c9d3bee
+Chat duration: 2008s (00:00:33:28)
+Estimated tokens: 701 estimated from session log
 
 ## Notes
 
