@@ -9,10 +9,10 @@ mode: discovery
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-15T22:29:30Z
-latest_commit_at_utc: 2026-06-15T23:02:58Z
-latest_commit_sha: c9d3bee
-chat_duration: 2008s (00:00:33:28)
-estimated_tokens: 701 estimated from session log
+latest_commit_at_utc: 2026-06-15T23:03:31Z
+latest_commit_sha: f68aa2d
+chat_duration: 2041s (00:00:34:01)
+estimated_tokens: 875 estimated from session log
 -->
 
 ## Initial Intent
@@ -70,6 +70,17 @@ Summary: Brought the prior chat-log grouping and metrics infrastructure into thi
 
 ADR impact: none
 
+
+### 2026-06-15T23:03:31Z - Commit recorded
+
+Commit: `f68aa2d`
+
+Message: Add agentic artifact standards
+
+Summary: Added the canonical artifact placement standard, expanded the build-capability artifact decision table, and indexed the standard from the harness README.
+
+ADR impact: none
+
 ## Commits
 
 
@@ -78,6 +89,13 @@ ADR impact: none
   Time UTC: 2026-06-15T23:02:58Z
   Message: Merge chat log grouping support
   Summary: Brought the prior chat-log grouping and metrics infrastructure into this session branch so the current chat log path and commit gates are available.
+  ADR impact: none
+
+
+- Commit: `f68aa2d`
+  Time UTC: 2026-06-15T23:03:31Z
+  Message: Add agentic artifact standards
+  Summary: Added the canonical artifact placement standard, expanded the build-capability artifact decision table, and indexed the standard from the harness README.
   ADR impact: none
 
 ## ADR Disposition
@@ -90,10 +108,10 @@ not a durable architecture decision beyond the standard itself.
 ## Session Metrics
 
 Raised at UTC: 2026-06-15T22:29:30Z
-Latest commit at UTC: 2026-06-15T23:02:58Z
-Latest commit SHA: c9d3bee
-Chat duration: 2008s (00:00:33:28)
-Estimated tokens: 701 estimated from session log
+Latest commit at UTC: 2026-06-15T23:03:31Z
+Latest commit SHA: f68aa2d
+Chat duration: 2041s (00:00:34:01)
+Estimated tokens: 875 estimated from session log
 
 ## Notes
 
