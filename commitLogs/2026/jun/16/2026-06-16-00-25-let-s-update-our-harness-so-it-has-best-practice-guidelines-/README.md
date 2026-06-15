@@ -9,8 +9,8 @@ mode: implementation
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-15T23:25:05Z
-latest_commit_at_utc: 2026-06-15T23:35:38Z
-latest_commit_sha: 92d2040
+latest_commit_at_utc: 2026-06-15T23:44:26Z
+latest_commit_sha: 798e658
 chat_duration: 633s (00:00:10:33)
 estimated_tokens: 616 estimated from session log
 -->
@@ -88,6 +88,17 @@ ADR impact: No ADR needed; policy captured in shared workflow, checklist, and en
 
 Updated harness artifact authoring guidance and classifier coverage for harness artifact/artefact guideline requests.
 
+
+### 2026-06-15T23:44:26Z - Commit recorded
+
+Commit: `798e658`
+
+Message: chore(harness): add artifact authoring standards
+
+Summary: Expanded the harness artifact standard with authoring requirements, validation expectations, and source-backed guidance; added classifier coverage for harness artifact/artefact guideline requests.
+
+ADR impact: No ADR needed; this updates an existing harness standard and classifier fixture without changing architecture.
+
 ## Commits
 
 
@@ -98,6 +109,13 @@ Updated harness artifact authoring guidance and classifier coverage for harness 
   Summary: Clarified that prior chat write permission authorizes only narrow session bookkeeping checkpoints, while task commits and dangerous git operations still require explicit approval.
   ADR impact: No ADR needed; policy captured in shared workflow, checklist, and enforcing scripts.
 
+
+- Commit: `798e658`
+  Time UTC: 2026-06-15T23:44:26Z
+  Message: chore(harness): add artifact authoring standards
+  Summary: Expanded the harness artifact standard with authoring requirements, validation expectations, and source-backed guidance; added classifier coverage for harness artifact/artefact guideline requests.
+  ADR impact: No ADR needed; this updates an existing harness standard and classifier fixture without changing architecture.
+
 ## ADR Disposition
 
 ADR needed: no
@@ -107,8 +125,8 @@ Reason: No ADR needed; the durable decision is a narrow shared git workflow/chec
 ## Session Metrics
 
 Raised at UTC: 2026-06-15T23:25:05Z
-Latest commit at UTC: 2026-06-15T23:35:38Z
-Latest commit SHA: 92d2040
+Latest commit at UTC: 2026-06-15T23:44:26Z
+Latest commit SHA: 798e658
 Chat duration: 633s (00:00:10:33)
 Estimated tokens: 616 estimated from session log
 
