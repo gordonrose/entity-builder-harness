@@ -32,6 +32,25 @@ Do not edit files while blocked.
 - Preserve unrelated user changes in a dirty worktree.
 - Before any commit, complete the shared before-commit checklist.
 
+## Prerequisite Branch State
+
+Before committing, the current chat branch must contain the workflow and commit
+gate files required by its session metadata.
+
+If a commit attempt finds that the declared workflow, before-commit checklist,
+or commit gate script is missing because the branch was created before a later
+shared-process chat commit, stop the commit path and repair the branch state
+first:
+
+1. Identify the local chat branch or commit that introduced the missing shared
+   process files.
+2. Ask for explicit approval before merging or cherry-picking it.
+3. Merge or cherry-pick the prerequisite shared-process commit before staging
+   the current task commit.
+4. Rerun the before-commit checklist and gate after the prerequisite is present.
+
+Do not bypass the gate just because it is missing on the current branch.
+
 ## Before Commit
 
 Run:

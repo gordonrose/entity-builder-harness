@@ -2,6 +2,17 @@
 
 Use this before committing shared process or harness changes.
 
+## Branch Prerequisites
+
+- The current branch contains the workflow named in the active session log.
+- The current branch contains this checklist.
+- The current branch contains the commit gate scripts referenced by the
+  workflow.
+- If any of those files are missing because the branch predates a later
+  shared-process chat commit, pause the task commit, ask for approval, merge or
+  cherry-pick the prerequisite shared-process commit first, and rerun this
+  checklist.
+
 ## Session Log
 
 - Initial intent is present.
