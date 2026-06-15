@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-15T23:25:05Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-15T23:35:38Z
+latest_commit_sha: 92d2040
+chat_duration: 633s (00:00:10:33)
+estimated_tokens: 616 estimated from session log
 -->
 
 ## Initial Intent
@@ -64,9 +64,26 @@ Decision: Enforce bookkeeping scope in scripts
 
 Rationale: The dirty-worktree gate now has an allow-session-bookkeeping mode, and the checkpoint helper refuses to commit when any non-bookkeeping path is dirty.
 
+
+### 2026-06-15T23:35:38Z - Commit recorded
+
+Commit: `92d2040`
+
+Message: chore(harness): clarify bookkeeping approval boundary
+
+Summary: Clarified that prior chat write permission authorizes only narrow session bookkeeping checkpoints, while task commits and dangerous git operations still require explicit approval.
+
+ADR impact: No ADR needed; policy captured in shared workflow, checklist, and enforcing scripts.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `92d2040`
+  Time UTC: 2026-06-15T23:35:38Z
+  Message: chore(harness): clarify bookkeeping approval boundary
+  Summary: Clarified that prior chat write permission authorizes only narrow session bookkeeping checkpoints, while task commits and dangerous git operations still require explicit approval.
+  ADR impact: No ADR needed; policy captured in shared workflow, checklist, and enforcing scripts.
 
 ## ADR Disposition
 
@@ -77,10 +94,10 @@ Reason: No ADR needed; the durable decision is a narrow shared git workflow/chec
 ## Session Metrics
 
 Raised at UTC: 2026-06-15T23:25:05Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-15T23:35:38Z
+Latest commit SHA: 92d2040
+Chat duration: 633s (00:00:10:33)
+Estimated tokens: 616 estimated from session log
 
 ## Notes
 
