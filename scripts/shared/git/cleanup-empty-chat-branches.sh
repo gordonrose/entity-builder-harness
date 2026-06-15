@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=../chat/session-log-paths.sh
+source "scripts/shared/chat/session-log-paths.sh"
+
 MODE="dry-run"
 BASE_BRANCH=""
 
@@ -16,7 +19,8 @@ Safety:
 - The current branch is never deleted.
 - Only chat/* branches are considered.
 - A branch is empty when it has no commits beyond the base branch.
-- commitLogs/<session> is deleted only when it names the same branch.
+- commitLogs/<yyyy>/<mmm>/<dd>/<session> or legacy commitLogs/<session> is
+  deleted only when it names the same branch.
 EOF
 }
 
@@ -118,7 +122,7 @@ while IFS= read -r branch; do
   fi
 
   session="${branch#chat/}"
-  log_dir="commitLogs/${session}"
+  log_dir="$(chat_log_dir_for_session "$session")"
   log_file="${log_dir}/README.md"
   delete_log="no"
 

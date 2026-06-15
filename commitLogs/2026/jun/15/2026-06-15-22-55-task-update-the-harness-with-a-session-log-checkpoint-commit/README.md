@@ -11,7 +11,7 @@ status: ready
 raised_at_utc: 2026-06-15T21:55:31Z
 latest_commit_at_utc: 2026-06-15T22:07:05Z
 latest_commit_sha: dd26383
-chat_duration: 694s
+chat_duration: 694s (00:00:11:34)
 estimated_tokens: 622 estimated from session log
 -->
 
@@ -89,7 +89,7 @@ Reason: Extends the existing session decision-recording architecture with an app
 Raised at UTC: 2026-06-15T21:55:31Z
 Latest commit at UTC: 2026-06-15T22:07:05Z
 Latest commit SHA: dd26383
-Chat duration: 694s
+Chat duration: 694s (00:00:11:34)
 Estimated tokens: 622 estimated from session log
 
 ## Notes

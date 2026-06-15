@@ -11,7 +11,7 @@ status: in-progress
 raised_at_utc: 2026-06-15T20:27:00Z
 latest_commit_at_utc: 2026-06-15T20:53:03Z
 latest_commit_sha: a6c6afd
-chat_duration: 1563s
+chat_duration: 1563s (00:00:26:03)
 estimated_tokens: 1332 estimated from session log
 -->
 
@@ -128,7 +128,7 @@ Reason: This change establishes a durable harness process for structured session
 Raised at UTC: 2026-06-15T20:27:00Z
 Latest commit at UTC: 2026-06-15T20:53:03Z
 Latest commit SHA: a6c6afd
-Chat duration: 1563s
+Chat duration: 1563s (00:00:26:03)
 Estimated tokens: 1332 estimated from session log
 
 ## Notes

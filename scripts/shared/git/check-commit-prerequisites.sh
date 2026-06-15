@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=../chat/session-log-paths.sh
+source "scripts/shared/chat/session-log-paths.sh"
+
 BRANCH="$(git branch --show-current)"
 CHECKLIST=".agentic/shared/checklists/before-commit.md"
 
-case "$BRANCH" in
-  chat/*)
-    SESSION_ID="${BRANCH#chat/}"
-    ;;
-  *)
-    echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
-    exit 1
-    ;;
-esac
+if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
+  echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
+  exit 1
+fi
 
-LOG_FILE="commitLogs/${SESSION_ID}/README.md"
+LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 FAILURES=0
 
 fail() {

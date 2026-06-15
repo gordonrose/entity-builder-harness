@@ -71,7 +71,9 @@ bookkeeping commit, run:
 bash scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
-This commit must contain only the current chat session log.
+<!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
+This commit must contain only the current chat session log and
+`commitLogs/README.md`.
 
 ## Approval
 

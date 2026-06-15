@@ -25,8 +25,8 @@ The cleanup remains conservative:
 - Only consider local `chat/*` branches.
 - Preserve any branch with branch-only commits that are not duplicated by the
   later chat branch.
-- Delete a matching `commitLogs/<session>` directory only when its session
-  metadata names the same branch.
+- Delete a matching grouped or legacy `commitLogs` session directory only when
+  its session metadata names the same branch.
 - Keep dry-run mode available for previewing branch and log deletion.
 
 ## Consequences

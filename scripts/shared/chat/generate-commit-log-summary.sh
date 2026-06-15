@@ -1,0 +1,199 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+node <<'NODE'
+const fs = require('fs');
+const path = require('path');
+
+const root = 'commitLogs';
+const outputPath = path.join(root, 'README.md');
+
+function walk(dir) {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return walk(entryPath);
+    }
+    if (entry.isFile() && entry.name === 'README.md' && entryPath !== outputPath) {
+      return [entryPath];
+    }
+    return [];
+  });
+}
+
+function metadata(content) {
+  const match = content.match(/<!-- agentic-session\n([\s\S]*?)\n-->/);
+  if (!match) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    match[1].split('\n').map((line) => {
+      const separator = line.indexOf(':');
+      if (separator === -1) {
+        return null;
+      }
+      return [
+        line.slice(0, separator).trim(),
+        line.slice(separator + 1).trim(),
+      ];
+    }).filter(Boolean),
+  );
+}
+
+function parseDurationSeconds(value) {
+  const match = String(value || '').match(/(\d+)s\b/);
+  return match ? Number(match[1]) : null;
+}
+
+function parseTokenCount(value) {
+  const match = String(value || '').match(/^(\d+)\b/);
+  return match ? Number(match[1]) : null;
+}
+
+function mean(values) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function standardDeviation(values, average) {
+  const variance = values.reduce((sum, value) => {
+    return sum + ((value - average) ** 2);
+  }, 0) / values.length;
+  return Math.sqrt(variance);
+}
+
+function quantile(sortedValues, q) {
+  if (sortedValues.length === 0) {
+    return null;
+  }
+  if (sortedValues.length === 1) {
+    return sortedValues[0];
+  }
+
+  const position = (sortedValues.length - 1) * q;
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  const weight = position - lower;
+
+  return sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight;
+}
+
+function metricStats(values) {
+  const valid = values.filter((value) => Number.isFinite(value));
+  if (valid.length === 0) {
+    return {
+      validCount: 0,
+      includedCount: 0,
+      outlierCount: 0,
+      total: null,
+      min: null,
+      max: null,
+      average: null,
+      q1: null,
+      median: null,
+      q3: null,
+    };
+  }
+
+  const average = mean(valid);
+  const sd = standardDeviation(valid, average);
+  const included = sd === 0
+    ? valid
+    : valid.filter((value) => Math.abs(value - average) <= 3 * sd);
+  const sorted = [...included].sort((a, b) => a - b);
+
+  return {
+    validCount: valid.length,
+    includedCount: included.length,
+    outlierCount: valid.length - included.length,
+    total: included.reduce((sum, value) => sum + value, 0),
+    min: sorted[0],
+    max: sorted[sorted.length - 1],
+    average: mean(included),
+    q1: quantile(sorted, 0.25),
+    median: quantile(sorted, 0.5),
+    q3: quantile(sorted, 0.75),
+  };
+}
+
+function formatNumber(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'n/a';
+  }
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
+function formatDuration(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'n/a';
+  }
+
+  const rounded = Math.round(value);
+  const days = Math.floor(rounded / 86400);
+  const hours = Math.floor((rounded % 86400) / 3600);
+  const minutes = Math.floor((rounded % 3600) / 60);
+  const seconds = rounded % 60;
+
+  return `${rounded}s (${String(days).padStart(2, '0')}:` +
+    `${String(hours).padStart(2, '0')}:` +
+    `${String(minutes).padStart(2, '0')}:` +
+    `${String(seconds).padStart(2, '0')})`;
+}
+
+function metricTable(stats, formatter) {
+  return [
+    '| Metric | Value |',
+    '| --- | ---: |',
+    `| Valid chats | ${stats.validCount} |`,
+    `| Included chats | ${stats.includedCount} |`,
+    `| Outliers excluded | ${stats.outlierCount} |`,
+    `| Total | ${formatter(stats.total)} |`,
+    `| Min | ${formatter(stats.min)} |`,
+    `| Max | ${formatter(stats.max)} |`,
+    `| Average | ${formatter(stats.average)} |`,
+    `| Q1 | ${formatter(stats.q1)} |`,
+    `| Median | ${formatter(stats.median)} |`,
+    `| Q3 | ${formatter(stats.q3)} |`,
+  ].join('\n');
+}
+
+const logs = walk(root).sort();
+const records = logs.map((filePath) => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const data = metadata(content);
+  return {
+    filePath,
+    id: data.id || path.basename(path.dirname(filePath)),
+    durationSeconds: parseDurationSeconds(data.chat_duration),
+    tokens: parseTokenCount(data.estimated_tokens),
+  };
+});
+
+const durationStats = metricStats(records.map((record) => record.durationSeconds));
+const tokenStats = metricStats(records.map((record) => record.tokens));
+
+const lines = [
+  '# Commit Log Summary',
+  '',
+  `Total chats: ${records.length}`,
+  '',
+  'Outliers are values more than 3 standard deviations from the mean for each metric.',
+  '',
+  '## Chat Duration',
+  '',
+  metricTable(durationStats, formatDuration),
+  '',
+  '## Token Consumption',
+  '',
+  metricTable(tokenStats, formatNumber),
+  '',
+];
+
+fs.mkdirSync(root, { recursive: true });
+fs.writeFileSync(outputPath, lines.join('\n'));
+console.log(`Wrote ${outputPath}`);
+NODE

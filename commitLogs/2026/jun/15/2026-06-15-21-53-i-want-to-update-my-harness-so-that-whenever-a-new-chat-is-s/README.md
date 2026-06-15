@@ -11,7 +11,7 @@ status: ready
 raised_at_utc: 2026-06-15T20:53:08Z
 latest_commit_at_utc: 2026-06-15T21:43:43Z
 latest_commit_sha: 01e6d8c
-chat_duration: 3035s
+chat_duration: 3035s (00:00:50:35)
 estimated_tokens: 1445 estimated from session log
 -->
 
@@ -167,7 +167,7 @@ Reason: This change establishes a durable harness self-review policy for replaci
 Raised at UTC: 2026-06-15T20:53:08Z
 Latest commit at UTC: 2026-06-15T21:43:43Z
 Latest commit SHA: 01e6d8c
-Chat duration: 3035s
+Chat duration: 3035s (00:00:50:35)
 Estimated tokens: 1445 estimated from session log
 
 ## Notes
