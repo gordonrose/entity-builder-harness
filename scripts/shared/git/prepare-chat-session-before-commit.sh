@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+bash scripts/shared/git/check-commit-prerequisites.sh
+
 BRANCH="$(git branch --show-current)"
 
 case "$BRANCH" in

@@ -9,9 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-15T20:53:08Z
-final_commit_at_utc:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-15T21:23:22Z
+latest_commit_sha: 140da35
+chat_duration: 1814s
+estimated_tokens: 998 estimated from session log
 -->
 
 ## Initial Intent
@@ -54,6 +55,12 @@ i want to update my harness so that whenever a new chat is started, commits that
   Rationale: A chat branch can be created from an older harness state while its
   session metadata points at newer shared-process files; the commit path should
   repair that branch state first instead of bypassing missing gates.
+- Decision: Use an executable prerequisite gate instead of duplicating
+  mechanical file-existence rules in prose.
+  Rationale: The harness should deterministically check that the declared
+  workflow, before-commit checklist, and referenced gate scripts exist, while
+  prose remains responsible for the approval rule around merge/cherry-pick
+  repair.
 
 ## Activity Log
 
@@ -78,6 +85,23 @@ Summary: Updated the shared process workflow and before-commit checklist to
 require prerequisite shared-process files to be merged or cherry-picked before
 committing when a chat branch predates those files.
 
+
+### 2026-06-15T21:23:22Z - Commit recorded
+
+Commit: `140da35`
+
+Message: document duplicate chat branch cleanup policy
+
+Summary: Added ADR 0002 for duplicate chat branch cleanup and updated the shared commit workflow to repair missing prerequisite workflow/gate files before committing.
+
+ADR impact: ADR 0002 records the cleanup policy; workflow update enforces prerequisite branch repair before future commits.
+
+### 2026-06-15T21:32:00Z - Prerequisite gate scripted
+
+Summary: Added an executable commit-prerequisite check, wired it into the
+before-commit preparation gate, and replaced duplicated prose checks in the
+workflow and checklist with the script invocation plus approval policy.
+
 ## Commits
 
 - Planned commit: add ADR for duplicate chat branch cleanup.
@@ -88,18 +112,30 @@ committing when a chat branch predates those files.
   current branch before committing, and repair the branch state first when they
   are missing.
 
+
+- Commit: `140da35`
+  Time UTC: 2026-06-15T21:23:22Z
+  Message: document duplicate chat branch cleanup policy
+  Summary: Added ADR 0002 for duplicate chat branch cleanup and updated the shared commit workflow to repair missing prerequisite workflow/gate files before committing.
+  ADR impact: ADR 0002 records the cleanup policy; workflow update enforces prerequisite branch repair before future commits.
+- Planned commit: script shared commit prerequisite checks.
+  Summary: Add `check-commit-prerequisites.sh`, call it from the preparation
+  gate, and replace checklist/workflow file-existence prose with the executable
+  check.
+
 ## ADR Disposition
 
-ADR needed: yes
-ADR path: docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md
-Reason: This change establishes a durable deletion policy for chat branches and matching commit logs, so its rationale and conservative safety constraints should be recorded.
+ADR needed: no
+ADR path:
+Reason: This commit mechanizes the prerequisite branch-state check already recorded in the shared commit workflow; no new architecture decision is introduced beyond that workflow policy.
 
 ## Session Metrics
 
 Raised at UTC: 2026-06-15T20:53:08Z
-Final commit at UTC:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-15T21:23:22Z
+Latest commit SHA: 140da35
+Chat duration: 1814s
+Estimated tokens: 998 estimated from session log
 
 ## Notes
 
