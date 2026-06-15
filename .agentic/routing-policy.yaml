@@ -27,6 +27,7 @@ layers:
       - task changes AGENTS.md or CLAUDE.md
       - task changes .agentic structure
       - task changes agents, skills, workflows, gates, routing, model registry
+      - task changes harness artifacts, artefacts, standards, or guidelines
       - task changes vendor adapters for Codex, Claude, or Mistral
       - task improves token usage or instruction loading
     workflow_index: .agentic/harness/workflows/README.md

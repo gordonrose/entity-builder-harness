@@ -8,6 +8,7 @@ required_gates:
 
 rules:
   - Keep AGENTS.md as a router only.
+  - Consult .agentic/harness/standards/agentic-artifact-standards.md before adding or changing harness artifacts.
   - Prefer scripts over prose where checks can be deterministic.
   - Do not duplicate rules across AGENTS.md, workflows, skills, and gates.
   - Update relevant indexes when adding or moving harness files.

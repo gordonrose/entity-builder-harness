@@ -39,7 +39,7 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/shared/workflows/change-shared-process.md"
     ;;
-  *AGENTS.md*|*CLAUDE.md*|*.agentic*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*capability*|*capabilities*|*skill*|*skills*|*agent*|*gate*|*gates*|*adapter*|*token*|*tokens*|*instruction*)
+  *AGENTS.md*|*CLAUDE.md*|*.agentic*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*capability*|*capabilities*|*skill*|*skills*|*agent*|*gate*|*gates*|*adapter*|*token*|*tokens*|*instruction*|*harness*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/harness/workflows/change-harness.md"

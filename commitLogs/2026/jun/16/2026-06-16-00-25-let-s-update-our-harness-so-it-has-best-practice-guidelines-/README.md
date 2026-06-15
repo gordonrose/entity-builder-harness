@@ -2,11 +2,11 @@
 
 <!-- agentic-session
 id: 2026-06-16-00-25-let-s-update-our-harness-so-it-has-best-practice-guidelines-
-task: update harness trust boundary for routine downstream session bookkeeping
+task: update harness artifact authoring best-practice guidance
 branch: chat/2026-06-16-00-25-let-s-update-our-harness-so-it-has-best-practice-guidelines-
-layer: shared
+layer: harness
 mode: implementation
-workflow: .agentic/shared/workflows/change-shared-process.md
+workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-15T23:25:05Z
 latest_commit_at_utc: 2026-06-15T23:35:38Z
@@ -51,6 +51,14 @@ actions still require explicit approval.
 - Decision: Enforce bookkeeping scope in scripts
   Rationale: The dirty-worktree gate now has an allow-session-bookkeeping mode, and the checkpoint helper refuses to commit when any non-bookkeeping path is dirty.
 
+
+- Decision: Expand the existing artifact standard rather than create a parallel standard
+  Rationale: Artifact selection and artifact authoring requirements should have one canonical owner to avoid duplication.
+
+
+- Decision: Add classifier coverage for harness artifact/artefact guideline requests
+  Rationale: The original request classified as unknown because the taxonomy did not include the broader harness artifact wording.
+
 ## Activity Log
 
 ### 2026-06-15T23:25:05Z - Session started
@@ -74,6 +82,11 @@ Message: chore(harness): clarify bookkeeping approval boundary
 Summary: Clarified that prior chat write permission authorizes only narrow session bookkeeping checkpoints, while task commits and dangerous git operations still require explicit approval.
 
 ADR impact: No ADR needed; policy captured in shared workflow, checklist, and enforcing scripts.
+
+
+### 2026-06-15T23:37:47Z - Implementation
+
+Updated harness artifact authoring guidance and classifier coverage for harness artifact/artefact guideline requests.
 
 ## Commits
 
