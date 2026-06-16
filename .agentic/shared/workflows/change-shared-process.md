@@ -120,6 +120,19 @@ For broader audits, run the same script with `--commit <sha>`, `--paths
 If the check flags scriptable process prose, propose the script or gate change
 for approval. Do not rewrite prose automatically.
 
+## Commit Log Deletions
+
+Run:
+
+```bash
+bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/check-commitlog-deletions.sh
+```
+
+Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete
+commit logs that record commits or are explicitly marked for retention. If this
+gate fails, restore the protected logs or remove them from the staged deletion
+set before committing.
+
 ## Before Commit
 
 Run:

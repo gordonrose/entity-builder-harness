@@ -57,6 +57,9 @@ Task: design and implement a stronger commit-boundary workflow that uses separat
 - Approved paths are mirrored from the active worktree into the isolated
   worktree with `stage-active-worktree-paths.sh`, so uncommitted active edits
   can be staged for a session commit without broad pathspecs.
+- Commit logs that record commits or are explicitly marked for retention must
+  survive branch cleanup; only empty, unsaved session logs may be deleted by
+  intentional cleanup.
 
 ## Activity Log
 
@@ -76,6 +79,13 @@ Added `scripts/shared/git/stage-active-worktree-paths.sh` so approved
 repository-relative paths can be mirrored from the active worktree into the
 isolated worktree and staged there. Updated the helper, docs, ADR, and smoke
 test to cover active-branch duplicate checkout and external-worktree refusal.
+
+### 2026-06-16T13:02:13Z - Commit log deletion guard added
+
+Restored staged deletions for commit logs that recorded commits and added a
+shared gate to block future staged deletion of commit logs with recorded work
+or explicit retention markers. Empty unsaved session logs remain eligible for
+intentional cleanup.
 
 
 ### 2026-06-16T09:00:52Z - Commit recorded

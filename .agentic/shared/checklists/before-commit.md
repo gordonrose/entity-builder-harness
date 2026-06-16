@@ -34,6 +34,17 @@ bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared
 If this flags staged process prose, propose moving the deterministic part into a
 script or gate, or keeping the prose with an allow marker and reason.
 
+## Commit Log Deletions
+
+Run:
+
+```bash
+bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/check-commitlog-deletions.sh
+```
+
+Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete
+commit logs that record commits or are explicitly marked for retention.
+
 ## Session Log
 
 - Initial intent is present.
