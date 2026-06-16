@@ -10,10 +10,10 @@ mode: implementation
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T17:59:09Z
-latest_commit_at_utc: 2026-06-16T21:07:38Z
-latest_commit_sha: 2b978eb
-chat_duration: 11309s (00:03:08:29)
-estimated_tokens: 1153 estimated from session log
+latest_commit_at_utc: 2026-06-16T21:15:32Z
+latest_commit_sha: c99c38e
+chat_duration: 11783s (00:03:16:23)
+estimated_tokens: 1409 estimated from session log
 -->
 
 ## Initial Intent
@@ -90,6 +90,17 @@ Summary: Added a harness standard that defines missing governance, the required 
 
 ADR impact: ADR 0012 elaborated
 
+
+### 2026-06-16T21:15:32Z - Commit recorded
+
+Commit: `c99c38e`
+
+Message: Wire missing governance standard into workflows
+
+Summary: Linked capability resolution and harness-change workflow to the missing-governance standard so agents can find it when a required action is not governed.
+
+ADR impact: ADR 0012 reinforced
+
 ## Commits
 
 
@@ -107,6 +118,13 @@ ADR impact: ADR 0012 elaborated
   Summary: Added a harness standard that defines missing governance, the required blocked response, examples, one-off exceptions, and hook guidance.
   ADR impact: ADR 0012 elaborated
 
+
+- Commit: `c99c38e`
+  Time UTC: 2026-06-16T21:15:32Z
+  Message: Wire missing governance standard into workflows
+  Summary: Linked capability resolution and harness-change workflow to the missing-governance standard so agents can find it when a required action is not governed.
+  ADR impact: ADR 0012 reinforced
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -116,10 +134,10 @@ Reason: This chat added a durable repo-wide agent operating rule and rejected or
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T17:59:09Z
-Latest commit at UTC: 2026-06-16T21:07:38Z
-Latest commit SHA: 2b978eb
-Chat duration: 11309s (00:03:08:29)
-Estimated tokens: 1153 estimated from session log
+Latest commit at UTC: 2026-06-16T21:15:32Z
+Latest commit SHA: c99c38e
+Chat duration: 11783s (00:03:16:23)
+Estimated tokens: 1409 estimated from session log
 
 ## Notes
 
