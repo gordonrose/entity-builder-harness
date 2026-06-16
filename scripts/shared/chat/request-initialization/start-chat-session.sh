@@ -187,6 +187,9 @@ Default mode: read-only.
 Do not create, edit, move, delete, stage, commit, format, or patch files unless I explicitly give permission in the current chat.
 Until then, inspect and propose only.
 
+After write permission is granted, rename this chat's commitLog folder to a concise summary with:
+bash scripts/shared/chat/rename-current-chat-log-folder.sh \"<short-summary>\"
+
 Do not commit without my explicit approval."
 
 if command -v clip.exe >/dev/null 2>&1; then
