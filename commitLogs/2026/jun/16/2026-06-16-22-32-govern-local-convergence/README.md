@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T21:32:52Z
-latest_commit_at_utc: 2026-06-16T22:15:18Z
-latest_commit_sha: 519a08a
-chat_duration: 2546s (00:00:42:26)
-estimated_tokens: 1048 estimated from session log
+latest_commit_at_utc: 2026-06-16T22:18:58Z
+latest_commit_sha: 9ad053e
+chat_duration: 2766s (00:00:46:06)
+estimated_tokens: 1380 estimated from session log
 -->
 
 ## Initial Intent
@@ -113,6 +113,17 @@ Summary: Added a read-only verifier and workflow recovery rules for governed loc
 
 ADR impact: No ADR needed; this codifies existing local convergence and missing-governance policy.
 
+
+### 2026-06-16T22:18:58Z - Commit recorded
+
+Commit: `9ad053e`
+
+Message: Handle renamed convergence session logs
+
+Summary: Fixed local convergence verification for renamed grouped session log folders.
+
+ADR impact: No ADR needed; this repairs the verifier implementation.
+
 ## Commits
 
 
@@ -122,6 +133,13 @@ ADR impact: No ADR needed; this codifies existing local convergence and missing-
   Message: Add governed local convergence verifier
   Summary: Added a read-only verifier and workflow recovery rules for governed local convergence.
   ADR impact: No ADR needed; this codifies existing local convergence and missing-governance policy.
+
+
+- Commit: `9ad053e`
+  Time UTC: 2026-06-16T22:18:58Z
+  Message: Handle renamed convergence session logs
+  Summary: Fixed local convergence verification for renamed grouped session log folders.
+  ADR impact: No ADR needed; this repairs the verifier implementation.
 
 ## ADR Disposition
 
@@ -135,10 +153,10 @@ chat-worktree decisions.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:32:52Z
-Latest commit at UTC: 2026-06-16T22:15:18Z
-Latest commit SHA: 519a08a
-Chat duration: 2546s (00:00:42:26)
-Estimated tokens: 1048 estimated from session log
+Latest commit at UTC: 2026-06-16T22:18:58Z
+Latest commit SHA: 9ad053e
+Chat duration: 2766s (00:00:46:06)
+Estimated tokens: 1380 estimated from session log
 
 ## Notes
 
