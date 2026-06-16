@@ -21,3 +21,6 @@
 - Look for the hidden story inside the day's work, not just the work itself.
 - A good talk or post should make the author think: "I did not realize that was
   the interesting part."
+- For public AI material, the story should move from a concrete repo incident
+  to a wider orientation frame. The critique should arrive as discovery or
+  upgrade, not exposure.

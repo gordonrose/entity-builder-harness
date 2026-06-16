@@ -32,8 +32,62 @@ messiness of real work.
 - Clickbait
 - Over-polished AI cadence
 - Grand claims unsupported by the logs
+- Significance inflation that makes a small incident sound grander by sanding
+  away the specific facts
+- Vague authority phrases such as "experts say", "the industry is moving", or
+  "teams are realizing" unless the source evidence actually supports them
 
 ## Current Calibration Notes
 
 - Keep the connection to the repo evidence visible.
 - Let the author sound like a lecturer talking to a room, not a brand.
+
+## Best-Self Calibration
+
+The public voice should feel like a generous lecturer with dry precision:
+curious, exacting, amused by real process absurdity, and unwilling to fake
+certainty.
+
+For AI-facing public material, keep the surface tone optimistic, current, and
+opportunity-facing. Let critique live underneath as contrast, implication, or
+an upgrade path. The piece should feel like a more exciting way to be serious
+about the topic, not a takedown.
+
+Prefer titles that sound like the next layer of opportunity rather than a
+correction. The negative should be subtext.
+
+Strong title calibration examples:
+
+- The Next AI Advantage Is Evidence
+- AI Fluency Is Growing Up
+- The Future Is Starting To Leave Receipts
+- What Comes After Prompt Fluency
+- The Quiet Infrastructure Behind Confident AI Work
+
+Avoid titles that sound like generic technical summaries, content-calendar
+insights, or direct accusations that the reader does not understand the topic.
+
+## AI-Smell Guardrails
+
+Positive, zeitgeist-aware language is allowed. Puffery is not.
+
+Do not make a concrete incident sound important by adding generic phrases about
+broader trends, pivotal shifts, transformative moments, crucial roles, or
+evolving landscapes. Let the specific moment carry the meaning first; only
+generalize after the mechanism is visible.
+
+Avoid superficial analysis tacked onto sentences with phrases such as
+"highlighting", "underscoring", "reflecting", "showcasing", "serving as a
+testament to", or "playing a key role in" unless the sentence names a concrete
+mechanism.
+
+Every positive claim should be anchored in one of:
+
+- a concrete repo incident
+- a named decision or tradeoff
+- an observable behavior in the system
+- a mechanism the reader can inspect
+- a source-backed claim
+
+If a sentence could appear unchanged in almost any AI article, cut it or make
+it specific.

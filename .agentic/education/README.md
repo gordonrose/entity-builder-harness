@@ -36,3 +36,13 @@ Mine the material before drafting from it.
 - `prompts/` stores versioned task prompts.
 - `references/` stores distilled principles from reviewed source material.
 - `feedback/` stores dated feedback notes for future calibration.
+
+## Education ADRs
+
+Durable education-layer decisions live in
+`docs/education/architecture/adrs/`.
+
+Use an education ADR for decisions about audience, pedagogy, public voice,
+content strategy, or recurring educational artifact shape. Do not create an ADR
+for every taste correction or one-off draft preference; store those in
+`profiles/` or `feedback/`.

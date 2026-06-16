@@ -20,3 +20,7 @@
 
 - Humor should support teaching and recognition.
 - If a joke makes the author sound less credible or less kind, cut it.
+- For hype-adjacent audiences, let humor include the reader rather than catch
+  them out. The joke should point at the situation, not at the reader's
+  insecurity.
+- Keep the dry edge, but make the surface hospitable.

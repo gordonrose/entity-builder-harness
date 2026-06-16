@@ -34,12 +34,14 @@ research/process reflection, comedy bit, warning label, or metaphor.
 For each candidate include:
 
 - Title
+- Title calibration note
 - One-sentence premise
 - Why this works
 - Hidden lesson
 - Opening hook
 - Suggested 5-part structure
 - Best audience
+- Reader outcome
 - Comedic angle
 - Risk
 - Scores for educational value, entertainment value, originality, voice fit,
@@ -92,6 +94,66 @@ Identify:
 - what to preserve
 - what to avoid
 - concise reusable voice update
+
+## Audience Fit
+
+Identify:
+
+- primary reader served
+- secondary reader preserved
+- how the piece upgrades the reader rather than exposing them
+- where technical reality is preserved without patronizing
+- what would make the piece feel too beginner, too accusatory, or too fluffy
+
+## Title Calibration
+
+For strong candidates, include:
+
+- original or working title
+- why it fits or fails the audience profile
+- stronger title options
+- whether the negative insight is subtext or too explicit
+- whether the title sounds like opportunity, critique, or generic summary
+
+## Zeitgeist Alignment
+
+Identify how the candidate follows the current surface mood around the topic:
+
+- optimism
+- acceleration
+- capability
+- opportunity
+- sophistication
+- practical advantage
+
+Also identify the grounded lesson underneath that surface mood.
+
+## Subtext Audit
+
+For each strong candidate, answer:
+
+- Is critique present as subtext, contrast, implication, or upgrade path?
+- Does the piece avoid humiliating the reader?
+- Does the reader leave feeling sharper rather than smaller?
+- Is the positivity genuine rather than empty?
+
+## AI-Smell Audit
+
+Review for patterns that make writing sound statistically smoothed or
+AI-generated:
+
+- significance inflation: "pivotal", "crucial", "transformative",
+  "broader shift", "evolving landscape", "key role"
+- superficial analysis appended with "highlighting", "underscoring",
+  "reflecting", "showcasing", "serving as", or "testament to"
+- vague authority: "experts say", "observers argue", "teams are realizing",
+  "the industry is moving"
+- promotional or press-release phrasing
+- neat three-part abstractions that are not earned by the evidence
+- positive claims that replace specificity instead of framing it
+
+For each finding, either cut the sentence, anchor it to a concrete incident or
+mechanism, or mark why the phrasing is intentionally preserved.
 
 ## Best Picks
 

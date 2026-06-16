@@ -19,12 +19,16 @@ story moments, humor angles, and voice notes.
 ## Process
 
 1. Read the relevant commit logs and supporting repo evidence.
-2. Summarize what actually happened.
-3. Extract raw material before proposing finished content.
-4. For each candidate, cite concrete evidence from the logs.
-5. Identify technical, emotional, teaching, and humor potential.
-6. Score only candidates with real content potential.
-7. Produce a specificity audit before finalizing.
+2. Load relevant education profiles before proposing public-facing candidates:
+   audience, voice, humor, storytelling, and structure.
+3. Summarize what actually happened.
+4. Extract raw material before proposing finished content.
+5. For each candidate, cite concrete evidence from the logs.
+6. Identify technical, emotional, teaching, and humor potential.
+7. Score only candidates with real content potential.
+8. Calibrate titles against the audience and voice profiles.
+9. Produce audience-fit, subtext, specificity, AI-smell, and machine-smell
+   audits before finalizing.
 
 ## Output
 
@@ -40,6 +44,11 @@ The output should include:
 - voice calibration notes
 - best picks
 - iteration questions
+- audience-fit audit
+- title calibration
+- zeitgeist alignment
+- subtext audit
+- AI-smell audit
 - specificity audit
 - machine-smell audit
 
@@ -52,3 +61,11 @@ The output should include:
 - Cut any idea that could have been produced without reading the logs.
 - Humor should come from recognition, understatement, irony, or real technical
   absurdity.
+- For hype-adjacent public AI audiences, keep the surface positive and
+  opportunity-facing while placing critique in subtext, contrast, or upgrade
+  path.
+- Keep positivity grounded in concrete evidence. Do not use significance
+  inflation, vague authority, or generic broader-trend language to make a thin
+  incident sound larger than it is.
+- Reject technically accurate titles when they sound generic, accusatory, or
+  unlike the author.
