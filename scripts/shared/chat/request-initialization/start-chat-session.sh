@@ -187,6 +187,8 @@ Default mode: read-only.
 Do not create, edit, move, delete, stage, commit, format, or patch files unless I explicitly give permission in the current chat.
 Until then, inspect and propose only.
 
+For approved commit-boundary operations, use scripts/shared/git/with-chat-branch.sh with this session log to run the command in an isolated reusable worktree for this chat's branch without asking for separate branch-switch permission.
+
 After write permission is granted, rename this chat's commitLog folder to a concise summary with:
 bash scripts/shared/chat/rename-current-chat-log-folder.sh \"<short-summary>\"
 
