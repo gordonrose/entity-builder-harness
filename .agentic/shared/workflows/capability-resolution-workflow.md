@@ -108,6 +108,9 @@ At minimum:
 - `execution` must use an existing capability, workflow, gate, script, tool, or documented process. If the capability must be created or changed first, reclassify as `implementation`.
 - `implementation` requires explicit write permission for the current chat.
 - `unknown` must not proceed to edits or commands that mutate state.
+- If a required action, recovery path, workaround, or substitution is not
+  governed by the selected workflow, gate, script, or standard, follow
+  `.agentic/harness/standards/missing-governance-stop-condition.md`.
 
 Workflows may define stricter gates.
 
