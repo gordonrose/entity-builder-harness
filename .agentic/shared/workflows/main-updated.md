@@ -52,6 +52,13 @@ Do not edit files or change branches while blocked.
    bash scripts/shared/git/main-update-status.sh
    ```
 
+5. Inspect active branch metadata and changed-path overlap:
+
+   ```bash
+   bash scripts/shared/git/active-chat-branches.sh
+   bash scripts/shared/git/branch-overlap-report.sh
+   ```
+
 ## Refresh Policy
 
 - New chat branches should start from `main`.
@@ -78,6 +85,8 @@ Do not edit files or change branches while blocked.
    ```bash
    git status --short --branch
    bash scripts/shared/git/main-update-status.sh
+   bash scripts/shared/git/active-chat-branches.sh
+   bash scripts/shared/git/branch-overlap-report.sh
    ```
 
 3. If the active chat branch is behind `main`, ask before integrating `main`

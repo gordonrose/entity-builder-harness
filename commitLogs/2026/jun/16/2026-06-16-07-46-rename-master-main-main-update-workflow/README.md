@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T06:46:24Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T07:36:18Z
+latest_commit_sha: ef6981b
+chat_duration: 2994s (00:00:49:54)
+estimated_tokens: 825 estimated from session log
 -->
 
 ## Initial Intent
@@ -53,6 +53,10 @@ is master my local equivalent of main? if so i'm assuming that is not currently 
 
 - Decision: Add a main-updated workflow and status helper.
   Rationale: Main refresh work should be inspectable, non-rewriting by default, and explicit about dirty worktrees, remotes, conflicts, and approval boundaries.
+
+
+- Decision: Add active branch and overlap visibility before automation.
+  Rationale: Parallel multi-device work needs read-only awareness tools before refresh/promote automation can safely move branches.
 
 ## Activity Log
 
@@ -95,9 +99,33 @@ Asked: What layer and mode should this use?
 
 Response: shared - discovery; later expanded to shared implementation when the user requested branch rename and workflow changes.
 
+
+### 2026-06-16T07:36:18Z - Commit recorded
+
+Commit: `ef6981b`
+
+Message: Add main branch coordination workflow
+
+Summary: Renamed the local base branch convention to main, added a main-update workflow and status helper, updated cleanup base inference, and taught the classifier master/main branch wording.
+
+ADR impact: No ADR needed; operational workflow codifies the branch-refresh procedure.
+
+
+### 2026-06-16T07:50:18Z - Decision
+
+Decision: Add active branch and overlap visibility before automation.
+
+Rationale: Parallel multi-device work needs read-only awareness tools before refresh/promote automation can safely move branches.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `ef6981b`
+  Time UTC: 2026-06-16T07:36:18Z
+  Message: Add main branch coordination workflow
+  Summary: Renamed the local base branch convention to main, added a main-update workflow and status helper, updated cleanup base inference, and taught the classifier master/main branch wording.
+  ADR impact: No ADR needed; operational workflow codifies the branch-refresh procedure.
 
 ## ADR Disposition
 
@@ -108,10 +136,10 @@ Reason: No new durable architecture decision; this codifies operational branch-r
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T06:46:24Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T07:36:18Z
+Latest commit SHA: ef6981b
+Chat duration: 2994s (00:00:49:54)
+Estimated tokens: 825 estimated from session log
 
 ## Notes
 
