@@ -9,15 +9,15 @@ Outliers are values more than 3 standard deviations from the mean for each metri
 | Metric | Value |
 | --- | ---: |
 | Valid chats | 11 |
-| Included chats | 11 |
-| Outliers excluded | 0 |
-| Total | 20912s (00:05:48:32) |
+| Included chats | 10 |
+| Outliers excluded | 1 |
+| Total | 17765s (00:04:56:05) |
 | Min | 249s (00:00:04:09) |
-| Max | 3147s (00:00:52:27) |
-| Average | 1901s (00:00:31:41) |
-| Q1 | 1129s (00:00:18:49) |
-| Median | 2041s (00:00:34:01) |
-| Q3 | 2674s (00:00:44:34) |
+| Max | 3035s (00:00:50:35) |
+| Average | 1777s (00:00:29:37) |
+| Q1 | 911s (00:00:15:11) |
+| Median | 1948s (00:00:32:28) |
+| Q3 | 2352s (00:00:39:12) |
 
 ## Token Consumption
 
@@ -26,10 +26,10 @@ Outliers are values more than 3 standard deviations from the mean for each metri
 | Valid chats | 11 |
 | Included chats | 11 |
 | Outliers excluded | 0 |
-| Total | 11262 |
+| Total | 11628 |
 | Min | 616 |
 | Max | 2147 |
-| Average | 1023.82 |
+| Average | 1057.09 |
 | Q1 | 692 |
 | Median | 875 |
-| Q3 | 1196.50 |
+| Q3 | 1327 |

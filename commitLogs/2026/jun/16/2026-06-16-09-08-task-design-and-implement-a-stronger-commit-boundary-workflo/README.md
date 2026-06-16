@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T08:08:25Z
-latest_commit_at_utc: 2026-06-16T09:00:52Z
-latest_commit_sha: a3c2929
-chat_duration: 3147s (00:00:52:27)
-estimated_tokens: 956 estimated from session log
+latest_commit_at_utc: 2026-06-16T13:03:20Z
+latest_commit_sha: 20f1eed
+chat_duration: 17695s (00:04:54:55)
+estimated_tokens: 1322 estimated from session log
 -->
 
 ## Initial Intent
@@ -98,6 +98,17 @@ Summary: Implemented isolated reusable git worktrees for session commit-boundary
 
 ADR impact: ADR 0009 records the isolated worktree commit-boundary architecture.
 
+
+### 2026-06-16T13:03:20Z - Commit recorded
+
+Commit: `20f1eed`
+
+Message: fix(shared): protect commit logs with recorded work
+
+Summary: Restored staged deletion of commit logs that recorded commits and added a commit gate, workflow/checklist docs, ADR 0010, and smoke coverage to prevent deleting logs with recorded work or retention markers.
+
+ADR impact: ADR 0010 records the commit-log retention rule.
+
 ## Commits
 
 
@@ -107,6 +118,13 @@ ADR impact: ADR 0009 records the isolated worktree commit-boundary architecture.
   Message: feat(shared): isolate session commit boundaries
   Summary: Implemented isolated reusable git worktrees for session commit-boundary commands, explicit active-path staging into the isolated worktree, shared workflow/checklist updates, ADR 0009, and smoke coverage.
   ADR impact: ADR 0009 records the isolated worktree commit-boundary architecture.
+
+
+- Commit: `20f1eed`
+  Time UTC: 2026-06-16T13:03:20Z
+  Message: fix(shared): protect commit logs with recorded work
+  Summary: Restored staged deletion of commit logs that recorded commits and added a commit gate, workflow/checklist docs, ADR 0010, and smoke coverage to prevent deleting logs with recorded work or retention markers.
+  ADR impact: ADR 0010 records the commit-log retention rule.
 
 ## ADR Disposition
 
@@ -118,10 +136,10 @@ to isolated reusable worktrees, changing the harness git architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T08:08:25Z
-Latest commit at UTC: 2026-06-16T09:00:52Z
-Latest commit SHA: a3c2929
-Chat duration: 3147s (00:00:52:27)
-Estimated tokens: 956 estimated from session log
+Latest commit at UTC: 2026-06-16T13:03:20Z
+Latest commit SHA: 20f1eed
+Chat duration: 17695s (00:04:54:55)
+Estimated tokens: 1322 estimated from session log
 
 ## Notes
 
