@@ -4,7 +4,7 @@
 
 Use this when a request needs a new repeatable capability, behaviour, process, automation, skill, workflow, standard, checklist, script, agent, orchestrator, or combination of these.
 
-This workflow may create artifacts for any target layer: `shared`, `harness`, or `product`.
+This workflow may create artifacts for any target layer: `shared`, `harness`, `education`, or `product`.
 
 ## Goal
 
@@ -22,7 +22,7 @@ Do not reclassify the layer unless the session metadata is missing, incomplete, 
 Expected inputs:
 
 - `task`: from the current chat/session log or pasted startup prompt
-- `layer`: `shared`, `harness`, `product`, or `mixed`
+- `layer`: `shared`, `harness`, `education`, `product`, or `mixed`
 - `workflow`: this workflow path
 
 The selected `layer` is the target layer for the capability being built.
@@ -98,7 +98,7 @@ Do not create vendor-specific adapters unless the vendor format adds necessary m
 Before editing, output:
 
 ```txt
-Target layer: <shared|harness|product|mixed>
+Target layer: <shared|harness|education|product|mixed>
 Capability name: <name>
 Existing artifact found: yes|no
 Recommended artifacts:

@@ -22,6 +22,7 @@ Allowed values:
 
 - `shared`
 - `harness`
+- `education`
 - `product`
 - `mixed`
 - `unknown`

@@ -10,3 +10,9 @@ explain capability resolution	harness	discovery	.agentic/harness/workflows/chang
 let's update our harness so it has best practice guidelines for adding new artefacts	harness	implementation	.agentic/harness/workflows/change-harness.md
 i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation	.agentic/shared/workflows/change-shared-process.md
 i'd like to update my harness so that whenever i commit something, it checks whether the decisions of the chat are worth codifying in a harness ADR	shared	implementation	.agentic/shared/workflows/change-shared-process.md
+turn today's commit logs into blog post ideas	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
+create a 30 minute lecture from yesterday's work	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
+mine commit logs for teaching assets	education	discovery	.agentic/education/workflows/mine-daily-learning-material.md
+update my lecturer voice profile	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
+improve the humor profile for education outputs	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
+add source-backed teaching principles for talks	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md

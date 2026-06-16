@@ -2,6 +2,7 @@ classification_order:
   - mixed
   - shared
   - harness
+  - education
   - product
 
 mode_order:
@@ -31,6 +32,15 @@ layers:
       - task changes vendor adapters for Codex, Claude, or Mistral
       - task improves token usage or instruction loading
     workflow_index: .agentic/harness/workflows/README.md
+
+  education:
+    use_when:
+      - task creates educational resources from repo work
+      - task mines commit logs for teaching material, blog posts, talks, or classroom assets
+      - task drafts lecture material, talk scripts, teaching examples, or educational blog posts
+      - task calibrates lecturer voice, humor, storytelling, tone, or structure for education outputs
+      - task incorporates source-backed teaching, storytelling, humor, talk design, or writing principles
+    workflow_index: .agentic/education/workflows/README.md
 
   product:
     use_when:

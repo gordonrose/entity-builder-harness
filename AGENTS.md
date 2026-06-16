@@ -20,6 +20,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 * `.agentic/shared/` governs chat sessions, git process, branching, commits, handoff, deployment process, and context compaction.
 * `.agentic/harness/` governs changes to the agentic harness itself.
+* `.agentic/education/` governs educational resources derived from repo work.
 * `.agentic/product/` governs Kanbien product/code work.
 
 ## Source of Truth
@@ -27,6 +28,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 * Session state: current branch’s `commitLogs/<session>/README.md`
 * Shared operating process: `.agentic/shared/`
 * Harness maintenance process: `.agentic/harness/`
+* Education resources process: `.agentic/education/`
 * Product/code process: `.agentic/product/`
 * Executable checks: `scripts/`
 * Human documentation: `docs/`
