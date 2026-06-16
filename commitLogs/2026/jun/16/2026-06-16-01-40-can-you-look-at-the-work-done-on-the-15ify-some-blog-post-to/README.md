@@ -9,10 +9,10 @@ mode: discovery
 workflow: .agentic/education/workflows/mine-daily-learning-material.md
 status: ready
 raised_at_utc: 2026-06-16T00:40:43Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T01:12:32Z
+latest_commit_sha: abb788d
+chat_duration: 1909s (00:00:31:49)
+estimated_tokens: 1576 estimated from session log
 -->
 
 ## Initial Intent
@@ -131,9 +131,26 @@ article as a specificity and AI-smell review pass. Added rules against
 significance inflation, vague authority, superficial analysis, and promotional
 puffery while preserving positive surface tone.
 
+
+### 2026-06-16T01:12:32Z - Commit recorded
+
+Commit: `abb788d`
+
+Message: Add education audience strategy and first artifacts
+
+Summary: Added education ADR structure and ADR 0001, calibrated audience/voice/title and AI-smell guidance, and created the first article, teaching note, and title bank.
+
+ADR impact: Education ADR 0001 records the audience and content-strategy decision; harness ADR not needed.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `abb788d`
+  Time UTC: 2026-06-16T01:12:32Z
+  Message: Add education audience strategy and first artifacts
+  Summary: Added education ADR structure and ADR 0001, calibrated audience/voice/title and AI-smell guidance, and created the first article, teaching note, and title bank.
+  ADR impact: Education ADR 0001 records the audience and content-strategy decision; harness ADR not needed.
 
 ## ADR Disposition
 
@@ -145,10 +162,10 @@ content-strategy decision for AI-facing public material.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T00:40:43Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T01:12:32Z
+Latest commit SHA: abb788d
+Chat duration: 1909s (00:00:31:49)
+Estimated tokens: 1576 estimated from session log
 
 ## Notes
 
