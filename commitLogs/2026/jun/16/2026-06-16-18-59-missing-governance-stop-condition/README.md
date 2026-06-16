@@ -10,10 +10,10 @@ mode: implementation
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T17:59:09Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T20:45:29Z
+latest_commit_sha: 5b26b1b
+chat_duration: 9980s (00:02:46:20)
+estimated_tokens: 861 estimated from session log
 -->
 
 ## Initial Intent
@@ -58,9 +58,26 @@ Initial intent: Task: Add a repo-wide harness governance principle that missing 
 
 Updated `AGENTS.md` so missing governance is an explicit stop condition. Ran targeted deterministic process drift validation on `AGENTS.md` and adjusted wording so the check passed without an allow marker.
 
+
+### 2026-06-16T20:45:29Z - Commit recorded
+
+Commit: `5b26b1b`
+
+Message: Add missing governance stop condition
+
+Summary: Added a repo-wide missing-governance stop condition to AGENTS.md and recorded ADR 0012 for the operating principle.
+
+ADR impact: ADR 0012 accepted
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `5b26b1b`
+  Time UTC: 2026-06-16T20:45:29Z
+  Message: Add missing governance stop condition
+  Summary: Added a repo-wide missing-governance stop condition to AGENTS.md and recorded ADR 0012 for the operating principle.
+  ADR impact: ADR 0012 accepted
 
 ## ADR Disposition
 
@@ -71,10 +88,10 @@ Reason: This chat added a durable repo-wide agent operating rule and rejected or
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T17:59:09Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T20:45:29Z
+Latest commit SHA: 5b26b1b
+Chat duration: 9980s (00:02:46:20)
+Estimated tokens: 861 estimated from session log
 
 ## Notes
 
