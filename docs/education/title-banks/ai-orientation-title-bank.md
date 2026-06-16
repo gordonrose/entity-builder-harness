@@ -12,6 +12,9 @@ discerning lesson underneath.
 - The Quiet Infrastructure Behind Confident AI Work
 - Confidence Is Better When It Leaves A Trace
 - What The System Knew When It Sounded Certain
+- When Confidence Comes With A Trace
+- The Evidence Layer Under AI Fluency
+- The Receipts Behind Serious AI Work
 
 ## Fluency Growing Up
 
@@ -20,6 +23,8 @@ discerning lesson underneath.
 - The Next Layer Of AI Fluency
 - From Prompt Fluency To System Fluency
 - When AI Fluency Starts Needing Infrastructure
+- After The Vocabulary Comes The System
+- The Point Where AI Fluency Starts Needing Proof
 
 ## Orientation And Advantage
 
@@ -36,6 +41,19 @@ discerning lesson underneath.
 - The AI Conversation Is Getting More Concrete
 - The Useful Part Starts Underneath The Buzzwords
 - The Best AI Teams Are Building More Than Demos
+- The Vocabulary Gets You In. The Evidence Moves You Forward.
+- The Confident Demo Is Only The First Layer
+- The Interesting Work Starts After The Words Arrive
+
+## Stronger Patterns
+
+- "The next..." works when the piece offers an upgrade path rather than a
+  takedown.
+- "What comes after..." works when the audience already feels fluent and wants
+  a higher-status frame.
+- "Receipts", "trace", and "evidence" work when anchored to a concrete system
+  incident.
+- Dry humor works best after the reader has been given something useful.
 
 ## Avoid
 
@@ -44,3 +62,5 @@ discerning lesson underneath.
 - Debunking titles
 - Corporate futurist phrasing
 - Titles that make negativity the surface posture
+- Overclaiming with "revolution", "transformation", "paradigm", or "future of"
+  unless the evidence genuinely earns it

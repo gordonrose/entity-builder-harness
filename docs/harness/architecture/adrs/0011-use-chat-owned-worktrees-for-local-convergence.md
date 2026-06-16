@@ -1,0 +1,57 @@
+# 0011 Use Chat-Owned Worktrees For Local Convergence
+
+Status: accepted
+Date: 2026-06-16
+
+## Context
+
+The harness previously isolated commit-boundary commands in reusable worktrees
+while normal chat edits could still happen in the root repository worktree. This
+allowed an isolated worktree to advance a chat branch while the root worktree
+kept stale staged entries and unrelated local residue. The result was confusing:
+the branch history recorded commits, but the user-facing workspace still looked
+dirty.
+
+The harness also needs to support multiple chats working in parallel on one
+device. In that model, each chat is closer to a local developer-like actor than
+to a single command running in one shared checkout.
+
+## Decision
+
+Treat the root repository worktree as the local integration console. Task work
+for a chat must happen in that chat's canonical chat-owned worktree, created
+from the chat branch and recorded in the session metadata.
+
+New chat startup creates:
+
+- a `chat/*` branch
+- a deterministic chat-owned worktree
+- a session log that links the session id, branch, and worktree
+
+Commit preparation runs:
+
+```bash
+bash scripts/shared/git/check-write-location.sh
+```
+
+to prevent task commits from the root integration worktree. Branch freshness is
+reported with:
+
+```bash
+bash scripts/shared/git/check-chat-branch-freshness.sh
+```
+
+Completed chat work converges through a local integration workflow before
+promotion into local `main`.
+
+## Consequences
+
+This makes each chat's files, index, branch, and session log independently
+owned, reducing cross-chat contamination and stale-index surprises. It also
+creates a local equivalent of a feature-branch/PR queue: many chat branches can
+exist, but promotion into `main` remains explicit.
+
+The model is stricter than the prior commit-boundary-only helper. Agents must
+run task commands from the chat worktree, not the root repo. Existing transition
+states may still require manual reconciliation before the root worktree can be
+treated as a clean integration console.

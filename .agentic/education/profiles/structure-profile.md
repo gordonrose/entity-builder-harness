@@ -1,14 +1,18 @@
 # Structure Profile
 
-## Blog Posts
+## Short Public Articles
 
-Default shape for a 3-minute post:
+Default shape for a short public article:
 
-1. Setup
-2. The problem
-3. The mistake, tension, or surprising detail
-4. The lesson
-5. The landing
+1. Source scene with felt stakes
+2. Reader-world bridge
+3. Nut graf that names the angle
+4. Source story and complication
+5. Practical meaning
+6. Return, image, or changed understanding
+
+The structure is blocked if it needs an invented hypothetical to make the
+reader care. Source packet and scene cards come before drafting.
 
 ## Talks
 

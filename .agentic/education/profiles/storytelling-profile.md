@@ -15,6 +15,10 @@
 - Ten loosely related ideas in one piece
 - Generic "what I learned today" structure
 - Abstract lessons without a scene, decision, mistake, or surprise
+- Scene-shaped slogans that compress the story into a punchy contrast instead
+  of telling what happened
+- Openings that ask the reader to care about internal repo concepts before
+  translating the stakes into their world
 
 ## Current Calibration Notes
 
@@ -24,3 +28,33 @@
 - For public AI material, the story should move from a concrete repo incident
   to a wider orientation frame. The critique should arrive as discovery or
   upgrade, not exposure.
+- The reader-facing stakes must arrive before internal vocabulary. Explain why
+  the moment matters in human terms before naming commits, ADRs, harnesses, or
+  logs.
+- Do not treat "a specific moment" as a punchline-shaped hook. A moment needs
+  context, motive, implicit authorial stake, and enough friction for the reader
+  to recognize it.
+- Do not state the author's care as the opening claim. Make the reader
+  understand the reason for that care through the situation.
+- Build the setting before relying on it. If the story uses an internal repo
+  example, the reader needs to understand who wanted what, what was at stake,
+  what went wrong, and why it resembles their world before the vocabulary
+  appears.
+- Avoid platonic summaries of work. Do not write about "the system", "the
+  record", or "the decision" as floating abstractions when the reader has not
+  yet seen the concrete situation.
+- Do not shrink a rich source story into the smallest abstract lesson. If the
+  real story includes a sequence of capabilities, such as recording chats,
+  adding metrics, and mining durable lessons, preserve that arc instead of
+  extracting only one generic principle.
+- When selecting a topic, compare candidate theses before drafting. A thesis can
+  be accurate and still too weak. Prefer the story with the strongest chain of
+  motive, friction, change, and consequence.
+- The stakes must land in the opening lines. If the reader reaches line seven
+  without feeling what can go wrong, the scene is still too light.
+- Avoid opening public articles with actual calendar dates unless the date
+  carries reader-facing stakes. Otherwise the article feels like a log entry and
+  ages faster than necessary.
+- Do not use value labels such as "useful", "obvious", "important", or
+  "interesting" as substitutes for pressure. Make the reader feel the pressure
+  first.

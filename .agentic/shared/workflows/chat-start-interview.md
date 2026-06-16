@@ -18,6 +18,9 @@ Do not reclassify.
 Do not read `.agentic/routing-policy.yaml`.
 Do not load unrelated workflows, skills, standards, or documentation.
 
+If the metadata includes a `worktree` value, use that chat-owned worktree for
+task writes. The root worktree is the local integration console.
+
 ## Missing Session
 
 If no matching chat log exists for the current branch, respond exactly:
@@ -75,3 +78,19 @@ Blocked: dirty worktree. Confirm proceed? Layer: <layer>. Mode: <mode>. Workflow
 
 Do not explain unless asked.
 Do not edit files while blocked.
+
+## Write Requests Without A Chat Worktree
+
+If the user grants write permission but the current session has no chat-owned
+worktree, create or verify it before editing:
+
+```bash
+bash scripts/shared/chat/ensure-chat-worktree.sh <session-log>
+```
+
+<!-- deterministic-check: allow reason="check-write-location.sh enforces the write-location invariant; workflow states when agents should invoke it" -->
+Then run task commands from that worktree and verify:
+
+```bash
+bash scripts/shared/git/check-write-location.sh
+```

@@ -6,6 +6,10 @@ Build a public teaching voice as a university lecturer: clear, thoughtful,
 technically credible, funny without trying too hard, and honest about the
 messiness of real work.
 
+Use `.agentic/education/profiles/voice-sample-bank.md` as the primary evidence
+for voice. This profile describes the target; the sample bank calibrates the
+actual sentence-level fingerprint.
+
 ## Tone
 
 - Reflective
@@ -36,11 +40,16 @@ messiness of real work.
   away the specific facts
 - Vague authority phrases such as "experts say", "the industry is moving", or
   "teams are realizing" unless the source evidence actually supports them
+- Punchy AI syntax: compressed two-sentence hooks, neat reversals, and
+  slogan-like contrasts that sound engineered rather than spoken
+- Abstract throat-clearing about technology cycles, eras, trends, or the future
+  before the reader has been given a reason to care
 
 ## Current Calibration Notes
 
 - Keep the connection to the repo evidence visible.
 - Let the author sound like a lecturer talking to a room, not a brand.
+- Compare public article drafts against the voice sample bank before approval.
 
 ## Best-Self Calibration
 
@@ -91,3 +100,49 @@ Every positive claim should be anchored in one of:
 
 If a sentence could appear unchanged in almost any AI article, cut it or make
 it specific.
+
+## Opening Voice
+
+Open like a person talking to another person about something that actually
+happened and whose stakes they genuinely understand.
+
+The reader should feel the stakes within the first seven lines. Do not ask them
+to wait until the explanation warms up.
+
+Do not open with an abstract thesis, a tidy aphorism, or a manufactured hook.
+The opening should have enough lived context that the reader can feel why the
+piece exists before the lesson is named. Do not announce the author's care
+directly. Reveal the reason for caring through the situation, consequence, or
+recognizable human problem.
+
+Do not use unexplained evaluative shortcuts in the opening. If a sentence says
+something was "useful", "obvious", "important", or "interesting", the reader
+should already understand why from the scene.
+
+Avoid opening public articles with actual calendar dates unless the exact date
+is part of the reader-facing stakes. Dates often age the article and can make a
+story feel like a log entry instead of an essay.
+
+Avoid patterns like:
+
+- "There is a stage in every technology cycle..."
+- "The AI summary sounded good. Then someone asked what it was based on."
+- "The question is no longer X. It is Y."
+- "In a world where..."
+- "We are entering an era..."
+
+Prefer openings that include:
+
+- who was doing something
+- what they were trying to do
+- what felt normal at first
+- where the situation became awkward, unclear, or revealing
+- what could go wrong if nobody noticed
+- why the moment mattered without saying "I care"
+- why a non-technical reader would recognize the stakes
+
+Do not drop the reader into file, script, rule, commit, ADR, harness, or log
+language before the human problem is clear.
+
+If the first paragraph sounds like it could be the first paragraph of a LinkedIn
+AI post, rewrite it as a scene.

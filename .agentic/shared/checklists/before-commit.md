@@ -2,6 +2,16 @@
 
 Use this before committing shared process or harness changes.
 
+## Write Location
+
+Run from the chat-owned worktree:
+
+```bash
+bash scripts/shared/git/check-write-location.sh
+```
+
+Task commits must not be prepared from the root integration worktree.
+
 ## Branch Prerequisites
 
 Run:
@@ -26,6 +36,17 @@ bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
 <!-- deterministic-check: allow reason="requires human review and approval before editing process prose" -->
 If this flags staged process prose, propose moving the deterministic part into a
 script or gate, or keeping the prose with an allow marker and reason.
+
+## Commit Log Deletions
+
+Run:
+
+```bash
+bash scripts/shared/git/check-commitlog-deletions.sh
+```
+
+Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete
+commit logs that record commits or are explicitly marked for retention.
 
 ## Session Log
 
@@ -81,3 +102,17 @@ would be committed.
 Do not create a task commit without explicit user approval in the current chat.
 The only commit allowed by prior write permission alone is the narrow session
 bookkeeping checkpoint described above.
+
+The chat-owned worktree is reusable and intentionally left in place after each
+chat. Cleanup requires explicit user approval or a deterministic cleanup script
+that preserves logs with recorded work or retention markers.
+
+After explicit approval to stage task paths, stage only approved
+repository-relative paths in the chat-owned worktree:
+
+```bash
+git add -- <path>...
+```
+
+Chat-owned worktree execution does not authorize pushes, merges, rebases, branch
+deletion, history rewrite, discarding work, or destructive actions.

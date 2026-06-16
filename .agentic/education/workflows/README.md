@@ -3,7 +3,7 @@
 ## Workflows
 
 - `mine-daily-learning-material.md` - mine commit logs and repo evidence for
-  blog, talk, classroom, and teaching-asset opportunities.
+  short public article, talk, classroom, and teaching-asset opportunities.
 - `create-educational-resource.md` - draft a selected educational resource from
   mined material and profiles.
 - `calibrate-education-outputs.md` - turn feedback on generated resources into

@@ -47,7 +47,7 @@ collect_script_refs() {
     return
   fi
 
-  sed -n -E 's/.*bash +(scripts\/[^ `"'\'']+).*/\1/p' "$file"
+  grep -Eo "scripts/[^ \`\"']+" "$file" || true
 }
 
 if [ ! -f "$LOG_FILE" ]; then

@@ -32,11 +32,33 @@ Do not edit files while blocked.
 - Do not create a task commit, push, delete branches, rewrite history, discard
   work, overwrite work, or perform destructive actions without explicit user
   approval.
+- Chat task work must run in the chat-owned worktree recorded in the current
+  session log. The root worktree is the local integration console and must not
+  receive task edits, staging, formatting, or commits.
 - After explicit write permission for the chat, routine session bookkeeping may
   be staged without another prompt when limited to the current chat session log
   and `commitLogs/README.md`.
 - Preserve unrelated user changes in a dirty worktree.
 - Before any commit, complete the shared before-commit checklist.
+
+## Chat-Owned Worktree
+
+Before writing, run:
+
+```bash
+bash scripts/shared/git/check-write-location.sh
+```
+
+<!-- deterministic-check: allow reason="ensure-chat-worktree.sh enforces worktree creation and verification; workflow states when agents should invoke it" -->
+If a session log exists but its worktree is missing, recreate or verify it with:
+
+```bash
+bash scripts/shared/chat/ensure-chat-worktree.sh <session-log>
+```
+
+The chat-owned worktree has its own files and index. Stage only approved
+repository-relative paths inside that worktree. The root worktree remains the
+local convergence console.
 
 ## Prerequisite Branch State
 
@@ -68,6 +90,19 @@ For broader audits, run the same script with `--commit <sha>`, `--paths
 <!-- deterministic-check: allow reason="requires human review and approval before editing process prose" -->
 If the check flags scriptable process prose, propose the script or gate change
 for approval. Do not rewrite prose automatically.
+
+## Commit Log Deletions
+
+Run:
+
+```bash
+bash scripts/shared/git/check-commitlog-deletions.sh
+```
+
+Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete
+commit logs that record commits or are explicitly marked for retention. If this
+gate fails, restore the protected logs or remove them from the staged deletion
+set before committing.
 
 ## Before Commit
 

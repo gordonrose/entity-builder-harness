@@ -25,12 +25,12 @@ Summarize the shape of the day:
 |---|---|---|---|---|
 |  |  |  |  |  |
 
-Content types may include 3-minute blog post, 30-minute talk, 30+50 minute
+Content types may include short public article, 30-minute talk, 30+50 minute
 lesson plan, lecture anecdote, classroom exercise, debugging story, design
 decision story, research/process reflection, comedy bit, warning label, or
 metaphor.
 
-## Candidate 3-Minute Blog Posts
+## Candidate Short Public Articles
 
 For each candidate include:
 
@@ -39,15 +39,26 @@ For each candidate include:
 - One-sentence premise
 - Why this works
 - Hidden lesson
-- Opening hook
-- Suggested 5-part structure
+- Tension chain
+- Source scene inventory
+- Opening scene and reader stakes
+- Article Reporter source-packet viability
+- Reader-world research packet viability
+- Required scene cards
+- Real reader-world bridge
+- Fresh reader-world examples needed before thesis
+- Example ledger conflicts
+- Missing material
+- Suggested structure
 - Best audience
 - Reader outcome
 - Comedic angle
 - Risk
-- Scores for educational value, entertainment value, originality, voice fit,
-  and ease of writing
+- Scores for source material density, opening scene, felt stakes, reader
+  orientation, thesis freshness, voice fit, and ease of writing
 - Source material IDs
+- Decision: advance to source packet / scan wider window / no public article
+  / gather reader-world research first
 
 ## Candidate 30-Minute Talks
 
@@ -110,6 +121,57 @@ Identify:
 - what to avoid
 - concise reusable voice update
 
+## Topic Strength Comparison
+
+Before best picks, compare the strongest possible theses.
+
+For each serious contender include:
+
+- thesis
+- source arc it preserves
+- what it leaves out
+- why it might be tempting
+- why it is strong or weak
+- audience relevance
+- emotional charge
+- evidence density
+- whether it is true-but-too-small
+
+Name the selected topic and explain why it is stronger than the alternatives.
+Reject any candidate that is merely accurate when the logs contain a richer
+story.
+
+If no topic has enough material for a public short article, state `no
+publishable article this cycle` and recommend the strongest non-article
+educational asset.
+
+## Opening Calibration
+
+For strong article candidates, answer:
+
+- Does the opening sound like a person talking to another person?
+- Does it begin with a lived situation rather than an abstract thesis?
+- What concrete source scene would the article open from?
+- Who wanted what in that scene?
+- What friction, cost, risk, or possible embarrassment makes the moment matter?
+- Would the reader feel the stakes within the first seven lines?
+- Does the opening avoid calendar dates unless the date itself matters?
+- Does the opening avoid value labels like "useful", "obvious", "important",
+  or "interesting" before the reader feels why?
+- Does it reveal why the author cares without announcing that care directly?
+- Does it give the reader a reason to care before internal vocabulary appears?
+- Does it avoid punchy AI syntax, tidy reversals, and slogan-shaped contrasts?
+- What context would an average non-technical reader need before the repo story
+  makes sense?
+- Does the candidate build the setting before relying on repo-specific terms?
+- Which terms need translation or delay for the intended audience?
+- What 2 to 3 reader-world examples would let the audience recognize the
+  problem before the thesis appears?
+- Could a cold reader answer the line 30 gate: world, person, object under
+  pressure, AI temptation, downside, and personal relevance?
+- Has `docs/education/articles/example-ledger.md` been checked for anecdote or
+  example reuse?
+
 ## Audience Fit
 
 Identify:
@@ -165,6 +227,7 @@ AI-generated:
   "the industry is moving"
 - promotional or press-release phrasing
 - neat three-part abstractions that are not earned by the evidence
+- punchy two-sentence hook syntax that feels manufactured rather than lived
 - positive claims that replace specificity instead of framing it
 
 For each finding, either cut the sentence, anchor it to a concrete incident or
@@ -174,7 +237,7 @@ mechanism, or mark why the phrasing is intentionally preserved.
 
 Recommend:
 
-- strongest 3-minute blog post
+- strongest short public article, or no article
 - strongest 30-minute talk
 - strongest teaching asset
 - funniest usable moment
@@ -193,6 +256,8 @@ For each strong candidate, answer:
 - Does this clearly come from the logs?
 - Is there a concrete incident?
 - Is there a real decision, mistake, surprise, or tradeoff?
+- Has the candidate preserved the strongest source story, or reduced it to a
+  weaker abstract lesson?
 - Could this have been generated without reading the logs?
 
 Remove or rewrite ideas that fail this audit.
