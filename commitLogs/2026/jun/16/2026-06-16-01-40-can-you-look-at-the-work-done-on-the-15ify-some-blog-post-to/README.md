@@ -9,10 +9,10 @@ mode: discovery
 workflow: .agentic/education/workflows/mine-daily-learning-material.md
 status: ready
 raised_at_utc: 2026-06-16T00:40:43Z
-latest_commit_at_utc: 2026-06-16T01:12:32Z
-latest_commit_sha: abb788d
-chat_duration: 1909s (00:00:31:49)
-estimated_tokens: 1576 estimated from session log
+latest_commit_at_utc: 2026-06-16T01:19:50Z
+latest_commit_sha: 17921fb
+chat_duration: 2347s (00:00:39:07)
+estimated_tokens: 2147 estimated from session log
 -->
 
 ## Initial Intent
@@ -165,6 +165,17 @@ Summary: Added education ADR structure and ADR 0001, calibrated audience/voice/t
 
 ADR impact: Education ADR 0001 records the audience and content-strategy decision; harness ADR not needed.
 
+
+### 2026-06-16T01:19:50Z - Commit recorded
+
+Commit: `17921fb`
+
+Message: Add education lesson plan template
+
+Summary: Added a facilitator-ready lesson-plan template, lesson-plan output location, prompt support, and education workflow/profile/template guidance for 30-minute cores with 50-minute extensions.
+
+ADR impact: No new ADR; this implements the education strategy from ADR 0001 by improving lesson-plan artifact shape.
+
 ## Commits
 
 
@@ -174,6 +185,13 @@ ADR impact: Education ADR 0001 records the audience and content-strategy decisio
   Message: Add education audience strategy and first artifacts
   Summary: Added education ADR structure and ADR 0001, calibrated audience/voice/title and AI-smell guidance, and created the first article, teaching note, and title bank.
   ADR impact: Education ADR 0001 records the audience and content-strategy decision; harness ADR not needed.
+
+
+- Commit: `17921fb`
+  Time UTC: 2026-06-16T01:19:50Z
+  Message: Add education lesson plan template
+  Summary: Added a facilitator-ready lesson-plan template, lesson-plan output location, prompt support, and education workflow/profile/template guidance for 30-minute cores with 50-minute extensions.
+  ADR impact: No new ADR; this implements the education strategy from ADR 0001 by improving lesson-plan artifact shape.
 
 ## ADR Disposition
 
@@ -185,10 +203,10 @@ content-strategy decision for AI-facing public material.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T00:40:43Z
-Latest commit at UTC: 2026-06-16T01:12:32Z
-Latest commit SHA: abb788d
-Chat duration: 1909s (00:00:31:49)
-Estimated tokens: 1576 estimated from session log
+Latest commit at UTC: 2026-06-16T01:19:50Z
+Latest commit SHA: 17921fb
+Chat duration: 2347s (00:00:39:07)
+Estimated tokens: 2147 estimated from session log
 
 ## Notes
 
