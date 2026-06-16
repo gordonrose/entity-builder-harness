@@ -25,9 +25,10 @@ Summarize the shape of the day:
 |---|---|---|---|---|
 |  |  |  |  |  |
 
-Content types may include 3-minute blog post, 30-minute talk, lecture anecdote,
-classroom exercise, debugging story, design decision story,
-research/process reflection, comedy bit, warning label, or metaphor.
+Content types may include 3-minute blog post, 30-minute talk, 30+50 minute
+lesson plan, lecture anecdote, classroom exercise, debugging story, design
+decision story, research/process reflection, comedy bit, warning label, or
+metaphor.
 
 ## Candidate 3-Minute Blog Posts
 
@@ -73,14 +74,28 @@ For each candidate include:
 ## Teaching Assets
 
 Include classroom examples, exercises, discussion prompts, debugging exercises,
-spot-the-mistake examples, mini case studies, analogies, diagrams, and slide
-moments.
+spot-the-mistake examples, mini case studies, analogies, diagrams, slide
+moments, and lesson-plan candidates.
 
 For each asset include:
 
 - what it teaches
 - how to use it
 - student level
+- source material IDs
+
+For lesson-plan candidates include:
+
+- title
+- 30-minute promise
+- 50-minute extension
+- source story
+- worked example
+- participant activity
+- debrief question
+- expected learner outcome
+- audience fit
+- risk
 - source material IDs
 
 ## Voice Calibration

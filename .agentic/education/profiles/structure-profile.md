@@ -25,12 +25,46 @@ Default shape for a 30-minute talk:
 
 Prefer classroom-ready forms:
 
+- 30-minute lesson plans with 50-minute extension paths
 - worked examples
 - debugging exercises
 - spot-the-mistake prompts
 - discussion questions
 - whiteboard diagrams
 - mini case studies
+
+## Lesson Plans
+
+Default lesson plans use a complete 30-minute core with an optional 50-minute
+extension.
+
+The 30-minute core must stand alone:
+
+- 0:00-3:00 hook
+- 3:00-8:00 source story
+- 8:00-13:00 core concept
+- 13:00-20:00 worked example
+- 20:00-27:00 participant activity
+- 27:00-30:00 debrief and landing
+
+The 50-minute extension adds 20 minutes:
+
+- 30:00-38:00 deeper discussion
+- 38:00-45:00 application to learner context
+- 45:00-50:00 share, refine, and land
+
+The extension should deepen practice, discussion, or application. It should not
+introduce a different lesson.
+
+A strong lesson plan includes:
+
+- one teachable transformation
+- one concrete source story
+- one worked example before abstraction
+- one participant activity
+- facilitator notes
+- expected answers and common wrong turns
+- a landing that makes learners feel more oriented, not exposed
 
 ## Current Calibration Notes
 

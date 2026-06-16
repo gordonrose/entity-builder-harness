@@ -10,6 +10,7 @@ Supported resources include:
 - 3-minute blog posts
 - 30-minute talk scripts
 - slide outlines
+- 30-minute lesson plans with 50-minute extension paths
 - lecture anecdotes
 - classroom exercises
 - mini case studies
@@ -31,11 +32,15 @@ Supported resources include:
 3. Load only the relevant profiles and reference principles.
 4. Draft from the concrete incident outward.
 5. Keep the author's voice central; do not imitate external sources.
-6. Run the audits before final output.
+6. For lesson plans, design the 30-minute core first, then add the 50-minute
+   extension.
+7. Run the audits before final output.
 
 ## Output
 
 Use `../templates/educational-resource.md`.
+
+For lesson plans, use `../templates/lesson-plan.md`.
 
 Include:
 
@@ -51,6 +56,17 @@ Include:
 - voice audit
 - teaching audit
 
+Lesson plans must include:
+
+- a complete 30-minute core that stands alone
+- a 50-minute extension that deepens practice, discussion, or application
+- one source story
+- one worked example
+- one participant activity
+- facilitator script notes
+- debrief guidance
+- audience, specificity, teaching, and AI-smell audits
+
 ## Quality Rules
 
 - Write in first person when drafting authorial material.
@@ -58,3 +74,7 @@ Include:
 - Use concrete details from the logs.
 - Avoid corporate tone, fake profundity, and generic AI phrasing.
 - A 30-minute talk needs one central spine, not many loosely related ideas.
+- A lesson plan needs one teachable transformation, not a collection of related
+  notes.
+- The 50-minute extension must deepen the same lesson rather than introduce a
+  second lesson.

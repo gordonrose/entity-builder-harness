@@ -33,6 +33,8 @@ can you look at the work done on the 15ify some blog post topics
 - User granted write permission with "let's go".
 - Added education-layer ADR structure, profiles, workflow/template updates, and
   first educational output artifacts.
+- Updated the education harness so lesson plans are facilitator-ready artifacts
+  with a complete 30-minute core and a 50-minute extension path.
 
 ## Questions Asked
 
@@ -52,6 +54,11 @@ can you look at the work done on the 15ify some blog post topics
   Wikipedia:Signs of AI writing?
   Response: Yes, but as an AI-smell/specificity audit rather than a broad ban
   on positive language. Enthusiasm is allowed; puffery is not.
+- Asked: How can the harness create more effective lesson plans, assuming a
+  30-minute primary session with additional content for 50 minutes?
+  Response: Treat lesson plans as first-class education artifacts with a timed
+  30-minute core, 50-minute extension, worked example, participant activity,
+  facilitator script, materials, and debrief guide.
 
 ## Issues Raised
 
@@ -67,6 +74,11 @@ can you look at the work done on the 15ify some blog post topics
   significance and replacing specific evidence with broad trend claims.
   Resolution: Add AI-smell guardrails for significance inflation, vague
   authority, superficial analysis, and promotional phrasing.
+- Raised: The first teaching note was too truncated to function as a lesson
+  plan.
+  Resolution: Add a lesson-plan template and update education workflows,
+  templates, and structure profile so future lesson plans include timing,
+  facilitation, worked examples, activities, and debrief guidance.
 
 ## Decisions Made
 
@@ -94,6 +106,11 @@ can you look at the work done on the 15ify some blog post topics
   mining workflow, report template, and calibration feedback.
   Rationale: The education layer should follow the positive zeitgeist without
   sounding statistically smoothed, inflated, or generic.
+- Decision: Make lesson plans a distinct education output with a 30-minute core
+  and 50-minute extension path.
+  Rationale: Teaching notes are useful seeds, but lesson plans need a timed
+  arc, facilitator moves, materials, learner activity, and debrief guidance to
+  be teachable.
 
 ## Activity Log
 
@@ -130,6 +147,12 @@ Summary: Incorporated guidance from the pasted Wikipedia:Signs of AI writing
 article as a specificity and AI-smell review pass. Added rules against
 significance inflation, vague authority, superficial analysis, and promotional
 puffery while preserving positive surface tone.
+
+### 2026-06-16T01:45:00Z - Lesson-plan harness update
+
+Summary: Added a reusable lesson-plan template, `docs/education/lesson-plans/`
+location guidance, and workflow/profile/template requirements for a complete
+30-minute core plus a 50-minute extension path.
 
 
 ### 2026-06-16T01:12:32Z - Commit recorded

@@ -31,6 +31,18 @@ For talks, include:
 - humor moments
 - strong closing
 
+For lesson plans, use `lesson-plan.md` and include:
+
+- 30-minute core
+- 50-minute extension
+- learning outcomes
+- lesson arc
+- facilitator script
+- materials
+- participant activity
+- worked example
+- debrief guide
+
 For blog posts, include:
 
 - title

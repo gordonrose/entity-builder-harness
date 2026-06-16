@@ -7,6 +7,7 @@ debugging trails, and project documentation into teaching material such as:
 
 - 3-minute blog posts
 - 30-minute talks
+- 30-minute lesson plans with 50-minute extension paths
 - lecture anecdotes
 - classroom exercises
 - mini case studies
@@ -36,6 +37,14 @@ Mine the material before drafting from it.
 - `prompts/` stores versioned task prompts.
 - `references/` stores distilled principles from reviewed source material.
 - `feedback/` stores dated feedback notes for future calibration.
+
+## Output Locations
+
+- `docs/education/articles/` stores public article drafts.
+- `docs/education/lesson-plans/` stores facilitator-ready lesson plans.
+- `docs/education/teaching-notes/` stores smaller reusable teaching notes that
+  are not yet complete lesson plans.
+- `docs/education/title-banks/` stores reusable title calibration material.
 
 ## Education ADRs
 
