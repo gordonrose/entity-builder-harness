@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T13:19:34Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T16:37:48Z
+latest_commit_sha: 0ba0578
+chat_duration: 11894s (00:03:18:14)
+estimated_tokens: 872 estimated from session log
 -->
 
 ## Initial Intent
@@ -76,9 +76,26 @@ updated chat start to create a chat-owned worktree without switching the root
 worktree, added write-location and freshness gates, added a local convergence
 workflow, and added smoke coverage for the new chat worktree startup invariant.
 
+
+### 2026-06-16T16:37:48Z - Commit recorded
+
+Commit: `0ba0578`
+
+Message: feat(shared): isolate chat sessions in worktrees
+
+Summary: Implemented chat-owned worktrees for new chat sessions, deterministic root write protection, branch freshness reporting, local convergence workflow, ADR 0011, and smoke coverage for root-clean chat startup.
+
+ADR impact: ADR 0011 records the shift from commit-boundary isolation to session-owned worktree isolation with local convergence.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `0ba0578`
+  Time UTC: 2026-06-16T16:37:48Z
+  Message: feat(shared): isolate chat sessions in worktrees
+  Summary: Implemented chat-owned worktrees for new chat sessions, deterministic root write protection, branch freshness reporting, local convergence workflow, ADR 0011, and smoke coverage for root-clean chat startup.
+  ADR impact: ADR 0011 records the shift from commit-boundary isolation to session-owned worktree isolation with local convergence.
 
 ## ADR Disposition
 
@@ -90,10 +107,10 @@ to session-owned worktree isolation with a local convergence lane.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T13:19:34Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T16:37:48Z
+Latest commit SHA: 0ba0578
+Chat duration: 11894s (00:03:18:14)
+Estimated tokens: 872 estimated from session log
 
 ## Notes
 
