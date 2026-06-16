@@ -77,6 +77,46 @@ info() {
   printf '%s: %s\n' "$1" "$2"
 }
 
+find_worktree_log_by_metadata() {
+  local grouped_parent="$1"
+  local candidate
+
+  if [ ! -d "$REPO_ROOT/$grouped_parent" ]; then
+    return 1
+  fi
+
+  while IFS= read -r candidate; do
+    if [ "$(chat_log_metadata_value "$REPO_ROOT/$candidate" "id")" = "$SESSION_ID" ] \
+      || [ "$(chat_log_metadata_value "$REPO_ROOT/$candidate" "branch")" = "$TARGET_BRANCH" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done < <(find "$REPO_ROOT/$grouped_parent" -mindepth 2 -maxdepth 2 -type f -name README.md \
+    | sed "s#^$REPO_ROOT/##" \
+    | sort)
+
+  return 1
+}
+
+find_branch_log_by_metadata() {
+  local grouped_parent="$1"
+  local candidate tmp_log
+
+  while IFS= read -r candidate; do
+    tmp_log="${tmp_dir}/candidate-log.md"
+    git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${candidate}" > "$tmp_log"
+    if [ "$(chat_log_metadata_value "$tmp_log" "id")" = "$SESSION_ID" ] \
+      || [ "$(chat_log_metadata_value "$tmp_log" "branch")" = "$TARGET_BRANCH" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done < <(git -C "$REPO_ROOT" ls-tree -r --name-only "$TARGET_BRANCH" -- "$grouped_parent" \
+    | awk '/\/README\.md$/ { print }' \
+    | sort)
+
+  return 1
+}
+
 case "$TARGET_BRANCH" in
   chat/*) ;;
   *)
@@ -121,11 +161,14 @@ if [ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]; then
 fi
 
 SESSION_ID="${TARGET_BRANCH#chat/}"
-GROUPED_LOG="$(chat_log_grouped_dir_for_session "$SESSION_ID")/README.md"
+GROUPED_DIR="$(chat_log_grouped_dir_for_session "$SESSION_ID")"
+GROUPED_PARENT="${GROUPED_DIR%/*}"
+GROUPED_LOG="${GROUPED_DIR}/README.md"
 FLAT_LOG="commitLogs/${SESSION_ID}/README.md"
 LOG_FILE="${tmp_dir}/session-log.md"
 LOG_SOURCE=""
 LOG_PATH=""
+metadata_log_path=""
 
 if git -C "$REPO_ROOT" cat-file -e "${TARGET_BRANCH}:${GROUPED_LOG}" 2>/dev/null; then
   git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${GROUPED_LOG}" > "$LOG_FILE"
@@ -135,6 +178,10 @@ elif git -C "$REPO_ROOT" cat-file -e "${TARGET_BRANCH}:${FLAT_LOG}" 2>/dev/null;
   git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${FLAT_LOG}" > "$LOG_FILE"
   LOG_SOURCE="branch"
   LOG_PATH="$FLAT_LOG"
+elif metadata_log_path="$(find_branch_log_by_metadata "$GROUPED_PARENT")"; then
+  git -C "$REPO_ROOT" show "${TARGET_BRANCH}:${metadata_log_path}" > "$LOG_FILE"
+  LOG_SOURCE="branch"
+  LOG_PATH="$metadata_log_path"
 elif [ -f "$REPO_ROOT/$GROUPED_LOG" ]; then
   cp "$REPO_ROOT/$GROUPED_LOG" "$LOG_FILE"
   LOG_SOURCE="worktree"
@@ -143,6 +190,10 @@ elif [ -f "$REPO_ROOT/$FLAT_LOG" ]; then
   cp "$REPO_ROOT/$FLAT_LOG" "$LOG_FILE"
   LOG_SOURCE="worktree"
   LOG_PATH="$FLAT_LOG"
+elif metadata_log_path="$(find_worktree_log_by_metadata "$GROUPED_PARENT")"; then
+  cp "$REPO_ROOT/$metadata_log_path" "$LOG_FILE"
+  LOG_SOURCE="worktree"
+  LOG_PATH="$metadata_log_path"
 else
   block "blocked-missing-log" \
     "session log is missing from root $BASE_BRANCH and target branch" \

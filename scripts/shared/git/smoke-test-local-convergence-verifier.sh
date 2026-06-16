@@ -152,6 +152,17 @@ branch="chat/$session"
 create_chat_branch_with_log "$repo" "$session"
 run_expect_state "$repo" "$branch" "eligible" "yes"
 
+repo="$(init_repo renamed-log)"
+session="2026-06-16-22-32-renamed-log"
+branch="chat/$session"
+create_chat_branch_with_log "$repo" "$session"
+worktree="$(canonical_worktree_path "$repo" "$branch")"
+git -C "$worktree" mv \
+  "commitLogs/2026/jun/16/$session" \
+  "commitLogs/2026/jun/16/2026-06-16-22-32-short-log-name"
+git -C "$worktree" commit -q -m "rename session log folder"
+run_expect_state "$repo" "$branch" "eligible" "yes"
+
 repo="$(init_repo behind)"
 session="2026-06-16-22-33-behind"
 branch="chat/$session"

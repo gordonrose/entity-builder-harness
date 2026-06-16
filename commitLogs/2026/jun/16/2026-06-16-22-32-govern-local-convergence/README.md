@@ -52,6 +52,9 @@ update harness to add governed approach to merging to local main when chat work 
 - The first patch attempt landed in the root integration worktree instead of
   this chat-owned worktree. Those root edits were removed, and the intended
   changes were applied in the chat-owned worktree.
+- Promotion preflight exposed that the verifier only checked the exact
+  session-id log folder and did not find renamed grouped session logs by
+  metadata.
 
 ## Decisions Made
 
@@ -87,6 +90,16 @@ Initial intent: update harness to add governed approach to merging to local main
   passed.
 - Verification run:
   `bash scripts/shared/harness/check-deterministic-process-drift.sh --paths .agentic/shared/workflows/local-convergence.md`
+  passed.
+
+### 2026-06-16T22:18:13Z - Renamed session log discovery fixed
+
+- Updated `scripts/shared/git/verify-local-convergence.sh` to discover renamed
+  grouped session logs on the target chat branch by matching session metadata.
+- Added a smoke test case for a branch whose session log folder was renamed
+  after creation.
+- Verification run:
+  `bash scripts/shared/git/smoke-test-local-convergence-verifier.sh`
   passed.
 
 
