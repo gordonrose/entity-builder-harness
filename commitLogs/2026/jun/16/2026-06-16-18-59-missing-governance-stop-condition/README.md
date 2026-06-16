@@ -49,6 +49,7 @@ Task: Add a repo-wide harness governance principle that missing governance is a 
 - Keep the router-level principle general rather than adding Git-specific recovery procedure.
 - Add a detailed harness standard for missing governance rather than a hook, because unexpectedness is judgment-heavy and hooks should be reserved for deterministic lifecycle triggers.
 - Wire the missing-governance standard into capability resolution and harness-change workflow discovery without duplicating the full rule.
+- Approved a one-off exception to merge this chat branch into local `main` even though local-convergence verification does not yet govern chat-branch-only session logs.
 
 ## Activity Log
 
@@ -67,6 +68,10 @@ Added `.agentic/harness/standards/missing-governance-stop-condition.md` and inde
 ### 2026-06-16T21:09:26Z - Wired standard into workflow discovery
 
 Updated `.agentic/shared/workflows/capability-resolution-workflow.md` and `.agentic/harness/workflows/change-harness.md` so agents know where to look when a required action is not governed by the selected workflow, gate, script, or standard.
+
+### 2026-06-16T21:31:14Z - One-off exception approved for local main merge
+
+User approved a one-off exception after local convergence intake found that `ensure-chat-worktree.sh <session-log>` cannot verify a session log that exists only on the chat branch before promotion to `main`. Follow-up harness work is needed to govern merge-to-main requests for chat-branch-only logs.
 
 
 ### 2026-06-16T20:45:29Z - Commit recorded
