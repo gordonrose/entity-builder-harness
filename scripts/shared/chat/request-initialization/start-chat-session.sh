@@ -143,28 +143,6 @@ Estimated tokens:
 - None recorded yet.
 EOF
 
-case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
-  apply)
-    echo "Cleaning up empty chat branches..."
-    bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
-    ;;
-  dry-run)
-    echo "Previewing empty chat branch cleanup..."
-    bash scripts/shared/git/cleanup-empty-chat-branches.sh --dry-run
-    ;;
-  0|false|no|skip)
-    echo "Skipping empty chat branch cleanup."
-    ;;
-  *)
-    echo "ERROR: invalid CHAT_CLEANUP_EMPTY_BRANCHES value: ${CHAT_CLEANUP_EMPTY_BRANCHES}" >&2
-    echo "Use apply, dry-run, skip, 0, false, or no." >&2
-    exit 2
-    ;;
-esac
-
-bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-git add "$LOG_FILE" commitLogs/README.md
-
 echo "Created branch: $BRANCH"
 echo "Created log: $LOG_FILE"
 
@@ -205,3 +183,25 @@ else
   echo "Paste this into Codex / Claude / Mistral:"
   echo "$FIRST_PROMPT"
 fi
+
+case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
+  apply)
+    echo "Cleaning up empty chat branches..."
+    bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
+    ;;
+  dry-run)
+    echo "Previewing empty chat branch cleanup..."
+    bash scripts/shared/git/cleanup-empty-chat-branches.sh --dry-run
+    ;;
+  0|false|no|skip)
+    echo "Skipping empty chat branch cleanup."
+    ;;
+  *)
+    echo "ERROR: invalid CHAT_CLEANUP_EMPTY_BRANCHES value: ${CHAT_CLEANUP_EMPTY_BRANCHES}" >&2
+    echo "Use apply, dry-run, skip, 0, false, or no." >&2
+    exit 2
+    ;;
+esac
+
+bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
+git add "$LOG_FILE" commitLogs/README.md
