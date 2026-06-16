@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T08:08:25Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T09:00:52Z
+latest_commit_sha: a3c2929
+chat_duration: 3147s (00:00:52:27)
+estimated_tokens: 956 estimated from session log
 -->
 
 ## Initial Intent
@@ -77,9 +77,26 @@ repository-relative paths can be mirrored from the active worktree into the
 isolated worktree and staged there. Updated the helper, docs, ADR, and smoke
 test to cover active-branch duplicate checkout and external-worktree refusal.
 
+
+### 2026-06-16T09:00:52Z - Commit recorded
+
+Commit: `a3c2929`
+
+Message: feat(shared): isolate session commit boundaries
+
+Summary: Implemented isolated reusable git worktrees for session commit-boundary commands, explicit active-path staging into the isolated worktree, shared workflow/checklist updates, ADR 0009, and smoke coverage.
+
+ADR impact: ADR 0009 records the isolated worktree commit-boundary architecture.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `a3c2929`
+  Time UTC: 2026-06-16T09:00:52Z
+  Message: feat(shared): isolate session commit boundaries
+  Summary: Implemented isolated reusable git worktrees for session commit-boundary commands, explicit active-path staging into the isolated worktree, shared workflow/checklist updates, ADR 0009, and smoke coverage.
+  ADR impact: ADR 0009 records the isolated worktree commit-boundary architecture.
 
 ## ADR Disposition
 
@@ -91,10 +108,10 @@ to isolated reusable worktrees, changing the harness git architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T08:08:25Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T09:00:52Z
+Latest commit SHA: a3c2929
+Chat duration: 3147s (00:00:52:27)
+Estimated tokens: 956 estimated from session log
 
 ## Notes
 
