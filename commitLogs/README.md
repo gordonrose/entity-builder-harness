@@ -11,10 +11,10 @@ Outliers are values more than 3 standard deviations from the mean for each metri
 | Valid chats | 13 |
 | Included chats | 13 |
 | Outliers excluded | 0 |
-| Total | 57334s (00:15:55:34) |
+| Total | 58663s (00:16:17:43) |
 | Min | 249s (00:00:04:09) |
 | Max | 17695s (00:04:54:55) |
-| Average | 4410s (00:01:13:30) |
+| Average | 4513s (00:01:15:13) |
 | Q1 | 1563s (00:00:26:03) |
 | Median | 2347s (00:00:39:07) |
 | Q3 | 3035s (00:00:50:35) |
@@ -26,10 +26,10 @@ Outliers are values more than 3 standard deviations from the mean for each metri
 | Valid chats | 13 |
 | Included chats | 13 |
 | Outliers excluded | 0 |
-| Total | 13361 |
+| Total | 13653 |
 | Min | 616 |
 | Max | 2147 |
-| Average | 1027.77 |
+| Average | 1050.23 |
 | Q1 | 762 |
-| Median | 872 |
+| Median | 875 |
 | Q3 | 1322 |

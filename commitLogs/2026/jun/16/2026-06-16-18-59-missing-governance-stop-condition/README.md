@@ -10,10 +10,10 @@ mode: implementation
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T17:59:09Z
-latest_commit_at_utc: 2026-06-16T20:45:29Z
-latest_commit_sha: 5b26b1b
-chat_duration: 9980s (00:02:46:20)
-estimated_tokens: 861 estimated from session log
+latest_commit_at_utc: 2026-06-16T21:07:38Z
+latest_commit_sha: 2b978eb
+chat_duration: 11309s (00:03:08:29)
+estimated_tokens: 1153 estimated from session log
 -->
 
 ## Initial Intent
@@ -74,6 +74,17 @@ Summary: Added a repo-wide missing-governance stop condition to AGENTS.md and re
 
 ADR impact: ADR 0012 accepted
 
+
+### 2026-06-16T21:07:38Z - Commit recorded
+
+Commit: `2b978eb`
+
+Message: Add missing governance standard
+
+Summary: Added a harness standard that defines missing governance, the required blocked response, examples, one-off exceptions, and hook guidance.
+
+ADR impact: ADR 0012 elaborated
+
 ## Commits
 
 
@@ -84,6 +95,13 @@ ADR impact: ADR 0012 accepted
   Summary: Added a repo-wide missing-governance stop condition to AGENTS.md and recorded ADR 0012 for the operating principle.
   ADR impact: ADR 0012 accepted
 
+
+- Commit: `2b978eb`
+  Time UTC: 2026-06-16T21:07:38Z
+  Message: Add missing governance standard
+  Summary: Added a harness standard that defines missing governance, the required blocked response, examples, one-off exceptions, and hook guidance.
+  ADR impact: ADR 0012 elaborated
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -93,10 +111,10 @@ Reason: This chat added a durable repo-wide agent operating rule and rejected or
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T17:59:09Z
-Latest commit at UTC: 2026-06-16T20:45:29Z
-Latest commit SHA: 5b26b1b
-Chat duration: 9980s (00:02:46:20)
-Estimated tokens: 861 estimated from session log
+Latest commit at UTC: 2026-06-16T21:07:38Z
+Latest commit SHA: 2b978eb
+Chat duration: 11309s (00:03:08:29)
+Estimated tokens: 1153 estimated from session log
 
 ## Notes
 
