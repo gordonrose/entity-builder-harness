@@ -77,10 +77,10 @@ if [ -z "$current_branch" ]; then
 fi
 
 if [ -z "$BASE_BRANCH" ]; then
-  if git show-ref --verify --quiet refs/heads/master; then
-    BASE_BRANCH="master"
-  elif git show-ref --verify --quiet refs/heads/main; then
+  if git show-ref --verify --quiet refs/heads/main; then
     BASE_BRANCH="main"
+  elif git show-ref --verify --quiet refs/heads/master; then
+    BASE_BRANCH="master"
   else
     echo "ERROR: could not infer base branch. Pass --base <branch>." >&2
     exit 1

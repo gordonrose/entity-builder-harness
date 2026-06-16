@@ -8,7 +8,7 @@ classify_mode() {
     *plan*|*proposal*|*architecture*|*approach*|*how\ should*|*how\ would*|*how\ do*)
       echo "planning"
       ;;
-    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*)
+    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*)
       echo "implementation"
       ;;
     *run*|*execute*|*use*|*apply*|*start*)
@@ -34,6 +34,11 @@ fi
 MODE="$(classify_mode)"
 
 case "$TASK" in
+  *default\ branch*|*base\ branch*|*master*|*origin/main*|*origin\ main*)
+    echo "Layer: shared"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/shared/workflows/change-shared-process.md"
+    ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
@@ -44,7 +49,7 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/education/workflows/mine-daily-learning-material.md"
     ;;
-  *chat*|*branch*|*branches*|*commit*|*worktree*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
+  *chat*|*branch*|*branches*|*default\ branch*|*base\ branch*|*master*|*commit*|*worktree*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
     echo "Layer: shared"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/shared/workflows/change-shared-process.md"
