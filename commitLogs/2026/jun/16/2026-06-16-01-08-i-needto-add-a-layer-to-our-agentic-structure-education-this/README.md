@@ -9,10 +9,10 @@ mode: implementation
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T00:08:49Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T00:39:44Z
+latest_commit_sha: e790d24
+chat_duration: 1855s (00:00:30:55)
+estimated_tokens: 762 estimated from session log
 -->
 
 ## Initial Intent
@@ -71,9 +71,26 @@ Initial intent: i needto add a layer to our agentic structure: education - this 
 - Ran `bash scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh`.
 - Result: classifier fixtures passed.
 
+
+### 2026-06-16T00:39:44Z - Commit recorded
+
+Commit: `e790d24`
+
+Message: Add education layer to agentic harness
+
+Summary: Added a first-class education layer with mining, drafting, calibration, source-backed improvement artifacts, routing/classifier support, fixtures, and ADR 0008.
+
+ADR impact: ADR 0008 records the new education layer boundary and quality loop.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `e790d24`
+  Time UTC: 2026-06-16T00:39:44Z
+  Message: Add education layer to agentic harness
+  Summary: Added a first-class education layer with mining, drafting, calibration, source-backed improvement artifacts, routing/classifier support, fixtures, and ADR 0008.
+  ADR impact: ADR 0008 records the new education layer boundary and quality loop.
 
 ## ADR Disposition
 
@@ -85,10 +102,10 @@ future workflow selection.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T00:08:49Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T00:39:44Z
+Latest commit SHA: e790d24
+Chat duration: 1855s (00:00:30:55)
+Estimated tokens: 762 estimated from session log
 
 ## Notes
 
