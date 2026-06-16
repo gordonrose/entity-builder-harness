@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T21:32:52Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T22:15:18Z
+latest_commit_sha: 519a08a
+chat_duration: 2546s (00:00:42:26)
+estimated_tokens: 1048 estimated from session log
 -->
 
 ## Initial Intent
@@ -89,9 +89,26 @@ Initial intent: update harness to add governed approach to merging to local main
   `bash scripts/shared/harness/check-deterministic-process-drift.sh --paths .agentic/shared/workflows/local-convergence.md`
   passed.
 
+
+### 2026-06-16T22:15:18Z - Commit recorded
+
+Commit: `519a08a`
+
+Message: Add governed local convergence verifier
+
+Summary: Added a read-only verifier and workflow recovery rules for governed local convergence.
+
+ADR impact: No ADR needed; this codifies existing local convergence and missing-governance policy.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `519a08a`
+  Time UTC: 2026-06-16T22:15:18Z
+  Message: Add governed local convergence verifier
+  Summary: Added a read-only verifier and workflow recovery rules for governed local convergence.
+  ADR impact: No ADR needed; this codifies existing local convergence and missing-governance policy.
 
 ## ADR Disposition
 
@@ -105,10 +122,10 @@ chat-worktree decisions.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:32:52Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T22:15:18Z
+Latest commit SHA: 519a08a
+Chat duration: 2546s (00:00:42:26)
+Estimated tokens: 1048 estimated from session log
 
 ## Notes
 
