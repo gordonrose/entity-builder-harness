@@ -50,6 +50,22 @@ Avoid:
 - anti-hype scolding
 - empty positivity
 - flattering the reader without teaching them anything
+- unexplained technical or repo-specific vocabulary before the reader has a
+  reason to care
+- examples that depend on an internal setting the reader has not been helped to
+  imagine
+
+## Context Rule
+
+Assume the primary reader does not know repo, software, or architecture-process
+language. They may know AI buzzwords, but not the mechanics underneath.
+
+Before using terms like commit, branch, ADR, harness, log, workflow, or gate,
+translate the human situation first. If the human situation cannot be explained
+plainly, do not use the term yet.
+
+The reader should never feel that the piece has suddenly walked into a room
+where everyone else already knows the furniture.
 
 ## Reader Outcome
 

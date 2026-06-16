@@ -1,74 +1,131 @@
 # The Next AI Advantage Is Evidence
 
-AI fluency is spreading quickly. More people can name the tools, describe the
-use cases, and talk comfortably about agents, copilots, prompts, workflows, and
-automation.
+Imagine a team using AI to clean up a one-page recommendation: launch the
+customer pilot next month, or wait.
 
-That is useful. It is also only the first layer.
+In the first version, the warning is plain. Support is thin. The customer is
+high profile. A bad rollout would be expensive to unwind. After a few rounds of
+prompting, the note reads better. The warning has become a sentence near the
+bottom. The recommendation sounds calmer. By the time it reaches the meeting,
+everyone can see what it says.
 
-The next advantage is not sounding fluent around AI. It is knowing what the
-system knew, what it assumed, and what evidence it had when it acted.
+No one can quite say why it now says that.
 
-I ran into this in a small way while building an agentic harness for my own
-work. The goal seemed straightforward: before committing a harness change, the
-system should ask whether the decision was important enough to record as an
-architecture decision.
+That is the awkward version of AI progress. The work looks more finished, but
+the person presenting it has less of the path in their hands. If the decision
+is challenged, they are not defending only the recommendation. They are
+defending the vanished conversation that made the recommendation feel right.
 
-That sounds sensible. It also sounds more mature than "let the chat scroll away
-and hope everyone remembers why the change happened."
+I ran into a small version of that problem while working on the rules around my
+own AI assistant.
 
-But the first version of the idea had a problem. The chat log was too thin. It
-recorded that a session started, a branch was created, and a commit log existed.
-It did not reliably preserve the questions, tradeoffs, decisions, mistakes, or
-reasons that would let a future agent decide whether an ADR was needed.
+The change I wanted sounded sensible. Before I finished a piece of work, I
+wanted the assistant to pause and ask whether any of the decisions from the
+conversation deserved to be saved for later. If we had changed direction,
+rejected an option, or made a rule that future-me would otherwise have to
+rediscover, the assistant should catch it before I marked the work done and
+moved on.
 
-So the problem was not really "should this change have an ADR?"
+The weakness showed up as soon as I asked what the assistant would be looking
+at.
 
-The problem was: "has the system preserved enough evidence to make that
-judgment responsibly?"
+The assistant could not judge whether the conversation contained a decision
+worth saving unless the conversation had been recorded well enough in the first
+place. When I looked at the record it would have to rely on, it mostly knew
+that the session had started, that a branch had been created, and that a
+session note existed. It did not reliably know the question I had asked, the
+issue that changed the plan, the decision we made, or the reason the decision
+mattered.
 
-That distinction matters far beyond one repo.
+So the assistant would have been doing something that looked mature from the
+outside. It would have checked for durable decisions. It might even have given
+a neat answer. But underneath that neatness, it would have been judging from a
+record that had already lost the argument.
 
-A lot of AI work currently rewards fluency. Can you name the tools? Can you
-describe the direction of travel? Can you produce the impressive demo? Can you
-say "agentic" without looking briefly uncomfortable?
+That is why the little failure travelled beyond my own setup. It was not
+really a software problem. It was a working-with-AI problem.
 
-All of that has its place. Fluency helps people enter the conversation.
+AI makes it easy to arrive at a cleaner final version. A sharper memo. A more
+confident plan. A tidier summary. A recommendation with fewer ragged edges. In
+many cases, that is a real improvement. Nobody should pretend the blank page
+was nobler.
 
-But systems that matter need more than fluent outputs. They need traces. They
-need context. They need records of what changed and why. They need to show
-their working, not in a school-exam sense, but in an organizational-trust sense.
+But the final version is not the whole value of the work. Sometimes the value
+is in the question that made you change course. Sometimes it is in the risk
+that sounded minor until you tried to write around it. Sometimes it is in the
+option you rejected because it would have made the next person pay for your
+speed.
 
-In the harness, that meant structured session logs. Questions asked. Issues
-raised. Decisions made. Commit summaries. ADR disposition. The boring-looking
-material that turns out not to be boring when someone later asks, "why did we
-do this?"
+If those things vanish, AI has not only helped you move faster. It has also
+made it easier to mistake polish for understanding.
 
-This is where AI fluency starts growing up.
+The repair was plain: make the conversation leave better tracks while it was
+happening.
 
-The more interesting teams will not be the ones with the most confident
-language around AI. They will be the ones building systems that can explain
-their own context. Not perfectly. Not magically. But concretely enough that a
-person can inspect the chain between intent, evidence, judgment, and action.
+Instead of treating an AI conversation as something that happened and then
+evaporated, the little harness of rules and scripts around my assistant now
+expects the record to capture the initial intent, the questions asked, the
+issues raised, the decisions made, the work completed, and whether any decision
+needs a durable explanation. In software teams, that kind of explanation is
+sometimes called an architecture decision record. The name is stiff, but the
+idea is ordinary: when a choice will matter later, write down what changed and
+why, so the next person does not have to reconstruct it from the debris.
 
-That is a different kind of confidence.
+The first lesson was simple: do not ask AI to judge from evidence you never
+kept.
 
-It does not require pretending the system understands more than it does. It
-requires arranging the work so that understanding has somewhere to live.
+Then the work widened.
 
-In that sense, evidence is becoming a product feature, a management habit, and
-a design principle at the same time.
+Once the sessions were recorded properly, they stopped being isolated chats.
+They became a body of work. That made a second change possible: grouping the
+sessions so they could be reviewed together, adding readable durations, and
+estimating token use as a rough signal of how much AI interaction each session
+consumed.
 
-The future of AI work will still be fast. It will still be impressive. It will
-still produce moments that feel slightly like someone has moved the furniture
-while you were out of the room.
+The numbers are not magic. A long session is not automatically good. A short
+one is not automatically elegant. Token counts do not tell you whether the
+thinking was any good. But they give you something better than vibes. You can
+see which kinds of work take longer than expected. You can spot the sessions
+that keep reopening the same question. You can notice when a supposedly simple
+change keeps producing decisions that deserve a permanent note.
 
-But the best version of that future will leave receipts.
+At that point, the record stopped being only a place to look things up.
 
-## Source Notes
+Without a record, each conversation has to justify itself by the thing it
+produces at the end. With a record, the conversation can also teach you
+something afterward. It can show why a decision changed. It can reveal where
+the work became more expensive than expected. It can become the raw material
+for a better rule, a teaching note, a lesson plan, or a sharper article than
+the one you would have written from memory.
 
-This article is based on the June 15, 2026 harness work that introduced
-structured session logs and commit-time ADR disposition:
+This matters most when AI stops being a novelty and becomes part of ordinary
+work.
 
-- `commitLogs/2026/jun/15/2026-06-15-21-27-i-d-like-to-update-my-harness-so-that-whenever-i-commit-some/README.md`
-- `docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md`
+The early thrill was production. You could ask for a plan and get a plan. You
+could ask for a summary and get something that looked like a summary. You could
+ask for a draft and avoid staring at a blank page for an hour. That thrill is
+still real, and slightly absurd in the way genuinely helpful tools often are.
+
+Repeated use asks for a different standard. It is not enough to know that AI
+helped you make something. The work has to leave behind enough of itself to be
+explained, improved, and trusted later.
+
+That is what I mean by evidence.
+
+Not a giant archive of transcripts. Not a theatrical pile of saved files. Not a
+managerial fantasy in which every conversation becomes a compliance artifact.
+
+Evidence is the part of the work that lets a person come back later and see how
+the conclusion was reached. What was asked. What changed. What was rejected.
+What cost more than expected. What should become a rule next time.
+
+The attractive version of AI fluency is speed. It always has been. Speed is
+easy to see, easy to sell, and easy to confuse with progress.
+
+The stronger version is work that compounds. A conversation becomes a record. A
+record becomes a decision note. A cluster of sessions becomes a pattern. A
+pattern becomes a lesson. The next person, including your future self, gets to
+start from more than a polished answer and a shrug.
+
+That is the next advantage I trust more than speed: AI work that leaves enough
+behind to make the next decision better.

@@ -12,3 +12,7 @@ feedback. Put those in `.agentic/education/profiles/` or
 ## Records
 
 - [0001 Orient AI Hype Audiences Without Humiliation](0001-orient-ai-hype-audiences-without-humiliation.md)
+- [0002 Use Article Editor Agent Before Public Article Drafting](0002-use-article-editor-agent-before-public-article-drafting.md)
+- [0003 Separate Article Editor And Writer Agents](0003-separate-article-editor-and-writer-agents.md)
+- [0004 Require Source Packets For Public Articles](0004-require-source-packets-for-public-articles.md)
+- [0005 Require Reader-World Research For Public Articles](0005-require-reader-world-research-for-public-articles.md)
