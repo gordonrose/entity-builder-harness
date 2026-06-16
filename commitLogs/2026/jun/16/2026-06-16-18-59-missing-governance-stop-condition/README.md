@@ -48,6 +48,7 @@ Task: Add a repo-wide harness governance principle that missing governance is a 
 - Add the missing-governance principle as a short always-loaded safety invariant in `AGENTS.md`.
 - Keep the router-level principle general rather than adding Git-specific recovery procedure.
 - Add a detailed harness standard for missing governance rather than a hook, because unexpectedness is judgment-heavy and hooks should be reserved for deterministic lifecycle triggers.
+- Wire the missing-governance standard into capability resolution and harness-change workflow discovery without duplicating the full rule.
 
 ## Activity Log
 
@@ -62,6 +63,10 @@ Updated `AGENTS.md` so missing governance is an explicit stop condition. Ran tar
 ### 2026-06-16T21:01:24Z - Added detailed harness standard
 
 Added `.agentic/harness/standards/missing-governance-stop-condition.md` and indexed it from `.agentic/harness/README.md`. The standard defines missing governance, the stop response, examples, one-off exception logging, and when hooks are appropriate.
+
+### 2026-06-16T21:09:26Z - Wired standard into workflow discovery
+
+Updated `.agentic/shared/workflows/capability-resolution-workflow.md` and `.agentic/harness/workflows/change-harness.md` so agents know where to look when a required action is not governed by the selected workflow, gate, script, or standard.
 
 
 ### 2026-06-16T20:45:29Z - Commit recorded
