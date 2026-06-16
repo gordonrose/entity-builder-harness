@@ -5,6 +5,8 @@ AGENTIC_ENV_FILE=".agentic/env.local"
 
 # shellcheck source=../session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../chat-worktree-paths.sh
+source "scripts/shared/chat/chat-worktree-paths.sh"
 
 CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET="no"
 CHAT_CLEANUP_EMPTY_BRANCHES_SHELL_VALUE="${CHAT_CLEANUP_EMPTY_BRANCHES:-}"
@@ -48,6 +50,18 @@ SLUG="$(echo "$QUESTION" \
 BRANCH="chat/${STAMP}-${SLUG}"
 LOG_DIR="$(chat_log_grouped_dir_for_session "${STAMP}-${SLUG}")"
 LOG_FILE="${LOG_DIR}/README.md"
+REPO_ROOT="$(chat_worktree_repo_root)"
+WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$BRANCH")"
+BASE_BRANCH="main"
+
+if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
+  BASE_BRANCH="$(git branch --show-current)"
+fi
+
+if [ -z "${BASE_BRANCH// }" ]; then
+  echo "ERROR: could not determine a base branch for the chat branch." >&2
+  exit 1
+fi
 
 CLASSIFICATION="$(bash scripts/shared/chat/request-initialization/classify-task.sh "$QUESTION" || true)"
 LAYER="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Layer: //p')"
@@ -66,17 +80,20 @@ fi
 
 git status --short
 
-git switch -c "$BRANCH"
+git branch "$BRANCH" "$BASE_BRANCH"
+mkdir -p "${WORKTREE_PATH%/*}"
+git worktree add --quiet "$WORKTREE_PATH" "$BRANCH"
 
-mkdir -p "$LOG_DIR"
+mkdir -p "$WORKTREE_PATH/$LOG_DIR"
 
-cat > "$LOG_FILE" <<EOF
+cat > "$WORKTREE_PATH/$LOG_FILE" <<EOF
 # Chat Session: ${STAMP} ${SLUG}
 
 <!-- agentic-session
 id: ${STAMP}-${SLUG}
 task: ${QUESTION}
 branch: ${BRANCH}
+worktree: ${WORKTREE_PATH}
 layer: ${LAYER}
 mode: ${MODE}
 workflow: ${WORKFLOW}
@@ -96,10 +113,15 @@ ${QUESTION}
 
 \`${BRANCH}\`
 
+## Worktree
+
+\`${WORKTREE_PATH}\`
+
 ## Session Log
 
 - Session started.
 - Branch created.
+- Chat-owned worktree created.
 - Commit log initialized.
 
 ## Questions Asked
@@ -145,9 +167,11 @@ EOF
 
 echo "Created branch: $BRANCH"
 echo "Created log: $LOG_FILE"
+echo "Created worktree: $WORKTREE_PATH"
 
 FIRST_PROMPT="Task: ${QUESTION}
 Session log: ${LOG_FILE}
+Chat worktree: ${WORKTREE_PATH}
 Layer: ${LAYER}
 Mode: ${MODE}
 Workflow: ${WORKFLOW}
@@ -165,14 +189,22 @@ Default mode: read-only.
 Do not create, edit, move, delete, stage, commit, format, or patch files unless I explicitly give permission in the current chat.
 Until then, inspect and propose only.
 
-For approved commit-boundary operations, use scripts/shared/git/with-chat-branch.sh with this session log to run the command in an isolated reusable worktree for this chat's branch without asking for separate branch-switch permission.
+When write permission is granted, run task commands from the chat worktree above, not from the root integration worktree.
+Before writing, run:
+bash scripts/shared/git/check-write-location.sh
+
+For approved commit-boundary operations, use this chat-owned worktree. Do not write task changes directly in the root integration worktree.
 
 After write permission is granted, rename this chat's commitLog folder to a concise summary with:
 bash scripts/shared/chat/rename-current-chat-log-folder.sh \"<short-summary>\"
 
 Do not commit without my explicit approval."
 
-if command -v clip.exe >/dev/null 2>&1; then
+if [ "${CHAT_COPY_PROMPT:-copy}" = "skip" ]; then
+  echo
+  echo "Paste this into Codex / Claude / Mistral:"
+  echo "$FIRST_PROMPT"
+elif command -v clip.exe >/dev/null 2>&1; then
   printf '%s' "$FIRST_PROMPT" | clip.exe
   echo "Copied first agent prompt to clipboard."
 elif command -v xclip >/dev/null 2>&1; then
@@ -203,5 +235,5 @@ case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
     ;;
 esac
 
-bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-git add "$LOG_FILE" commitLogs/README.md
+(cd "$WORKTREE_PATH" && bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null)
+git -C "$WORKTREE_PATH" add "$LOG_FILE" commitLogs/README.md

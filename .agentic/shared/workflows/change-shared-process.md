@@ -32,69 +32,40 @@ Do not edit files while blocked.
 - Do not create a task commit, push, delete branches, rewrite history, discard
   work, overwrite work, or perform destructive actions without explicit user
   approval.
-- For commit preparation, staging for approved commits, task commits after
-  explicit approval, commit recording, and narrow session-bookkeeping
-  checkpoint commits, agents must run commit-boundary commands in an isolated
-  worktree for the branch recorded in the current chat session log.
+- Chat task work must run in the chat-owned worktree recorded in the current
+  session log. The root worktree is the local integration console and must not
+  receive task edits, staging, formatting, or commits.
 - After explicit write permission for the chat, routine session bookkeeping may
   be staged without another prompt when limited to the current chat session log
   and `commitLogs/README.md`.
 - Preserve unrelated user changes in a dirty worktree.
 - Before any commit, complete the shared before-commit checklist.
 
-## Isolated Commit Worktree
+## Chat-Owned Worktree
 
-Wrap approved commit-boundary commands with the session branch helper:
-
-```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- <command> [args...]
-```
-
-The helper reads the target branch from the session log, verifies that it names
-a local `chat/*` branch, creates or reuses a deterministic isolated worktree
-under `${AGENTIC_CHAT_WORKTREE_ROOT:-/tmp/agentic-chat-worktrees/...}`, and runs
-the command there. It does not switch, stage, clean, or discard anything in the
-active user worktree.
-
-<!-- deterministic-check: allow reason="with-chat-branch.sh enforces these stop conditions; workflow prose summarizes the human policy" -->
-Reuse is deterministic: the same repo path and branch map to the same isolated
-worktree path. The helper reuses that worktree when it already exists and stops
-if the path is not a worktree, belongs to a different repository, or is checked
-out on a different branch. If the active user worktree is already on the target
-session branch, the helper may create the isolated worktree with Git's duplicate
-checkout force flag; it must still leave active files and index state alone. It
-also stops if the session branch is missing, non-local, not under `chat/*`,
-already checked out outside the active and isolated paths, or the wrapped
-command fails.
-
-Cleanup is manual and explicit. The helper leaves the isolated worktree in
-place so approved staging and commit commands can operate across multiple
-commit-boundary steps. Do not delete or prune isolated worktrees as part of this
-workflow unless the user explicitly approves that cleanup.
-
-This authorization is limited to commit-boundary operations. It does not
-authorize pushes, merges, rebases, branch deletion, history rewrite, discarding
-work, or destructive actions.
-
-## Staging Approved Paths
-
-After explicit approval to stage paths for a task commit, mirror only those
-approved paths into the isolated worktree:
+Before writing, run:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/stage-active-worktree-paths.sh <path>...
+bash scripts/shared/git/check-write-location.sh
 ```
 
-This stages the named paths in the isolated worktree from the active worktree.
-Use repository-relative paths only. Do not use broad pathspecs when unrelated
-work is present.
+<!-- deterministic-check: allow reason="ensure-chat-worktree.sh enforces worktree creation and verification; workflow states when agents should invoke it" -->
+If a session log exists but its worktree is missing, recreate or verify it with:
+
+```bash
+bash scripts/shared/chat/ensure-chat-worktree.sh <session-log>
+```
+
+The chat-owned worktree has its own files and index. Stage only approved
+repository-relative paths inside that worktree. The root worktree remains the
+local convergence console.
 
 ## Prerequisite Branch State
 
 Run:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/check-commit-prerequisites.sh
+bash scripts/shared/git/check-commit-prerequisites.sh
 ```
 
 <!-- deterministic-check: allow reason="requires human approval before merge or cherry-pick repair" -->
@@ -110,7 +81,7 @@ Do not bypass the gate just because it is missing on the current branch.
 For commit-gate scope, run:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
+bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
 ```
 
 For broader audits, run the same script with `--commit <sha>`, `--paths
@@ -125,7 +96,7 @@ for approval. Do not rewrite prose automatically.
 Run:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/check-commitlog-deletions.sh
+bash scripts/shared/git/check-commitlog-deletions.sh
 ```
 
 Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete
@@ -138,7 +109,7 @@ set before committing.
 Run:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/prepare-chat-session-before-commit.sh
+bash scripts/shared/git/prepare-chat-session-before-commit.sh
 ```
 
 This verifies that the session log records decisions and an ADR disposition,
@@ -151,7 +122,7 @@ Do not commit if the preparation gate fails.
 Run:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
 ```
 
 This appends the commit to the session log and updates the rolling
@@ -164,7 +135,7 @@ the prior chat write permission authorizes creating a session-log checkpoint
 commit without another prompt:
 
 ```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->

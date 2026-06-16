@@ -17,6 +17,7 @@ Safety:
 - Dry-run is the default.
 - --apply is required to delete branches or commitLogs.
 - The current branch is never deleted.
+- Branches checked out in any worktree are never deleted by this script.
 - Only chat/* branches are considered.
 - A branch is empty when it has no commits beyond the base branch.
 - commitLogs/<yyyy>/<mmm>/<dd>/<session> or legacy commitLogs/<session> is
@@ -147,6 +148,13 @@ while IFS= read -r branch; do
 
   if [ "$branch" = "$current_branch" ]; then
     echo "SKIP current branch: $branch"
+    skipped_count=$((skipped_count + 1))
+    continue
+  fi
+
+  if git worktree list --porcelain \
+    | awk -v branch="refs/heads/${branch}" '/^branch / && substr($0, 8) == branch { found = 1 } END { exit found ? 0 : 1 }'; then
+    echo "SKIP checked-out worktree branch: $branch"
     skipped_count=$((skipped_count + 1))
     continue
   fi
