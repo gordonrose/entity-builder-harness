@@ -20,6 +20,8 @@ layers:
       - task changes chat session metadata or session logs
       - task changes chat-owned worktree creation or cleanup
       - task changes chat branch refresh from main
+      - task changes chat commit or checkpoint flow
+      - task changes promotion from chat branch to main
       - task changes chat closeout, chat shortcuts, or chat reporting
       - task changes chat lifecycle scripts or compatibility workflows
     workflow_index: .agentic/00.chat/workflows/README.md

@@ -73,6 +73,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Route chat lifecycle to 00.chat
   Rationale: AGENTS.md and routing policy now treat .agentic/00.chat as the owner for chat lifecycle while .agentic/shared remains cross-layer process and compatibility workflow space.
 
+
+- Decision: Add concrete 00.chat workflow entrypoints
+  Rationale: The chat layer now has workflow files for start, refresh, commit, promote, cleanup, and reporting; each delegates to compatibility paths until a future migration promotes it to full implementation.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -162,6 +166,13 @@ Message: Route chat lifecycle to chat layer
 Summary: Adds the chat layer to routing, names .agentic/00.chat as chat lifecycle owner, and reframes shared workflows as cross-layer compatibility space.
 
 ADR impact: ADR 0013 covers the chat layer ownership decision.
+
+
+### 2026-06-17T14:31:56Z - Decision
+
+Decision: Add concrete 00.chat workflow entrypoints
+
+Rationale: The chat layer now has workflow files for start, refresh, commit, promote, cleanup, and reporting; each delegates to compatibility paths until a future migration promotes it to full implementation.
 
 ## Commits
 
