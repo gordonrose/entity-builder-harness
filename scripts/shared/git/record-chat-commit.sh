@@ -198,6 +198,4 @@ awk \
 
 mv "$tmp" "$LOG_FILE"
 
-bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-
 echo "Recorded chat commit: $COMMIT_SHA"

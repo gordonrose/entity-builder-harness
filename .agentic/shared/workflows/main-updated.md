@@ -99,45 +99,12 @@ The classifier reports state; the workflow decides what is allowed.
 - `clean`: the active chat worktree can use the normal refresh or preflight
   flow.
 - `current-session-bookkeeping`: dirty paths are limited to the current chat
-  session log and `commitLogs/README.md`. Preserve the session log. If the
-  incoming `main` overlap includes the current session log, stop.
-- `generated-commitlog-summary`: only `commitLogs/README.md` is dirty, and it
-  matches `bash scripts/shared/chat/generate-commit-log-summary.sh --check`.
-  This derived file may be restored before refresh and regenerated after
-  refresh if the user approves that recovery.
+  session log. Preserve the session log. If the incoming `main` overlap
+  includes the current session log, stop.
 - `repo-work`: dirty paths include normal repository work. Create a governed
   checkpoint commit before refresh if the user approves. Do not stash by
   default.
 - `unsupported-dirty`: stop. The workflow does not own this recovery.
-
-## Generated Summary Recovery
-
-Use this only when the classifier reports `generated-commitlog-summary`.
-
-1. Record the classifier output in the session log.
-2. Verify the aggregate summary:
-
-   ```bash
-   bash scripts/shared/chat/generate-commit-log-summary.sh --check
-   ```
-
-3. After explicit approval, restore only the generated summary:
-
-   ```bash
-   git restore -- commitLogs/README.md
-   ```
-
-4. Refresh from `main` using the normal or preflight flow.
-5. Regenerate the summary:
-
-   ```bash
-   bash scripts/shared/chat/generate-commit-log-summary.sh
-   ```
-
-6. Re-run the classifier and record the result.
-
-Do not use this path for session logs, source files, docs, scripts, workflow
-files, tests, or unknown generated-looking files.
 
 ## Checkpoint And Preflight Refresh
 

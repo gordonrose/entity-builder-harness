@@ -26,7 +26,6 @@ mkdir -p \
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shared/chat/chat-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/shared/chat/ensure-chat-worktree.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/generate-commit-log-summary.sh" "$REPO/scripts/shared/chat/generate-commit-log-summary.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/classify-task.sh" "$REPO/scripts/shared/chat/request-initialization/classify-task.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/start-chat-session.sh" "$REPO/scripts/shared/chat/request-initialization/start-chat-session.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/cleanup-empty-chat-branches.sh" "$REPO/scripts/shared/git/cleanup-empty-chat-branches.sh"

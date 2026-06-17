@@ -32,31 +32,28 @@ EOF
 
 (
   cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-  bash scripts/shared/chat/generate-commit-log-summary.sh --check >/dev/null
-  bash scripts/shared/chat/generate-commit-log-summary.sh --print > "$TMP_ROOT/printed.md"
+  bash scripts/shared/chat/generate-commit-log-summary.sh > "$TMP_ROOT/printed.md"
+  bash scripts/shared/chat/generate-commit-log-summary.sh --output "$TMP_ROOT/written.md" >/dev/null
 )
 
-if ! cmp -s "$REPO/commitLogs/README.md" "$TMP_ROOT/printed.md"; then
-  fail "--print output did not match written summary"
+if ! cmp -s "$TMP_ROOT/written.md" "$TMP_ROOT/printed.md"; then
+  fail "printed output did not match explicit output file"
 fi
-
-printf '\nmanual drift\n' >> "$REPO/commitLogs/README.md"
 
 set +e
 (
   cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh --check
-) >/dev/null 2>"$TMP_ROOT/check.err"
-CHECK_STATUS="$?"
+  bash scripts/shared/chat/generate-commit-log-summary.sh --output commitLogs/README.md
+) >/dev/null 2>"$TMP_ROOT/blocked.err"
+BLOCKED_STATUS="$?"
 set -e
 
-if [ "$CHECK_STATUS" -eq 0 ]; then
-  fail "--check allowed a drifted summary"
+if [ "$BLOCKED_STATUS" -eq 0 ]; then
+  fail "script allowed writing commitLogs/README.md"
 fi
 
-if ! grep -q "is not up to date" "$TMP_ROOT/check.err"; then
-  fail "--check did not explain drift"
+if ! grep -q "not maintained" "$TMP_ROOT/blocked.err"; then
+  fail "script did not explain retired aggregate path"
 fi
 
 echo "commit log summary smoke test passed."

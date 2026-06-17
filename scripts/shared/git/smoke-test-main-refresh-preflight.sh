@@ -61,7 +61,7 @@ EOF
 
 (
   cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
+  bash scripts/shared/chat/generate-commit-log-summary.sh --output "$TMP_ROOT/base-summary.md" >/dev/null
 )
 
 git -C "$REPO" add .

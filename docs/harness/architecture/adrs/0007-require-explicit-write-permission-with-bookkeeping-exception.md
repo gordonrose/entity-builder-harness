@@ -8,7 +8,7 @@ Date: 2026-06-16
 The harness is designed for collaborative work in a shared repository. Agents
 often need to inspect files before the user has decided whether to authorize
 changes. At the same time, chat sessions maintain durable bookkeeping in the
-current session log and aggregate commit-log summary.
+current session log.
 
 Requiring explicit approval for every routine bookkeeping update creates noisy
 repeat prompts after the user has already granted write permission for the
@@ -31,7 +31,6 @@ bookkeeping may be staged and checkpointed without another prompt only when it
 is limited to:
 
 - the current chat session log
-- `commitLogs/README.md`
 
 Task commits still require explicit user approval. Destructive git operations,
 branch deletion, history rewrites, pushes, discarding work, and overwriting work
@@ -47,5 +46,4 @@ while preserving a strict boundary around code, process, and git history
 changes.
 
 The exception is intentionally small. If future bookkeeping expands beyond the
-current session log and aggregate summary, the allowed scope must be revisited
-instead of assumed.
+current session log, the allowed scope must be revisited instead of assumed.

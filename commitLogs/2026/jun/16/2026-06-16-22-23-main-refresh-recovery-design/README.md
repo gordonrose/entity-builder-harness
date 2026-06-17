@@ -65,6 +65,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Conflict resolution remains blocked outside governed classes
   Rationale: The harness can now govern clean refreshes, generated summary recovery, checkpointed work, preflight promotion, and later cleanup; LLM or automatic resolution of normal repo conflicts remains missing governance and should stop.
 
+
+- Decision: Create 00.chat layer and retire tracked aggregate summary
+  Rationale: Chat lifecycle governance should move into .agentic/00.chat over time, and commitLogs/README.md should not be maintained as a tracked generated artifact; session summaries are generated on request from source session logs.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -110,6 +114,22 @@ Summary: Adds dirty-state classification, generated-summary verification, prefli
 
 ADR impact: No new ADR; implements the planned main-updated workflow hardening.
 
+
+### 2026-06-17T14:17:14Z - Decision
+
+Decision: Create 00.chat layer and retire tracked aggregate summary
+
+Rationale: Chat lifecycle governance should move into .agentic/00.chat over time, and commitLogs/README.md should not be maintained as a tracked generated artifact; session summaries are generated on request from source session logs.
+
+
+### 2026-06-17T14:17:14Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+
+Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggregate summary decision.
+
 ## Commits
 
 
@@ -122,9 +142,9 @@ ADR impact: No new ADR; implements the planned main-updated workflow hardening.
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path:
-Reason: This updates the existing main-updated workflow and scripts to make the already-discussed recovery strategy executable; no new cross-cutting architecture decision beyond the workflow change is introduced.
+ADR needed: yes
+ADR path: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggregate summary decision.
 
 ## Session Metrics
 

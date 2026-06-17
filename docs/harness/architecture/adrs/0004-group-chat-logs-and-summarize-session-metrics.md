@@ -1,6 +1,6 @@
 # 0004 Group Chat Logs And Summarize Session Metrics
 
-Status: accepted
+Status: superseded by ADR 0013
 Date: 2026-06-15
 
 ## Context
@@ -24,16 +24,15 @@ Session-log scripts resolve both grouped logs and legacy flat logs so older
 branches remain readable during transitions. Chat duration is stored as raw
 seconds plus `dd:hh:mm:ss`, for example `694s (00:00:11:34)`.
 
-The harness maintains `commitLogs/README.md` with aggregate chat duration and
-token consumption statistics. Metrics exclude values more than 3 standard
-deviations from the mean for that metric, and the summary records how many
-outliers were excluded.
+Superseded: ADR 0013 stops maintaining `commitLogs/README.md` as a tracked
+generated artifact. Aggregate chat duration and token consumption statistics
+are now generated on request from the individual session logs.
 
 ## Consequences
 
 Commit logs become easier to browse as history grows, and future scripts have a
-single resolver for session-log paths. The aggregate summary gives quick process
-signals without requiring agents to manually inspect every session log.
+single resolver for session-log paths.
 
-The checkpoint flow may include both the current session log and
-`commitLogs/README.md` because recording a commit can update both files.
+The aggregate summary decision in this ADR was later reversed because the
+tracked generated file created merge noise and was less useful than on-demand
+reporting.

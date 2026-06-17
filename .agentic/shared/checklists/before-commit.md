@@ -94,8 +94,8 @@ bash scripts/shared/git/checkpoint-chat-session-log.sh
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
 This commit must contain only the current chat session log and
-`commitLogs/README.md`. Stop and ask if any other path is staged, unstaged, or
-would be committed.
+no other paths. Stop and ask if any other path is staged, unstaged, or would be
+committed.
 
 ## Approval
 
