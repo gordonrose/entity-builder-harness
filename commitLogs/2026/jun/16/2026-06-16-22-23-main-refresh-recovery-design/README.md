@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-17T16:00:02Z
-latest_commit_sha: 38c0d20
-chat_duration: 67019s (00:18:36:59)
-estimated_tokens: 5950 estimated from session log
+latest_commit_at_utc: 2026-06-17T22:05:29Z
+latest_commit_sha: 4995429
+chat_duration: 88946s (01:00:42:26)
+estimated_tokens: 6485 estimated from session log
 -->
 
 ## Initial Intent
@@ -306,6 +306,17 @@ Decision: Finish chat-start migration and clear legacy workflow references
 
 Rationale: Promoted chat-start.md to own startup governance directly, reduced chat-start-interview.md to a compatibility pointer, updated classifier fallback to .agentic/00.chat/workflows/chat-start.md, and made commit prerequisites rely on the canonical chat checklist.
 
+
+### 2026-06-17T22:05:29Z - Commit recorded
+
+Commit: `4995429`
+
+Message: Finish chat start workflow migration
+
+Summary: Promotes chat-start.md to own startup governance directly, reduces chat-start-interview.md to a compatibility pointer, updates classifier fallback to the chat layer workflow, and clears legacy shared workflow references from the migration audit.
+
+ADR impact: covered by existing chat layer ADR
+
 ## Commits
 
 
@@ -365,6 +376,13 @@ Rationale: Promoted chat-start.md to own startup governance directly, reduced ch
   Summary: Moves local convergence and chat-to-main promotion governance into .agentic/00.chat/workflows/chat-promote-to-main.md and leaves local-convergence.md as a compatibility pointer.
   ADR impact: covered by existing chat layer ADR
 
+
+- Commit: `4995429`
+  Time UTC: 2026-06-17T22:05:29Z
+  Message: Finish chat start workflow migration
+  Summary: Promotes chat-start.md to own startup governance directly, reduces chat-start-interview.md to a compatibility pointer, updates classifier fallback to the chat layer workflow, and clears legacy shared workflow references from the migration audit.
+  ADR impact: covered by existing chat layer ADR
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -374,10 +392,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-17T16:00:02Z
-Latest commit SHA: 38c0d20
-Chat duration: 67019s (00:18:36:59)
-Estimated tokens: 5950 estimated from session log
+Latest commit at UTC: 2026-06-17T22:05:29Z
+Latest commit SHA: 4995429
+Chat duration: 88946s (01:00:42:26)
+Estimated tokens: 6485 estimated from session log
 
 ## Notes
 
