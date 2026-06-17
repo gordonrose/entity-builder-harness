@@ -77,6 +77,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Add concrete 00.chat workflow entrypoints
   Rationale: The chat layer now has workflow files for start, refresh, commit, promote, cleanup, and reporting; each delegates to compatibility paths until a future migration promotes it to full implementation.
 
+
+- Decision: Align classifier with chat layer
+  Rationale: Capability resolution now lists chat as an allowed layer, and the startup classifier routes chat lifecycle tasks to .agentic/00.chat workflow entrypoints with fixtures covering cleanup, refresh, reporting, and promotion.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -184,6 +188,13 @@ Message: Add chat workflow entrypoints
 Summary: Adds concrete .agentic/00.chat workflow entrypoints for chat start, refresh, commit, promote, cleanup, and reporting while delegating to legacy compatibility paths.
 
 ADR impact: ADR 0013 covers chat lifecycle ownership; this commit adds migration entrypoints.
+
+
+### 2026-06-17T15:01:38Z - Decision
+
+Decision: Align classifier with chat layer
+
+Rationale: Capability resolution now lists chat as an allowed layer, and the startup classifier routes chat lifecycle tasks to .agentic/00.chat workflow entrypoints with fixtures covering cleanup, refresh, reporting, and promotion.
 
 ## Commits
 

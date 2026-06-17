@@ -5,10 +5,13 @@ TASK="${*:-}"
 
 classify_mode() {
   case "$TASK" in
+    *run*existing*|*use*existing*)
+      echo "execution"
+      ;;
     *plan*|*proposal*|*architecture*|*approach*|*how\ should*|*how\ would*|*how\ do*)
       echo "planning"
       ;;
-    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*)
+    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*)
       echo "implementation"
       ;;
     *run*|*execute*|*use*|*apply*|*start*)
@@ -39,6 +42,41 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/shared/workflows/change-shared-process.md"
     ;;
+  *chat\ start*|*start\ chat*|*chat\ startup*|*session\ metadata*|*session\ log*|*session\ logs*|*chat\ session*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
+    ;;
+  *main\ refresh*|*refresh\ from\ main*|*main\ updated*|*updated\ main*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-refresh-from-main.md"
+    ;;
+  *chat\ commit*|*checkpoint*|*session\ checkpoint*|*record\ chat\ commit*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-commit.md"
+    ;;
+  *local\ convergence*|*promote\ to\ main*|*promote*chat*main*|*merge\ to\ main*|*merge\ chat\ branch*|*merge\ chat\ work*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-promote-to-main.md"
+    ;;
+  *chat\ cleanup*|*cleanup\ chat*|*chat\ branch\ cleanup*|*preflight\ cleanup*|*worktree\ cleanup*|*clean\ up*chat*worktree*|*clean\ up\ old\ worktrees*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-cleanup.md"
+    ;;
+  *chat\ report*|*chat\ reporting*|*session\ summary*|*session\ summaries*|*commit\ log\ summary*|*commit\ logs\ summary*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-reporting.md"
+    ;;
+  *00.chat*|*chat\ lifecycle*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
+    ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
@@ -49,7 +87,7 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/education/workflows/mine-daily-learning-material.md"
     ;;
-  *chat*|*branch*|*branches*|*default\ branch*|*base\ branch*|*master*|*commit*|*worktree*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
+  *branch*|*branches*|*commit*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
     echo "Layer: shared"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/shared/workflows/change-shared-process.md"

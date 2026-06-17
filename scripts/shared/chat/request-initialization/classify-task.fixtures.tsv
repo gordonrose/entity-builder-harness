@@ -1,17 +1,21 @@
 # task	expected_layer	expected_mode	expected_workflow
 read only, how should we design modes?	harness	planning	.agentic/harness/workflows/change-harness.md
 inspect the workflow files	harness	discovery	.agentic/harness/workflows/change-harness.md
-run the existing branch cleanup capability	shared	execution	.agentic/shared/workflows/change-shared-process.md
+run the existing chat branch cleanup capability	chat	execution	.agentic/00.chat/workflows/chat-cleanup.md
 update AGENTS.md routing rules	harness	implementation	.agentic/harness/workflows/change-harness.md
 fix the failing tests	product	implementation	.agentic/product/workflows/default.md
 what is the auth flow?	product	discovery	.agentic/product/workflows/default.md
-use the existing chat start process	shared	execution	.agentic/shared/workflows/change-shared-process.md
+use the existing chat start process	chat	execution	.agentic/00.chat/workflows/chat-start.md
 explain capability resolution	harness	discovery	.agentic/harness/workflows/change-harness.md
 let's update our harness so it has best practice guidelines for adding new artefacts	harness	implementation	.agentic/harness/workflows/change-harness.md
 i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation	.agentic/shared/workflows/change-shared-process.md
 is master my local equivalent of main? if so i'm assuming that is not currently up to date?	shared	discovery	.agentic/shared/workflows/change-shared-process.md
 rename master to main and add a workflow for when main is updated	shared	implementation	.agentic/shared/workflows/change-shared-process.md
 i'd like to update my harness so that whenever i commit something, it checks whether the decisions of the chat are worth codifying in a harness ADR	shared	implementation	.agentic/shared/workflows/change-shared-process.md
+add a governed main refresh flow for chat branches	chat	implementation	.agentic/00.chat/workflows/chat-refresh-from-main.md
+generate a commit log summary for this repo	chat	implementation	.agentic/00.chat/workflows/chat-reporting.md
+clean up old chat worktrees	chat	implementation	.agentic/00.chat/workflows/chat-cleanup.md
+promote this chat branch to main	chat	implementation	.agentic/00.chat/workflows/chat-promote-to-main.md
 turn today's commit logs into blog post ideas	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
 create a 30 minute lecture from yesterday's work	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
 mine commit logs for teaching assets	education	discovery	.agentic/education/workflows/mine-daily-learning-material.md
