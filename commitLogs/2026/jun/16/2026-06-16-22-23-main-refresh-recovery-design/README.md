@@ -93,6 +93,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Promote main refresh governance into 00.chat
   Rationale: Moved active chat branch refresh rules from .agentic/shared/workflows/main-updated.md into .agentic/00.chat/workflows/chat-refresh-from-main.md and left the shared path as a compatibility pointer.
 
+
+- Decision: Promote local convergence governance into 00.chat
+  Rationale: Moved chat branch promotion rules from .agentic/shared/workflows/local-convergence.md into .agentic/00.chat/workflows/chat-promote-to-main.md and left the shared path as a compatibility pointer.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -239,6 +243,13 @@ Rationale: Added .agentic/00.chat/checklists/before-commit.md as the canonical c
 Decision: Promote main refresh governance into 00.chat
 
 Rationale: Moved active chat branch refresh rules from .agentic/shared/workflows/main-updated.md into .agentic/00.chat/workflows/chat-refresh-from-main.md and left the shared path as a compatibility pointer.
+
+
+### 2026-06-17T15:59:31Z - Decision
+
+Decision: Promote local convergence governance into 00.chat
+
+Rationale: Moved chat branch promotion rules from .agentic/shared/workflows/local-convergence.md into .agentic/00.chat/workflows/chat-promote-to-main.md and left the shared path as a compatibility pointer.
 
 ## Commits
 
