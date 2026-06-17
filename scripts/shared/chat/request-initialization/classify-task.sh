@@ -105,7 +105,7 @@ case "$TASK" in
   *)
     echo "Layer: unknown"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/shared/workflows/chat-start-interview.md"
+    echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
     exit 1
     ;;
 esac

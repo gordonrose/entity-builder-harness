@@ -65,7 +65,7 @@ else
 fi
 
 echo
-echo "Retired aggregate summary references"
+echo "Retired aggregate summary policy references"
 summary_matches="$(
   grep -RIl 'commitLogs/README.md' .agentic scripts docs 2>/dev/null \
     | grep -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/shared/chat/audit-chat-layer-migration\.sh$' \
@@ -73,9 +73,9 @@ summary_matches="$(
 )"
 
 if [ -z "$summary_matches" ]; then
-  echo "OK: no commitLogs/README.md references found."
+  echo "OK: no commitLogs/README.md policy references found."
 else
-  echo "Retired summary reference files:"
+  echo "Policy reference files:"
   printf '%s\n' "$summary_matches"
 fi
 

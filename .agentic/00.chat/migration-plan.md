@@ -69,6 +69,8 @@ Run:
 bash scripts/shared/chat/audit-chat-layer-migration.sh
 ```
 
-The audit reports required canonical files, compatibility paths, and known
-legacy references in source/process files that still need intentional handling.
-It does not treat historical session logs as migration blockers.
+The audit reports required canonical files, compatibility paths, and remaining
+legacy shared workflow references in source/process files. It also inventories
+policy references to the retired aggregate summary so future chats can tell
+intentional "do not recreate this" guidance apart from generated-artifact
+regression. It does not treat historical session logs as migration blockers.

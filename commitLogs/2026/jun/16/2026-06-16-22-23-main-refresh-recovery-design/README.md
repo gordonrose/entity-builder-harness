@@ -101,6 +101,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Add chat cleanup/reporting governance and migration plan
   Rationale: Promoted cleanup and reporting workflow rules inside .agentic/00.chat, added .agentic/00.chat/migration-plan.md for later chats, and added scripts/shared/chat/audit-chat-layer-migration.sh to inspect canonical files and remaining compatibility references.
 
+
+- Decision: Finish chat-start migration and clear legacy workflow references
+  Rationale: Promoted chat-start.md to own startup governance directly, reduced chat-start-interview.md to a compatibility pointer, updated classifier fallback to .agentic/00.chat/workflows/chat-start.md, and made commit prerequisites rely on the canonical chat checklist.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -294,6 +298,13 @@ ADR impact: covered by existing chat layer ADR
 Decision: Add chat cleanup/reporting governance and migration plan
 
 Rationale: Promoted cleanup and reporting workflow rules inside .agentic/00.chat, added .agentic/00.chat/migration-plan.md for later chats, and added scripts/shared/chat/audit-chat-layer-migration.sh to inspect canonical files and remaining compatibility references.
+
+
+### 2026-06-17T21:42:26Z - Decision
+
+Decision: Finish chat-start migration and clear legacy workflow references
+
+Rationale: Promoted chat-start.md to own startup governance directly, reduced chat-start-interview.md to a compatibility pointer, updated classifier fallback to .agentic/00.chat/workflows/chat-start.md, and made commit prerequisites rely on the canonical chat checklist.
 
 ## Commits
 
