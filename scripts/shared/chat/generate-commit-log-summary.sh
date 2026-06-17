@@ -1,10 +1,54 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-node <<'NODE'
+usage() {
+  cat <<'EOF'
+Usage:
+  generate-commit-log-summary.sh [--write|--check|--print]
+
+Generates commitLogs/README.md from individual chat session logs.
+
+Modes:
+  --write  Write commitLogs/README.md. This is the default.
+  --check  Verify commitLogs/README.md already matches generated output.
+  --print  Print generated output without writing.
+EOF
+}
+
+MODE="write"
+
+if [ $# -gt 1 ]; then
+  usage >&2
+  exit 2
+fi
+
+if [ $# -eq 1 ]; then
+  case "$1" in
+    --write)
+      MODE="write"
+      ;;
+    --check)
+      MODE="check"
+      ;;
+    --print)
+      MODE="print"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 2
+      ;;
+  esac
+fi
+
+node - "$MODE" <<'NODE'
 const fs = require('fs');
 const path = require('path');
 
+const mode = process.argv[2];
 const root = 'commitLogs';
 const outputPath = path.join(root, 'README.md');
 
@@ -193,7 +237,28 @@ const lines = [
   '',
 ];
 
+const output = lines.join('\n');
+
+if (mode === 'print') {
+  process.stdout.write(output);
+  process.exit(0);
+}
+
+if (mode === 'check') {
+  const current = fs.existsSync(outputPath)
+    ? fs.readFileSync(outputPath, 'utf8')
+    : null;
+
+  if (current === output) {
+    console.log(`${outputPath} is up to date.`);
+    process.exit(0);
+  }
+
+  console.error(`${outputPath} is not up to date.`);
+  process.exit(1);
+}
+
 fs.mkdirSync(root, { recursive: true });
-fs.writeFileSync(outputPath, lines.join('\n'));
+fs.writeFileSync(outputPath, output);
 console.log(`Wrote ${outputPath}`);
 NODE
