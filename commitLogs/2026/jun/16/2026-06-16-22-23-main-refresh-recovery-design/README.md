@@ -97,6 +97,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Promote local convergence governance into 00.chat
   Rationale: Moved chat branch promotion rules from .agentic/shared/workflows/local-convergence.md into .agentic/00.chat/workflows/chat-promote-to-main.md and left the shared path as a compatibility pointer.
 
+
+- Decision: Add chat cleanup/reporting governance and migration plan
+  Rationale: Promoted cleanup and reporting workflow rules inside .agentic/00.chat, added .agentic/00.chat/migration-plan.md for later chats, and added scripts/shared/chat/audit-chat-layer-migration.sh to inspect canonical files and remaining compatibility references.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -283,6 +287,13 @@ Message: Promote chat main promotion workflow
 Summary: Moves local convergence and chat-to-main promotion governance into .agentic/00.chat/workflows/chat-promote-to-main.md and leaves local-convergence.md as a compatibility pointer.
 
 ADR impact: covered by existing chat layer ADR
+
+
+### 2026-06-17T21:27:58Z - Decision
+
+Decision: Add chat cleanup/reporting governance and migration plan
+
+Rationale: Promoted cleanup and reporting workflow rules inside .agentic/00.chat, added .agentic/00.chat/migration-plan.md for later chats, and added scripts/shared/chat/audit-chat-layer-migration.sh to inspect canonical files and remaining compatibility references.
 
 ## Commits
 
