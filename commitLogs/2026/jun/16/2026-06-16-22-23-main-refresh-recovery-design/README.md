@@ -69,6 +69,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Create 00.chat layer and retire tracked aggregate summary
   Rationale: Chat lifecycle governance should move into .agentic/00.chat over time, and commitLogs/README.md should not be maintained as a tracked generated artifact; session summaries are generated on request from source session logs.
 
+
+- Decision: Route chat lifecycle to 00.chat
+  Rationale: AGENTS.md and routing policy now treat .agentic/00.chat as the owner for chat lifecycle while .agentic/shared remains cross-layer process and compatibility workflow space.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -140,6 +144,13 @@ Message: Create chat layer and retire aggregate summary
 Summary: Adds .agentic/00.chat as the chat lifecycle owner, retires tracked commitLogs/README.md, and makes session summaries on-demand.
 
 ADR impact: ADR 0013 records the layer and reporting decision.
+
+
+### 2026-06-17T14:23:40Z - Decision
+
+Decision: Route chat lifecycle to 00.chat
+
+Rationale: AGENTS.md and routing policy now treat .agentic/00.chat as the owner for chat lifecycle while .agentic/shared remains cross-layer process and compatibility workflow space.
 
 ## Commits
 

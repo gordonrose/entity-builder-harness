@@ -2,8 +2,11 @@
 
 ## Use When
 
-Use this when a request changes shared chat, branch, git, commit, merge,
-handoff, deployment, release, or context-preservation process.
+Use this when a request changes cross-layer git, commit, merge, handoff,
+deployment, release, or context-preservation process.
+
+Chat lifecycle changes belong to `.agentic/00.chat/`, even while some legacy
+workflow and script paths remain under `.agentic/shared/` or `scripts/shared/`.
 
 ## Required Gates
 
