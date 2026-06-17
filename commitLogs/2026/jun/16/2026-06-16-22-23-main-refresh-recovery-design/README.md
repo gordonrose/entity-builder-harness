@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-17T15:47:02Z
-latest_commit_sha: e7e7adb
-chat_duration: 66239s (00:18:23:59)
-estimated_tokens: 4873 estimated from session log
+latest_commit_at_utc: 2026-06-17T16:00:02Z
+latest_commit_sha: 38c0d20
+chat_duration: 67019s (00:18:36:59)
+estimated_tokens: 5950 estimated from session log
 -->
 
 ## Initial Intent
@@ -251,6 +251,39 @@ Decision: Promote local convergence governance into 00.chat
 
 Rationale: Moved chat branch promotion rules from .agentic/shared/workflows/local-convergence.md into .agentic/00.chat/workflows/chat-promote-to-main.md and left the shared path as a compatibility pointer.
 
+
+### 2026-06-17T15:59:52Z - Commit recorded
+
+Commit: `2552120`
+
+Message: Promote chat commit checklist
+
+Summary: Adds the canonical .agentic/00.chat before-commit checklist, promotes chat-commit.md to own commit/checkpoint rules, and keeps the shared checklist as a compatibility path.
+
+ADR impact: covered by existing chat layer ADR
+
+
+### 2026-06-17T15:59:57Z - Commit recorded
+
+Commit: `4ac93a8`
+
+Message: Promote chat main refresh workflow
+
+Summary: Moves active chat branch refresh governance into .agentic/00.chat/workflows/chat-refresh-from-main.md and leaves main-updated.md as a compatibility pointer.
+
+ADR impact: covered by existing chat layer ADR
+
+
+### 2026-06-17T16:00:02Z - Commit recorded
+
+Commit: `38c0d20`
+
+Message: Promote chat main promotion workflow
+
+Summary: Moves local convergence and chat-to-main promotion governance into .agentic/00.chat/workflows/chat-promote-to-main.md and leaves local-convergence.md as a compatibility pointer.
+
+ADR impact: covered by existing chat layer ADR
+
 ## Commits
 
 
@@ -289,6 +322,27 @@ Rationale: Moved chat branch promotion rules from .agentic/shared/workflows/loca
   Summary: Updates capability resolution and task classification so chat lifecycle requests route to .agentic/00.chat workflow entrypoints.
   ADR impact: ADR 0013 covers chat layer ownership; this commit aligns executable classification.
 
+
+- Commit: `2552120`
+  Time UTC: 2026-06-17T15:59:52Z
+  Message: Promote chat commit checklist
+  Summary: Adds the canonical .agentic/00.chat before-commit checklist, promotes chat-commit.md to own commit/checkpoint rules, and keeps the shared checklist as a compatibility path.
+  ADR impact: covered by existing chat layer ADR
+
+
+- Commit: `4ac93a8`
+  Time UTC: 2026-06-17T15:59:57Z
+  Message: Promote chat main refresh workflow
+  Summary: Moves active chat branch refresh governance into .agentic/00.chat/workflows/chat-refresh-from-main.md and leaves main-updated.md as a compatibility pointer.
+  ADR impact: covered by existing chat layer ADR
+
+
+- Commit: `38c0d20`
+  Time UTC: 2026-06-17T16:00:02Z
+  Message: Promote chat main promotion workflow
+  Summary: Moves local convergence and chat-to-main promotion governance into .agentic/00.chat/workflows/chat-promote-to-main.md and leaves local-convergence.md as a compatibility pointer.
+  ADR impact: covered by existing chat layer ADR
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -298,10 +352,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-17T15:47:02Z
-Latest commit SHA: e7e7adb
-Chat duration: 66239s (00:18:23:59)
-Estimated tokens: 4873 estimated from session log
+Latest commit at UTC: 2026-06-17T16:00:02Z
+Latest commit SHA: 38c0d20
+Chat duration: 67019s (00:18:36:59)
+Estimated tokens: 5950 estimated from session log
 
 ## Notes
 
