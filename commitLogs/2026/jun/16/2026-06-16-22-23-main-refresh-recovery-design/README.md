@@ -81,6 +81,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Align classifier with chat layer
   Rationale: Capability resolution now lists chat as an allowed layer, and the startup classifier routes chat lifecycle tasks to .agentic/00.chat workflow entrypoints with fixtures covering cleanup, refresh, reporting, and promotion.
 
+
+- Decision: Route chat startup through 00.chat
+  Rationale: AGENTS.md now uses .agentic/00.chat/workflows/chat-start.md as the canonical chat-start entrypoint, and the chat worktree session smoke test verifies new sessions classify to the chat layer workflow.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -206,6 +210,13 @@ Message: Align classifier with chat layer
 Summary: Updates capability resolution and task classification so chat lifecycle requests route to .agentic/00.chat workflow entrypoints.
 
 ADR impact: ADR 0013 covers chat layer ownership; this commit aligns executable classification.
+
+
+### 2026-06-17T15:49:11Z - Decision
+
+Decision: Route chat startup through 00.chat
+
+Rationale: AGENTS.md now uses .agentic/00.chat/workflows/chat-start.md as the canonical chat-start entrypoint, and the chat worktree session smoke test verifies new sessions classify to the chat layer workflow.
 
 ## Commits
 

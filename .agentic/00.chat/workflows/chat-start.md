@@ -16,6 +16,10 @@ The executable compatibility workflow is still:
 Follow that workflow until this file is promoted from ownership entrypoint to
 full implementation.
 
+This file is the canonical chat-start entrypoint. `AGENTS.md` points here so
+future agents discover chat lifecycle ownership before following the legacy
+compatibility implementation.
+
 ## Migration Notes
 
 When migrating, preserve:

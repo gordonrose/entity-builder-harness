@@ -72,4 +72,20 @@ if ! git -C "$worktree_path" diff --cached --name-only | grep -q '^commitLogs/';
   fail "chat worktree did not stage the session log"
 fi
 
+session_log="$(git -C "$worktree_path" diff --cached --name-only | grep '^commitLogs/.*/README.md$' | head -n 1)"
+if [ -z "$session_log" ]; then
+  fail "could not find staged session log"
+fi
+
+layer="$(sed -n '/<!-- agentic-session/,/-->/s/^layer: //p' "$worktree_path/$session_log" | head -n 1)"
+workflow="$(sed -n '/<!-- agentic-session/,/-->/s/^workflow: //p' "$worktree_path/$session_log" | head -n 1)"
+
+if [ "$layer" != "chat" ]; then
+  fail "chat startup did not classify the session as chat layer: ${layer:-missing}"
+fi
+
+if [ "$workflow" != ".agentic/00.chat/workflows/chat-start.md" ]; then
+  fail "chat startup did not use the 00.chat workflow: ${workflow:-missing}"
+fi
+
 echo "chat worktree session smoke test passed."

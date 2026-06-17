@@ -7,7 +7,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 ## Before Acting
 
 0. Skip steps 1-7 if i start a chat with 'ignore chat start'
-1. Follow `.agentic/shared/workflows/chat-start-interview.md`.
+1. Follow `.agentic/00.chat/workflows/chat-start.md`.
 2. Use the current branch’s `commitLogs/<session>/README.md` session metadata as the first source of truth.
 3. Do not reclassify unless the session metadata is missing, incomplete, or marked `unknown`.
 4. Load the workflow listed in the session metadata.
