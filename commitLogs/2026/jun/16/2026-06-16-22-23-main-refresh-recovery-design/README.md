@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-17T14:29:39Z
-latest_commit_sha: 64957c3
-chat_duration: 61596s (00:17:06:36)
-estimated_tokens: 4233 estimated from session log
+latest_commit_at_utc: 2026-06-17T14:59:21Z
+latest_commit_sha: 90a6d57
+chat_duration: 63378s (00:17:36:18)
+estimated_tokens: 4538 estimated from session log
 -->
 
 ## Initial Intent
@@ -174,6 +174,17 @@ Decision: Add concrete 00.chat workflow entrypoints
 
 Rationale: The chat layer now has workflow files for start, refresh, commit, promote, cleanup, and reporting; each delegates to compatibility paths until a future migration promotes it to full implementation.
 
+
+### 2026-06-17T14:59:21Z - Commit recorded
+
+Commit: `90a6d57`
+
+Message: Add chat workflow entrypoints
+
+Summary: Adds concrete .agentic/00.chat workflow entrypoints for chat start, refresh, commit, promote, cleanup, and reporting while delegating to legacy compatibility paths.
+
+ADR impact: ADR 0013 covers chat lifecycle ownership; this commit adds migration entrypoints.
+
 ## Commits
 
 
@@ -198,6 +209,13 @@ Rationale: The chat layer now has workflow files for start, refresh, commit, pro
   Summary: Adds the chat layer to routing, names .agentic/00.chat as chat lifecycle owner, and reframes shared workflows as cross-layer compatibility space.
   ADR impact: ADR 0013 covers the chat layer ownership decision.
 
+
+- Commit: `90a6d57`
+  Time UTC: 2026-06-17T14:59:21Z
+  Message: Add chat workflow entrypoints
+  Summary: Adds concrete .agentic/00.chat workflow entrypoints for chat start, refresh, commit, promote, cleanup, and reporting while delegating to legacy compatibility paths.
+  ADR impact: ADR 0013 covers chat lifecycle ownership; this commit adds migration entrypoints.
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -207,10 +225,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-17T14:29:39Z
-Latest commit SHA: 64957c3
-Chat duration: 61596s (00:17:06:36)
-Estimated tokens: 4233 estimated from session log
+Latest commit at UTC: 2026-06-17T14:59:21Z
+Latest commit SHA: 90a6d57
+Chat duration: 63378s (00:17:36:18)
+Estimated tokens: 4538 estimated from session log
 
 ## Notes
 
