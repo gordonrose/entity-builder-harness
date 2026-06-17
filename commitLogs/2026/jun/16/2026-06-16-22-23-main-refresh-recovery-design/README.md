@@ -89,6 +89,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Promote chat commit governance into 00.chat
   Rationale: Added .agentic/00.chat/checklists/before-commit.md as the canonical chat commit checklist, promoted chat-commit.md to describe commit and checkpoint rules directly, and kept the shared checklist as a compatibility path.
 
+
+- Decision: Promote main refresh governance into 00.chat
+  Rationale: Moved active chat branch refresh rules from .agentic/shared/workflows/main-updated.md into .agentic/00.chat/workflows/chat-refresh-from-main.md and left the shared path as a compatibility pointer.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -228,6 +232,13 @@ Rationale: AGENTS.md now uses .agentic/00.chat/workflows/chat-start.md as the ca
 Decision: Promote chat commit governance into 00.chat
 
 Rationale: Added .agentic/00.chat/checklists/before-commit.md as the canonical chat commit checklist, promoted chat-commit.md to describe commit and checkpoint rules directly, and kept the shared checklist as a compatibility path.
+
+
+### 2026-06-17T15:58:54Z - Decision
+
+Decision: Promote main refresh governance into 00.chat
+
+Rationale: Moved active chat branch refresh rules from .agentic/shared/workflows/main-updated.md into .agentic/00.chat/workflows/chat-refresh-from-main.md and left the shared path as a compatibility pointer.
 
 ## Commits
 
