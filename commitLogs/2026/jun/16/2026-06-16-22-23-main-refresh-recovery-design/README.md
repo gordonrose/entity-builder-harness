@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-17T14:59:21Z
-latest_commit_sha: 90a6d57
-chat_duration: 63378s (00:17:36:18)
-estimated_tokens: 4538 estimated from session log
+latest_commit_at_utc: 2026-06-17T15:47:02Z
+latest_commit_sha: e7e7adb
+chat_duration: 66239s (00:18:23:59)
+estimated_tokens: 4873 estimated from session log
 -->
 
 ## Initial Intent
@@ -196,6 +196,17 @@ Decision: Align classifier with chat layer
 
 Rationale: Capability resolution now lists chat as an allowed layer, and the startup classifier routes chat lifecycle tasks to .agentic/00.chat workflow entrypoints with fixtures covering cleanup, refresh, reporting, and promotion.
 
+
+### 2026-06-17T15:47:02Z - Commit recorded
+
+Commit: `e7e7adb`
+
+Message: Align classifier with chat layer
+
+Summary: Updates capability resolution and task classification so chat lifecycle requests route to .agentic/00.chat workflow entrypoints.
+
+ADR impact: ADR 0013 covers chat layer ownership; this commit aligns executable classification.
+
 ## Commits
 
 
@@ -227,6 +238,13 @@ Rationale: Capability resolution now lists chat as an allowed layer, and the sta
   Summary: Adds concrete .agentic/00.chat workflow entrypoints for chat start, refresh, commit, promote, cleanup, and reporting while delegating to legacy compatibility paths.
   ADR impact: ADR 0013 covers chat lifecycle ownership; this commit adds migration entrypoints.
 
+
+- Commit: `e7e7adb`
+  Time UTC: 2026-06-17T15:47:02Z
+  Message: Align classifier with chat layer
+  Summary: Updates capability resolution and task classification so chat lifecycle requests route to .agentic/00.chat workflow entrypoints.
+  ADR impact: ADR 0013 covers chat layer ownership; this commit aligns executable classification.
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -236,10 +254,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-17T14:59:21Z
-Latest commit SHA: 90a6d57
-Chat duration: 63378s (00:17:36:18)
-Estimated tokens: 4538 estimated from session log
+Latest commit at UTC: 2026-06-17T15:47:02Z
+Latest commit SHA: e7e7adb
+Chat duration: 66239s (00:18:23:59)
+Estimated tokens: 4873 estimated from session log
 
 ## Notes
 
