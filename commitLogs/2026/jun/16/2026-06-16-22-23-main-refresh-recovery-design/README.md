@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-17T13:49:47Z
-latest_commit_sha: 67839a4
-chat_duration: 59204s (00:16:26:44)
-estimated_tokens: 3518 estimated from session log
+latest_commit_at_utc: 2026-06-17T14:21:28Z
+latest_commit_sha: 6f2318d
+chat_duration: 61105s (00:16:58:25)
+estimated_tokens: 3949 estimated from session log
 -->
 
 ## Initial Intent
@@ -130,6 +130,17 @@ ADR path: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-se
 
 Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggregate summary decision.
 
+
+### 2026-06-17T14:21:28Z - Commit recorded
+
+Commit: `6f2318d`
+
+Message: Create chat layer and retire aggregate summary
+
+Summary: Adds .agentic/00.chat as the chat lifecycle owner, retires tracked commitLogs/README.md, and makes session summaries on-demand.
+
+ADR impact: ADR 0013 records the layer and reporting decision.
+
 ## Commits
 
 
@@ -140,6 +151,13 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
   Summary: Adds dirty-state classification, generated-summary verification, preflight main refresh promotion, and smoke tests for the governed recovery flow.
   ADR impact: No new ADR; implements the planned main-updated workflow hardening.
 
+
+- Commit: `6f2318d`
+  Time UTC: 2026-06-17T14:21:28Z
+  Message: Create chat layer and retire aggregate summary
+  Summary: Adds .agentic/00.chat as the chat lifecycle owner, retires tracked commitLogs/README.md, and makes session summaries on-demand.
+  ADR impact: ADR 0013 records the layer and reporting decision.
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -149,10 +167,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-17T13:49:47Z
-Latest commit SHA: 67839a4
-Chat duration: 59204s (00:16:26:44)
-Estimated tokens: 3518 estimated from session log
+Latest commit at UTC: 2026-06-17T14:21:28Z
+Latest commit SHA: 6f2318d
+Chat duration: 61105s (00:16:58:25)
+Estimated tokens: 3949 estimated from session log
 
 ## Notes
 
