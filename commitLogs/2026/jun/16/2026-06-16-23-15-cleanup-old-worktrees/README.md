@@ -10,10 +10,10 @@ mode: unknown
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-16T22:15:09Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-16T22:38:49Z
+latest_commit_sha: e40ac7a
+chat_duration: 1420s (00:00:23:40)
+estimated_tokens: 629 estimated from session log
 -->
 
 ## Initial Intent
@@ -69,9 +69,26 @@ stale 2026-06-15-21-53 and superseded 2026-06-16-07-17 local branches. Verified
 that the only remaining unmerged local branch is the staged-file split
 recommendation branch.
 
+
+### 2026-06-16T22:38:49Z - Commit recorded
+
+Commit: `e40ac7a`
+
+Message: chore(shared): record old worktree cleanup
+
+Summary: Recorded removal of clean old worktrees and stale local branches while preserving dirty worktrees and the staged-file split follow-up.
+
+ADR impact: none
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `e40ac7a`
+  Time UTC: 2026-06-16T22:38:49Z
+  Message: chore(shared): record old worktree cleanup
+  Summary: Recorded removal of clean old worktrees and stale local branches while preserving dirty worktrees and the staged-file split follow-up.
+  ADR impact: none
 
 ## ADR Disposition
 
@@ -83,10 +100,10 @@ no shared process rule or architecture decision changed.
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T22:15:09Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-16T22:38:49Z
+Latest commit SHA: e40ac7a
+Chat duration: 1420s (00:00:23:40)
+Estimated tokens: 629 estimated from session log
 
 ## Notes
 
