@@ -5,7 +5,8 @@ set -euo pipefail
 source "scripts/shared/chat/session-log-paths.sh"
 
 BRANCH="$(git branch --show-current)"
-CHECKLIST=".agentic/shared/checklists/before-commit.md"
+CHECKLIST=".agentic/00.chat/checklists/before-commit.md"
+COMPAT_CHECKLIST=".agentic/shared/checklists/before-commit.md"
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
   echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
@@ -67,7 +68,8 @@ else
   check_file "$WORKFLOW" "declared workflow"
 fi
 
-check_file "$CHECKLIST" "before-commit checklist"
+check_file "$CHECKLIST" "canonical before-commit checklist"
+check_file "$COMPAT_CHECKLIST" "compatibility before-commit checklist"
 
 SCRIPT_REFS=""
 if [ -n "${WORKFLOW// }" ] && [ -f "$WORKFLOW" ]; then
@@ -78,6 +80,11 @@ fi
 if [ -f "$CHECKLIST" ]; then
   SCRIPT_REFS="$SCRIPT_REFS
 $(collect_script_refs "$CHECKLIST")"
+fi
+
+if [ -f "$COMPAT_CHECKLIST" ]; then
+  SCRIPT_REFS="$SCRIPT_REFS
+$(collect_script_refs "$COMPAT_CHECKLIST")"
 fi
 
 while IFS= read -r script_path; do

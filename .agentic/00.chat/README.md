@@ -12,6 +12,7 @@ cleanup, shortcuts, and on-demand chat reports.
 
 - Active chat state: current branch session log under `commitLogs/`
 - Chat lifecycle workflows: `.agentic/00.chat/workflows/`
+- Chat lifecycle checklists: `.agentic/00.chat/checklists/`
 - Chat lifecycle skills: `.agentic/00.chat/skills/`
 - Legacy shared workflow locations: `.agentic/shared/workflows/`
 - Legacy chat scripts: `scripts/shared/chat/` and `scripts/shared/git/`

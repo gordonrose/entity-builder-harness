@@ -85,6 +85,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Route chat startup through 00.chat
   Rationale: AGENTS.md now uses .agentic/00.chat/workflows/chat-start.md as the canonical chat-start entrypoint, and the chat worktree session smoke test verifies new sessions classify to the chat layer workflow.
 
+
+- Decision: Promote chat commit governance into 00.chat
+  Rationale: Added .agentic/00.chat/checklists/before-commit.md as the canonical chat commit checklist, promoted chat-commit.md to describe commit and checkpoint rules directly, and kept the shared checklist as a compatibility path.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -217,6 +221,13 @@ ADR impact: ADR 0013 covers chat layer ownership; this commit aligns executable 
 Decision: Route chat startup through 00.chat
 
 Rationale: AGENTS.md now uses .agentic/00.chat/workflows/chat-start.md as the canonical chat-start entrypoint, and the chat worktree session smoke test verifies new sessions classify to the chat layer workflow.
+
+
+### 2026-06-17T15:53:54Z - Decision
+
+Decision: Promote chat commit governance into 00.chat
+
+Rationale: Added .agentic/00.chat/checklists/before-commit.md as the canonical chat commit checklist, promoted chat-commit.md to describe commit and checkpoint rules directly, and kept the shared checklist as a compatibility path.
 
 ## Commits
 

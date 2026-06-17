@@ -1,12 +1,6 @@
-# Shared Before-Commit Checklist
+# Chat Before-Commit Checklist
 
-Compatibility path. Canonical chat commit governance lives at:
-
-```txt
-.agentic/00.chat/checklists/before-commit.md
-```
-
-Use this before committing shared process or harness changes.
+Use this before committing approved chat task work.
 
 ## Write Location
 
@@ -28,8 +22,8 @@ bash scripts/shared/git/check-commit-prerequisites.sh
 
 <!-- deterministic-check: allow reason="requires human approval before merge or cherry-pick repair" -->
 If this reports missing workflow, checklist, or gate files, pause the task
-commit. Ask for approval before merging or cherry-picking the shared-process
-commit that introduced the missing files, then rerun this checklist.
+commit. Ask for approval before merging or cherry-picking the commit that
+introduced the missing files, then rerun this checklist.
 
 ## Deterministic Process Drift
 
@@ -99,9 +93,8 @@ bash scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
-This commit must contain only the current chat session log and
-no other paths. Stop and ask if any other path is staged, unstaged, or would be
-committed.
+This commit must contain only the current chat session log and no other paths.
+Stop and ask if any other path is staged, unstaged, or would be committed.
 
 ## Approval
 
