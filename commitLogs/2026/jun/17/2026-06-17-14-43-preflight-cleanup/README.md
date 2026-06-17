@@ -10,10 +10,10 @@ mode: unknown
 workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-17T13:43:04Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_tokens:
+latest_commit_at_utc: 2026-06-17T14:15:10Z
+latest_commit_sha: 4dedbb9
+chat_duration: 1926s (00:00:32:06)
+estimated_tokens: 807 estimated from session log
 -->
 
 ## Initial Intent
@@ -80,9 +80,26 @@ ADR needed: no
 
 Reason: This extends the existing governed main-refresh workflow with deterministic cleanup behavior in scripts and tests; it does not introduce a new durable architecture decision.
 
+
+### 2026-06-17T14:15:10Z - Commit recorded
+
+Commit: `4dedbb9`
+
+Message: Harden main refresh preflight cleanup
+
+Summary: Added deterministic cleanup for successful main-refresh preflight promotion, including dirty-worktree refusal and smoke coverage.
+
+ADR impact: No ADR needed; extends existing governed main-refresh workflow.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `4dedbb9`
+  Time UTC: 2026-06-17T14:15:10Z
+  Message: Harden main refresh preflight cleanup
+  Summary: Added deterministic cleanup for successful main-refresh preflight promotion, including dirty-worktree refusal and smoke coverage.
+  ADR impact: No ADR needed; extends existing governed main-refresh workflow.
 
 ## ADR Disposition
 
@@ -93,10 +110,10 @@ Reason: This extends the existing governed main-refresh workflow with determinis
 ## Session Metrics
 
 Raised at UTC: 2026-06-17T13:43:04Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated tokens:
+Latest commit at UTC: 2026-06-17T14:15:10Z
+Latest commit SHA: 4dedbb9
+Chat duration: 1926s (00:00:32:06)
+Estimated tokens: 807 estimated from session log
 
 ## Notes
 
