@@ -32,9 +32,9 @@ required.
 
 When `record-chat-commit.sh` leaves the current session log dirty, that expected
 bookkeeping update may be committed as its own checkpoint commit. The checkpoint
-flow stages and commits only the current session log and `commitLogs/README.md`;
-it refuses to run when unrelated files are staged. Agents still need explicit
-user approval before creating the checkpoint commit.
+flow stages and commits only the current session log; it refuses to run when
+unrelated files are staged. Agents still need explicit user approval before
+creating the checkpoint commit.
 
 ## Consequences
 
@@ -43,8 +43,8 @@ Commit-time ADR checks can use the session log as evidence instead of relying
 on memory. Small changes remain lightweight because the session can explicitly
 record that no ADR is needed.
 
-The harness now has two commit responsibilities: prepare the session before each
-commit, then record the commit afterward so multi-commit chats remain accurate.
-If recording the commit dirties the session log, agents can preserve a clean
-working tree with a narrow session-bookkeeping checkpoint instead of folding
-that bookkeeping into unrelated follow-up work.
+The harness now has two commit responsibilities: prepare the session before
+each commit, then record the commit afterward so multi-commit chats remain
+accurate. If recording the commit dirties the session log, agents can preserve a
+clean working tree with a narrow session-bookkeeping checkpoint instead of
+folding that bookkeeping into unrelated follow-up work.

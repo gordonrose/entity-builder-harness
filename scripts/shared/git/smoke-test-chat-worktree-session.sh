@@ -26,7 +26,6 @@ mkdir -p \
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shared/chat/chat-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/shared/chat/ensure-chat-worktree.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/generate-commit-log-summary.sh" "$REPO/scripts/shared/chat/generate-commit-log-summary.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/classify-task.sh" "$REPO/scripts/shared/chat/request-initialization/classify-task.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/start-chat-session.sh" "$REPO/scripts/shared/chat/request-initialization/start-chat-session.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/cleanup-empty-chat-branches.sh" "$REPO/scripts/shared/git/cleanup-empty-chat-branches.sh"
@@ -71,6 +70,22 @@ fi
 
 if ! git -C "$worktree_path" diff --cached --name-only | grep -q '^commitLogs/'; then
   fail "chat worktree did not stage the session log"
+fi
+
+session_log="$(git -C "$worktree_path" diff --cached --name-only | grep '^commitLogs/.*/README.md$' | head -n 1)"
+if [ -z "$session_log" ]; then
+  fail "could not find staged session log"
+fi
+
+layer="$(sed -n '/<!-- agentic-session/,/-->/s/^layer: //p' "$worktree_path/$session_log" | head -n 1)"
+workflow="$(sed -n '/<!-- agentic-session/,/-->/s/^workflow: //p' "$worktree_path/$session_log" | head -n 1)"
+
+if [ "$layer" != "chat" ]; then
+  fail "chat startup did not classify the session as chat layer: ${layer:-missing}"
+fi
+
+if [ "$workflow" != ".agentic/00.chat/workflows/chat-start.md" ]; then
+  fail "chat startup did not use the 00.chat workflow: ${workflow:-missing}"
 fi
 
 echo "chat worktree session smoke test passed."

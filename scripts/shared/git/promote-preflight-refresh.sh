@@ -34,6 +34,75 @@ if ! git show-ref --verify --quiet "refs/heads/${PREFLIGHT_BRANCH}"; then
   exit 1
 fi
 
+preflight_worktrees_for_branch() {
+  local branch="$1"
+
+  git worktree list --porcelain \
+    | awk -v branch="refs/heads/${branch}" '
+      /^worktree / { path = substr($0, 10) }
+      /^branch / && substr($0, 8) == branch { print path }
+    '
+}
+
+worktree_count() {
+  awk 'NF { count += 1 } END { print count + 0 }'
+}
+
+cleanup_stale_preflight_siblings() {
+  local promoted_branch="$1"
+  local prefix="${promoted_branch%/*}/"
+  local sibling sibling_worktrees sibling_worktree_count sibling_worktree
+
+  while IFS= read -r sibling; do
+    if [ -z "$sibling" ] || [ "$sibling" = "$promoted_branch" ]; then
+      continue
+    fi
+
+    case "$sibling" in
+      "$prefix"*)
+        ;;
+      *)
+        continue
+        ;;
+    esac
+
+    if ! git merge-base --is-ancestor "$sibling" HEAD; then
+      echo "stale_preflight_skipped=${sibling} reason=unique-commits-not-in-promoted-head"
+      continue
+    fi
+
+    sibling_worktrees="$(preflight_worktrees_for_branch "$sibling")"
+    sibling_worktree_count="$(printf '%s\n' "$sibling_worktrees" | worktree_count)"
+
+    if [ "$sibling_worktree_count" -gt 1 ]; then
+      echo "stale_preflight_skipped=${sibling} reason=multiple-worktrees"
+      continue
+    fi
+
+    if [ "$sibling_worktree_count" = "1" ]; then
+      sibling_worktree="$(printf '%s\n' "$sibling_worktrees" | awk 'NF { print; exit }')"
+      sibling_worktree="$(cd "$sibling_worktree" && pwd -P)"
+
+      if [ "$sibling_worktree" = "$CURRENT_WORKTREE" ]; then
+        echo "stale_preflight_skipped=${sibling} reason=active-worktree"
+        continue
+      fi
+
+      if [ -n "$(git -C "$sibling_worktree" status --porcelain)" ]; then
+        echo "stale_preflight_skipped=${sibling} reason=dirty-worktree"
+        continue
+      fi
+
+      git worktree remove "$sibling_worktree"
+      echo "stale_preflight_removed=${sibling} worktree=${sibling_worktree}"
+    else
+      echo "stale_preflight_removed=${sibling} worktree="
+    fi
+
+    git branch -d "$sibling" >/dev/null
+  done < <(git branch --format='%(refname:short)')
+}
+
 CURRENT_BRANCH="$(git branch --show-current)"
 
 case "$CURRENT_BRANCH" in
@@ -59,18 +128,9 @@ if ! git merge-base --is-ancestor HEAD "$PREFLIGHT_BRANCH"; then
   exit 1
 fi
 
-PREFLIGHT_WORKTREES="$(
-  git worktree list --porcelain \
-    | awk -v branch="refs/heads/${PREFLIGHT_BRANCH}" '
-      /^worktree / { path = substr($0, 10) }
-      /^branch / && substr($0, 8) == branch { print path }
-    '
-)"
+PREFLIGHT_WORKTREES="$(preflight_worktrees_for_branch "$PREFLIGHT_BRANCH")"
 
-PREFLIGHT_WORKTREE_COUNT="$(
-  printf '%s\n' "$PREFLIGHT_WORKTREES" \
-    | awk 'NF { count += 1 } END { print count + 0 }'
-)"
+PREFLIGHT_WORKTREE_COUNT="$(printf '%s\n' "$PREFLIGHT_WORKTREES" | worktree_count)"
 
 if [ "$PREFLIGHT_WORKTREE_COUNT" != "1" ]; then
   echo "ERROR: expected exactly one preflight worktree for ${PREFLIGHT_BRANCH}; found ${PREFLIGHT_WORKTREE_COUNT}." >&2
@@ -103,6 +163,7 @@ fi
 
 git worktree remove "$PREFLIGHT_WORKTREE"
 git branch -d "$PREFLIGHT_BRANCH" >/dev/null
+cleanup_stale_preflight_siblings "$PREFLIGHT_BRANCH"
 
 echo "Promoted preflight refresh:"
 echo "current_branch=${CURRENT_BRANCH}"

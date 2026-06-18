@@ -1,0 +1,321 @@
+# Main Refresh Conflict Types
+
+## Purpose
+
+Classify conflicts found while refreshing a chat branch from `main`.
+
+Use this standard after preflight reports conflicts and before resolving any
+conflicted path. Resolve only conflicts with a deterministic action. If no type
+fits, stop and propose either a new type or an expansion of an existing type.
+
+## Classification Method
+
+For each conflicted path, compare:
+
+- file ownership: canonical owner, compatibility path, generated artifact, or
+  session evidence
+- conflict shape: both modified, add/add, delete/modify, or deleted by them
+- content source: authored prose/code, generated output, or bookkeeping
+- governance direction: stricter rule added, ownership moved, artifact retired,
+  or normal repo behavior changed
+- risk: whether either side would discard user-authored work, session evidence,
+  or stricter governance
+
+Inspect Git stages when needed:
+
+```bash
+git show :1:<path>   # base
+git show :2:<path>   # chat branch
+git show :3:<path>   # incoming main
+git diff :2:<path> :3:<path>
+```
+
+## Session Log Audit Trail
+
+For every preflight conflict, record an audit entry under the current chat
+session log's `## Main Refresh Conflicts` section before promoting the
+preflight result.
+
+Use:
+
+```bash
+bash scripts/shared/chat/record-main-refresh-conflict.sh \
+  --path <conflicted-path> \
+  --type <conflict-type> \
+  --reason <classification-reason> \
+  --action <resolution-action> \
+  --mode <deterministic|skill-assisted|manual|stopped> \
+  --preflight-branch <branch> \
+  --preflight-worktree <path> \
+  --files <changed-files-summary> \
+  --checks <checks-summary>
+```
+
+Each entry must record:
+
+- preflight branch
+- preflight worktree
+- conflicted path
+- conflict type
+- classification reason
+- resolution mode
+- deterministic action, skill-assisted action, manual action, or stop reason
+- files changed by the resolution
+- checks run or still pending
+
+## Promotion After Conflict Resolution
+
+Approval to run a governed main-refresh preflight includes approval to promote a
+clean, tested preflight result back to the chat branch.
+
+After every conflicted path has a `## Main Refresh Conflicts` audit entry and
+the required checks pass, promote the preflight branch automatically with:
+
+```bash
+bash scripts/shared/git/promote-preflight-refresh.sh <preflight-branch>
+```
+
+Stop before promotion if:
+
+- unresolved conflicts remain
+- required checks failed or were skipped
+- the preflight worktree is dirty
+- the preflight branch no longer descends from the chat branch
+- the promotion script refuses cleanup
+- the user explicitly asked to inspect before promotion
+
+Do not ask for a second approval when none of those stop conditions apply.
+
+## Type Index
+
+| Type | Detect | Deterministic action |
+| --- | --- | --- |
+| `ownership-migration-conflict` | One side converts a legacy path to a compatibility pointer while the other side improves the legacy path | Keep the compatibility pointer; migrate useful improvements into the canonical owner |
+| `generated-artifact-conflict` | Conflict is only in a generated artifact that can be recreated from source evidence | Remove or restore the generated artifact according to its governing workflow, then regenerate only if an explicit output is requested |
+| `session-bookkeeping-conflict` | Conflict is limited to the current chat session log or chat-owned bookkeeping | Preserve current session evidence; never discard recorded commits or retention markers |
+| `retired-artifact-delete-modify-conflict` | Chat branch deletes a retired generated artifact while `main` modifies it | Keep the deletion when the retirement ADR/workflow is present; preserve useful policy references in canonical docs if needed |
+| `retired-artifact-generator-conflict` | One side preserves generator behavior for a retired tracked artifact while the other side makes generation on-demand only | Preserve retired-artifact policy; keep safe print/explicit-output behavior; block recreation of the retired tracked artifact |
+| `retired-artifact-policy-script-conflict` | One side adds classifier or workflow behavior for a retired tracked artifact while the other side retires that artifact | Preserve retired-artifact policy; remove recoverability paths for the retired tracked artifact |
+| `script-add-add-conflict` | Both sides add the same script path independently | Compare behavior, tests, and call sites; if both implement the same governed capability, merge behavior and tests; otherwise stop |
+| `normal-repo-conflict` | Conflict changes authored code/prose without a matching governed type | Stop for approval before resolving |
+| `unsupported-conflict` | No existing type fits or classification is ambiguous | Stop with missing-governance response and propose a new or expanded type |
+
+## Type Details
+
+### ownership-migration-conflict
+
+Detect:
+- A legacy workflow, checklist, or script path has become a compatibility
+  pointer on one side.
+- The other side keeps the legacy path as the implementation and adds useful
+  governance, checks, or stricter safety behavior.
+
+Examples:
+- `.agentic/shared/workflows/local-convergence.md` points to
+  `.agentic/00.chat/workflows/chat-promote-to-main.md` on the chat branch,
+  while `main` adds verifier-based local convergence rules to the old shared
+  path.
+
+Deterministic action:
+- Keep the legacy path as a compatibility pointer.
+- Migrate useful main-side improvements into the canonical owner named by the
+  pointer.
+- Adjust layer names, workflow paths, and exact blocked responses to the
+  canonical owner.
+
+Required checks:
+- Run deterministic process drift checks on the legacy pointer and canonical
+  owner.
+- Run any script tests that cover the migrated behavior.
+
+Session log entry:
+- Record the conflicted path, canonical owner, migrated improvement, changed
+  files, and checks.
+
+Stop if:
+- The canonical owner is missing.
+- The improvement cannot be migrated without changing behavior outside the
+  owner.
+- Either side contains user-authored content whose ownership is unclear.
+
+### generated-artifact-conflict
+
+Detect:
+- The conflicted path is a generated report, summary, build product, or other
+  reproducible artifact.
+- A workflow, script, or ADR defines the source evidence and output policy.
+
+Deterministic action:
+- Follow the artifact policy.
+- Do not preserve stale generated content just because it appears in a conflict.
+- Do not recreate tracked `commitLogs/README.md`.
+
+Required checks:
+- Run the generator smoke test or verifier when one exists.
+
+Session log entry:
+- Record source evidence, artifact path, and whether regeneration happened.
+
+Stop if:
+- The source evidence is missing.
+- The artifact is not reproducible.
+- The artifact policy is unclear.
+
+### session-bookkeeping-conflict
+
+Detect:
+- The conflict is limited to the current chat session log or chat-owned metadata.
+
+Deterministic action:
+- Preserve recorded commits, latest commit metadata, decisions, issues, ADR
+  disposition, and retention markers.
+- Prefer additive merge of session evidence when entries are independent.
+
+Required checks:
+- Run commit prerequisite and session-log gates when applicable.
+
+Session log entry:
+- Record that session evidence was preserved and how.
+
+Stop if:
+- The conflict involves another chat's session log.
+- Recorded commits or retention markers disagree.
+
+### retired-artifact-delete-modify-conflict
+
+Detect:
+- One side deletes a generated artifact because it has been retired.
+- The other side modifies the same artifact.
+- A workflow or ADR records the retirement.
+
+Deterministic action:
+- Keep the deletion.
+- Move any durable policy value into the canonical doc only if it is not already
+  represented there.
+
+Required checks:
+- Run artifact generator and retirement smoke tests when present.
+
+Session log entry:
+- Record artifact path, retirement source, and whether any policy text moved.
+
+Stop if:
+- Retirement evidence is missing.
+- The modified content includes non-generated user-authored decisions.
+
+### retired-artifact-generator-conflict
+
+Detect:
+- The conflicted path is a generator script or generator test.
+- One side writes, checks, or recreates a tracked artifact that another side has
+  retired.
+- A workflow or ADR records the artifact retirement.
+
+Deterministic action:
+- Preserve the retired-artifact policy.
+- Do not restore default writes to the retired tracked artifact.
+- Do not restore checks that require the retired tracked artifact to exist.
+- Preserve safe non-persistent behavior such as stdout printing.
+- Preserve explicit-output behavior only when it refuses the retired tracked
+  artifact path.
+
+Required checks:
+- Run the generator smoke test.
+- Run shell syntax checks for shell-based generators.
+
+Session log entry:
+- Record retired artifact path, generator path, retirement source, preserved
+  safe behavior, and blocked behavior.
+
+Stop if:
+- The generator also produces non-retired artifacts and behavior cannot be
+  separated deterministically.
+- The retirement source is missing or ambiguous.
+
+### retired-artifact-policy-script-conflict
+
+Detect:
+- The conflicted path is a classifier, workflow, verifier, or test.
+- One side adds recoverability, validation, or workflow behavior for a tracked
+  artifact that another side has retired.
+- A workflow or ADR records the artifact retirement.
+
+Deterministic action:
+- Preserve the retired-artifact policy.
+- Remove or avoid recoverability classes that treat the retired artifact as
+  active state.
+- Preserve unrelated classifier, verifier, or workflow behavior.
+- Update tests so they verify the retired artifact is not reintroduced as an
+  active governed path.
+
+Required checks:
+- Run the relevant classifier/verifier smoke tests.
+- Run shell syntax checks for shell scripts.
+
+Session log entry:
+- Record retired artifact path, policy script path, removed recoverability, and
+  preserved behavior.
+
+Stop if:
+- The policy script behavior cannot be separated from unrelated active
+  behavior.
+- The retirement source is missing or ambiguous.
+
+### script-add-add-conflict
+
+Detect:
+- Both sides add the same script or test path.
+- Git reports add/add (`AA`).
+
+Deterministic action:
+- Compare scripts by behavior, not just text.
+- If both implement the same capability, produce a merged script that preserves
+  stricter validation and all relevant tests.
+- If the capability differs, stop.
+
+Required checks:
+- Run shell syntax checks and the relevant smoke tests.
+
+Session log entry:
+- Record merged behavior and tests run.
+
+Stop if:
+- Behavior differs in a way that changes ownership, safety, or data mutation.
+- No test covers the merged script.
+
+### normal-repo-conflict
+
+Detect:
+- Conflict is user-authored code/prose and no more specific governed type fits.
+
+Deterministic action:
+- None.
+
+Required checks:
+- N/A until resolution is approved.
+
+Session log entry:
+- Record the stop and requested next step.
+
+Stop if:
+- Always stop before resolving.
+
+### unsupported-conflict
+
+Detect:
+- Existing types do not fit.
+- More than one type fits and the action differs.
+- The model cannot explain the classification in terms of ownership, shape,
+  source, governance direction, and risk.
+
+Deterministic action:
+- None.
+
+Required checks:
+- N/A until governance is updated.
+
+Session log entry:
+- Record proposed new type or proposed expansion.
+
+Stop if:
+- Always stop with the missing-governance response.

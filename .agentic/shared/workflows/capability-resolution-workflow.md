@@ -21,6 +21,7 @@ Layer identifies the ownership area affected by the request.
 Allowed values:
 
 - `shared`
+- `chat`
 - `harness`
 - `education`
 - `product`
@@ -34,7 +35,8 @@ definitions.
 
 Mode identifies the kind of work the user is asking the agent to perform.
 
-Mode is independent of layer. The same mode can apply to shared, harness, or product work.
+Mode is independent of layer. The same mode can apply to chat, shared,
+harness, education, or product work.
 
 Allowed values:
 
@@ -91,6 +93,12 @@ Examples:
 Layer: harness
 Mode: planning
 Workflow: .agentic/harness/workflows/build-capability-workflow.md
+```
+
+```text
+Layer: chat
+Mode: implementation
+Workflow: .agentic/00.chat/workflows/chat-refresh-from-main.md
 ```
 
 ```text

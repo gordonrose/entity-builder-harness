@@ -56,8 +56,9 @@ or produce decisions and lessons worth carrying forward.
 
 ## Exact Source Evidence
 
-ADR 0004: "The harness maintains `commitLogs/README.md` with aggregate chat
-duration and token consumption statistics."
+ADR 0004 originally maintained `commitLogs/README.md` with aggregate chat
+duration and token consumption statistics; ADR 0013 later moved that summary
+to on-demand generation.
 
 Commit log summary: grouped logs by year/month/day, added deterministic
 duration and token statistics, formatted durations as seconds plus

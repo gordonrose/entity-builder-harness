@@ -7,7 +7,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 ## Before Acting
 
 0. Skip steps 1-7 if i start a chat with 'ignore chat start'
-1. Follow `.agentic/shared/workflows/chat-start-interview.md`. 
+1. Follow `.agentic/00.chat/workflows/chat-start.md`.
 2. Use the current branch’s `commitLogs/<session>/README.md` session metadata as the first source of truth.
 3. Do not reclassify unless the session metadata is missing, incomplete, or marked `unknown`.
 4. Load the workflow listed in the session metadata.
@@ -19,7 +19,8 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 ## Operating Layers
 
-* `.agentic/shared/` governs chat sessions, git process, branching, commits, handoff, deployment process, and context compaction.
+* `.agentic/00.chat/` governs chat lifecycle, including chat sessions, chat worktrees, session logs, chat refresh, chat closeout, cleanup, shortcuts, and chat reporting.
+* `.agentic/shared/` governs cross-layer process primitives, including git approval rules, handoff, deployment process, and context compaction.
 * `.agentic/harness/` governs changes to the agentic harness itself.
 * `.agentic/education/` governs educational resources derived from repo work.
 * `.agentic/product/` governs Kanbien product/code work.
@@ -27,6 +28,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 ## Source of Truth
 
 * Session state: current branch’s `commitLogs/<session>/README.md`
+* Chat lifecycle process: `.agentic/00.chat/`
 * Shared operating process: `.agentic/shared/`
 * Harness maintenance process: `.agentic/harness/`
 * Education resources process: `.agentic/education/`

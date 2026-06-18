@@ -51,7 +51,6 @@ if SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
   LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
 fi
 
-SUMMARY_FILE="commitLogs/README.md"
 STATUS_FILE="$(mktemp)"
 DIRTY_FILE="$(mktemp)"
 STAGED_FILE="$(mktemp)"
@@ -100,20 +99,12 @@ emit_common() {
   echo "EOF"
 }
 
-path_count() {
-  wc -l < "$1" | tr -d ' '
-}
-
 only_allowed_paths="yes"
 repo_work_paths=""
 other_commitlog_paths=""
 
 while IFS= read -r path; do
   if [ -z "$path" ]; then
-    continue
-  fi
-
-  if [ "$path" = "$SUMMARY_FILE" ]; then
     continue
   fi
 
@@ -136,27 +127,9 @@ while IFS= read -r path; do
 done < "$DIRTY_FILE"
 
 if [ "$only_allowed_paths" = "yes" ]; then
-  dirty_count="$(path_count "$DIRTY_FILE")"
-
-  if [ "$dirty_count" = "1" ] && grep -qx "$SUMMARY_FILE" "$DIRTY_FILE"; then
-    if bash scripts/shared/chat/generate-commit-log-summary.sh --check >/dev/null 2>&1; then
-      echo "classification=generated-commitlog-summary"
-      echo "recoverability=recoverable-with-restore-regenerate"
-      echo "reason=only generated aggregate commit log summary is dirty and it matches generator output"
-      emit_common
-      exit 0
-    fi
-
-    echo "classification=unsupported-dirty"
-    echo "recoverability=blocked"
-    echo "reason=aggregate commit log summary is dirty but does not match generator output"
-    emit_common
-    exit 0
-  fi
-
   echo "classification=current-session-bookkeeping"
   echo "recoverability=checkpoint-or-preserve"
-  echo "reason=dirty paths are limited to the current session log and aggregate commit log summary"
+  echo "reason=dirty paths are limited to the current session log"
   emit_common
   exit 0
 fi

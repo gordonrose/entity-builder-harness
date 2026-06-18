@@ -5,7 +5,7 @@ set -euo pipefail
 source "scripts/shared/chat/session-log-paths.sh"
 
 BRANCH="$(git branch --show-current)"
-CHECKLIST=".agentic/shared/checklists/before-commit.md"
+CHECKLIST=".agentic/00.chat/checklists/before-commit.md"
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
   echo "ERROR: current branch is not a chat branch: $BRANCH" >&2
@@ -67,7 +67,7 @@ else
   check_file "$WORKFLOW" "declared workflow"
 fi
 
-check_file "$CHECKLIST" "before-commit checklist"
+check_file "$CHECKLIST" "canonical before-commit checklist"
 
 SCRIPT_REFS=""
 if [ -n "${WORKFLOW// }" ] && [ -f "$WORKFLOW" ]; then

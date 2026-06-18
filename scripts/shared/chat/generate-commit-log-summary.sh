@@ -4,34 +4,31 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  generate-commit-log-summary.sh [--write|--check|--print]
+  generate-commit-log-summary.sh [--print|--output <path>]
 
-Generates commitLogs/README.md from individual chat session logs.
-
-Modes:
-  --write  Write commitLogs/README.md. This is the default.
-  --check  Verify commitLogs/README.md already matches generated output.
-  --print  Print generated output without writing.
+Prints an aggregate summary from individual chat session logs.
+Use --output to write the summary to an explicit on-demand artifact path.
+Do not write commitLogs/README.md.
 EOF
 }
 
-MODE="write"
+OUTPUT_PATH=""
+MODE="print"
 
-if [ $# -gt 1 ]; then
-  usage >&2
-  exit 2
-fi
-
-if [ $# -eq 1 ]; then
+while [ $# -gt 0 ]; do
   case "$1" in
-    --write)
-      MODE="write"
-      ;;
-    --check)
-      MODE="check"
-      ;;
     --print)
       MODE="print"
+      shift
+      ;;
+    --output)
+      if [ $# -lt 2 ]; then
+        usage >&2
+        exit 2
+      fi
+      MODE="output"
+      OUTPUT_PATH="$2"
+      shift 2
       ;;
     -h|--help)
       usage
@@ -42,15 +39,22 @@ if [ $# -eq 1 ]; then
       exit 2
       ;;
   esac
+done
+
+if [ "$OUTPUT_PATH" = "commitLogs/README.md" ]; then
+  echo "ERROR: commitLogs/README.md is not maintained as an aggregate artifact." >&2
+  echo "Write on-demand summaries somewhere else, such as /tmp/chat-summary.md." >&2
+  exit 1
 fi
 
-node - "$MODE" <<'NODE'
+node - "$MODE" "$OUTPUT_PATH" <<'NODE'
 const fs = require('fs');
 const path = require('path');
 
 const mode = process.argv[2];
+const outputPath = process.argv[3];
 const root = 'commitLogs';
-const outputPath = path.join(root, 'README.md');
+const retiredOutputPath = path.join(root, 'README.md');
 
 function walk(dir) {
   if (!fs.existsSync(dir)) {
@@ -62,7 +66,7 @@ function walk(dir) {
     if (entry.isDirectory()) {
       return walk(entryPath);
     }
-    if (entry.isFile() && entry.name === 'README.md' && entryPath !== outputPath) {
+    if (entry.isFile() && entry.name === 'README.md' && entryPath !== retiredOutputPath) {
       return [entryPath];
     }
     return [];
@@ -244,21 +248,7 @@ if (mode === 'print') {
   process.exit(0);
 }
 
-if (mode === 'check') {
-  const current = fs.existsSync(outputPath)
-    ? fs.readFileSync(outputPath, 'utf8')
-    : null;
-
-  if (current === output) {
-    console.log(`${outputPath} is up to date.`);
-    process.exit(0);
-  }
-
-  console.error(`${outputPath} is not up to date.`);
-  process.exit(1);
-}
-
-fs.mkdirSync(root, { recursive: true });
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, output);
 console.log(`Wrote ${outputPath}`);
 NODE

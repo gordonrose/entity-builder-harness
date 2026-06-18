@@ -1,5 +1,6 @@
 classification_order:
   - mixed
+  - chat
   - shared
   - harness
   - education
@@ -13,10 +14,20 @@ mode_order:
   - unknown
 
 layers:
-  shared:
+  chat:
     use_when:
       - task changes chat startup
-      - task changes branch creation
+      - task changes chat session metadata or session logs
+      - task changes chat-owned worktree creation or cleanup
+      - task changes chat branch refresh from main
+      - task changes chat commit or checkpoint flow
+      - task changes promotion from chat branch to main
+      - task changes chat closeout, chat shortcuts, or chat reporting
+      - task changes chat lifecycle scripts or compatibility workflows
+    workflow_index: .agentic/00.chat/workflows/README.md
+
+  shared:
+    use_when:
       - task changes git workflow
       - task changes commit process
       - task changes deployment/release process shared by all work
@@ -56,7 +67,7 @@ layers:
     use_when:
       - task touches more than one layer
       - task changes both harness and product code
-      - task changes shared process plus harness or product behaviour
+      - task changes chat or shared process plus harness or product behaviour
     rule: split into separate phases and plan around executing one workflow at a time
 
 modes:

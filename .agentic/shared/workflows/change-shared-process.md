@@ -2,8 +2,11 @@
 
 ## Use When
 
-Use this when a request changes shared chat, branch, git, commit, merge,
-handoff, deployment, release, or context-preservation process.
+Use this when a request changes cross-layer git, commit, merge, handoff,
+deployment, release, or context-preservation process.
+
+Chat lifecycle changes belong to `.agentic/00.chat/`, even while some legacy
+workflow and script paths remain under `.agentic/shared/` or `scripts/shared/`.
 
 ## Required Gates
 
@@ -36,8 +39,7 @@ Do not edit files while blocked.
   session log. The root worktree is the local integration console and must not
   receive task edits, staging, formatting, or commits.
 - After explicit write permission for the chat, routine session bookkeeping may
-  be staged without another prompt when limited to the current chat session log
-  and `commitLogs/README.md`.
+  be staged without another prompt when limited to the current chat session log.
 - Preserve unrelated user changes in a dirty worktree.
 - Before any commit, complete the shared before-commit checklist.
 
@@ -140,5 +142,5 @@ bash scripts/shared/git/checkpoint-chat-session-log.sh
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
 The checkpoint commit is bookkeeping only and must contain no files except the
-current chat session log and `commitLogs/README.md`. Stop and ask if any other
-path is staged, unstaged, or would be committed.
+current chat session log. Stop and ask if any other path is staged, unstaged,
+or would be committed.

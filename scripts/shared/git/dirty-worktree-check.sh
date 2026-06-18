@@ -7,7 +7,7 @@ Usage:
   dirty-worktree-check.sh [--allow-session-bookkeeping]
 
 Checks whether the worktree is clean. With --allow-session-bookkeeping, changes
-limited to the current chat session log and commitLogs/README.md are accepted.
+limited to the current chat session log are accepted.
 EOF
 }
 
@@ -47,7 +47,6 @@ if [ "$ALLOW_SESSION_BOOKKEEPING" = "yes" ]; then
 
   if SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
     LOG_FILE="$(chat_log_file_for_session "$SESSION_ID")"
-    SUMMARY_FILE="commitLogs/README.md"
     MIXED_FILES="$(
       {
         git diff --name-only
@@ -55,8 +54,7 @@ if [ "$ALLOW_SESSION_BOOKKEEPING" = "yes" ]; then
         git ls-files --others --exclude-standard
       } | awk \
         -v log_file="$LOG_FILE" \
-        -v summary_file="$SUMMARY_FILE" \
-        '$0 != "" && $0 != log_file && $0 != summary_file' \
+        '$0 != "" && $0 != log_file' \
         | sort -u
     )"
 

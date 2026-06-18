@@ -146,6 +146,10 @@ Initial intent: ${QUESTION}
 
 - None recorded yet.
 
+## Main Refresh Conflicts
+
+- None recorded yet.
+
 ## ADR Disposition
 
 ADR needed: unknown
@@ -235,5 +239,4 @@ case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
     ;;
 esac
 
-(cd "$WORKTREE_PATH" && bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null)
-git -C "$WORKTREE_PATH" add "$LOG_FILE" commitLogs/README.md
+git -C "$WORKTREE_PATH" add "$LOG_FILE"

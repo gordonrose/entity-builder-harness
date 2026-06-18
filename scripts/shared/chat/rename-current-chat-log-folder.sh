@@ -83,8 +83,6 @@ awk -v stamp="$STAMP" -v slug="$SLUG" '
 ' "$TARGET_FILE" > "$tmp"
 mv "$tmp" "$TARGET_FILE"
 
-bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-
 echo "Renamed chat log folder:"
 echo "  from: $CURRENT_DIR"
 echo "  to:   $TARGET_DIR"

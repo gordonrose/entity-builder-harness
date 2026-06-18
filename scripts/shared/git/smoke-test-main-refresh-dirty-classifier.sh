@@ -53,7 +53,7 @@ EOF
 
 (
   cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
+  bash scripts/shared/chat/generate-commit-log-summary.sh --output "$TMP_ROOT/base-summary.md" >/dev/null
 )
 
 git -C "$REPO" add .
@@ -82,29 +82,14 @@ estimated_tokens: 75 tokens
 EOF
 
 git -C "$REPO" add "$OTHER_LOG"
-git -C "$REPO" commit -q -m "add other log without regenerating summary"
-
-(
-  cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-)
-
-if [ "$(classification)" != "generated-commitlog-summary" ]; then
-  fail "generated summary was not classified as generated-commitlog-summary"
-fi
-
-git -C "$REPO" restore -- commitLogs/README.md
+git -C "$REPO" commit -q -m "add other log"
 printf '\nlocal note\n' >> "$REPO/$SESSION_LOG"
-(
-  cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
-)
 
 if [ "$(classification)" != "current-session-bookkeeping" ]; then
   fail "current session changes were not classified as current-session-bookkeeping"
 fi
 
-git -C "$REPO" restore -- "$SESSION_LOG" commitLogs/README.md
+git -C "$REPO" restore -- "$SESSION_LOG"
 printf '\nrepo work\n' >> "$REPO/README.md"
 
 if [ "$(classification)" != "repo-work" ]; then
