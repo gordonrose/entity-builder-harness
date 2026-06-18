@@ -12,9 +12,9 @@ Usage:
 Records a commit in the current chat session log and updates rolling latest
 commit session metrics.
 
-Set CHAT_TRANSCRIPT_BYTES to the current chat transcript byte count so the
-harness can estimate chat tokens without reading the wrong artifact. Set
-CHAT_TRANSCRIPT_SOURCE to describe the source when available.
+The script estimates chat tokens from CHAT_TRANSCRIPT_BYTES when supplied.
+Otherwise it uses codex_session_log_path metadata, or discovers the matching
+Codex JSONL session log and counts its bytes.
 EOF
 }
 
@@ -123,6 +123,19 @@ if [ -n "${RAISED_AT_UTC// }" ]; then
   fi
 fi
 
+CODEX_SESSION_LOG_PATH="${CODEX_SESSION_LOG_PATH:-$(metadata_value "codex_session_log_path")}"
+
+if [ -z "${CHAT_TRANSCRIPT_BYTES:-}" ]; then
+  if [ -z "${CODEX_SESSION_LOG_PATH// }" ]; then
+    CODEX_SESSION_LOG_PATH="$(bash scripts/shared/chat/discover-codex-session-log.sh "$SESSION_ID" "$LOG_FILE" 2>/dev/null || true)"
+  fi
+
+  if [ -n "${CODEX_SESSION_LOG_PATH// }" ] && [ -f "$CODEX_SESSION_LOG_PATH" ]; then
+    CHAT_TRANSCRIPT_BYTES="$(wc -c < "$CODEX_SESSION_LOG_PATH" | tr -d ' ')"
+    CHAT_TRANSCRIPT_SOURCE="${CHAT_TRANSCRIPT_SOURCE:-Codex session log: ${CODEX_SESSION_LOG_PATH}}"
+  fi
+fi
+
 if [ -n "${CHAT_TRANSCRIPT_BYTES:-}" ]; then
   case "$CHAT_TRANSCRIPT_BYTES" in
     ''|*[!0-9]*)
@@ -139,7 +152,7 @@ elif [ "${ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS:-}" = "yes" ]; then
   CHAT_TOKEN_ESTIMATE="unavailable; transcript source not supplied by chat"
 else
   echo "ERROR: missing chat transcript metrics." >&2
-  echo "Set CHAT_TRANSCRIPT_BYTES before recording a chat commit." >&2
+  echo "Set CHAT_TRANSCRIPT_BYTES, record codex_session_log_path, or ensure the Codex session log is discoverable." >&2
   echo "Use ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes only for explicit legacy or recovery cases." >&2
   exit 1
 fi
@@ -165,8 +178,36 @@ tmp="$(mktemp)"
 awk \
   -v latest_at="$COMMIT_AT_UTC" \
   -v latest_sha="$COMMIT_SHA" \
+  -v codex_path="$CODEX_SESSION_LOG_PATH" \
   -v duration="$CHAT_DURATION" \
   -v chat_tokens="$CHAT_TOKEN_ESTIMATE" '
+    BEGIN {
+      in_meta = 0
+      wrote_codex_path = (codex_path == "")
+    }
+    /^<!-- agentic-session/ {
+      in_meta = 1
+      print
+      next
+    }
+    in_meta && /^codex_session_log_path:/ {
+      if (codex_path != "") {
+        print "codex_session_log_path: " codex_path
+      } else {
+        print
+      }
+      wrote_codex_path = 1
+      next
+    }
+    in_meta && /^-->/ {
+      if (wrote_codex_path == 0) {
+        print "codex_session_log_path: " codex_path
+        wrote_codex_path = 1
+      }
+      in_meta = 0
+      print
+      next
+    }
     /^final_commit_at_utc:/ {
       print "latest_commit_at_utc: " latest_at
       print "latest_commit_sha: " latest_sha
