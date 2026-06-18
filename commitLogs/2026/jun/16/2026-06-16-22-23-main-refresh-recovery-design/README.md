@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-17T22:05:29Z
-latest_commit_sha: 4995429
-chat_duration: 88946s (01:00:42:26)
-estimated_tokens: 6485 estimated from session log
+latest_commit_at_utc: 2026-06-18T14:31:29Z
+latest_commit_sha: a773de6
+chat_duration: 148106s (01:17:08:26)
+estimated_tokens: 9571 estimated from session log
 -->
 
 ## Initial Intent
@@ -416,6 +416,17 @@ Mode: deterministic
 
 Action: kept main-side expanded smoke coverage aligned with stricter promotion behavior
 
+
+### 2026-06-18T14:31:29Z - Commit recorded
+
+Commit: `a773de6`
+
+Message: Allow automatic promotion of tested preflight
+
+Summary: Records the governed main-refresh conflict taxonomy and audit trail, resolves the preflight merge conflicts, and adds automatic promotion for clean tested preflight results.
+
+ADR impact: covered by ADR 0013 and main-refresh conflict standard
+
 ## Commits
 
 
@@ -481,6 +492,13 @@ Action: kept main-side expanded smoke coverage aligned with stricter promotion b
   Message: Finish chat start workflow migration
   Summary: Promotes chat-start.md to own startup governance directly, reduces chat-start-interview.md to a compatibility pointer, updates classifier fallback to the chat layer workflow, and clears legacy shared workflow references from the migration audit.
   ADR impact: covered by existing chat layer ADR
+
+
+- Commit: `a773de6`
+  Time UTC: 2026-06-18T14:31:29Z
+  Message: Allow automatic promotion of tested preflight
+  Summary: Records the governed main-refresh conflict taxonomy and audit trail, resolves the preflight merge conflicts, and adds automatic promotion for clean tested preflight results.
+  ADR impact: covered by ADR 0013 and main-refresh conflict standard
 
 ## Main Refresh Conflicts
 
@@ -593,10 +611,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-17T22:05:29Z
-Latest commit SHA: 4995429
-Chat duration: 88946s (01:00:42:26)
-Estimated tokens: 6485 estimated from session log
+Latest commit at UTC: 2026-06-18T14:31:29Z
+Latest commit SHA: a773de6
+Chat duration: 148106s (01:17:08:26)
+Estimated tokens: 9571 estimated from session log
 
 ## Notes
 
