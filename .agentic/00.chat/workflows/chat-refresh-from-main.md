@@ -150,15 +150,19 @@ refresh should be rehearsed before mutating the active chat worktree.
    ```
 
 5. Promotion fast-forwards the active chat branch, verifies it points at the
-   tested preflight commit, removes the clean temporary preflight worktree, and
-   deletes only the matching `agentic/preflight/*/<timestamp>` branch.
+   tested preflight commit, removes the clean temporary preflight worktree,
+   deletes the matching `agentic/preflight/*/<timestamp>` branch, and cleans up
+   stale sibling preflight branches/worktrees for the same chat branch when they
+   are already ancestors of the promoted chat branch and have clean or absent
+   worktrees.
 <!-- deterministic-check: allow reason="promote-preflight-refresh.sh enforces dirty preflight worktree refusal before promotion or cleanup" -->
 6. Stop before promotion if unresolved conflicts remain, required checks failed
    or were skipped, the preflight worktree is dirty, the preflight branch no
    longer descends from the chat branch, the promotion script refuses cleanup,
-   or the user explicitly asked to inspect before promotion. Do not
-   force-remove the preflight worktree, delete the preflight branch, or promote
-   the chat branch while stopped.
+   or the user explicitly asked to inspect before promotion. Stale sibling
+   preflight branches with unique commits or dirty worktrees must be reported
+   and skipped, not deleted. Do not force-remove the preflight worktree, delete
+   the preflight branch, or promote the chat branch while stopped.
 7. After promotion, run the relevant layer checks before any task commit or
    promotion to `main`.
 

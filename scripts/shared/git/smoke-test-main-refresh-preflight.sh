@@ -22,6 +22,18 @@ cleanup() {
   if [ -n "${DIRTY_PREFLIGHT_BRANCH:-}" ]; then
     git -C "$REPO" branch -D "$DIRTY_PREFLIGHT_BRANCH" >/dev/null 2>&1 || true
   fi
+  if [ -n "${STALE_PREFLIGHT_WORKTREE:-}" ] && [ -d "$STALE_PREFLIGHT_WORKTREE" ]; then
+    git -C "$REPO" worktree remove -f "$STALE_PREFLIGHT_WORKTREE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "${UNIQUE_PREFLIGHT_WORKTREE:-}" ] && [ -d "$UNIQUE_PREFLIGHT_WORKTREE" ]; then
+    git -C "$REPO" worktree remove -f "$UNIQUE_PREFLIGHT_WORKTREE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "${STALE_PREFLIGHT_BRANCH:-}" ]; then
+    git -C "$REPO" branch -D "$STALE_PREFLIGHT_BRANCH" >/dev/null 2>&1 || true
+  fi
+  if [ -n "${UNIQUE_PREFLIGHT_BRANCH:-}" ]; then
+    git -C "$REPO" branch -D "$UNIQUE_PREFLIGHT_BRANCH" >/dev/null 2>&1 || true
+  fi
   rm -rf "$TMP_ROOT"
 }
 
@@ -121,6 +133,20 @@ fi
 
 rm -f "$PREFLIGHT_WORKTREE/preflight-note.txt"
 
+PREFLIGHT_PREFIX="${PREFLIGHT_BRANCH%/*}"
+STALE_PREFLIGHT_BRANCH="${PREFLIGHT_PREFIX}/20000101000000"
+STALE_PREFLIGHT_WORKTREE="$TMP_ROOT/stale-preflight-worktree"
+git -C "$REPO" branch "$STALE_PREFLIGHT_BRANCH" HEAD
+git -C "$REPO" worktree add --quiet "$STALE_PREFLIGHT_WORKTREE" "$STALE_PREFLIGHT_BRANCH"
+
+UNIQUE_PREFLIGHT_BRANCH="${PREFLIGHT_PREFIX}/20000101000001"
+UNIQUE_PREFLIGHT_WORKTREE="$TMP_ROOT/unique-preflight-worktree"
+git -C "$REPO" branch "$UNIQUE_PREFLIGHT_BRANCH" HEAD
+git -C "$REPO" worktree add --quiet "$UNIQUE_PREFLIGHT_WORKTREE" "$UNIQUE_PREFLIGHT_BRANCH"
+printf 'unique stale preflight\n' >> "$UNIQUE_PREFLIGHT_WORKTREE/unique.txt"
+git -C "$UNIQUE_PREFLIGHT_WORKTREE" add unique.txt
+git -C "$UNIQUE_PREFLIGHT_WORKTREE" commit -q -m "unique stale preflight work"
+
 PROMOTE_OUTPUT="$(
   cd "$REPO"
   bash scripts/shared/git/promote-preflight-refresh.sh "$PREFLIGHT_BRANCH"
@@ -144,6 +170,30 @@ fi
 
 if ! printf '%s\n' "$PROMOTE_OUTPUT" | grep -q '^cleanup_result=removed-worktree-and-deleted-branch$'; then
   fail "promotion did not report cleanup result"
+fi
+
+if git -C "$REPO" show-ref --verify --quiet "refs/heads/${STALE_PREFLIGHT_BRANCH}"; then
+  fail "ancestor stale preflight branch still exists after promotion"
+fi
+
+if git -C "$REPO" worktree list --porcelain | grep -Fqx "worktree ${STALE_PREFLIGHT_WORKTREE}"; then
+  fail "ancestor stale preflight worktree still exists after promotion"
+fi
+
+if ! printf '%s\n' "$PROMOTE_OUTPUT" | grep -q "^stale_preflight_removed=${STALE_PREFLIGHT_BRANCH} "; then
+  fail "promotion did not report stale preflight removal"
+fi
+
+if ! git -C "$REPO" show-ref --verify --quiet "refs/heads/${UNIQUE_PREFLIGHT_BRANCH}"; then
+  fail "unique stale preflight branch was deleted"
+fi
+
+if ! git -C "$REPO" worktree list --porcelain | grep -Fqx "worktree ${UNIQUE_PREFLIGHT_WORKTREE}"; then
+  fail "unique stale preflight worktree was removed"
+fi
+
+if ! printf '%s\n' "$PROMOTE_OUTPUT" | grep -q "^stale_preflight_skipped=${UNIQUE_PREFLIGHT_BRANCH} reason=unique-commits-not-in-promoted-head$"; then
+  fail "promotion did not report unique stale preflight skip"
 fi
 
 DIRTY_PREFLIGHT_BRANCH="topic/not-preflight"

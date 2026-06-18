@@ -42,6 +42,12 @@ bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
 - Delete deterministic temporary preflight branches/worktrees only when their
   corresponding operation has either been promoted or explicitly abandoned by
   the user.
+- After a successful preflight promotion, automatically delete stale sibling
+  preflight branches/worktrees for the same chat branch only when the stale
+  branch is already an ancestor of the promoted chat branch and any associated
+  worktree is clean.
+- Report and skip stale sibling preflight branches that have unique commits,
+  dirty worktrees, multiple worktrees, or ambiguous ownership.
 - Require explicit approval for cleanup outside deterministic safe cases.
 - If a cleanup case is not covered here or by a script-level gate, stop and ask
   whether to update the harness or approve a one-off exception.

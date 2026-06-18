@@ -105,6 +105,10 @@ Task: Explore and design a governed main-refresh recovery process for chat branc
 - Decision: Finish chat-start migration and clear legacy workflow references
   Rationale: Promoted chat-start.md to own startup governance directly, reduced chat-start-interview.md to a compatibility pointer, updated classifier fallback to .agentic/00.chat/workflows/chat-start.md, and made commit prerequisites rely on the canonical chat checklist.
 
+
+- Decision: Clean safe stale preflight siblings after promotion
+  Rationale: Updated preflight promotion to remove stale sibling preflight branches and worktrees for the same chat branch only when they are already ancestors of the promoted chat branch and clean or absent; unique or dirty stale preflights are reported and skipped.
+
 ## Activity Log
 
 ### 2026-06-16T21:23:03Z - Session started
@@ -426,6 +430,13 @@ Message: Allow automatic promotion of tested preflight
 Summary: Records the governed main-refresh conflict taxonomy and audit trail, resolves the preflight merge conflicts, and adds automatic promotion for clean tested preflight results.
 
 ADR impact: covered by ADR 0013 and main-refresh conflict standard
+
+
+### 2026-06-18T14:35:02Z - Decision
+
+Decision: Clean safe stale preflight siblings after promotion
+
+Rationale: Updated preflight promotion to remove stale sibling preflight branches and worktrees for the same chat branch only when they are already ancestors of the promoted chat branch and clean or absent; unique or dirty stale preflights are reported and skipped.
 
 ## Commits
 
