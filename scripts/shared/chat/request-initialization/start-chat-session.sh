@@ -204,20 +204,43 @@ bash scripts/shared/chat/rename-current-chat-log-folder.sh \"<short-summary>\"
 
 Do not commit without my explicit approval."
 
+print_first_prompt() {
+  echo
+  echo "Paste this into Codex / Claude / Mistral:"
+  echo "$FIRST_PROMPT"
+}
+
+copy_first_prompt_with_retry() {
+  local label="$1"
+  shift
+
+  local attempt=1
+  while [ "$attempt" -le 2 ]; do
+    if printf '%s' "$FIRST_PROMPT" | "$@"; then
+      echo "Copied first agent prompt to clipboard."
+      return 0
+    fi
+
+    if [ "$attempt" -lt 2 ]; then
+      echo "Clipboard copy via ${label} failed; retrying..." >&2
+      sleep 1
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  echo "WARNING: Clipboard copy via ${label} failed; printing prompt instead." >&2
+  return 1
+}
+
 if [ "${CHAT_COPY_PROMPT:-copy}" = "skip" ]; then
-  echo
-  echo "Paste this into Codex / Claude / Mistral:"
-  echo "$FIRST_PROMPT"
+  print_first_prompt
 elif command -v clip.exe >/dev/null 2>&1; then
-  printf '%s' "$FIRST_PROMPT" | clip.exe
-  echo "Copied first agent prompt to clipboard."
+  copy_first_prompt_with_retry "clip.exe" clip.exe || print_first_prompt
 elif command -v xclip >/dev/null 2>&1; then
-  printf '%s' "$FIRST_PROMPT" | xclip -selection clipboard
-  echo "Copied first agent prompt to clipboard."
+  copy_first_prompt_with_retry "xclip" xclip -selection clipboard || print_first_prompt
 else
-  echo
-  echo "Paste this into Codex / Claude / Mistral:"
-  echo "$FIRST_PROMPT"
+  print_first_prompt
 fi
 
 case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in

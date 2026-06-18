@@ -88,4 +88,29 @@ if [ "$workflow" != ".agentic/00.chat/workflows/chat-start.md" ]; then
   fail "chat startup did not use the 00.chat workflow: ${workflow:-missing}"
 fi
 
+FAKE_BIN="$TMP_ROOT/fake-bin"
+mkdir -p "$FAKE_BIN"
+cat > "$FAKE_BIN/clip.exe" <<'EOF'
+#!/usr/bin/env bash
+cat >/dev/null
+exit 1
+EOF
+chmod +x "$FAKE_BIN/clip.exe"
+
+AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
+CHAT_CLEANUP_EMPTY_BRANCHES=skip \
+CHAT_COPY_PROMPT=copy \
+PATH="$FAKE_BIN:$PATH" \
+  bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+    bash scripts/shared/chat/request-initialization/start-chat-session.sh "test clipboard fallback session" \
+    >"$TMP_ROOT/chat-worktree-session-clipboard.out" 2>&1
+
+if ! grep -q 'WARNING: Clipboard copy via clip.exe failed; printing prompt instead.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "clipboard failure did not warn before falling back"
+fi
+
+if ! grep -q 'Paste this into Codex / Claude / Mistral:' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "clipboard failure did not print the first prompt"
+fi
+
 echo "chat worktree session smoke test passed."
