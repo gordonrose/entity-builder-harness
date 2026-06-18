@@ -13,6 +13,8 @@ in place as compatibility shims while active sessions still reference them.
 - Layer overview: `.agentic/00.chat/README.md`
 - Workflow index: `.agentic/00.chat/workflows/README.md`
 - Before-commit checklist: `.agentic/00.chat/checklists/before-commit.md`
+- Main refresh conflict type standard:
+  `.agentic/00.chat/standards/main-refresh-conflict-types.md`
 - Reporting skill: `.agentic/00.chat/skills/session-summary.md`
 
 ## Migrated Workflow Ownership
@@ -60,6 +62,10 @@ to the canonical chat layer:
    desired retention policy is explicit.
 5. Review whether `change-shared-process.md` should keep chat lifecycle notes
    or narrow itself to cross-layer process only.
+6. Add a conflict classifier script after the conflict type standard has been
+   exercised by at least one main-refresh recovery.
+7. Add a verification gate that compares unresolved or resolved preflight
+   conflict paths with `## Main Refresh Conflicts` entries before promotion.
 
 ## Audit
 

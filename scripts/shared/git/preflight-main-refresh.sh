@@ -53,7 +53,7 @@ case "$CURRENT_BRANCH" in
 esac
 
 CURRENT_HEAD="$(git rev-parse HEAD)"
-SAFE_BRANCH="$(printf '%s\n' "$CURRENT_BRANCH" | tr -c 'A-Za-z0-9._-' '-')"
+SAFE_BRANCH="$(printf '%s' "$CURRENT_BRANCH" | tr -c 'A-Za-z0-9._-' '-')"
 STAMP="$(date -u +%Y%m%d%H%M%S)"
 PREFLIGHT_BRANCH="agentic/preflight/${SAFE_BRANCH}/${STAMP}"
 PREFLIGHT_ROOT="${TMPDIR:-/tmp}/agentic-main-refresh-preflight"

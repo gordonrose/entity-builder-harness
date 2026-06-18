@@ -12,9 +12,10 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 3. Do not reclassify unless the session metadata is missing, incomplete, or marked `unknown`.
 4. Load the workflow listed in the session metadata.
 5. Follow that workflow’s required gates before editing files.
-6. Stop if repo state, branch state, task ownership, classification, or workflow choice is ambiguous.
-7. Follow shared git approval rules before commits or destructive actions; never push, delete branches, rewrite history, discard work, or overwrite work without explicit user approval.
-8. Default mode is read-only. Do not create, edit, move, delete, stage, commit, or format files unless the user explicitly grants write permission for this chat.
+6. Stop when repo state, branch state, task ownership, classification, workflow choice, or governance coverage is ambiguous or absent.
+7. Missing governance is a stop condition. If a required action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard, stop before acting. Explain the governance gap and ask whether to update the harness instead of improvising.
+8. Follow shared git approval rules before commits or destructive actions; never push, delete branches, rewrite history, discard work, or overwrite work without explicit user approval.
+9. Default mode is read-only. Do not create, edit, move, delete, stage, commit, or format files unless the user explicitly grants write permission for this chat.
 
 ## Operating Layers
 

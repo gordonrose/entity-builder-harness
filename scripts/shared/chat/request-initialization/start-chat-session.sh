@@ -146,6 +146,10 @@ Initial intent: ${QUESTION}
 
 - None recorded yet.
 
+## Main Refresh Conflicts
+
+- None recorded yet.
+
 ## ADR Disposition
 
 ADR needed: unknown

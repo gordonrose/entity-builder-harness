@@ -121,8 +121,26 @@ refresh should be rehearsed before mutating the active chat worktree.
    bash scripts/shared/git/preflight-main-refresh.sh
    ```
 
-3. If preflight reports conflicts, stop. Summarize the conflict paths and do
-   not promote the preflight branch until the recovery is governed or approved.
+3. If preflight reports conflicts, stop before resolving. Classify each
+   conflicted path with:
+
+   ```txt
+   .agentic/00.chat/standards/main-refresh-conflict-types.md
+   ```
+
+   Resolve only conflicts with deterministic actions in that standard. If no
+   existing type fits, use the missing-governance stop response and propose a
+   new type or expansion before resolving.
+
+   Record every conflict classification and resolution under `## Main Refresh
+   Conflicts` in the current chat session log with:
+
+   ```bash
+   bash scripts/shared/chat/record-main-refresh-conflict.sh ...
+   ```
+
+   Do not promote the preflight branch until the session log records the audit
+   trail for every conflicted path.
 4. If preflight reports `result=clean-merge`, promote only after explicit user
    approval:
 
@@ -130,7 +148,13 @@ refresh should be rehearsed before mutating the active chat worktree.
    bash scripts/shared/git/promote-preflight-refresh.sh <preflight-branch>
    ```
 
-5. After promotion, run the relevant layer checks before any task commit or
+5. Promotion fast-forwards the active chat branch, verifies it points at the
+   tested preflight commit, removes the clean temporary preflight worktree, and
+   deletes only the matching `agentic/preflight/*/<timestamp>` branch.
+<!-- deterministic-check: allow reason="promote-preflight-refresh.sh enforces dirty preflight worktree refusal before promotion or cleanup" -->
+6. If the preflight worktree is dirty, stop. Do not force-remove it, delete the
+   preflight branch, or promote the chat branch.
+7. After promotion, run the relevant layer checks before any task commit or
    promotion to `main`.
 
 ## Recommended Active-Branch Flow
@@ -176,6 +200,8 @@ refresh should be rehearsed before mutating the active chat worktree.
   from `main`.
 - Note whether the comparison used local refs only or included a remote fetch.
 - Record the classifier result, dirty paths, incoming overlap paths, recovery
-  action, preflight branch, merge result, and whether stash was used. Expected
-  value for stash is `no` unless a later governed stash path is approved.
+  action, preflight branch, preflight worktree, promoted commit, cleanup result,
+  conflict type for each conflicted path, deterministic action used, and whether
+  stash was used. Expected value for stash is `no` unless a later governed stash
+  path is approved.
 - Do not commit the refresh unless the user explicitly approves the commit.

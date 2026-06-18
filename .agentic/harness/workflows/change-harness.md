@@ -9,6 +9,7 @@ required_gates:
 rules:
   - Keep AGENTS.md as a router only.
   - Consult .agentic/harness/standards/agentic-artifact-standards.md before adding or changing harness artifacts.
+  - Consult .agentic/harness/standards/missing-governance-stop-condition.md when a required harness action, recovery path, workaround, or substitution is not already governed.
   - Prefer scripts over prose where checks can be deterministic.
   - Do not duplicate rules across AGENTS.md, workflows, skills, and gates.
   - Update relevant indexes when adding or moving harness files.

@@ -317,6 +317,105 @@ Summary: Promotes chat-start.md to own startup governance directly, reduces chat
 
 ADR impact: covered by existing chat layer ADR
 
+
+### 2026-06-18T13:48:16Z - Main refresh conflict recorded
+
+Path: `.agentic/shared/workflows/local-convergence.md`
+
+Type: `ownership-migration-conflict`
+
+Mode: deterministic
+
+Action: kept shared compatibility pointer and migrated verifier-based governance into .agentic/00.chat/workflows/chat-promote-to-main.md
+
+
+### 2026-06-18T13:50:44Z - Main refresh conflict recorded
+
+Path: `.agentic/shared/workflows/main-updated.md`
+
+Type: `ownership-migration-conflict`
+
+Mode: deterministic
+
+Action: kept shared compatibility pointer; migrated valid preflight promotion cleanup guidance into .agentic/00.chat/workflows/chat-refresh-from-main.md; did not migrate obsolete commitLogs/README.md generated-summary recovery because ADR 0013 retires that tracked artifact
+
+
+### 2026-06-18T13:53:55Z - Main refresh conflict recorded
+
+Path: `commitLogs/README.md`
+
+Type: `retired-artifact-delete-modify-conflict`
+
+Mode: deterministic
+
+Action: kept deletion because ADR 0013 retires tracked commitLogs/README.md and on-demand summaries remain available through the chat reporting workflow and generator script
+
+
+### 2026-06-18T13:57:29Z - Main refresh conflict recorded
+
+Path: `scripts/shared/chat/generate-commit-log-summary.sh`
+
+Type: `retired-artifact-generator-conflict`
+
+Mode: deterministic
+
+Action: kept on-demand stdout and explicit --output behavior, added safe --print alias, and continued blocking --output commitLogs/README.md; did not restore --write or --check for the retired tracked artifact
+
+
+### 2026-06-18T14:02:44Z - Main refresh conflict recorded
+
+Path: `scripts/shared/git/classify-main-refresh-dirty-state.sh`
+
+Type: `retired-artifact-policy-script-conflict`
+
+Mode: deterministic
+
+Action: kept classifier behavior that only recognizes clean, current-session-bookkeeping, repo-work, and unsupported-dirty; did not preserve generated-commitlog-summary or --check behavior for the retired artifact
+
+
+### 2026-06-18T14:03:16Z - Main refresh conflict recorded
+
+Path: `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
+
+Type: `retired-artifact-policy-script-conflict`
+
+Mode: deterministic
+
+Action: kept smoke coverage for clean, current-session-bookkeeping, repo-work, and unsupported-dirty; did not preserve generated-commitlog-summary expectation
+
+
+### 2026-06-18T14:27:28Z - Main refresh conflict recorded
+
+Path: `scripts/shared/git/preflight-main-refresh.sh`
+
+Type: `script-add-add-conflict`
+
+Mode: deterministic
+
+Action: kept main-side stricter preflight branch-name sanitization without changing the governed preflight capability
+
+
+### 2026-06-18T14:27:35Z - Main refresh conflict recorded
+
+Path: `scripts/shared/git/promote-preflight-refresh.sh`
+
+Type: `script-add-add-conflict`
+
+Mode: deterministic
+
+Action: kept main-side validation requiring preflight branch shape, exactly one clean preflight worktree, promoted commit verification, worktree removal, branch deletion, and structured output
+
+
+### 2026-06-18T14:27:41Z - Main refresh conflict recorded
+
+Path: `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
+
+Type: `script-add-add-conflict`
+
+Mode: deterministic
+
+Action: kept main-side expanded smoke coverage aligned with stricter promotion behavior
+
 ## Commits
 
 
@@ -382,6 +481,108 @@ ADR impact: covered by existing chat layer ADR
   Message: Finish chat start workflow migration
   Summary: Promotes chat-start.md to own startup governance directly, reduces chat-start-interview.md to a compatibility pointer, updates classifier fallback to the chat layer workflow, and clears legacy shared workflow references from the migration audit.
   ADR impact: covered by existing chat layer ADR
+
+## Main Refresh Conflicts
+
+
+
+- Path: `.agentic/shared/workflows/local-convergence.md`
+  Type: `ownership-migration-conflict`
+  Mode: deterministic
+  Reason: chat branch converted the legacy shared workflow to a compatibility pointer while main improved the legacy workflow with verifier-based local convergence governance
+  Action: kept shared compatibility pointer and migrated verifier-based governance into .agentic/00.chat/workflows/chat-promote-to-main.md
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: .agentic/shared/workflows/local-convergence.md; .agentic/00.chat/workflows/chat-promote-to-main.md
+  Checks: pending: deterministic process drift and diff check after conflict resolution
+
+
+- Path: `.agentic/shared/workflows/main-updated.md`
+  Type: `ownership-migration-conflict`
+  Mode: deterministic
+  Reason: chat branch converted the legacy shared refresh workflow to a compatibility pointer while main improved the legacy workflow with generated-summary recovery and preflight cleanup guidance
+  Action: kept shared compatibility pointer; migrated valid preflight promotion cleanup guidance into .agentic/00.chat/workflows/chat-refresh-from-main.md; did not migrate obsolete commitLogs/README.md generated-summary recovery because ADR 0013 retires that tracked artifact
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: .agentic/shared/workflows/main-updated.md; .agentic/00.chat/workflows/chat-refresh-from-main.md
+  Checks: pending: deterministic process drift and diff check after conflict resolution
+
+
+- Path: `commitLogs/README.md`
+  Type: `retired-artifact-delete-modify-conflict`
+  Mode: deterministic
+  Reason: chat branch retired the tracked aggregate commit log summary while main modified the generated artifact
+  Action: kept deletion because ADR 0013 retires tracked commitLogs/README.md and on-demand summaries remain available through the chat reporting workflow and generator script
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: commitLogs/README.md
+  Checks: pending: commit log deletion gate and diff check after conflict resolution
+
+
+- Path: `scripts/shared/chat/generate-commit-log-summary.sh`
+  Type: `retired-artifact-generator-conflict`
+  Mode: deterministic
+  Reason: main preserved generator behavior for tracked commitLogs/README.md while chat branch retired that artifact and made summaries on-demand
+  Action: kept on-demand stdout and explicit --output behavior, added safe --print alias, and continued blocking --output commitLogs/README.md; did not restore --write or --check for the retired tracked artifact
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: scripts/shared/chat/generate-commit-log-summary.sh; .agentic/00.chat/standards/main-refresh-conflict-types.md
+  Checks: pending: generator smoke test, shell syntax, and diff check
+
+
+- Path: `scripts/shared/git/classify-main-refresh-dirty-state.sh`
+  Type: `retired-artifact-policy-script-conflict`
+  Mode: deterministic
+  Reason: main added generated-commitlog-summary dirty-state recoverability for commitLogs/README.md while chat branch retired that tracked artifact
+  Action: kept classifier behavior that only recognizes clean, current-session-bookkeeping, repo-work, and unsupported-dirty; did not preserve generated-commitlog-summary or --check behavior for the retired artifact
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: scripts/shared/git/classify-main-refresh-dirty-state.sh; .agentic/00.chat/standards/main-refresh-conflict-types.md
+  Checks: pending: dirty classifier smoke test, shell syntax, and diff check
+
+
+- Path: `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
+  Type: `retired-artifact-policy-script-conflict`
+  Mode: deterministic
+  Reason: main added smoke coverage for generated-commitlog-summary while chat branch retired commitLogs/README.md as an active tracked artifact
+  Action: kept smoke coverage for clean, current-session-bookkeeping, repo-work, and unsupported-dirty; did not preserve generated-commitlog-summary expectation
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh
+  Checks: pending: dirty classifier smoke test, shell syntax, and diff check
+
+
+- Path: `scripts/shared/git/preflight-main-refresh.sh`
+  Type: `script-add-add-conflict`
+  Mode: deterministic
+  Reason: both sides added the governed preflight refresh script and main tightened branch-name sanitization
+  Action: kept main-side stricter preflight branch-name sanitization without changing the governed preflight capability
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: scripts/shared/git/preflight-main-refresh.sh
+  Checks: pending: preflight smoke test, shell syntax, and diff check
+
+
+- Path: `scripts/shared/git/promote-preflight-refresh.sh`
+  Type: `script-add-add-conflict`
+  Mode: deterministic
+  Reason: both sides added the governed preflight promotion script and main added stricter validation plus cleanup
+  Action: kept main-side validation requiring preflight branch shape, exactly one clean preflight worktree, promoted commit verification, worktree removal, branch deletion, and structured output
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: scripts/shared/git/promote-preflight-refresh.sh
+  Checks: pending: preflight smoke test, shell syntax, and diff check
+
+
+- Path: `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
+  Type: `script-add-add-conflict`
+  Mode: deterministic
+  Reason: both sides added preflight smoke coverage and main expanded coverage for dirty preflight refusal, cleanup, and non-preflight branch rejection
+  Action: kept main-side expanded smoke coverage aligned with stricter promotion behavior
+  Preflight branch: `agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617221026`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro--20260617221026`
+  Files changed by resolution: scripts/shared/git/smoke-test-main-refresh-preflight.sh
+  Checks: pending: preflight smoke test, shell syntax, and diff check
 
 ## ADR Disposition
 

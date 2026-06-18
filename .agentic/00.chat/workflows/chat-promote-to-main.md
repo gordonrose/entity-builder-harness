@@ -37,20 +37,17 @@ Do not change branches or edit files while blocked.
    bash scripts/shared/chat/report-chat-workspaces.sh
    ```
 
-2. Verify the target chat branch has a session log and chat-owned worktree:
+2. Verify the target chat branch is ready for local convergence:
 
    ```bash
-   bash scripts/shared/chat/ensure-chat-worktree.sh <session-log>
+   bash scripts/shared/git/verify-local-convergence.sh <chat-branch>
    ```
 
-3. Inspect freshness against local `main`:
+   This verification is read-only. It may inspect a session log from the chat
+   branch before that log exists on root `main`.
 
-   ```bash
-   bash scripts/shared/git/check-chat-branch-freshness.sh <chat-branch>
-   ```
-
-4. If the chat branch is behind or diverged, ask before merging or rebasing
-   `main` into the chat branch.
+3. If verification reports `State: eligible`, ask for explicit user approval
+   before merging the chat branch into local `main`.
 
 ## Refresh Policy
 
@@ -61,10 +58,56 @@ Do not change branches or edit files while blocked.
 - If conflicts appear, stop after Git reports the conflict set. Summarize the
   conflicting files and ask before resolving them.
 
+### Behind `main`
+
+If verification reports `blocked-behind`, do not merge the chat branch into
+`main`. Ask for approval to refresh the chat branch from `main`.
+
+For an approved non-rewriting refresh, run from the chat-owned worktree:
+
+```bash
+git merge --no-ff main
+```
+
+Then rerun the relevant checks and rerun local convergence verification.
+
+### Diverged From `main`
+
+If verification reports `blocked-diverged`, do not merge the chat branch into
+`main`. Explain that both `main` and the chat branch have unique commits.
+
+Prefer an approved merge of `main` into the chat branch from the chat-owned
+worktree. Rebase rewrites chat branch commits and requires separate explicit
+approval.
+
+If conflicts appear, stop after Git reports the conflict set. Summarize the
+conflicting files and ask before resolving them.
+
+### Dirty Chat Worktree
+
+<!-- deterministic-check: allow reason="verifier emits the state; prose governs human recovery choices" -->
+If verification reports `blocked-dirty-chat-worktree`, do not merge the chat
+branch into `main`.
+
+Do not stash, discard, stage, or commit dirty chat work automatically. Ask the
+user whether to inspect, commit, preserve, or explicitly discard the work.
+
+### Missing Or Ambiguous Evidence
+
+<!-- deterministic-check: allow reason="verifier emits the state; prose routes governed recovery and missing-governance fallback" -->
+If verification reports a missing log, missing worktree, invalid metadata,
+unrecorded commit, or log-head mismatch, do not merge. Follow the verifier's
+required action and rerun verification.
+
+If the required recovery path is not covered by this workflow, a script, a gate,
+or a standard, use the missing-governance stop response from
+`.agentic/harness/standards/missing-governance-stop-condition.md`.
+
 ## Promotion Policy
 
 Before promoting a chat branch into local `main`:
 
+- Root `main` must be clean.
 - The chat worktree must be clean.
 - The session log must record the latest task commit or explicitly state why no
   task commit exists.
@@ -72,6 +115,12 @@ Before promoting a chat branch into local `main`:
   refresh from `main`.
 - Relevant checks for the changed layer must pass.
 - User approval is required before merging into `main`.
+
+For an approved local merge, run from the root integration worktree:
+
+```bash
+git merge --no-ff <chat-branch>
+```
 
 Pushes to `origin` require separate explicit approval.
 

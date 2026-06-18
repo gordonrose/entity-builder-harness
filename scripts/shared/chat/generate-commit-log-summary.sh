@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  generate-commit-log-summary.sh [--output <path>]
+  generate-commit-log-summary.sh [--print|--output <path>]
 
 Prints an aggregate summary from individual chat session logs.
 Use --output to write the summary to an explicit on-demand artifact path.
@@ -13,14 +13,20 @@ EOF
 }
 
 OUTPUT_PATH=""
+MODE="print"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --print)
+      MODE="print"
+      shift
+      ;;
     --output)
       if [ $# -lt 2 ]; then
         usage >&2
         exit 2
       fi
+      MODE="output"
       OUTPUT_PATH="$2"
       shift 2
       ;;
@@ -41,11 +47,12 @@ if [ "$OUTPUT_PATH" = "commitLogs/README.md" ]; then
   exit 1
 fi
 
-node - "$OUTPUT_PATH" <<'NODE'
+node - "$MODE" "$OUTPUT_PATH" <<'NODE'
 const fs = require('fs');
 const path = require('path');
 
-const outputPath = process.argv[2];
+const mode = process.argv[2];
+const outputPath = process.argv[3];
 const root = 'commitLogs';
 const retiredOutputPath = path.join(root, 'README.md');
 
@@ -236,7 +243,7 @@ const lines = [
 
 const output = lines.join('\n');
 
-if (!outputPath) {
+if (mode === 'print') {
   process.stdout.write(output);
   process.exit(0);
 }
