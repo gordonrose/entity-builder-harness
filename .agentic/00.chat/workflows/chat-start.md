@@ -22,6 +22,18 @@ Do not load unrelated workflows, skills, standards, or documentation.
 If the metadata includes a `worktree` value, use that chat-owned worktree for
 task writes. The root worktree is the local integration console.
 
+<!-- deterministic-check: allow reason="register-codex-session-log.sh owns discovery and mutation; workflow governs when to invoke it" -->
+If `codex_session_log_path` is missing or blank, register the current Codex
+session JSONL before the first task commit:
+
+```bash
+bash scripts/shared/chat/register-codex-session-log.sh
+```
+
+This records the transcript source used later for estimated chat-token metrics.
+If the helper cannot find a unique matching Codex session log, continue in
+read-only mode and record the gap before any commit-boundary operation.
+
 ## Missing Session
 
 <!-- deterministic-check: allow reason="read-current-chat-log.sh detects missing session; workflow defines the exact blocked response" -->

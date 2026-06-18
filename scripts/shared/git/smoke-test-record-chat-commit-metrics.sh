@@ -25,6 +25,8 @@ cp "$SOURCE_ROOT/scripts/shared/git/record-chat-commit.sh" \
   "$REPO/scripts/shared/git/record-chat-commit.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" \
   "$REPO/scripts/shared/chat/session-log-paths.sh"
+cp "$SOURCE_ROOT/scripts/shared/chat/discover-codex-session-log.sh" \
+  "$REPO/scripts/shared/chat/discover-codex-session-log.sh"
 
 cat > "$REPO/$LOG_FILE" <<EOF
 # Chat Session: token metrics
@@ -69,7 +71,8 @@ EOF
 set +e
 (
   cd "$REPO"
-  bash scripts/shared/git/record-chat-commit.sh abc1234 "Test commit" "Missing token metric"
+  CODEX_HOME="$TMP_ROOT/empty-codex" \
+    bash scripts/shared/git/record-chat-commit.sh abc1234 "Test commit" "Missing token metric"
 ) >/dev/null 2>"$TMP_ROOT/missing-metrics.err"
 MISSING_STATUS="$?"
 set -e
@@ -84,6 +87,7 @@ fi
 
 (
   cd "$REPO"
+  CODEX_HOME="$TMP_ROOT/empty-codex" \
   ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes \
     bash scripts/shared/git/record-chat-commit.sh abc1234 "Test commit" "Legacy token metric escape" >/dev/null
 )
@@ -100,11 +104,36 @@ if ! grep -q '^Estimated chat tokens: unavailable; transcript source not supplie
   fail "visible legacy chat token metric escape was not marked unavailable"
 fi
 
+CODEX_HOME_FIXTURE="$TMP_ROOT/codex-home"
+CODEX_SESSION_LOG="$CODEX_HOME_FIXTURE/sessions/2026/06/18/rollout-test.jsonl"
+mkdir -p "${CODEX_SESSION_LOG%/*}"
+cat > "$CODEX_SESSION_LOG" <<EOF
+{"type":"message","payload":"${SESSION_ID}"}
+{"type":"message","payload":"${BRANCH}"}
+{"type":"message","payload":"${LOG_FILE}"}
+EOF
+CODEX_SESSION_BYTES="$(wc -c < "$CODEX_SESSION_LOG" | tr -d ' ')"
+CODEX_SESSION_TOKENS="$(( (CODEX_SESSION_BYTES + 3) / 4 ))"
+
+(
+  cd "$REPO"
+  CODEX_HOME="$CODEX_HOME_FIXTURE" \
+    bash scripts/shared/git/record-chat-commit.sh cde4567 "Test commit 2" "Discovered Codex session metric" >/dev/null
+)
+
+if ! grep -q "^codex_session_log_path: ${CODEX_SESSION_LOG}$" "$REPO/$LOG_FILE"; then
+  fail "discovered Codex session log path was not recorded"
+fi
+
+if ! grep -q "^estimated_chat_tokens: ${CODEX_SESSION_TOKENS} estimated from chat transcript bytes (${CODEX_SESSION_BYTES} bytes; source: Codex session log: ${CODEX_SESSION_LOG})$" "$REPO/$LOG_FILE"; then
+  fail "discovered Codex session byte metric was not recorded"
+fi
+
 (
   cd "$REPO"
   CHAT_TRANSCRIPT_BYTES=4096 \
   CHAT_TRANSCRIPT_SOURCE="smoke transcript fixture" \
-    bash scripts/shared/git/record-chat-commit.sh def5678 "Test commit 2" "Transcript byte token metric" >/dev/null
+    bash scripts/shared/git/record-chat-commit.sh def5678 "Test commit 3" "Transcript byte token metric" >/dev/null
 )
 
 if ! grep -q '^estimated_chat_tokens: 1024 estimated from chat transcript bytes (4096 bytes; source: smoke transcript fixture)$' "$REPO/$LOG_FILE"; then

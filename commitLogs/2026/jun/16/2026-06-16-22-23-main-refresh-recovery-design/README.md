@@ -13,7 +13,8 @@ raised_at_utc: 2026-06-16T21:23:03Z
 latest_commit_at_utc: 2026-06-18T14:57:22Z
 latest_commit_sha: db7faa9
 chat_duration: 149659s (01:17:34:19)
-estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_tokens: 1593780 estimated from chat transcript bytes (6375118 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl)
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl
 -->
 
 ## Initial Intent
@@ -661,7 +662,7 @@ Raised at UTC: 2026-06-16T21:23:03Z
 Latest commit at UTC: 2026-06-18T14:57:22Z
 Latest commit SHA: db7faa9
 Chat duration: 149659s (01:17:34:19)
-Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat tokens: 1593780 estimated from chat transcript bytes (6375118 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl)
 
 ## Notes
 
