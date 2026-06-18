@@ -13,7 +13,7 @@ raised_at_utc: 2026-06-16T21:23:03Z
 latest_commit_at_utc: 2026-06-18T14:37:40Z
 latest_commit_sha: 8125aa4
 chat_duration: 148477s (01:17:14:37)
-estimated_tokens: 9931 estimated from session log
+estimated_chat_tokens: pending; next commit recording requires chat-supplied transcript bytes
 -->
 
 ## Initial Intent
@@ -643,7 +643,7 @@ Raised at UTC: 2026-06-16T21:23:03Z
 Latest commit at UTC: 2026-06-18T14:37:40Z
 Latest commit SHA: 8125aa4
 Chat duration: 148477s (01:17:14:37)
-Estimated tokens: 9931 estimated from session log
+Estimated chat tokens: pending; next commit recording requires chat-supplied transcript bytes
 
 ## Notes
 

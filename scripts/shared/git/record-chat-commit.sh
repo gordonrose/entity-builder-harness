@@ -11,6 +11,10 @@ Usage:
 
 Records a commit in the current chat session log and updates rolling latest
 commit session metrics.
+
+Set CHAT_TRANSCRIPT_BYTES to the current chat transcript byte count so the
+harness can estimate chat tokens without reading the wrong artifact. Set
+CHAT_TRANSCRIPT_SOURCE to describe the source when available.
 EOF
 }
 
@@ -119,11 +123,25 @@ if [ -n "${RAISED_AT_UTC// }" ]; then
   fi
 fi
 
-if [ -n "${ESTIMATED_TOKENS:-}" ]; then
-  TOKEN_ESTIMATE="$ESTIMATED_TOKENS"
+if [ -n "${CHAT_TRANSCRIPT_BYTES:-}" ]; then
+  case "$CHAT_TRANSCRIPT_BYTES" in
+    ''|*[!0-9]*)
+      echo "ERROR: CHAT_TRANSCRIPT_BYTES must be a non-negative integer." >&2
+      exit 1
+      ;;
+  esac
+
+  CHAT_TRANSCRIPT_SOURCE="${CHAT_TRANSCRIPT_SOURCE:-chat-supplied transcript byte count}"
+  CHAT_TOKEN_ESTIMATE="$(( (CHAT_TRANSCRIPT_BYTES + 3) / 4 )) estimated from chat transcript bytes (${CHAT_TRANSCRIPT_BYTES} bytes; source: ${CHAT_TRANSCRIPT_SOURCE})"
+elif [ -n "${ESTIMATED_CHAT_TOKENS:-}" ]; then
+  CHAT_TOKEN_ESTIMATE="$ESTIMATED_CHAT_TOKENS"
+elif [ "${ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS:-}" = "yes" ]; then
+  CHAT_TOKEN_ESTIMATE="unavailable; transcript source not supplied by chat"
 else
-  CHAR_COUNT="$(wc -c < "$LOG_FILE" | tr -d ' ')"
-  TOKEN_ESTIMATE="$(( (CHAR_COUNT + 3) / 4 )) estimated from session log"
+  echo "ERROR: missing chat transcript metrics." >&2
+  echo "Set CHAT_TRANSCRIPT_BYTES before recording a chat commit." >&2
+  echo "Use ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes only for explicit legacy or recovery cases." >&2
+  exit 1
 fi
 
 insert_section_entry "## Commits" "- Commit: \`${COMMIT_SHA}\`
@@ -148,7 +166,7 @@ awk \
   -v latest_at="$COMMIT_AT_UTC" \
   -v latest_sha="$COMMIT_SHA" \
   -v duration="$CHAT_DURATION" \
-  -v tokens="$TOKEN_ESTIMATE" '
+  -v chat_tokens="$CHAT_TOKEN_ESTIMATE" '
     /^final_commit_at_utc:/ {
       print "latest_commit_at_utc: " latest_at
       print "latest_commit_sha: " latest_sha
@@ -167,7 +185,11 @@ awk \
       next
     }
     /^estimated_tokens:/ {
-      print "estimated_tokens: " tokens
+      print "estimated_chat_tokens: " chat_tokens
+      next
+    }
+    /^estimated_chat_tokens:/ {
+      print "estimated_chat_tokens: " chat_tokens
       next
     }
     /^Final commit at UTC:/ {
@@ -188,7 +210,11 @@ awk \
       next
     }
     /^Estimated tokens:/ {
-      print "Estimated tokens: " tokens
+      print "Estimated chat tokens: " chat_tokens
+      next
+    }
+    /^Estimated chat tokens:/ {
+      print "Estimated chat tokens: " chat_tokens
       next
     }
     {

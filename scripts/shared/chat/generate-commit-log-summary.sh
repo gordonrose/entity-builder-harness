@@ -217,7 +217,7 @@ const records = logs.map((filePath) => {
     filePath,
     id: data.id || path.basename(path.dirname(filePath)),
     durationSeconds: parseDurationSeconds(data.chat_duration),
-    tokens: parseTokenCount(data.estimated_tokens),
+    tokens: parseTokenCount(data.estimated_chat_tokens),
   };
 });
 
@@ -235,7 +235,7 @@ const lines = [
   '',
   metricTable(durationStats, formatDuration),
   '',
-  '## Token Consumption',
+  '## Estimated Chat Tokens',
   '',
   metricTable(tokenStats, formatNumber),
   '',

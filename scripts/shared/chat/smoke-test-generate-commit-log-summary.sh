@@ -26,7 +26,7 @@ cat > "$REPO/commitLogs/2026/jun/17/test-chat/README.md" <<'EOF'
 <!-- agentic-session
 id: test-chat
 chat_duration: 42s
-estimated_tokens: 100 tokens
+estimated_chat_tokens: 100 tokens
 -->
 EOF
 
@@ -54,6 +54,10 @@ fi
 
 if ! grep -q "not maintained" "$TMP_ROOT/blocked.err"; then
   fail "script did not explain retired aggregate path"
+fi
+
+if ! grep -q "Estimated Chat Tokens" "$TMP_ROOT/printed.md"; then
+  fail "summary did not use estimated chat token heading"
 fi
 
 echo "commit log summary smoke test passed."
