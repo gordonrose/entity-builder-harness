@@ -99,6 +99,7 @@ mode: ${MODE}
 workflow: ${WORKFLOW}
 status: ready
 raised_at_utc: ${RAISED_AT_UTC}
+codex_session_log_path:
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:

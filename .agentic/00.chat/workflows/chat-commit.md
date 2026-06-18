@@ -24,17 +24,16 @@ Before committing approved task work, follow:
 - Preserve unrelated user changes in a dirty worktree.
 - Do not push, merge to `main`, rebase, delete branches, rewrite history,
   discard work, or perform destructive actions unless separately approved.
-- After a task commit, estimate the current chat transcript byte count from the
-  chat runtime/context, then record the commit with:
+- After a task commit, record it with:
 
 ```bash
-CHAT_TRANSCRIPT_BYTES=<current-chat-transcript-byte-count> \
-CHAT_TRANSCRIPT_SOURCE="chat-runtime-context" \
-  bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
 ```
 
-- Do not use the session log file size as a chat token source.
-- If the chat transcript byte count cannot be supplied, stop before recording
+- The recorder must estimate chat-token metrics from `CHAT_TRANSCRIPT_BYTES`,
+  `codex_session_log_path`, or a discovered Codex JSONL session log. It must not
+  use the session log file size as a chat token source.
+- If no transcript source can be supplied or discovered, stop before recording
   the commit unless the current workflow explicitly permits
   `ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes` for a legacy or recovery case.
 
