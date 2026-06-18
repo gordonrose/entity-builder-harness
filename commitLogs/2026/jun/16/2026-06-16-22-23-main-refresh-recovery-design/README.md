@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-18T14:57:22Z
-latest_commit_sha: db7faa9
-chat_duration: 149659s (01:17:34:19)
-estimated_chat_tokens: 1593780 estimated from chat transcript bytes (6375118 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl)
+latest_commit_at_utc: 2026-06-18T15:11:01Z
+latest_commit_sha: 0bb049b
+chat_duration: 150478s (01:17:47:58)
+estimated_chat_tokens: 1628770 estimated from chat transcript bytes (6515077 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl)
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl
 -->
 
@@ -461,6 +461,17 @@ Summary: Requires future commit recording to receive chat-supplied transcript by
 
 ADR impact: No ADR; tightens existing chat metrics governance without changing architecture.
 
+
+### 2026-06-18T15:11:01Z - Commit recorded
+
+Commit: `0bb049b`
+
+Message: Derive chat metrics from Codex session logs
+
+Summary: Adds Codex session log discovery and registration, records codex_session_log_path for chats, and derives estimated chat tokens from the Codex JSONL transcript bytes instead of session-log size.
+
+ADR impact: No ADR; implements the existing chat metrics governance with a concrete transcript source.
+
 ## Commits
 
 
@@ -547,6 +558,13 @@ ADR impact: No ADR; tightens existing chat metrics governance without changing a
   Message: Require chat-supplied transcript metrics
   Summary: Requires future commit recording to receive chat-supplied transcript bytes, stops estimating tokens from session-log size, updates chat commit workflow guidance, and adds smoke coverage for the metric boundary.
   ADR impact: No ADR; tightens existing chat metrics governance without changing architecture.
+
+
+- Commit: `0bb049b`
+  Time UTC: 2026-06-18T15:11:01Z
+  Message: Derive chat metrics from Codex session logs
+  Summary: Adds Codex session log discovery and registration, records codex_session_log_path for chats, and derives estimated chat tokens from the Codex JSONL transcript bytes instead of session-log size.
+  ADR impact: No ADR; implements the existing chat metrics governance with a concrete transcript source.
 
 ## Main Refresh Conflicts
 
@@ -659,10 +677,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-18T14:57:22Z
-Latest commit SHA: db7faa9
-Chat duration: 149659s (01:17:34:19)
-Estimated chat tokens: 1593780 estimated from chat transcript bytes (6375118 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl)
+Latest commit at UTC: 2026-06-18T15:11:01Z
+Latest commit SHA: 0bb049b
+Chat duration: 150478s (01:17:47:58)
+Estimated chat tokens: 1628770 estimated from chat transcript bytes (6515077 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/16/rollout-2026-06-16T22-23-10-019ed251-17cc-7fb0-8799-5ed1638b463f.jsonl)
 
 ## Notes
 
