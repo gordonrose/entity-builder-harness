@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-18T14:37:40Z
-latest_commit_sha: 8125aa4
-chat_duration: 148477s (01:17:14:37)
-estimated_tokens: 9931 estimated from session log
+latest_commit_at_utc: 2026-06-18T14:57:22Z
+latest_commit_sha: db7faa9
+chat_duration: 149659s (01:17:34:19)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
 -->
 
 ## Initial Intent
@@ -449,6 +449,17 @@ Summary: Adds safe stale sibling preflight cleanup during tested preflight promo
 
 ADR impact: No ADR; extends governed chat refresh cleanup behavior without a new architecture decision.
 
+
+### 2026-06-18T14:57:22Z - Commit recorded
+
+Commit: `db7faa9`
+
+Message: Require chat-supplied transcript metrics
+
+Summary: Requires future commit recording to receive chat-supplied transcript bytes, stops estimating tokens from session-log size, updates chat commit workflow guidance, and adds smoke coverage for the metric boundary.
+
+ADR impact: No ADR; tightens existing chat metrics governance without changing architecture.
+
 ## Commits
 
 
@@ -528,6 +539,13 @@ ADR impact: No ADR; extends governed chat refresh cleanup behavior without a new
   Message: Clean stale preflight siblings after promotion
   Summary: Adds safe stale sibling preflight cleanup during tested preflight promotion, preserving dirty or unique stale preflights and covering the behavior with smoke tests.
   ADR impact: No ADR; extends governed chat refresh cleanup behavior without a new architecture decision.
+
+
+- Commit: `db7faa9`
+  Time UTC: 2026-06-18T14:57:22Z
+  Message: Require chat-supplied transcript metrics
+  Summary: Requires future commit recording to receive chat-supplied transcript bytes, stops estimating tokens from session-log size, updates chat commit workflow guidance, and adds smoke coverage for the metric boundary.
+  ADR impact: No ADR; tightens existing chat metrics governance without changing architecture.
 
 ## Main Refresh Conflicts
 
@@ -640,10 +658,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-18T14:37:40Z
-Latest commit SHA: 8125aa4
-Chat duration: 148477s (01:17:14:37)
-Estimated tokens: 9931 estimated from session log
+Latest commit at UTC: 2026-06-18T14:57:22Z
+Latest commit SHA: db7faa9
+Chat duration: 149659s (01:17:34:19)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
 
 ## Notes
 

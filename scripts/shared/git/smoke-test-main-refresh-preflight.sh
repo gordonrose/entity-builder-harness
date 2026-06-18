@@ -73,7 +73,7 @@ cat > "$REPO/$SESSION_LOG" <<EOF
 <!-- agentic-session
 id: ${SESSION_ID}
 chat_duration: 10s
-estimated_tokens: 50 tokens
+estimated_chat_tokens: 50 tokens
 -->
 EOF
 

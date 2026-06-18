@@ -63,7 +63,7 @@ raised_at_utc: 2026-06-16T08:08:25Z
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
-estimated_tokens:
+estimated_chat_tokens:
 -->
 EOF
 
@@ -155,7 +155,7 @@ raised_at_utc: 2026-06-16T08:08:25Z
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
-estimated_tokens:
+estimated_chat_tokens:
 -->
 EOF
 
@@ -196,7 +196,7 @@ raised_at_utc: 2026-06-16T08:08:25Z
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
-estimated_tokens:
+estimated_chat_tokens:
 -->
 EOF
 

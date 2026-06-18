@@ -102,7 +102,7 @@ raised_at_utc: ${RAISED_AT_UTC}
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
-estimated_tokens:
+estimated_chat_tokens:
 -->
 
 ## Initial Intent
@@ -162,7 +162,7 @@ Raised at UTC: ${RAISED_AT_UTC}
 Latest commit at UTC:
 Latest commit SHA:
 Chat duration:
-Estimated tokens:
+Estimated chat tokens:
 
 ## Notes
 

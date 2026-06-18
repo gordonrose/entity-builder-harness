@@ -78,11 +78,20 @@ Do not commit if the gate fails.
 Run:
 
 ```bash
-bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+CHAT_TRANSCRIPT_BYTES=<current-chat-transcript-byte-count> \
+CHAT_TRANSCRIPT_SOURCE="chat-runtime-context" \
+  bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
 ```
 
 Record every commit in the chat. The latest recorded commit is treated as the
 current endpoint for chat duration and session metrics.
+
+The chat, not the repository script, owns the transcript byte count. Estimate
+the current chat transcript size from the chat runtime/context and pass it as
+`CHAT_TRANSCRIPT_BYTES`. Never substitute the session log file size. If the
+transcript byte count cannot be supplied, stop before recording the commit
+unless the current workflow explicitly permits
+`ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes` for a legacy or recovery case.
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
 If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
