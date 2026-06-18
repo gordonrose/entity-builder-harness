@@ -10,10 +10,10 @@ mode: planning
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-16T21:23:03Z
-latest_commit_at_utc: 2026-06-18T14:31:29Z
-latest_commit_sha: a773de6
-chat_duration: 148106s (01:17:08:26)
-estimated_tokens: 9571 estimated from session log
+latest_commit_at_utc: 2026-06-18T14:37:40Z
+latest_commit_sha: 8125aa4
+chat_duration: 148477s (01:17:14:37)
+estimated_tokens: 9931 estimated from session log
 -->
 
 ## Initial Intent
@@ -438,6 +438,17 @@ Decision: Clean safe stale preflight siblings after promotion
 
 Rationale: Updated preflight promotion to remove stale sibling preflight branches and worktrees for the same chat branch only when they are already ancestors of the promoted chat branch and clean or absent; unique or dirty stale preflights are reported and skipped.
 
+
+### 2026-06-18T14:37:40Z - Commit recorded
+
+Commit: `8125aa4`
+
+Message: Clean stale preflight siblings after promotion
+
+Summary: Adds safe stale sibling preflight cleanup during tested preflight promotion, preserving dirty or unique stale preflights and covering the behavior with smoke tests.
+
+ADR impact: No ADR; extends governed chat refresh cleanup behavior without a new architecture decision.
+
 ## Commits
 
 
@@ -510,6 +521,13 @@ Rationale: Updated preflight promotion to remove stale sibling preflight branche
   Message: Allow automatic promotion of tested preflight
   Summary: Records the governed main-refresh conflict taxonomy and audit trail, resolves the preflight merge conflicts, and adds automatic promotion for clean tested preflight results.
   ADR impact: covered by ADR 0013 and main-refresh conflict standard
+
+
+- Commit: `8125aa4`
+  Time UTC: 2026-06-18T14:37:40Z
+  Message: Clean stale preflight siblings after promotion
+  Summary: Adds safe stale sibling preflight cleanup during tested preflight promotion, preserving dirty or unique stale preflights and covering the behavior with smoke tests.
+  ADR impact: No ADR; extends governed chat refresh cleanup behavior without a new architecture decision.
 
 ## Main Refresh Conflicts
 
@@ -622,10 +640,10 @@ Reason: Creates a new chat lifecycle layer and reverses the prior tracked aggreg
 ## Session Metrics
 
 Raised at UTC: 2026-06-16T21:23:03Z
-Latest commit at UTC: 2026-06-18T14:31:29Z
-Latest commit SHA: a773de6
-Chat duration: 148106s (01:17:08:26)
-Estimated tokens: 9571 estimated from session log
+Latest commit at UTC: 2026-06-18T14:37:40Z
+Latest commit SHA: 8125aa4
+Chat duration: 148477s (01:17:14:37)
+Estimated tokens: 9931 estimated from session log
 
 ## Notes
 
