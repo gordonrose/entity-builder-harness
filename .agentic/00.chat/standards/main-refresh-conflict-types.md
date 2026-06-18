@@ -63,6 +63,29 @@ Each entry must record:
 - files changed by the resolution
 - checks run or still pending
 
+## Promotion After Conflict Resolution
+
+Approval to run a governed main-refresh preflight includes approval to promote a
+clean, tested preflight result back to the chat branch.
+
+After every conflicted path has a `## Main Refresh Conflicts` audit entry and
+the required checks pass, promote the preflight branch automatically with:
+
+```bash
+bash scripts/shared/git/promote-preflight-refresh.sh <preflight-branch>
+```
+
+Stop before promotion if:
+
+- unresolved conflicts remain
+- required checks failed or were skipped
+- the preflight worktree is dirty
+- the preflight branch no longer descends from the chat branch
+- the promotion script refuses cleanup
+- the user explicitly asked to inspect before promotion
+
+Do not ask for a second approval when none of those stop conditions apply.
+
 ## Type Index
 
 | Type | Detect | Deterministic action |

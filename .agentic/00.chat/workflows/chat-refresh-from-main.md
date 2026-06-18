@@ -141,8 +141,9 @@ refresh should be rehearsed before mutating the active chat worktree.
 
    Do not promote the preflight branch until the session log records the audit
    trail for every conflicted path.
-4. If preflight reports `result=clean-merge`, promote only after explicit user
-   approval:
+4. If the user already approved the main-refresh preflight, and the preflight
+   branch is clean, fully resolved, tested, and contains the intended merge
+   result, promote it back to the chat branch automatically:
 
    ```bash
    bash scripts/shared/git/promote-preflight-refresh.sh <preflight-branch>
@@ -152,8 +153,12 @@ refresh should be rehearsed before mutating the active chat worktree.
    tested preflight commit, removes the clean temporary preflight worktree, and
    deletes only the matching `agentic/preflight/*/<timestamp>` branch.
 <!-- deterministic-check: allow reason="promote-preflight-refresh.sh enforces dirty preflight worktree refusal before promotion or cleanup" -->
-6. If the preflight worktree is dirty, stop. Do not force-remove it, delete the
-   preflight branch, or promote the chat branch.
+6. Stop before promotion if unresolved conflicts remain, required checks failed
+   or were skipped, the preflight worktree is dirty, the preflight branch no
+   longer descends from the chat branch, the promotion script refuses cleanup,
+   or the user explicitly asked to inspect before promotion. Do not
+   force-remove the preflight worktree, delete the preflight branch, or promote
+   the chat branch while stopped.
 7. After promotion, run the relevant layer checks before any task commit or
    promotion to `main`.
 
