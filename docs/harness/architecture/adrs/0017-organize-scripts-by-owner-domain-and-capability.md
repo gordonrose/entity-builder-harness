@@ -467,14 +467,6 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/main-update-status.sh`
    - `scripts/shared/git/preflight-main-refresh.sh`
    - `scripts/shared/git/promote-preflight-refresh.sh`
-   - `scripts/shared/git/smoke-test-chat-worktree-session.sh`
-   - `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
-   - `scripts/shared/git/smoke-test-commit-prerequisites.sh`
-   - `scripts/shared/git/smoke-test-commitlog-deletions.sh`
-   - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
-   - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
-   - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
-   - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
    - `scripts/shared/git/verify-local-convergence.sh`
 
 2. Superseded isolated chat branch execution helpers retained for retirement
@@ -629,22 +621,12 @@ Bootstrap compatibility classifications:
    - `scripts/shared/chat/update-chat-log.sh`
    - `scripts/shared/git/cleanup-empty-chat-branches.sh`
    - `scripts/shared/git/promote-preflight-refresh.sh`
-   - `scripts/shared/git/smoke-test-chat-worktree-session.sh`
-   - `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
-   - `scripts/shared/git/smoke-test-commit-prerequisites.sh`
-   - `scripts/shared/git/smoke-test-commitlog-deletions.sh`
-   - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
-   - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
-   - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
-   - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
-
-6. Validation-only smoke wrapper audit result:
+6. Retired validation-only smoke wrappers:
 
    The old `scripts/shared/git/smoke-test-*.sh` wrappers below each forward to
-   a canonical `scripts/00.chat/.../smoke-test.sh` file. They are validation
-   compatibility wrappers, not install-critical runtime paths. They can be
-   retired in a later explicit removal slice after references are updated and
-   the bootstrap audit remains clean:
+   a canonical `scripts/00.chat/.../smoke-test.sh` file. They were validation
+   compatibility wrappers, not install-critical runtime paths, and were removed
+   after confirming the bootstrap audit remained clean:
 
    - `scripts/shared/git/smoke-test-chat-worktree-session.sh` wraps
      `scripts/00.chat/startup/start-chat-session/smoke-test.sh`
@@ -669,7 +651,7 @@ Bootstrap compatibility classifications:
 | Command wrapper compatibility | Public/external callers no longer use old shared command wrapper paths | `scripts/shared/chat/commands/close.sh`, `scripts/shared/chat/commands/new.sh` |
 | Governed runner compatibility acceptance | `scripts/shared/harness/run-governed-script.sh` no longer accepts old compatibility paths | `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`, `scripts/shared/chat/audit-chat-layer-migration.sh`, `scripts/shared/chat/generate-commit-log-summary.sh`, `scripts/shared/chat/report-chat-workspaces.sh`, `scripts/shared/chat/rename-current-chat-log-folder.sh`, `scripts/shared/chat/request-initialization/auto-start-missing-session.sh`, `scripts/shared/git/active-chat-branches.sh`, `scripts/shared/git/branch-overlap-report.sh`, `scripts/shared/git/check-chat-branch-freshness.sh`, `scripts/shared/git/check-commit-prerequisites.sh`, `scripts/shared/git/check-commitlog-deletions.sh`, `scripts/shared/git/check-write-location.sh`, `scripts/shared/git/checkpoint-chat-session-log.sh`, `scripts/shared/git/classify-main-refresh-dirty-state.sh`, `scripts/shared/git/dirty-worktree-check.sh`, `scripts/shared/git/main-update-status.sh`, `scripts/shared/git/prepare-chat-session-before-commit.sh`, `scripts/shared/git/record-chat-commit.sh`, `scripts/shared/git/stage-active-worktree-paths.sh`, `scripts/shared/git/verify-local-convergence.sh` |
 | Bootstrap/install compatibility | Bootstrap audit and public install surfaces no longer include old paths as required or validation candidates | `scripts/shared/chat/discover-codex-session-log.sh`, `scripts/shared/chat/ensure-chat-worktree.sh`, `scripts/shared/chat/estimate-chat-cost.js`, `scripts/shared/chat/record-main-refresh-conflict.sh`, `scripts/shared/chat/register-codex-session-log.sh`, `scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh`, `scripts/shared/chat/request-initialization/classify-task.sh`, `scripts/shared/chat/request-initialization/read-current-chat-log.sh`, `scripts/shared/chat/request-initialization/start-chat-session.sh`, `scripts/shared/chat/update-chat-log.sh`, `scripts/shared/git/cleanup-empty-chat-branches.sh`, `scripts/shared/git/promote-preflight-refresh.sh` |
-| Validation-only smoke wrapper retirement candidates | Explicit removal slice confirms all references use canonical smoke tests and bootstrap audit stays clean | `scripts/shared/git/smoke-test-chat-worktree-session.sh`, `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`, `scripts/shared/git/smoke-test-commit-prerequisites.sh`, `scripts/shared/git/smoke-test-commitlog-deletions.sh`, `scripts/shared/git/smoke-test-local-convergence-verifier.sh`, `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`, `scripts/shared/git/smoke-test-main-refresh-preflight.sh`, `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh` |
+| Retired validation-only smoke wrappers | Historical references may mention old paths, but operative validation should use canonical `scripts/00.chat/.../smoke-test.sh` paths | `scripts/shared/git/smoke-test-chat-worktree-session.sh`, `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`, `scripts/shared/git/smoke-test-commit-prerequisites.sh`, `scripts/shared/git/smoke-test-commitlog-deletions.sh`, `scripts/shared/git/smoke-test-local-convergence-verifier.sh`, `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`, `scripts/shared/git/smoke-test-main-refresh-preflight.sh`, `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh` |
 | Source shim compatibility | All sourced callers import canonical `scripts/00.chat/.../lib.sh` files directly | `scripts/shared/chat/chat-worktree-paths.sh`, `scripts/shared/chat/session-log-paths.sh` |
 | Superseded legacy | Retirement pass proves no bootstrap, install, recovery, or audit surface needs the old isolated execution model | `scripts/shared/git/smoke-test-with-chat-branch.sh`, `scripts/shared/git/stage-active-worktree-paths.sh`, `scripts/shared/git/with-chat-branch.sh` |
 | Upstream compatibility wrapper | Public/external callers no longer use the old shared upstream helper path | `scripts/shared/chat/ensure-llm-workbench-repo.sh` |
@@ -740,8 +722,8 @@ Start chat session batch result:
   executable while smoke fixtures, downstream references, and any external users
   migrate to the canonical startup path.
 - smoke-test compatibility wrapper:
-  `scripts/shared/git/smoke-test-chat-worktree-session.sh` remains executable
-  while callers migrate to the canonical startup smoke-test path.
+  `scripts/shared/git/smoke-test-chat-worktree-session.sh` was retired after
+  callers migrated to the canonical startup smoke-test path.
 - direct callers migrated:
   `scripts/00.chat/startup/start-new-chat/script.sh`,
   `.agentic/00.chat/workflows/chat-start.md`, and related script metadata now
