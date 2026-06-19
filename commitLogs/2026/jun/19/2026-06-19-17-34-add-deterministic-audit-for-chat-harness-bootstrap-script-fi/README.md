@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T19:11:52Z
-latest_commit_sha: fc0fe5d
-chat_duration: 9426s (00:02:37:06)
-estimated_chat_tokens: 1820910 estimated from chat transcript bytes (7283640 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 54.63 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T19:15:26Z
+latest_commit_sha: 95b19c1
+chat_duration: 9640s (00:02:40:40)
+estimated_chat_tokens: 1859280 estimated from chat transcript bytes (7437120 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 55.78 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -298,6 +298,17 @@ Summary: Moved ensure-chat-worktree into scripts/00.chat/worktree/ensure-chat-wo
 
 ADR impact: ADR 0017 records the canonical worktree helper and remaining compatibility wrapper boundary.
 
+
+### 2026-06-19T19:15:26Z - Commit recorded
+
+Commit: `95b19c1`
+
+Message: Move chat closeout command
+
+Summary: Moved the chat closeout prompt command to scripts/00.chat/closeout/build-closeout-prompt/script.sh, kept the shared command path as a dispatcher-compatible wrapper, and updated smoke fixtures and ADR 0017.
+
+ADR impact: ADR 0017 records the closeout command batch and remaining command-discovery compatibility wrapper.
+
 ## Commits
 
 
@@ -448,6 +459,13 @@ ADR impact: ADR 0017 records the canonical worktree helper and remaining compati
   Summary: Moved ensure-chat-worktree into scripts/00.chat/worktree/ensure-chat-worktree/script.sh, kept the old shared path as a compatibility wrapper, updated workflows to point to the canonical helper, and adjusted smoke fixtures.
   ADR impact: ADR 0017 records the canonical worktree helper and remaining compatibility wrapper boundary.
 
+
+- Commit: `95b19c1`
+  Time UTC: 2026-06-19T19:15:26Z
+  Message: Move chat closeout command
+  Summary: Moved the chat closeout prompt command to scripts/00.chat/closeout/build-closeout-prompt/script.sh, kept the shared command path as a dispatcher-compatible wrapper, and updated smoke fixtures and ADR 0017.
+  ADR impact: ADR 0017 records the closeout command batch and remaining command-discovery compatibility wrapper.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -463,11 +481,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T19:11:52Z
-Latest commit SHA: fc0fe5d
-Chat duration: 9426s (00:02:37:06)
-Estimated chat tokens: 1820910 estimated from chat transcript bytes (7283640 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 54.63 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T19:15:26Z
+Latest commit SHA: 95b19c1
+Chat duration: 9640s (00:02:40:40)
+Estimated chat tokens: 1859280 estimated from chat transcript bytes (7437120 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 55.78 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
