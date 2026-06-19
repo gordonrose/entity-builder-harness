@@ -11,10 +11,10 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-18T15:26:14Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl
-latest_commit_at_utc: 2026-06-19T11:18:17Z
-latest_commit_sha: d64c637
-chat_duration: 71523s (00:19:52:03)
-estimated_chat_tokens: 205790 estimated from chat transcript bytes (823157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
+latest_commit_at_utc: 2026-06-19T11:19:51Z
+latest_commit_sha: b1b7433
+chat_duration: 71617s (00:19:53:37)
+estimated_chat_tokens: 217644 estimated from chat transcript bytes (870576 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 -->
 
 ## Initial Intent
@@ -73,6 +73,17 @@ Summary: Reclassified the task as harness implementation and renamed the session
 
 ADR impact: ADR needed: unknown
 
+
+### 2026-06-19T11:19:51Z - Commit recorded
+
+Commit: `b1b7433`
+
+Message: Add governed script permission standard
+
+Summary: Added the canonical harness policy for persistent vendor permission to target only the governed script runner.
+
+ADR impact: ADR needed: unknown
+
 ## Commits
 
 
@@ -81,6 +92,13 @@ ADR impact: ADR needed: unknown
   Time UTC: 2026-06-19T11:18:17Z
   Message: Reclassify governed script permission task
   Summary: Reclassified the task as harness implementation and renamed the session log for governed script permissions.
+  ADR impact: ADR needed: unknown
+
+
+- Commit: `b1b7433`
+  Time UTC: 2026-06-19T11:19:51Z
+  Message: Add governed script permission standard
+  Summary: Added the canonical harness policy for persistent vendor permission to target only the governed script runner.
   ADR impact: ADR needed: unknown
 
 ## Main Refresh Conflicts
@@ -96,10 +114,10 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: 2026-06-18T15:26:14Z
-Latest commit at UTC: 2026-06-19T11:18:17Z
-Latest commit SHA: d64c637
-Chat duration: 71523s (00:19:52:03)
-Estimated chat tokens: 205790 estimated from chat transcript bytes (823157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
+Latest commit at UTC: 2026-06-19T11:19:51Z
+Latest commit SHA: b1b7433
+Chat duration: 71617s (00:19:53:37)
+Estimated chat tokens: 217644 estimated from chat transcript bytes (870576 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 
 ## Notes
 
