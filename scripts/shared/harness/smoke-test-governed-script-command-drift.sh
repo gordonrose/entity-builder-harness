@@ -60,9 +60,24 @@ cat > .agentic/00.chat/workflows/prose.md <<'EOF'
 The checkpoint helper lives at scripts/shared/git/checkpoint-chat-session-log.sh.
 EOF
 
+if bash scripts/shared/harness/check-governed-script-command-drift.sh \
+    --paths .agentic/00.chat/workflows/prose.md \
+    > "$TMP_ROOT/prose.out" 2>&1; then
+  fail "bare approval-sensitive script reference was not flagged"
+fi
+
+grep -q 'unrouted-approved-governed-script-reference' "$TMP_ROOT/prose.out" \
+  || fail "bare script finding did not include expected type"
+
+cat > .agentic/00.chat/workflows/basename-prose.md <<'EOF'
+# Basename prose
+
+The checkpoint-chat-session-log.sh helper is approval-sensitive.
+EOF
+
 bash scripts/shared/harness/check-governed-script-command-drift.sh \
-  --paths .agentic/00.chat/workflows/prose.md \
-  > "$TMP_ROOT/prose.out"
+  --paths .agentic/00.chat/workflows/basename-prose.md \
+  > "$TMP_ROOT/basename-prose.out"
 
 cat > docs/harness/architecture/adrs/0001-example.md <<'EOF'
 # Historical ADR
