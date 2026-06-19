@@ -44,6 +44,8 @@ always scripts/shared/git/verify-local-convergence.sh
 always scripts/shared/harness/check-deterministic-process-drift.sh
 always scripts/shared/harness/check-governed-script-command-drift.sh
 approved scripts/shared/chat/rename-current-chat-log-folder.sh
+approved scripts/shared/chat/ensure-llm-workbench-repo.sh
+approved scripts/shared/chat/request-initialization/auto-start-missing-session.sh
 approved scripts/shared/git/checkpoint-chat-session-log.sh
 approved scripts/shared/git/prepare-chat-session-before-commit.sh
 approved scripts/shared/git/record-chat-commit.sh
@@ -71,7 +73,7 @@ case "$SCRIPT_PATH" in
     echo "ERROR: refused non-repository script path: $SCRIPT_PATH" >&2
     exit 1
     ;;
-  scripts/shared/*.sh|scripts/shared/*/*.sh)
+  scripts/shared/*.sh|scripts/shared/*/*.sh|scripts/shared/chat/request-initialization/*.sh)
     ;;
   *)
     echo "ERROR: refused script outside governed shared script paths: $SCRIPT_PATH" >&2
@@ -99,6 +101,8 @@ case "$SCRIPT_PATH" in
     RUN_CLASS="always"
     ;;
   scripts/shared/chat/rename-current-chat-log-folder.sh|\
+  scripts/shared/chat/ensure-llm-workbench-repo.sh|\
+  scripts/shared/chat/request-initialization/auto-start-missing-session.sh|\
   scripts/shared/git/checkpoint-chat-session-log.sh|\
   scripts/shared/git/prepare-chat-session-before-commit.sh|\
   scripts/shared/git/record-chat-commit.sh|\

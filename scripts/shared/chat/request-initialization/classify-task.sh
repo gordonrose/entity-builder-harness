@@ -11,7 +11,7 @@ classify_mode() {
     *plan*|*proposal*|*architecture*|*approach*|*how\ should*|*how\ would*|*how\ do*)
       echo "planning"
       ;;
-    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*|*document*|*open*chat*|*open*llm-workbench*)
+    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*|*document*|*open*chat*|*open*llm-workbench*|*bootstrap*|*seed*)
       echo "implementation"
       ;;
     *run*|*execute*|*use*|*apply*|*start*)
@@ -41,6 +41,11 @@ case "$TASK" in
     echo "Layer: shared"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/shared/workflows/change-shared-process.md"
+    ;;
+  *governed\ script*|*governed\ checkpoint*|*approval\ prompt*|*permission\ prompt*|*codex*approval*|*allow*bash*|*bash*permission*|*shell*permission*|*tool*permission*|*.codex*|*.claude*|*.vibe*|*codex*claude*mistral*|*vendor*adapter*)
+    echo "Layer: harness"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/harness/workflows/change-harness.md"
     ;;
   *chat\ start*|*start\ chat*|*chat\ startup*|*session\ metadata*|*session\ log*|*session\ logs*|*chat\ session*|*chat*worktree*session*|*chat-owned\ worktree*)
     echo "Layer: chat"
@@ -72,6 +77,11 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-reporting.md"
     ;;
+  *bootstrap*llm-workbench*|*bootstrap*chat\ workbench*|*seed*upstream*workbench*|*empty\ workbench\ repo*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md"
+    ;;
   *upstream\ reusable\ lesson*|*reusable\ lesson\ workflow*|*llm-workbench*|*workbench\ repo*)
     echo "Layer: chat"
     echo "Mode: ${MODE}"
@@ -81,11 +91,6 @@ case "$TASK" in
     echo "Layer: chat"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
-    ;;
-  *governed\ script*|*allow*bash*|*bash*permission*|*shell*permission*|*tool*permission*|*.codex*|*.claude*|*.vibe*|*codex*claude*mistral*|*vendor*adapter*)
-    echo "Layer: harness"
-    echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/harness/workflows/change-harness.md"
     ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*)
     echo "Layer: harness"
