@@ -327,6 +327,19 @@ Check write location batch result:
   `scripts/shared/git/check-write-location.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Dirty worktree check batch result:
+
+- canonical implementation:
+  `scripts/00.chat/worktree/dirty-worktree-check/script.sh`
+- capability README:
+  `scripts/00.chat/worktree/dirty-worktree-check/README.md`
+- compatibility wrapper:
+  `scripts/shared/git/dirty-worktree-check.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/dirty-worktree-check.sh` wrapper path until the
+  governed-runner path policy is migrated.
+
 Closeout command batch result:
 
 - canonical implementation:
