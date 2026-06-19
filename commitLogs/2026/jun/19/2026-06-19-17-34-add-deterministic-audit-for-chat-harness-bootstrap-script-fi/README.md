@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T21:50:47Z
-latest_commit_sha: 074600e
-chat_duration: 18961s (00:05:16:01)
-estimated_chat_tokens: 3370210 estimated from chat transcript bytes (13480838 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 101.11 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T21:57:00Z
+latest_commit_sha: 902b139
+chat_duration: 19334s (00:05:22:14)
+estimated_chat_tokens: 3427279 estimated from chat transcript bytes (13709114 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 102.82 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -584,6 +584,17 @@ Summary: Documented bootstrap audit semantics and classified public install surf
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-06-19T21:57:00Z - Commit recorded
+
+Commit: `902b139`
+
+Message: Move llm-workbench upstream helper to canonical path
+
+Summary: Moved the llm-workbench upstream availability helper to scripts/00.chat/upstream, kept the old shared path as a compatibility wrapper, updated governed runner advertising, smoke coverage, metadata, and ADR 0017.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -916,6 +927,13 @@ ADR impact: covered by session ADR disposition
   Summary: Documented bootstrap audit semantics and classified public install surfaces, shared governance primitives, required old-path wrappers, superseded legacy paths, and validation-only compatibility candidates in ADR 0017.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `902b139`
+  Time UTC: 2026-06-19T21:57:00Z
+  Message: Move llm-workbench upstream helper to canonical path
+  Summary: Moved the llm-workbench upstream availability helper to scripts/00.chat/upstream, kept the old shared path as a compatibility wrapper, updated governed runner advertising, smoke coverage, metadata, and ADR 0017.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -931,11 +949,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T21:50:47Z
-Latest commit SHA: 074600e
-Chat duration: 18961s (00:05:16:01)
-Estimated chat tokens: 3370210 estimated from chat transcript bytes (13480838 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 101.11 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T21:57:00Z
+Latest commit SHA: 902b139
+Chat duration: 19334s (00:05:22:14)
+Estimated chat tokens: 3427279 estimated from chat transcript bytes (13709114 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 102.82 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
