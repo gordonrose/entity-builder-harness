@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T21:46:55Z
-latest_commit_sha: 8dab55e
-chat_duration: 18729s (00:05:12:09)
-estimated_chat_tokens: 3327455 estimated from chat transcript bytes (13309820 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 99.82 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T21:50:47Z
+latest_commit_sha: 074600e
+chat_duration: 18961s (00:05:16:01)
+estimated_chat_tokens: 3370210 estimated from chat transcript bytes (13480838 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 101.11 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -573,6 +573,17 @@ Summary: Moved chat command discovery to canonical 00.chat command folders, adde
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-06-19T21:50:47Z - Commit recorded
+
+Commit: `074600e`
+
+Message: Classify bootstrap install compatibility paths
+
+Summary: Documented bootstrap audit semantics and classified public install surfaces, shared governance primitives, required old-path wrappers, superseded legacy paths, and validation-only compatibility candidates in ADR 0017.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -898,6 +909,13 @@ ADR impact: covered by session ADR disposition
   Summary: Moved chat command discovery to canonical 00.chat command folders, added canonical new and close command entrypoints, retained shared command wrappers, and updated command docs, smoke tests, and ADR guidance.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `074600e`
+  Time UTC: 2026-06-19T21:50:47Z
+  Message: Classify bootstrap install compatibility paths
+  Summary: Documented bootstrap audit semantics and classified public install surfaces, shared governance primitives, required old-path wrappers, superseded legacy paths, and validation-only compatibility candidates in ADR 0017.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -913,11 +931,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T21:46:55Z
-Latest commit SHA: 8dab55e
-Chat duration: 18729s (00:05:12:09)
-Estimated chat tokens: 3327455 estimated from chat transcript bytes (13309820 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 99.82 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T21:50:47Z
+Latest commit SHA: 074600e
+Chat duration: 18961s (00:05:16:01)
+Estimated chat tokens: 3370210 estimated from chat transcript bytes (13480838 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 101.11 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
