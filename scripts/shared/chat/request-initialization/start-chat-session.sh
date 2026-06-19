@@ -9,7 +9,7 @@ set -euo pipefail
 #   used_by:
 #     - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 #     - scripts/00.chat/command/dispatcher/smoke-test.sh
-#     - scripts/shared/git/smoke-test-chat-worktree-session.sh
+#     - scripts/00.chat/startup/start-chat-session/smoke-test.sh
 #   effects: branches, worktrees, writes-files, stages-files
 
 exec bash scripts/00.chat/startup/start-chat-session/script.sh "$@"

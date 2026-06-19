@@ -274,10 +274,15 @@ Start chat session batch result:
   `scripts/00.chat/startup/start-chat-session/script.sh`
 - capability README:
   `scripts/00.chat/startup/start-chat-session/README.md`
+- canonical smoke test:
+  `scripts/00.chat/startup/start-chat-session/smoke-test.sh`
 - request-initialization compatibility wrapper:
   `scripts/shared/chat/request-initialization/start-chat-session.sh` remains
   executable while smoke fixtures, downstream references, and any external users
   migrate to the canonical startup path.
+- smoke-test compatibility wrapper:
+  `scripts/shared/git/smoke-test-chat-worktree-session.sh` remains executable
+  while callers migrate to the canonical startup smoke-test path.
 - direct callers migrated:
   `scripts/00.chat/startup/start-new-chat/script.sh`,
   `.agentic/00.chat/workflows/chat-start.md`, and related script metadata now

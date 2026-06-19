@@ -153,6 +153,13 @@ After a successful run, expect:
 - a first prompt printed or copied for the next agent
 - the original root worktree still on its original branch
 
+## Smoke Test
+
+`smoke-test.sh` creates a throwaway Git repo and runs startup there. It verifies
+that startup leaves the root repo on `main`, creates a separate chat worktree,
+stages the session log in that chat worktree, records chat startup metadata, and
+falls back to printed terminal handoff when clipboard copy fails.
+
 ## Compatibility
 
 The old request-initialization entrypoint remains at
