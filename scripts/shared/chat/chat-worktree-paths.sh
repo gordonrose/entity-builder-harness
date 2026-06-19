@@ -6,7 +6,8 @@
 #   domain: worktree
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/shared/chat/ensure-chat-worktree.sh
+#     - scripts/shared/chat/request-initialization/start-chat-session.sh
+#     - scripts/shared/git/check-write-location.sh
 #     - scripts/shared/git/verify-local-convergence.sh
 #   effects: read-only
 

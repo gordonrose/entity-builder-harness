@@ -138,7 +138,7 @@ If the user grants write permission but the current session has no chat-owned
 worktree, create or verify it before editing:
 
 ```bash
-bash scripts/shared/chat/ensure-chat-worktree.sh <session-log>
+bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
 ```
 
 <!-- deterministic-check: allow reason="check-write-location.sh enforces the write-location invariant; workflow states when agents should invoke it" -->

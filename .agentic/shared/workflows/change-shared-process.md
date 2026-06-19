@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: shared
+kind: workflow
+purpose: Govern changes to cross-layer shared process.
+domain: process
+portability: llm-workbench-required
+used_by:
+  - .agentic/harness/workflows/change-harness.md
+  - AGENTS.md
+-->
+
 # Change Shared Process Workflow
 
 ## Use When
@@ -51,11 +62,11 @@ Before writing, run:
 bash scripts/shared/git/check-write-location.sh
 ```
 
-<!-- deterministic-check: allow reason="ensure-chat-worktree.sh enforces worktree creation and verification; workflow states when agents should invoke it" -->
+<!-- deterministic-check: allow reason="ensure-chat-worktree enforces worktree creation and verification; workflow states when agents should invoke it" -->
 If a session log exists but its worktree is missing, recreate or verify it with:
 
 ```bash
-bash scripts/shared/chat/ensure-chat-worktree.sh <session-log>
+bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
 ```
 
 The chat-owned worktree has its own files and index. Stage only approved
