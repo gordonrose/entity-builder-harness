@@ -340,6 +340,24 @@ Dirty worktree check batch result:
   `scripts/shared/git/dirty-worktree-check.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Recovery import batch result:
+
+- canonical implementation:
+  `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/smoke-test.sh`
+- capability README:
+  `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md`
+- compatibility wrapper:
+  `scripts/shared/git/stage-active-worktree-paths.sh`
+- legacy isolated runner retained for compatibility review:
+  `scripts/shared/git/with-chat-branch.sh`
+- legacy smoke test retained:
+  `scripts/shared/git/smoke-test-with-chat-branch.sh`
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  canonical recovery script path.
+
 Remaining shared git inventory after commit-boundary batch:
 
 All remaining `scripts/shared/git/*.sh` files currently declare
@@ -361,6 +379,7 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/smoke-test-commit-prerequisites.sh`
    - `scripts/shared/git/smoke-test-commitlog-deletions.sh`
    - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
+   - `scripts/shared/git/stage-active-worktree-paths.sh`
 
 2. Chat refresh and local convergence capabilities not yet moved:
 
@@ -376,9 +395,9 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
    - `scripts/shared/git/verify-local-convergence.sh`
 
-3. Isolated chat branch execution helpers not yet moved:
+3. Legacy isolated chat branch execution helpers retained for compatibility
+   review:
 
-   - `scripts/shared/git/stage-active-worktree-paths.sh`
    - `scripts/shared/git/smoke-test-with-chat-branch.sh`
    - `scripts/shared/git/with-chat-branch.sh`
 

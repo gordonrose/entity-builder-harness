@@ -1,7 +1,24 @@
+<!-- agentic-artifact:
+owner: harness
+kind: adr
+purpose: Record the older isolated worktree commit-boundary model and its recovery-only successor behavior.
+domain: architecture
+portability: llm-workbench-required
+used_by:
+  - scripts/shared/git/with-chat-branch.sh
+  - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
+-->
+
 # 0009 Use Isolated Worktrees for Session Commit Boundaries
 
-Status: accepted
+Status: accepted, superseded for normal chat work by ADR 0011
 Date: 2026-06-16
+
+Superseded normal path: ADR 0011 changed the harness from
+commit-boundary-only isolated worktrees to chat-owned worktrees for all task
+work. The useful part of this ADR remains as governed recovery/import behavior:
+explicit paths can be imported from an active worktree into the session's
+chat-owned worktree when edits happened in the wrong checkout.
 
 ## Context
 
@@ -23,6 +40,10 @@ Approved commit-boundary operations run through:
 ```bash
 bash scripts/shared/git/with-chat-branch.sh <session-log> -- <command> [args...]
 ```
+
+This was the normal commit-boundary model when this ADR was accepted. For new
+normal task work, use the chat-owned worktree recorded in the session log
+instead.
 
 The helper reads the branch from the session log, validates that it is a local
 `chat/*` branch, and runs the requested command inside a deterministic isolated
@@ -48,6 +69,15 @@ only explicit approved paths into the isolated worktree with:
 
 ```bash
 bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/stage-active-worktree-paths.sh <path>...
+```
+
+Current recovery import uses the clearer canonical capability:
+
+```bash
+bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+  --session-log <session-log> \
+  --source-worktree <active-worktree> \
+  -- <path>...
 ```
 
 The staging helper accepts repository-relative paths, copies existing files or

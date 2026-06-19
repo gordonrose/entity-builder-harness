@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: harness
+kind: adr
+purpose: Record the chat-owned worktree model for local convergence and normal task work.
+domain: architecture
+portability: llm-workbench-required
+used_by:
+  - .agentic/00.chat/workflows/chat-start.md
+  - .agentic/00.chat/checklists/before-commit.md
+-->
+
 # 0011 Use Chat-Owned Worktrees For Local Convergence
 
 Status: accepted
@@ -55,3 +66,16 @@ The model is stricter than the prior commit-boundary-only helper. Agents must
 run task commands from the chat worktree, not the root repo. Existing transition
 states may still require manual reconciliation before the root worktree can be
 treated as a clean integration console.
+
+If useful edits are made outside the chat-owned worktree, treat that as
+recovery, not normal commit flow. Import only explicit approved paths with:
+
+```bash
+bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+  --session-log <session-log> \
+  --source-worktree <active-worktree> \
+  -- <path>...
+```
+
+The recovery import refuses ambiguous paths and a dirty target chat worktree so
+existing session work is not hidden by the import.

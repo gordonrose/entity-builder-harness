@@ -37,19 +37,33 @@ assert_file_equals() {
 }
 
 REPO="$TMP_ROOT/repo"
-mkdir -p "$REPO/scripts/shared/git" "$REPO/scripts/shared/chat" "$REPO/scripts/00.chat/session-log/paths"
+mkdir -p \
+  "$REPO/scripts/shared/git" \
+  "$REPO/scripts/shared/chat" \
+  "$REPO/scripts/00.chat/recovery/import-active-paths-to-chat-worktree" \
+  "$REPO/scripts/00.chat/session-log/paths" \
+  "$REPO/scripts/00.chat/worktree/paths"
 
 cp "$SOURCE_ROOT/scripts/shared/git/with-chat-branch.sh" "$REPO/scripts/shared/git/with-chat-branch.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/stage-active-worktree-paths.sh" "$REPO/scripts/shared/git/stage-active-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh" "$REPO/scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 
 git -C "$REPO" init -q -b main
 git -C "$REPO" config user.name "Smoke Test"
 git -C "$REPO" config user.email "smoke@example.invalid"
 
 printf 'base\n' > "$REPO/base.txt"
-git -C "$REPO" add base.txt scripts/shared/git/with-chat-branch.sh scripts/shared/git/stage-active-worktree-paths.sh scripts/shared/chat/session-log-paths.sh scripts/00.chat/session-log/paths/lib.sh
+git -C "$REPO" add \
+  base.txt \
+  scripts/shared/git/with-chat-branch.sh \
+  scripts/shared/git/stage-active-worktree-paths.sh \
+  scripts/shared/chat/session-log-paths.sh \
+  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+  scripts/00.chat/session-log/paths/lib.sh \
+  scripts/00.chat/worktree/paths/lib.sh
 git -C "$REPO" commit -q -m "initial"
 
 SESSION_ID="2026-06-16-09-08-smoke"
@@ -113,6 +127,7 @@ esac
 if [ ! -f "$ISOLATED_PWD/smoke-output.txt" ]; then
   fail "wrapped command did not write inside isolated worktree"
 fi
+rm "$ISOLATED_PWD/smoke-output.txt"
 
 (
   cd "$REPO"

@@ -1,3 +1,13 @@
+<!-- agentic-artifact:
+owner: shared
+kind: checklist
+purpose: Preserve the shared before-commit compatibility path for chat commit governance.
+domain: git
+portability: llm-workbench-required
+used_by:
+  - .agentic/00.chat/checklists/before-commit.md
+-->
+
 # Shared Before-Commit Checklist
 
 Compatibility path. Canonical chat commit governance lives at:
@@ -135,6 +145,18 @@ repository-relative paths in the chat-owned worktree:
 
 ```bash
 git add -- <path>...
+```
+
+If approved work was accidentally edited outside the chat-owned worktree, treat
+that as recovery. Import only explicit approved paths into the chat-owned
+worktree before continuing:
+
+```bash
+bash scripts/shared/harness/run-governed-script.sh --approved-action \
+  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+  --session-log <session-log> \
+  --source-worktree <active-worktree> \
+  -- <path>...
 ```
 
 Chat-owned worktree execution does not authorize pushes, merges, rebases, branch
