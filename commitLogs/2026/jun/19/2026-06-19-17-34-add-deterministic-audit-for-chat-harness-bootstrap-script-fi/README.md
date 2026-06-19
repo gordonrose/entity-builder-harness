@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T20:23:56Z
-latest_commit_sha: 8ae71e4
-chat_duration: 13750s (00:03:49:10)
-estimated_chat_tokens: 2416607 estimated from chat transcript bytes (9666425 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 72.50 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T20:27:14Z
+latest_commit_sha: a06b99e
+chat_duration: 13948s (00:03:52:28)
+estimated_chat_tokens: 2451742 estimated from chat transcript bytes (9806968 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 73.55 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -463,6 +463,17 @@ Summary: Moved dirty-worktree-check into scripts/00.chat/worktree/dirty-worktree
 
 ADR impact: Validated clean, bookkeeping-only, wrapper, and mixed-dirty failure behavior in a throwaway repo, plus bootstrap audit, metadata headers, governed command drift, and syntax checks.
 
+
+### 2026-06-19T20:27:14Z - Commit recorded
+
+Commit: `a06b99e`
+
+Message: Document remaining shared git migration inventory
+
+Summary: Added an ADR 0017 inventory classifying remaining scripts/shared/git files into moved compatibility wrappers, chat refresh/local convergence candidates, and isolated chat branch execution helpers.
+
+ADR impact: The inventory records that remaining shared git files are still owner 00.chat by metadata and recommends migrating refresh/local convergence before isolated chat branch execution helpers.
+
 ## Commits
 
 
@@ -718,6 +729,13 @@ ADR impact: Validated clean, bookkeeping-only, wrapper, and mixed-dirty failure 
   Summary: Moved dirty-worktree-check into scripts/00.chat/worktree/dirty-worktree-check, added a capability README, kept the old shared git path as a compatibility wrapper, and updated ADR 0017.
   ADR impact: Validated clean, bookkeeping-only, wrapper, and mixed-dirty failure behavior in a throwaway repo, plus bootstrap audit, metadata headers, governed command drift, and syntax checks.
 
+
+- Commit: `a06b99e`
+  Time UTC: 2026-06-19T20:27:14Z
+  Message: Document remaining shared git migration inventory
+  Summary: Added an ADR 0017 inventory classifying remaining scripts/shared/git files into moved compatibility wrappers, chat refresh/local convergence candidates, and isolated chat branch execution helpers.
+  ADR impact: The inventory records that remaining shared git files are still owner 00.chat by metadata and recommends migrating refresh/local convergence before isolated chat branch execution helpers.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -733,11 +751,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T20:23:56Z
-Latest commit SHA: 8ae71e4
-Chat duration: 13750s (00:03:49:10)
-Estimated chat tokens: 2416607 estimated from chat transcript bytes (9666425 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 72.50 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T20:27:14Z
+Latest commit SHA: a06b99e
+Chat duration: 13948s (00:03:52:28)
+Estimated chat tokens: 2451742 estimated from chat transcript bytes (9806968 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 73.55 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
