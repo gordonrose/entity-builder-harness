@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+// agentic-script:
+//   owner: 00.chat
+//   purpose: Estimate chat cost metadata from an estimated token count.
+//   portability: llm-workbench-required
+//   used_by:
+//     - scripts/shared/git/record-chat-commit.sh
+//     - scripts/shared/git/smoke-test-record-chat-commit-metrics.sh
+//   effects: read-only
+
 const fs = require('fs');
 const path = require('path');
 

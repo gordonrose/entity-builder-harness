@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Smoke test public scripts/chat aliases against a throwaway repo.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#     - scripts/shared/chat/audit-chat-bootstrap-file-set.sh
+#   effects: writes-files
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

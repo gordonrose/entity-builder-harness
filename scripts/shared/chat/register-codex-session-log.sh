@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Record the discovered Codex transcript path in the current chat log.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-start.md
+#     - scripts/shared/git/record-chat-commit.sh
+#   effects: writes-files
+
 # shellcheck source=session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 

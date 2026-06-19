@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Smoke test on-demand chat commit log summary generation.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-reporting.md
+#     - scripts/shared/chat/generate-commit-log-summary.sh
+#   effects: writes-files
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

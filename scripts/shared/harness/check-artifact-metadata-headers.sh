@@ -173,7 +173,7 @@ check_script_header() {
   fi
 
   for field in owner purpose portability used_by effects; do
-    if ! printf '%s\n' "$header" | grep -Eq "^[#/]?[[:space:]]+${field}:"; then
+    if ! printf '%s\n' "$header" | grep -Eq "^(#|//)[[:space:]]+${field}:"; then
       echo "ERROR: missing ${field} in script metadata header: $path" >&2
       return 1
     fi

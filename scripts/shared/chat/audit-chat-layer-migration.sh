@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Verify canonical chat-layer files and compatibility references.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/migration-plan.md
+#     - scripts/chat/audit-chat-layer-migration.sh
+#   effects: read-only
+
 required_paths=(
   ".agentic/00.chat/README.md"
   ".agentic/00.chat/migration-plan.md"

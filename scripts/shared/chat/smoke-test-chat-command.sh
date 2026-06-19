@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Smoke test the shared chat command dispatcher and chat subcommands.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/commands/README.md
+#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#   effects: writes-files, branches, worktrees
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

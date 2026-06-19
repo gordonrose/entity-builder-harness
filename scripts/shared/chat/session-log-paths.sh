@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Provide canonical chat session id and commit log path helper functions.
+#   portability: llm-workbench-required
+#   used_by:
+#     - scripts/shared/chat/request-initialization/read-current-chat-log.sh
+#     - scripts/shared/git/prepare-chat-session-before-commit.sh
+#   effects: read-only
+
 chat_session_id_from_branch() {
   local branch="$1"
 

@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T16:57:05Z
-latest_commit_sha: 1f1e19c
-chat_duration: 1339s (00:00:22:19)
-estimated_chat_tokens: 791849 estimated from chat transcript bytes (3167396 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 23.76 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T16:58:18Z
+latest_commit_sha: ed40b10
+chat_duration: 1412s (00:00:23:32)
+estimated_chat_tokens: 805795 estimated from chat transcript bytes (3223177 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 24.17 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -80,6 +80,17 @@ Summary: Added the artifact metadata header standard, governed metadata checker,
 
 ADR impact: No new ADR; this implements the metadata governance plan in standards and gates.
 
+
+### 2026-06-19T16:58:18Z - Commit recorded
+
+Commit: `ed40b10`
+
+Message: Backfill metadata for chat script aliases
+
+Summary: Added agentic-script metadata headers to the public scripts/chat alias commands and verified them with the alias smoke test.
+
+ADR impact: No ADR impact; metadata backfill follows the new standard.
+
 ## Commits
 
 
@@ -97,6 +108,13 @@ ADR impact: No new ADR; this implements the metadata governance plan in standard
   Summary: Added the artifact metadata header standard, governed metadata checker, and commit-gate enforcement for newly added scripts and harness Markdown artifacts.
   ADR impact: No new ADR; this implements the metadata governance plan in standards and gates.
 
+
+- Commit: `ed40b10`
+  Time UTC: 2026-06-19T16:58:18Z
+  Message: Backfill metadata for chat script aliases
+  Summary: Added agentic-script metadata headers to the public scripts/chat alias commands and verified them with the alias smoke test.
+  ADR impact: No ADR impact; metadata backfill follows the new standard.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -112,11 +130,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T16:57:05Z
-Latest commit SHA: 1f1e19c
-Chat duration: 1339s (00:00:22:19)
-Estimated chat tokens: 791849 estimated from chat transcript bytes (3167396 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 23.76 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T16:58:18Z
+Latest commit SHA: ed40b10
+Chat duration: 1412s (00:00:23:32)
+Estimated chat tokens: 805795 estimated from chat transcript bytes (3223177 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 24.17 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
@@ -125,3 +143,6 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
   `scripts/shared/chat/update-chat-log.sh`.
 - Public `scripts/chat/*.sh` files are thin aliases and are tagged as
   `llm-workbench-required`.
+- Root `scripts/shared/chat/` scripts were classified as required,
+  validation, source-only, or internal based on workflow references and smoke
+  test usage.

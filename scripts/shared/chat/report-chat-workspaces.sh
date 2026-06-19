@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Report chat branches, log head state, and worktree status.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-cleanup.md
+#     - .agentic/00.chat/workflows/chat-promote-to-main.md
+#   effects: read-only
+
 BASE_BRANCH="${1:-main}"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"

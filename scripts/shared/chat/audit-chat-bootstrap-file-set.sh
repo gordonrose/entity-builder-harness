@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Audit the portable chat bootstrap script and support-file set.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#     - .agentic/shared/standards/upstream-repo-bootstrap.md
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:

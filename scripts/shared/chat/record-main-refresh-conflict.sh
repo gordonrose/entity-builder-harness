@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Record main-refresh conflict classification and resolution in the current chat log.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - .agentic/00.chat/standards/main-refresh-conflict-types.md
+#   effects: writes-files
+
 # shellcheck source=session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 

@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Ensure the canonical local llm-workbench upstream repo exists.
+#   portability: source-only
+#   used_by:
+#     - .agentic/harness/standards/governed-script-permissions.md
+#     - .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+#   effects: network, writes-files
+
 usage() {
   cat <<'EOF'
 Usage:
