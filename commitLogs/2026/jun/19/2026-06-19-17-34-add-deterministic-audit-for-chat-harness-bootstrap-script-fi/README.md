@@ -58,6 +58,8 @@ add deterministic audit for chat harness bootstrap script file set
   such as `git`, `startup`, `session-log`, `governance`, and `validation`.
 - Bias Git-shaped chat workbench behavior toward `owner: 00.chat` unless a
   non-chat owner is clear.
+- Plan a script layout migration organized by owner layer, domain, and
+  capability folder, with old paths retained as wrappers during migration.
 
 ## Activity Log
 
@@ -250,3 +252,5 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
   smoke tests.
 - `scripts/shared/harness/` scripts were classified as required harness gates,
   runner infrastructure, or validation smoke tests.
+- Added proposed ADR 0017 for organizing scripts by owner, domain, and
+  capability folder before moving files.
