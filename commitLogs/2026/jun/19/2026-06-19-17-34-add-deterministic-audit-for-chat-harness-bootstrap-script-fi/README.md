@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T20:01:01Z
-latest_commit_sha: 0cdbc73
-chat_duration: 12375s (00:03:26:15)
-estimated_chat_tokens: 2238306 estimated from chat transcript bytes (8953222 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 67.15 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T20:06:11Z
+latest_commit_sha: 3d822d7
+chat_duration: 12685s (00:03:31:25)
+estimated_chat_tokens: 2275515 estimated from chat transcript bytes (9102060 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 68.27 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -397,6 +397,17 @@ Summary: Moved record-chat-commit and its metrics smoke test into scripts/00.cha
 
 ADR impact: Validated canonical and compatibility smoke paths, bootstrap file-set audit, metadata headers, governed command drift, syntax checks, and the pre-commit gate.
 
+
+### 2026-06-19T20:06:11Z - Commit recorded
+
+Commit: `3d822d7`
+
+Message: Move chat session checkpoint capability
+
+Summary: Moved checkpoint-chat-session-log into scripts/00.chat/session-log/checkpoint-chat-session-log, added a capability README, kept the old governed shared path as a compatibility wrapper, and updated ADR 0017 plus session-log helper metadata.
+
+ADR impact: Validated canonical and wrapper dry-run behavior in a throwaway repo, bootstrap file-set audit, metadata headers, governed command drift and smoke, syntax checks, and pre-commit gate.
+
 ## Commits
 
 
@@ -610,6 +621,13 @@ ADR impact: Validated canonical and compatibility smoke paths, bootstrap file-se
   Summary: Moved record-chat-commit and its metrics smoke test into scripts/00.chat/session-log/record-chat-commit, added a capability README, kept old shared git paths as compatibility wrappers, and updated helper metadata plus ADR 0017.
   ADR impact: Validated canonical and compatibility smoke paths, bootstrap file-set audit, metadata headers, governed command drift, syntax checks, and the pre-commit gate.
 
+
+- Commit: `3d822d7`
+  Time UTC: 2026-06-19T20:06:11Z
+  Message: Move chat session checkpoint capability
+  Summary: Moved checkpoint-chat-session-log into scripts/00.chat/session-log/checkpoint-chat-session-log, added a capability README, kept the old governed shared path as a compatibility wrapper, and updated ADR 0017 plus session-log helper metadata.
+  ADR impact: Validated canonical and wrapper dry-run behavior in a throwaway repo, bootstrap file-set audit, metadata headers, governed command drift and smoke, syntax checks, and pre-commit gate.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -625,11 +643,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T20:01:01Z
-Latest commit SHA: 0cdbc73
-Chat duration: 12375s (00:03:26:15)
-Estimated chat tokens: 2238306 estimated from chat transcript bytes (8953222 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 67.15 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T20:06:11Z
+Latest commit SHA: 3d822d7
+Chat duration: 12685s (00:03:31:25)
+Estimated chat tokens: 2275515 estimated from chat transcript bytes (9102060 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 68.27 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
