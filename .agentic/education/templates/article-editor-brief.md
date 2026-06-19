@@ -79,6 +79,39 @@ route to inspect it or understand why it cannot be inspected directly.
 Describe what the target reader already feels, fears, wants, or performs but
 may not have named yet.
 
+## Reader Prerequisite Ladder
+
+List the steps of understanding the reader needs before the article can use
+its central analogy, technical model, or harness mechanism.
+
+Include:
+
+- what the reader already wants
+- what hidden cost or pressure follows from that desire
+- what normal-world model helps explain the pressure
+- what part of the model transfers to the source story
+- what part does not transfer and must be created, governed, or explained
+- what sentence or section will bridge the gap
+
+Block if the article depends on a technical analogy but the ladder skips the
+missing middle step.
+
+## Analogy Transfer Test
+
+For each major analogy, answer:
+
+- analogy:
+- what transfers cleanly:
+- what does not transfer:
+- what the source story or harness had to create:
+- where the analogy could mislead the reader:
+- what must be stated plainly before drafting:
+
+For example, a human developer analogy does not transfer cleanly to AI chats
+unless the article explains that chats are not naturally separate accountable
+individuals. The harness must manufacture that separateness upstream through
+branch, worktree, session log, write guard, or another boundary.
+
 ## Reader-World Research Summary
 
 Summarize the reader-world research packet.
@@ -101,6 +134,13 @@ Name the downside if the problem is ignored.
 Stakes must be more than an observation. Identify a palpable risk, cost, loss,
 embarrassment, bad decision, wasted effort, loss of control, loss of memory, or
 false confidence.
+
+For AI-output articles, also identify the accountability bottleneck:
+
+- what is being generated quickly:
+- what remains slow for humans:
+- what becomes expensive if inspectability is too low:
+- who owns the result when the assistant is wrong:
 
 ## Why Now
 
@@ -145,6 +185,9 @@ Include:
 - the concrete object under pressure in each situation
 - the point at which the article may move from recognition into thesis
 - what must not be rushed
+- what technical or process model must be taught before the harness mechanism
+  appears
+- what missing transfer step must be stated directly
 
 ## Opening Lab Requirement
 
@@ -185,6 +228,8 @@ Include:
 - insufficient human pressure
 - thesis that sounds true but not urgent
 - named artifact with no link and no availability explanation
+- analogy that assumes the reader already understands the missing middle step
+- polished prose that compresses a needed teaching step
 
 ## Line 30 Cold-Reader Gate
 

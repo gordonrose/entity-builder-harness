@@ -24,3 +24,9 @@
   them out. The joke should point at the situation, not at the reader's
   insecurity.
 - Keep the dry edge, but make the surface hospitable.
+- For broad public technical explainers, prefer accessible recognition over
+  crafted literary wit. A plain phrase that helps the reader understand the
+  pressure is stronger than a beautiful joke that asks them to pause.
+- Humor can be blunt and conversational when it carries the lesson, as in
+  "owner of a faster mess" or "added insult to injury." Do not over-refine
+  these into magazine-style cleverness.

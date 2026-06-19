@@ -68,7 +68,22 @@ the opening, main evidence, or primary reader bridge.
 - Abstract words used before they are earned:
 - Verdict:
 
-### Candidate 3: Mechanism First
+### Candidate 3: Plain Teaching
+
+Use this candidate for public technical explainers where the article may need
+to begin with the reader's desire, a plain cost, or a direct teaching frame
+before moving into the source scene.
+
+- Draft opening:
+- Reader desire named:
+- Hidden cost or accountability pressure:
+- First concrete example:
+- Felt stake by line seven:
+- Cold reader retell:
+- Does it avoid sounding generic or content-calendar-like:
+- Verdict:
+
+### Candidate 4: Mechanism First
 
 This candidate exists to show the tempting but weaker system-first version.
 
@@ -98,6 +113,8 @@ Answer:
   plainly explains why that route is missing?
 - Which opening gives the writer enough runway to add reader-world examples
   before the thesis?
+- Which opening best teaches the prerequisite ladder before the article uses
+  technical vocabulary or a harness mechanism?
 - Which opening should be used, revised, or rejected?
 
 ## Banned Or Delayed Language

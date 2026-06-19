@@ -160,6 +160,71 @@ Use for:
 - Keep empathy practical: people feel heard, options stay open, pressure drops,
   trust buys freedom.
 
+## Public Technical Explainer Examples
+
+### Speed With Accountability
+
+> I really like how quickly AI works. But we shouldn't think that speed doesn't
+> come with a lot of downsides.
+
+Why it works:
+
+- Starts from an honest desire rather than a warning.
+- Keeps the surface plain and accessible.
+- Gives the reader permission to like the speed before introducing the cost.
+
+Use for:
+
+- openings where the reader's attraction to AI is real
+- articles that balance capability and control
+
+### Inspectability As The Cost Of Speed
+
+> Work can now be created faster than it can be inspected, understood, tested,
+> explained, and owned.
+
+Why it works:
+
+- Names the full accountability chain.
+- Makes the bottleneck visible without sounding anti-AI.
+- Uses a clean list that escalates from inspection to ownership.
+
+Use for:
+
+- nut grafs about AI output pressure
+- explaining why harness structure is not bureaucracy
+
+### Faster Mess
+
+> If AI gives me ten times the output but only one tenth of the inspectability,
+> I have not become ten times faster. I have become the owner of a faster mess.
+
+Why it works:
+
+- Converts an abstract productivity tradeoff into a memorable consequence.
+- Has dry bite, but the joke serves the teaching point.
+- Centers human accountability.
+
+Use for:
+
+- turning productivity claims into accountability tests
+- endings or pivots where the article needs a hard landing
+
+### Human Accountability
+
+> The assistant is not accountable. I am.
+
+Why it works:
+
+- Blunt, clear, and load-bearing.
+- Names the human ownership problem without melodrama.
+- Gives the article a moral center.
+
+Use for:
+
+- transitions from AI capability to human responsibility
+- rejecting drafts that make the assistant seem like the accountable actor
+
 ## Lines That Do Not Sound Like The Author
 
 > The AI summary sounded good. Then someone asked what it was based on.

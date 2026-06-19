@@ -60,6 +60,11 @@ draft. The writer must know:
   unavailable, archived, paywalled, or known only through secondary reporting
 - what the selected thesis is
 - what weaker thesis was rejected
+- whether the article is a magazine-style story or a public technical
+  explainer
+- what reader prerequisite ladder must be taught before the central analogy or
+  harness mechanism appears
+- what analogy transfer test the editor approved
 - what the reader should feel before the thesis appears
 - what a cold reader should understand by roughly line 30
 - which technical terms need to be taught, delayed, translated, or avoided
@@ -75,6 +80,7 @@ The writer must produce at least:
 
 - one human-consequence opening
 - one scene-first opening
+- one plain-teaching opening for public technical explainers
 - one mechanism-first opening included to expose why it is weaker
 
 Do not draft the full article until the Article Editor Agent has approved an
@@ -98,6 +104,10 @@ The draft must:
 - let the reader enter the situation before naming the lesson
 - keep the reader oriented paragraph by paragraph
 - teach technical vocabulary only after the reader has felt the need for it
+- in public technical explainer mode, prioritize reader orientation over
+  magazine compression
+- make explicit what does not transfer when using an analogy between human
+  teams and AI chats, agents, or harnesses
 - preserve the selected thesis unless the draft reveals a stronger one
 - make stakes concrete through cost, risk, loss, embarrassment, wasted effort,
   false confidence, or reduced control
@@ -125,6 +135,7 @@ The draft must not:
 - introduce repo vocabulary before the human situation is clear
 - turn the article into a tour of internal machinery
 - smooth away the author's dry, exacting, slightly amused voice
+- over-literary the draft when the brief calls for public teaching clarity
 - flatter the reader without teaching them anything
 - use a generic hypothetical as the opening, main evidence, or primary reader
   bridge
@@ -152,6 +163,20 @@ Default article shape:
 
 This is a guide, not a formula. Preserve the brief's story logic over the
 shape when they conflict.
+
+Public technical explainer shape:
+
+1. Reader desire
+2. Hidden cost or accountability pressure
+3. Public examples
+4. Author-owned concrete version
+5. Plain-language model
+6. What does not transfer
+7. Harness mechanism
+8. Practical payoff
+
+Use this shape when the approved brief names public teaching clarity,
+technical-reader onboarding, or an analogy that needs prerequisite explanation.
 
 ## Required Output
 
