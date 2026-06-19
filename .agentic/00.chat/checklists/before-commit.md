@@ -11,6 +11,7 @@ bash scripts/shared/git/check-write-location.sh
 ```
 
 Task commits must not be prepared from the root integration worktree.
+Preserve unrelated user changes in a dirty worktree.
 
 ## Branch Prerequisites
 
