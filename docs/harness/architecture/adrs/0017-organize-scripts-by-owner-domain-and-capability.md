@@ -340,6 +340,58 @@ Dirty worktree check batch result:
   `scripts/shared/git/dirty-worktree-check.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Remaining shared git inventory after commit-boundary batch:
+
+All remaining `scripts/shared/git/*.sh` files currently declare
+`owner: 00.chat`. None are classified as genuinely cross-layer shared Git
+primitives by metadata. They fall into three groups:
+
+1. Compatibility wrappers for capabilities already moved:
+
+   - `scripts/shared/git/check-commit-prerequisites.sh`
+   - `scripts/shared/git/check-commitlog-deletions.sh`
+   - `scripts/shared/git/check-write-location.sh`
+   - `scripts/shared/git/checkpoint-chat-session-log.sh`
+   - `scripts/shared/git/cleanup-empty-chat-branches.sh`
+   - `scripts/shared/git/dirty-worktree-check.sh`
+   - `scripts/shared/git/prepare-chat-session-before-commit.sh`
+   - `scripts/shared/git/record-chat-commit.sh`
+   - `scripts/shared/git/smoke-test-chat-worktree-session.sh`
+   - `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
+   - `scripts/shared/git/smoke-test-commit-prerequisites.sh`
+   - `scripts/shared/git/smoke-test-commitlog-deletions.sh`
+   - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
+
+2. Chat refresh and local convergence capabilities not yet moved:
+
+   - `scripts/shared/git/active-chat-branches.sh`
+   - `scripts/shared/git/branch-overlap-report.sh`
+   - `scripts/shared/git/check-chat-branch-freshness.sh`
+   - `scripts/shared/git/classify-main-refresh-dirty-state.sh`
+   - `scripts/shared/git/main-update-status.sh`
+   - `scripts/shared/git/preflight-main-refresh.sh`
+   - `scripts/shared/git/promote-preflight-refresh.sh`
+   - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
+   - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
+   - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
+   - `scripts/shared/git/verify-local-convergence.sh`
+
+3. Isolated chat branch execution helpers not yet moved:
+
+   - `scripts/shared/git/stage-active-worktree-paths.sh`
+   - `scripts/shared/git/smoke-test-with-chat-branch.sh`
+   - `scripts/shared/git/with-chat-branch.sh`
+
+Next migration recommendation:
+
+- Move the chat refresh/local convergence group as its own batch before touching
+  isolated chat branch execution helpers.
+- Keep existing shared paths as wrappers while governed runner allowlists,
+  workflow docs, and old external users still reference them.
+- Revisit whether any compatibility wrapper can be retired only after command
+  discovery, governed runner path policy, and bootstrap install surfaces no
+  longer depend on the old path.
+
 Closeout command batch result:
 
 - canonical implementation:
