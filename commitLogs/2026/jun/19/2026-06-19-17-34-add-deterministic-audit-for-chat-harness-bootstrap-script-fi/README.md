@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T19:24:46Z
-latest_commit_sha: 7372552
-chat_duration: 10200s (00:02:50:00)
-estimated_chat_tokens: 1937314 estimated from chat transcript bytes (7749253 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 58.12 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T19:31:26Z
+latest_commit_sha: 4a91c54
+chat_duration: 10600s (00:02:56:40)
+estimated_chat_tokens: 2042011 estimated from chat transcript bytes (8168044 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 61.26 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -331,6 +331,17 @@ Summary: Moved opening-prompt auto-start into scripts/00.chat/startup/auto-start
 
 ADR impact: ADR 0017 records the auto-start helper batch and the remaining governed-runner path-policy exception.
 
+
+### 2026-06-19T19:31:26Z - Commit recorded
+
+Commit: `4a91c54`
+
+Message: Move chat session startup engine
+
+Summary: Moved start-chat-session into scripts/00.chat/startup/start-chat-session with a capability README, kept the old request-initialization path as a compatibility wrapper, and updated startup callers and smoke fixtures.
+
+ADR impact: ADR 0017 records the startup engine migration and remaining compatibility boundary.
+
 ## Commits
 
 
@@ -502,6 +513,13 @@ ADR impact: ADR 0017 records the auto-start helper batch and the remaining gover
   Summary: Moved opening-prompt auto-start into scripts/00.chat/startup/auto-start-missing-session/script.sh, kept the old request-initialization path as a governed-runner-compatible wrapper, and updated dispatcher metadata, smoke fixtures, and ADR 0017.
   ADR impact: ADR 0017 records the auto-start helper batch and the remaining governed-runner path-policy exception.
 
+
+- Commit: `4a91c54`
+  Time UTC: 2026-06-19T19:31:26Z
+  Message: Move chat session startup engine
+  Summary: Moved start-chat-session into scripts/00.chat/startup/start-chat-session with a capability README, kept the old request-initialization path as a compatibility wrapper, and updated startup callers and smoke fixtures.
+  ADR impact: ADR 0017 records the startup engine migration and remaining compatibility boundary.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -517,11 +535,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T19:24:46Z
-Latest commit SHA: 7372552
-Chat duration: 10200s (00:02:50:00)
-Estimated chat tokens: 1937314 estimated from chat transcript bytes (7749253 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 58.12 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T19:31:26Z
+Latest commit SHA: 4a91c54
+Chat duration: 10600s (00:02:56:40)
+Estimated chat tokens: 2042011 estimated from chat transcript bytes (8168044 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 61.26 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
