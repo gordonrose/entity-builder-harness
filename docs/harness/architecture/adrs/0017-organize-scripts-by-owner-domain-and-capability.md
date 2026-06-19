@@ -136,7 +136,7 @@ Second pilot result:
   `scripts/00.chat/command/dispatcher/smoke-test.sh`
 - capability README:
   `scripts/00.chat/command/dispatcher/README.md`
-- compatibility wrappers:
+- retired shared compatibility wrappers:
   `scripts/shared/chat/chat-command.sh` and
   `scripts/shared/chat/smoke-test-chat-command.sh`
 - public alias preserved:
@@ -151,7 +151,8 @@ Reporting batch result:
   `scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh`
 - compatibility wrappers:
   `scripts/shared/chat/report-chat-workspaces.sh`,
-  `scripts/shared/chat/generate-commit-log-summary.sh`, and
+  `scripts/shared/chat/generate-commit-log-summary.sh`
+- retired shared compatibility wrapper:
   `scripts/shared/chat/smoke-test-generate-commit-log-summary.sh`
 - public aliases preserved:
   `scripts/chat/report-chat-workspaces.sh` and
