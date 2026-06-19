@@ -174,6 +174,18 @@ Audit batch result:
   `scripts/shared/harness/run-governed-script.sh` still allowlists the old
   shared wrapper paths until the governed-runner path policy is migrated.
 
+Classification batch result:
+
+- canonical implementation:
+  `scripts/00.chat/classification/classify-task/script.sh`
+- canonical fixture check:
+  `scripts/00.chat/classification/classify-task/check-fixtures.sh`
+- canonical fixtures:
+  `scripts/00.chat/classification/classify-task/fixtures.tsv`
+- compatibility wrappers:
+  `scripts/shared/chat/request-initialization/classify-task.sh` and
+  `scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh`
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

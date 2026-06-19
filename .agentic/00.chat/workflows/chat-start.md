@@ -72,7 +72,7 @@ the user to paste the generated first prompt back into the same chat.
 If `layer`, `mode`, or `workflow` is missing or `unknown`, run:
 
 ```bash
-bash scripts/shared/chat/request-initialization/classify-task.sh "<task from chat log or user message>"
+bash scripts/00.chat/classification/classify-task/script.sh "<task from chat log or user message>"
 ```
 
 If classification returns a clear `Layer`, `Mode`, and `Workflow`, ask before

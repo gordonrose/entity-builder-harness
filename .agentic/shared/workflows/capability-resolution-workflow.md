@@ -148,13 +148,13 @@ Phase 2: implementation
 Classifier examples live in:
 
 ```text
-scripts/shared/chat/request-initialization/classify-task.fixtures.tsv
+scripts/00.chat/classification/classify-task/fixtures.tsv
 ```
 
 Check them with:
 
 ```bash
-bash scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh
+bash scripts/00.chat/classification/classify-task/check-fixtures.sh
 ```
 
 Add a fixture when:

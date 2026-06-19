@@ -73,7 +73,7 @@ if [ -z "${BASE_BRANCH// }" ]; then
   exit 1
 fi
 
-CLASSIFICATION="$(bash scripts/shared/chat/request-initialization/classify-task.sh "$QUESTION" || true)"
+CLASSIFICATION="$(bash scripts/00.chat/classification/classify-task/script.sh "$QUESTION" || true)"
 LAYER="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Layer: //p')"
 MODE="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Mode: //p')"
 WORKFLOW="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Workflow: //p')"
