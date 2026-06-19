@@ -15,8 +15,8 @@ This capability owns the chat command dispatcher.
 
 The dispatcher is the small command-line router for chat commands. It accepts a
 command name such as `list`, `new`, or `close`, validates the name, finds the
-matching executable under `scripts/shared/chat/commands/`, and transfers control
-to that command script.
+matching executable under `scripts/00.chat/command/<name>/script.sh`, and
+transfers control to that command script.
 
 The dispatcher is not the implementation of each chat action. The subcommand
 scripts remain separate so each command can evolve independently.
@@ -24,8 +24,9 @@ scripts remain separate so each command can evolve independently.
 ## Files
 
 - `script.sh` is the canonical dispatcher entrypoint.
+- `<command>/script.sh` files are canonical command entrypoints.
 - `smoke-test.sh` validates the dispatcher and core chat subcommands in a
   throwaway repository.
 
-Compatibility wrappers remain at the old shared paths while the script layout
-migration is in progress.
+Compatibility wrappers remain under `scripts/shared/chat/commands/` while old
+external callers migrate.

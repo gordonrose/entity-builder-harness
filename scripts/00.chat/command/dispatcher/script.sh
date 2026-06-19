@@ -3,7 +3,7 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Dispatch chat subcommands from scripts/shared/chat/commands.
+#   purpose: Dispatch chat subcommands from canonical scripts/00.chat/command folders.
 #   domain: command
 #   portability: llm-workbench-required
 #   used_by:
@@ -13,7 +13,7 @@ set -euo pipefail
 #     - scripts/00.chat/startup/auto-start-missing-session/script.sh
 #   effects: branches, worktrees, writes-files, stages-files
 
-COMMAND_DIR="scripts/shared/chat/commands"
+COMMAND_DIR="scripts/00.chat/command"
 
 usage() {
   cat <<EOF
@@ -23,8 +23,9 @@ Commands:
 EOF
 
   if [ -d "$COMMAND_DIR" ]; then
-    find "$COMMAND_DIR" -maxdepth 1 -type f -name '*.sh' -perm -u+x \
-      | sed -E 's#^.*/([^/]+)\.sh$#  \1#' \
+    find "$COMMAND_DIR" -mindepth 2 -maxdepth 2 -type f -path '*/script.sh' -perm -u+x \
+      ! -path "$COMMAND_DIR/dispatcher/script.sh" \
+      | sed -E 's#^scripts/00\.chat/command/([^/]+)/script\.sh$#  \1#' \
       | sort
   fi
 }
@@ -52,7 +53,13 @@ case "$COMMAND_NAME" in
     ;;
 esac
 
-COMMAND_SCRIPT="${COMMAND_DIR}/${COMMAND_NAME}.sh"
+COMMAND_SCRIPT="${COMMAND_DIR}/${COMMAND_NAME}/script.sh"
+
+if [ "$COMMAND_NAME" = "dispatcher" ]; then
+  echo "ERROR: unknown chat command: $COMMAND_NAME" >&2
+  usage >&2
+  exit 2
+fi
 
 if [ ! -f "$COMMAND_SCRIPT" ]; then
   echo "ERROR: unknown chat command: $COMMAND_NAME" >&2

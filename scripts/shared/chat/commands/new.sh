@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: startup
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/00.chat/command/dispatcher/script.sh
+#     - scripts/00.chat/command/new/script.sh
 #   effects: branches, worktrees, writes-files, stages-files
 
-exec bash scripts/00.chat/startup/start-new-chat/script.sh "$@"
+exec bash scripts/00.chat/command/new/script.sh "$@"

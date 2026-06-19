@@ -31,9 +31,6 @@ The canonical dispatcher is:
 bash scripts/00.chat/command/dispatcher/script.sh <command> [args...]
 ```
 
-The old shared dispatcher path remains as a compatibility wrapper during the
-script-layout migration.
-
 Its capability README is:
 
 ```txt
@@ -71,7 +68,7 @@ about before creating a session.
 Add a new executable script at:
 
 ```txt
-scripts/shared/chat/commands/<name>.sh
+scripts/00.chat/command/<name>/script.sh
 ```
 
 Use lowercase command names when possible. Keep the command script narrow:
@@ -83,3 +80,7 @@ Use lowercase command names when possible. Keep the command script narrow:
 
 Update the dispatcher smoke test named in its capability README when adding a
 command that should remain part of the stable shortcut surface.
+
+The old `scripts/shared/chat/commands/<name>.sh` path is compatibility-only.
+Do not add new commands there unless an explicit compatibility wrapper is part
+of the same approved change.

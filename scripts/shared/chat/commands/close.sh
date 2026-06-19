@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: closeout
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/00.chat/command/dispatcher/script.sh
+#     - scripts/00.chat/command/close/script.sh
 #   effects: read-only
 
-exec bash scripts/00.chat/closeout/build-closeout-prompt/script.sh "$@"
+exec bash scripts/00.chat/command/close/script.sh "$@"
