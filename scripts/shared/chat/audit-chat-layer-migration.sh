@@ -12,6 +12,7 @@ required_paths=(
   ".agentic/00.chat/workflows/chat-cleanup.md"
   ".agentic/00.chat/workflows/chat-reporting.md"
   ".agentic/00.chat/workflows/chat-upstream-reusable-lesson.md"
+  ".agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md"
   ".agentic/00.chat/checklists/before-commit.md"
   ".agentic/00.chat/skills/session-summary.md"
   "scripts/chat/README.md"
