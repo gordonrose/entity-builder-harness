@@ -10,13 +10,13 @@ mode: implementation
 workflow: .agentic/00.chat/workflows/chat-commit.md
 status: ready
 raised_at_utc: 2026-06-19T12:38:12Z
-codex_session_log_path:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T13-38-16-019edfe3-9b6e-7eb3-988f-5803810a1e2c.jsonl
+latest_commit_at_utc: 2026-06-19T15:07:25Z
+latest_commit_sha: 4a22752
+chat_duration: 8953s (00:02:29:13)
+estimated_chat_tokens: 343721 estimated from chat transcript bytes (1374882 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T13-38-16-019edfe3-9b6e-7eb3-988f-5803810a1e2c.jsonl)
+estimated_chat_cost: USD 10.31 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -78,9 +78,26 @@ approval-sensitive governed scripts to use the governed runner, added a
 standard rule for future artifacts, added a deterministic drift checker with
 smoke coverage, and wired the checker into the before-commit preparation gate.
 
+
+### 2026-06-19T15:07:25Z - Commit recorded
+
+Commit: `4a22752`
+
+Message: chore(harness): enforce governed script command examples
+
+Summary: Routes approval-sensitive governed script examples through the runner, documents the command-shape rule, adds a drift checker with smoke coverage, and wires it into commit preparation.
+
+ADR impact: ADR not needed; enforces existing governed-script permission architecture.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `4a22752`
+  Time UTC: 2026-06-19T15:07:25Z
+  Message: chore(harness): enforce governed script command examples
+  Summary: Routes approval-sensitive governed script examples through the runner, documents the command-shape rule, adds a drift checker with smoke coverage, and wires it into commit preparation.
+  ADR impact: ADR not needed; enforces existing governed-script permission architecture.
 
 ## Main Refresh Conflicts
 
@@ -97,12 +114,12 @@ Reason: The change enforces the existing governed-script permission model and
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T12:38:12Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-19T15:07:25Z
+Latest commit SHA: 4a22752
+Chat duration: 8953s (00:02:29:13)
+Estimated chat tokens: 343721 estimated from chat transcript bytes (1374882 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T13-38-16-019edfe3-9b6e-7eb3-988f-5803810a1e2c.jsonl)
+Estimated chat cost: USD 10.31 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
