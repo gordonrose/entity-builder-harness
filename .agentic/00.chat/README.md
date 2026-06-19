@@ -29,10 +29,10 @@ move while active chats still reference legacy workflow and script paths.
 When a chat-specific process remains in a legacy location, this layer owns the
 behavior and the legacy path is a compatibility location.
 
-Use `scripts/chat/` for chat-layer script entrypoints where available. The
-wrappers delegate to `scripts/shared/` compatibility implementations.
+Use `scripts/chat/` for public chat-layer script entrypoints where available.
+The wrappers delegate to canonical capability scripts under `scripts/00.chat/`.
 
-Use `bash scripts/shared/chat/audit-chat-layer-migration.sh` to inspect the
+Use `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh` to inspect the
 current migration state before moving more chat lifecycle behavior.
 
 Use `bash scripts/shared/chat/record-main-refresh-conflict.sh` to append the

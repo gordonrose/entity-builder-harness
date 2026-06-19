@@ -7,8 +7,8 @@ set -euo pipefail
 #   domain: git
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/chat/audit-chat-bootstrap-file-set.sh
-#     - scripts/shared/chat/audit-chat-layer-migration.sh
+#     - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+#     - scripts/00.chat/migration/audit-chat-layer-migration/script.sh
 #     - scripts/shared/chat/smoke-test-chat-script-aliases.sh
 #   effects: branches, destructive
 

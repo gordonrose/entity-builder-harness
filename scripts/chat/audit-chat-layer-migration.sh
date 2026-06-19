@@ -7,8 +7,8 @@ set -euo pipefail
 #   domain: migration
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/chat/audit-chat-layer-migration.sh
+#     - scripts/00.chat/migration/audit-chat-layer-migration/script.sh
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 #   effects: read-only
 
-exec bash scripts/shared/chat/audit-chat-layer-migration.sh "$@"
+exec bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh "$@"

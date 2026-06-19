@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: reporting
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/chat/audit-chat-layer-migration.sh
+#     - scripts/00.chat/migration/audit-chat-layer-migration/script.sh
 #     - scripts/shared/chat/smoke-test-chat-script-aliases.sh
 #   effects: read-only
 

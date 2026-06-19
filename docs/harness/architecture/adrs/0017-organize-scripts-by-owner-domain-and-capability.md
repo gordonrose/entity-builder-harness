@@ -160,6 +160,20 @@ Reporting batch result:
   `scripts/shared/harness/run-governed-script.sh` still allowlists the old
   shared wrapper paths until the governed-runner path policy is migrated.
 
+Audit batch result:
+
+- canonical implementations:
+  `scripts/00.chat/migration/audit-chat-layer-migration/script.sh` and
+  `scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh`
+- compatibility wrappers:
+  `scripts/shared/chat/audit-chat-layer-migration.sh` and
+  `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`
+- public alias preserved:
+  `scripts/chat/audit-chat-layer-migration.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  shared wrapper paths until the governed-runner path policy is migrated.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

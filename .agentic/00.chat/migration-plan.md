@@ -85,7 +85,7 @@ their stated evidence, policy, or workflow precondition exists.
 Run:
 
 ```bash
-bash scripts/shared/chat/audit-chat-layer-migration.sh
+bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh
 ```
 
 The audit reports required canonical files, compatibility paths, and remaining

@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#     - scripts/shared/chat/audit-chat-bootstrap-file-set.sh
+#     - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
 #   effects: writes-files
 
 fail() {
