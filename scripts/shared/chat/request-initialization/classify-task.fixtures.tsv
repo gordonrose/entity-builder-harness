@@ -9,6 +9,7 @@ use the existing chat start process	chat	execution	.agentic/00.chat/workflows/ch
 explain capability resolution	harness	discovery	.agentic/harness/workflows/change-harness.md
 how do i allow bash for governed scripts in my codex and claude and mistral chats?	harness	planning	.agentic/harness/workflows/change-harness.md
 implement governed script permissions for codex claude and mistral	harness	implementation	.agentic/harness/workflows/change-harness.md
+update the harness so governed checkpoint and upstream reusable lesson clone operations do not trigger repeated codex approval prompts	harness	implementation	.agentic/harness/workflows/change-harness.md
 let's update our harness so it has best practice guidelines for adding new artefacts	harness	implementation	.agentic/harness/workflows/change-harness.md
 i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation	.agentic/shared/workflows/change-shared-process.md
 is master my local equivalent of main? if so i'm assuming that is not currently up to date?	shared	discovery	.agentic/shared/workflows/change-shared-process.md
