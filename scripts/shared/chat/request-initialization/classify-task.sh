@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Classify an opening task into layer, mode, and workflow metadata.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-start.md
+#     - scripts/shared/chat/request-initialization/start-chat-session.sh
+#   effects: read-only
+
 TASK="${*:-}"
 
 classify_mode() {

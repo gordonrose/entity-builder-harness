@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Print current chat session metadata from the active chat branch log.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-start.md
+#     - scripts/shared/git/smoke-test-commit-prerequisites.sh
+#   effects: read-only
+
 # shellcheck source=../session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 

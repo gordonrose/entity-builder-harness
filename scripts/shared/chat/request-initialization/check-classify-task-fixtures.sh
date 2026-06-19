@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Validate task classifier fixtures against current classification output.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/shared/workflows/capability-resolution-workflow.md
+#     - .agentic/00.chat/workflows/chat-start.md
+#   effects: read-only
+
 FIXTURES="${1:-scripts/shared/chat/request-initialization/classify-task.fixtures.tsv}"
 FAILURES=0
 

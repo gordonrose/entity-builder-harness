@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: 00.chat
+#   purpose: Build and copy or print the governed chat closeout prompt.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/commands/README.md
+#     - scripts/shared/chat/chat-command.sh
+#   effects: read-only
+
 # shellcheck source=../session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 
