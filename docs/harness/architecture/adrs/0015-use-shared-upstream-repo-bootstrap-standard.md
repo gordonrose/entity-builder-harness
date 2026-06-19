@@ -21,6 +21,16 @@ Layer-specific workflows must consult the shared standard and define their own
 portable file sets. The chat layer owns the first workflow for bootstrapping a
 chat workbench repo such as `llm-workbench`.
 
+Empty upstream repos must establish an initial branch, starter public files, and
+an initial commit before normal chat startup can be exercised there. Source repo
+`commitLogs/` are not copied; the upstream repo creates its own session logs
+after startup is available.
+
+For open-source upstream repos, bootstrap should create a minimal usable product
+surface, not only an internal harness file baseline. The first `llm-workbench`
+bootstrap includes public docs, examples, install/uninstall scripts, and an
+install smoke test so the final user experience is tested from the beginning.
+
 ## Consequences
 
 Future reusable repos can share the same bootstrap safety model without routing
@@ -33,3 +43,9 @@ The first `llm-workbench` bootstrap remains governed, but no files are copied
 into the upstream repo until the bootstrap workflow is used with explicit write
 approval.
 
+The first upstream commit becomes a prerequisite for testing chat startup in an
+empty reusable repo.
+
+Bootstrapping more product surface up front increases initial scope, but avoids
+validating a harness-only shape that external engineers would never use
+directly.
