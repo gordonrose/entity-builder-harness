@@ -11,7 +11,7 @@ classify_mode() {
     *plan*|*proposal*|*architecture*|*approach*|*how\ should*|*how\ would*|*how\ do*)
       echo "planning"
       ;;
-    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*)
+    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*|*document*|*open*chat*|*open*llm-workbench*)
       echo "implementation"
       ;;
     *run*|*execute*|*use*|*apply*|*start*)
@@ -76,6 +76,11 @@ case "$TASK" in
     echo "Layer: chat"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-reporting.md"
+    ;;
+  *upstream\ reusable\ lesson*|*reusable\ lesson\ workflow*|*llm-workbench*|*workbench\ repo*)
+    echo "Layer: chat"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md"
     ;;
   *00.chat*|*chat\ lifecycle*)
     echo "Layer: chat"
