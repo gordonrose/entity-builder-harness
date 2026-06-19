@@ -41,4 +41,4 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 ## Size Rule
 
-`AGENTS.md` must stay between 150 and 300 lines. If a rule only applies to frontend, auth, migrations, git, deployment, testing, documentation, or chat/session setup, move it into the relevant workflow, skill, gate, or standard.
+Keep `AGENTS.md` under 80 lines unless a harness ADR approves a larger router. If a rule only applies to frontend, auth, migrations, git, deployment, testing, documentation, or chat/session setup, move it into the relevant workflow, skill, gate, or standard.
