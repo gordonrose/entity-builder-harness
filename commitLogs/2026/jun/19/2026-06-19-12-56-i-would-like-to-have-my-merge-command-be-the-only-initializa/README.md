@@ -11,10 +11,10 @@ workflow: .agentic/00.chat/workflows/chat-promote-to-main.md
 status: ready
 raised_at_utc: 2026-06-19T11:56:14Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-56-21-019edfbd-3dcc-78a3-9608-b7d82c9ed733.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
+latest_commit_at_utc: 2026-06-19T12:06:32Z
+latest_commit_sha: 5672a43
+chat_duration: 618s (00:00:10:18)
+estimated_chat_tokens: 86264 estimated from chat transcript bytes (345054 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-56-21-019edfbd-3dcc-78a3-9608-b7d82c9ed733.jsonl)
 -->
 
 ## Initial Intent
@@ -58,9 +58,26 @@ Updated `.agentic/00.chat/workflows/chat-promote-to-main.md` so a user request
 to merge or promote a chat branch to `main` also approves the non-rewriting
 refresh from `main` required by local convergence.
 
+
+### 2026-06-19T12:06:32Z - Commit recorded
+
+Commit: `5672a43`
+
+Message: Let merge requests approve chat refresh
+
+Summary: Clarifies chat promotion workflow so merge/promote-to-main approval also covers the required non-rewriting refresh from main, while preserving separate approval for rebase, conflict resolution, push, and final merge gates.
+
+ADR impact: no ADR
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `5672a43`
+  Time UTC: 2026-06-19T12:06:32Z
+  Message: Let merge requests approve chat refresh
+  Summary: Clarifies chat promotion workflow so merge/promote-to-main approval also covers the required non-rewriting refresh from main, while preserving separate approval for rebase, conflict resolution, push, and final merge gates.
+  ADR impact: no ADR
 
 ## Main Refresh Conflicts
 
@@ -75,10 +92,10 @@ Reason: Narrow workflow clarification; no new architecture primitive.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T11:56:14Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
+Latest commit at UTC: 2026-06-19T12:06:32Z
+Latest commit SHA: 5672a43
+Chat duration: 618s (00:00:10:18)
+Estimated chat tokens: 86264 estimated from chat transcript bytes (345054 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-56-21-019edfbd-3dcc-78a3-9608-b7d82c9ed733.jsonl)
 
 ## Notes
 
