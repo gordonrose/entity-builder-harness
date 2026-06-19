@@ -111,7 +111,7 @@ set before committing.
 Run:
 
 ```bash
-bash scripts/shared/git/prepare-chat-session-before-commit.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/prepare-chat-session-before-commit.sh
 ```
 
 This verifies that the session log records decisions and an ADR disposition,
@@ -124,7 +124,7 @@ Do not commit if the preparation gate fails.
 Run:
 
 ```bash
-bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
 ```
 
 This appends the commit to the session log and updates the rolling
@@ -137,7 +137,7 @@ the prior chat write permission authorizes creating a session-log checkpoint
 commit without another prompt:
 
 ```bash
-bash scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
