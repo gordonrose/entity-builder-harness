@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T23:34:14Z
-latest_commit_sha: 1accd0a
-chat_duration: 25168s (00:06:59:28)
-estimated_chat_tokens: 4176998 estimated from chat transcript bytes (16707992 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 125.31 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T23:43:03Z
+latest_commit_sha: b3897eb
+chat_duration: 25697s (00:07:08:17)
+estimated_chat_tokens: 4251635 estimated from chat transcript bytes (17006539 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 127.55 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -716,6 +716,17 @@ Summary: Removed the final scripts/shared/chat source shims after migrating runt
 
 ADR impact: ADR 0017 now records the source shims as retired compatibility paths.
 
+
+### 2026-06-19T23:43:03Z - Commit recorded
+
+Commit: `b3897eb`
+
+Message: Retire shared git gate wrappers
+
+Summary: Migrated active chat gate workflows, checklists, READMEs, smoke tests, and governed runner allowlists to canonical scripts/00.chat paths, then removed the old scripts/shared/git gate wrappers.
+
+ADR impact: ADR 0017 now records the shared git gate wrappers as retired compatibility paths.
+
 ## Commits
 
 
@@ -1132,6 +1143,13 @@ ADR impact: ADR 0017 now records the source shims as retired compatibility paths
   Summary: Removed the final scripts/shared/chat source shims after migrating runtime callers and smoke fixtures to canonical scripts/00.chat session-log and worktree path libraries. Updated chat workflows, command docs, bootstrap guidance, ADR 0017, and runner path acceptance to reflect the canonical-only chat layout.
   ADR impact: ADR 0017 now records the source shims as retired compatibility paths.
 
+
+- Commit: `b3897eb`
+  Time UTC: 2026-06-19T23:43:03Z
+  Message: Retire shared git gate wrappers
+  Summary: Migrated active chat gate workflows, checklists, READMEs, smoke tests, and governed runner allowlists to canonical scripts/00.chat paths, then removed the old scripts/shared/git gate wrappers.
+  ADR impact: ADR 0017 now records the shared git gate wrappers as retired compatibility paths.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1147,11 +1165,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T23:34:14Z
-Latest commit SHA: 1accd0a
-Chat duration: 25168s (00:06:59:28)
-Estimated chat tokens: 4176998 estimated from chat transcript bytes (16707992 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 125.31 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T23:43:03Z
+Latest commit SHA: b3897eb
+Chat duration: 25697s (00:07:08:17)
+Estimated chat tokens: 4251635 estimated from chat transcript bytes (17006539 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 127.55 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes

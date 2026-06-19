@@ -367,7 +367,6 @@ Main refresh status/readiness batch result:
 - direct callers migrated:
   `.agentic/00.chat/workflows/chat-refresh-from-main.md`,
   `docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md`,
-  `scripts/shared/git/preflight-main-refresh.sh`, and
   `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
 - governed runner update:
   `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
@@ -384,7 +383,7 @@ Main refresh rehearse/apply batch result:
 - capability READMEs:
   `scripts/00.chat/main-refresh/rehearse-refresh-from-main/README.md` and
   `scripts/00.chat/main-refresh/apply-rehearsed-refresh/README.md`
-- compatibility wrappers:
+- retired compatibility wrappers:
   `scripts/shared/git/preflight-main-refresh.sh`,
   `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
 - retired compatibility wrapper:
@@ -440,13 +439,7 @@ All remaining `scripts/shared/git/*.sh` files currently declare
 `owner: 00.chat`. None are classified as genuinely cross-layer shared Git
 primitives by metadata. They fall into three groups:
 
-1. Compatibility wrappers for capabilities already moved:
-
-   - `scripts/shared/git/cleanup-empty-chat-branches.sh`
-   - `scripts/shared/git/preflight-main-refresh.sh`
-   - `scripts/shared/git/promote-preflight-refresh.sh`
-
-2. Superseded isolated chat branch execution helpers retained for retirement
+1. Superseded isolated chat branch execution helpers retained for retirement
    review:
 
    - `scripts/shared/git/smoke-test-with-chat-branch.sh`
@@ -550,14 +543,7 @@ Bootstrap compatibility classifications:
    These remain reachable from seed surfaces today, but they are not canonical
    ownership paths:
 
-   - `scripts/shared/git/active-chat-branches.sh`
-   - `scripts/shared/git/branch-overlap-report.sh`
-   - `scripts/shared/git/check-chat-branch-freshness.sh`
-   - `scripts/shared/git/classify-main-refresh-dirty-state.sh`
-   - `scripts/shared/git/main-update-status.sh`
-   - `scripts/shared/git/preflight-main-refresh.sh`
    - `scripts/shared/git/stage-active-worktree-paths.sh`
-   - `scripts/shared/git/verify-local-convergence.sh`
 
 4. Required superseded legacy paths:
 
