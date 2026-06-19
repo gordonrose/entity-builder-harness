@@ -6,7 +6,7 @@
 #   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/chat/request-initialization/read-current-chat-log.sh
+#     - scripts/00.chat/session-log/read-current-chat-log/script.sh
 #     - scripts/shared/git/prepare-chat-session-before-commit.sh
 #   effects: read-only
 

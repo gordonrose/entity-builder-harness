@@ -1,3 +1,13 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: checklist
+purpose: Define the required checks before committing approved chat task work.
+domain: git
+portability: llm-workbench-required
+used_by:
+  - .agentic/shared/checklists/before-commit.md
+-->
+
 # Chat Before-Commit Checklist
 
 Use this before committing approved chat task work.
@@ -69,6 +79,12 @@ commit logs that record commits or are explicitly marked for retention.
   explicitly recorded as none.
 - Decisions made during the chat are summarized, or explicitly recorded as none.
 - Commit summary is recorded before or immediately after each commit.
+
+For structured manual session-log entries, use:
+
+```bash
+bash scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary> <detail>
+```
 
 ## ADR Disposition
 

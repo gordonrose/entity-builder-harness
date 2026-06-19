@@ -11,4 +11,4 @@ set -euo pipefail
 #     - .agentic/00.chat/workflows/chat-refresh-from-main.md
 #   effects: writes-files
 
-exec bash scripts/shared/chat/record-main-refresh-conflict.sh "$@"
+exec bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh "$@"

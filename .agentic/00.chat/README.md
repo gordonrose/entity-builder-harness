@@ -35,7 +35,7 @@ The wrappers delegate to canonical capability scripts under `scripts/00.chat/`.
 Use `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh` to inspect the
 current migration state before moving more chat lifecycle behavior.
 
-Use `bash scripts/shared/chat/record-main-refresh-conflict.sh` to append the
+Use `bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh` to append the
 required session-log audit trail for governed main-refresh conflict recovery.
 
 ## Reporting Policy

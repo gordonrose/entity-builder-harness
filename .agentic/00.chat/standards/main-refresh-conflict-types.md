@@ -39,7 +39,7 @@ preflight result.
 Use:
 
 ```bash
-bash scripts/shared/chat/record-main-refresh-conflict.sh \
+bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh \
   --path <conflicted-path> \
   --type <conflict-type> \
   --reason <classification-reason> \

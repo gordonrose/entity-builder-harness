@@ -33,6 +33,7 @@ mkdir -p \
   "$REPO/.agentic/00.chat/checklists" \
   "$REPO/.agentic/00.chat/workflows" \
   "$REPO/commitLogs/2026/jun/19/2026-06-19-13-11-test" \
+  "$REPO/scripts/00.chat/session-log/read-current-chat-log" \
   "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness"
@@ -57,15 +58,14 @@ cat > "$REPO/.agentic/00.chat/workflows/chat-start.md" <<'EOF'
 Run:
 
 ```bash
-bash scripts/shared/chat/request-initialization/read-current-chat-log.sh
+bash scripts/00.chat/session-log/read-current-chat-log/script.sh
 ```
 
 The executable startup scripts still live under `scripts/shared/chat/` for
 compatibility.
 EOF
 
-mkdir -p "$REPO/scripts/shared/chat/request-initialization"
-printf '#!/usr/bin/env bash\n' > "$REPO/scripts/shared/chat/request-initialization/read-current-chat-log.sh"
+printf '#!/usr/bin/env bash\n' > "$REPO/scripts/00.chat/session-log/read-current-chat-log/script.sh"
 
 cat > "$REPO/commitLogs/2026/jun/19/2026-06-19-13-11-test/README.md" <<'EOF'
 # Chat Session: test

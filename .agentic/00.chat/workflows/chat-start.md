@@ -10,7 +10,7 @@ workflow, and chat-owned worktree with minimal token use.
 First run:
 
 ```bash
-bash scripts/shared/chat/request-initialization/read-current-chat-log.sh
+bash scripts/00.chat/session-log/read-current-chat-log/script.sh
 ```
 
 If it returns valid `layer`, `mode`, and `workflow` values, use them.

@@ -186,6 +186,28 @@ Classification batch result:
   `scripts/shared/chat/request-initialization/classify-task.sh` and
   `scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh`
 
+Session-log executable batch result:
+
+- canonical implementations:
+  `scripts/00.chat/session-log/read-current-chat-log/script.sh`,
+  `scripts/00.chat/session-log/update-chat-log/script.sh`,
+  `scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh`, and
+  `scripts/00.chat/session-log/record-main-refresh-conflict/script.sh`
+- compatibility wrappers:
+  `scripts/shared/chat/request-initialization/read-current-chat-log.sh`,
+  `scripts/shared/chat/update-chat-log.sh`,
+  `scripts/shared/chat/rename-current-chat-log-folder.sh`, and
+  `scripts/shared/chat/record-main-refresh-conflict.sh`
+- public alias preserved:
+  `scripts/chat/record-main-refresh-conflict.sh`
+- deferred source library:
+  `scripts/shared/chat/session-log-paths.sh` remains at the old source-able
+  path until sourced helper migration is handled separately.
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `rename-current-chat-log-folder.sh` wrapper path until the governed-runner
+  path policy is migrated.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

@@ -136,7 +136,7 @@ refresh should be rehearsed before mutating the active chat worktree.
    Conflicts` in the current chat session log with:
 
    ```bash
-   bash scripts/shared/chat/record-main-refresh-conflict.sh ...
+   bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh ...
    ```
 
    Do not promote the preflight branch until the session log records the audit
