@@ -9,7 +9,7 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/skills/session-summary.md
 #     - .agentic/00.chat/workflows/chat-reporting.md
-#     - scripts/chat/generate-commit-log-summary.sh
+#     - package.json scripts.chat:commit-log-summary
 #   effects: read-only, writes-files
 
 usage() {

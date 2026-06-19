@@ -22,7 +22,7 @@ They make repeated actions easy to trigger without moving process rules into
 Run commands through:
 
 ```bash
-bash scripts/chat/chat-command.sh <command> [args...]
+npm run chat -- <command> [args...]
 ```
 
 The canonical dispatcher is:
@@ -40,7 +40,7 @@ scripts/00.chat/command/dispatcher/README.md
 List available commands with:
 
 ```bash
-bash scripts/chat/chat-command.sh list
+npm run chat:list
 ```
 
 ## Commands

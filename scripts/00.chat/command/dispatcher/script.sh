@@ -9,7 +9,8 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/commands/README.md
 #     - scripts/00.chat/command/dispatcher/README.md
-#     - scripts/chat/chat-command.sh
+#     - package.json scripts.chat
+#     - package.json scripts.chat:list
 #     - scripts/00.chat/startup/auto-start-missing-session/script.sh
 #   effects: branches, worktrees, writes-files, stages-files
 
@@ -17,7 +18,7 @@ COMMAND_DIR="scripts/00.chat/command"
 
 usage() {
   cat <<EOF
-Usage: chat-command.sh <command> [args...]
+Usage: npm run chat -- <command> [args...]
 
 Commands:
 EOF

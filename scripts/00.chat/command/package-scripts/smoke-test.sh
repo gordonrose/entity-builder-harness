@@ -3,7 +3,7 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Smoke test public scripts/chat aliases against a throwaway repo.
+#   purpose: Smoke test package.json chat command scripts against a throwaway repo.
 #   domain: validation
 #   portability: llm-workbench-validation
 #   used_by:
@@ -17,7 +17,7 @@ fail() {
 }
 
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
-TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/chat-script-aliases-smoke.XXXXXX")"
+TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/chat-package-scripts-smoke.XXXXXX")"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -37,13 +37,12 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/00.chat/startup/start-new-chat" \
   "$REPO/scripts/00.chat/worktree/paths" \
-  "$REPO/scripts/chat" \
   "$REPO/scripts/shared/chat/commands" \
   "$REPO/commitLogs/2026/jun/19/test-chat"
 
 git -C "$REPO" init --quiet --initial-branch=main
 
-cp "$SOURCE_ROOT"/scripts/chat/*.sh "$REPO/scripts/chat/"
+cp "$SOURCE_ROOT/package.json" "$REPO/package.json"
 cp "$SOURCE_ROOT/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/new/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/close/script.sh"
@@ -58,7 +57,17 @@ cp "$SOURCE_ROOT/scripts/shared/chat/commands/new.sh" "$REPO/scripts/shared/chat
 cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/close.sh" "$REPO/scripts/shared/chat/commands/close.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO"/scripts/chat/*.sh "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/commands/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x \
+  "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" \
+  "$REPO/scripts/00.chat/command/dispatcher/script.sh" \
+  "$REPO/scripts/00.chat/command/new/script.sh" \
+  "$REPO/scripts/00.chat/command/close/script.sh" \
+  "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" \
+  "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh" \
+  "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" \
+  "$REPO"/scripts/shared/chat/*.sh \
+  "$REPO"/scripts/shared/chat/commands/*.sh \
+  "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 cat > "$REPO/commitLogs/2026/jun/19/test-chat/README.md" <<'EOF'
 # Chat Session: test-chat
@@ -71,19 +80,19 @@ estimated_chat_cost: USD 0.0006 estimated from estimated_chat_tokens
 -->
 EOF
 
-git -C "$REPO" add scripts commitLogs
+git -C "$REPO" add package.json scripts commitLogs
 git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' commit --quiet -m 'fixture'
 
 (
   cd "$REPO"
-  bash scripts/chat/chat-command.sh list > "$TMP_ROOT/list.out"
-  bash scripts/chat/generate-commit-log-summary.sh > "$TMP_ROOT/summary.out"
-  bash scripts/chat/cleanup-empty-chat-branches.sh --dry-run > "$TMP_ROOT/cleanup.out"
+  npm run --silent chat:list > "$TMP_ROOT/list.out"
+  npm run --silent chat:commit-log-summary > "$TMP_ROOT/summary.out"
+  npm run --silent chat:cleanup-empty-branches -- --dry-run > "$TMP_ROOT/cleanup.out"
 )
 
-grep -q '^  close$' "$TMP_ROOT/list.out" || fail "chat-command alias did not list close"
-grep -q '^  new$' "$TMP_ROOT/list.out" || fail "chat-command alias did not list new"
-grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "summary alias did not delegate"
-grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "cleanup alias did not delegate"
+grep -q '^  close$' "$TMP_ROOT/list.out" || fail "chat:list did not list close"
+grep -q '^  new$' "$TMP_ROOT/list.out" || fail "chat:list did not list new"
+grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "chat:commit-log-summary did not delegate"
+grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "chat:cleanup-empty-branches did not delegate"
 
-echo "chat script aliases smoke test passed."
+echo "chat package scripts smoke test passed."

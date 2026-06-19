@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: workflow
+purpose: Govern bootstrapping the portable chat workbench into an upstream repo.
+domain: bootstrap
+portability: llm-workbench-required
+used_by:
+  - .agentic/shared/standards/upstream-repo-bootstrap.md
+  - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+-->
+
 # Bootstrap Chat Workbench Repo Workflow
 
 ## Use When
@@ -48,7 +59,7 @@ Initial candidate paths:
 - `.agentic/shared/standards/`
 - `.agentic/shared/workflows/` entries required by chat startup, commit, and
   promotion compatibility
-- `scripts/chat/`
+- `package.json` chat command scripts
 - `scripts/shared/chat/`
 - `scripts/shared/git/`
 - `scripts/shared/harness/` gates required by chat startup, commit, classifier,
@@ -101,7 +112,7 @@ For an empty upstream repo:
 
 1. Copy the approved portable file set and starter public files.
 2. Add the minimal open-source product shell.
-3. Verify `scripts/chat/chat-command.sh list` works.
+3. Verify `npm run chat:list` works.
 4. Verify `tests/smoke-test-install.sh` passes against a throwaway repo.
 5. Create the first upstream commit only after explicit commit approval.
 6. After the first commit exists, verify a normal chat can be started in the

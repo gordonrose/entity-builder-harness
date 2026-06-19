@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: migration-plan
+purpose: Track migration from legacy chat lifecycle paths to canonical 00.chat paths.
+domain: migration
+portability: llm-workbench-required
+used_by:
+  - scripts/00.chat/migration/audit-chat-layer-migration/script.sh
+  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+-->
+
 # 00.chat Migration Plan
 
 ## Purpose
@@ -16,7 +27,7 @@ in place as compatibility shims while active sessions still reference them.
 - Main refresh conflict type standard:
   `.agentic/00.chat/standards/main-refresh-conflict-types.md`
 - Reporting skill: `.agentic/00.chat/skills/session-summary.md`
-- Chat script aliases: `scripts/chat/`
+- Public chat commands: `package.json` `chat:*` scripts
 
 ## Migrated Workflow Ownership
 
@@ -36,7 +47,6 @@ to the canonical chat layer:
 - `.agentic/shared/workflows/main-updated.md`
 - `.agentic/shared/workflows/local-convergence.md`
 - `.agentic/shared/checklists/before-commit.md`
-- `scripts/chat/`
 - `scripts/shared/chat/`
 - `scripts/shared/git/`
 
@@ -56,13 +66,13 @@ to the canonical chat layer:
 ## Completed Migration Queue
 
 1. Added canonical chat lifecycle workflows under `.agentic/00.chat/workflows/`.
-2. Added chat-layer command, cleanup, reporting, and conflict-recording script
-   aliases under `scripts/chat/`.
+2. Added chat-layer command, cleanup, reporting, and conflict-recording package
+   scripts in `package.json`.
 3. Kept `scripts/shared/` implementation paths as compatibility targets for
    active sessions and existing tooling.
-4. Added audit coverage for the chat-layer script alias surface.
+4. Added audit coverage for the chat-layer package script surface.
 5. Kept focused smoke tests for startup, classification, refresh, commit,
-   reporting, cleanup, commands, and chat script aliases.
+   reporting, cleanup, commands, and package scripts.
 
 ## Deferred Migration Queue
 

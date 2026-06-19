@@ -9,7 +9,7 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-cleanup.md
 #     - .agentic/00.chat/workflows/chat-promote-to-main.md
-#     - scripts/chat/report-chat-workspaces.sh
+#     - package.json scripts.chat:report-workspaces
 #   effects: read-only
 
 BASE_BRANCH="${1:-main}"

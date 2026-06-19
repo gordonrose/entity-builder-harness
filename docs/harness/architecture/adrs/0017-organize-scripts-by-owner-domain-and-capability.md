@@ -94,7 +94,7 @@ Pilot with `cleanup-empty-chat-branches` because it has:
 
 - clear `00.chat` ownership
 - `domain: git`
-- a public alias under `scripts/chat/`
+- a public command surface
 - a shared implementation under `scripts/shared/git/`
 - a matching smoke test
 
@@ -106,10 +106,9 @@ scripts/00.chat/git/cleanup-empty-chat-branches/
   smoke-test.sh
 ```
 
-Compatibility paths remain:
+Compatibility paths initially remained:
 
 ```txt
-scripts/chat/cleanup-empty-chat-branches.sh
 scripts/shared/git/cleanup-empty-chat-branches.sh
 scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh
 ```
@@ -125,8 +124,8 @@ Pilot result:
 - compatibility wrappers:
   `scripts/shared/git/cleanup-empty-chat-branches.sh` and
   `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
-- public alias preserved:
-  `scripts/chat/cleanup-empty-chat-branches.sh`
+- public command now exposed by:
+  `package.json` `chat:cleanup-empty-branches`
 
 Second pilot result:
 
@@ -139,8 +138,8 @@ Second pilot result:
 - retired shared compatibility wrappers:
   `scripts/shared/chat/chat-command.sh` and
   `scripts/shared/chat/smoke-test-chat-command.sh`
-- public alias preserved:
-  `scripts/chat/chat-command.sh`
+- public command now exposed by:
+  `package.json` `chat` and `chat:list`
 
 Reporting batch result:
 
@@ -154,9 +153,8 @@ Reporting batch result:
   `scripts/shared/chat/generate-commit-log-summary.sh`
 - retired shared compatibility wrapper:
   `scripts/shared/chat/smoke-test-generate-commit-log-summary.sh`
-- public aliases preserved:
-  `scripts/chat/report-chat-workspaces.sh` and
-  `scripts/chat/generate-commit-log-summary.sh`
+- public commands now exposed by:
+  `package.json` `chat:report-workspaces` and `chat:commit-log-summary`
 - governed runner exception:
   `scripts/shared/harness/run-governed-script.sh` still allowlists the old
   shared wrapper paths until the governed-runner path policy is migrated.
@@ -169,8 +167,8 @@ Audit batch result:
 - compatibility wrappers:
   `scripts/shared/chat/audit-chat-layer-migration.sh` and
   `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`
-- public alias preserved:
-  `scripts/chat/audit-chat-layer-migration.sh`
+- public command now exposed by:
+  `package.json` `chat:audit-layer-migration`
 - governed runner exception:
   `scripts/shared/harness/run-governed-script.sh` still allowlists the old
   shared wrapper paths until the governed-runner path policy is migrated.
@@ -200,8 +198,8 @@ Session-log executable batch result:
   `scripts/shared/chat/update-chat-log.sh`,
   `scripts/shared/chat/rename-current-chat-log-folder.sh`, and
   `scripts/shared/chat/record-main-refresh-conflict.sh`
-- public alias preserved:
-  `scripts/chat/record-main-refresh-conflict.sh`
+- public command now exposed by:
+  `package.json` `chat:record-main-refresh-conflict`
 - canonical source library:
   `scripts/00.chat/session-log/paths/lib.sh`
 - source compatibility shim:
@@ -516,8 +514,8 @@ Bootstrap/install compatibility audit result:
 - The bootstrap audit currently treats a path as required when it is reachable
   from installed or agent-facing seed surfaces. Required does not mean the path
   is permanently canonical.
-- Public terminal aliases under `scripts/chat/` remain required because they are
-  the stable human-facing command surface for a bootstrapped workbench.
+- Package scripts in `package.json` are the stable human-facing command surface
+  for a bootstrapped workbench.
 - Canonical `scripts/00.chat/...` implementations are now required for the
   actual chat capabilities.
 - `scripts/shared/harness/run-governed-script.sh` and the deterministic harness
@@ -551,12 +549,17 @@ Bootstrap compatibility classifications:
 
 1. Public install surface to keep:
 
-   - `scripts/chat/chat-command.sh`
-   - `scripts/chat/audit-chat-layer-migration.sh`
-   - `scripts/chat/cleanup-empty-chat-branches.sh`
-   - `scripts/chat/generate-commit-log-summary.sh`
-   - `scripts/chat/record-main-refresh-conflict.sh`
-   - `scripts/chat/report-chat-workspaces.sh`
+   - `package.json` `chat`
+   - `package.json` `chat:list`
+   - `package.json` `chat:new`
+   - `package.json` `chat:close`
+   - `package.json` `chat:audit-bootstrap`
+   - `package.json` `chat:audit-layer-migration`
+   - `package.json` `chat:cleanup-empty-branches`
+   - `package.json` `chat:commit-log-summary`
+   - `package.json` `chat:record-main-refresh-conflict`
+   - `package.json` `chat:report-workspaces`
+   - `package.json` `chat:smoke-package-scripts`
 
 2. Shared governance primitives to keep:
 
@@ -671,7 +674,7 @@ Bootstrap compatibility classifications:
 
 | Category | Keep Until | Paths |
 |---|---|---|
-| Public terminal aliases | Public/bootstrap command surface is redesigned | `scripts/chat/chat-command.sh`, `scripts/chat/audit-chat-layer-migration.sh`, `scripts/chat/cleanup-empty-chat-branches.sh`, `scripts/chat/generate-commit-log-summary.sh`, `scripts/chat/record-main-refresh-conflict.sh`, `scripts/chat/report-chat-workspaces.sh` |
+| Retired public terminal aliases | Historical references may mention old paths, but operative public commands should use `npm run chat:*` package scripts | `scripts/chat/chat-command.sh`, `scripts/chat/audit-chat-layer-migration.sh`, `scripts/chat/cleanup-empty-chat-branches.sh`, `scripts/chat/generate-commit-log-summary.sh`, `scripts/chat/record-main-refresh-conflict.sh`, `scripts/chat/report-chat-workspaces.sh` |
 | Command wrapper compatibility | Public/external callers no longer use old shared command wrapper paths | `scripts/shared/chat/commands/close.sh`, `scripts/shared/chat/commands/new.sh` |
 | Governed runner compatibility acceptance | `scripts/shared/harness/run-governed-script.sh` no longer accepts old compatibility paths | `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`, `scripts/shared/chat/audit-chat-layer-migration.sh`, `scripts/shared/chat/generate-commit-log-summary.sh`, `scripts/shared/chat/report-chat-workspaces.sh`, `scripts/shared/chat/rename-current-chat-log-folder.sh`, `scripts/shared/chat/request-initialization/auto-start-missing-session.sh`, `scripts/shared/git/active-chat-branches.sh`, `scripts/shared/git/branch-overlap-report.sh`, `scripts/shared/git/check-chat-branch-freshness.sh`, `scripts/shared/git/check-commit-prerequisites.sh`, `scripts/shared/git/check-commitlog-deletions.sh`, `scripts/shared/git/check-write-location.sh`, `scripts/shared/git/checkpoint-chat-session-log.sh`, `scripts/shared/git/classify-main-refresh-dirty-state.sh`, `scripts/shared/git/dirty-worktree-check.sh`, `scripts/shared/git/main-update-status.sh`, `scripts/shared/git/prepare-chat-session-before-commit.sh`, `scripts/shared/git/record-chat-commit.sh`, `scripts/shared/git/stage-active-worktree-paths.sh`, `scripts/shared/git/verify-local-convergence.sh` |
 | Bootstrap/install compatibility | Bootstrap audit and public install surfaces no longer include old paths as required or validation candidates | `scripts/shared/chat/ensure-chat-worktree.sh`, `scripts/shared/chat/estimate-chat-cost.js`, `scripts/shared/chat/record-main-refresh-conflict.sh`, `scripts/shared/chat/request-initialization/start-chat-session.sh`, `scripts/shared/git/cleanup-empty-chat-branches.sh`, `scripts/shared/git/promote-preflight-refresh.sh` |
@@ -766,7 +769,7 @@ For the pilot:
 
 - run the new capability script directly
 - run the old shared path
-- run the public `scripts/chat/` alias
+- run the public `npm run chat:*` package script
 - run the smoke test from the new path
 - run the old smoke-test path wrapper
 - run the bootstrap file-set audit

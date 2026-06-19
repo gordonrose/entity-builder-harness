@@ -9,7 +9,7 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-refresh-from-main.md
 #     - .agentic/00.chat/standards/main-refresh-conflict-types.md
-#     - scripts/chat/record-main-refresh-conflict.sh
+#     - package.json scripts.chat:record-main-refresh-conflict
 #   effects: writes-files
 
 # shellcheck source=../paths/lib.sh

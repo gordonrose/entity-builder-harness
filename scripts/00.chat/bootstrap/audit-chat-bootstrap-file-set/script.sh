@@ -20,10 +20,10 @@ Usage:
 Reports the script and support-file dependency set for the portable chat
 harness bootstrap.
 
-The audit starts from public chat commands, chat workflows, shared process
-artifacts used by chat startup/commit/promotion, and the governed script
-runner. It then follows script references to produce a required script set and
-candidate unreferenced scripts.
+The audit starts from package chat commands, chat workflows, shared process
+artifacts used by chat startup/commit/promotion, and the governed script runner.
+It then follows script references to produce a required script set and candidate
+unreferenced scripts.
 EOF
 }
 
@@ -79,7 +79,7 @@ add_tree_if_exists ".agentic/shared/checklists"
 add_tree_if_exists ".agentic/shared/gates"
 add_tree_if_exists ".agentic/shared/standards"
 add_tree_if_exists ".agentic/shared/workflows"
-add_tree_if_exists "scripts/chat"
+add_if_exists "package.json"
 add_if_exists "scripts/shared/harness/run-governed-script.sh"
 add_if_exists "scripts/shared/harness/check-deterministic-process-drift.sh"
 add_if_exists "scripts/shared/harness/check-governed-script-command-drift.sh"
@@ -168,7 +168,7 @@ echo "- .agentic/shared/checklists/"
 echo "- .agentic/shared/gates/"
 echo "- .agentic/shared/standards/"
 echo "- .agentic/shared/workflows/"
-echo "- scripts/chat/"
+echo "- package.json chat scripts"
 echo "- governed runner and deterministic harness checks"
 echo
 echo "Required scripts and support files:"

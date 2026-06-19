@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: layer-readme
+purpose: Explain the chat lifecycle governance layer and its canonical surfaces.
+domain: governance
+portability: llm-workbench-required
+used_by:
+  - AGENTS.md
+  - .agentic/00.chat/migration-plan.md
+-->
+
 # 00.chat Layer
 
 ## Purpose
@@ -17,7 +28,7 @@ cleanup, shortcuts, and on-demand chat reports.
 - Chat lifecycle standards: `.agentic/00.chat/standards/`
 - Chat command shortcuts: `.agentic/00.chat/commands/`
 - Chat lifecycle migration plan: `.agentic/00.chat/migration-plan.md`
-- Chat script aliases: `scripts/chat/`
+- Public chat commands: `package.json` `chat:*` scripts
 - Legacy shared workflow locations: `.agentic/shared/workflows/`
 - Legacy chat scripts: `scripts/shared/chat/` and `scripts/shared/git/`
 
@@ -29,8 +40,9 @@ move while active chats still reference legacy workflow and script paths.
 When a chat-specific process remains in a legacy location, this layer owns the
 behavior and the legacy path is a compatibility location.
 
-Use `scripts/chat/` for public chat-layer script entrypoints where available.
-The wrappers delegate to canonical capability scripts under `scripts/00.chat/`.
+Use `npm run chat:*` package scripts for public chat-layer command entrypoints.
+The package scripts delegate to canonical capability scripts under
+`scripts/00.chat/`.
 
 Use `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh` to inspect the
 current migration state before moving more chat lifecycle behavior.
