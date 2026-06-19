@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Convert an opening prompt into a governed chat session when metadata is missing.
+#   domain: startup
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md

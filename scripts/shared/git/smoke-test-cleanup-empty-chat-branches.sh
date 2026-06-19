@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Smoke test empty chat branch and session log cleanup safety.
+#   domain: git
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-cleanup.md

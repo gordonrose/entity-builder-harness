@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Smoke test the shared chat command dispatcher and chat subcommands.
+#   domain: validation
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/00.chat/commands/README.md

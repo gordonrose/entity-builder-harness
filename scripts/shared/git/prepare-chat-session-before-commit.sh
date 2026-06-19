@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Run commit-boundary gates and session-log readiness checks before task commits.
+#   domain: git
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/checklists/before-commit.md

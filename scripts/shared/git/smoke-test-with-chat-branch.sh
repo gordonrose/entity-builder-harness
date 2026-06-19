@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Smoke test isolated chat branch command execution and guarded staging.
+#   domain: git
 #   portability: llm-workbench-validation
 #   used_by:
 #     - docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md

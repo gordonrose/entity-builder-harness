@@ -39,6 +39,9 @@ add deterministic audit for chat harness bootstrap script file set
 - The chat workbench bootstrap file set was previously prose-only, so it did
   not give a deterministic answer to which `scripts/` files are runtime
   required, validation/compatibility candidates, or unclassified.
+- Metadata ownership initially used fake layer labels such as `shared-git` and
+  `shared-harness`, which blurred real layer ownership with implementation
+  domains.
 
 ## Decisions Made
 
@@ -51,6 +54,10 @@ add deterministic audit for chat harness bootstrap script file set
   them from the bootstrap decision.
 - Backfill script metadata in folder batches, starting with the public
   `scripts/chat/` alias surface.
+- Keep `owner` limited to real harness layers and use `domain` for mechanisms
+  such as `git`, `startup`, `session-log`, `governance`, and `validation`.
+- Bias Git-shaped chat workbench behavior toward `owner: 00.chat` unless a
+  non-chat owner is clear.
 
 ## Activity Log
 

@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Create chat branch, session log, prompt, and chat-owned worktree.
+#   domain: startup
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/shared/chat/commands/new.sh

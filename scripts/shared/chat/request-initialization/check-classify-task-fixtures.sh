@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Validate task classifier fixtures against current classification output.
+#   domain: classification
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/shared/workflows/capability-resolution-workflow.md

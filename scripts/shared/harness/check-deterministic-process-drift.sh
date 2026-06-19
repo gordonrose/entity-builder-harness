@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-harness
+#   owner: harness
 #   purpose: Flag process prose that should likely be represented as deterministic scripts or gates.
+#   domain: governance
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/checklists/before-commit.md

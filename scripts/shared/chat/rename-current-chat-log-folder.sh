@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Rename the current chat session log folder while preserving metadata.
+#   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md

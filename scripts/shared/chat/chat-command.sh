@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Dispatch chat subcommands from scripts/shared/chat/commands.
+#   domain: command
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/commands/README.md

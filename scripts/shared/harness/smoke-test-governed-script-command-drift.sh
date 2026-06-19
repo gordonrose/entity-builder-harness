@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-harness
+#   owner: harness
 #   purpose: Smoke test governed script command drift detection.
+#   domain: validation
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/harness/standards/governed-script-permissions.md

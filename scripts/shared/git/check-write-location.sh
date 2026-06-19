@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Enforce task writes from chat-owned worktrees instead of the root integration worktree.
+#   domain: git
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/checklists/before-commit.md

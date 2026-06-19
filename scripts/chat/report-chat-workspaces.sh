@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Public alias for reporting active chat workspaces.
+#   domain: reporting
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/shared/chat/audit-chat-layer-migration.sh

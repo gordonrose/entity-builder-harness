@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Check worktree cleanliness with optional current-session bookkeeping tolerance.
+#   domain: git
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md

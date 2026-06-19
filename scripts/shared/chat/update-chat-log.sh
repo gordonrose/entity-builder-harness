@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Internal helper for appending structured entries to the current chat log.
+#   domain: session-log
 #   portability: internal
 #   used_by:
 #     - .agentic/00.chat/checklists/before-commit.md

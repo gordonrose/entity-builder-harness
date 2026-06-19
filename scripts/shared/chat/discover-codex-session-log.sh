@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Find the Codex JSONL transcript for a chat session.
+#   domain: transcript
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/shared/chat/register-codex-session-log.sh

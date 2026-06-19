@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-harness
+#   owner: harness
 #   purpose: Run only explicitly governed repository scripts with approval-sensitive routing.
+#   domain: governance
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/harness/standards/governed-script-permissions.md

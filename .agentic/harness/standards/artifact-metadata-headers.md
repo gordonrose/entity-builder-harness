@@ -2,6 +2,7 @@
 owner: harness
 kind: standard
 purpose: Define metadata headers for scripts and harness process documents.
+domain: metadata
 portability: llm-workbench-required
 used_by:
   - .agentic/harness/standards/agentic-artifact-standards.md
@@ -33,13 +34,27 @@ Scripts must declare metadata near the top of the file, after any shebang:
 
 ```bash
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Verify whether a chat branch can be merged into local main.
+#   domain: git
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-promote-to-main.md
 #   effects: read-only
 ```
+
+Allowed `owner` values are real harness layers:
+
+- `00.chat`
+- `shared`
+- `harness`
+- `aws`
+- `product`
+- `education`
+
+Use `domain` for mechanism or topic boundaries such as `git`, `startup`,
+`session-log`, `governance`, `metadata`, `reporting`, `refresh`, or
+`validation`. Do not encode domains into owner names.
 
 Allowed `portability` values:
 
@@ -73,6 +88,7 @@ Harness Markdown documents must declare metadata at the top of the file:
 owner: 00.chat
 kind: workflow
 purpose: Govern chat startup and session routing.
+domain: startup
 portability: llm-workbench-required
 used_by:
   - AGENTS.md

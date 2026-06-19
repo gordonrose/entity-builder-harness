@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Smoke test public scripts/chat aliases against a throwaway repo.
+#   domain: validation
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md

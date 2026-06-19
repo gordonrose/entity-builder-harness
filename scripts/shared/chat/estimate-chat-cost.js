@@ -2,6 +2,7 @@
 // agentic-script:
 //   owner: 00.chat
 //   purpose: Estimate chat cost metadata from an estimated token count.
+//   domain: metrics
 //   portability: llm-workbench-required
 //   used_by:
 //     - scripts/shared/git/record-chat-commit.sh

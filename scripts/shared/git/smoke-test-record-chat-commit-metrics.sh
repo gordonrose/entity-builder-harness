@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Smoke test chat commit recording metrics and transcript discovery.
+#   domain: git
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/00.chat/checklists/before-commit.md

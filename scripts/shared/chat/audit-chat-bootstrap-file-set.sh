@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Audit the portable chat bootstrap script and support-file set.
+#   domain: bootstrap
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md

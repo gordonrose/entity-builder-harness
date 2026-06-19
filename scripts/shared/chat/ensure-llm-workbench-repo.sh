@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Ensure the canonical local llm-workbench upstream repo exists.
+#   domain: upstream
 #   portability: source-only
 #   used_by:
 #     - .agentic/harness/standards/governed-script-permissions.md

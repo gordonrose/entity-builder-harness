@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Smoke test commit log deletion protection for recorded work.
+#   domain: git
 #   portability: llm-workbench-validation
 #   used_by:
 #     - docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md

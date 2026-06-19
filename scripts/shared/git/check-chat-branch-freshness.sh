@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Check whether a chat branch includes the latest local base branch.
+#   domain: git
 #   portability: llm-workbench-required
 #   used_by:
 #     - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md

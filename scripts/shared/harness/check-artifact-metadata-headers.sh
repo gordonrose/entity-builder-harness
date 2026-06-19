@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-harness
+#   owner: harness
 #   purpose: Verify metadata headers on newly added or selected harness artifacts.
+#   domain: metadata
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/harness/standards/artifact-metadata-headers.md
@@ -172,7 +173,7 @@ check_script_header() {
     return 1
   fi
 
-  for field in owner purpose portability used_by effects; do
+  for field in owner purpose domain portability used_by effects; do
     if ! printf '%s\n' "$header" | grep -Eq "^(#|//)[[:space:]]+${field}:"; then
       echo "ERROR: missing ${field} in script metadata header: $path" >&2
       return 1
@@ -181,6 +182,11 @@ check_script_header() {
 
   if ! printf '%s\n' "$header" | grep -Eq 'portability: (llm-workbench-required|llm-workbench-validation|llm-workbench-compatibility|source-only|internal)$'; then
     echo "ERROR: invalid portability value in script metadata header: $path" >&2
+    return 1
+  fi
+
+  if ! printf '%s\n' "$header" | grep -Eq 'owner: (00\.chat|shared|harness|aws|product|education)$'; then
+    echo "ERROR: invalid owner value in script metadata header: $path" >&2
     return 1
   fi
 
@@ -198,7 +204,7 @@ check_markdown_header() {
     return 1
   fi
 
-  for field in owner kind purpose portability used_by; do
+  for field in owner kind purpose domain portability used_by; do
     if ! printf '%s\n' "$header" | grep -Eq "^${field}:"; then
       echo "ERROR: missing ${field} in artifact metadata header: $path" >&2
       return 1
@@ -207,6 +213,11 @@ check_markdown_header() {
 
   if ! printf '%s\n' "$header" | grep -Eq '^portability: (llm-workbench-required|llm-workbench-validation|llm-workbench-compatibility|source-only|internal)$'; then
     echo "ERROR: invalid portability value in artifact metadata header: $path" >&2
+    return 1
+  fi
+
+  if ! printf '%s\n' "$header" | grep -Eq '^owner: (00\.chat|shared|harness|aws|product|education)$'; then
+    echo "ERROR: invalid owner value in artifact metadata header: $path" >&2
     return 1
   fi
 

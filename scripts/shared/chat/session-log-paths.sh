@@ -3,6 +3,7 @@
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Provide canonical chat session id and commit log path helper functions.
+#   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/shared/chat/request-initialization/read-current-chat-log.sh

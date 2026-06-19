@@ -3,6 +3,7 @@
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Provide canonical chat worktree path and metadata helper functions.
+#   domain: worktree
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/shared/chat/ensure-chat-worktree.sh

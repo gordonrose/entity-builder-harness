@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Build and copy or print the governed chat closeout prompt.
+#   domain: closeout
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/commands/README.md

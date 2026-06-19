@@ -4,6 +4,7 @@ set -euo pipefail
 # agentic-script:
 #   owner: 00.chat
 #   purpose: Smoke test on-demand chat commit log summary generation.
+#   domain: validation
 #   portability: llm-workbench-validation
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-reporting.md

@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # agentic-script:
-#   owner: shared-git
+#   owner: 00.chat
 #   purpose: Run commit-boundary commands in an isolated worktree for a chat branch.
+#   domain: git
 #   portability: llm-workbench-compatibility
 #   used_by:
 #     - docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
