@@ -4,6 +4,7 @@ classification_order:
   - shared
   - harness
   - education
+  - aws
   - product
 
 mode_order:
@@ -54,6 +55,15 @@ layers:
       - task incorporates source-backed teaching, storytelling, humor, talk design, or writing principles
     workflow_index: .agentic/education/workflows/README.md
 
+  aws:
+    use_when:
+      - task inspects AWS account, profile, region, environment, or resource state
+      - task changes AWS infrastructure, runtime resources, deployment targets, or cloud configuration
+      - task diagnoses ECS, ECR, RDS, ElastiCache, Route 53, load balancers, App Runner, Elastic Beanstalk, CloudWatch, or IAM for this repo
+      - task plans or executes AWS operational changes
+      - task documents AWS runbooks, non-secret inventory, or cloud environment decisions
+    workflow_index: .agentic/aws/workflows/README.md
+
   product:
     use_when:
       - task changes application source code
@@ -69,6 +79,7 @@ layers:
       - task touches more than one layer
       - task changes both harness and product code
       - task changes chat or shared process plus harness or product behaviour
+      - task changes AWS infrastructure plus product behavior or shared release process
     rule: split into separate phases and plan around executing one workflow at a time
 
 modes:
