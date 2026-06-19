@@ -27,6 +27,7 @@ trap cleanup EXIT
 
 REPO="$TMP_ROOT/repo"
 mkdir -p \
+  "$REPO/scripts/00.chat/closeout/build-closeout-prompt" \
   "$REPO/scripts/00.chat/command/dispatcher" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary" \
@@ -48,9 +49,10 @@ cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.cha
 cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shared/chat/chat-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/new.sh" "$REPO/scripts/shared/chat/commands/new.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/close.sh" "$REPO/scripts/shared/chat/commands/close.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO"/scripts/chat/*.sh "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/commands/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO"/scripts/chat/*.sh "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/commands/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 cat > "$REPO/commitLogs/2026/jun/19/test-chat/README.md" <<'EOF'
 # Chat Session: test-chat

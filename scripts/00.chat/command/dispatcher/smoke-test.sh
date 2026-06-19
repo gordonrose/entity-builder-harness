@@ -31,6 +31,7 @@ mkdir -p "$REPO"
 git -C "$REPO" init --quiet --initial-branch=main
 
 mkdir -p \
+  "$REPO/scripts/00.chat/closeout/build-closeout-prompt" \
   "$REPO/scripts/00.chat/command/dispatcher" \
   "$REPO/scripts/00.chat/classification/classify-task" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
@@ -48,12 +49,13 @@ cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/w
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/shared/chat/ensure-chat-worktree.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/new.sh" "$REPO/scripts/shared/chat/commands/new.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/close.sh" "$REPO/scripts/shared/chat/commands/close.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "$REPO/scripts/shared/chat/request-initialization/auto-start-missing-session.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/start-chat-session.sh" "$REPO/scripts/shared/chat/request-initialization/start-chat-session.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/commands/*.sh "$REPO"/scripts/shared/chat/request-initialization/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/commands/*.sh "$REPO"/scripts/shared/chat/request-initialization/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts

@@ -240,6 +240,15 @@ Transcript and metrics batch result:
   `.agentic/00.chat/workflows/chat-start.md`, and
   `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
 
+Closeout command batch result:
+
+- canonical implementation:
+  `scripts/00.chat/closeout/build-closeout-prompt/script.sh`
+- command compatibility wrapper:
+  `scripts/shared/chat/commands/close.sh` remains executable so the dispatcher
+  can continue listing and invoking `chat-command close` from the shared command
+  directory until command discovery is migrated.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:
