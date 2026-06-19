@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T19:35:09Z
-latest_commit_sha: 0b09130
-chat_duration: 10823s (00:03:00:23)
-estimated_chat_tokens: 2063674 estimated from chat transcript bytes (8254696 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 61.91 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T19:45:07Z
+latest_commit_sha: 4136277
+chat_duration: 11421s (00:03:10:21)
+estimated_chat_tokens: 2107955 estimated from chat transcript bytes (8431820 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 63.24 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -353,6 +353,17 @@ Summary: Expanded the start-chat-session capability README into an educational g
 
 ADR impact: The README now teaches why startup creates a branch, worktree, session log, first prompt, and cleanup pass before agent work begins.
 
+
+### 2026-06-19T19:45:07Z - Commit recorded
+
+Commit: `4136277`
+
+Message: Clarify terminal prompt handoff
+
+Summary: Clarified that CHAT_COPY_PROMPT is terminal handoff convenience rather than the startup contract, and documented that IDE/app integrations should consume startup data directly.
+
+ADR impact: Added an ADR 0017 follow-up to revisit the terminal prompt handoff interface after the current script organization stream.
+
 ## Commits
 
 
@@ -538,6 +549,13 @@ ADR impact: The README now teaches why startup creates a branch, worktree, sessi
   Summary: Expanded the start-chat-session capability README into an educational guide that explains the chat startup mental model, each startup action, and what the script deliberately does not do.
   ADR impact: The README now teaches why startup creates a branch, worktree, session log, first prompt, and cleanup pass before agent work begins.
 
+
+- Commit: `4136277`
+  Time UTC: 2026-06-19T19:45:07Z
+  Message: Clarify terminal prompt handoff
+  Summary: Clarified that CHAT_COPY_PROMPT is terminal handoff convenience rather than the startup contract, and documented that IDE/app integrations should consume startup data directly.
+  ADR impact: Added an ADR 0017 follow-up to revisit the terminal prompt handoff interface after the current script organization stream.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -553,11 +571,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T19:35:09Z
-Latest commit SHA: 0b09130
-Chat duration: 10823s (00:03:00:23)
-Estimated chat tokens: 2063674 estimated from chat transcript bytes (8254696 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 61.91 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T19:45:07Z
+Latest commit SHA: 4136277
+Chat duration: 11421s (00:03:10:21)
+Estimated chat tokens: 2107955 estimated from chat transcript bytes (8431820 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 63.24 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
