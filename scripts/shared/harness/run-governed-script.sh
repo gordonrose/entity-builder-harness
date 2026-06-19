@@ -38,38 +38,31 @@ case "$1" in
     ;;
   --list)
     cat <<'EOF'
-always scripts/shared/chat/audit-chat-layer-migration.sh
-always scripts/shared/chat/audit-chat-bootstrap-file-set.sh
-always scripts/shared/chat/generate-commit-log-summary.sh
-always scripts/shared/chat/report-chat-workspaces.sh
-always scripts/shared/git/active-chat-branches.sh
+always scripts/00.chat/migration/audit-chat-layer-migration/script.sh
+always scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+always scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+always scripts/00.chat/reporting/report-chat-workspaces/script.sh
 always scripts/00.chat/local-merge/list-active-chat-branches/script.sh
-always scripts/shared/git/branch-overlap-report.sh
 always scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
-always scripts/shared/git/check-chat-branch-freshness.sh
 always scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
-always scripts/shared/git/check-commit-prerequisites.sh
-always scripts/shared/git/check-commitlog-deletions.sh
-always scripts/shared/git/check-write-location.sh
-always scripts/shared/git/classify-main-refresh-dirty-state.sh
+always scripts/00.chat/session-log/check-commit-prerequisites/script.sh
+always scripts/00.chat/session-log/check-commitlog-deletions/script.sh
+always scripts/00.chat/worktree/check-write-location/script.sh
 always scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
-always scripts/shared/git/dirty-worktree-check.sh
-always scripts/shared/git/main-update-status.sh
+always scripts/00.chat/worktree/dirty-worktree-check/script.sh
 always scripts/00.chat/main-refresh/show-main-update-status/script.sh
 always scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
-always scripts/shared/git/verify-local-convergence.sh
 always scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
 always scripts/shared/harness/check-deterministic-process-drift.sh
 always scripts/shared/harness/check-artifact-metadata-headers.sh
 always scripts/shared/harness/check-governed-script-command-drift.sh
-approved scripts/shared/chat/rename-current-chat-log-folder.sh
+approved scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh
 approved scripts/shared/chat/ensure-llm-workbench-repo.sh
-approved scripts/shared/chat/request-initialization/auto-start-missing-session.sh
+approved scripts/00.chat/startup/auto-start-missing-session/script.sh
 approved scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
-approved scripts/shared/git/checkpoint-chat-session-log.sh
-approved scripts/shared/git/prepare-chat-session-before-commit.sh
-approved scripts/shared/git/record-chat-commit.sh
-approved scripts/shared/git/stage-active-worktree-paths.sh
+approved scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+approved scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+approved scripts/00.chat/session-log/record-chat-commit/script.sh
 EOF
     exit 0
     ;;
@@ -94,13 +87,26 @@ case "$SCRIPT_PATH" in
     exit 1
     ;;
   scripts/shared/*.sh|scripts/shared/*/*.sh|scripts/shared/chat/request-initialization/*.sh|\
+  scripts/00.chat/migration/audit-chat-layer-migration/script.sh|\
+  scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
+  scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\
+  scripts/00.chat/reporting/report-chat-workspaces/script.sh|\
   scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
   scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
+  scripts/00.chat/session-log/check-commit-prerequisites/script.sh|\
+  scripts/00.chat/session-log/check-commitlog-deletions/script.sh|\
+  scripts/00.chat/worktree/check-write-location/script.sh|\
   scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
+  scripts/00.chat/worktree/dirty-worktree-check/script.sh|\
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
   scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
+  scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
+  scripts/00.chat/startup/auto-start-missing-session/script.sh|\
+  scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
+  scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
+  scripts/00.chat/session-log/record-chat-commit/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh)
     ;;
   *)
@@ -112,9 +118,13 @@ esac
 RUN_CLASS=""
 case "$SCRIPT_PATH" in
   scripts/shared/chat/audit-chat-layer-migration.sh|\
+  scripts/00.chat/migration/audit-chat-layer-migration/script.sh|\
   scripts/shared/chat/audit-chat-bootstrap-file-set.sh|\
+  scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
   scripts/shared/chat/generate-commit-log-summary.sh|\
+  scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\
   scripts/shared/chat/report-chat-workspaces.sh|\
+  scripts/00.chat/reporting/report-chat-workspaces/script.sh|\
   scripts/shared/git/active-chat-branches.sh|\
   scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
   scripts/shared/git/branch-overlap-report.sh|\
@@ -122,11 +132,15 @@ case "$SCRIPT_PATH" in
   scripts/shared/git/check-chat-branch-freshness.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
   scripts/shared/git/check-commit-prerequisites.sh|\
+  scripts/00.chat/session-log/check-commit-prerequisites/script.sh|\
   scripts/shared/git/check-commitlog-deletions.sh|\
+  scripts/00.chat/session-log/check-commitlog-deletions/script.sh|\
   scripts/shared/git/check-write-location.sh|\
+  scripts/00.chat/worktree/check-write-location/script.sh|\
   scripts/shared/git/classify-main-refresh-dirty-state.sh|\
   scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
   scripts/shared/git/dirty-worktree-check.sh|\
+  scripts/00.chat/worktree/dirty-worktree-check/script.sh|\
   scripts/shared/git/main-update-status.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
@@ -138,12 +152,17 @@ case "$SCRIPT_PATH" in
     RUN_CLASS="always"
     ;;
   scripts/shared/chat/rename-current-chat-log-folder.sh|\
+  scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
   scripts/shared/chat/ensure-llm-workbench-repo.sh|\
   scripts/shared/chat/request-initialization/auto-start-missing-session.sh|\
+  scripts/00.chat/startup/auto-start-missing-session/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/shared/git/checkpoint-chat-session-log.sh|\
+  scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
   scripts/shared/git/prepare-chat-session-before-commit.sh|\
+  scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
   scripts/shared/git/record-chat-commit.sh|\
+  scripts/00.chat/session-log/record-chat-commit/script.sh|\
   scripts/shared/git/stage-active-worktree-paths.sh)
     RUN_CLASS="approved"
     ;;

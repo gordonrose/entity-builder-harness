@@ -112,6 +112,7 @@ scan_file() {
   local script
   local line_no
   local text
+  local previous_text=""
 
   is_scannable_path "$path" || return 0
 
@@ -124,6 +125,16 @@ scan_file() {
             *"bash scripts/shared/harness/run-governed-script.sh --approved-action $script"*)
               ;;
             *)
+              case "$path:$text" in
+                scripts/shared/*:*"exec bash $script"*)
+                  continue
+                  ;;
+              esac
+              case "$previous_text" in
+                *"bash scripts/shared/harness/run-governed-script.sh --approved-action \\"*)
+                  continue
+                  ;;
+              esac
               printf '%s:%s\n' "$path" "$line_no"
               case "$text" in
                 *"bash $script"*)
@@ -142,7 +153,8 @@ scan_file() {
           ;;
       esac
     done
-  done < <(grep -n 'scripts/shared/' "$path" || true)
+    previous_text="$text"
+  done < <(grep -n 'scripts/' "$path" || true)
 }
 
 while IFS= read -r path; do

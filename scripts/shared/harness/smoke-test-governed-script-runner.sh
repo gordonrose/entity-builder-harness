@@ -22,6 +22,12 @@ trap 'rm -rf "$TMP_ROOT"' EXIT
 
 REPO="$TMP_ROOT/repo"
 mkdir -p \
+  "$REPO/scripts/00.chat/session-log/rename-current-chat-log-folder" \
+  "$REPO/scripts/00.chat/session-log/prepare-chat-session-before-commit" \
+  "$REPO/scripts/00.chat/session-log/record-chat-commit" \
+  "$REPO/scripts/00.chat/session-log/checkpoint-chat-session-log" \
+  "$REPO/scripts/00.chat/startup/auto-start-missing-session" \
+  "$REPO/scripts/00.chat/worktree/check-write-location" \
   "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/chat/request-initialization" \
   "$REPO/scripts/shared/git" \
@@ -44,9 +50,15 @@ make_fixture() {
 }
 
 make_fixture "scripts/shared/git/check-write-location.sh" "allowed-check"
+make_fixture "scripts/00.chat/worktree/check-write-location/script.sh" "canonical-check"
 make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "allowed-workbench"
 make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "approved-auto-start"
+make_fixture "scripts/00.chat/startup/auto-start-missing-session/script.sh" "canonical-auto-start"
 make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "approved-action"
+make_fixture "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh" "canonical-approved-action"
+make_fixture "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh" "canonical-prepare"
+make_fixture "scripts/00.chat/session-log/record-chat-commit/script.sh" "canonical-record"
+make_fixture "scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh" "canonical-checkpoint"
 make_fixture "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "dangerous-helper"
 make_fixture "scripts/shared/harness/check-deterministic-process-drift.sh" "allowed-harness"
 make_fixture "scripts/local/not-governed.sh" "local-script"
@@ -63,6 +75,11 @@ cd "$REPO"
 OUT="$(bash scripts/shared/harness/run-governed-script.sh scripts/shared/git/check-write-location.sh arg1)"
 if [ "$OUT" != "allowed-check:arg1" ]; then
   fail "allowed check did not run through the governed runner: $OUT"
+fi
+
+OUT="$(bash scripts/shared/harness/run-governed-script.sh scripts/00.chat/worktree/check-write-location/script.sh arg1)"
+if [ "$OUT" != "canonical-check:arg1" ]; then
+  fail "canonical allowed check did not run through the governed runner: $OUT"
 fi
 
 if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run >"$TMP_ROOT/workbench-missing.out" 2>&1; then
@@ -83,6 +100,11 @@ if [ "$OUT" != "approved-auto-start:new chat" ]; then
   fail "auto-start helper did not run with --approved-action: $OUT"
 fi
 
+OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/startup/auto-start-missing-session/script.sh "new chat")"
+if [ "$OUT" != "canonical-auto-start:new chat" ]; then
+  fail "canonical auto-start helper did not run with --approved-action: $OUT"
+fi
+
 if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/rename-current-chat-log-folder.sh test >"$TMP_ROOT/approved-missing.out" 2>&1; then
   fail "approval-sensitive script ran without --approved-action"
 fi
@@ -90,6 +112,11 @@ fi
 OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/rename-current-chat-log-folder.sh test)"
 if [ "$OUT" != "approved-action:test" ]; then
   fail "approval-sensitive script did not run with --approved-action: $OUT"
+fi
+
+OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh test)"
+if [ "$OUT" != "canonical-approved-action:test" ]; then
+  fail "canonical approval-sensitive script did not run with --approved-action: $OUT"
 fi
 
 if bash scripts/shared/harness/run-governed-script.sh scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --apply >"$TMP_ROOT/dangerous.out" 2>&1; then
@@ -110,10 +137,10 @@ fi
 
 LIST="$(bash scripts/shared/harness/run-governed-script.sh --list)"
 case "$LIST" in
-  *"always scripts/shared/git/check-write-location.sh"*)
+  *"always scripts/00.chat/worktree/check-write-location/script.sh"*)
     ;;
   *)
-    fail "--list output did not include expected always entry"
+    fail "--list output did not include expected canonical always entry"
     ;;
 esac
 
@@ -126,18 +153,18 @@ case "$LIST" in
 esac
 
 case "$LIST" in
-  *"approved scripts/shared/chat/request-initialization/auto-start-missing-session.sh"*)
+  *"approved scripts/00.chat/startup/auto-start-missing-session/script.sh"*)
     ;;
   *)
-    fail "--list output did not include expected auto-start entry"
+    fail "--list output did not include expected canonical auto-start entry"
     ;;
 esac
 
 case "$LIST" in
-  *"approved scripts/shared/chat/rename-current-chat-log-folder.sh"*)
+  *"approved scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh"*)
     ;;
   *)
-    fail "--list output did not include expected approved entry"
+    fail "--list output did not include expected canonical approved entry"
     ;;
 esac
 

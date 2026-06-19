@@ -39,7 +39,7 @@ cat > .agentic/00.chat/checklists/bad.md <<'EOF'
 # Bad
 
 ```bash
-bash scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 EOF
 
@@ -56,7 +56,7 @@ cat > .agentic/00.chat/checklists/good.md <<'EOF'
 # Good
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 EOF
 
@@ -67,7 +67,7 @@ bash scripts/shared/harness/check-governed-script-command-drift.sh \
 cat > .agentic/00.chat/workflows/prose.md <<'EOF'
 # Prose
 
-The checkpoint helper lives at scripts/shared/git/checkpoint-chat-session-log.sh.
+The checkpoint helper lives at scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh.
 EOF
 
 if bash scripts/shared/harness/check-governed-script-command-drift.sh \
@@ -93,7 +93,7 @@ cat > docs/harness/architecture/adrs/0001-example.md <<'EOF'
 # Historical ADR
 
 ```bash
-bash scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 EOF
 

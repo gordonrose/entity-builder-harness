@@ -97,7 +97,7 @@ bash scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/prepare-chat-session-before-commit.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 ```
 
 Do not commit if the gate fails.
@@ -107,7 +107,7 @@ Do not commit if the gate fails.
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
 ```
 
 Record every commit in the chat. The latest recorded commit is treated as the
@@ -130,7 +130,7 @@ If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
 write permission for the chat authorizes the bookkeeping checkpoint commit:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->

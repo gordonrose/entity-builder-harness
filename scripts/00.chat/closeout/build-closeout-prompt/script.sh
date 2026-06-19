@@ -81,7 +81,7 @@ Use the current session log as the first source of truth.
 If there is uncommitted task work, follow .agentic/00.chat/workflows/chat-commit.md and .agentic/00.chat/checklists/before-commit.md.
 Ask for explicit approval before creating any task commit.
 After any task commit, record it with:
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
 
 Then follow .agentic/00.chat/workflows/chat-promote-to-main.md for local convergence.
 Run the required gates and verification before merging.
