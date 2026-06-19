@@ -23,6 +23,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 * `.agentic/shared/` governs cross-layer process primitives, including git approval rules, handoff, deployment process, and context compaction.
 * `.agentic/harness/` governs changes to the agentic harness itself.
 * `.agentic/education/` governs educational resources derived from repo work.
+* `.agentic/aws/` governs AWS infrastructure, environments, runtime operations, and cloud deployment targets.
 * `.agentic/product/` governs Kanbien product/code work.
 
 ## Source of Truth
@@ -32,6 +33,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 * Shared operating process: `.agentic/shared/`
 * Harness maintenance process: `.agentic/harness/`
 * Education resources process: `.agentic/education/`
+* AWS infrastructure and operations process: `.agentic/aws/`
 * Product/code process: `.agentic/product/`
 * Executable checks: `scripts/`
 * Human documentation: `docs/`

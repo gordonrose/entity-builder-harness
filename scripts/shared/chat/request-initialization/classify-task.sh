@@ -36,6 +36,20 @@ fi
 
 MODE="$(classify_mode)"
 
+aws_workflow() {
+  case "$MODE" in
+    planning)
+      echo ".agentic/aws/workflows/plan-aws-change.md"
+      ;;
+    implementation|execution)
+      echo ".agentic/aws/workflows/execute-approved-aws-change.md"
+      ;;
+    *)
+      echo ".agentic/aws/workflows/inspect-aws-state.md"
+      ;;
+  esac
+}
+
 case "$TASK" in
   *default\ branch*|*base\ branch*|*master*|*origin/main*|*origin\ main*)
     echo "Layer: shared"
@@ -101,6 +115,11 @@ case "$TASK" in
     echo "Layer: education"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/education/workflows/mine-daily-learning-material.md"
+    ;;
+  *aws*|*AWS*|*ecs*|*ECS*|*ecr*|*ECR*|*rds*|*RDS*|*route53*|*Route\ 53*|*cloudwatch*|*CloudWatch*|*iam*|*IAM*|*app\ runner*|*App\ Runner*|*elastic\ beanstalk*|*Elastic\ Beanstalk*|*elasticache*|*ElastiCache*|*load\ balancer*|*load\ balancers*|*target\ group*|*target\ groups*|*task\ definition*|*task\ definitions*)
+    echo "Layer: aws"
+    echo "Mode: ${MODE}"
+    echo "Workflow: $(aws_workflow)"
     ;;
   *branch*|*branches*|*commit*|*git*|*handoff*|*deployment*|*release*|*remote*|*push*|*pull*|*merge*|*conflict*|*conflicts*|*cherry-pick*|*origin/main*|*origin\ main*|*github*)
     echo "Layer: shared"
