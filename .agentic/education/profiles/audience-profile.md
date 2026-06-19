@@ -67,6 +67,26 @@ plainly, do not use the term yet.
 The reader should never feel that the piece has suddenly walked into a room
 where everyone else already knows the furniture.
 
+## Competent Non-Technical Reader Rule
+
+Treat the reader as intelligent and AI-curious, not as technically initiated.
+They can follow a careful explanation, but they may not know how engineering
+work normally converges through local work, branches, shared baselines, review,
+checks, and merge.
+
+When a public article depends on a technical analogy, build a prerequisite
+ladder first:
+
+- what the reader already wants
+- what hidden cost or pressure follows from that desire
+- what normal-world model helps explain it
+- what part of the model transfers to the AI setting
+- what part does not transfer and must be created by the harness
+
+Prefer slight over-explanation to a missing middle step. A sentence that is
+less elegant but keeps the reader oriented is better than a sharper sentence
+that requires insider context.
+
 ## Reader Outcome
 
 A successful piece leaves the reader feeling sharper, safer, and more able to

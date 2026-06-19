@@ -56,8 +56,8 @@ before stating the thesis.
 Public articles should use one folder per article, with `article.md`,
 `source-packet.md`, `reader-world-research-packet.md`, `editor-brief.md`,
 `opening-lab.md`, `writer-notes.md`, `editor-review.md`, `revision-log.md`,
-and `scene-cards/`. Legacy flat files may remain until they are next revised
-through the source-packet pipeline.
+optional `calibration-report.md`, and `scene-cards/`. Legacy flat files may
+remain until they are next revised through the source-packet pipeline.
 
 ## Article Drafting
 
@@ -88,6 +88,12 @@ the public article body.
 
 After drafting, return the article to the Article Editor Agent for review. The
 writer does not mark its own draft publishable.
+
+When user feedback or a user-final rewrite reveals reusable lessons, create an
+article calibration report using
+`.agentic/education/templates/article-calibration-report.md`. Use it to compare
+the generated draft with the preferred version and route durable lessons into
+profiles, templates, workflows, or prompts.
 
 Prefer no article over a weak article.
 
