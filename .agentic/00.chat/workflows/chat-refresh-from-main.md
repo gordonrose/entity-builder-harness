@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: workflow
+purpose: Govern refreshing a chat branch from local main without losing work or bypassing recovery paths.
+domain: main-refresh
+portability: llm-workbench-required
+used_by:
+  - .agentic/shared/workflows/change-shared-process.md
+  - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+-->
+
 # Chat Refresh From Main Workflow
 
 ## Use When
@@ -15,10 +26,10 @@ history, user work, and session evidence.
 Before changing branches, merging, rebasing, staging, or committing, run:
 
 ```bash
-bash scripts/shared/git/classify-main-refresh-dirty-state.sh
+bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
 ```
 
-<!-- deterministic-check: allow reason="classifier determines dirty state; workflow defines the human-facing blocked response" -->
+<!-- deterministic-check: allow reason="refresh-readiness classifier determines dirty state; workflow defines the human-facing blocked response" -->
 If the classifier reports `unsupported-dirty`, respond exactly:
 
 ```txt
@@ -40,7 +51,7 @@ commit while blocked.
    git show-ref --verify --quiet refs/heads/main
    ```
 
-<!-- deterministic-check: allow reason="remote presence is reported by main-update-status.sh; workflow keeps the human fetch policy visible" -->
+<!-- deterministic-check: allow reason="show-main-update-status reports remote presence; workflow keeps the human fetch policy visible" -->
 2. If a remote exists, fetch before comparing:
 
    ```bash
@@ -48,13 +59,13 @@ commit while blocked.
    git branch -vv --all
    ```
 
-<!-- deterministic-check: allow reason="main-update-status.sh emits the local-only freshness warning deterministically" -->
+<!-- deterministic-check: allow reason="show-main-update-status emits the local-only freshness warning deterministically" -->
 3. If no remote exists, state that freshness is only local.
 
 4. Inspect branch relationship:
 
    ```bash
-   bash scripts/shared/git/main-update-status.sh
+   bash scripts/00.chat/main-refresh/show-main-update-status/script.sh
    ```
 
 5. Inspect active branch metadata and changed-path overlap:
@@ -91,7 +102,7 @@ commit while blocked.
 Classify before refresh:
 
 ```bash
-bash scripts/shared/git/classify-main-refresh-dirty-state.sh
+bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
 ```
 
 The classifier reports state; the workflow decides what is allowed.
@@ -178,8 +189,8 @@ refresh should be rehearsed before mutating the active chat worktree.
 
    ```bash
    git status --short --branch
-   bash scripts/shared/git/classify-main-refresh-dirty-state.sh
-   bash scripts/shared/git/main-update-status.sh
+   bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
+   bash scripts/00.chat/main-refresh/show-main-update-status/script.sh
    bash scripts/shared/git/active-chat-branches.sh
    bash scripts/shared/git/branch-overlap-report.sh
    ```

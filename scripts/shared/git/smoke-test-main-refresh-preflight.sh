@@ -54,6 +54,7 @@ SESSION_ID="2026-06-17-00-01-preflight-chat"
 SESSION_LOG="commitLogs/2026/jun/17/${SESSION_ID}/README.md"
 
 mkdir -p \
+  "$REPO/scripts/00.chat/main-refresh/classify-refresh-readiness" \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary" \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/shared/chat" \
@@ -66,8 +67,8 @@ cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" \
   "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/git/classify-main-refresh-dirty-state.sh" \
-  "$REPO/scripts/shared/git/classify-main-refresh-dirty-state.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh" \
+  "$REPO/scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/preflight-main-refresh.sh" \
   "$REPO/scripts/shared/git/preflight-main-refresh.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/promote-preflight-refresh.sh" \

@@ -49,7 +49,7 @@ to prevent task commits from the root integration worktree. Branch freshness is
 reported with:
 
 ```bash
-bash scripts/shared/git/check-chat-branch-freshness.sh
+bash scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
 ```
 
 Completed chat work converges through a local integration workflow before

@@ -42,7 +42,7 @@ if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
   exit 1
 fi
 
-CLASSIFICATION="$(bash scripts/shared/git/classify-main-refresh-dirty-state.sh "$BASE_BRANCH" | sed -n 's/^classification=//p' | head -n 1)"
+CLASSIFICATION="$(bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh "$BASE_BRANCH" | sed -n 's/^classification=//p' | head -n 1)"
 
 if [ "$CLASSIFICATION" != "clean" ]; then
   echo "ERROR: preflight requires a clean chat worktree." >&2

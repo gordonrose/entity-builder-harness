@@ -45,12 +45,15 @@ always scripts/shared/chat/report-chat-workspaces.sh
 always scripts/shared/git/active-chat-branches.sh
 always scripts/shared/git/branch-overlap-report.sh
 always scripts/shared/git/check-chat-branch-freshness.sh
+always scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
 always scripts/shared/git/check-commit-prerequisites.sh
 always scripts/shared/git/check-commitlog-deletions.sh
 always scripts/shared/git/check-write-location.sh
 always scripts/shared/git/classify-main-refresh-dirty-state.sh
+always scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
 always scripts/shared/git/dirty-worktree-check.sh
 always scripts/shared/git/main-update-status.sh
+always scripts/00.chat/main-refresh/show-main-update-status/script.sh
 always scripts/shared/git/verify-local-convergence.sh
 always scripts/shared/harness/check-deterministic-process-drift.sh
 always scripts/shared/harness/check-artifact-metadata-headers.sh
@@ -87,6 +90,9 @@ case "$SCRIPT_PATH" in
     exit 1
     ;;
   scripts/shared/*.sh|scripts/shared/*/*.sh|scripts/shared/chat/request-initialization/*.sh|\
+  scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
+  scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
+  scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh)
     ;;
   *)
@@ -104,12 +110,15 @@ case "$SCRIPT_PATH" in
   scripts/shared/git/active-chat-branches.sh|\
   scripts/shared/git/branch-overlap-report.sh|\
   scripts/shared/git/check-chat-branch-freshness.sh|\
+  scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
   scripts/shared/git/check-commit-prerequisites.sh|\
   scripts/shared/git/check-commitlog-deletions.sh|\
   scripts/shared/git/check-write-location.sh|\
   scripts/shared/git/classify-main-refresh-dirty-state.sh|\
+  scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
   scripts/shared/git/dirty-worktree-check.sh|\
   scripts/shared/git/main-update-status.sh|\
+  scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/shared/git/verify-local-convergence.sh|\
   scripts/shared/harness/check-deterministic-process-drift.sh|\
   scripts/shared/harness/check-artifact-metadata-headers.sh|\

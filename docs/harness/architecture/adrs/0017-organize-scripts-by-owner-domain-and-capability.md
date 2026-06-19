@@ -358,6 +358,33 @@ Recovery import batch result:
   `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
   canonical recovery script path.
 
+Main refresh status/readiness batch result:
+
+- canonical implementations:
+  `scripts/00.chat/main-refresh/show-main-update-status/script.sh`,
+  `scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh`, and
+  `scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh`
+- capability READMEs:
+  `scripts/00.chat/main-refresh/show-main-update-status/README.md`,
+  `scripts/00.chat/main-refresh/check-chat-is-current-with-main/README.md`, and
+  `scripts/00.chat/main-refresh/classify-refresh-readiness/README.md`
+- compatibility wrappers:
+  `scripts/shared/git/main-update-status.sh`,
+  `scripts/shared/git/check-chat-branch-freshness.sh`,
+  `scripts/shared/git/classify-main-refresh-dirty-state.sh`, and
+  `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
+- direct callers migrated:
+  `.agentic/00.chat/workflows/chat-refresh-from-main.md`,
+  `docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md`,
+  `scripts/shared/git/preflight-main-refresh.sh`, and
+  `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  canonical main-refresh status/readiness script paths while retaining old
+  shared wrappers for compatibility.
+
 Remaining shared git inventory after commit-boundary batch:
 
 All remaining `scripts/shared/git/*.sh` files currently declare
@@ -374,10 +401,14 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/dirty-worktree-check.sh`
    - `scripts/shared/git/prepare-chat-session-before-commit.sh`
    - `scripts/shared/git/record-chat-commit.sh`
+   - `scripts/shared/git/check-chat-branch-freshness.sh`
+   - `scripts/shared/git/classify-main-refresh-dirty-state.sh`
+   - `scripts/shared/git/main-update-status.sh`
    - `scripts/shared/git/smoke-test-chat-worktree-session.sh`
    - `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
    - `scripts/shared/git/smoke-test-commit-prerequisites.sh`
    - `scripts/shared/git/smoke-test-commitlog-deletions.sh`
+   - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
    - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
    - `scripts/shared/git/stage-active-worktree-paths.sh`
 
@@ -385,13 +416,9 @@ primitives by metadata. They fall into three groups:
 
    - `scripts/shared/git/active-chat-branches.sh`
    - `scripts/shared/git/branch-overlap-report.sh`
-   - `scripts/shared/git/check-chat-branch-freshness.sh`
-   - `scripts/shared/git/classify-main-refresh-dirty-state.sh`
-   - `scripts/shared/git/main-update-status.sh`
    - `scripts/shared/git/preflight-main-refresh.sh`
    - `scripts/shared/git/promote-preflight-refresh.sh`
    - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
-   - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
    - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
    - `scripts/shared/git/verify-local-convergence.sh`
 
