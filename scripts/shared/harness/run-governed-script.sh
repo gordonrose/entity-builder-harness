@@ -118,13 +118,9 @@ esac
 
 RUN_CLASS=""
 case "$SCRIPT_PATH" in
-  scripts/shared/chat/audit-chat-layer-migration.sh|\
   scripts/00.chat/migration/audit-chat-layer-migration/script.sh|\
-  scripts/shared/chat/audit-chat-bootstrap-file-set.sh|\
   scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
-  scripts/shared/chat/generate-commit-log-summary.sh|\
   scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\
-  scripts/shared/chat/report-chat-workspaces.sh|\
   scripts/00.chat/reporting/report-chat-workspaces/script.sh|\
   scripts/shared/git/active-chat-branches.sh|\
   scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\

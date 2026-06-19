@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T22:28:07Z
-latest_commit_sha: c0e163d
-chat_duration: 21201s (00:05:53:21)
-estimated_chat_tokens: 3816166 estimated from chat transcript bytes (15264661 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 114.48 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T22:31:27Z
+latest_commit_sha: c9a384f
+chat_duration: 21401s (00:05:56:41)
+estimated_chat_tokens: 3853070 estimated from chat transcript bytes (15412280 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 115.59 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -661,6 +661,17 @@ Summary: Removed the remaining Track A validation-only wrappers after moving sta
 
 ADR impact: ADR 0017 now records the remaining validation compatibility wrappers as retired Track A paths with canonical replacements.
 
+
+### 2026-06-19T22:31:27Z - Commit recorded
+
+Commit: `c9a384f`
+
+Message: Retire shared command wrappers
+
+Summary: Removed old shared chat command compatibility wrappers after command and package smoke fixtures moved to canonical command scripts and package scripts.
+
+ADR impact: ADR 0017 now records shared command wrappers as retired historical paths.
+
 ## Commits
 
 
@@ -1042,6 +1053,13 @@ ADR impact: ADR 0017 now records the remaining validation compatibility wrappers
   Summary: Removed the remaining Track A validation-only wrappers after moving startup and command smoke fixtures to canonical scripts/00.chat paths and confirming bootstrap audit stayed clean.
   ADR impact: ADR 0017 now records the remaining validation compatibility wrappers as retired Track A paths with canonical replacements.
 
+
+- Commit: `c9a384f`
+  Time UTC: 2026-06-19T22:31:27Z
+  Message: Retire shared command wrappers
+  Summary: Removed old shared chat command compatibility wrappers after command and package smoke fixtures moved to canonical command scripts and package scripts.
+  ADR impact: ADR 0017 now records shared command wrappers as retired historical paths.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1057,11 +1075,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T22:28:07Z
-Latest commit SHA: c0e163d
-Chat duration: 21201s (00:05:53:21)
-Estimated chat tokens: 3816166 estimated from chat transcript bytes (15264661 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 114.48 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T22:31:27Z
+Latest commit SHA: c9a384f
+Chat duration: 21401s (00:05:56:41)
+Estimated chat tokens: 3853070 estimated from chat transcript bytes (15412280 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 115.59 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
