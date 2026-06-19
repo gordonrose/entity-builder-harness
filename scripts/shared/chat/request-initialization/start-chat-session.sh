@@ -104,6 +104,8 @@ latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
 estimated_chat_tokens:
+estimated_chat_cost:
+estimated_chat_cost_basis:
 -->
 
 ## Initial Intent
@@ -156,6 +158,8 @@ Latest commit at UTC:
 Latest commit SHA:
 Chat duration:
 Estimated chat tokens:
+Estimated chat cost:
+Estimated chat cost basis:
 
 ## Notes
 

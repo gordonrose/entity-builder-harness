@@ -90,6 +90,11 @@ bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-imp
 Record every commit in the chat. The latest recorded commit is treated as the
 current endpoint for chat duration and session metrics.
 
+When the current chat workflow records estimated token metrics, any
+`estimated_chat_cost` value is an approximate planning metric, not a billing
+record. It is derived from the estimated token count and the checked-in pricing
+snapshot.
+
 <!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
 If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
 write permission for the chat authorizes the bookkeeping checkpoint commit:

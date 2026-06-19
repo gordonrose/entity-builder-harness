@@ -103,6 +103,11 @@ function parseTokenCount(value) {
   return match ? Number(match[1]) : null;
 }
 
+function parseUsdCost(value) {
+  const match = String(value || '').match(/^USD\s+(\d+(?:\.\d+)?)\b/);
+  return match ? Number(match[1]) : null;
+}
+
 function mean(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
@@ -175,6 +180,16 @@ function formatNumber(value) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
+function formatUsd(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'n/a';
+  }
+  if (value > 0 && value < 1) {
+    return `USD ${value.toFixed(4)}`;
+  }
+  return `USD ${value.toFixed(2)}`;
+}
+
 function formatDuration(value) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return 'n/a';
@@ -218,11 +233,13 @@ const records = logs.map((filePath) => {
     id: data.id || path.basename(path.dirname(filePath)),
     durationSeconds: parseDurationSeconds(data.chat_duration),
     tokens: parseTokenCount(data.estimated_chat_tokens),
+    cost: parseUsdCost(data.estimated_chat_cost),
   };
 });
 
 const durationStats = metricStats(records.map((record) => record.durationSeconds));
 const tokenStats = metricStats(records.map((record) => record.tokens));
+const costStats = metricStats(records.map((record) => record.cost));
 
 const lines = [
   '# Commit Log Summary',
@@ -238,6 +255,10 @@ const lines = [
   '## Estimated Chat Tokens',
   '',
   metricTable(tokenStats, formatNumber),
+  '',
+  '## Estimated Chat Cost',
+  '',
+  metricTable(costStats, formatUsd),
   '',
 ];
 
