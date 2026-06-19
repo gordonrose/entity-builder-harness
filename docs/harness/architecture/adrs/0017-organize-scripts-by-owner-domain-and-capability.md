@@ -314,6 +314,19 @@ Check commit log deletions batch result:
   `scripts/shared/git/check-commitlog-deletions.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Check write location batch result:
+
+- canonical implementation:
+  `scripts/00.chat/worktree/check-write-location/script.sh`
+- capability README:
+  `scripts/00.chat/worktree/check-write-location/README.md`
+- compatibility wrapper:
+  `scripts/shared/git/check-write-location.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/check-write-location.sh` wrapper path until the
+  governed-runner path policy is migrated.
+
 Closeout command batch result:
 
 - canonical implementation:

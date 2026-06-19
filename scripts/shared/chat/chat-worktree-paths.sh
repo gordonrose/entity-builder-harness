@@ -6,7 +6,7 @@
 #   domain: worktree
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/shared/git/check-write-location.sh
+#     - scripts/00.chat/worktree/check-write-location/script.sh
 #     - scripts/shared/git/verify-local-convergence.sh
 #   effects: read-only
 
