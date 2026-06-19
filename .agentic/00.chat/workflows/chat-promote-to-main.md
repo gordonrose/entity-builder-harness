@@ -51,6 +51,9 @@ Do not change branches or edit files while blocked.
 
 ## Refresh Policy
 
+- A user request to merge or promote a chat branch to `main` also approves the
+  non-rewriting refresh from `main` that local convergence requires, unless the
+  user explicitly asks to inspect before refresh.
 - Prefer merging `main` into a chat branch because it preserves recorded commit
   SHAs and session evidence.
 - Rebase rewrites chat branch commits and requires explicit user approval.
@@ -61,9 +64,10 @@ Do not change branches or edit files while blocked.
 ### Behind `main`
 
 If verification reports `blocked-behind`, do not merge the chat branch into
-`main`. Ask for approval to refresh the chat branch from `main`.
+`main`. If the user already requested merge or promotion to `main`, refresh the
+chat branch from `main` without asking for a second approval.
 
-For an approved non-rewriting refresh, run from the chat-owned worktree:
+For the approved non-rewriting refresh, run from the chat-owned worktree:
 
 ```bash
 git merge --no-ff main
@@ -76,8 +80,9 @@ Then rerun the relevant checks and rerun local convergence verification.
 If verification reports `blocked-diverged`, do not merge the chat branch into
 `main`. Explain that both `main` and the chat branch have unique commits.
 
-Prefer an approved merge of `main` into the chat branch from the chat-owned
-worktree. Rebase rewrites chat branch commits and requires separate explicit
+If the user already requested merge or promotion to `main`, merge `main` into
+the chat branch from the chat-owned worktree without asking for a second
+approval. Rebase rewrites chat branch commits and requires separate explicit
 approval.
 
 If conflicts appear, stop after Git reports the conflict set. Summarize the
@@ -111,8 +116,9 @@ Before promoting a chat branch into local `main`:
 - The chat worktree must be clean.
 - The session log must record the latest task commit or explicitly state why no
   task commit exists.
-- The chat branch must include latest local `main`, or the user must approve a
-  refresh from `main`.
+- The chat branch must include latest local `main`. If a refresh is needed, the
+  initial merge or promotion request approves the non-rewriting refresh from
+  `main`.
 - Relevant checks for the changed layer must pass.
 - User approval is required before merging into `main`.
 
