@@ -86,7 +86,7 @@ case "$SCRIPT_PATH" in
     echo "ERROR: refused non-repository script path: $SCRIPT_PATH" >&2
     exit 1
     ;;
-  scripts/shared/*.sh|scripts/shared/*/*.sh|scripts/shared/chat/request-initialization/*.sh|\
+  scripts/shared/*.sh|scripts/shared/*/*.sh|\
   scripts/00.chat/migration/audit-chat-layer-migration/script.sh|\
   scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
   scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\

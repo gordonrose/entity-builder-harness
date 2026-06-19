@@ -28,7 +28,7 @@ fail() {
 copy_verifier_scripts() {
   local repo="$1"
 
-  mkdir -p "$repo/scripts/shared/git" "$repo/scripts/shared/chat" "$repo/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main" "$repo/scripts/00.chat/session-log/paths" "$repo/scripts/00.chat/worktree/paths"
+  mkdir -p "$repo/scripts/shared/git" "$repo/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main" "$repo/scripts/00.chat/session-log/paths" "$repo/scripts/00.chat/worktree/paths"
   cp "$SOURCE_ROOT/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh" "$repo/scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$repo/scripts/00.chat/worktree/paths/lib.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$repo/scripts/00.chat/session-log/paths/lib.sh"

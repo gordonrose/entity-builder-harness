@@ -59,12 +59,9 @@ mkdir -p \
   "$REPO/scripts/00.chat/main-refresh/apply-rehearsed-refresh" \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/git" \
   "$REPO/$(dirname "$SESSION_LOG")"
 
-cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" \
-  "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" \
   "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" \

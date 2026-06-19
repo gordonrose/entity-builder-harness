@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# shellcheck source=../../../scripts/shared/chat/session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../../scripts/00.chat/session-log/paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 BRANCH="$(git branch --show-current)"
 

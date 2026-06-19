@@ -7,7 +7,8 @@
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/reporting/report-chat-workspaces/script.sh
-#     - scripts/shared/chat/chat-worktree-paths.sh
+#     - scripts/00.chat/startup/start-chat-session/script.sh
+#     - scripts/00.chat/worktree/ensure-chat-worktree/script.sh
 #   effects: read-only
 
 chat_worktree_repo_root() {

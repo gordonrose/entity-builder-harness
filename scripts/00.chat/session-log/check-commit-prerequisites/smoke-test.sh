@@ -36,11 +36,9 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/check-commit-prerequisites" \
   "$REPO/scripts/00.chat/session-log/read-current-chat-log" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness"
 
-cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/check-commit-prerequisites/script.sh" "$REPO/scripts/00.chat/session-log/check-commit-prerequisites/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/check-commit-prerequisites.sh" "$REPO/scripts/shared/git/check-commit-prerequisites.sh"
@@ -65,8 +63,8 @@ Run:
 bash scripts/00.chat/session-log/read-current-chat-log/script.sh
 ```
 
-The executable startup scripts still live under `scripts/shared/chat/` for
-compatibility.
+The executable startup scripts live under canonical `scripts/00.chat/`
+capability folders.
 EOF
 
 printf '#!/usr/bin/env bash\n' > "$REPO/scripts/00.chat/session-log/read-current-chat-log/script.sh"
@@ -97,7 +95,7 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 grep -q 'Commit prerequisites are present.' "$TMP_ROOT/out" \
   || fail "commit prerequisites did not pass with prose directory reference"
 
-if grep -q 'scripts/shared/chat/ is missing' "$TMP_ROOT/out"; then
+if grep -q 'scripts/00.chat/ is missing' "$TMP_ROOT/out"; then
   fail "directory prose reference was treated as a missing script"
 fi
 

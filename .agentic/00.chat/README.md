@@ -30,7 +30,7 @@ cleanup, shortcuts, and on-demand chat reports.
 - Chat lifecycle migration plan: `.agentic/00.chat/migration-plan.md`
 - Public chat commands: `package.json` `chat:*` scripts
 - Legacy shared workflow locations: `.agentic/shared/workflows/`
-- Legacy chat scripts: `scripts/shared/chat/` and `scripts/shared/git/`
+- Legacy shared git helpers: `scripts/shared/git/`
 
 ## Migration Policy
 

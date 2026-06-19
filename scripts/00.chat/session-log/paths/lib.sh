@@ -8,7 +8,8 @@
 #   used_by:
 #     - scripts/00.chat/session-log/read-current-chat-log/script.sh
 #     - scripts/00.chat/session-log/update-chat-log/script.sh
-#     - scripts/shared/chat/session-log-paths.sh
+#     - .agentic/shared/gates/assert_chat_session.sh
+#     - scripts/shared/git/with-chat-branch.sh
 #   effects: read-only
 
 chat_session_id_from_branch() {

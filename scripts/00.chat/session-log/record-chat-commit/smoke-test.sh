@@ -31,7 +31,7 @@ SESSION_ID="2026-06-18-00-00-token-metrics"
 BRANCH="chat/${SESSION_ID}"
 LOG_FILE="commitLogs/2026/jun/18/${SESSION_ID}/README.md"
 
-mkdir -p "$REPO/scripts/shared/git" "$REPO/scripts/shared/chat" \
+mkdir -p "$REPO/scripts/shared/git" \
   "$REPO/scripts/00.chat/transcript/discover-codex-session-log" \
   "$REPO/scripts/00.chat/metrics/estimate-chat-cost" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit" \
@@ -41,8 +41,6 @@ cp "$SOURCE_ROOT/scripts/00.chat/session-log/record-chat-commit/script.sh" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/record-chat-commit.sh" \
   "$REPO/scripts/shared/git/record-chat-commit.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" \
-  "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" \
   "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/transcript/discover-codex-session-log/script.sh" \

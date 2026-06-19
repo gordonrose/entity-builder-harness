@@ -47,7 +47,6 @@ to the canonical chat layer:
 - `.agentic/shared/workflows/main-updated.md`
 - `.agentic/shared/workflows/local-convergence.md`
 - `.agentic/shared/checklists/before-commit.md`
-- `scripts/shared/chat/`
 - `scripts/shared/git/`
 
 ## Migration Rules

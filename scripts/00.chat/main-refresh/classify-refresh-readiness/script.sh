@@ -42,8 +42,8 @@ if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
   exit 1
 fi
 
-# shellcheck source=../chat/session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../session-log/paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 BRANCH="$(git branch --show-current)"
 

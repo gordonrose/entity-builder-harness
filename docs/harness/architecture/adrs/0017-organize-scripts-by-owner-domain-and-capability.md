@@ -202,16 +202,14 @@ Session-log executable batch result:
   `package.json` `chat:record-main-refresh-conflict`
 - canonical source library:
   `scripts/00.chat/session-log/paths/lib.sh`
-- source compatibility shim:
-  `scripts/shared/chat/session-log-paths.sh` remains source-able for shared git,
-  startup, and downstream smoke fixtures until those callers migrate in later
-  batches.
+- retired source compatibility shim:
+  `scripts/shared/chat/session-log-paths.sh` was removed after sourced callers
+  and downstream smoke fixtures moved to the canonical session-log library.
 - canonical worktree source library:
   `scripts/00.chat/worktree/paths/lib.sh`
-- worktree source compatibility shim:
-  `scripts/shared/chat/chat-worktree-paths.sh` remains source-able for shared
-  startup, shared git, and downstream smoke fixtures until those callers
-  migrate in later batches.
+- retired worktree source compatibility shim:
+  `scripts/shared/chat/chat-worktree-paths.sh` was removed after downstream
+  smoke fixtures moved to the canonical worktree library.
 - canonical worktree helper:
   `scripts/00.chat/worktree/ensure-chat-worktree/script.sh`
 - retired worktree helper compatibility wrapper:
@@ -566,8 +564,6 @@ Bootstrap compatibility classifications:
    These remain reachable from seed surfaces today, but they are not canonical
    ownership paths:
 
-   - `scripts/shared/chat/chat-worktree-paths.sh`
-   - `scripts/shared/chat/session-log-paths.sh`
    - `scripts/shared/git/active-chat-branches.sh`
    - `scripts/shared/git/branch-overlap-report.sh`
    - `scripts/shared/git/check-chat-branch-freshness.sh`
@@ -684,7 +680,7 @@ Bootstrap compatibility classifications:
 | Retired validation-only chat helper wrappers | Historical references may mention old paths, but operative validation should use canonical `scripts/00.chat/...` paths | `scripts/shared/chat/discover-codex-session-log.sh`, `scripts/shared/chat/register-codex-session-log.sh`, `scripts/shared/chat/request-initialization/read-current-chat-log.sh`, `scripts/shared/chat/update-chat-log.sh` |
 | Retired validation-only classification wrappers | Historical references may mention old paths, but operative validation should use canonical classification paths | `scripts/shared/chat/request-initialization/classify-task.sh`, `scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh` |
 | Retired validation-only smoke wrappers | Historical references may mention old paths, but operative validation should use canonical `scripts/00.chat/.../smoke-test.sh` paths | `scripts/shared/git/smoke-test-chat-worktree-session.sh`, `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`, `scripts/shared/git/smoke-test-commit-prerequisites.sh`, `scripts/shared/git/smoke-test-commitlog-deletions.sh`, `scripts/shared/git/smoke-test-local-convergence-verifier.sh`, `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`, `scripts/shared/git/smoke-test-main-refresh-preflight.sh`, `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh` |
-| Source shim compatibility | All sourced callers import canonical `scripts/00.chat/.../lib.sh` files directly | `scripts/shared/chat/chat-worktree-paths.sh`, `scripts/shared/chat/session-log-paths.sh` |
+| Retired source shim compatibility | All sourced callers import canonical `scripts/00.chat/.../lib.sh` files directly | `scripts/shared/chat/chat-worktree-paths.sh`, `scripts/shared/chat/session-log-paths.sh` |
 | Superseded legacy | Retirement pass proves no bootstrap, install, recovery, or audit surface needs the old isolated execution model | `scripts/shared/git/smoke-test-with-chat-branch.sh`, `scripts/shared/git/stage-active-worktree-paths.sh`, `scripts/shared/git/with-chat-branch.sh` |
 | Retired upstream compatibility wrapper | Public/external callers no longer use the old shared upstream helper path | `scripts/shared/chat/ensure-llm-workbench-repo.sh` |
 

@@ -72,8 +72,8 @@ fi
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
 
-# shellcheck source=../chat/session-log-paths.sh
-source "$REPO_ROOT/scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../00.chat/session-log/paths/lib.sh
+source "$REPO_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 if [ -z "${SESSION_LOG// }" ]; then
   CURRENT_BRANCH="$(git -C "$REPO_ROOT" branch --show-current)"

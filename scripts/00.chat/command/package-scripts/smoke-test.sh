@@ -37,7 +37,6 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/00.chat/startup/start-new-chat" \
   "$REPO/scripts/00.chat/worktree/paths" \
-  "$REPO/scripts/shared/chat/commands" \
   "$REPO/commitLogs/2026/jun/19/test-chat"
 
 git -C "$REPO" init --quiet --initial-branch=main
@@ -48,9 +47,7 @@ cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/c
 cp "$SOURCE_ROOT/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/close/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/reporting/report-chat-workspaces/script.sh" "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shared/chat/chat-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
@@ -63,7 +60,6 @@ chmod +x \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" \
   "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh" \
   "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" \
-  "$REPO"/scripts/shared/chat/*.sh \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 cat > "$REPO/commitLogs/2026/jun/19/test-chat/README.md" <<'EOF'

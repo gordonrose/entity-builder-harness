@@ -42,7 +42,7 @@ The script verifies:
 - executable script references in the workflow and checklist point to real
   `.sh` files
 
-Directory prose such as `scripts/shared/chat/` is ignored; only script-looking
+Directory prose such as `scripts/00.chat/` is ignored; only script-looking
 references ending in `.sh` are treated as gate references.
 
 ## What This Does Not Do

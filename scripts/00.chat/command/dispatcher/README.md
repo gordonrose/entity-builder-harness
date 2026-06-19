@@ -28,5 +28,6 @@ scripts remain separate so each command can evolve independently.
 - `smoke-test.sh` validates the dispatcher and core chat subcommands in a
   throwaway repository.
 
-Compatibility wrappers remain under `scripts/shared/chat/commands/` while old
-external callers migrate.
+The old `scripts/shared/chat/commands/` compatibility wrappers have been
+retired. Public callers should use `package.json` `chat:*` scripts; governed
+callers should use canonical `scripts/00.chat/command/...` paths.

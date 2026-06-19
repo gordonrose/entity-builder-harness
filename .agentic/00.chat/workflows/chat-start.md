@@ -150,5 +150,7 @@ bash scripts/shared/git/check-write-location.sh
 
 ## Migration Notes
 
-The executable startup scripts still live under `scripts/shared/chat/` for
-compatibility. That path is implementation location, not ownership.
+The executable chat startup scripts now live under canonical
+`scripts/00.chat/...` capability folders. Old `scripts/shared/chat/` command
+wrappers have been retired; use public `package.json` `chat:*` commands or
+the canonical governed script paths.

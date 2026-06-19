@@ -81,6 +81,7 @@ Use lowercase command names when possible. Keep the command script narrow:
 Update the dispatcher smoke test named in its capability README when adding a
 command that should remain part of the stable shortcut surface.
 
-The old `scripts/shared/chat/commands/<name>.sh` path is compatibility-only.
-Do not add new commands there unless an explicit compatibility wrapper is part
-of the same approved change.
+The old `scripts/shared/chat/commands/<name>.sh` compatibility path has been
+retired. Do not add new commands there; add canonical
+`scripts/00.chat/command/<name>/script.sh` entrypoints and package-script
+shortcuts instead.

@@ -60,7 +60,6 @@ Initial candidate paths:
 - `.agentic/shared/workflows/` entries required by chat startup, commit, and
   promotion compatibility
 - `package.json` chat command scripts
-- `scripts/shared/chat/`
 - `scripts/shared/git/`
 - `scripts/shared/harness/` gates required by chat startup, commit, classifier,
   governed script, and deterministic process checks
