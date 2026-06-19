@@ -268,6 +268,21 @@ Auto-start missing session batch result:
   still allowlists the old approved-action path until the governed-runner path
   policy is migrated.
 
+Start chat session batch result:
+
+- canonical implementation:
+  `scripts/00.chat/startup/start-chat-session/script.sh`
+- capability README:
+  `scripts/00.chat/startup/start-chat-session/README.md`
+- request-initialization compatibility wrapper:
+  `scripts/shared/chat/request-initialization/start-chat-session.sh` remains
+  executable while smoke fixtures, downstream references, and any external users
+  migrate to the canonical startup path.
+- direct callers migrated:
+  `scripts/00.chat/startup/start-new-chat/script.sh`,
+  `.agentic/00.chat/workflows/chat-start.md`, and related script metadata now
+  point at the canonical startup path.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

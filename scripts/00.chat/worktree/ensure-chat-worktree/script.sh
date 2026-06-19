@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/shared/chat/request-initialization/start-chat-session.sh
+#     - scripts/00.chat/startup/start-chat-session/script.sh
 #   effects: worktrees
 
 usage() {

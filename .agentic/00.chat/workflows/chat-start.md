@@ -6,7 +6,7 @@ domain: startup
 portability: llm-workbench-required
 used_by:
   - AGENTS.md
-  - scripts/shared/chat/request-initialization/start-chat-session.sh
+  - scripts/00.chat/startup/start-chat-session/script.sh
 -->
 
 # Chat Start Workflow

@@ -9,7 +9,7 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md
 #     - scripts/00.chat/classification/classify-task/check-fixtures.sh
-#     - scripts/shared/chat/request-initialization/start-chat-session.sh
+#     - scripts/00.chat/startup/start-chat-session/script.sh
 #   effects: read-only
 
 TASK="${*:-}"

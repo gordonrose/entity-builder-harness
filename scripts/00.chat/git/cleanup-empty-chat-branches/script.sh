@@ -10,7 +10,7 @@ set -euo pipefail
 #     - .agentic/00.chat/workflows/chat-cleanup.md
 #     - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 #     - scripts/chat/cleanup-empty-chat-branches.sh
-#     - scripts/shared/chat/request-initialization/start-chat-session.sh
+#     - scripts/00.chat/startup/start-chat-session/script.sh
 #   effects: branches, writes-files, destructive
 
 # shellcheck source=../../session-log/paths/lib.sh

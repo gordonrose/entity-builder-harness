@@ -7,7 +7,8 @@ set -euo pipefail
 #   domain: worktree
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/shared/chat/request-initialization/start-chat-session.sh
+#     - scripts/00.chat/command/dispatcher/smoke-test.sh
+#     - scripts/shared/git/smoke-test-chat-worktree-session.sh
 #   effects: worktrees
 
 exec bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh "$@"
