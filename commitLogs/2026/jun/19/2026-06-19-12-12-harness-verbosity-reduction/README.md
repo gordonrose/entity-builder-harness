@@ -11,10 +11,10 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T11:12:44Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-12-50-019edf95-64fc-72f3-9698-a40f682f7599.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
+latest_commit_at_utc: 2026-06-19T11:25:27Z
+latest_commit_sha: 9bc5f64
+chat_duration: 763s (00:00:12:43)
+estimated_chat_tokens: 150354 estimated from chat transcript bytes (601416 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-12-50-019edf95-64fc-72f3-9698-a40f682f7599.jsonl)
 -->
 
 ## Initial Intent
@@ -71,9 +71,26 @@ ADR needed: no
 
 Reason: Small process cleanup that follows existing artifact ownership rules; no durable architecture tradeoff introduced.
 
+
+### 2026-06-19T11:25:27Z - Commit recorded
+
+Commit: `9bc5f64`
+
+Message: chore(harness): reduce chat instruction verbosity
+
+Summary: Reduced generated startup prompt and session-log verbosity, moved write-permission rename guidance into chat-start workflow, and consolidated chat commit rules into the before-commit checklist.
+
+ADR impact: No ADR needed; follows existing artifact ownership standard.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `9bc5f64`
+  Time UTC: 2026-06-19T11:25:27Z
+  Message: chore(harness): reduce chat instruction verbosity
+  Summary: Reduced generated startup prompt and session-log verbosity, moved write-permission rename guidance into chat-start workflow, and consolidated chat commit rules into the before-commit checklist.
+  ADR impact: No ADR needed; follows existing artifact ownership standard.
 
 ## Main Refresh Conflicts
 
@@ -88,10 +105,10 @@ Reason: Small process cleanup that follows existing artifact ownership rules; no
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T11:12:44Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
+Latest commit at UTC: 2026-06-19T11:25:27Z
+Latest commit SHA: 9bc5f64
+Chat duration: 763s (00:00:12:43)
+Estimated chat tokens: 150354 estimated from chat transcript bytes (601416 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-12-50-019edf95-64fc-72f3-9698-a40f682f7599.jsonl)
 
 ## Notes
 
