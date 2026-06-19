@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/check-commitlog-deletions.sh
 #     - scripts/00.chat/session-log/check-commitlog-deletions/README.md
 #     - scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
 #     - docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md

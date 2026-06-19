@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: worktree
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/check-write-location.sh
 #     - scripts/00.chat/worktree/check-write-location/README.md
 #   effects: read-only
 

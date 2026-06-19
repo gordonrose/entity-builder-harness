@@ -36,13 +36,11 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/check-commit-prerequisites" \
   "$REPO/scripts/00.chat/session-log/read-current-chat-log" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness"
 
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/check-commit-prerequisites/script.sh" "$REPO/scripts/00.chat/session-log/check-commit-prerequisites/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/git/check-commit-prerequisites.sh" "$REPO/scripts/shared/git/check-commit-prerequisites.sh"
-chmod +x "$REPO/scripts/00.chat/session-log/check-commit-prerequisites/script.sh" "$REPO/scripts/shared/git/check-commit-prerequisites.sh"
+chmod +x "$REPO/scripts/00.chat/session-log/check-commit-prerequisites/script.sh"
 
 cat > "$REPO/.agentic/00.chat/checklists/before-commit.md" <<'EOF'
 # Before Commit
@@ -50,7 +48,7 @@ cat > "$REPO/.agentic/00.chat/checklists/before-commit.md" <<'EOF'
 Run:
 
 ```bash
-bash scripts/shared/git/check-commit-prerequisites.sh
+bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 ```
 EOF
 
@@ -89,7 +87,7 @@ git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' c
 git -C "$REPO" switch --quiet -c chat/2026-06-19-13-11-test
 
 bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
-  bash scripts/shared/git/check-commit-prerequisites.sh \
+  bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh \
   >"$TMP_ROOT/out"
 
 grep -q 'Commit prerequisites are present.' "$TMP_ROOT/out" \

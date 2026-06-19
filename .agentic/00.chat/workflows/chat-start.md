@@ -119,7 +119,7 @@ Do not manually guess another workflow.
 Before editing files, run:
 
 ```bash
-bash scripts/shared/git/dirty-worktree-check.sh
+bash scripts/00.chat/worktree/dirty-worktree-check/script.sh
 ```
 
 <!-- deterministic-check: allow reason="dirty-worktree-check.sh detects dirty state; workflow defines the exact blocked response" -->
@@ -145,7 +145,7 @@ bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
 Then run task commands from that worktree and verify:
 
 ```bash
-bash scripts/shared/git/check-write-location.sh
+bash scripts/00.chat/worktree/check-write-location/script.sh
 ```
 
 ## Migration Notes

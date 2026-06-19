@@ -42,7 +42,7 @@ New chat startup creates:
 Commit preparation runs:
 
 ```bash
-bash scripts/shared/git/check-write-location.sh
+bash scripts/00.chat/worktree/check-write-location/script.sh
 ```
 
 to prevent task commits from the root integration worktree. Branch freshness is

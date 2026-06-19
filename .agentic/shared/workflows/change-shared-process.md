@@ -24,7 +24,7 @@ workflow and script paths remain under `.agentic/shared/` or `scripts/shared/`.
 Before editing files:
 
 ```bash
-bash scripts/shared/git/dirty-worktree-check.sh --allow-session-bookkeeping
+bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
 ```
 
 `bookkeeping-only` is acceptable after explicit write permission for the chat.
@@ -59,7 +59,7 @@ Do not edit files while blocked.
 Before writing, run:
 
 ```bash
-bash scripts/shared/git/check-write-location.sh
+bash scripts/00.chat/worktree/check-write-location/script.sh
 ```
 
 <!-- deterministic-check: allow reason="ensure-chat-worktree enforces worktree creation and verification; workflow states when agents should invoke it" -->
@@ -78,7 +78,7 @@ local convergence console.
 Run:
 
 ```bash
-bash scripts/shared/git/check-commit-prerequisites.sh
+bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 ```
 
 <!-- deterministic-check: allow reason="requires human approval before merge or cherry-pick repair" -->
@@ -109,7 +109,7 @@ for approval. Do not rewrite prose automatically.
 Run:
 
 ```bash
-bash scripts/shared/git/check-commitlog-deletions.sh
+bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 ```
 
 Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete

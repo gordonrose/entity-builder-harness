@@ -125,14 +125,10 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
   scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
-  scripts/shared/git/check-commit-prerequisites.sh|\
   scripts/00.chat/session-log/check-commit-prerequisites/script.sh|\
-  scripts/shared/git/check-commitlog-deletions.sh|\
   scripts/00.chat/session-log/check-commitlog-deletions/script.sh|\
-  scripts/shared/git/check-write-location.sh|\
   scripts/00.chat/worktree/check-write-location/script.sh|\
   scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
-  scripts/shared/git/dirty-worktree-check.sh|\
   scripts/00.chat/worktree/dirty-worktree-check/script.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
@@ -146,11 +142,8 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
   scripts/00.chat/startup/auto-start-missing-session/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
-  scripts/shared/git/checkpoint-chat-session-log.sh|\
   scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
-  scripts/shared/git/prepare-chat-session-before-commit.sh|\
   scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
-  scripts/shared/git/record-chat-commit.sh|\
   scripts/00.chat/session-log/record-chat-commit/script.sh|\
   scripts/shared/git/stage-active-worktree-paths.sh)
     RUN_CLASS="approved"

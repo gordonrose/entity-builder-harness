@@ -49,7 +49,7 @@ make_fixture() {
   } > "$REPO/$path"
 }
 
-make_fixture "scripts/shared/git/check-write-location.sh" "allowed-check"
+make_fixture "scripts/shared/git/check-write-location.sh" "retired-check"
 make_fixture "scripts/00.chat/worktree/check-write-location/script.sh" "canonical-check"
 make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "retired-workbench"
 make_fixture "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh" "canonical-workbench"
@@ -73,9 +73,8 @@ git -C "$REPO" \
 
 cd "$REPO"
 
-OUT="$(bash scripts/shared/harness/run-governed-script.sh scripts/shared/git/check-write-location.sh arg1)"
-if [ "$OUT" != "allowed-check:arg1" ]; then
-  fail "allowed check did not run through the governed runner: $OUT"
+if bash scripts/shared/harness/run-governed-script.sh scripts/shared/git/check-write-location.sh arg1 >"$TMP_ROOT/check-retired.out" 2>&1; then
+  fail "retired check-write-location helper was still accepted"
 fi
 
 OUT="$(bash scripts/shared/harness/run-governed-script.sh scripts/00.chat/worktree/check-write-location/script.sh arg1)"

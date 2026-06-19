@@ -19,7 +19,7 @@ contain real commit records.
 Add a commit gate:
 
 ```bash
-bash scripts/shared/git/check-commitlog-deletions.sh
+bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 ```
 
 The gate inspects staged deletions matching `commitLogs/**/README.md` and reads

@@ -4,7 +4,7 @@ purpose: Govern changes to AGENTS.md, CLAUDE.md, .agentic structure, routing, wo
 
 required_gates:
   - id: dirty_worktree
-    script: scripts/shared/git/dirty-worktree-check.sh --allow-session-bookkeeping
+    script: scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
 
 rules:
   - Keep AGENTS.md as a router only.

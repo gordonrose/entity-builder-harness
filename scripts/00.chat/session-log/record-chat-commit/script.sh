@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/record-chat-commit.sh
 #     - scripts/00.chat/session-log/record-chat-commit/README.md
 #     - scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
 #   effects: writes-files

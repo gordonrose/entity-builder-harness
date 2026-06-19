@@ -74,7 +74,7 @@ bash scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
 The old shared path remains available:
 
 ```bash
-scripts/shared/git/check-commitlog-deletions.sh
+scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

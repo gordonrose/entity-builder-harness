@@ -113,7 +113,7 @@ bash scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
 The governed runner still approves the old path:
 
 ```bash
-scripts/shared/git/record-chat-commit.sh
+scripts/00.chat/session-log/record-chat-commit/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

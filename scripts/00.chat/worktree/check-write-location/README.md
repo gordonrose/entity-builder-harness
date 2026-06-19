@@ -71,7 +71,7 @@ This is for intentional root/integration maintenance, not ordinary task work.
 The old shared path remains available:
 
 ```bash
-scripts/shared/git/check-write-location.sh
+scripts/00.chat/worktree/check-write-location/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

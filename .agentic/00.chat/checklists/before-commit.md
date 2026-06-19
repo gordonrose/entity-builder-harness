@@ -17,7 +17,7 @@ Use this before committing approved chat task work.
 Run from the chat-owned worktree:
 
 ```bash
-bash scripts/shared/git/check-write-location.sh
+bash scripts/00.chat/worktree/check-write-location/script.sh
 ```
 
 Task commits must not be prepared from the root integration worktree.
@@ -28,7 +28,7 @@ Preserve unrelated user changes in a dirty worktree.
 Run:
 
 ```bash
-bash scripts/shared/git/check-commit-prerequisites.sh
+bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 ```
 
 <!-- deterministic-check: allow reason="requires human approval before merge or cherry-pick repair" -->
@@ -65,7 +65,7 @@ batches.
 Run:
 
 ```bash
-bash scripts/shared/git/check-commitlog-deletions.sh
+bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 ```
 
 Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete

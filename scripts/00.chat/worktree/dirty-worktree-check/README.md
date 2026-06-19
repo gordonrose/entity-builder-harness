@@ -62,7 +62,7 @@ accidentally continue across unreviewed or unrelated changes.
 The old shared path remains available:
 
 ```bash
-scripts/shared/git/dirty-worktree-check.sh
+scripts/00.chat/worktree/dirty-worktree-check/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

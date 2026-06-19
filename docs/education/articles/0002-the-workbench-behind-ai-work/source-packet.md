@@ -58,7 +58,7 @@ question was where the work actor was allowed to stand.
 - Chat branch.
 - Chat-owned worktree under `/tmp/agentic-chat-worktrees/...`.
 - Session log under `commitLogs/`.
-- `scripts/shared/git/check-write-location.sh`.
+- `scripts/00.chat/worktree/check-write-location/script.sh`.
 - `.agentic/00.chat/workflows/chat-refresh-from-main.md`.
 - `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh`.
 - Main-refresh preflight worktree under `/tmp/agentic-main-refresh-preflight/...`.

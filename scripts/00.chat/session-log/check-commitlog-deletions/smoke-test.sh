@@ -27,10 +27,9 @@ fail() {
 }
 
 REPO="$TMP_ROOT/repo"
-mkdir -p "$REPO/scripts/00.chat/session-log/check-commitlog-deletions" "$REPO/scripts/shared/git"
+mkdir -p "$REPO/scripts/00.chat/session-log/check-commitlog-deletions"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/check-commitlog-deletions/script.sh" "$REPO/scripts/00.chat/session-log/check-commitlog-deletions/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/git/check-commitlog-deletions.sh" "$REPO/scripts/shared/git/check-commitlog-deletions.sh"
-chmod +x "$REPO/scripts/00.chat/session-log/check-commitlog-deletions/script.sh" "$REPO/scripts/shared/git/check-commitlog-deletions.sh"
+chmod +x "$REPO/scripts/00.chat/session-log/check-commitlog-deletions/script.sh"
 
 git -C "$REPO" init -q -b main
 git -C "$REPO" config user.name "Smoke Test"
@@ -80,7 +79,7 @@ git -C "$REPO" rm -q "$COMMITTED_LOG" "$EMPTY_LOG" "$RETAINED_LOG"
 set +e
 (
   cd "$REPO"
-  bash scripts/shared/git/check-commitlog-deletions.sh
+  bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 ) > "$TMP_ROOT/protected.out" 2> "$TMP_ROOT/protected.err"
 PROTECTED_STATUS="$?"
 set -e
@@ -101,7 +100,7 @@ git -C "$REPO" restore --staged --worktree -- "$COMMITTED_LOG" "$RETAINED_LOG"
 
 (
   cd "$REPO"
-  bash scripts/shared/git/check-commitlog-deletions.sh
+  bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 ) > "$TMP_ROOT/empty-only.out" 2> "$TMP_ROOT/empty-only.err"
 
 if ! grep -q "Commit log deletion gate passed" "$TMP_ROOT/empty-only.out"; then

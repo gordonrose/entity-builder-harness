@@ -244,13 +244,12 @@ Record chat commit batch result:
   `scripts/00.chat/session-log/record-chat-commit/smoke-test.sh`
 - capability README:
   `scripts/00.chat/session-log/record-chat-commit/README.md`
-- compatibility wrappers:
+- retired compatibility wrappers:
   `scripts/shared/git/record-chat-commit.sh` and
   `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/record-chat-commit.sh` wrapper path until the
-  governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  record-chat-commit path for this action.
 
 Checkpoint chat session log batch result:
 
@@ -258,12 +257,11 @@ Checkpoint chat session log batch result:
   `scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh`
 - capability README:
   `scripts/00.chat/session-log/checkpoint-chat-session-log/README.md`
-- compatibility wrapper:
+- retired compatibility wrapper:
   `scripts/shared/git/checkpoint-chat-session-log.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/checkpoint-chat-session-log.sh` wrapper path until the
-  governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  path for this action.
 
 Prepare chat session before commit batch result:
 
@@ -271,12 +269,11 @@ Prepare chat session before commit batch result:
   `scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh`
 - capability README:
   `scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md`
-- compatibility wrapper:
+- retired compatibility wrapper:
   `scripts/shared/git/prepare-chat-session-before-commit.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/prepare-chat-session-before-commit.sh` wrapper path until
-  the governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  path for this action.
 
 Check commit prerequisites batch result:
 
@@ -286,13 +283,12 @@ Check commit prerequisites batch result:
   `scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh`
 - capability README:
   `scripts/00.chat/session-log/check-commit-prerequisites/README.md`
-- compatibility wrappers:
+- retired compatibility wrappers:
   `scripts/shared/git/check-commit-prerequisites.sh` and
   `scripts/shared/git/smoke-test-commit-prerequisites.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/check-commit-prerequisites.sh` wrapper path until the
-  governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  path for this action.
 
 Check commit log deletions batch result:
 
@@ -302,13 +298,12 @@ Check commit log deletions batch result:
   `scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh`
 - capability README:
   `scripts/00.chat/session-log/check-commitlog-deletions/README.md`
-- compatibility wrappers:
+- retired compatibility wrappers:
   `scripts/shared/git/check-commitlog-deletions.sh` and
   `scripts/shared/git/smoke-test-commitlog-deletions.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/check-commitlog-deletions.sh` wrapper path until the
-  governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  path for this action.
 
 Check write location batch result:
 
@@ -316,12 +311,11 @@ Check write location batch result:
   `scripts/00.chat/worktree/check-write-location/script.sh`
 - capability README:
   `scripts/00.chat/worktree/check-write-location/README.md`
-- compatibility wrapper:
+- retired compatibility wrapper:
   `scripts/shared/git/check-write-location.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/check-write-location.sh` wrapper path until the
-  governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  path for this action.
 
 Dirty worktree check batch result:
 
@@ -329,12 +323,11 @@ Dirty worktree check batch result:
   `scripts/00.chat/worktree/dirty-worktree-check/script.sh`
 - capability README:
   `scripts/00.chat/worktree/dirty-worktree-check/README.md`
-- compatibility wrapper:
+- retired compatibility wrapper:
   `scripts/shared/git/dirty-worktree-check.sh`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  `scripts/shared/git/dirty-worktree-check.sh` wrapper path until the
-  governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  path for this action.
 
 Recovery import batch result:
 
@@ -449,14 +442,7 @@ primitives by metadata. They fall into three groups:
 
 1. Compatibility wrappers for capabilities already moved:
 
-   - `scripts/shared/git/check-commit-prerequisites.sh`
-   - `scripts/shared/git/check-commitlog-deletions.sh`
-   - `scripts/shared/git/check-write-location.sh`
-   - `scripts/shared/git/checkpoint-chat-session-log.sh`
    - `scripts/shared/git/cleanup-empty-chat-branches.sh`
-   - `scripts/shared/git/dirty-worktree-check.sh`
-   - `scripts/shared/git/prepare-chat-session-before-commit.sh`
-   - `scripts/shared/git/record-chat-commit.sh`
    - `scripts/shared/git/preflight-main-refresh.sh`
    - `scripts/shared/git/promote-preflight-refresh.sh`
 
@@ -567,16 +553,9 @@ Bootstrap compatibility classifications:
    - `scripts/shared/git/active-chat-branches.sh`
    - `scripts/shared/git/branch-overlap-report.sh`
    - `scripts/shared/git/check-chat-branch-freshness.sh`
-   - `scripts/shared/git/check-commit-prerequisites.sh`
-   - `scripts/shared/git/check-commitlog-deletions.sh`
-   - `scripts/shared/git/check-write-location.sh`
-   - `scripts/shared/git/checkpoint-chat-session-log.sh`
    - `scripts/shared/git/classify-main-refresh-dirty-state.sh`
-   - `scripts/shared/git/dirty-worktree-check.sh`
    - `scripts/shared/git/main-update-status.sh`
    - `scripts/shared/git/preflight-main-refresh.sh`
-   - `scripts/shared/git/prepare-chat-session-before-commit.sh`
-   - `scripts/shared/git/record-chat-commit.sh`
    - `scripts/shared/git/stage-active-worktree-paths.sh`
    - `scripts/shared/git/verify-local-convergence.sh`
 
@@ -672,7 +651,8 @@ Bootstrap compatibility classifications:
 |---|---|---|
 | Retired public terminal aliases | Historical references may mention old paths, but operative public commands should use `npm run chat:*` package scripts | `scripts/chat/chat-command.sh`, `scripts/chat/audit-chat-layer-migration.sh`, `scripts/chat/cleanup-empty-chat-branches.sh`, `scripts/chat/generate-commit-log-summary.sh`, `scripts/chat/record-main-refresh-conflict.sh`, `scripts/chat/report-chat-workspaces.sh` |
 | Retired command wrapper compatibility | Historical references may mention old paths, but operative commands should use `npm run chat:*` or canonical `scripts/00.chat/command/...` paths | `scripts/shared/chat/commands/close.sh`, `scripts/shared/chat/commands/new.sh` |
-| Governed runner compatibility acceptance | `scripts/shared/harness/run-governed-script.sh` no longer accepts old compatibility paths | `scripts/shared/git/check-commit-prerequisites.sh`, `scripts/shared/git/check-commitlog-deletions.sh`, `scripts/shared/git/check-write-location.sh`, `scripts/shared/git/checkpoint-chat-session-log.sh`, `scripts/shared/git/dirty-worktree-check.sh`, `scripts/shared/git/prepare-chat-session-before-commit.sh`, `scripts/shared/git/record-chat-commit.sh`, `scripts/shared/git/stage-active-worktree-paths.sh` |
+| Governed runner compatibility acceptance | `scripts/shared/harness/run-governed-script.sh` no longer accepts old compatibility paths | `scripts/shared/git/stage-active-worktree-paths.sh` |
+| Retired governed runner active gate wrappers | Historical references may mention old paths, but operative gates should use canonical `scripts/00.chat/...` paths | `scripts/shared/git/check-commit-prerequisites.sh`, `scripts/shared/git/check-commitlog-deletions.sh`, `scripts/shared/git/check-write-location.sh`, `scripts/shared/git/checkpoint-chat-session-log.sh`, `scripts/shared/git/dirty-worktree-check.sh`, `scripts/shared/git/prepare-chat-session-before-commit.sh`, `scripts/shared/git/record-chat-commit.sh` |
 | Retired governed runner chat command wrappers | Historical references may mention old paths, but operative approved actions should use canonical `scripts/00.chat/...` paths | `scripts/shared/chat/rename-current-chat-log-folder.sh`, `scripts/shared/chat/request-initialization/auto-start-missing-session.sh` |
 | Retired governed runner read-only git wrappers | Historical references may mention old paths, but operative approved actions should use canonical `scripts/00.chat/...` paths | `scripts/shared/git/active-chat-branches.sh`, `scripts/shared/git/branch-overlap-report.sh`, `scripts/shared/git/check-chat-branch-freshness.sh`, `scripts/shared/git/classify-main-refresh-dirty-state.sh`, `scripts/shared/git/main-update-status.sh`, `scripts/shared/git/verify-local-convergence.sh` |
 | Retired governed runner read-only/reporting wrappers | Historical references may mention old paths, but operative approved actions should use canonical `scripts/00.chat/...` paths | `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`, `scripts/shared/chat/audit-chat-layer-migration.sh`, `scripts/shared/chat/generate-commit-log-summary.sh`, `scripts/shared/chat/report-chat-workspaces.sh` |

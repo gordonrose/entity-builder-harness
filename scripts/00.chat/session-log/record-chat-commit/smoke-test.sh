@@ -31,16 +31,13 @@ SESSION_ID="2026-06-18-00-00-token-metrics"
 BRANCH="chat/${SESSION_ID}"
 LOG_FILE="commitLogs/2026/jun/18/${SESSION_ID}/README.md"
 
-mkdir -p "$REPO/scripts/shared/git" \
-  "$REPO/scripts/00.chat/transcript/discover-codex-session-log" \
+mkdir -p "$REPO/scripts/00.chat/transcript/discover-codex-session-log" \
   "$REPO/scripts/00.chat/metrics/estimate-chat-cost" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit" \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/.agentic/harness/data" "$REPO/${LOG_FILE%/README.md}"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/record-chat-commit/script.sh" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/git/record-chat-commit.sh" \
-  "$REPO/scripts/shared/git/record-chat-commit.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" \
   "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/transcript/discover-codex-session-log/script.sh" \
@@ -50,7 +47,6 @@ cp "$SOURCE_ROOT/scripts/00.chat/metrics/estimate-chat-cost/script.js" \
 cp "$SOURCE_ROOT/.agentic/harness/data/openai-chat-pricing.json" \
   "$REPO/.agentic/harness/data/openai-chat-pricing.json"
 chmod +x "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh" \
-  "$REPO/scripts/shared/git/record-chat-commit.sh" \
   "$REPO/scripts/00.chat/transcript/discover-codex-session-log/script.sh"
 
 cat > "$REPO/$LOG_FILE" <<EOF
@@ -101,7 +97,7 @@ set +e
 (
   cd "$REPO"
   CODEX_HOME="$TMP_ROOT/empty-codex" \
-    bash scripts/shared/git/record-chat-commit.sh abc1234 "Test commit" "Missing token metric"
+    bash scripts/00.chat/session-log/record-chat-commit/script.sh abc1234 "Test commit" "Missing token metric"
 ) >/dev/null 2>"$TMP_ROOT/missing-metrics.err"
 MISSING_STATUS="$?"
 set -e
@@ -118,7 +114,7 @@ fi
   cd "$REPO"
   CODEX_HOME="$TMP_ROOT/empty-codex" \
   ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes \
-    bash scripts/shared/git/record-chat-commit.sh abc1234 "Test commit" "Legacy token metric escape" >/dev/null
+    bash scripts/00.chat/session-log/record-chat-commit/script.sh abc1234 "Test commit" "Legacy token metric escape" >/dev/null
 )
 
 if grep -q '^estimated_tokens:' "$REPO/$LOG_FILE"; then
@@ -152,7 +148,7 @@ CODEX_SESSION_COST="$(node -e "const cost=(${CODEX_SESSION_TOKENS}/1000000)*30; 
 (
   cd "$REPO"
   CODEX_HOME="$CODEX_HOME_FIXTURE" \
-    bash scripts/shared/git/record-chat-commit.sh cde4567 "Test commit 2" "Discovered Codex session metric" >/dev/null
+    bash scripts/00.chat/session-log/record-chat-commit/script.sh cde4567 "Test commit 2" "Discovered Codex session metric" >/dev/null
 )
 
 if ! grep -q "^codex_session_log_path: ${CODEX_SESSION_LOG}$" "$REPO/$LOG_FILE"; then
@@ -175,7 +171,7 @@ fi
   cd "$REPO"
   CHAT_TRANSCRIPT_BYTES=4096 \
   CHAT_TRANSCRIPT_SOURCE="smoke transcript fixture" \
-    bash scripts/shared/git/record-chat-commit.sh def5678 "Test commit 3" "Transcript byte token metric" >/dev/null
+    bash scripts/00.chat/session-log/record-chat-commit/script.sh def5678 "Test commit 3" "Transcript byte token metric" >/dev/null
 )
 
 if ! grep -q '^estimated_chat_tokens: 1024 estimated from chat transcript bytes (4096 bytes; source: smoke transcript fixture)$' "$REPO/$LOG_FILE"; then

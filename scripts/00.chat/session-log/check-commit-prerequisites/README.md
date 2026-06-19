@@ -72,7 +72,7 @@ bash scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
 The old shared path remains available:
 
 ```bash
-scripts/shared/git/check-commit-prerequisites.sh
+scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

@@ -71,7 +71,7 @@ Then it validates the current chat session:
 The governed runner still approves the old path:
 
 ```bash
-scripts/shared/git/prepare-chat-session-before-commit.sh
+scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

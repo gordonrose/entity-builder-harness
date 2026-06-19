@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/checkpoint-chat-session-log.sh
 #     - scripts/00.chat/session-log/checkpoint-chat-session-log/README.md
 #   effects: stages-files, commits
 

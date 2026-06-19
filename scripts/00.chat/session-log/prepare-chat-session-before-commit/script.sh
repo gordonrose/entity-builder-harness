@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/prepare-chat-session-before-commit.sh
 #     - scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md
 #   effects: read-only
 

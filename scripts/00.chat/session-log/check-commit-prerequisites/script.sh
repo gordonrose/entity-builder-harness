@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: session-log
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/check-commit-prerequisites.sh
 #     - scripts/00.chat/session-log/check-commit-prerequisites/README.md
 #     - scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
 #   effects: read-only

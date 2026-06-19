@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: worktree
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/dirty-worktree-check.sh
 #     - scripts/00.chat/worktree/dirty-worktree-check/README.md
 #   effects: read-only
 

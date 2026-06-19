@@ -80,7 +80,7 @@ checkpoint-chat-session-log.sh [--dry-run] [message]
 The governed runner still approves the old path:
 
 ```bash
-scripts/shared/git/checkpoint-chat-session-log.sh
+scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 
 That file is now a compatibility wrapper around the canonical implementation.

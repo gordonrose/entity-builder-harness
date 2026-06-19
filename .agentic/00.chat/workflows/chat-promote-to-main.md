@@ -28,7 +28,7 @@ Before merging, rebasing, staging, committing, pushing, deleting branches, or
 discarding work, run:
 
 ```bash
-bash scripts/shared/git/dirty-worktree-check.sh
+bash scripts/00.chat/worktree/dirty-worktree-check/script.sh
 ```
 
 <!-- deterministic-check: allow reason="workflow defines the exact blocked response around the dirty-worktree gate output" -->
