@@ -11,7 +11,7 @@ used_by:
 
 # 0017 Organize Scripts By Owner, Domain, And Capability
 
-Status: proposed
+Status: accepted
 Date: 2026-06-19
 
 ## Context
@@ -115,6 +115,18 @@ scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh
 ```
 
 The wrappers must be thin, metadata-tagged compatibility scripts.
+
+Pilot result:
+
+- canonical implementation:
+  `scripts/00.chat/git/cleanup-empty-chat-branches/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/git/cleanup-empty-chat-branches/smoke-test.sh`
+- compatibility wrappers:
+  `scripts/shared/git/cleanup-empty-chat-branches.sh` and
+  `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
+- public alias preserved:
+  `scripts/chat/cleanup-empty-chat-branches.sh`
 
 ### Phase 3: Prove Compatibility
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Public alias for removing empty chat branches through the shared Git helper.
+#   purpose: Public alias for removing empty chat branches through the chat cleanup capability.
 #   domain: git
 #   portability: llm-workbench-required
 #   used_by:

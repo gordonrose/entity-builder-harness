@@ -89,7 +89,7 @@ extract_script_refs() {
   local dir
 
   grep -Eo 'scripts/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" 2>/dev/null \
-    | grep -E '^scripts/(chat|shared)/' || true
+    | grep -E '^scripts/(00\.chat|chat|harness|shared)/' || true
 
   case "$path" in
     scripts/*)
@@ -145,7 +145,7 @@ find scripts -type f \
 } | sort -u > "$REQUIRED"
 
 comm -23 "$ALL_SCRIPTS" "$REQUIRED" > "$UNREFERENCED"
-grep -E '/smoke-test-[^/]+\.sh$|/with-chat-branch\.sh$' "$UNREFERENCED" > "$VALIDATION" || true
+grep -E '/smoke-test-[^/]+\.sh$|/smoke-test\.sh$|/with-chat-branch\.sh$' "$UNREFERENCED" > "$VALIDATION" || true
 comm -23 "$UNREFERENCED" "$VALIDATION" > "$UNCLASSIFIED"
 
 echo "Chat bootstrap script file set audit"
