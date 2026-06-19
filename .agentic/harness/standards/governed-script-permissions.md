@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: harness
+kind: standard
+purpose: Define persistent tool permission policy for governed repository scripts.
+domain: governance
+portability: llm-workbench-required
+used_by:
+  - scripts/shared/harness/run-governed-script.sh
+  - scripts/shared/harness/smoke-test-governed-script-runner.sh
+-->
+
 # Governed Script Permissions
 
 ## Purpose
@@ -84,7 +95,7 @@ approval such as `git clone`, prefer a narrowly scoped governed helper and route
 it through the runner. For the reusable lesson upstream workbench, use:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
 ```
 
 ### Never Persistent-Auto-Approved

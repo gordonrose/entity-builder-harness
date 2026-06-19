@@ -27,6 +27,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/record-chat-commit" \
   "$REPO/scripts/00.chat/session-log/checkpoint-chat-session-log" \
   "$REPO/scripts/00.chat/startup/auto-start-missing-session" \
+  "$REPO/scripts/00.chat/upstream/ensure-llm-workbench-repo" \
   "$REPO/scripts/00.chat/worktree/check-write-location" \
   "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/chat/request-initialization" \
@@ -52,6 +53,7 @@ make_fixture() {
 make_fixture "scripts/shared/git/check-write-location.sh" "allowed-check"
 make_fixture "scripts/00.chat/worktree/check-write-location/script.sh" "canonical-check"
 make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "allowed-workbench"
+make_fixture "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh" "canonical-workbench"
 make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "approved-auto-start"
 make_fixture "scripts/00.chat/startup/auto-start-missing-session/script.sh" "canonical-auto-start"
 make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "approved-action"
@@ -89,6 +91,11 @@ fi
 OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run)"
 if [ "$OUT" != "allowed-workbench:--dry-run" ]; then
   fail "allowed workbench helper did not run through the governed runner: $OUT"
+fi
+
+OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh --dry-run)"
+if [ "$OUT" != "canonical-workbench:--dry-run" ]; then
+  fail "canonical workbench helper did not run through the governed runner: $OUT"
 fi
 
 if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/request-initialization/auto-start-missing-session.sh "new chat" >"$TMP_ROOT/auto-start-missing.out" 2>&1; then
@@ -145,10 +152,10 @@ case "$LIST" in
 esac
 
 case "$LIST" in
-  *"approved scripts/shared/chat/ensure-llm-workbench-repo.sh"*)
+  *"approved scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh"*)
     ;;
   *)
-    fail "--list output did not include expected workbench entry"
+    fail "--list output did not include expected canonical workbench entry"
     ;;
 esac
 

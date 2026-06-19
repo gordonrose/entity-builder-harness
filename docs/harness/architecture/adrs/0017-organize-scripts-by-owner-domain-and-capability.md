@@ -536,9 +536,23 @@ Bootstrap/install compatibility audit result:
   install-critical path. Those files are either smoke-test wrappers, old-path
   compatibility wrappers, or validation helpers that can be retired after their
   canonical tests and public install expectations are updated.
-- `scripts/shared/chat/ensure-llm-workbench-repo.sh` is not a compatibility
-  wrapper. It is still a governed upstream workflow support script and needs a
-  separate canonical-location decision if it moves.
+- `scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh` owns upstream
+  workbench repository availability checks for reusable-lesson promotion.
+
+Upstream repo availability batch result:
+
+- canonical implementation:
+  `scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh`
+- capability README:
+  `scripts/00.chat/upstream/ensure-llm-workbench-repo/README.md`
+- compatibility wrapper:
+  `scripts/shared/chat/ensure-llm-workbench-repo.sh`
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh --list` advertises the
+  canonical upstream path while retaining the old shared path as an approved
+  compatibility input.
+- direct callers migrated:
+  `.agentic/harness/standards/governed-script-permissions.md`
 
 Bootstrap compatibility classifications:
 
@@ -632,7 +646,7 @@ Bootstrap compatibility classifications:
 | Bootstrap/install compatibility | Bootstrap audit and public install surfaces no longer include old paths as required or validation candidates | `scripts/shared/chat/discover-codex-session-log.sh`, `scripts/shared/chat/ensure-chat-worktree.sh`, `scripts/shared/chat/estimate-chat-cost.js`, `scripts/shared/chat/record-main-refresh-conflict.sh`, `scripts/shared/chat/register-codex-session-log.sh`, `scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh`, `scripts/shared/chat/request-initialization/classify-task.sh`, `scripts/shared/chat/request-initialization/read-current-chat-log.sh`, `scripts/shared/chat/request-initialization/start-chat-session.sh`, `scripts/shared/chat/update-chat-log.sh`, `scripts/shared/git/cleanup-empty-chat-branches.sh`, `scripts/shared/git/promote-preflight-refresh.sh`, `scripts/shared/git/smoke-test-chat-worktree-session.sh`, `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`, `scripts/shared/git/smoke-test-commit-prerequisites.sh`, `scripts/shared/git/smoke-test-commitlog-deletions.sh`, `scripts/shared/git/smoke-test-local-convergence-verifier.sh`, `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`, `scripts/shared/git/smoke-test-main-refresh-preflight.sh`, `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh` |
 | Source shim compatibility | All sourced callers import canonical `scripts/00.chat/.../lib.sh` files directly | `scripts/shared/chat/chat-worktree-paths.sh`, `scripts/shared/chat/session-log-paths.sh` |
 | Superseded legacy | Retirement pass proves no bootstrap, install, recovery, or audit surface needs the old isolated execution model | `scripts/shared/git/smoke-test-with-chat-branch.sh`, `scripts/shared/git/stage-active-worktree-paths.sh`, `scripts/shared/git/with-chat-branch.sh` |
-| Not a wrapper | Keep as governed upstream workflow support unless a new canonical location is approved | `scripts/shared/chat/ensure-llm-workbench-repo.sh` |
+| Upstream compatibility wrapper | Public/external callers no longer use the old shared upstream helper path | `scripts/shared/chat/ensure-llm-workbench-repo.sh` |
 
 Retirement rule:
 

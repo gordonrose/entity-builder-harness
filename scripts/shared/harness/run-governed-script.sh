@@ -57,7 +57,7 @@ always scripts/shared/harness/check-deterministic-process-drift.sh
 always scripts/shared/harness/check-artifact-metadata-headers.sh
 always scripts/shared/harness/check-governed-script-command-drift.sh
 approved scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh
-approved scripts/shared/chat/ensure-llm-workbench-repo.sh
+approved scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
 approved scripts/00.chat/startup/auto-start-missing-session/script.sh
 approved scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
 approved scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
@@ -107,6 +107,7 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
   scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
   scripts/00.chat/session-log/record-chat-commit/script.sh|\
+  scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh)
     ;;
   *)
@@ -154,6 +155,7 @@ case "$SCRIPT_PATH" in
   scripts/shared/chat/rename-current-chat-log-folder.sh|\
   scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
   scripts/shared/chat/ensure-llm-workbench-repo.sh|\
+  scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
   scripts/shared/chat/request-initialization/auto-start-missing-session.sh|\
   scripts/00.chat/startup/auto-start-missing-session/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
