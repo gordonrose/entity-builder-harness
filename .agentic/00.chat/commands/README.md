@@ -11,13 +11,19 @@ They make repeated actions easy to trigger without moving process rules into
 Run commands through:
 
 ```bash
+bash scripts/chat/chat-command.sh <command> [args...]
+```
+
+The compatibility entrypoint remains:
+
+```bash
 bash scripts/shared/chat/chat-command.sh <command> [args...]
 ```
 
 List available commands with:
 
 ```bash
-bash scripts/shared/chat/chat-command.sh list
+bash scripts/chat/chat-command.sh list
 ```
 
 ## Commands
