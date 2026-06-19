@@ -7,7 +7,7 @@ Usage:
   check-governed-script-command-drift.sh [--paths <path>...]
 
 Flags active agent-facing artifacts that show approval-sensitive governed
-scripts as direct bash commands instead of routing through the governed runner.
+scripts without routing through the governed runner.
 EOF
 }
 
@@ -109,17 +109,30 @@ scan_file() {
     [ -n "$line_no" ] || continue
     for script in $APPROVED_SCRIPTS; do
       case "$text" in
-        *"bash $script"*)
-          printf '%s:%s\n' "$path" "$line_no"
-          printf '  Type: direct-approved-governed-script\n'
-          printf '  Text: %s\n' "$text"
-          printf '  Suggestion: Use bash scripts/shared/harness/run-governed-script.sh --approved-action %s\n\n' "$script"
-          FINDINGS=$((FINDINGS + 1))
-          break
+        *"$script"*)
+          case "$text" in
+            *"bash scripts/shared/harness/run-governed-script.sh --approved-action $script"*)
+              ;;
+            *)
+              printf '%s:%s\n' "$path" "$line_no"
+              case "$text" in
+                *"bash $script"*)
+                  printf '  Type: direct-approved-governed-script\n'
+                  ;;
+                *)
+                  printf '  Type: unrouted-approved-governed-script-reference\n'
+                  ;;
+              esac
+              printf '  Text: %s\n' "$text"
+              printf '  Suggestion: Use bash scripts/shared/harness/run-governed-script.sh --approved-action %s\n\n' "$script"
+              FINDINGS=$((FINDINGS + 1))
+              break
+              ;;
+          esac
           ;;
       esac
     done
-  done < <(grep -n 'bash scripts/shared/' "$path" || true)
+  done < <(grep -n 'scripts/shared/' "$path" || true)
 }
 
 while IFS= read -r path; do
