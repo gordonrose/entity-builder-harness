@@ -31,6 +31,7 @@ cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/sha
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/new.sh" "$REPO/scripts/shared/chat/commands/new.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/commands/close.sh" "$REPO/scripts/shared/chat/commands/close.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/classify-task.sh" "$REPO/scripts/shared/chat/request-initialization/classify-task.sh"
+cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "$REPO/scripts/shared/chat/request-initialization/auto-start-missing-session.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/start-chat-session.sh" "$REPO/scripts/shared/chat/request-initialization/start-chat-session.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/cleanup-empty-chat-branches.sh" "$REPO/scripts/shared/git/cleanup-empty-chat-branches.sh"
 chmod +x "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/commands/*.sh "$REPO"/scripts/shared/chat/request-initialization/*.sh "$REPO"/scripts/shared/git/*.sh
@@ -56,6 +57,25 @@ CHAT_COPY_PROMPT=skip \
 
 grep -q 'Created branch: chat/' "$TMP_ROOT/new.out" || fail "new command did not create a chat branch"
 grep -q 'Paste this into Codex / Claude / Mistral:' "$TMP_ROOT/new.out" || fail "new command did not print first prompt"
+
+AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
+CHAT_CLEANUP_EMPTY_BRANCHES=skip \
+CHAT_COPY_PROMPT=skip \
+  bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+    bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh "test opening prompt session" \
+    >"$TMP_ROOT/auto-start.out"
+
+grep -q 'Created branch: chat/' "$TMP_ROOT/auto-start.out" || fail "auto-start did not create a chat branch"
+grep -q 'Task: test opening prompt session' "$TMP_ROOT/auto-start.out" || fail "auto-start did not use opening prompt as task"
+
+if CHAT_COPY_PROMPT=skip \
+  bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+    bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh new \
+    >"$TMP_ROOT/bare-new.out"; then
+  fail "bare new auto-start unexpectedly succeeded"
+fi
+
+grep -Fxq 'What should the new chat be about?' "$TMP_ROOT/bare-new.out" || fail "bare new did not ask for a task summary"
 
 chat_branch="$(git -C "$REPO" branch --format='%(refname:short)' | grep '^chat/' | head -n 1)"
 worktree_path="$(

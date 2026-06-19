@@ -47,7 +47,7 @@ collect_script_refs() {
     return
   fi
 
-  grep -Eo "scripts/[^ \`\"']+" "$file" || true
+  grep -Eo "scripts/[^ \`\"']+\.sh" "$file" || true
 }
 
 if [ ! -f "$LOG_FILE" ]; then
