@@ -72,7 +72,7 @@ Message: feat(harness): add aws layer scaffold
 
 Summary: Added a first-class AWS harness layer with inspect, plan, and execute workflows; routed AWS classification; added AWS ADR locations and harness ADR 0014.
 
-ADR impact: ADR added: docs/harness/architecture/adrs/0014-add-aws-layer.md
+ADR impact: ADR added: docs/harness/architecture/adrs/0016-add-aws-layer.md
 
 ## Commits
 
@@ -82,7 +82,7 @@ ADR impact: ADR added: docs/harness/architecture/adrs/0014-add-aws-layer.md
   Time UTC: 2026-06-19T16:11:46Z
   Message: feat(harness): add aws layer scaffold
   Summary: Added a first-class AWS harness layer with inspect, plan, and execute workflows; routed AWS classification; added AWS ADR locations and harness ADR 0014.
-  ADR impact: ADR added: docs/harness/architecture/adrs/0014-add-aws-layer.md
+  ADR impact: ADR added: docs/harness/architecture/adrs/0016-add-aws-layer.md
 
 ## Main Refresh Conflicts
 
@@ -91,7 +91,7 @@ ADR impact: ADR added: docs/harness/architecture/adrs/0014-add-aws-layer.md
 ## ADR Disposition
 
 ADR needed: yes
-ADR path: docs/harness/architecture/adrs/0014-add-aws-layer.md
+ADR path: docs/harness/architecture/adrs/0016-add-aws-layer.md
 Reason: adding a first-class harness layer is a durable architecture decision.
 
 ## Session Metrics
