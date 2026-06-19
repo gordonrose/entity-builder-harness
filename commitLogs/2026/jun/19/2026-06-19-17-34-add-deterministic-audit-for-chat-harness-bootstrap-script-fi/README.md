@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T18:04:15Z
-latest_commit_sha: e627fbe
-chat_duration: 5369s (00:01:29:29)
-estimated_chat_tokens: 1299410 estimated from chat transcript bytes (5197640 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 38.98 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T18:14:18Z
+latest_commit_sha: ef10b3e
+chat_duration: 5972s (00:01:39:32)
+estimated_chat_tokens: 1371442 estimated from chat transcript bytes (5485768 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 41.14 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -199,6 +199,17 @@ Summary: Moved the chat command dispatcher and smoke test into scripts/00.chat/c
 
 ADR impact: ADR 0017 now records the dispatcher as a second capability-folder pilot.
 
+
+### 2026-06-19T18:14:18Z - Commit recorded
+
+Commit: `ef10b3e`
+
+Message: Move chat reporting capabilities
+
+Summary: Moved chat workspace reporting and commit log summary generation into scripts/00.chat/reporting capability folders, retained old shared paths as compatibility wrappers, updated public aliases, reporting docs, smoke fixtures, and ADR 0017.
+
+ADR impact: ADR 0017 now records the reporting batch and the temporary governed-runner wrapper exception.
+
 ## Commits
 
 
@@ -286,6 +297,13 @@ ADR impact: ADR 0017 now records the dispatcher as a second capability-folder pi
   Summary: Moved the chat command dispatcher and smoke test into scripts/00.chat/command/dispatcher, added a capability README explaining dispatcher behavior, kept old shared paths as compatibility wrappers, and updated normal command references to the canonical path.
   ADR impact: ADR 0017 now records the dispatcher as a second capability-folder pilot.
 
+
+- Commit: `ef10b3e`
+  Time UTC: 2026-06-19T18:14:18Z
+  Message: Move chat reporting capabilities
+  Summary: Moved chat workspace reporting and commit log summary generation into scripts/00.chat/reporting capability folders, retained old shared paths as compatibility wrappers, updated public aliases, reporting docs, smoke fixtures, and ADR 0017.
+  ADR impact: ADR 0017 now records the reporting batch and the temporary governed-runner wrapper exception.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -301,11 +319,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T18:04:15Z
-Latest commit SHA: e627fbe
-Chat duration: 5369s (00:01:29:29)
-Estimated chat tokens: 1299410 estimated from chat transcript bytes (5197640 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 38.98 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T18:14:18Z
+Latest commit SHA: ef10b3e
+Chat duration: 5972s (00:01:39:32)
+Estimated chat tokens: 1371442 estimated from chat transcript bytes (5485768 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 41.14 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
