@@ -11,10 +11,10 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-18T15:26:14Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl
-latest_commit_at_utc: 2026-06-19T11:25:33Z
-latest_commit_sha: a885e68
-chat_duration: 71959s (00:19:59:19)
-estimated_chat_tokens: 241039 estimated from chat transcript bytes (964153 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
+latest_commit_at_utc: 2026-06-19T11:27:33Z
+latest_commit_sha: 4632f44
+chat_duration: 72079s (00:20:01:19)
+estimated_chat_tokens: 252539 estimated from chat transcript bytes (1010153 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 -->
 
 ## Initial Intent
@@ -106,6 +106,17 @@ Summary: Added smoke coverage for the governed runner allowlist, approval-sensit
 
 ADR impact: ADR needed: unknown
 
+
+### 2026-06-19T11:27:33Z - Commit recorded
+
+Commit: `4632f44`
+
+Message: Add vendor governed script permission adapters
+
+Summary: Added live Codex, Claude Code, and Mistral Vibe permission adapters that allow only the governed script runner.
+
+ADR impact: ADR needed: unknown
+
 ## Commits
 
 
@@ -137,6 +148,13 @@ ADR impact: ADR needed: unknown
   Summary: Added smoke coverage for the governed runner allowlist, approval-sensitive marker, and denied path cases.
   ADR impact: ADR needed: unknown
 
+
+- Commit: `4632f44`
+  Time UTC: 2026-06-19T11:27:33Z
+  Message: Add vendor governed script permission adapters
+  Summary: Added live Codex, Claude Code, and Mistral Vibe permission adapters that allow only the governed script runner.
+  ADR impact: ADR needed: unknown
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -150,10 +168,10 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: 2026-06-18T15:26:14Z
-Latest commit at UTC: 2026-06-19T11:25:33Z
-Latest commit SHA: a885e68
-Chat duration: 71959s (00:19:59:19)
-Estimated chat tokens: 241039 estimated from chat transcript bytes (964153 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
+Latest commit at UTC: 2026-06-19T11:27:33Z
+Latest commit SHA: 4632f44
+Chat duration: 72079s (00:20:01:19)
+Estimated chat tokens: 252539 estimated from chat transcript bytes (1010153 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 
 ## Notes
 
