@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T21:16:42Z
-latest_commit_sha: b76d05c
-chat_duration: 16916s (00:04:41:56)
-estimated_chat_tokens: 2924430 estimated from chat transcript bytes (11697720 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 87.73 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T21:22:35Z
+latest_commit_sha: 7b756a6
+chat_duration: 17269s (00:04:47:49)
+estimated_chat_tokens: 3040010 estimated from chat transcript bytes (12160040 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 91.20 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -518,6 +518,17 @@ Summary: Moved the local-main merge readiness verifier and smoke test into a rea
 
 ADR impact: ADR 0017 records the local merge readiness batch; ADR 0011 now describes local merge verification as the explicit path into main.
 
+
+### 2026-06-19T21:22:35Z - Commit recorded
+
+Commit: `7b756a6`
+
+Message: Move local merge visibility reports
+
+Summary: Moved local-merge visibility reports to canonical 00.chat paths, added READMEs, retained compatibility wrappers, and updated workflow, runner, and ADR references.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -808,6 +819,13 @@ ADR impact: ADR 0017 records the local merge readiness batch; ADR 0011 now descr
   Summary: Moved the local-main merge readiness verifier and smoke test into a readable local-merge capability folder, retained shared git compatibility wrappers, updated the promote-to-main workflow, and switched the verifier to canonical session/worktree helper libraries.
   ADR impact: ADR 0017 records the local merge readiness batch; ADR 0011 now describes local merge verification as the explicit path into main.
 
+
+- Commit: `7b756a6`
+  Time UTC: 2026-06-19T21:22:35Z
+  Message: Move local merge visibility reports
+  Summary: Moved local-merge visibility reports to canonical 00.chat paths, added READMEs, retained compatibility wrappers, and updated workflow, runner, and ADR references.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -823,11 +841,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T21:16:42Z
-Latest commit SHA: b76d05c
-Chat duration: 16916s (00:04:41:56)
-Estimated chat tokens: 2924430 estimated from chat transcript bytes (11697720 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 87.73 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T21:22:35Z
+Latest commit SHA: 7b756a6
+Chat duration: 17269s (00:04:47:49)
+Estimated chat tokens: 3040010 estimated from chat transcript bytes (12160040 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 91.20 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
