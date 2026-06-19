@@ -25,10 +25,14 @@ Before writing to the upstream repo, inspect and record:
 - upstream repo absolute path
 - target upstream repo purpose
 - whether the upstream repo is empty or already initialized
+- whether the upstream repo has a valid `HEAD`
+- current branch name, or the intended initial branch for an unborn `HEAD`
 - candidate portable paths
 - required exclusions
 - source paths that must remain private or source-specific
 - whether any target paths would be overwritten
+- whether the bootstrap creates a minimal usable product surface or only an
+  internal file baseline
 
 ## Approval Boundaries
 
@@ -38,6 +42,21 @@ Before writing to the upstream repo, inspect and record:
 - Pushing upstream changes requires separate explicit approval.
 - Deleting, moving, or rewriting upstream history requires separate explicit
   approval and a workflow that governs that action.
+
+## Empty Repo Bootstrap
+
+For an empty upstream repo with no valid `HEAD`:
+
+- establish the initial branch before running workflows that require a current
+  branch
+- add starter public files required by the layer workflow
+- create an initial commit before attempting normal chat startup in the
+  upstream repo
+- do not push the initial commit without separate explicit approval
+
+Do not pre-copy source repo `commitLogs/`. The upstream repo's first chat
+startup creates its own `commitLogs/<date>/<session>/README.md` after the
+initial commit exists.
 
 ## Required Exclusions
 
@@ -59,6 +78,11 @@ A bootstrap workflow must produce or record:
 - source repo and upstream repo paths
 - file set copied or proposed
 - exclusions applied
+- initial branch and initial commit status for empty upstream repos
+- product-shell files created, when the upstream repo is intended for external
+  use
+- whether `commitLogs/` was created by a first upstream chat or intentionally
+  left absent until then
 - checks run
 - commit status
 - push status
@@ -73,6 +97,7 @@ Stop before writing when:
 - the portable file set is not defined by a layer workflow
 - target repo contains files that would be overwritten without approval
 - source-specific or private material cannot be cleanly separated
+- an externally usable upstream repo lacks install docs, examples, or smoke
+  tests defined by its layer workflow
 - the requested bootstrap would require a copy, commit, push, delete, move, or
   overwrite action not governed by the current workflow
-
