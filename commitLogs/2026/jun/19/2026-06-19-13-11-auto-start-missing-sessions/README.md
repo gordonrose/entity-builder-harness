@@ -11,12 +11,12 @@ workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-06-19T12:11:21Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-20-16-019edf9c-326b-7e63-b1b7-f23415a772f7.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-19T12:16:02Z
+latest_commit_sha: 56dafbb
+chat_duration: 281s (00:00:04:41)
+estimated_chat_tokens: 302909 estimated from chat transcript bytes (1211635 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-20-16-019edf9c-326b-7e63-b1b7-f23415a772f7.jsonl)
+estimated_chat_cost: USD 9.09 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -86,9 +86,26 @@ Validated with:
 - `bash scripts/shared/chat/smoke-test-chat-command.sh`
 - `bash scripts/shared/git/smoke-test-chat-worktree-session.sh`
 
+
+### 2026-06-19T12:16:02Z - Commit recorded
+
+Commit: `56dafbb`
+
+Message: Auto-start missing chat sessions
+
+Summary: Changed chat-start missing-session behavior to auto-create a chat from the opening prompt, added the helper and smoke coverage, and fixed prerequisite script-reference parsing.
+
+ADR impact: ADR not needed; existing chat-start workflow behavior plus deterministic helper coverage.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `56dafbb`
+  Time UTC: 2026-06-19T12:16:02Z
+  Message: Auto-start missing chat sessions
+  Summary: Changed chat-start missing-session behavior to auto-create a chat from the opening prompt, added the helper and smoke coverage, and fixed prerequisite script-reference parsing.
+  ADR impact: ADR not needed; existing chat-start workflow behavior plus deterministic helper coverage.
 
 ## Main Refresh Conflicts
 
@@ -105,12 +122,12 @@ introduce a new durable architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T12:11:21Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-19T12:16:02Z
+Latest commit SHA: 56dafbb
+Chat duration: 281s (00:00:04:41)
+Estimated chat tokens: 302909 estimated from chat transcript bytes (1211635 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-20-16-019edf9c-326b-7e63-b1b7-f23415a772f7.jsonl)
+Estimated chat cost: USD 9.09 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
