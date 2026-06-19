@@ -518,6 +518,112 @@ Governed runner canonical-surface batch result:
   approval-sensitive references and recognizes multiline approved-action
   commands.
 
+Bootstrap/install compatibility audit result:
+
+- The bootstrap audit currently treats a path as required when it is reachable
+  from installed or agent-facing seed surfaces. Required does not mean the path
+  is permanently canonical.
+- Public terminal aliases under `scripts/chat/` remain required because they are
+  the stable human-facing command surface for a bootstrapped workbench.
+- Canonical `scripts/00.chat/...` implementations are now required for the
+  actual chat capabilities.
+- `scripts/shared/harness/run-governed-script.sh` and the deterministic harness
+  checks remain required shared process primitives, not chat wrappers.
+- Several `scripts/shared/chat/...` and `scripts/shared/git/...` paths remain
+  required only because seeded workflows, standards, runner compatibility, or
+  public aliases still reference them.
+- The audit's "validation and compatibility candidates" section is not the
+  install-critical path. Those files are either smoke-test wrappers, old-path
+  compatibility wrappers, or validation helpers that can be retired after their
+  canonical tests and public install expectations are updated.
+- `scripts/shared/chat/ensure-llm-workbench-repo.sh` is not a compatibility
+  wrapper. It is still a governed upstream workflow support script and needs a
+  separate canonical-location decision if it moves.
+
+Bootstrap compatibility classifications:
+
+1. Public install surface to keep:
+
+   - `scripts/chat/chat-command.sh`
+   - `scripts/chat/audit-chat-layer-migration.sh`
+   - `scripts/chat/cleanup-empty-chat-branches.sh`
+   - `scripts/chat/generate-commit-log-summary.sh`
+   - `scripts/chat/record-main-refresh-conflict.sh`
+   - `scripts/chat/report-chat-workspaces.sh`
+
+2. Shared governance primitives to keep:
+
+   - `scripts/shared/harness/run-governed-script.sh`
+   - `scripts/shared/harness/check-artifact-metadata-headers.sh`
+   - `scripts/shared/harness/check-deterministic-process-drift.sh`
+   - `scripts/shared/harness/check-governed-script-command-drift.sh`
+
+3. Required old-path compatibility wrappers:
+
+   These remain reachable from seed surfaces today, but they are not canonical
+   ownership paths:
+
+   - `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`
+   - `scripts/shared/chat/audit-chat-layer-migration.sh`
+   - `scripts/shared/chat/chat-worktree-paths.sh`
+   - `scripts/shared/chat/commands/close.sh`
+   - `scripts/shared/chat/commands/new.sh`
+   - `scripts/shared/chat/generate-commit-log-summary.sh`
+   - `scripts/shared/chat/rename-current-chat-log-folder.sh`
+   - `scripts/shared/chat/report-chat-workspaces.sh`
+   - `scripts/shared/chat/request-initialization/auto-start-missing-session.sh`
+   - `scripts/shared/chat/session-log-paths.sh`
+   - `scripts/shared/git/active-chat-branches.sh`
+   - `scripts/shared/git/branch-overlap-report.sh`
+   - `scripts/shared/git/check-chat-branch-freshness.sh`
+   - `scripts/shared/git/check-commit-prerequisites.sh`
+   - `scripts/shared/git/check-commitlog-deletions.sh`
+   - `scripts/shared/git/check-write-location.sh`
+   - `scripts/shared/git/checkpoint-chat-session-log.sh`
+   - `scripts/shared/git/classify-main-refresh-dirty-state.sh`
+   - `scripts/shared/git/dirty-worktree-check.sh`
+   - `scripts/shared/git/main-update-status.sh`
+   - `scripts/shared/git/preflight-main-refresh.sh`
+   - `scripts/shared/git/prepare-chat-session-before-commit.sh`
+   - `scripts/shared/git/record-chat-commit.sh`
+   - `scripts/shared/git/stage-active-worktree-paths.sh`
+   - `scripts/shared/git/verify-local-convergence.sh`
+
+4. Required superseded legacy paths:
+
+   These remain required only because current documentation or compatibility
+   wrappers still reference the old isolated execution model:
+
+   - `scripts/shared/git/smoke-test-with-chat-branch.sh`
+   - `scripts/shared/git/with-chat-branch.sh`
+
+5. Validation-only compatibility candidates:
+
+   These are not currently required by the bootstrap seed graph. Keep them
+   until the corresponding canonical smoke tests or install expectations are
+   explicit enough to retire old-path validation wrappers:
+
+   - `scripts/shared/chat/discover-codex-session-log.sh`
+   - `scripts/shared/chat/ensure-chat-worktree.sh`
+   - `scripts/shared/chat/estimate-chat-cost.js`
+   - `scripts/shared/chat/record-main-refresh-conflict.sh`
+   - `scripts/shared/chat/register-codex-session-log.sh`
+   - `scripts/shared/chat/request-initialization/check-classify-task-fixtures.sh`
+   - `scripts/shared/chat/request-initialization/classify-task.sh`
+   - `scripts/shared/chat/request-initialization/read-current-chat-log.sh`
+   - `scripts/shared/chat/request-initialization/start-chat-session.sh`
+   - `scripts/shared/chat/update-chat-log.sh`
+   - `scripts/shared/git/cleanup-empty-chat-branches.sh`
+   - `scripts/shared/git/promote-preflight-refresh.sh`
+   - `scripts/shared/git/smoke-test-chat-worktree-session.sh`
+   - `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
+   - `scripts/shared/git/smoke-test-commit-prerequisites.sh`
+   - `scripts/shared/git/smoke-test-commitlog-deletions.sh`
+   - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
+   - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
+   - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
+   - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
+
 | Category | Keep Until | Paths |
 |---|---|---|
 | Public terminal aliases | Public/bootstrap command surface is redesigned | `scripts/chat/chat-command.sh`, `scripts/chat/audit-chat-layer-migration.sh`, `scripts/chat/cleanup-empty-chat-branches.sh`, `scripts/chat/generate-commit-log-summary.sh`, `scripts/chat/record-main-refresh-conflict.sh`, `scripts/chat/report-chat-workspaces.sh` |
