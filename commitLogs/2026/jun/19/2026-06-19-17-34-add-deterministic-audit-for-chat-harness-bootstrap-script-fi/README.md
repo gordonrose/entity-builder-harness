@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T23:49:40Z
-latest_commit_sha: 94117e5
-chat_duration: 26094s (00:07:14:54)
-estimated_chat_tokens: 4293087 estimated from chat transcript bytes (17172346 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 128.79 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T23:54:33Z
+latest_commit_sha: 358cab4
+chat_duration: 26387s (00:07:19:47)
+estimated_chat_tokens: 4424342 estimated from chat transcript bytes (17697366 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 132.73 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -738,6 +738,17 @@ Summary: Removed the obsolete shared git preflight-main-refresh compatibility wr
 
 ADR impact: ADR 0017 now records preflight-main-refresh as retired compatibility.
 
+
+### 2026-06-19T23:54:33Z - Commit recorded
+
+Commit: `358cab4`
+
+Message: Retire isolated chat branch helpers
+
+Summary: Removed the superseded shared git isolated-command runner, active-worktree staging wrapper, and legacy smoke test after proving canonical chat-owned worktrees plus the recovery import cover the useful behavior and no active bootstrap, install, workflow, or governed runner surface depends on the old paths.
+
+ADR impact: ADR 0009 now records the isolated-runner model as historical, and ADR 0017 records the legacy trio as retired superseded paths.
+
 ## Commits
 
 
@@ -1168,6 +1179,13 @@ ADR impact: ADR 0017 now records preflight-main-refresh as retired compatibility
   Summary: Removed the obsolete shared git preflight-main-refresh compatibility wrapper after confirming main-refresh rehearsal is owned by the canonical scripts/00.chat/main-refresh/rehearse-refresh-from-main path and the bootstrap audit no longer needs the wrapper.
   ADR impact: ADR 0017 now records preflight-main-refresh as retired compatibility.
 
+
+- Commit: `358cab4`
+  Time UTC: 2026-06-19T23:54:33Z
+  Message: Retire isolated chat branch helpers
+  Summary: Removed the superseded shared git isolated-command runner, active-worktree staging wrapper, and legacy smoke test after proving canonical chat-owned worktrees plus the recovery import cover the useful behavior and no active bootstrap, install, workflow, or governed runner surface depends on the old paths.
+  ADR impact: ADR 0009 now records the isolated-runner model as historical, and ADR 0017 records the legacy trio as retired superseded paths.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1183,11 +1201,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T23:49:40Z
-Latest commit SHA: 94117e5
-Chat duration: 26094s (00:07:14:54)
-Estimated chat tokens: 4293087 estimated from chat transcript bytes (17172346 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 128.79 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T23:54:33Z
+Latest commit SHA: 358cab4
+Chat duration: 26387s (00:07:19:47)
+Estimated chat tokens: 4424342 estimated from chat transcript bytes (17697366 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 132.73 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
