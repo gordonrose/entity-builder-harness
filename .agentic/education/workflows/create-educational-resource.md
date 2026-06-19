@@ -49,11 +49,15 @@ Supported resources include:
    line edit, and cold-reader review.
 10. Return article drafts to the Article Editor Agent for review before
    treating them as publishable.
-11. For non-article resources, draft from the concrete incident outward.
-12. Keep the author's voice central; do not imitate external sources.
-13. For lesson plans, design the 30-minute core first, then add the 50-minute
+11. After user feedback or a user-final rewrite, run a calibration comparison
+    before the next article cycle. Compare generated draft against user-final
+    text and identify reusable audience, structure, voice, humor, and workflow
+    lessons.
+12. For non-article resources, draft from the concrete incident outward.
+13. Keep the author's voice central; do not imitate external sources.
+14. For lesson plans, design the 30-minute core first, then add the 50-minute
    extension.
-14. Run the audits before final output.
+15. Run the audits before final output.
 
 ## Output
 
@@ -67,6 +71,8 @@ For public-facing articles, use:
 - `../templates/article-editor-brief.md`
 - `../templates/article-opening-lab.md`
 - `../templates/article-revision-log.md`
+- `../templates/article-calibration-report.md` when user feedback or a
+  user-final rewrite produces reusable lessons
 
 Then use `../agents/article-writer.md` for the draft body only.
 
@@ -119,6 +125,9 @@ Lesson plans must include:
 - Use spoken language for talks.
 - Use concrete details from the logs.
 - Avoid corporate tone, fake profundity, and generic AI phrasing.
+- For public technical explainers, preserve reader orientation before
+  magazine-style polish. Do not skip prerequisite explanation in order to sound
+  sharper.
 - A 30-minute talk needs one central spine, not many loosely related ideas.
 - A lesson plan needs one teachable transformation, not a collection of related
   notes.

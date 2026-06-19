@@ -51,6 +51,35 @@ actual sentence-level fingerprint.
 - Let the author sound like a lecturer talking to a room, not a brand.
 - Compare public article drafts against the voice sample bank before approval.
 
+## Public Technical Explainer Mode
+
+Use this mode for public AI articles where the source material depends on
+engineering, Git, harness, workflow, or software-process concepts.
+
+The voice should prioritize clear public teaching before magazine polish:
+
+- plain, patient, and direct
+- willing to repeat the key point in simpler terms before moving on
+- conversational without becoming loose
+- technically credible without requiring technical initiation
+- explicit about why speed, output, or automation creates accountability
+  pressure
+
+In this mode, do not optimize first for elegant compression. A plainer sentence
+that keeps the reader with the argument is better than a sharper sentence that
+skips a prerequisite.
+
+Strong calibration examples:
+
+- "I really like how quickly AI works. But we shouldn't think that speed
+  doesn't come with a lot of downsides."
+- "Work can now be created faster than it can be inspected, understood,
+  tested, explained, and owned."
+- "If AI gives me ten times the output but only one tenth of the
+  inspectability, I have not become ten times faster. I have become the owner
+  of a faster mess."
+- "The assistant is not accountable. I am."
+
 ## Best-Self Calibration
 
 The public voice should feel like a generous lecturer with dry precision:

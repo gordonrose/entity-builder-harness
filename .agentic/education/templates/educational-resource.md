@@ -59,6 +59,8 @@ For short public articles, include:
 - scene card summary
 - article editor brief summary
 - article opening lab summary
+- article calibration report summary, when user feedback or a user-final
+  rewrite produced reusable lessons
 - source scene used
 - article body only
 - alternate titles

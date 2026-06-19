@@ -14,6 +14,27 @@ Default shape for a short public article:
 The structure is blocked if it needs an invented hypothetical to make the
 reader care. Source packet and scene cards come before drafting.
 
+## Public Technical Explainers
+
+Use this shape when a public article teaches a technical or harness concept to
+AI-curious readers who may not know the underlying software process.
+
+Default shape:
+
+1. Reader desire
+2. Hidden cost or accountability pressure
+3. Public examples that make the cost recognizable
+4. Author-owned concrete version of the same problem
+5. Plain-language model or analogy
+6. What does not transfer from that model
+7. Harness mechanism that creates the missing condition
+8. Practical payoff
+
+This shape should still use source evidence, but it may open from the reader's
+desire before the source scene when that helps orientation. Block the draft if
+the technical analogy has no prerequisite ladder or if the article jumps from
+the analogy to the harness without explaining what does not transfer.
+
 ## Talks
 
 Default shape for a 30-minute talk:

@@ -11,8 +11,17 @@ required_paths=(
   ".agentic/00.chat/workflows/chat-promote-to-main.md"
   ".agentic/00.chat/workflows/chat-cleanup.md"
   ".agentic/00.chat/workflows/chat-reporting.md"
+  ".agentic/00.chat/workflows/chat-upstream-reusable-lesson.md"
+  ".agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md"
   ".agentic/00.chat/checklists/before-commit.md"
   ".agentic/00.chat/skills/session-summary.md"
+  "scripts/chat/README.md"
+  "scripts/chat/audit-chat-layer-migration.sh"
+  "scripts/chat/chat-command.sh"
+  "scripts/chat/cleanup-empty-chat-branches.sh"
+  "scripts/chat/generate-commit-log-summary.sh"
+  "scripts/chat/record-main-refresh-conflict.sh"
+  "scripts/chat/report-chat-workspaces.sh"
 )
 
 compatibility_paths=(

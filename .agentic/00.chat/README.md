@@ -15,7 +15,9 @@ cleanup, shortcuts, and on-demand chat reports.
 - Chat lifecycle checklists: `.agentic/00.chat/checklists/`
 - Chat lifecycle skills: `.agentic/00.chat/skills/`
 - Chat lifecycle standards: `.agentic/00.chat/standards/`
+- Chat command shortcuts: `.agentic/00.chat/commands/`
 - Chat lifecycle migration plan: `.agentic/00.chat/migration-plan.md`
+- Chat script aliases: `scripts/chat/`
 - Legacy shared workflow locations: `.agentic/shared/workflows/`
 - Legacy chat scripts: `scripts/shared/chat/` and `scripts/shared/git/`
 
@@ -26,6 +28,9 @@ move while active chats still reference legacy workflow and script paths.
 
 When a chat-specific process remains in a legacy location, this layer owns the
 behavior and the legacy path is a compatibility location.
+
+Use `scripts/chat/` for chat-layer script entrypoints where available. The
+wrappers delegate to `scripts/shared/` compatibility implementations.
 
 Use `bash scripts/shared/chat/audit-chat-layer-migration.sh` to inspect the
 current migration state before moving more chat lifecycle behavior.

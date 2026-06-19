@@ -69,7 +69,7 @@ commit logs that record commits or are explicitly marked for retention.
 Run:
 
 ```bash
-bash scripts/shared/git/prepare-chat-session-before-commit.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/prepare-chat-session-before-commit.sh
 ```
 
 Do not commit if the gate fails.
@@ -79,7 +79,7 @@ Do not commit if the gate fails.
 Run:
 
 ```bash
-bash scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/record-chat-commit.sh <sha> <message> <summary> [adr-impact]
 ```
 
 Record every commit in the chat. The latest recorded commit is treated as the
@@ -92,12 +92,17 @@ discovered, stop before recording the commit unless the current workflow
 explicitly permits `ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes` for a legacy or
 recovery case.
 
+The recorder may estimate chat cost from the estimated chat-token metric and the
+checked-in pricing snapshot. Treat `estimated_chat_cost` as an approximate
+planning metric, not a billing record, because transcript-derived token counts
+do not split input, cached input, and output tokens.
+
 <!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
 If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
 write permission for the chat authorizes the bookkeeping checkpoint commit:
 
 ```bash
-bash scripts/shared/git/checkpoint-chat-session-log.sh
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/checkpoint-chat-session-log.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->

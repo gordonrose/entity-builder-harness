@@ -58,3 +58,13 @@
 - Do not use value labels such as "useful", "obvious", "important", or
   "interesting" as substitutes for pressure. Make the reader feel the pressure
   first.
+- When an article uses an analogy, perform an analogy transfer check before
+  drafting. Name what transfers cleanly, what does not transfer, and what the
+  harness or source story had to create to make the analogy work.
+- Do not let one sentence carry an unstated transformation. For example,
+  "AI chats need their own version of that" skips the real story when the
+  important point is that chats are not naturally individual work actors; the
+  harness manufactures inspectable separateness upstream.
+- For public technical explainers, the story may begin with the reader's
+  desire and hidden cost rather than a compact source scene, as long as the
+  author-owned source story arrives before the mechanism is explained.

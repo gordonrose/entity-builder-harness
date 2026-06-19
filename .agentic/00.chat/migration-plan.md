@@ -16,6 +16,7 @@ in place as compatibility shims while active sessions still reference them.
 - Main refresh conflict type standard:
   `.agentic/00.chat/standards/main-refresh-conflict-types.md`
 - Reporting skill: `.agentic/00.chat/skills/session-summary.md`
+- Chat script aliases: `scripts/chat/`
 
 ## Migrated Workflow Ownership
 
@@ -35,6 +36,7 @@ to the canonical chat layer:
 - `.agentic/shared/workflows/main-updated.md`
 - `.agentic/shared/workflows/local-convergence.md`
 - `.agentic/shared/checklists/before-commit.md`
+- `scripts/chat/`
 - `scripts/shared/chat/`
 - `scripts/shared/git/`
 
@@ -51,21 +53,32 @@ to the canonical chat layer:
   approval gates.
 - Do not reintroduce tracked aggregate `commitLogs/README.md`.
 
-## Later-Chat Work Queue
+## Completed Migration Queue
 
-1. Add or expand smoke tests for cleanup and reporting workflows.
-2. Consider chat-layer script aliases under `scripts/00.chat/` or
-   `scripts/chat/`, keeping `scripts/shared/` wrappers for compatibility.
-3. Audit session metadata to determine when legacy workflow paths can be
+1. Added canonical chat lifecycle workflows under `.agentic/00.chat/workflows/`.
+2. Added chat-layer command, cleanup, reporting, and conflict-recording script
+   aliases under `scripts/chat/`.
+3. Kept `scripts/shared/` implementation paths as compatibility targets for
+   active sessions and existing tooling.
+4. Added audit coverage for the chat-layer script alias surface.
+5. Kept focused smoke tests for startup, classification, refresh, commit,
+   reporting, cleanup, commands, and chat script aliases.
+
+## Deferred Migration Queue
+
+1. Audit session metadata to determine when legacy workflow paths can be
    retired.
-4. Add governed cleanup for temporary preflight branches and worktrees once the
+2. Add governed cleanup for temporary preflight branches and worktrees once the
    desired retention policy is explicit.
-5. Review whether `change-shared-process.md` should keep chat lifecycle notes
+3. Review whether `change-shared-process.md` should keep chat lifecycle notes
    or narrow itself to cross-layer process only.
-6. Add a conflict classifier script after the conflict type standard has been
+4. Add a conflict classifier script after the conflict type standard has been
    exercised by at least one main-refresh recovery.
-7. Add a verification gate that compares unresolved or resolved preflight
+5. Add a verification gate that compares unresolved or resolved preflight
    conflict paths with `## Main Refresh Conflicts` entries before promotion.
+
+Do not treat deferred items as permission to improvise. Complete them only when
+their stated evidence, policy, or workflow precondition exists.
 
 ## Audit
 
