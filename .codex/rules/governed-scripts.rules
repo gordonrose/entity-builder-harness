@@ -7,10 +7,15 @@ prefix_rule(
     match = [
         "bash scripts/shared/harness/run-governed-script.sh --list",
         "bash scripts/shared/harness/run-governed-script.sh scripts/shared/git/check-write-location.sh",
+        "bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run",
+        "bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/request-initialization/auto-start-missing-session.sh update harness permissions",
         "bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/git/record-chat-commit.sh abc1234 message summary",
     ],
     not_match = [
         "bash scripts/shared/git/check-write-location.sh",
+        "bash scripts/shared/git/checkpoint-chat-session-log.sh",
+        "bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh update harness permissions",
+        "git clone git@github.com:gordonrose/llm-workbench.git /home/owner/projects/llm-workbench",
         "bash -lc scripts/shared/harness/run-governed-script.sh --list",
         "sh scripts/shared/harness/run-governed-script.sh --list",
     ],

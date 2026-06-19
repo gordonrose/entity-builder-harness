@@ -79,6 +79,14 @@ Direct script calls are allowed inside implementation scripts, smoke tests,
 fixture setup, and historical or explanatory prose when they are not active
 instructions to an agent.
 
+For repository bootstrap actions that would otherwise require broad persistent
+approval such as `git clone`, prefer a narrowly scoped governed helper and route
+it through the runner. For the reusable lesson upstream workbench, use:
+
+```bash
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh
+```
+
 ### Never Persistent-Auto-Approved
 
 These actions must not be granted persistent vendor auto-approval through the

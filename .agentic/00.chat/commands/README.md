@@ -43,7 +43,7 @@ current branch, the chat-start workflow treats the opening user message as the
 new chat summary and runs:
 
 ```bash
-bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh "<opening user message>"
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/request-initialization/auto-start-missing-session.sh "<opening user message>"
 ```
 
 If the opening message is exactly `new`, the agent asks what the chat should be

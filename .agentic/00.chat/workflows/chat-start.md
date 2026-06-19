@@ -59,7 +59,7 @@ Do not create a session until the user provides a task summary.
 Otherwise run:
 
 ```bash
-bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh "<opening user message>"
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/request-initialization/auto-start-missing-session.sh "<opening user message>"
 ```
 
 After the command succeeds, use the generated session log, layer, mode,
