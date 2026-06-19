@@ -6,7 +6,7 @@
 #   domain: session-log
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/shared/git/prepare-chat-session-before-commit.sh
+#     - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 #     - scripts/00.chat/session-log/record-chat-commit/script.sh
 #     - scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 #   effects: read-only

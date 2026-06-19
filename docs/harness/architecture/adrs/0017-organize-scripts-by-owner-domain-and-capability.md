@@ -269,6 +269,19 @@ Checkpoint chat session log batch result:
   `scripts/shared/git/checkpoint-chat-session-log.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Prepare chat session before commit batch result:
+
+- canonical implementation:
+  `scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh`
+- capability README:
+  `scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md`
+- compatibility wrapper:
+  `scripts/shared/git/prepare-chat-session-before-commit.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/prepare-chat-session-before-commit.sh` wrapper path until
+  the governed-runner path policy is migrated.
+
 Closeout command batch result:
 
 - canonical implementation:

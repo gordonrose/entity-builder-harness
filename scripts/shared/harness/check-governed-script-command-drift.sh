@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: governance
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/git/prepare-chat-session-before-commit.sh
+#     - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 #     - .agentic/harness/standards/governed-script-permissions.md
 #   effects: read-only
 
