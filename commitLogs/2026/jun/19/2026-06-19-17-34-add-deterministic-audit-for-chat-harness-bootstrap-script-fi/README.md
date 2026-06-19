@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T20:27:14Z
-latest_commit_sha: a06b99e
-chat_duration: 13948s (00:03:52:28)
-estimated_chat_tokens: 2451742 estimated from chat transcript bytes (9806968 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 73.55 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T20:50:22Z
+latest_commit_sha: ece9f31
+chat_duration: 15336s (00:04:15:36)
+estimated_chat_tokens: 2678097 estimated from chat transcript bytes (10712385 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 80.34 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -474,6 +474,17 @@ Summary: Added an ADR 0017 inventory classifying remaining scripts/shared/git fi
 
 ADR impact: The inventory records that remaining shared git files are still owner 00.chat by metadata and recommends migrating refresh/local convergence before isolated chat branch execution helpers.
 
+
+### 2026-06-19T20:50:22Z - Commit recorded
+
+Commit: `ece9f31`
+
+Message: Add governed recovery import for active worktree paths
+
+Summary: Added a governed recovery capability to import explicit paths from an active worktree into the session chat-owned worktree, converted the old staging helper into a compatibility wrapper, documented ADR supersession boundaries, and added smoke coverage.
+
+ADR impact: ADR 0009 now records recovery-only successor behavior; ADR 0011 documents recovery import for wrong-worktree edits; ADR 0017 records the recovery import batch.
+
 ## Commits
 
 
@@ -736,6 +747,13 @@ ADR impact: The inventory records that remaining shared git files are still owne
   Summary: Added an ADR 0017 inventory classifying remaining scripts/shared/git files into moved compatibility wrappers, chat refresh/local convergence candidates, and isolated chat branch execution helpers.
   ADR impact: The inventory records that remaining shared git files are still owner 00.chat by metadata and recommends migrating refresh/local convergence before isolated chat branch execution helpers.
 
+
+- Commit: `ece9f31`
+  Time UTC: 2026-06-19T20:50:22Z
+  Message: Add governed recovery import for active worktree paths
+  Summary: Added a governed recovery capability to import explicit paths from an active worktree into the session chat-owned worktree, converted the old staging helper into a compatibility wrapper, documented ADR supersession boundaries, and added smoke coverage.
+  ADR impact: ADR 0009 now records recovery-only successor behavior; ADR 0011 documents recovery import for wrong-worktree edits; ADR 0017 records the recovery import batch.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -751,11 +769,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T20:27:14Z
-Latest commit SHA: a06b99e
-Chat duration: 13948s (00:03:52:28)
-Estimated chat tokens: 2451742 estimated from chat transcript bytes (9806968 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 73.55 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T20:50:22Z
+Latest commit SHA: ece9f31
+Chat duration: 15336s (00:04:15:36)
+Estimated chat tokens: 2678097 estimated from chat transcript bytes (10712385 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 80.34 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
