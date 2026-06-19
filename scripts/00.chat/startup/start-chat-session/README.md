@@ -44,13 +44,37 @@ conversation.
 - Task summary: the human description of the work. It can be passed as command
   arguments, or entered interactively when the script prompts for it.
 - `.agentic/env.local`: optional local environment values for this checkout.
-- `CHAT_COPY_PROMPT`: controls first-prompt handoff. The default is `copy`,
-  which tries the clipboard first and prints the prompt as a fallback. Use
-  `skip` to print only.
+- `CHAT_COPY_PROMPT`: controls terminal first-prompt handoff. The default is
+  `copy`, which tries the clipboard first and prints the prompt as a fallback.
+  Use `skip` to print only.
 - `CHAT_CLEANUP_EMPTY_BRANCHES`: controls startup cleanup. The default is
   `apply`, which removes empty abandoned chat branches through the governed
   cleanup script. Use `dry-run` to inspect only, or `skip` when startup should
   not clean empty chat branches.
+
+## Terminal Handoff And IDE Integrations
+
+The startup script always builds a first prompt. That prompt is a portable
+session packet for terminal-based startup: it contains the task, session log,
+chat worktree, layer, mode, workflow, and dirty-worktree stop response.
+
+`CHAT_COPY_PROMPT` only controls how that terminal packet is handed to a human:
+copy it to the clipboard, or print it in the terminal. It is a terminal
+convenience, not the startup contract.
+
+IDE extensions and app integrations should not depend on clipboard behavior.
+They should use the startup data directly:
+
+- task summary
+- session log path
+- chat worktree path
+- layer
+- mode
+- workflow
+- starting worktree status
+
+That keeps the durable startup model the same while allowing different surfaces
+to present or pass the session packet in their own way.
 
 ## Flow
 
@@ -92,12 +116,13 @@ conversation.
    worktree. It starts with machine-readable session metadata and human-readable
    sections for activity, decisions, issues, commits, conflicts, and metrics.
 
-7. Print or copy the first prompt.
+7. Print or copy the first prompt for terminal use.
 
    The prompt is the bridge from startup automation into the next agent turn. It
    names the task, session log, worktree, layer, mode, workflow, and the
-   dirty-worktree stop response. If clipboard copy fails, the script prints the
-   prompt instead.
+   dirty-worktree stop response. Terminal startup can copy or print it. IDE and
+   app integrations should treat those fields as structured startup data rather
+   than depending on clipboard behavior.
 
 8. Clean empty chat branches.
 

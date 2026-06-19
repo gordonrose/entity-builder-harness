@@ -282,6 +282,11 @@ Start chat session batch result:
   `scripts/00.chat/startup/start-new-chat/script.sh`,
   `.agentic/00.chat/workflows/chat-start.md`, and related script metadata now
   point at the canonical startup path.
+- follow-up:
+  Revisit `CHAT_COPY_PROMPT` after the current script organization stream. It is
+  terminal handoff behavior, not the chat startup contract. Consider replacing
+  or wrapping it with a clearer terminal-specific startup packet interface for
+  IDE extensions and app integrations.
 
 ### Phase 3: Prove Compatibility
 
