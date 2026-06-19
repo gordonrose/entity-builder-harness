@@ -5,7 +5,6 @@ purpose: Record the older isolated worktree commit-boundary model and its recove
 domain: architecture
 portability: llm-workbench-required
 used_by:
-  - scripts/shared/git/with-chat-branch.sh
   - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
 -->
 
@@ -20,11 +19,10 @@ work. The useful part of this ADR remains as governed recovery/import behavior:
 explicit paths can be imported from an active worktree into the session's
 chat-owned worktree when edits happened in the wrong checkout.
 
-Current guidance: do not introduce new normal chat flows that call
-`scripts/shared/git/with-chat-branch.sh` or
-`scripts/shared/git/stage-active-worktree-paths.sh`. Keep them only as
-superseded compatibility helpers until a later retirement pass proves they are
-unneeded by bootstrap, install, and recovery surfaces.
+Current guidance: do not reintroduce the old isolated command runner. The
+retirement pass found no active workflow, bootstrap, install, or recovery
+surface that still needs it. Use the canonical recovery import for
+wrong-worktree recovery.
 
 ## Context
 
@@ -41,15 +39,15 @@ made the user's checkout move during commit-boundary operations.
 
 ## Decision
 
-Approved commit-boundary operations run through:
+Approved commit-boundary operations originally ran through:
 
 ```bash
 bash scripts/shared/git/with-chat-branch.sh <session-log> -- <command> [args...]
 ```
 
-This was the normal commit-boundary model when this ADR was accepted. For new
-normal task work, use the chat-owned worktree recorded in the session log
-instead.
+This was the normal commit-boundary model when this ADR was accepted. It is now
+historical context only. Normal task work happens directly in the chat-owned
+worktree recorded in the session log.
 
 For recovery imports, use the canonical recovery capability instead of this
 isolated command runner:
@@ -61,13 +59,13 @@ bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
   -- <path>...
 ```
 
-The helper reads the branch from the session log, validates that it is a local
+The retired helper read the branch from the session log, validated that it was a local
 `chat/*` branch, and runs the requested command inside a deterministic isolated
 worktree for that branch. The default worktree root is under
 `${AGENTIC_CHAT_WORKTREE_ROOT:-/tmp/agentic-chat-worktrees/...}`. The same repo
 path and branch resolve to the same reusable worktree path.
 
-The helper must not switch, stage, clean, discard, or otherwise mutate the
+The retired helper did not switch, stage, clean, discard, or otherwise mutate the
 active user worktree. If the active user worktree is already on the target
 session branch, the helper may use Git's duplicate checkout force flag to create
 the isolated worktree for that same branch while leaving active files and index
@@ -76,21 +74,21 @@ the branch is not a local `chat/*` branch, the branch is already checked out in
 another non-active worktree, the isolated path is invalid, or the wrapped
 command fails.
 
-Reuse is intentional. The helper leaves the isolated worktree in place so
+Reuse was intentional. The helper left the isolated worktree in place so
 approved staging and task commit steps can happen across multiple
 commit-boundary commands. Cleanup is manual and requires explicit user approval.
 
-When active-worktree edits need to become an approved task commit, agents mirror
-only explicit approved paths into the isolated worktree with:
+When active-worktree edits needed to become an approved task commit, agents
+mirrored only explicit approved paths into the isolated worktree with:
 
 ```bash
 bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/stage-active-worktree-paths.sh <path>...
 ```
 
-The staging helper accepts repository-relative paths, copies existing files or
+The staging helper accepted repository-relative paths, copied existing files or
 directories from the active worktree into the isolated worktree, and stages
 deletions when an approved path no longer exists in the active worktree. This
-helper is superseded for current recovery work by the canonical recovery
+helper has been retired. Current recovery work uses the canonical recovery
 capability shown above.
 
 This authorization is limited to commit preparation, staging for approved

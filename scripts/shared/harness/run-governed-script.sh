@@ -144,8 +144,7 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
   scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
-  scripts/00.chat/session-log/record-chat-commit/script.sh|\
-  scripts/shared/git/stage-active-worktree-paths.sh)
+  scripts/00.chat/session-log/record-chat-commit/script.sh)
     RUN_CLASS="approved"
     ;;
   *)

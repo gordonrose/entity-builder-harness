@@ -62,4 +62,5 @@ temporary isolated session worktree while normal edits happened elsewhere.
 
 The current harness model is stricter: each chat owns its worktree. This
 capability keeps the useful recovery behavior, but names it as recovery import
-instead of normal commit flow.
+instead of normal commit flow. The old shared helpers have been retired so new
+instructions and scripts do not accidentally revive the earlier model.

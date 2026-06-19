@@ -8,7 +8,6 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
-#     - scripts/shared/git/stage-active-worktree-paths.sh
 #   effects: writes-files, stages-files
 
 usage() {
