@@ -60,7 +60,7 @@ question was where the work actor was allowed to stand.
 - Session log under `commitLogs/`.
 - `scripts/shared/git/check-write-location.sh`.
 - `.agentic/00.chat/workflows/chat-refresh-from-main.md`.
-- `scripts/shared/git/verify-local-convergence.sh`.
+- `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh`.
 - Main-refresh preflight worktree under `/tmp/agentic-main-refresh-preflight/...`.
 - Clipboard failure log showing `clip.exe` failure after core artifacts existed.
 - Public coding-agent artifacts: virtual machine, cloned repo, draft pull request, session logs, review tag.

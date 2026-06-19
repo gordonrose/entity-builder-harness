@@ -122,11 +122,8 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
   scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\
   scripts/00.chat/reporting/report-chat-workspaces/script.sh|\
-  scripts/shared/git/active-chat-branches.sh|\
   scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
-  scripts/shared/git/branch-overlap-report.sh|\
   scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
-  scripts/shared/git/check-chat-branch-freshness.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
   scripts/shared/git/check-commit-prerequisites.sh|\
   scripts/00.chat/session-log/check-commit-prerequisites/script.sh|\
@@ -134,14 +131,11 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/session-log/check-commitlog-deletions/script.sh|\
   scripts/shared/git/check-write-location.sh|\
   scripts/00.chat/worktree/check-write-location/script.sh|\
-  scripts/shared/git/classify-main-refresh-dirty-state.sh|\
   scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
   scripts/shared/git/dirty-worktree-check.sh|\
   scripts/00.chat/worktree/dirty-worktree-check/script.sh|\
-  scripts/shared/git/main-update-status.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
-  scripts/shared/git/verify-local-convergence.sh|\
   scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
   scripts/shared/harness/check-deterministic-process-drift.sh|\
   scripts/shared/harness/check-artifact-metadata-headers.sh|\

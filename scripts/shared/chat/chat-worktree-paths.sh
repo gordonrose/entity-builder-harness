@@ -7,7 +7,6 @@
 #   portability: llm-workbench-compatibility
 #   used_by:
 #     - scripts/00.chat/worktree/check-write-location/script.sh
-#     - scripts/shared/git/verify-local-convergence.sh
 #   effects: read-only
 
 # shellcheck source=../../00.chat/worktree/paths/lib.sh
