@@ -142,11 +142,8 @@ case "$SCRIPT_PATH" in
   scripts/shared/harness/check-governed-script-command-drift.sh)
     RUN_CLASS="always"
     ;;
-  scripts/shared/chat/rename-current-chat-log-folder.sh|\
   scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
-  scripts/shared/chat/ensure-llm-workbench-repo.sh|\
   scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
-  scripts/shared/chat/request-initialization/auto-start-missing-session.sh|\
   scripts/00.chat/startup/auto-start-missing-session/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/shared/git/checkpoint-chat-session-log.sh|\

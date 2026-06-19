@@ -19,8 +19,8 @@ harness lesson and `llm-workbench` owns the reusable implementation.
 ## Files
 
 - `script.sh` is the canonical helper.
-- `scripts/shared/chat/ensure-llm-workbench-repo.sh` remains a compatibility
-  wrapper for older governed-runner calls.
+- `scripts/shared/chat/ensure-llm-workbench-repo.sh` has been retired. Older
+  governed-runner calls should be updated to this canonical path.
 
 ## Behavior
 

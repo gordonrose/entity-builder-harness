@@ -7,7 +7,6 @@ set -euo pipefail
 #   domain: startup
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/chat/request-initialization/auto-start-missing-session.sh
 #     - .agentic/00.chat/commands/README.md
 #     - scripts/00.chat/startup/auto-start-missing-session/README.md
 #   effects: branches, worktrees, writes-files, stages-files

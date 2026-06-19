@@ -91,7 +91,7 @@ bash scripts/00.chat/command/dispatcher/smoke-test.sh
 
 ## Compatibility
 
-The old request-initialization entrypoint remains at
-`scripts/shared/chat/request-initialization/auto-start-missing-session.sh`.
-It delegates to this canonical script because the governed runner still
-allowlists the shared path for approved auto-start actions.
+The old request-initialization entrypoint
+`scripts/shared/chat/request-initialization/auto-start-missing-session.sh` has
+been retired. New callers should use this canonical script through the governed
+runner.

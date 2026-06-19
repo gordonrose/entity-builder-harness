@@ -30,7 +30,6 @@ mkdir -p \
   "$REPO/scripts/00.chat/upstream/ensure-llm-workbench-repo" \
   "$REPO/scripts/00.chat/worktree/check-write-location" \
   "$REPO/scripts/shared/chat" \
-  "$REPO/scripts/shared/chat/request-initialization" \
   "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness" \
   "$REPO/scripts/local"
@@ -52,11 +51,11 @@ make_fixture() {
 
 make_fixture "scripts/shared/git/check-write-location.sh" "allowed-check"
 make_fixture "scripts/00.chat/worktree/check-write-location/script.sh" "canonical-check"
-make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "allowed-workbench"
+make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "retired-workbench"
 make_fixture "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh" "canonical-workbench"
-make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "approved-auto-start"
+make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "retired-auto-start"
 make_fixture "scripts/00.chat/startup/auto-start-missing-session/script.sh" "canonical-auto-start"
-make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "approved-action"
+make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "retired-rename"
 make_fixture "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh" "canonical-approved-action"
 make_fixture "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh" "canonical-prepare"
 make_fixture "scripts/00.chat/session-log/record-chat-commit/script.sh" "canonical-record"
@@ -88,9 +87,8 @@ if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/ensure
   fail "workbench clone helper ran without --approved-action"
 fi
 
-OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run)"
-if [ "$OUT" != "allowed-workbench:--dry-run" ]; then
-  fail "allowed workbench helper did not run through the governed runner: $OUT"
+if bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run >"$TMP_ROOT/workbench-retired.out" 2>&1; then
+  fail "retired workbench helper was still accepted"
 fi
 
 OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh --dry-run)"
@@ -102,9 +100,8 @@ if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/reques
   fail "auto-start helper ran without --approved-action"
 fi
 
-OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/request-initialization/auto-start-missing-session.sh "new chat")"
-if [ "$OUT" != "approved-auto-start:new chat" ]; then
-  fail "auto-start helper did not run with --approved-action: $OUT"
+if bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/request-initialization/auto-start-missing-session.sh "new chat" >"$TMP_ROOT/auto-start-retired.out" 2>&1; then
+  fail "retired auto-start helper was still accepted"
 fi
 
 OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/startup/auto-start-missing-session/script.sh "new chat")"
@@ -116,9 +113,8 @@ if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/rename
   fail "approval-sensitive script ran without --approved-action"
 fi
 
-OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/rename-current-chat-log-folder.sh test)"
-if [ "$OUT" != "approved-action:test" ]; then
-  fail "approval-sensitive script did not run with --approved-action: $OUT"
+if bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/rename-current-chat-log-folder.sh test >"$TMP_ROOT/rename-retired.out" 2>&1; then
+  fail "retired rename helper was still accepted"
 fi
 
 OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh test)"
