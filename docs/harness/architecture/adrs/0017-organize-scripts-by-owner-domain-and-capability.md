@@ -298,6 +298,22 @@ Check commit prerequisites batch result:
   `scripts/shared/git/check-commit-prerequisites.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Check commit log deletions batch result:
+
+- canonical implementation:
+  `scripts/00.chat/session-log/check-commitlog-deletions/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh`
+- capability README:
+  `scripts/00.chat/session-log/check-commitlog-deletions/README.md`
+- compatibility wrappers:
+  `scripts/shared/git/check-commitlog-deletions.sh` and
+  `scripts/shared/git/smoke-test-commitlog-deletions.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/check-commitlog-deletions.sh` wrapper path until the
+  governed-runner path policy is migrated.
+
 Closeout command batch result:
 
 - canonical implementation:

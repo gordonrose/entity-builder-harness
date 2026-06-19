@@ -16,7 +16,7 @@ source "scripts/00.chat/session-log/paths/lib.sh"
 
 bash scripts/shared/git/check-write-location.sh
 bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
-bash scripts/shared/git/check-commitlog-deletions.sh
+bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
 bash scripts/shared/harness/check-artifact-metadata-headers.sh --staged-added
 bash scripts/shared/harness/check-governed-script-command-drift.sh
