@@ -262,11 +262,17 @@ Auto-start missing session batch result:
 
 - canonical implementation:
   `scripts/00.chat/startup/auto-start-missing-session/script.sh`
+- capability README:
+  `scripts/00.chat/startup/auto-start-missing-session/README.md`
 - request-initialization compatibility wrapper:
   `scripts/shared/chat/request-initialization/auto-start-missing-session.sh`
   remains executable because `scripts/shared/harness/run-governed-script.sh`
   still allowlists the old approved-action path until the governed-runner path
   policy is migrated.
+- validation:
+  `scripts/00.chat/command/dispatcher/smoke-test.sh` covers opening-prompt
+  auto-start behavior, including normal session creation and the bare `new`
+  guard.
 
 Start chat session batch result:
 
