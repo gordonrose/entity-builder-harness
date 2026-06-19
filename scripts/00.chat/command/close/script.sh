@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/command/dispatcher/script.sh
-#     - scripts/shared/chat/commands/close.sh
+#     - package.json scripts.chat:close
 #   effects: read-only
 
 exec bash scripts/00.chat/closeout/build-closeout-prompt/script.sh "$@"

@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/command/dispatcher/script.sh
-#     - scripts/shared/chat/commands/new.sh
+#     - package.json scripts.chat:new
 #   effects: branches, worktrees, writes-files, stages-files
 
 exec bash scripts/00.chat/startup/start-new-chat/script.sh "$@"
