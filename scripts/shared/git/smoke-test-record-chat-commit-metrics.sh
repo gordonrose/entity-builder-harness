@@ -20,13 +20,18 @@ SESSION_ID="2026-06-18-00-00-token-metrics"
 BRANCH="chat/${SESSION_ID}"
 LOG_FILE="commitLogs/2026/jun/18/${SESSION_ID}/README.md"
 
-mkdir -p "$REPO/scripts/shared/git" "$REPO/scripts/shared/chat" "$REPO/${LOG_FILE%/README.md}"
+mkdir -p "$REPO/scripts/shared/git" "$REPO/scripts/shared/chat" \
+  "$REPO/.agentic/harness/data" "$REPO/${LOG_FILE%/README.md}"
 cp "$SOURCE_ROOT/scripts/shared/git/record-chat-commit.sh" \
   "$REPO/scripts/shared/git/record-chat-commit.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" \
   "$REPO/scripts/shared/chat/session-log-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/discover-codex-session-log.sh" \
   "$REPO/scripts/shared/chat/discover-codex-session-log.sh"
+cp "$SOURCE_ROOT/scripts/shared/chat/estimate-chat-cost.js" \
+  "$REPO/scripts/shared/chat/estimate-chat-cost.js"
+cp "$SOURCE_ROOT/.agentic/harness/data/openai-chat-pricing.json" \
+  "$REPO/.agentic/harness/data/openai-chat-pricing.json"
 
 cat > "$REPO/$LOG_FILE" <<EOF
 # Chat Session: token metrics
@@ -39,6 +44,8 @@ latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
 estimated_tokens:
+estimated_chat_cost:
+estimated_chat_cost_basis:
 -->
 
 ## Commits
@@ -56,6 +63,8 @@ Latest commit at UTC:
 Latest commit SHA:
 Chat duration:
 Estimated tokens:
+Estimated chat cost:
+Estimated chat cost basis:
 EOF
 
 (
@@ -104,6 +113,10 @@ if ! grep -q '^Estimated chat tokens: unavailable; transcript source not supplie
   fail "visible legacy chat token metric escape was not marked unavailable"
 fi
 
+if ! grep -q '^estimated_chat_cost: unavailable; estimated chat tokens are unavailable$' "$REPO/$LOG_FILE"; then
+  fail "missing-token escape did not mark estimated chat cost unavailable"
+fi
+
 CODEX_HOME_FIXTURE="$TMP_ROOT/codex-home"
 CODEX_SESSION_LOG="$CODEX_HOME_FIXTURE/sessions/2026/06/18/rollout-test.jsonl"
 mkdir -p "${CODEX_SESSION_LOG%/*}"
@@ -114,6 +127,7 @@ cat > "$CODEX_SESSION_LOG" <<EOF
 EOF
 CODEX_SESSION_BYTES="$(wc -c < "$CODEX_SESSION_LOG" | tr -d ' ')"
 CODEX_SESSION_TOKENS="$(( (CODEX_SESSION_BYTES + 3) / 4 ))"
+CODEX_SESSION_COST="$(node -e "const cost=(${CODEX_SESSION_TOKENS}/1000000)*30; console.log(cost > 0 && cost < 1 ? cost.toFixed(4) : cost.toFixed(2));")"
 
 (
   cd "$REPO"
@@ -129,6 +143,14 @@ if ! grep -q "^estimated_chat_tokens: ${CODEX_SESSION_TOKENS} estimated from cha
   fail "discovered Codex session byte metric was not recorded"
 fi
 
+if ! grep -q "^estimated_chat_cost: USD ${CODEX_SESSION_COST} estimated from estimated_chat_tokens$" "$REPO/$LOG_FILE"; then
+  fail "discovered Codex session cost metric was not recorded"
+fi
+
+if ! grep -q '^estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest;' "$REPO/$LOG_FILE"; then
+  fail "chat cost basis did not use the default ChatGPT pricing profile"
+fi
+
 (
   cd "$REPO"
   CHAT_TRANSCRIPT_BYTES=4096 \
@@ -138,6 +160,10 @@ fi
 
 if ! grep -q '^estimated_chat_tokens: 1024 estimated from chat transcript bytes (4096 bytes; source: smoke transcript fixture)$' "$REPO/$LOG_FILE"; then
   fail "transcript-byte chat token metric was not recorded"
+fi
+
+if ! grep -q '^estimated_chat_cost: USD 0.0307 estimated from estimated_chat_tokens$' "$REPO/$LOG_FILE"; then
+  fail "transcript-byte chat cost metric was not recorded"
 fi
 
 if grep -q 'estimated from session log' "$REPO/$LOG_FILE"; then

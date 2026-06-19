@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "default_profile": "chat-latest-standard-conservative-output",
+  "currency": "USD",
+  "unit": "1M tokens",
+  "source": {
+    "name": "OpenAI API pricing",
+    "url": "https://developers.openai.com/api/docs/pricing",
+    "retrieved_at_utc": "2026-06-19T00:00:00Z"
+  },
+  "profiles": {
+    "chat-latest-standard-conservative-output": {
+      "model": "chat-latest",
+      "category": "ChatGPT",
+      "tier": "standard",
+      "context": "standard",
+      "input_usd_per_1m_tokens": 5,
+      "cached_input_usd_per_1m_tokens": 0.5,
+      "output_usd_per_1m_tokens": 30,
+      "estimate_rate_usd_per_1m_tokens": 30,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    },
+    "gpt-5.5-standard-short-conservative-output": {
+      "model": "gpt-5.5",
+      "category": "flagship",
+      "tier": "standard",
+      "context": "short",
+      "input_usd_per_1m_tokens": 5,
+      "cached_input_usd_per_1m_tokens": 0.5,
+      "output_usd_per_1m_tokens": 30,
+      "estimate_rate_usd_per_1m_tokens": 30,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    },
+    "gpt-5.5-standard-long-conservative-output": {
+      "model": "gpt-5.5",
+      "category": "flagship",
+      "tier": "standard",
+      "context": "long",
+      "input_usd_per_1m_tokens": 10,
+      "cached_input_usd_per_1m_tokens": 1,
+      "output_usd_per_1m_tokens": 45,
+      "estimate_rate_usd_per_1m_tokens": 45,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    },
+    "gpt-5.4-standard-short-conservative-output": {
+      "model": "gpt-5.4",
+      "category": "flagship",
+      "tier": "standard",
+      "context": "short",
+      "input_usd_per_1m_tokens": 2.5,
+      "cached_input_usd_per_1m_tokens": 0.25,
+      "output_usd_per_1m_tokens": 15,
+      "estimate_rate_usd_per_1m_tokens": 15,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    },
+    "gpt-5.4-standard-long-conservative-output": {
+      "model": "gpt-5.4",
+      "category": "flagship",
+      "tier": "standard",
+      "context": "long",
+      "input_usd_per_1m_tokens": 5,
+      "cached_input_usd_per_1m_tokens": 0.5,
+      "output_usd_per_1m_tokens": 22.5,
+      "estimate_rate_usd_per_1m_tokens": 22.5,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    },
+    "gpt-5.4-mini-standard-conservative-output": {
+      "model": "gpt-5.4-mini",
+      "category": "flagship",
+      "tier": "standard",
+      "context": "standard",
+      "input_usd_per_1m_tokens": 0.75,
+      "cached_input_usd_per_1m_tokens": 0.075,
+      "output_usd_per_1m_tokens": 4.5,
+      "estimate_rate_usd_per_1m_tokens": 4.5,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    },
+    "gpt-5.4-nano-standard-conservative-output": {
+      "model": "gpt-5.4-nano",
+      "category": "flagship",
+      "tier": "standard",
+      "context": "standard",
+      "input_usd_per_1m_tokens": 0.2,
+      "cached_input_usd_per_1m_tokens": 0.02,
+      "output_usd_per_1m_tokens": 1.25,
+      "estimate_rate_usd_per_1m_tokens": 1.25,
+      "assumption": "all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens"
+    }
+  }
+}
