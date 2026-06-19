@@ -22,3 +22,5 @@ mine commit logs for teaching assets	education	discovery	.agentic/education/work
 update my lecturer voice profile	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
 improve the humor profile for education outputs	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
 add source-backed teaching principles for talks	education	implementation	.agentic/education/workflows/mine-daily-learning-material.md
+inspect aws ecs state	aws	discovery	.agentic/aws/workflows/inspect-aws-state.md
+plan aws rds change	aws	planning	.agentic/aws/workflows/plan-aws-change.md
