@@ -256,6 +256,19 @@ Record chat commit batch result:
   `scripts/shared/git/record-chat-commit.sh` wrapper path until the
   governed-runner path policy is migrated.
 
+Checkpoint chat session log batch result:
+
+- canonical implementation:
+  `scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh`
+- capability README:
+  `scripts/00.chat/session-log/checkpoint-chat-session-log/README.md`
+- compatibility wrapper:
+  `scripts/shared/git/checkpoint-chat-session-log.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/checkpoint-chat-session-log.sh` wrapper path until the
+  governed-runner path policy is migrated.
+
 Closeout command batch result:
 
 - canonical implementation:

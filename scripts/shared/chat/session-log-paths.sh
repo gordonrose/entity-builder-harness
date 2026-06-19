@@ -8,6 +8,7 @@
 #   used_by:
 #     - scripts/shared/git/prepare-chat-session-before-commit.sh
 #     - scripts/00.chat/session-log/record-chat-commit/script.sh
+#     - scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 #   effects: read-only
 
 # shellcheck source=../../00.chat/session-log/paths/lib.sh
