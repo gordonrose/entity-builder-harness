@@ -10,11 +10,11 @@ mode: execution
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T11:19:44Z
-codex_session_log_path:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-19-50-019edf9b-ccd2-7811-a9b5-ef68234bcb53.jsonl
+latest_commit_at_utc: 2026-06-19T14:43:41Z
+latest_commit_sha: 81878d6
+chat_duration: 12237s (00:03:23:57)
+estimated_chat_tokens: 401889 estimated from chat transcript bytes (1607553 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-19-50-019edf9b-ccd2-7811-a9b5-ef68234bcb53.jsonl)
 -->
 
 ## Initial Intent
@@ -124,9 +124,26 @@ education workflows, added an article calibration report template, and created
 `docs/education/articles/0002-the-workbench-behind-ai-work/calibration-report.md`
 from this article's draft-versus-user-final comparison.
 
+
+### 2026-06-19T14:43:41Z - Commit recorded
+
+Commit: `81878d6`
+
+Message: Calibrate education article workflow
+
+Summary: Drafted the AI workbench education article, captured user-final calibration lessons, and updated education profiles/templates/workflows so future public technical explainers preserve reader orientation, accountability framing, analogy transfer, and post-feedback calibration.
+
+ADR impact: No ADR needed; extends existing education article pipeline guidance and calibration artifacts.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `81878d6`
+  Time UTC: 2026-06-19T14:43:41Z
+  Message: Calibrate education article workflow
+  Summary: Drafted the AI workbench education article, captured user-final calibration lessons, and updated education profiles/templates/workflows so future public technical explainers preserve reader orientation, accountability framing, analogy transfer, and post-feedback calibration.
+  ADR impact: No ADR needed; extends existing education article pipeline guidance and calibration artifacts.
 
 ## Main Refresh Conflicts
 
@@ -144,10 +161,10 @@ pipeline ADRs.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T11:19:44Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
+Latest commit at UTC: 2026-06-19T14:43:41Z
+Latest commit SHA: 81878d6
+Chat duration: 12237s (00:03:23:57)
+Estimated chat tokens: 401889 estimated from chat transcript bytes (1607553 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-19-50-019edf9b-ccd2-7811-a9b5-ef68234bcb53.jsonl)
 
 ## Notes
 
