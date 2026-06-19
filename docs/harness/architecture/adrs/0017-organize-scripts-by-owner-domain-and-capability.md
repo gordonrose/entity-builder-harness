@@ -258,6 +258,16 @@ New-session command batch result:
   continue listing and invoking `chat-command new` from the shared command
   directory until command discovery is migrated.
 
+Auto-start missing session batch result:
+
+- canonical implementation:
+  `scripts/00.chat/startup/auto-start-missing-session/script.sh`
+- request-initialization compatibility wrapper:
+  `scripts/shared/chat/request-initialization/auto-start-missing-session.sh`
+  remains executable because `scripts/shared/harness/run-governed-script.sh`
+  still allowlists the old approved-action path until the governed-runner path
+  policy is migrated.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

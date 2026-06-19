@@ -10,7 +10,7 @@ set -euo pipefail
 #     - .agentic/00.chat/commands/README.md
 #     - scripts/00.chat/command/dispatcher/README.md
 #     - scripts/chat/chat-command.sh
-#     - scripts/shared/chat/request-initialization/auto-start-missing-session.sh
+#     - scripts/00.chat/startup/auto-start-missing-session/script.sh
 #   effects: branches, worktrees, writes-files, stages-files
 
 COMMAND_DIR="scripts/shared/chat/commands"
