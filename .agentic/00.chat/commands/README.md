@@ -28,13 +28,10 @@ bash scripts/chat/chat-command.sh list
 
 ## Commands
 
-- `new <task summary>` - starts a new chat session using the same startup path
-  as the default VS Code build task.
+- `new <task summary>` - starts a new chat session from an explicit task
+  summary.
 - `close` - prints or copies a governed prompt for committing approved work, if
   needed, then promoting the chat branch into local `main`.
-
-The default VS Code build task routes through `chat-command.sh new`, so
-Ctrl+Shift+B and the named `new` command exercise the same startup path.
 
 ## Chat Message Auto-Start
 
