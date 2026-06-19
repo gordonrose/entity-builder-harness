@@ -15,6 +15,7 @@ cleanup, shortcuts, and on-demand chat reports.
 - Chat lifecycle checklists: `.agentic/00.chat/checklists/`
 - Chat lifecycle skills: `.agentic/00.chat/skills/`
 - Chat lifecycle standards: `.agentic/00.chat/standards/`
+- Chat command shortcuts: `.agentic/00.chat/commands/`
 - Chat lifecycle migration plan: `.agentic/00.chat/migration-plan.md`
 - Legacy shared workflow locations: `.agentic/shared/workflows/`
 - Legacy chat scripts: `scripts/shared/chat/` and `scripts/shared/git/`

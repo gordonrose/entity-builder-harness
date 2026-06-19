@@ -77,6 +77,17 @@ Summary: Adds the governed script runner wrapper, allowlist data file, and smoke
 
 ADR impact: ADR not needed; adds deterministic permission wrapper plumbing without changing harness architecture.
 
+
+### 2026-06-19T12:05:39Z - Main refresh conflict recorded
+
+Path: `scripts/shared/harness/run-governed-script.sh`
+
+Type: `script-add-add-conflict`
+
+Mode: deterministic
+
+Action: Kept main's governed runner and smoke test, removed the temporary data-file allowlist runner artifacts from the chat branch, and preserved the chat-cost pricing data.
+
 ## Commits
 
 
@@ -96,7 +107,17 @@ ADR impact: ADR not needed; adds deterministic permission wrapper plumbing witho
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `scripts/shared/harness/run-governed-script.sh`
+  Type: `script-add-add-conflict`
+  Mode: deterministic
+  Reason: Both the chat branch and main independently added the governed script runner; main already contains the broader standard-backed runner with checkpoint-chat-session-log.sh as an approval-sensitive script.
+  Action: Kept main's governed runner and smoke test, removed the temporary data-file allowlist runner artifacts from the chat branch, and preserved the chat-cost pricing data.
+  Preflight branch: `agentic/preflight/chat-2026-06-19-12-27-are-there-apis-we-can-call-that-would-calculate-the-cost-bas/20260619120415`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-19-12-27-are-there-apis-we-can-call-that-would-calculate-the-cost-bas-20260619120415`
+  Files changed by resolution: resolved scripts/shared/harness/run-governed-script.sh; removed .agentic/harness/data/governed-script-allowlist.txt and scripts/shared/harness/smoke-test-run-governed-script.sh
+  Checks: smoke-test-governed-script-runner.sh; smoke-test-record-chat-commit-metrics.sh; smoke-test-generate-commit-log-summary.sh; bash -n runner/metric/session scripts
 
 ## ADR Disposition
 

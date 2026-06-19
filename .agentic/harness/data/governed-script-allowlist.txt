@@ -1,3 +1,0 @@
-# Repository-relative scripts that may be run through
-# scripts/shared/harness/run-governed-script.sh.
-scripts/shared/git/checkpoint-chat-session-log.sh
