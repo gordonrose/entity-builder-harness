@@ -28,9 +28,10 @@ fail() {
 copy_verifier_scripts() {
   local repo="$1"
 
-  mkdir -p "$repo/scripts/shared/git" "$repo/scripts/shared/chat" "$repo/scripts/00.chat/session-log/paths"
+  mkdir -p "$repo/scripts/shared/git" "$repo/scripts/shared/chat" "$repo/scripts/00.chat/session-log/paths" "$repo/scripts/00.chat/worktree/paths"
   cp "$SOURCE_ROOT/scripts/shared/git/verify-local-convergence.sh" "$repo/scripts/shared/git/verify-local-convergence.sh"
   cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$repo/scripts/shared/chat/chat-worktree-paths.sh"
+  cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$repo/scripts/00.chat/worktree/paths/lib.sh"
   cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$repo/scripts/shared/chat/session-log-paths.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$repo/scripts/00.chat/session-log/paths/lib.sh"
 }

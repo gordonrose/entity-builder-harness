@@ -207,6 +207,12 @@ Session-log executable batch result:
   `scripts/shared/chat/session-log-paths.sh` remains source-able for shared git,
   startup, and downstream smoke fixtures until those callers migrate in later
   batches.
+- canonical worktree source library:
+  `scripts/00.chat/worktree/paths/lib.sh`
+- worktree source compatibility shim:
+  `scripts/shared/chat/chat-worktree-paths.sh` remains source-able for shared
+  startup, shared git, and downstream smoke fixtures until those callers
+  migrate in later batches.
 - governed runner exception:
   `scripts/shared/harness/run-governed-script.sh` still allowlists the old
   `rename-current-chat-log-folder.sh` wrapper path until the governed-runner
