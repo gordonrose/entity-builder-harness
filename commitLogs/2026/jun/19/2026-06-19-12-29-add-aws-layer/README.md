@@ -11,10 +11,10 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T11:29:43Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
+latest_commit_at_utc: 2026-06-19T16:11:46Z
+latest_commit_sha: 006755b
+chat_duration: 16923s (00:04:42:03)
+estimated_chat_tokens: 190974 estimated from chat transcript bytes (763896 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl)
 -->
 
 ## Initial Intent
@@ -63,9 +63,26 @@ Initial intent: i'd like to continue my aws harness work in a new chat with the 
   applied cleanly.
 - Ported the scaffold into this chat worktree using current file structure.
 
+
+### 2026-06-19T16:11:46Z - Commit recorded
+
+Commit: `006755b`
+
+Message: feat(harness): add aws layer scaffold
+
+Summary: Added a first-class AWS harness layer with inspect, plan, and execute workflows; routed AWS classification; added AWS ADR locations and harness ADR 0014.
+
+ADR impact: ADR added: docs/harness/architecture/adrs/0014-add-aws-layer.md
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `006755b`
+  Time UTC: 2026-06-19T16:11:46Z
+  Message: feat(harness): add aws layer scaffold
+  Summary: Added a first-class AWS harness layer with inspect, plan, and execute workflows; routed AWS classification; added AWS ADR locations and harness ADR 0014.
+  ADR impact: ADR added: docs/harness/architecture/adrs/0014-add-aws-layer.md
 
 ## Main Refresh Conflicts
 
@@ -80,10 +97,10 @@ Reason: adding a first-class harness layer is a durable architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T11:29:43Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
+Latest commit at UTC: 2026-06-19T16:11:46Z
+Latest commit SHA: 006755b
+Chat duration: 16923s (00:04:42:03)
+Estimated chat tokens: 190974 estimated from chat transcript bytes (763896 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl)
 
 ## Notes
 
