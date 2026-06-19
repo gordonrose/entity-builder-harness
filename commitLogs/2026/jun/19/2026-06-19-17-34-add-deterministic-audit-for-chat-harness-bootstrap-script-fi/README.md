@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T22:03:04Z
-latest_commit_sha: 8703814
-chat_duration: 19698s (00:05:28:18)
-estimated_chat_tokens: 3551667 estimated from chat transcript bytes (14206665 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 106.55 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T22:06:48Z
+latest_commit_sha: c8bdc1c
+chat_duration: 19922s (00:05:32:02)
+estimated_chat_tokens: 3609114 estimated from chat transcript bytes (14436456 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 108.27 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -617,6 +617,17 @@ Summary: Removed eight old shared git smoke-test compatibility wrappers after ca
 
 ADR impact: ADR 0017 now records the validation-only smoke wrappers as retired historical paths with canonical replacements.
 
+
+### 2026-06-19T22:06:48Z - Commit recorded
+
+Commit: `c8bdc1c`
+
+Message: Retire validation-only chat helper wrappers
+
+Summary: Removed four old shared chat transcript/session-log compatibility wrappers after confirming canonical scripts/00.chat replacements, no live old-path references, and a clean bootstrap audit.
+
+ADR impact: ADR 0017 now records the retired chat helper wrappers and their canonical transcript/session-log replacements.
+
 ## Commits
 
 
@@ -970,6 +981,13 @@ ADR impact: ADR 0017 now records the validation-only smoke wrappers as retired h
   Summary: Removed eight old shared git smoke-test compatibility wrappers after canonical scripts/00.chat smoke tests passed and the bootstrap audit stayed clean.
   ADR impact: ADR 0017 now records the validation-only smoke wrappers as retired historical paths with canonical replacements.
 
+
+- Commit: `c8bdc1c`
+  Time UTC: 2026-06-19T22:06:48Z
+  Message: Retire validation-only chat helper wrappers
+  Summary: Removed four old shared chat transcript/session-log compatibility wrappers after confirming canonical scripts/00.chat replacements, no live old-path references, and a clean bootstrap audit.
+  ADR impact: ADR 0017 now records the retired chat helper wrappers and their canonical transcript/session-log replacements.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -985,11 +1003,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T22:03:04Z
-Latest commit SHA: 8703814
-Chat duration: 19698s (00:05:28:18)
-Estimated chat tokens: 3551667 estimated from chat transcript bytes (14206665 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 106.55 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T22:06:48Z
+Latest commit SHA: c8bdc1c
+Chat duration: 19922s (00:05:32:02)
+Estimated chat tokens: 3609114 estimated from chat transcript bytes (14436456 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 108.27 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
