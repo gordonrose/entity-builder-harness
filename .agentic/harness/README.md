@@ -9,4 +9,5 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 ## Data
 
+- `data/governed-script-allowlist.txt` - repo-relative scripts permitted through the governed script runner.
 - `data/openai-chat-pricing.json` - versioned pricing snapshot used by chat cost estimation scripts.

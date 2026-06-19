@@ -10,11 +10,13 @@ mode: discovery
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T11:27:29Z
-codex_session_log_path:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-27-32-019edfa2-dbcd-7811-8a7c-4f897c50d512.jsonl
+latest_commit_at_utc: 2026-06-19T11:59:31Z
+latest_commit_sha: 04c2539
+chat_duration: 1922s (00:00:32:02)
+estimated_chat_tokens: 137408 estimated from chat transcript bytes (549629 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-27-32-019edfa2-dbcd-7811-8a7c-4f897c50d512.jsonl)
+estimated_chat_cost: USD 4.12 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -43,6 +45,9 @@ are there APIs we can call that would calculate the cost based on model and toke
   commit recording.
 - Default cost estimates to the ChatGPT `chat-latest` standard profile with a
   conservative output-token-rate assumption.
+- Add a governed script runner allowlist and include
+  `scripts/shared/git/checkpoint-chat-session-log.sh` so checkpoint bookkeeping
+  can run through the approved harness wrapper.
 
 ## Activity Log
 
@@ -50,9 +55,26 @@ are there APIs we can call that would calculate the cost based on model and toke
 
 Initial intent: are there APIs we can call that would calculate the cost based on model and token count?
 
+
+### 2026-06-19T11:59:31Z - Commit recorded
+
+Commit: `04c2539`
+
+Message: Add estimated chat cost metrics
+
+Summary: Adds a ChatGPT-first pricing snapshot, deterministic chat cost estimator, session metric wiring, summary aggregation, and smoke coverage.
+
+ADR impact: ADR not needed; extends existing chat metric recording without changing harness architecture.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `04c2539`
+  Time UTC: 2026-06-19T11:59:31Z
+  Message: Add estimated chat cost metrics
+  Summary: Adds a ChatGPT-first pricing snapshot, deterministic chat cost estimator, session metric wiring, summary aggregation, and smoke coverage.
+  ADR impact: ADR not needed; extends existing chat metric recording without changing harness architecture.
 
 ## Main Refresh Conflicts
 
@@ -69,10 +91,12 @@ or ownership boundaries.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T11:27:29Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
+Latest commit at UTC: 2026-06-19T11:59:31Z
+Latest commit SHA: 04c2539
+Chat duration: 1922s (00:00:32:02)
+Estimated chat tokens: 137408 estimated from chat transcript bytes (549629 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-27-32-019edfa2-dbcd-7811-8a7c-4f897c50d512.jsonl)
+Estimated chat cost: USD 4.12 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
