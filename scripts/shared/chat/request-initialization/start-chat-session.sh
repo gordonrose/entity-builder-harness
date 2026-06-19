@@ -110,14 +110,6 @@ estimated_chat_tokens:
 
 ${QUESTION}
 
-## Branch
-
-\`${BRANCH}\`
-
-## Worktree
-
-\`${WORKTREE_PATH}\`
-
 ## Session Log
 
 - Session started.
@@ -185,24 +177,10 @@ Bootstrap worktree status: ${WORKTREE_STATUS}
 If Bootstrap worktree status is dirty, reply exactly:
 Blocked: dirty worktree. Confirm proceed? Layer: ${LAYER}. Mode: ${MODE}. Workflow: ${WORKFLOW}
 
-Do not read workflows before that response.
-Do not run git status before that response.
-Do not run dirty-worktree-check before that response.
+Before that response, do not read workflows or run git status/dirty checks.
 
-Default mode: read-only.
-
-Do not create, edit, move, delete, stage, commit, format, or patch files unless I explicitly give permission in the current chat.
-Until then, inspect and propose only.
-
-When write permission is granted, run task commands from the chat worktree above, not from the root integration worktree.
-Before writing, run:
-bash scripts/shared/git/check-write-location.sh
-
-For approved commit-boundary operations, use this chat-owned worktree. Do not write task changes directly in the root integration worktree.
-
-After write permission is granted, rename this chat's commitLog folder to a concise summary with:
-bash scripts/shared/chat/rename-current-chat-log-folder.sh \"<short-summary>\"
-
+Default mode: read-only until I grant write permission in this chat.
+For writes or commit-boundary work, use the chat worktree above and follow the current workflow gates.
 Do not commit without my explicit approval."
 
 print_first_prompt() {
