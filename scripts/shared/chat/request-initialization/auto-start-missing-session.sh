@@ -36,4 +36,4 @@ case "$PROMPT_LOWER" in
     ;;
 esac
 
-exec bash scripts/shared/chat/chat-command.sh new "$PROMPT"
+exec bash scripts/00.chat/command/dispatcher/script.sh new "$PROMPT"

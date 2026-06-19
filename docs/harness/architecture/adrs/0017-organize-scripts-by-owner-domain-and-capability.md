@@ -128,6 +128,20 @@ Pilot result:
 - public alias preserved:
   `scripts/chat/cleanup-empty-chat-branches.sh`
 
+Second pilot result:
+
+- canonical implementation:
+  `scripts/00.chat/command/dispatcher/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/command/dispatcher/smoke-test.sh`
+- capability README:
+  `scripts/00.chat/command/dispatcher/README.md`
+- compatibility wrappers:
+  `scripts/shared/chat/chat-command.sh` and
+  `scripts/shared/chat/smoke-test-chat-command.sh`
+- public alias preserved:
+  `scripts/chat/chat-command.sh`
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

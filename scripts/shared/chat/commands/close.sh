@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/commands/README.md
-#     - scripts/shared/chat/chat-command.sh
+#     - scripts/00.chat/command/dispatcher/script.sh
 #   effects: read-only
 
 # shellcheck source=../session-log-paths.sh

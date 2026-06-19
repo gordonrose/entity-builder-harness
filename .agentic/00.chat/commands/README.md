@@ -14,10 +14,19 @@ Run commands through:
 bash scripts/chat/chat-command.sh <command> [args...]
 ```
 
-The compatibility entrypoint remains:
+The canonical dispatcher is:
 
 ```bash
-bash scripts/shared/chat/chat-command.sh <command> [args...]
+bash scripts/00.chat/command/dispatcher/script.sh <command> [args...]
+```
+
+The old shared dispatcher path remains as a compatibility wrapper during the
+script-layout migration.
+
+Its capability README is:
+
+```txt
+scripts/00.chat/command/dispatcher/README.md
 ```
 
 List available commands with:
@@ -61,5 +70,5 @@ Use lowercase command names when possible. Keep the command script narrow:
 - preserve existing approval boundaries for commits, merges, pushes, branch
   deletion, destructive actions, and history rewriting
 
-Update `scripts/shared/chat/smoke-test-chat-command.sh` when adding a command
-that should remain part of the stable shortcut surface.
+Update the dispatcher smoke test named in its capability README when adding a
+command that should remain part of the stable shortcut surface.

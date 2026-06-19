@@ -11,4 +11,4 @@ set -euo pipefail
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 #   effects: branches, worktrees, writes-files, stages-files
 
-exec bash scripts/shared/chat/chat-command.sh "$@"
+exec bash scripts/00.chat/command/dispatcher/script.sh "$@"
