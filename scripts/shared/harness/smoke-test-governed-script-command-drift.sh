@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-harness
+#   purpose: Smoke test governed script command drift detection.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/harness/standards/governed-script-permissions.md
+#     - scripts/shared/harness/check-governed-script-command-drift.sh
+#   effects: writes-files, commits
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

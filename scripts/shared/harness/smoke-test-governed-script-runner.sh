@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-harness
+#   purpose: Smoke test governed script runner allowlist and approval behavior.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/harness/standards/governed-script-permissions.md
+#     - scripts/shared/harness/run-governed-script.sh
+#   effects: writes-files, commits
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

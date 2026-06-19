@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-harness
+#   purpose: Flag process prose that should likely be represented as deterministic scripts or gates.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/checklists/before-commit.md
+#     - .agentic/shared/workflows/change-shared-process.md
+#   effects: read-only
+
 MODE=""
 COMMIT_SHA=""
 PATH_ARGS=()

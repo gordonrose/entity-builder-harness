@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-harness
+#   purpose: Flag approval-sensitive governed script references that bypass the governed runner.
+#   portability: llm-workbench-required
+#   used_by:
+#     - scripts/shared/git/prepare-chat-session-before-commit.sh
+#     - .agentic/harness/standards/governed-script-permissions.md
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:
