@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T17:32:59Z
-latest_commit_sha: 2c6e0bc
-chat_duration: 3493s (00:00:58:13)
-estimated_chat_tokens: 1047858 estimated from chat transcript bytes (4191432 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 31.44 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T17:38:30Z
+latest_commit_sha: b015295
+chat_duration: 3824s (00:01:03:44)
+estimated_chat_tokens: 1137861 estimated from chat transcript bytes (4551443 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 34.14 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -166,6 +166,17 @@ Summary: Added proposed ADR 0017 defining the owner/domain/capability script lay
 
 ADR impact: ADR 0017 proposed; records the planned script layout migration.
 
+
+### 2026-06-19T17:38:30Z - Commit recorded
+
+Commit: `b015295`
+
+Message: Pilot cleanup script capability folder
+
+Summary: Moved cleanup-empty-chat-branches into scripts/00.chat/git/cleanup-empty-chat-branches with script and smoke-test colocated, retained old shared paths as wrappers, and updated bootstrap audit classification for capability folders.
+
+ADR impact: ADR 0017 accepted after the cleanup-empty-chat-branches pilot passed direct and compatibility checks.
+
 ## Commits
 
 
@@ -232,6 +243,13 @@ ADR impact: ADR 0017 proposed; records the planned script layout migration.
   Summary: Added proposed ADR 0017 defining the owner/domain/capability script layout migration plan, including compatibility wrappers and a cleanup-empty-chat-branches pilot.
   ADR impact: ADR 0017 proposed; records the planned script layout migration.
 
+
+- Commit: `b015295`
+  Time UTC: 2026-06-19T17:38:30Z
+  Message: Pilot cleanup script capability folder
+  Summary: Moved cleanup-empty-chat-branches into scripts/00.chat/git/cleanup-empty-chat-branches with script and smoke-test colocated, retained old shared paths as wrappers, and updated bootstrap audit classification for capability folders.
+  ADR impact: ADR 0017 accepted after the cleanup-empty-chat-branches pilot passed direct and compatibility checks.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -247,11 +265,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T17:32:59Z
-Latest commit SHA: 2c6e0bc
-Chat duration: 3493s (00:00:58:13)
-Estimated chat tokens: 1047858 estimated from chat transcript bytes (4191432 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 31.44 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T17:38:30Z
+Latest commit SHA: b015295
+Chat duration: 3824s (00:01:03:44)
+Estimated chat tokens: 1137861 estimated from chat transcript bytes (4551443 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 34.14 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
