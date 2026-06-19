@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T16:53:29Z
-latest_commit_sha: 3c0fc14
-chat_duration: 1123s (00:00:18:43)
-estimated_chat_tokens: 760853 estimated from chat transcript bytes (3043410 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 22.83 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T16:57:05Z
+latest_commit_sha: 1f1e19c
+chat_duration: 1339s (00:00:22:19)
+estimated_chat_tokens: 791849 estimated from chat transcript bytes (3167396 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 23.76 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -49,6 +49,8 @@ add deterministic audit for chat harness bootstrap script file set
   `scripts/uninstall.sh` as target files, not source repo dependencies.
 - Keep validation helpers visible as candidates instead of silently excluding
   them from the bootstrap decision.
+- Backfill script metadata in folder batches, starting with the public
+  `scripts/chat/` alias surface.
 
 ## Activity Log
 
@@ -67,6 +69,17 @@ Summary: Added a governed audit that derives required chat bootstrap scripts and
 
 ADR impact: Existing ADR 0015 covers bootstrap productization; no new ADR.
 
+
+### 2026-06-19T16:57:05Z - Commit recorded
+
+Commit: `1f1e19c`
+
+Message: Require metadata for new harness artifacts
+
+Summary: Added the artifact metadata header standard, governed metadata checker, and commit-gate enforcement for newly added scripts and harness Markdown artifacts.
+
+ADR impact: No new ADR; this implements the metadata governance plan in standards and gates.
+
 ## Commits
 
 
@@ -76,6 +89,13 @@ ADR impact: Existing ADR 0015 covers bootstrap productization; no new ADR.
   Message: Add chat bootstrap file set audit
   Summary: Added a governed audit that derives required chat bootstrap scripts and separates validation and unclassified candidates before upstream copying.
   ADR impact: Existing ADR 0015 covers bootstrap productization; no new ADR.
+
+
+- Commit: `1f1e19c`
+  Time UTC: 2026-06-19T16:57:05Z
+  Message: Require metadata for new harness artifacts
+  Summary: Added the artifact metadata header standard, governed metadata checker, and commit-gate enforcement for newly added scripts and harness Markdown artifacts.
+  ADR impact: No new ADR; this implements the metadata governance plan in standards and gates.
 
 ## Main Refresh Conflicts
 
@@ -92,14 +112,16 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T16:53:29Z
-Latest commit SHA: 3c0fc14
-Chat duration: 1123s (00:00:18:43)
-Estimated chat tokens: 760853 estimated from chat transcript bytes (3043410 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 22.83 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T16:57:05Z
+Latest commit SHA: 1f1e19c
+Chat duration: 1339s (00:00:22:19)
+Estimated chat tokens: 791849 estimated from chat transcript bytes (3167396 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 23.76 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
 - Current audit output reports one unclassified candidate:
   `scripts/shared/chat/update-chat-log.sh`.
+- Public `scripts/chat/*.sh` files are thin aliases and are tagged as
+  `llm-workbench-required`.
