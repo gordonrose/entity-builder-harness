@@ -4,7 +4,7 @@
     {
       "label": "Start Chat Session",
       "type": "shell",
-      "command": "./scripts/shared/chat/request-initialization/start-chat-session.sh",
+      "command": "./scripts/shared/chat/chat-command.sh new",
       "group": {
         "kind": "build",
         "isDefault": true
