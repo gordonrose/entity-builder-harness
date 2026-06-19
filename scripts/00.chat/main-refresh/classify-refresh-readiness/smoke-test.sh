@@ -33,7 +33,6 @@ OTHER_LOG="commitLogs/2026/jun/17/other-chat/README.md"
 mkdir -p \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/scripts/shared/git" \
   "$REPO/$(dirname "$SESSION_LOG")" \
   "$REPO/$(dirname "$OTHER_LOG")"
 

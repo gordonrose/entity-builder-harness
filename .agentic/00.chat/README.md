@@ -30,7 +30,7 @@ cleanup, shortcuts, and on-demand chat reports.
 - Chat lifecycle migration plan: `.agentic/00.chat/migration-plan.md`
 - Public chat commands: `package.json` `chat:*` scripts
 - Legacy shared workflow locations: `.agentic/shared/workflows/`
-- Legacy shared git helpers: `scripts/shared/git/`
+- Shared harness governance helpers: `scripts/shared/harness/`
 
 ## Migration Policy
 
@@ -43,6 +43,10 @@ behavior and the legacy path is a compatibility location.
 Use `npm run chat:*` package scripts for public chat-layer command entrypoints.
 The package scripts delegate to canonical capability scripts under
 `scripts/00.chat/`.
+
+Do not add new chat lifecycle scripts under `scripts/shared/git/` or
+`scripts/shared/chat/`. Those locations were retired as compatibility surfaces;
+new chat-owned behavior belongs under `scripts/00.chat/<domain>/<capability>/`.
 
 Use `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh` to inspect the
 current migration state before moving more chat lifecycle behavior.

@@ -47,7 +47,11 @@ to the canonical chat layer:
 - `.agentic/shared/workflows/main-updated.md`
 - `.agentic/shared/workflows/local-convergence.md`
 - `.agentic/shared/checklists/before-commit.md`
-- `scripts/shared/git/`
+
+Script compatibility wrappers under `scripts/shared/chat/` and
+`scripts/shared/git/` have been retired. Keep historical references for audit
+context, but operative instructions and package scripts should point to
+canonical `scripts/00.chat/...` capability paths.
 
 ## Migration Rules
 
@@ -67,8 +71,9 @@ to the canonical chat layer:
 1. Added canonical chat lifecycle workflows under `.agentic/00.chat/workflows/`.
 2. Added chat-layer command, cleanup, reporting, and conflict-recording package
    scripts in `package.json`.
-3. Kept `scripts/shared/` implementation paths as compatibility targets for
-   active sessions and existing tooling.
+3. Migrated chat lifecycle implementation paths to canonical
+   `scripts/00.chat/...` capabilities and retired old `scripts/shared/chat/`
+   and `scripts/shared/git/` wrappers.
 4. Added audit coverage for the chat-layer package script surface.
 5. Kept focused smoke tests for startup, classification, refresh, commit,
    reporting, cleanup, commands, and package scripts.
@@ -97,8 +102,9 @@ Run:
 bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh
 ```
 
-The audit reports required canonical files, compatibility paths, and remaining
-legacy shared workflow references in source/process files. It also inventories
-policy references to the retired aggregate summary so future chats can tell
-intentional "do not recreate this" guidance apart from generated-artifact
-regression. It does not treat historical session logs as migration blockers.
+The audit reports required canonical files, remaining workflow/checklist
+compatibility paths, and remaining legacy shared workflow references in
+source/process files. It also inventories policy references to the retired
+aggregate summary so future chats can tell intentional "do not recreate this"
+guidance apart from generated-artifact regression. It does not treat historical
+session logs as migration blockers.
