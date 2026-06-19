@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/shared/git/smoke-test-commit-prerequisites.sh
+#     - scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
 #   effects: read-only
 
 # shellcheck source=../paths/lib.sh

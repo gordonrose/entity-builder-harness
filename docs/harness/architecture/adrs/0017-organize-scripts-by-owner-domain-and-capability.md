@@ -282,6 +282,22 @@ Prepare chat session before commit batch result:
   `scripts/shared/git/prepare-chat-session-before-commit.sh` wrapper path until
   the governed-runner path policy is migrated.
 
+Check commit prerequisites batch result:
+
+- canonical implementation:
+  `scripts/00.chat/session-log/check-commit-prerequisites/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh`
+- capability README:
+  `scripts/00.chat/session-log/check-commit-prerequisites/README.md`
+- compatibility wrappers:
+  `scripts/shared/git/check-commit-prerequisites.sh` and
+  `scripts/shared/git/smoke-test-commit-prerequisites.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/check-commit-prerequisites.sh` wrapper path until the
+  governed-runner path policy is migrated.
+
 Closeout command batch result:
 
 - canonical implementation:

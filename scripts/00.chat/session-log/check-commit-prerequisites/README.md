@@ -1,0 +1,78 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: capability-readme
+purpose: Explain how commit prerequisite checks verify workflow and gate references before chat commits.
+domain: session-log
+portability: llm-workbench-required
+used_by:
+  - scripts/00.chat/session-log/check-commit-prerequisites/script.sh
+  - scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
+  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+-->
+
+# Check Commit Prerequisites
+
+`script.sh` verifies that the current chat session points at real governance
+artifacts before a task commit proceeds.
+
+It is a structural readiness check. It does not decide whether the code change
+is good. It checks that the session log, declared workflow, canonical checklist,
+and referenced gate scripts are present so the commit boundary is governed by
+real files rather than stale documentation.
+
+## Mental Model
+
+A chat session is only committable if its process map still resolves.
+
+The session log names a workflow. The workflow and before-commit checklist name
+scripts that should exist. If any of those links are broken, the agent might be
+following a workflow that cannot actually run.
+
+This gate catches that problem before the task commit.
+
+## Checks
+
+The script verifies:
+
+- current branch is a `chat/*` branch
+- matching session log exists
+- session metadata includes a `workflow`
+- declared workflow file exists
+- canonical `.agentic/00.chat/checklists/before-commit.md` exists
+- executable script references in the workflow and checklist point to real
+  `.sh` files
+
+Directory prose such as `scripts/shared/chat/` is ignored; only script-looking
+references ending in `.sh` are treated as gate references.
+
+## What This Does Not Do
+
+- It does not run every referenced gate.
+- It does not inspect code quality.
+- It does not stage, commit, merge, or push.
+- It does not validate ADR disposition content.
+- It does not replace `prepare-chat-session-before-commit`; it is one gate that
+  the readiness coordinator runs.
+
+## Validation
+
+`smoke-test.sh` builds a throwaway chat repo and verifies that:
+
+- a valid workflow/checklist setup passes
+- prose directory references are not mistaken for missing scripts
+
+Run the canonical smoke test with:
+
+```bash
+bash scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
+```
+
+## Compatibility
+
+The old shared path remains available:
+
+```bash
+scripts/shared/git/check-commit-prerequisites.sh
+```
+
+That file is now a compatibility wrapper around the canonical implementation.
