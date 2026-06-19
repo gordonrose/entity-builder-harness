@@ -71,8 +71,8 @@ commit while blocked.
 5. Inspect active branch metadata and changed-path overlap:
 
    ```bash
-   bash scripts/shared/git/active-chat-branches.sh
-   bash scripts/shared/git/branch-overlap-report.sh
+   bash scripts/00.chat/local-merge/list-active-chat-branches/script.sh
+   bash scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
    ```
 
 ## Refresh Policy
@@ -191,8 +191,8 @@ refresh should be rehearsed before mutating the active chat worktree.
    git status --short --branch
    bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
    bash scripts/00.chat/main-refresh/show-main-update-status/script.sh
-   bash scripts/shared/git/active-chat-branches.sh
-   bash scripts/shared/git/branch-overlap-report.sh
+   bash scripts/00.chat/local-merge/list-active-chat-branches/script.sh
+   bash scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
    ```
 
 3. If the active chat branch is behind `main`, ask before integrating `main`

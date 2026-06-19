@@ -43,7 +43,9 @@ always scripts/shared/chat/audit-chat-bootstrap-file-set.sh
 always scripts/shared/chat/generate-commit-log-summary.sh
 always scripts/shared/chat/report-chat-workspaces.sh
 always scripts/shared/git/active-chat-branches.sh
+always scripts/00.chat/local-merge/list-active-chat-branches/script.sh
 always scripts/shared/git/branch-overlap-report.sh
+always scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
 always scripts/shared/git/check-chat-branch-freshness.sh
 always scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
 always scripts/shared/git/check-commit-prerequisites.sh
@@ -87,11 +89,13 @@ shift
 
 case "$SCRIPT_PATH" in
   /*|*../*|../*|*"/.."|*".."|*"
-"*)
+"*) 
     echo "ERROR: refused non-repository script path: $SCRIPT_PATH" >&2
     exit 1
     ;;
   scripts/shared/*.sh|scripts/shared/*/*.sh|scripts/shared/chat/request-initialization/*.sh|\
+  scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
+  scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
   scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
@@ -112,7 +116,9 @@ case "$SCRIPT_PATH" in
   scripts/shared/chat/generate-commit-log-summary.sh|\
   scripts/shared/chat/report-chat-workspaces.sh|\
   scripts/shared/git/active-chat-branches.sh|\
+  scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
   scripts/shared/git/branch-overlap-report.sh|\
+  scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
   scripts/shared/git/check-chat-branch-freshness.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
   scripts/shared/git/check-commit-prerequisites.sh|\

@@ -426,6 +426,24 @@ Local merge readiness batch result:
   canonical read-only local merge readiness verifier path while retaining the
   old shared wrapper for compatibility.
 
+Local merge visibility batch result:
+
+- canonical implementations:
+  `scripts/00.chat/local-merge/list-active-chat-branches/script.sh` and
+  `scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh`
+- capability READMEs:
+  `scripts/00.chat/local-merge/list-active-chat-branches/README.md` and
+  `scripts/00.chat/local-merge/report-chat-branch-overlaps/README.md`
+- compatibility wrappers:
+  `scripts/shared/git/active-chat-branches.sh` and
+  `scripts/shared/git/branch-overlap-report.sh`
+- direct callers migrated:
+  `.agentic/00.chat/workflows/chat-refresh-from-main.md`
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  canonical read-only local merge visibility script paths while retaining old
+  shared wrappers for compatibility.
+
 Remaining shared git inventory after commit-boundary batch:
 
 All remaining `scripts/shared/git/*.sh` files currently declare
@@ -437,6 +455,8 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/check-commit-prerequisites.sh`
    - `scripts/shared/git/check-commitlog-deletions.sh`
    - `scripts/shared/git/check-write-location.sh`
+   - `scripts/shared/git/active-chat-branches.sh`
+   - `scripts/shared/git/branch-overlap-report.sh`
    - `scripts/shared/git/checkpoint-chat-session-log.sh`
    - `scripts/shared/git/cleanup-empty-chat-branches.sh`
    - `scripts/shared/git/dirty-worktree-check.sh`
@@ -458,12 +478,7 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/stage-active-worktree-paths.sh`
    - `scripts/shared/git/verify-local-convergence.sh`
 
-2. Chat refresh and local convergence capabilities not yet moved:
-
-   - `scripts/shared/git/active-chat-branches.sh`
-   - `scripts/shared/git/branch-overlap-report.sh`
-
-3. Legacy isolated chat branch execution helpers retained for compatibility
+2. Legacy isolated chat branch execution helpers retained for compatibility
    review:
 
    - `scripts/shared/git/smoke-test-with-chat-branch.sh`
