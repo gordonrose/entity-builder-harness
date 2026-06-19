@@ -29,6 +29,7 @@ case "$1" in
   --list)
     cat <<'EOF'
 always scripts/shared/chat/audit-chat-layer-migration.sh
+always scripts/shared/chat/audit-chat-bootstrap-file-set.sh
 always scripts/shared/chat/generate-commit-log-summary.sh
 always scripts/shared/chat/report-chat-workspaces.sh
 always scripts/shared/git/active-chat-branches.sh
@@ -84,6 +85,7 @@ esac
 RUN_CLASS=""
 case "$SCRIPT_PATH" in
   scripts/shared/chat/audit-chat-layer-migration.sh|\
+  scripts/shared/chat/audit-chat-bootstrap-file-set.sh|\
   scripts/shared/chat/generate-commit-log-summary.sh|\
   scripts/shared/chat/report-chat-workspaces.sh|\
   scripts/shared/git/active-chat-branches.sh|\

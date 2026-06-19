@@ -28,6 +28,8 @@ Before writing to the upstream repo, inspect and record:
 - whether the upstream repo has a valid `HEAD`
 - current branch name, or the intended initial branch for an unborn `HEAD`
 - candidate portable paths
+- deterministic audit output for the layer-specific portable file set, when a
+  layer provides one
 - required exclusions
 - source paths that must remain private or source-specific
 - whether any target paths would be overwritten
@@ -94,7 +96,8 @@ A bootstrap workflow must produce or record:
 Stop before writing when:
 
 - upstream ownership is ambiguous
-- the portable file set is not defined by a layer workflow
+- the portable file set is not defined by a layer workflow or deterministic
+  audit when the layer provides one
 - target repo contains files that would be overwritten without approval
 - source-specific or private material cannot be cleanly separated
 - an externally usable upstream repo lacks install docs, examples, or smoke

@@ -24,6 +24,12 @@ git -C <upstream-repo> branch --show-current || true
 find <upstream-repo> -maxdepth 2 -type f
 ```
 
+Then run the portable script file set audit from the source repo:
+
+```bash
+bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/audit-chat-bootstrap-file-set.sh
+```
+
 If the upstream repo is not empty, list target paths that would be added or
 overwritten and ask for explicit approval before writing.
 
@@ -73,6 +79,10 @@ outside engineer would use it:
 The install smoke test must install the workbench into a throwaway Git repo,
 verify the public command surface works, and verify the first chat startup
 creates the target repo's own `commitLogs/`.
+
+Use `scripts/shared/chat/audit-chat-bootstrap-file-set.sh` to distinguish
+required scripts from candidate unreferenced scripts before copying scripts
+into the upstream repo.
 
 ## Required Exclusions
 
