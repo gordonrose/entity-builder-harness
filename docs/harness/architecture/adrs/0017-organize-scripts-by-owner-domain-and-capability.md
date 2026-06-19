@@ -236,9 +236,25 @@ Transcript and metrics batch result:
   `scripts/shared/chat/register-codex-session-log.sh`, and
   `scripts/shared/chat/estimate-chat-cost.js`
 - direct callers migrated:
-  `scripts/shared/git/record-chat-commit.sh`,
+  `scripts/00.chat/session-log/record-chat-commit/script.sh`,
   `.agentic/00.chat/workflows/chat-start.md`, and
+  `scripts/00.chat/session-log/record-chat-commit/smoke-test.sh`
+
+Record chat commit batch result:
+
+- canonical implementation:
+  `scripts/00.chat/session-log/record-chat-commit/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/session-log/record-chat-commit/smoke-test.sh`
+- capability README:
+  `scripts/00.chat/session-log/record-chat-commit/README.md`
+- compatibility wrappers:
+  `scripts/shared/git/record-chat-commit.sh` and
   `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  `scripts/shared/git/record-chat-commit.sh` wrapper path until the
+  governed-runner path policy is migrated.
 
 Closeout command batch result:
 

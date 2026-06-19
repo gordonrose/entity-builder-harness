@@ -5,8 +5,8 @@
 //   domain: metrics
 //   portability: llm-workbench-required
 //   used_by:
-//     - scripts/shared/git/record-chat-commit.sh
-//     - scripts/shared/git/smoke-test-record-chat-commit-metrics.sh
+//     - scripts/00.chat/session-log/record-chat-commit/script.sh
+//     - scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
 //   effects: read-only
 
 const fs = require('fs');

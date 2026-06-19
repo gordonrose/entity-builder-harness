@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/shared/git/record-chat-commit.sh
+#     - scripts/00.chat/session-log/record-chat-commit/script.sh
 #   effects: writes-files
 
 # shellcheck source=../../session-log/paths/lib.sh

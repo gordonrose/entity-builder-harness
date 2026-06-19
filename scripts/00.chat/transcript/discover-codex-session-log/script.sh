@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/transcript/register-codex-session-log/script.sh
-#     - scripts/shared/git/record-chat-commit.sh
+#     - scripts/00.chat/session-log/record-chat-commit/script.sh
 #   effects: read-only
 
 usage() {

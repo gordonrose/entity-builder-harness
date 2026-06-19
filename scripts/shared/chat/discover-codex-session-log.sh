@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: transcript
 #   portability: llm-workbench-compatibility
 #   used_by:
-#     - scripts/shared/git/record-chat-commit.sh
+#     - scripts/00.chat/session-log/record-chat-commit/script.sh
 #   effects: read-only
 
 exec bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$@"
