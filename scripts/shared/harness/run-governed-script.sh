@@ -43,6 +43,7 @@ always scripts/shared/git/dirty-worktree-check.sh
 always scripts/shared/git/main-update-status.sh
 always scripts/shared/git/verify-local-convergence.sh
 always scripts/shared/harness/check-deterministic-process-drift.sh
+always scripts/shared/harness/check-artifact-metadata-headers.sh
 always scripts/shared/harness/check-governed-script-command-drift.sh
 approved scripts/shared/chat/rename-current-chat-log-folder.sh
 approved scripts/shared/chat/ensure-llm-workbench-repo.sh
@@ -99,6 +100,7 @@ case "$SCRIPT_PATH" in
   scripts/shared/git/main-update-status.sh|\
   scripts/shared/git/verify-local-convergence.sh|\
   scripts/shared/harness/check-deterministic-process-drift.sh|\
+  scripts/shared/harness/check-artifact-metadata-headers.sh|\
   scripts/shared/harness/check-governed-script-command-drift.sh)
     RUN_CLASS="always"
     ;;

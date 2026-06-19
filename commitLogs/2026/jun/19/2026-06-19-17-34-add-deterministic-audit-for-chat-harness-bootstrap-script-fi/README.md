@@ -11,12 +11,12 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-19T16:53:29Z
+latest_commit_sha: 3c0fc14
+chat_duration: 1123s (00:00:18:43)
+estimated_chat_tokens: 760853 estimated from chat transcript bytes (3043410 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 22.83 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -56,9 +56,26 @@ add deterministic audit for chat harness bootstrap script file set
 
 Initial intent: add deterministic audit for chat harness bootstrap script file set
 
+
+### 2026-06-19T16:53:29Z - Commit recorded
+
+Commit: `3c0fc14`
+
+Message: Add chat bootstrap file set audit
+
+Summary: Added a governed audit that derives required chat bootstrap scripts and separates validation and unclassified candidates before upstream copying.
+
+ADR impact: Existing ADR 0015 covers bootstrap productization; no new ADR.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `3c0fc14`
+  Time UTC: 2026-06-19T16:53:29Z
+  Message: Add chat bootstrap file set audit
+  Summary: Added a governed audit that derives required chat bootstrap scripts and separates validation and unclassified candidates before upstream copying.
+  ADR impact: Existing ADR 0015 covers bootstrap productization; no new ADR.
 
 ## Main Refresh Conflicts
 
@@ -75,12 +92,12 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-19T16:53:29Z
+Latest commit SHA: 3c0fc14
+Chat duration: 1123s (00:00:18:43)
+Estimated chat tokens: 760853 estimated from chat transcript bytes (3043410 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 22.83 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 

@@ -43,6 +43,18 @@ bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
 If this flags staged process prose, propose moving the deterministic part into a
 script or gate, or keeping the prose with an allow marker and reason.
 
+## Artifact Metadata
+
+Run:
+
+```bash
+bash scripts/shared/harness/check-artifact-metadata-headers.sh --staged-added
+```
+
+New scripts and harness/process Markdown documents must declare metadata
+headers before entering the repo. Existing files are backfilled in focused
+batches.
+
 ## Commit Log Deletions
 
 Run:

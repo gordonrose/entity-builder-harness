@@ -124,6 +124,7 @@ support dry-run mode first.
 - Keep ordered process in the workflow; put quality rules in standards and
   deterministic checks in scripts or gates.
 - Do not duplicate artifact requirements already owned by this standard.
+- Include an `agentic-artifact` metadata header when created or backfilled.
 
 ### Standard
 
@@ -131,6 +132,7 @@ support dry-run mode first.
 - Separate requirements from guidance.
 - Include source review notes when external best-practice claims affect the
   rule.
+- Include an `agentic-artifact` metadata header when created or backfilled.
 
 ### Checklist
 
@@ -145,6 +147,8 @@ support dry-run mode first.
 - Exit non-zero on failure and print concise, actionable output.
 - Support dry-run mode before any delete, move, commit, push, clean, overwrite,
   or other destructive behavior.
+- Include an `agentic-script` metadata header as defined in
+  `.agentic/harness/standards/artifact-metadata-headers.md`.
 
 ### Gate
 
