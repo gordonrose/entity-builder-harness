@@ -16,7 +16,7 @@ Before deleting branches, removing worktrees, deleting logs, or discarding any
 work, inspect chat workspace state:
 
 ```bash
-bash scripts/shared/chat/report-chat-workspaces.sh
+bash scripts/00.chat/reporting/report-chat-workspaces/script.sh
 ```
 
 For empty chat branch cleanup, start with a dry run:
@@ -58,6 +58,7 @@ The canonical empty-branch cleanup script is:
 
 ```txt
 scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
+scripts/00.chat/reporting/report-chat-workspaces/script.sh
 ```
 
 The old shared cleanup path remains as a compatibility wrapper during the
@@ -66,7 +67,6 @@ script-layout migration. See ADR 0017 for compatibility-wrapper paths.
 Other cleanup helpers still live at their current shared paths:
 
 ```txt
-scripts/shared/chat/report-chat-workspaces.sh
 scripts/shared/git/promote-preflight-refresh.sh
 ```
 

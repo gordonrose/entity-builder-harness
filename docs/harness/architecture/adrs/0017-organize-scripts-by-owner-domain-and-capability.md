@@ -142,6 +142,24 @@ Second pilot result:
 - public alias preserved:
   `scripts/chat/chat-command.sh`
 
+Reporting batch result:
+
+- canonical implementations:
+  `scripts/00.chat/reporting/report-chat-workspaces/script.sh` and
+  `scripts/00.chat/reporting/generate-commit-log-summary/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh`
+- compatibility wrappers:
+  `scripts/shared/chat/report-chat-workspaces.sh`,
+  `scripts/shared/chat/generate-commit-log-summary.sh`, and
+  `scripts/shared/chat/smoke-test-generate-commit-log-summary.sh`
+- public aliases preserved:
+  `scripts/chat/report-chat-workspaces.sh` and
+  `scripts/chat/generate-commit-log-summary.sh`
+- governed runner exception:
+  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
+  shared wrapper paths until the governed-runner path policy is migrated.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

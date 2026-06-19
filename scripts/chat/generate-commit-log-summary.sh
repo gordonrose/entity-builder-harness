@@ -11,4 +11,4 @@ set -euo pipefail
 #     - scripts/shared/chat/smoke-test-chat-script-aliases.sh
 #   effects: read-only
 
-exec bash scripts/shared/chat/generate-commit-log-summary.sh "$@"
+exec bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh "$@"

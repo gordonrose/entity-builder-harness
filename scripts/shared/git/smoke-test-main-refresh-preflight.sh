@@ -54,14 +54,15 @@ SESSION_ID="2026-06-17-00-01-preflight-chat"
 SESSION_LOG="commitLogs/2026/jun/17/${SESSION_ID}/README.md"
 
 mkdir -p \
+  "$REPO/scripts/00.chat/reporting/generate-commit-log-summary" \
   "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/git" \
   "$REPO/$(dirname "$SESSION_LOG")"
 
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" \
   "$REPO/scripts/shared/chat/session-log-paths.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/generate-commit-log-summary.sh" \
-  "$REPO/scripts/shared/chat/generate-commit-log-summary.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" \
+  "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/classify-main-refresh-dirty-state.sh" \
   "$REPO/scripts/shared/git/classify-main-refresh-dirty-state.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/preflight-main-refresh.sh" \
@@ -89,7 +90,7 @@ EOF
 
 (
   cd "$REPO"
-  bash scripts/shared/chat/generate-commit-log-summary.sh >/dev/null
+  bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh >/dev/null
 )
 
 git -C "$REPO" add .

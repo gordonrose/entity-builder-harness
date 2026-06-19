@@ -34,7 +34,7 @@ Do not change branches or edit files while blocked.
 1. Inspect all chat workspaces:
 
    ```bash
-   bash scripts/shared/chat/report-chat-workspaces.sh
+   bash scripts/00.chat/reporting/report-chat-workspaces/script.sh
    ```
 
 2. Verify the target chat branch is ready for local convergence:

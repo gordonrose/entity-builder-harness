@@ -11,4 +11,4 @@ set -euo pipefail
 #     - .agentic/00.chat/workflows/chat-reporting.md
 #   effects: read-only
 
-exec bash scripts/shared/chat/report-chat-workspaces.sh "$@"
+exec bash scripts/00.chat/reporting/report-chat-workspaces/script.sh "$@"
