@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Record a task commit and chat metrics in the current session log.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/checklists/before-commit.md
+#     - .agentic/shared/checklists/before-commit.md
+#   effects: writes-files
+
 # shellcheck source=../chat/session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 

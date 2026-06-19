@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T17:00:17Z
-latest_commit_sha: 1b8a15a
-chat_duration: 1531s (00:00:25:31)
-estimated_chat_tokens: 839842 estimated from chat transcript bytes (3359367 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 25.20 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T17:01:49Z
+latest_commit_sha: f6ff62c
+chat_duration: 1623s (00:00:27:03)
+estimated_chat_tokens: 857374 estimated from chat transcript bytes (3429493 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 25.72 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -102,6 +102,17 @@ Summary: Added metadata headers to root scripts/shared/chat helpers and validati
 
 ADR impact: No ADR impact; metadata backfill follows the new standard.
 
+
+### 2026-06-19T17:01:49Z - Commit recorded
+
+Commit: `f6ff62c`
+
+Message: Backfill metadata for chat startup scripts
+
+Summary: Added metadata headers to chat command and request-initialization scripts, verified classifier fixtures, chat-command smoke, and chat-worktree startup smoke.
+
+ADR impact: No ADR impact; metadata backfill follows the new standard.
+
 ## Commits
 
 
@@ -133,6 +144,13 @@ ADR impact: No ADR impact; metadata backfill follows the new standard.
   Summary: Added metadata headers to root scripts/shared/chat helpers and validation scripts, and fixed metadata checking for JavaScript comment headers.
   ADR impact: No ADR impact; metadata backfill follows the new standard.
 
+
+- Commit: `f6ff62c`
+  Time UTC: 2026-06-19T17:01:49Z
+  Message: Backfill metadata for chat startup scripts
+  Summary: Added metadata headers to chat command and request-initialization scripts, verified classifier fixtures, chat-command smoke, and chat-worktree startup smoke.
+  ADR impact: No ADR impact; metadata backfill follows the new standard.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -148,11 +166,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T17:00:17Z
-Latest commit SHA: 1b8a15a
-Chat duration: 1531s (00:00:25:31)
-Estimated chat tokens: 839842 estimated from chat transcript bytes (3359367 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 25.20 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T17:01:49Z
+Latest commit SHA: f6ff62c
+Chat duration: 1623s (00:00:27:03)
+Estimated chat tokens: 857374 estimated from chat transcript bytes (3429493 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 25.72 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
@@ -166,3 +184,6 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
   test usage.
 - `scripts/shared/chat/commands/` and `request-initialization/` scripts were
   classified as chat startup command/runtime files.
+- `scripts/shared/git/` scripts were classified as required Git gates,
+  approved mutators, refresh helpers, compatibility helpers, or validation
+  smoke tests.

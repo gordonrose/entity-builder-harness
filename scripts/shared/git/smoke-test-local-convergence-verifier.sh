@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Smoke test local convergence verifier classifications.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-promote-to-main.md
+#     - scripts/shared/git/verify-local-convergence.sh
+#   effects: writes-files, branches, worktrees, commits
+
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/local-convergence-verifier-smoke.XXXXXX")"
 

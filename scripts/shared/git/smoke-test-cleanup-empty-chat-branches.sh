@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Smoke test empty chat branch and session log cleanup safety.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-cleanup.md
+#     - scripts/shared/git/cleanup-empty-chat-branches.sh
+#   effects: writes-files, branches, commits, destructive
+
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/cleanup-empty-chat-branches-smoke.XXXXXX")"
 

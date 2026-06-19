@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Test-refresh a chat branch from main in a temporary preflight worktree.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - scripts/shared/git/smoke-test-main-refresh-preflight.sh
+#   effects: branches, worktrees, commits
+
 usage() {
   cat <<'EOF'
 Usage:

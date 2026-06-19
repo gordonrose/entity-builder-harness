@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Report active chat branches and their session metadata relative to a base branch.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - scripts/shared/harness/run-governed-script.sh
+#   effects: read-only
+
 # shellcheck source=../chat/session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 

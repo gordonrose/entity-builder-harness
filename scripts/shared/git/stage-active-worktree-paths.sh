@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Mirror explicit paths from the active worktree and stage them in an isolated chat worktree.
+#   portability: llm-workbench-compatibility
+#   used_by:
+#     - docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
+#     - scripts/shared/git/smoke-test-with-chat-branch.sh
+#   effects: writes-files, stages-files
+
 usage() {
   cat <<'EOF'
 Usage:

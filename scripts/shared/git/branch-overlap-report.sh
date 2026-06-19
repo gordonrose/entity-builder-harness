@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Report changed-path overlap between active work and chat branches.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - scripts/shared/harness/run-governed-script.sh
+#   effects: read-only
+
 BASE_BRANCH="${1:-main}"
 
 if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then

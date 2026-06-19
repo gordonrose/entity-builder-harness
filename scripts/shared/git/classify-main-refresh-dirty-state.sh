@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Classify dirty chat worktree state before refreshing from main.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - scripts/shared/git/preflight-main-refresh.sh
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:

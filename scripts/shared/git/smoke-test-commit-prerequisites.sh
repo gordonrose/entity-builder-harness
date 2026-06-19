@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Smoke test commit prerequisite validation and missing-file failures.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/checklists/before-commit.md
+#     - scripts/shared/git/check-commit-prerequisites.sh
+#   effects: writes-files, branches, commits
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

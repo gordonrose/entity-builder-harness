@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Promote a tested preflight refresh branch into the active chat branch.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - .agentic/00.chat/standards/main-refresh-conflict-types.md
+#   effects: branches, worktrees, destructive
+
 usage() {
   cat <<'EOF'
 Usage:

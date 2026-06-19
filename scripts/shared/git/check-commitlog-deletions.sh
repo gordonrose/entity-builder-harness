@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Block staged deletion of commit logs that record committed work.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/checklists/before-commit.md
+#     - docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:

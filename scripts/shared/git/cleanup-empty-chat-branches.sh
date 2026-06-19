@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Delete empty chat branches and matching empty session logs after dry-run inspection.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-cleanup.md
+#     - scripts/chat/cleanup-empty-chat-branches.sh
+#   effects: branches, writes-files, destructive
+
 # shellcheck source=../chat/session-log-paths.sh
 source "scripts/shared/chat/session-log-paths.sh"
 

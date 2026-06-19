@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Smoke test dirty-state classification before main refresh.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - scripts/shared/git/classify-main-refresh-dirty-state.sh
+#   effects: writes-files, branches, commits
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1

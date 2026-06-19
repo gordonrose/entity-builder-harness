@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Verify whether a completed chat branch is eligible for local main convergence.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-promote-to-main.md
+#     - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:

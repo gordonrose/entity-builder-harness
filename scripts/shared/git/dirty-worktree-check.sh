@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Check worktree cleanliness with optional current-session bookkeeping tolerance.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-start.md
+#     - .agentic/harness/workflows/change-harness.md
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:

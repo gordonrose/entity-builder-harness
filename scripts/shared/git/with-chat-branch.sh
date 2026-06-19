@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Run commit-boundary commands in an isolated worktree for a chat branch.
+#   portability: llm-workbench-compatibility
+#   used_by:
+#     - docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
+#     - scripts/shared/git/smoke-test-with-chat-branch.sh
+#   effects: worktrees, writes-files
+
 usage() {
   cat <<'EOF'
 Usage:

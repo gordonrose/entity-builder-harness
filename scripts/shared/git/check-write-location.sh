@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Enforce task writes from chat-owned worktrees instead of the root integration worktree.
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/00.chat/checklists/before-commit.md
+#     - .agentic/00.chat/workflows/chat-start.md
+#   effects: read-only
+
 usage() {
   cat <<'EOF'
 Usage:

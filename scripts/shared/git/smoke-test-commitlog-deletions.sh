@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Smoke test commit log deletion protection for recorded work.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
+#     - scripts/shared/git/check-commitlog-deletions.sh
+#   effects: writes-files, commits
+
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/commitlog-deletions-smoke.XXXXXX")"
 

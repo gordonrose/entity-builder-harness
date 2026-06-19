@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-script:
+#   owner: shared-git
+#   purpose: Smoke test preflight main refresh and promotion behavior.
+#   portability: llm-workbench-validation
+#   used_by:
+#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
+#     - scripts/shared/git/preflight-main-refresh.sh
+#   effects: writes-files, branches, worktrees, commits, destructive
+
 fail() {
   echo "FAIL: $*" >&2
   exit 1
