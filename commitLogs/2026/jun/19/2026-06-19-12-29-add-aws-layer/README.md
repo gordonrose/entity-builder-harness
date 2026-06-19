@@ -11,10 +11,12 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T11:29:43Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl
-latest_commit_at_utc: 2026-06-19T16:11:46Z
-latest_commit_sha: 006755b
-chat_duration: 16923s (00:04:42:03)
-estimated_chat_tokens: 190974 estimated from chat transcript bytes (763896 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl)
+latest_commit_at_utc: 2026-06-19T16:19:56Z
+latest_commit_sha: 54a4e28
+chat_duration: 17413s (00:04:50:13)
+estimated_chat_tokens: 221482 estimated from chat transcript bytes (885927 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl)
+estimated_chat_cost: USD 6.64 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -74,6 +76,17 @@ Summary: Added a first-class AWS harness layer with inspect, plan, and execute w
 
 ADR impact: ADR added: docs/harness/architecture/adrs/0016-add-aws-layer.md
 
+
+### 2026-06-19T16:19:56Z - Commit recorded
+
+Commit: `54a4e28`
+
+Message: fix(harness): renumber aws layer adr
+
+Summary: Renumbered the AWS layer ADR from 0014 to 0016 after refreshing from main introduced ADRs 0014 and 0015.
+
+ADR impact: ADR path updated: docs/harness/architecture/adrs/0016-add-aws-layer.md
+
 ## Commits
 
 
@@ -83,6 +96,13 @@ ADR impact: ADR added: docs/harness/architecture/adrs/0016-add-aws-layer.md
   Message: feat(harness): add aws layer scaffold
   Summary: Added a first-class AWS harness layer with inspect, plan, and execute workflows; routed AWS classification; added AWS ADR locations and harness ADR 0014.
   ADR impact: ADR added: docs/harness/architecture/adrs/0016-add-aws-layer.md
+
+
+- Commit: `54a4e28`
+  Time UTC: 2026-06-19T16:19:56Z
+  Message: fix(harness): renumber aws layer adr
+  Summary: Renumbered the AWS layer ADR from 0014 to 0016 after refreshing from main introduced ADRs 0014 and 0015.
+  ADR impact: ADR path updated: docs/harness/architecture/adrs/0016-add-aws-layer.md
 
 ## Main Refresh Conflicts
 
@@ -97,10 +117,12 @@ Reason: adding a first-class harness layer is a durable architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T11:29:43Z
-Latest commit at UTC: 2026-06-19T16:11:46Z
-Latest commit SHA: 006755b
-Chat duration: 16923s (00:04:42:03)
-Estimated chat tokens: 190974 estimated from chat transcript bytes (763896 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl)
+Latest commit at UTC: 2026-06-19T16:19:56Z
+Latest commit SHA: 54a4e28
+Chat duration: 17413s (00:04:50:13)
+Estimated chat tokens: 221482 estimated from chat transcript bytes (885927 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T12-29-47-019edfa4-e9ed-7061-b80b-d0a24a8ce3c4.jsonl)
+Estimated chat cost: USD 6.64 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
