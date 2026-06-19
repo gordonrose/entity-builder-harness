@@ -20,6 +20,12 @@ work. The useful part of this ADR remains as governed recovery/import behavior:
 explicit paths can be imported from an active worktree into the session's
 chat-owned worktree when edits happened in the wrong checkout.
 
+Current guidance: do not introduce new normal chat flows that call
+`scripts/shared/git/with-chat-branch.sh` or
+`scripts/shared/git/stage-active-worktree-paths.sh`. Keep them only as
+superseded compatibility helpers until a later retirement pass proves they are
+unneeded by bootstrap, install, and recovery surfaces.
+
 ## Context
 
 Each chat session records its intended `chat/*` branch in the session log, but
@@ -44,6 +50,16 @@ bash scripts/shared/git/with-chat-branch.sh <session-log> -- <command> [args...]
 This was the normal commit-boundary model when this ADR was accepted. For new
 normal task work, use the chat-owned worktree recorded in the session log
 instead.
+
+For recovery imports, use the canonical recovery capability instead of this
+isolated command runner:
+
+```bash
+bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+  --session-log <session-log> \
+  --source-worktree <active-worktree> \
+  -- <path>...
+```
 
 The helper reads the branch from the session log, validates that it is a local
 `chat/*` branch, and runs the requested command inside a deterministic isolated
@@ -71,18 +87,11 @@ only explicit approved paths into the isolated worktree with:
 bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/stage-active-worktree-paths.sh <path>...
 ```
 
-Current recovery import uses the clearer canonical capability:
-
-```bash
-bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
-  --session-log <session-log> \
-  --source-worktree <active-worktree> \
-  -- <path>...
-```
-
 The staging helper accepts repository-relative paths, copies existing files or
 directories from the active worktree into the isolated worktree, and stages
-deletions when an approved path no longer exists in the active worktree.
+deletions when an approved path no longer exists in the active worktree. This
+helper is superseded for current recovery work by the canonical recovery
+capability shown above.
 
 This authorization is limited to commit preparation, staging for approved
 commits, task commits after explicit approval, commit recording, and narrow

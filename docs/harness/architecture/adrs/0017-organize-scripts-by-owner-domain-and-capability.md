@@ -350,9 +350,9 @@ Recovery import batch result:
   `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md`
 - compatibility wrapper:
   `scripts/shared/git/stage-active-worktree-paths.sh`
-- legacy isolated runner retained for compatibility review:
+- superseded compatibility runner retained for retirement review:
   `scripts/shared/git/with-chat-branch.sh`
-- legacy smoke test retained:
+- superseded compatibility smoke test retained:
   `scripts/shared/git/smoke-test-with-chat-branch.sh`
 - governed runner update:
   `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
@@ -475,22 +475,28 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
    - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
    - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
-   - `scripts/shared/git/stage-active-worktree-paths.sh`
    - `scripts/shared/git/verify-local-convergence.sh`
 
-2. Legacy isolated chat branch execution helpers retained for compatibility
+2. Superseded isolated chat branch execution helpers retained for retirement
    review:
 
    - `scripts/shared/git/smoke-test-with-chat-branch.sh`
+   - `scripts/shared/git/stage-active-worktree-paths.sh`
    - `scripts/shared/git/with-chat-branch.sh`
+
+   These belong to the pre-ADR-0011 commit-boundary model. Do not migrate
+   `with-chat-branch.sh` into a first-class canonical capability folder unless
+   a future review finds a current workflow that still needs isolated command
+   execution. Keep `stage-active-worktree-paths.sh` only as a compatibility
+   adapter to the canonical recovery import. Prefer
+   `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh`
+   for wrong-worktree recovery imports.
 
 Next migration recommendation:
 
-- Move the chat refresh/local convergence group as its own batch before touching
-  isolated chat branch execution helpers.
 - Keep existing shared paths as wrappers while governed runner allowlists,
   workflow docs, and old external users still reference them.
-- Revisit whether any compatibility wrapper can be retired only after command
+- Run a retirement pass for superseded isolated execution helpers after command
   discovery, governed runner path policy, and bootstrap install surfaces no
   longer depend on the old path.
 

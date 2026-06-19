@@ -3,9 +3,10 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Run commit-boundary commands in an isolated worktree for a chat branch.
-#   domain: git
+#   purpose: Superseded compatibility helper for the old isolated-worktree commit-boundary model.
+#   domain: legacy-compatibility
 #   portability: llm-workbench-compatibility
+#   status: superseded-by scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh for recovery imports and chat-owned worktrees for normal task work
 #   used_by:
 #     - docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
 #     - scripts/shared/git/smoke-test-with-chat-branch.sh

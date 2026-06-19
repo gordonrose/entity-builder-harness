@@ -3,9 +3,10 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Compatibility wrapper for recovery import into a chat-owned worktree.
-#   domain: recovery
+#   purpose: Superseded compatibility wrapper for recovery import into a chat-owned worktree.
+#   domain: legacy-compatibility
 #   portability: llm-workbench-compatibility
+#   status: superseded-by scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
 #   used_by:
 #     - docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
 #     - scripts/shared/git/smoke-test-with-chat-branch.sh
