@@ -54,6 +54,7 @@ always scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
 always scripts/shared/git/dirty-worktree-check.sh
 always scripts/shared/git/main-update-status.sh
 always scripts/00.chat/main-refresh/show-main-update-status/script.sh
+always scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 always scripts/shared/git/verify-local-convergence.sh
 always scripts/shared/harness/check-deterministic-process-drift.sh
 always scripts/shared/harness/check-artifact-metadata-headers.sh
@@ -92,6 +93,7 @@ case "$SCRIPT_PATH" in
   scripts/shared/*.sh|scripts/shared/*/*.sh|scripts/shared/chat/request-initialization/*.sh|\
   scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
   scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
+  scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh)
     ;;
@@ -119,6 +121,7 @@ case "$SCRIPT_PATH" in
   scripts/shared/git/dirty-worktree-check.sh|\
   scripts/shared/git/main-update-status.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
+  scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
   scripts/shared/git/verify-local-convergence.sh|\
   scripts/shared/harness/check-deterministic-process-drift.sh|\
   scripts/shared/harness/check-artifact-metadata-headers.sh|\

@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-refresh-from-main.md
-#     - scripts/shared/git/preflight-main-refresh.sh
+#     - scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 #   effects: read-only
 
 usage() {

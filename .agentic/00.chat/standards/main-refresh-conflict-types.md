@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: standard
+purpose: Define governed conflict classification and resolution during chat refresh from main.
+domain: main-refresh
+portability: llm-workbench-required
+used_by:
+  - .agentic/00.chat/workflows/chat-refresh-from-main.md
+  - scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
+-->
+
 # Main Refresh Conflict Types
 
 ## Purpose
@@ -63,26 +74,26 @@ Each entry must record:
 - files changed by the resolution
 - checks run or still pending
 
-## Promotion After Conflict Resolution
+## Applying After Conflict Resolution
 
-Approval to run a governed main-refresh preflight includes approval to promote a
-clean, tested preflight result back to the chat branch.
+Approval to run a governed main-refresh rehearsal includes approval to apply a
+clean, tested rehearsed result back to the chat branch.
 
 After every conflicted path has a `## Main Refresh Conflicts` audit entry and
-the required checks pass, promote the preflight branch automatically with:
+the required checks pass, apply the preflight branch automatically with:
 
 ```bash
-bash scripts/shared/git/promote-preflight-refresh.sh <preflight-branch>
+bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
 ```
 
-Stop before promotion if:
+Stop before applying if:
 
 - unresolved conflicts remain
 - required checks failed or were skipped
 - the preflight worktree is dirty
 - the preflight branch no longer descends from the chat branch
-- the promotion script refuses cleanup
-- the user explicitly asked to inspect before promotion
+- the apply script refuses cleanup
+- the user explicitly asked to inspect before applying
 
 Do not ask for a second approval when none of those stop conditions apply.
 

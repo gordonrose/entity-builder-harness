@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: workflow
+purpose: Govern cleanup of chat branches, worktrees, temporary refresh artifacts, and empty session logs.
+domain: cleanup
+portability: llm-workbench-required
+used_by:
+  - .agentic/00.chat/README.md
+  - scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
+-->
+
 # Chat Cleanup Workflow
 
 ## Use When
@@ -64,10 +75,10 @@ scripts/00.chat/reporting/report-chat-workspaces/script.sh
 The old shared cleanup path remains as a compatibility wrapper during the
 script-layout migration. See ADR 0017 for compatibility-wrapper paths.
 
-Other cleanup helpers still live at their current shared paths:
+Other cleanup helpers:
 
 ```txt
-scripts/shared/git/promote-preflight-refresh.sh
+scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
 ```
 
 ## Migration Notes

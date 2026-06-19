@@ -117,7 +117,7 @@ The classifier reports state; the workflow decides what is allowed.
   default.
 - `unsupported-dirty`: stop. The workflow does not own this recovery.
 
-## Checkpoint And Preflight Refresh
+## Checkpoint And Rehearsed Refresh
 
 Use this when normal repository work exists on the chat branch or when a main
 refresh should be rehearsed before mutating the active chat worktree.
@@ -129,7 +129,7 @@ refresh should be rehearsed before mutating the active chat worktree.
    worktree:
 
    ```bash
-   bash scripts/shared/git/preflight-main-refresh.sh
+   bash scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
    ```
 
 3. If preflight reports conflicts, stop before resolving. Classify each
@@ -150,31 +150,31 @@ refresh should be rehearsed before mutating the active chat worktree.
    bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh ...
    ```
 
-   Do not promote the preflight branch until the session log records the audit
+   Do not apply the rehearsed refresh until the session log records the audit
    trail for every conflicted path.
 4. If the user already approved the main-refresh preflight, and the preflight
    branch is clean, fully resolved, tested, and contains the intended merge
-   result, promote it back to the chat branch automatically:
+   result, apply it back to the chat branch automatically:
 
    ```bash
-   bash scripts/shared/git/promote-preflight-refresh.sh <preflight-branch>
+   bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
    ```
 
-5. Promotion fast-forwards the active chat branch, verifies it points at the
+5. Applying the rehearsed refresh fast-forwards the active chat branch, verifies it points at the
    tested preflight commit, removes the clean temporary preflight worktree,
    deletes the matching `agentic/preflight/*/<timestamp>` branch, and cleans up
    stale sibling preflight branches/worktrees for the same chat branch when they
    are already ancestors of the promoted chat branch and have clean or absent
    worktrees.
-<!-- deterministic-check: allow reason="promote-preflight-refresh.sh enforces dirty preflight worktree refusal before promotion or cleanup" -->
-6. Stop before promotion if unresolved conflicts remain, required checks failed
+<!-- deterministic-check: allow reason="apply-rehearsed-refresh enforces dirty preflight worktree refusal before applying or cleanup" -->
+6. Stop before applying if unresolved conflicts remain, required checks failed
    or were skipped, the preflight worktree is dirty, the preflight branch no
-   longer descends from the chat branch, the promotion script refuses cleanup,
-   or the user explicitly asked to inspect before promotion. Stale sibling
+   longer descends from the chat branch, the apply script refuses cleanup,
+   or the user explicitly asked to inspect before applying. Stale sibling
    preflight branches with unique commits or dirty worktrees must be reported
    and skipped, not deleted. Do not force-remove the preflight worktree, delete
-   the preflight branch, or promote the chat branch while stopped.
-7. After promotion, run the relevant layer checks before any task commit or
+   the preflight branch, or apply the refresh while stopped.
+7. After applying the refresh, run the relevant layer checks before any task commit or
    promotion to `main`.
 
 ## Recommended Active-Branch Flow
