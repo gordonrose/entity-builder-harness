@@ -30,6 +30,19 @@ bash scripts/shared/chat/chat-command.sh list
 The default VS Code build task routes through `chat-command.sh new`, so
 Ctrl+Shift+B and the named `new` command exercise the same startup path.
 
+## Chat Message Auto-Start
+
+When a chat starts in this repo and no matching chat session exists for the
+current branch, the chat-start workflow treats the opening user message as the
+new chat summary and runs:
+
+```bash
+bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh "<opening user message>"
+```
+
+If the opening message is exactly `new`, the agent asks what the chat should be
+about before creating a session.
+
 ## Adding A Command
 
 Add a new executable script at:
