@@ -162,7 +162,6 @@ falls back to printed terminal handoff when clipboard copy fails.
 
 ## Compatibility
 
-The old request-initialization entrypoint remains at
-`scripts/shared/chat/request-initialization/start-chat-session.sh`. It delegates
-to this canonical script until smoke fixtures, downstream references, and any
-external users no longer need the shared path.
+The old request-initialization entrypoint
+`scripts/shared/chat/request-initialization/start-chat-session.sh` was retired
+after smoke fixtures and downstream references moved to this canonical script.

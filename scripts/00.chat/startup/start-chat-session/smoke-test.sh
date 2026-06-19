@@ -37,7 +37,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree" \
   "$REPO/scripts/00.chat/worktree/paths" \
-  "$REPO/scripts/shared/chat/request-initialization" \
+  "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/git"
 
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
@@ -45,12 +45,10 @@ cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.cha
 cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shared/chat/chat-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/shared/chat/ensure-chat-worktree.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
-cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/start-chat-session.sh" "$REPO/scripts/shared/chat/request-initialization/start-chat-session.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/request-initialization/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO"/scripts/shared/chat/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
@@ -60,7 +58,7 @@ AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
-    bash scripts/shared/chat/request-initialization/start-chat-session.sh "test chat worktree session" \
+    bash scripts/00.chat/startup/start-chat-session/script.sh "test chat worktree session" \
     >/tmp/chat-worktree-session.out
 
 root_branch="$(git -C "$REPO" branch --show-current)"
@@ -123,7 +121,7 @@ CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=copy \
 PATH="$FAKE_BIN:$PATH" \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
-    bash scripts/shared/chat/request-initialization/start-chat-session.sh "test clipboard fallback session" \
+    bash scripts/00.chat/startup/start-chat-session/script.sh "test clipboard fallback session" \
     >"$TMP_ROOT/chat-worktree-session-clipboard.out" 2>&1
 
 if ! grep -q 'WARNING: Clipboard copy via clip.exe failed; printing prompt instead.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
