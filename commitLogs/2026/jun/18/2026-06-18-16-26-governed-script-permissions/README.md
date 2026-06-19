@@ -11,10 +11,10 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-18T15:26:14Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl
-latest_commit_at_utc: 2026-06-19T11:19:51Z
-latest_commit_sha: b1b7433
-chat_duration: 71617s (00:19:53:37)
-estimated_chat_tokens: 217644 estimated from chat transcript bytes (870576 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
+latest_commit_at_utc: 2026-06-19T11:23:05Z
+latest_commit_sha: da2a44d
+chat_duration: 71811s (00:19:56:51)
+estimated_chat_tokens: 229795 estimated from chat transcript bytes (919178 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 -->
 
 ## Initial Intent
@@ -84,6 +84,17 @@ Summary: Added the canonical harness policy for persistent vendor permission to 
 
 ADR impact: ADR needed: unknown
 
+
+### 2026-06-19T11:23:05Z - Commit recorded
+
+Commit: `da2a44d`
+
+Message: Add governed script runner
+
+Summary: Added the deterministic runner that allows only explicit governed scripts and requires --approved-action for approval-sensitive helpers.
+
+ADR impact: ADR needed: unknown
+
 ## Commits
 
 
@@ -101,6 +112,13 @@ ADR impact: ADR needed: unknown
   Summary: Added the canonical harness policy for persistent vendor permission to target only the governed script runner.
   ADR impact: ADR needed: unknown
 
+
+- Commit: `da2a44d`
+  Time UTC: 2026-06-19T11:23:05Z
+  Message: Add governed script runner
+  Summary: Added the deterministic runner that allows only explicit governed scripts and requires --approved-action for approval-sensitive helpers.
+  ADR impact: ADR needed: unknown
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -114,10 +132,10 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: 2026-06-18T15:26:14Z
-Latest commit at UTC: 2026-06-19T11:19:51Z
-Latest commit SHA: b1b7433
-Chat duration: 71617s (00:19:53:37)
-Estimated chat tokens: 217644 estimated from chat transcript bytes (870576 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
+Latest commit at UTC: 2026-06-19T11:23:05Z
+Latest commit SHA: da2a44d
+Chat duration: 71811s (00:19:56:51)
+Estimated chat tokens: 229795 estimated from chat transcript bytes (919178 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 
 ## Notes
 
