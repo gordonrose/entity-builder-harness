@@ -13,6 +13,7 @@ trap 'rm -rf "$TMP_ROOT"' EXIT
 REPO="$TMP_ROOT/repo"
 mkdir -p \
   "$REPO/scripts/shared/chat" \
+  "$REPO/scripts/shared/chat/request-initialization" \
   "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness" \
   "$REPO/scripts/local"
@@ -33,6 +34,8 @@ make_fixture() {
 }
 
 make_fixture "scripts/shared/git/check-write-location.sh" "allowed-check"
+make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "allowed-workbench"
+make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "approved-auto-start"
 make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "approved-action"
 make_fixture "scripts/shared/git/cleanup-empty-chat-branches.sh" "dangerous-helper"
 make_fixture "scripts/shared/harness/check-deterministic-process-drift.sh" "allowed-harness"
@@ -50,6 +53,24 @@ cd "$REPO"
 OUT="$(bash scripts/shared/harness/run-governed-script.sh scripts/shared/git/check-write-location.sh arg1)"
 if [ "$OUT" != "allowed-check:arg1" ]; then
   fail "allowed check did not run through the governed runner: $OUT"
+fi
+
+if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run >"$TMP_ROOT/workbench-missing.out" 2>&1; then
+  fail "workbench clone helper ran without --approved-action"
+fi
+
+OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/ensure-llm-workbench-repo.sh --dry-run)"
+if [ "$OUT" != "allowed-workbench:--dry-run" ]; then
+  fail "allowed workbench helper did not run through the governed runner: $OUT"
+fi
+
+if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/request-initialization/auto-start-missing-session.sh "new chat" >"$TMP_ROOT/auto-start-missing.out" 2>&1; then
+  fail "auto-start helper ran without --approved-action"
+fi
+
+OUT="$(bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/request-initialization/auto-start-missing-session.sh "new chat")"
+if [ "$OUT" != "approved-auto-start:new chat" ]; then
+  fail "auto-start helper did not run with --approved-action: $OUT"
 fi
 
 if bash scripts/shared/harness/run-governed-script.sh scripts/shared/chat/rename-current-chat-log-folder.sh test >"$TMP_ROOT/approved-missing.out" 2>&1; then
@@ -83,6 +104,22 @@ case "$LIST" in
     ;;
   *)
     fail "--list output did not include expected always entry"
+    ;;
+esac
+
+case "$LIST" in
+  *"approved scripts/shared/chat/ensure-llm-workbench-repo.sh"*)
+    ;;
+  *)
+    fail "--list output did not include expected workbench entry"
+    ;;
+esac
+
+case "$LIST" in
+  *"approved scripts/shared/chat/request-initialization/auto-start-missing-session.sh"*)
+    ;;
+  *)
+    fail "--list output did not include expected auto-start entry"
     ;;
 esac
 
