@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: workflow
+purpose: Govern explicit local merge from completed chat branches into main.
+domain: local-merge
+portability: llm-workbench-required
+used_by:
+  - .agentic/00.chat/workflows/README.md
+  - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+-->
+
 # Chat Promote To Main Workflow
 
 ## Use When
@@ -9,7 +20,7 @@ or when deciding whether a chat branch is ready for promotion.
 
 Treat the root worktree as the local integration console. Chat branches are
 feature branches owned by their chat worktrees. Integration into `main` is an
-explicit convergence operation.
+  explicit local merge operation.
 
 ## Required Gates
 
@@ -37,10 +48,10 @@ Do not change branches or edit files while blocked.
    bash scripts/00.chat/reporting/report-chat-workspaces/script.sh
    ```
 
-2. Verify the target chat branch is ready for local convergence:
+2. Verify the target chat branch is ready to merge into local `main`:
 
    ```bash
-   bash scripts/shared/git/verify-local-convergence.sh <chat-branch>
+   bash scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh <chat-branch>
    ```
 
    This verification is read-only. It may inspect a session log from the chat
@@ -52,7 +63,7 @@ Do not change branches or edit files while blocked.
 ## Refresh Policy
 
 - A user request to merge or promote a chat branch to `main` also approves the
-  non-rewriting refresh from `main` that local convergence requires, unless the
+  non-rewriting refresh from `main` that local merge requires, unless the
   user explicitly asks to inspect before refresh.
 - Prefer merging `main` into a chat branch because it preserves recorded commit
   SHAs and session evidence.
@@ -73,7 +84,7 @@ For the approved non-rewriting refresh, run from the chat-owned worktree:
 git merge --no-ff main
 ```
 
-Then rerun the relevant checks and rerun local convergence verification.
+Then rerun the relevant checks and rerun local merge verification.
 
 ### Diverged From `main`
 

@@ -47,7 +47,7 @@ scripts/
       cleanup-empty-chat-branches/
         script.sh
         smoke-test.sh
-      verify-local-convergence/
+      verify-chat-ready-to-merge-local-main/
         script.sh
         smoke-test.sh
     session-log/
@@ -408,6 +408,24 @@ Main refresh rehearse/apply batch result:
   read-only/mutating rehearsal script path while leaving the destructive apply
   path outside the always-approved runner surface.
 
+Local merge readiness batch result:
+
+- canonical implementation:
+  `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh`
+- canonical smoke test:
+  `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/smoke-test.sh`
+- capability README:
+  `scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/README.md`
+- compatibility wrappers:
+  `scripts/shared/git/verify-local-convergence.sh` and
+  `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
+- direct callers migrated:
+  `.agentic/00.chat/workflows/chat-promote-to-main.md`
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  canonical read-only local merge readiness verifier path while retaining the
+  old shared wrapper for compatibility.
+
 Remaining shared git inventory after commit-boundary batch:
 
 All remaining `scripts/shared/git/*.sh` files currently declare
@@ -436,14 +454,14 @@ primitives by metadata. They fall into three groups:
    - `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
    - `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
    - `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
+   - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
    - `scripts/shared/git/stage-active-worktree-paths.sh`
+   - `scripts/shared/git/verify-local-convergence.sh`
 
 2. Chat refresh and local convergence capabilities not yet moved:
 
    - `scripts/shared/git/active-chat-branches.sh`
    - `scripts/shared/git/branch-overlap-report.sh`
-   - `scripts/shared/git/smoke-test-local-convergence-verifier.sh`
-   - `scripts/shared/git/verify-local-convergence.sh`
 
 3. Legacy isolated chat branch execution helpers retained for compatibility
    review:
