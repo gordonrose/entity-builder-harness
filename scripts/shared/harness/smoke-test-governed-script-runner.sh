@@ -47,7 +47,7 @@ make_fixture "scripts/shared/git/check-write-location.sh" "allowed-check"
 make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "allowed-workbench"
 make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "approved-auto-start"
 make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "approved-action"
-make_fixture "scripts/shared/git/cleanup-empty-chat-branches.sh" "dangerous-helper"
+make_fixture "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "dangerous-helper"
 make_fixture "scripts/shared/harness/check-deterministic-process-drift.sh" "allowed-harness"
 make_fixture "scripts/local/not-governed.sh" "local-script"
 
@@ -92,7 +92,7 @@ if [ "$OUT" != "approved-action:test" ]; then
   fail "approval-sensitive script did not run with --approved-action: $OUT"
 fi
 
-if bash scripts/shared/harness/run-governed-script.sh scripts/shared/git/cleanup-empty-chat-branches.sh --apply >"$TMP_ROOT/dangerous.out" 2>&1; then
+if bash scripts/shared/harness/run-governed-script.sh scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --apply >"$TMP_ROOT/dangerous.out" 2>&1; then
   fail "dangerous helper was allowed"
 fi
 

@@ -22,13 +22,13 @@ bash scripts/shared/chat/report-chat-workspaces.sh
 For empty chat branch cleanup, start with a dry run:
 
 ```bash
-bash scripts/shared/git/cleanup-empty-chat-branches.sh --dry-run
+bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --dry-run
 ```
 
 Only run `--apply` after explicit user approval in the current chat:
 
 ```bash
-bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
+bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --apply
 ```
 
 ## Rules
@@ -52,12 +52,20 @@ bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
 - If a cleanup case is not covered here or by a script-level gate, stop and ask
   whether to update the harness or approve a one-off exception.
 
-## Compatibility Scripts
+## Script Paths
 
-The executable scripts still live under compatibility paths:
+The canonical empty-branch cleanup script is:
 
 ```txt
-scripts/shared/git/cleanup-empty-chat-branches.sh
+scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
+```
+
+The old shared cleanup path remains as a compatibility wrapper during the
+script-layout migration. See ADR 0017 for compatibility-wrapper paths.
+
+Other cleanup helpers still live at their current shared paths:
+
+```txt
 scripts/shared/chat/report-chat-workspaces.sh
 scripts/shared/git/promote-preflight-refresh.sh
 ```

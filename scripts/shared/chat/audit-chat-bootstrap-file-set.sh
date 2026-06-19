@@ -47,6 +47,7 @@ ALL_SCRIPTS="$TMP_DIR/all-scripts.txt"
 REQUIRED="$TMP_DIR/required.txt"
 UNREFERENCED="$TMP_DIR/unreferenced.txt"
 VALIDATION="$TMP_DIR/validation.txt"
+COMPATIBILITY="$TMP_DIR/compatibility.txt"
 UNCLASSIFIED="$TMP_DIR/unclassified.txt"
 
 : > "$SEEDS"
@@ -145,7 +146,16 @@ find scripts -type f \
 } | sort -u > "$REQUIRED"
 
 comm -23 "$ALL_SCRIPTS" "$REQUIRED" > "$UNREFERENCED"
-grep -E '/smoke-test-[^/]+\.sh$|/smoke-test\.sh$|/with-chat-branch\.sh$' "$UNREFERENCED" > "$VALIDATION" || true
+while IFS= read -r path; do
+  [ -n "$path" ] || continue
+  if grep -Eq '^[#[:space:]]*portability: .*compatibility' "$path"; then
+    printf '%s\n' "$path"
+  fi
+done < "$UNREFERENCED" > "$COMPATIBILITY"
+{
+  grep -E '/smoke-test-[^/]+\.sh$|/smoke-test\.sh$|/with-chat-branch\.sh$' "$UNREFERENCED" || true
+  cat "$COMPATIBILITY"
+} | sort -u > "$VALIDATION"
 comm -23 "$UNREFERENCED" "$VALIDATION" > "$UNCLASSIFIED"
 
 echo "Chat bootstrap script file set audit"

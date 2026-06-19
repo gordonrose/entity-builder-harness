@@ -239,11 +239,11 @@ fi
 case "${CHAT_CLEANUP_EMPTY_BRANCHES:-apply}" in
   apply)
     echo "Cleaning up empty chat branches..."
-    bash scripts/shared/git/cleanup-empty-chat-branches.sh --apply
+    bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --apply
     ;;
   dry-run)
     echo "Previewing empty chat branch cleanup..."
-    bash scripts/shared/git/cleanup-empty-chat-branches.sh --dry-run
+    bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --dry-run
     ;;
   0|false|no|skip)
     echo "Skipping empty chat branch cleanup."

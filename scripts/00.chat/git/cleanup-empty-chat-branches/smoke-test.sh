@@ -9,7 +9,6 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-cleanup.md
 #     - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-#     - scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh
 #   effects: writes-files, branches, commits, destructive
 
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"

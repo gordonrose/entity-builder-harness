@@ -30,6 +30,7 @@ mkdir -p "$REPO"
 git -C "$REPO" init --quiet --initial-branch=main
 
 mkdir -p \
+  "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/shared/chat/request-initialization" \
   "$REPO/scripts/shared/git"
 
@@ -38,8 +39,8 @@ cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shar
 cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/shared/chat/ensure-chat-worktree.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/classify-task.sh" "$REPO/scripts/shared/chat/request-initialization/classify-task.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/request-initialization/start-chat-session.sh" "$REPO/scripts/shared/chat/request-initialization/start-chat-session.sh"
-cp "$SOURCE_ROOT/scripts/shared/git/cleanup-empty-chat-branches.sh" "$REPO/scripts/shared/git/cleanup-empty-chat-branches.sh"
-chmod +x "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/request-initialization/*.sh "$REPO"/scripts/shared/git/*.sh
+cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO"/scripts/shared/chat/*.sh "$REPO"/scripts/shared/chat/request-initialization/*.sh "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
