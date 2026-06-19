@@ -249,6 +249,15 @@ Closeout command batch result:
   can continue listing and invoking `chat-command close` from the shared command
   directory until command discovery is migrated.
 
+New-session command batch result:
+
+- canonical implementation:
+  `scripts/00.chat/startup/start-new-chat/script.sh`
+- command compatibility wrapper:
+  `scripts/shared/chat/commands/new.sh` remains executable so the dispatcher can
+  continue listing and invoking `chat-command new` from the shared command
+  directory until command discovery is migrated.
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

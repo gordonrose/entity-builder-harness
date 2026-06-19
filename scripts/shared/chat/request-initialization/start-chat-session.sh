@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: startup
 #   portability: llm-workbench-required
 #   used_by:
-#     - scripts/shared/chat/commands/new.sh
+#     - scripts/00.chat/startup/start-new-chat/script.sh
 #     - .agentic/00.chat/workflows/chat-start.md
 #   effects: branches, worktrees, writes-files, stages-files
 

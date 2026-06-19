@@ -3,12 +3,11 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Start a new governed chat session through request-initialization.
+#   purpose: Compatibility wrapper for the chat new-session command.
 #   domain: startup
-#   portability: llm-workbench-required
+#   portability: llm-workbench-compatibility
 #   used_by:
-#     - .agentic/00.chat/commands/README.md
 #     - scripts/00.chat/command/dispatcher/script.sh
 #   effects: branches, worktrees, writes-files, stages-files
 
-exec bash scripts/shared/chat/request-initialization/start-chat-session.sh "$@"
+exec bash scripts/00.chat/startup/start-new-chat/script.sh "$@"
