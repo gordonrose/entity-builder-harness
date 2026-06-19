@@ -27,6 +27,7 @@ cat > "$REPO/commitLogs/2026/jun/17/test-chat/README.md" <<'EOF'
 id: test-chat
 chat_duration: 42s
 estimated_chat_tokens: 100 tokens
+estimated_chat_cost: USD 0.0030 estimated from estimated_chat_tokens
 -->
 EOF
 
@@ -58,6 +59,14 @@ fi
 
 if ! grep -q "Estimated Chat Tokens" "$TMP_ROOT/printed.md"; then
   fail "summary did not use estimated chat token heading"
+fi
+
+if ! grep -q "Estimated Chat Cost" "$TMP_ROOT/printed.md"; then
+  fail "summary did not use estimated chat cost heading"
+fi
+
+if ! grep -q '| Total | USD 0.0030 |' "$TMP_ROOT/printed.md"; then
+  fail "summary did not aggregate estimated chat cost"
 fi
 
 echo "commit log summary smoke test passed."

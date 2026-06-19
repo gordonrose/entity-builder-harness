@@ -22,6 +22,13 @@ Do not load unrelated workflows, skills, standards, or documentation.
 If the metadata includes a `worktree` value, use that chat-owned worktree for
 task writes. The root worktree is the local integration console.
 
+After the user first grants write permission for the chat, rename the current
+session log folder to a concise summary:
+
+```bash
+bash scripts/shared/chat/rename-current-chat-log-folder.sh "<short-summary>"
+```
+
 <!-- deterministic-check: allow reason="register-codex-session-log.sh owns discovery and mutation; workflow governs when to invoke it" -->
 If `codex_session_log_path` is missing or blank, register the current Codex
 session JSONL before the first task commit:
@@ -36,14 +43,28 @@ read-only mode and record the gap before any commit-boundary operation.
 
 ## Missing Session
 
-<!-- deterministic-check: allow reason="read-current-chat-log.sh detects missing session; workflow defines the exact blocked response" -->
-If no matching chat log exists for the current branch, respond exactly:
+<!-- deterministic-check: allow reason="read-current-chat-log.sh detects missing session; auto-start helper owns deterministic command behavior" -->
+If no matching chat log exists for the current branch, treat the opening user
+message as a request for a new chat session unless it starts with
+`ignore chat start`.
+
+If the opening message is exactly `new`, ask exactly:
 
 ```txt
-Blocked: missing chat session. Run Start Chat Session (Ctrl+Shift+B) first.
+What should the new chat be about?
 ```
 
-Do not edit files.
+Do not create a session until the user provides a task summary.
+
+Otherwise run:
+
+```bash
+bash scripts/shared/chat/request-initialization/auto-start-missing-session.sh "<opening user message>"
+```
+
+After the command succeeds, use the generated session log, layer, mode,
+workflow, and chat-owned worktree as the current chat context. Do not require
+the user to paste the generated first prompt back into the same chat.
 
 ## Unknown Metadata
 

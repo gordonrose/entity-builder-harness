@@ -11,6 +11,7 @@ bash scripts/shared/git/check-write-location.sh
 ```
 
 Task commits must not be prepared from the root integration worktree.
+Preserve unrelated user changes in a dirty worktree.
 
 ## Branch Prerequisites
 
@@ -90,6 +91,11 @@ substitute the session log file size. If no transcript source can be supplied or
 discovered, stop before recording the commit unless the current workflow
 explicitly permits `ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes` for a legacy or
 recovery case.
+
+The recorder may estimate chat cost from the estimated chat-token metric and the
+checked-in pricing snapshot. Treat `estimated_chat_cost` as an approximate
+planning metric, not a billing record, because transcript-derived token counts
+do not split input, cached input, and output tokens.
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
 If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit

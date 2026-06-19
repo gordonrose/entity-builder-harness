@@ -15,6 +15,9 @@ commit session metrics.
 The script estimates chat tokens from CHAT_TRANSCRIPT_BYTES when supplied.
 Otherwise it uses codex_session_log_path metadata, or discovers the matching
 Codex JSONL session log and counts its bytes.
+
+The script estimates chat cost from the resulting estimated chat-token count
+when a pricing profile is available.
 EOF
 }
 
@@ -157,6 +160,16 @@ else
   exit 1
 fi
 
+CHAT_COST_ESTIMATE="unavailable; estimated chat tokens are unavailable"
+CHAT_COST_BASIS="unavailable; estimated chat tokens are unavailable"
+
+if [[ "$CHAT_TOKEN_ESTIMATE" =~ ^([0-9]+)[[:space:]] ]]; then
+  CHAT_TOKEN_COUNT="${BASH_REMATCH[1]}"
+  CHAT_COST_OUTPUT="$(node scripts/shared/chat/estimate-chat-cost.js "$CHAT_TOKEN_COUNT")"
+  CHAT_COST_ESTIMATE="$(printf '%s\n' "$CHAT_COST_OUTPUT" | sed -n 's/^estimated_chat_cost: //p' | head -n 1)"
+  CHAT_COST_BASIS="$(printf '%s\n' "$CHAT_COST_OUTPUT" | sed -n 's/^estimated_chat_cost_basis: //p' | head -n 1)"
+fi
+
 insert_section_entry "## Commits" "- Commit: \`${COMMIT_SHA}\`
   Time UTC: ${COMMIT_AT_UTC}
   Message: ${COMMIT_MESSAGE}
@@ -180,10 +193,14 @@ awk \
   -v latest_sha="$COMMIT_SHA" \
   -v codex_path="$CODEX_SESSION_LOG_PATH" \
   -v duration="$CHAT_DURATION" \
-  -v chat_tokens="$CHAT_TOKEN_ESTIMATE" '
+  -v chat_tokens="$CHAT_TOKEN_ESTIMATE" \
+  -v chat_cost="$CHAT_COST_ESTIMATE" \
+  -v chat_cost_basis="$CHAT_COST_BASIS" '
     BEGIN {
       in_meta = 0
       wrote_codex_path = (codex_path == "")
+      wrote_chat_cost = 0
+      wrote_chat_cost_basis = 0
     }
     /^<!-- agentic-session/ {
       in_meta = 1
@@ -203,6 +220,14 @@ awk \
       if (wrote_codex_path == 0) {
         print "codex_session_log_path: " codex_path
         wrote_codex_path = 1
+      }
+      if (wrote_chat_cost == 0) {
+        print "estimated_chat_cost: " chat_cost
+        wrote_chat_cost = 1
+      }
+      if (wrote_chat_cost_basis == 0) {
+        print "estimated_chat_cost_basis: " chat_cost_basis
+        wrote_chat_cost_basis = 1
       }
       in_meta = 0
       print
@@ -233,6 +258,16 @@ awk \
       print "estimated_chat_tokens: " chat_tokens
       next
     }
+    /^estimated_chat_cost:/ {
+      print "estimated_chat_cost: " chat_cost
+      wrote_chat_cost = 1
+      next
+    }
+    /^estimated_chat_cost_basis:/ {
+      print "estimated_chat_cost_basis: " chat_cost_basis
+      wrote_chat_cost_basis = 1
+      next
+    }
     /^Final commit at UTC:/ {
       print "Latest commit at UTC: " latest_at
       print "Latest commit SHA: " latest_sha
@@ -256,6 +291,14 @@ awk \
     }
     /^Estimated chat tokens:/ {
       print "Estimated chat tokens: " chat_tokens
+      print "Estimated chat cost: " chat_cost
+      print "Estimated chat cost basis: " chat_cost_basis
+      next
+    }
+    /^Estimated chat cost:/ {
+      next
+    }
+    /^Estimated chat cost basis:/ {
       next
     }
     {

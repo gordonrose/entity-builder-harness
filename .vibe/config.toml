@@ -1,0 +1,12 @@
+[tools.bash]
+permission = "ask"
+allow = [
+  "bash scripts/shared/harness/run-governed-script.sh",
+  "bash scripts/shared/harness/run-governed-script.sh *",
+]
+deny = [
+  "bash -c *",
+  "bash -lc *",
+  "sh -c *",
+  "zsh -c *",
+]

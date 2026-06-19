@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(bash scripts/shared/harness/run-governed-script.sh *)"
+    ],
+    "deny": [
+      "Bash(bash -c *)",
+      "Bash(bash -lc *)",
+      "Bash(sh -c *)",
+      "Bash(zsh -c *)"
+    ]
+  }
+}
