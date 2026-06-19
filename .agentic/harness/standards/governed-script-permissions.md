@@ -58,6 +58,27 @@ After the user approves the action class, agents should not ask for a second
 confirmation for each downstream governed script unless the workflow, script,
 or gate reaches a new stop condition.
 
+## Agent-Facing Command Examples
+
+Agent-facing harness artifacts must teach the command form agents are expected
+to execute.
+
+When a workflow, checklist, standard, prompt, template, or command handoff shows
+an approval-sensitive governed script as an executable command, route it through
+the governed runner:
+
+```bash
+bash scripts/shared/harness/run-governed-script.sh --approved-action <script> [args...]
+```
+
+`--approved-action` does not grant approval by itself. It only records that the
+current workflow and current chat already contain explicit approval for that
+action class.
+
+Direct script calls are allowed inside implementation scripts, smoke tests,
+fixture setup, and historical or explanatory prose when they are not active
+instructions to an agent.
+
 ### Never Persistent-Auto-Approved
 
 These actions must not be granted persistent vendor auto-approval through the

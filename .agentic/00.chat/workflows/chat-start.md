@@ -26,7 +26,7 @@ After the user first grants write permission for the chat, rename the current
 session log folder to a concise summary:
 
 ```bash
-bash scripts/shared/chat/rename-current-chat-log-folder.sh "<short-summary>"
+bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/shared/chat/rename-current-chat-log-folder.sh "<short-summary>"
 ```
 
 <!-- deterministic-check: allow reason="register-codex-session-log.sh owns discovery and mutation; workflow governs when to invoke it" -->

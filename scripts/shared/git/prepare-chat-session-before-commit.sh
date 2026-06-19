@@ -8,6 +8,7 @@ bash scripts/shared/git/check-write-location.sh
 bash scripts/shared/git/check-commit-prerequisites.sh
 bash scripts/shared/git/check-commitlog-deletions.sh
 bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
+bash scripts/shared/harness/check-governed-script-command-drift.sh
 
 BRANCH="$(git branch --show-current)"
 
