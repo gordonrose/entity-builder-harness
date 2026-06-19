@@ -10,11 +10,11 @@ mode: implementation
 workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-18T15:26:14Z
-codex_session_log_path:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl
+latest_commit_at_utc: 2026-06-19T11:18:17Z
+latest_commit_sha: d64c637
+chat_duration: 71523s (00:19:52:03)
+estimated_chat_tokens: 205790 estimated from chat transcript bytes (823157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 -->
 
 ## Initial Intent
@@ -62,9 +62,26 @@ Layer: harness
 Mode: implementation
 Workflow: .agentic/harness/workflows/change-harness.md
 
+
+### 2026-06-19T11:18:17Z - Commit recorded
+
+Commit: `d64c637`
+
+Message: Reclassify governed script permission task
+
+Summary: Reclassified the task as harness implementation and renamed the session log for governed script permissions.
+
+ADR impact: ADR needed: unknown
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `d64c637`
+  Time UTC: 2026-06-19T11:18:17Z
+  Message: Reclassify governed script permission task
+  Summary: Reclassified the task as harness implementation and renamed the session log for governed script permissions.
+  ADR impact: ADR needed: unknown
 
 ## Main Refresh Conflicts
 
@@ -79,10 +96,10 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: 2026-06-18T15:26:14Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
+Latest commit at UTC: 2026-06-19T11:18:17Z
+Latest commit SHA: d64c637
+Chat duration: 71523s (00:19:52:03)
+Estimated chat tokens: 205790 estimated from chat transcript bytes (823157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/18/rollout-2026-06-18T16-26-18-019edb57-15bb-77c1-8fbe-4af9f85342cd.jsonl)
 
 ## Notes
 
