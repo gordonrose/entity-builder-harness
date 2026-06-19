@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T21:22:35Z
-latest_commit_sha: 7b756a6
-chat_duration: 17269s (00:04:47:49)
-estimated_chat_tokens: 3040010 estimated from chat transcript bytes (12160040 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 91.20 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T21:28:08Z
+latest_commit_sha: 219c37f
+chat_duration: 17602s (00:04:53:22)
+estimated_chat_tokens: 3125668 estimated from chat transcript bytes (12502670 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 93.77 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -529,6 +529,17 @@ Summary: Moved local-merge visibility reports to canonical 00.chat paths, added 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-06-19T21:28:08Z - Commit recorded
+
+Commit: `219c37f`
+
+Message: Classify isolated worktree helpers as superseded
+
+Summary: Marked the old isolated worktree command runner and staging adapter as superseded compatibility helpers, clarified ADR guidance, and kept retirement review separate from canonical migration.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -826,6 +837,13 @@ ADR impact: covered by session ADR disposition
   Summary: Moved local-merge visibility reports to canonical 00.chat paths, added READMEs, retained compatibility wrappers, and updated workflow, runner, and ADR references.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `219c37f`
+  Time UTC: 2026-06-19T21:28:08Z
+  Message: Classify isolated worktree helpers as superseded
+  Summary: Marked the old isolated worktree command runner and staging adapter as superseded compatibility helpers, clarified ADR guidance, and kept retirement review separate from canonical migration.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -841,11 +859,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T21:22:35Z
-Latest commit SHA: 7b756a6
-Chat duration: 17269s (00:04:47:49)
-Estimated chat tokens: 3040010 estimated from chat transcript bytes (12160040 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 91.20 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T21:28:08Z
+Latest commit SHA: 219c37f
+Chat duration: 17602s (00:04:53:22)
+Estimated chat tokens: 3125668 estimated from chat transcript bytes (12502670 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 93.77 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
