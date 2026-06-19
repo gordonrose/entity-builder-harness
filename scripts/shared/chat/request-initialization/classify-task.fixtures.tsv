@@ -7,6 +7,8 @@ fix the failing tests	product	implementation	.agentic/product/workflows/default.
 what is the auth flow?	product	discovery	.agentic/product/workflows/default.md
 use the existing chat start process	chat	execution	.agentic/00.chat/workflows/chat-start.md
 explain capability resolution	harness	discovery	.agentic/harness/workflows/change-harness.md
+how do i allow bash for governed scripts in my codex and claude and mistral chats?	harness	planning	.agentic/harness/workflows/change-harness.md
+implement governed script permissions for codex claude and mistral	harness	implementation	.agentic/harness/workflows/change-harness.md
 let's update our harness so it has best practice guidelines for adding new artefacts	harness	implementation	.agentic/harness/workflows/change-harness.md
 i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation	.agentic/shared/workflows/change-shared-process.md
 is master my local equivalent of main? if so i'm assuming that is not currently up to date?	shared	discovery	.agentic/shared/workflows/change-shared-process.md

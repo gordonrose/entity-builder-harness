@@ -77,6 +77,11 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
     ;;
+  *governed\ script*|*allow*bash*|*bash*permission*|*shell*permission*|*tool*permission*|*.codex*|*.claude*|*.vibe*|*codex*claude*mistral*|*vendor*adapter*)
+    echo "Layer: harness"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/harness/workflows/change-harness.md"
+    ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
