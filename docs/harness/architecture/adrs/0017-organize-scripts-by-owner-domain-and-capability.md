@@ -208,6 +208,22 @@ Session-log executable batch result:
   `rename-current-chat-log-folder.sh` wrapper path until the governed-runner
   path policy is migrated.
 
+Transcript and metrics batch result:
+
+- canonical transcript implementations:
+  `scripts/00.chat/transcript/discover-codex-session-log/script.sh` and
+  `scripts/00.chat/transcript/register-codex-session-log/script.sh`
+- canonical metrics implementation:
+  `scripts/00.chat/metrics/estimate-chat-cost/script.js`
+- compatibility wrappers:
+  `scripts/shared/chat/discover-codex-session-log.sh`,
+  `scripts/shared/chat/register-codex-session-log.sh`, and
+  `scripts/shared/chat/estimate-chat-cost.js`
+- direct callers migrated:
+  `scripts/shared/git/record-chat-commit.sh`,
+  `.agentic/00.chat/workflows/chat-start.md`, and
+  `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
+
 ### Phase 3: Prove Compatibility
 
 For the pilot:

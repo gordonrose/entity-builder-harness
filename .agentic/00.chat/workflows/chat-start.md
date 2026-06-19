@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: 00.chat
+kind: workflow
+purpose: Govern chat startup routing, session metadata discovery, and first-chat setup steps.
+domain: startup
+portability: llm-workbench-required
+used_by:
+  - AGENTS.md
+  - scripts/shared/chat/request-initialization/start-chat-session.sh
+-->
+
 # Chat Start Workflow
 
 ## Purpose
@@ -34,7 +45,7 @@ If `codex_session_log_path` is missing or blank, register the current Codex
 session JSONL before the first task commit:
 
 ```bash
-bash scripts/shared/chat/register-codex-session-log.sh
+bash scripts/00.chat/transcript/register-codex-session-log/script.sh
 ```
 
 This records the transcript source used later for estimated chat-token metrics.

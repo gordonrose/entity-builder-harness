@@ -149,7 +149,7 @@ find scripts -type f \
 comm -23 "$ALL_SCRIPTS" "$REQUIRED" > "$UNREFERENCED"
 while IFS= read -r path; do
   [ -n "$path" ] || continue
-  if grep -Eq '^[#[:space:]]*portability: .*compatibility' "$path"; then
+  if grep -Eq '^([#[:space:]]*|[[:space:]]*//[[:space:]]*)portability: .*compatibility' "$path"; then
     printf '%s\n' "$path"
   fi
 done < "$UNREFERENCED" > "$COMPATIBILITY"

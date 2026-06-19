@@ -140,7 +140,7 @@ CODEX_SESSION_LOG_PATH="${CODEX_SESSION_LOG_PATH:-$(metadata_value "codex_sessio
 
 if [ -z "${CHAT_TRANSCRIPT_BYTES:-}" ]; then
   if [ -z "${CODEX_SESSION_LOG_PATH// }" ]; then
-    CODEX_SESSION_LOG_PATH="$(bash scripts/shared/chat/discover-codex-session-log.sh "$SESSION_ID" "$LOG_FILE" 2>/dev/null || true)"
+    CODEX_SESSION_LOG_PATH="$(bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$SESSION_ID" "$LOG_FILE" 2>/dev/null || true)"
   fi
 
   if [ -n "${CODEX_SESSION_LOG_PATH// }" ] && [ -f "$CODEX_SESSION_LOG_PATH" ]; then
@@ -175,7 +175,7 @@ CHAT_COST_BASIS="unavailable; estimated chat tokens are unavailable"
 
 if [[ "$CHAT_TOKEN_ESTIMATE" =~ ^([0-9]+)[[:space:]] ]]; then
   CHAT_TOKEN_COUNT="${BASH_REMATCH[1]}"
-  CHAT_COST_OUTPUT="$(node scripts/shared/chat/estimate-chat-cost.js "$CHAT_TOKEN_COUNT")"
+  CHAT_COST_OUTPUT="$(node scripts/00.chat/metrics/estimate-chat-cost/script.js "$CHAT_TOKEN_COUNT")"
   CHAT_COST_ESTIMATE="$(printf '%s\n' "$CHAT_COST_OUTPUT" | sed -n 's/^estimated_chat_cost: //p' | head -n 1)"
   CHAT_COST_BASIS="$(printf '%s\n' "$CHAT_COST_OUTPUT" | sed -n 's/^estimated_chat_cost_basis: //p' | head -n 1)"
 fi
