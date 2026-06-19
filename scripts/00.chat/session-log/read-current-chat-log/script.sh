@@ -11,8 +11,8 @@ set -euo pipefail
 #     - scripts/shared/git/smoke-test-commit-prerequisites.sh
 #   effects: read-only
 
-# shellcheck source=../session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 BRANCH="$(git branch --show-current)"
 

@@ -12,8 +12,8 @@ set -euo pipefail
 #     - scripts/shared/harness/run-governed-script.sh
 #   effects: writes-files
 
-# shellcheck source=session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 usage() {
   cat <<'EOF'

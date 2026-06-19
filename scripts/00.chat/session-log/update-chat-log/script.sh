@@ -11,8 +11,8 @@ set -euo pipefail
 #     - commitLogs/2026/jun/19/2026-06-19-17-34-add-deterministic-audit-for-chat-harness-bootstrap-script-fi/README.md
 #   effects: writes-files
 
-# shellcheck source=session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 usage() {
   cat <<'EOF'

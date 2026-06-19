@@ -32,10 +32,12 @@ git -C "$REPO" init --quiet --initial-branch=main
 mkdir -p \
   "$REPO/scripts/00.chat/classification/classify-task" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
+  "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/shared/chat/request-initialization" \
   "$REPO/scripts/shared/git"
 
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/chat-worktree-paths.sh" "$REPO/scripts/shared/chat/chat-worktree-paths.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/ensure-chat-worktree.sh" "$REPO/scripts/shared/chat/ensure-chat-worktree.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"

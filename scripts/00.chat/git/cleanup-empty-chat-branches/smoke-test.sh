@@ -26,16 +26,17 @@ fail() {
 }
 
 REPO="$TMP_ROOT/repo"
-mkdir -p "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" "$REPO/scripts/shared/chat"
+mkdir -p "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" "$REPO/scripts/shared/chat" "$REPO/scripts/00.chat/session-log/paths"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 
 git -C "$REPO" init -q -b main
 git -C "$REPO" config user.name "Smoke Test"
 git -C "$REPO" config user.email "smoke@example.invalid"
 
 printf 'base\n' > "$REPO/base.txt"
-git -C "$REPO" add base.txt scripts/00.chat/git/cleanup-empty-chat-branches/script.sh scripts/shared/chat/session-log-paths.sh
+git -C "$REPO" add base.txt scripts/00.chat/git/cleanup-empty-chat-branches/script.sh scripts/shared/chat/session-log-paths.sh scripts/00.chat/session-log/paths/lib.sh
 git -C "$REPO" commit -q -m "initial"
 
 COMMITTED_SESSION="2026-06-16-07-18-committed-log"

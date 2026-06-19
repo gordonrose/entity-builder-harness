@@ -11,8 +11,8 @@ set -euo pipefail
 #     - scripts/shared/git/record-chat-commit.sh
 #   effects: writes-files
 
-# shellcheck source=session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../session-log/paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 usage() {
   cat <<'EOF'

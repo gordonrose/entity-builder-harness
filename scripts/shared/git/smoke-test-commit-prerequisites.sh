@@ -34,11 +34,13 @@ mkdir -p \
   "$REPO/.agentic/00.chat/workflows" \
   "$REPO/commitLogs/2026/jun/19/2026-06-19-13-11-test" \
   "$REPO/scripts/00.chat/session-log/read-current-chat-log" \
+  "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/shared/chat" \
   "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness"
 
 cp "$SOURCE_ROOT/scripts/shared/chat/session-log-paths.sh" "$REPO/scripts/shared/chat/session-log-paths.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/shared/git/check-commit-prerequisites.sh" "$REPO/scripts/shared/git/check-commit-prerequisites.sh"
 chmod +x "$REPO/scripts/shared/git/check-commit-prerequisites.sh"
 

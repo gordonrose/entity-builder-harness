@@ -201,9 +201,12 @@ Session-log executable batch result:
   `scripts/shared/chat/record-main-refresh-conflict.sh`
 - public alias preserved:
   `scripts/chat/record-main-refresh-conflict.sh`
-- deferred source library:
-  `scripts/shared/chat/session-log-paths.sh` remains at the old source-able
-  path until sourced helper migration is handled separately.
+- canonical source library:
+  `scripts/00.chat/session-log/paths/lib.sh`
+- source compatibility shim:
+  `scripts/shared/chat/session-log-paths.sh` remains source-able for shared git,
+  startup, and downstream smoke fixtures until those callers migrate in later
+  batches.
 - governed runner exception:
   `scripts/shared/harness/run-governed-script.sh` still allowlists the old
   `rename-current-chat-log-folder.sh` wrapper path until the governed-runner

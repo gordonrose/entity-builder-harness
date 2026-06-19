@@ -19,8 +19,8 @@ REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
 
 # shellcheck source=chat-worktree-paths.sh
 source "$REPO_ROOT/scripts/shared/chat/chat-worktree-paths.sh"
-# shellcheck source=session-log-paths.sh
-source "$REPO_ROOT/scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../session-log/paths/lib.sh
+source "$REPO_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
   echo "ERROR: base branch does not exist: $BASE_BRANCH" >&2

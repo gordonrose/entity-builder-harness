@@ -13,8 +13,8 @@ set -euo pipefail
 #     - scripts/shared/chat/request-initialization/start-chat-session.sh
 #   effects: branches, writes-files, destructive
 
-# shellcheck source=../chat/session-log-paths.sh
-source "scripts/shared/chat/session-log-paths.sh"
+# shellcheck source=../../session-log/paths/lib.sh
+source "scripts/00.chat/session-log/paths/lib.sh"
 
 MODE="dry-run"
 BASE_BRANCH=""
