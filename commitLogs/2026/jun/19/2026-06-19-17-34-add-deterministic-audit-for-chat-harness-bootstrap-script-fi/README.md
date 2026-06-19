@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T18:23:04Z
-latest_commit_sha: 0fd6780
-chat_duration: 6498s (00:01:48:18)
-estimated_chat_tokens: 1443228 estimated from chat transcript bytes (5772910 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 43.30 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T18:35:50Z
+latest_commit_sha: b0130c3
+chat_duration: 7264s (00:02:01:04)
+estimated_chat_tokens: 1552981 estimated from chat transcript bytes (6211923 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 46.59 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -232,6 +232,17 @@ Summary: Moved chat task classification, fixture check, and fixtures into script
 
 ADR impact: ADR 0017 now records the classification batch.
 
+
+### 2026-06-19T18:35:50Z - Commit recorded
+
+Commit: `b0130c3`
+
+Message: Move chat session-log executable helpers
+
+Summary: Moved executable session-log helpers into scripts/00.chat/session-log capability folders, retained old executable paths as compatibility wrappers, updated canonical references, smoke fixtures, and the bootstrap audit surface; left the sourced session-log-paths library for a separate migration pass.
+
+ADR impact: ADR 0017 records the session-log executable batch and the deferred sourced-library/governed-runner exceptions.
+
 ## Commits
 
 
@@ -340,6 +351,13 @@ ADR impact: ADR 0017 now records the classification batch.
   Summary: Moved chat task classification, fixture check, and fixtures into scripts/00.chat/classification/classify-task, retained old executable paths as compatibility wrappers, and updated startup, docs, and smoke fixtures to use canonical classifier paths.
   ADR impact: ADR 0017 now records the classification batch.
 
+
+- Commit: `b0130c3`
+  Time UTC: 2026-06-19T18:35:50Z
+  Message: Move chat session-log executable helpers
+  Summary: Moved executable session-log helpers into scripts/00.chat/session-log capability folders, retained old executable paths as compatibility wrappers, updated canonical references, smoke fixtures, and the bootstrap audit surface; left the sourced session-log-paths library for a separate migration pass.
+  ADR impact: ADR 0017 records the session-log executable batch and the deferred sourced-library/governed-runner exceptions.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -355,11 +373,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T18:23:04Z
-Latest commit SHA: 0fd6780
-Chat duration: 6498s (00:01:48:18)
-Estimated chat tokens: 1443228 estimated from chat transcript bytes (5772910 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 43.30 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T18:35:50Z
+Latest commit SHA: b0130c3
+Chat duration: 7264s (00:02:01:04)
+Estimated chat tokens: 1552981 estimated from chat transcript bytes (6211923 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 46.59 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
