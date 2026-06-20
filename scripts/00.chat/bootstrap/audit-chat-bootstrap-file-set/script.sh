@@ -75,7 +75,6 @@ add_tree_if_exists() {
 
 add_if_exists "AGENTS.md"
 add_tree_if_exists ".agentic/00.chat"
-add_tree_if_exists ".agentic/shared/gates"
 add_tree_if_exists ".agentic/shared/standards"
 add_tree_if_exists ".agentic/shared/workflows"
 add_if_exists "package.json"
@@ -163,7 +162,6 @@ echo
 echo "Seed surfaces scanned:"
 echo "- AGENTS.md"
 echo "- .agentic/00.chat/"
-echo "- .agentic/shared/gates/"
 echo "- .agentic/shared/standards/"
 echo "- .agentic/shared/workflows/"
 echo "- package.json chat scripts"

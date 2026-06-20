@@ -33,7 +33,6 @@ These paths are intended to be copied directly into the first public workbench
 bootstrap, subject to the normal upstream inspection gates:
 
 - `.agentic/00.chat/`
-- `.agentic/shared/gates/`
 - `.agentic/shared/standards/upstream-repo-bootstrap.md`
 - `.agentic/shared/workflows/` entries required by cross-layer process and
   capability resolution

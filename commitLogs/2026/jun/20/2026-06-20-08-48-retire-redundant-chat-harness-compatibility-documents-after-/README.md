@@ -50,6 +50,10 @@ retire redundant chat harness compatibility documents after 00.chat migration
 - Decision: Updated audits to enforce retired paths stay absent
   Rationale: The chat-layer migration audit now treats the old compatibility files as required-absent, while bootstrap boundaries no longer seed the deleted shared checklist tree.
 
+
+- Decision: Retired orphan shared chat-session gate
+  Rationale: The unused .agentic/shared/gates/assert_chat_session.sh gate had no callers, was non-executable, and duplicated current 00.chat session/worktree checks, so it was removed along with shared-gates bootstrap references.
+
 ## Activity Log
 
 ### 2026-06-20T07:48:44Z - Session started
@@ -94,6 +98,13 @@ Message: Retire redundant chat compatibility artifacts
 Summary: Removed obsolete shared/harness default workflows, retired shared chat lifecycle compatibility pointers and duplicate before-commit checklist, and updated migration/bootstrap audits to enforce the retired paths stay absent.
 
 ADR impact: No new ADR; completes existing 00.chat migration plan cleanup.
+
+
+### 2026-06-20T08:08:03Z - Decision
+
+Decision: Retired orphan shared chat-session gate
+
+Rationale: The unused .agentic/shared/gates/assert_chat_session.sh gate had no callers, was non-executable, and duplicated current 00.chat session/worktree checks, so it was removed along with shared-gates bootstrap references.
 
 ## Commits
 

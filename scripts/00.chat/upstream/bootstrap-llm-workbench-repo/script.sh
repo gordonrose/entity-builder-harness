@@ -286,7 +286,6 @@ echo
 echo "File plan:"
 plan_templates
 plan_tree ".agentic/00.chat"
-plan_tree ".agentic/shared/gates"
 plan_tree ".agentic/shared/standards"
 plan_tree ".agentic/shared/workflows"
 plan_tree ".agentic/harness"
