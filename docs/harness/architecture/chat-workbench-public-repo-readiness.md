@@ -33,11 +33,10 @@ These paths are intended to be copied directly into the first public workbench
 bootstrap, subject to the normal upstream inspection gates:
 
 - `.agentic/00.chat/`
-- `.agentic/shared/checklists/`
 - `.agentic/shared/gates/`
 - `.agentic/shared/standards/upstream-repo-bootstrap.md`
-- `.agentic/shared/workflows/` entries required by chat startup, commit,
-  refresh, convergence, and capability resolution
+- `.agentic/shared/workflows/` entries required by cross-layer process and
+  capability resolution
 - `.agentic/harness/` standards and workflows required by metadata,
   deterministic process, governed script, and harness-maintenance checks
 - `scripts/00.chat/`

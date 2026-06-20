@@ -13,11 +13,12 @@ used_by:
 
 ## Purpose
 
-Guide future chats as chat lifecycle governance moves from compatibility paths
-into `.agentic/00.chat/`.
+Guide future chats as chat lifecycle governance finishes moving from
+compatibility paths into `.agentic/00.chat/`.
 
 The goal is controlled migration, not a big-bang rename. Legacy paths may stay
-in place as compatibility shims while active sessions still reference them.
+in historical references, but operative chat lifecycle governance belongs in
+`.agentic/00.chat/`.
 
 ## Current Canonical Surfaces
 
@@ -38,15 +39,18 @@ in place as compatibility shims while active sessions still reference them.
 - Cleanup: `.agentic/00.chat/workflows/chat-cleanup.md`
 - Reporting: `.agentic/00.chat/workflows/chat-reporting.md`
 
-## Compatibility Paths
+## Retired Compatibility Paths
 
-These paths may remain for existing references, but they must point to or defer
-to the canonical chat layer:
+These old shared paths are retired. Historical references may mention them, but
+operative instructions, audits, and package scripts should point to the
+canonical chat layer:
 
 - `.agentic/shared/workflows/chat-start-interview.md`
 - `.agentic/shared/workflows/main-updated.md`
 - `.agentic/shared/workflows/local-convergence.md`
 - `.agentic/shared/checklists/before-commit.md`
+- `.agentic/shared/workflows/default.md`
+- `.agentic/harness/workflows/default.md`
 
 Script compatibility wrappers under `scripts/shared/chat/` and
 `scripts/shared/git/` have been retired. Keep historical references for audit
@@ -56,8 +60,8 @@ canonical `scripts/00.chat/...` capability paths.
 ## Migration Rules
 
 - Move ownership prose before moving executable paths.
-- Keep old workflow/checklist paths as compatibility pointers until no active
-  session metadata or scripts rely on them.
+- Keep retired workflow/checklist paths absent unless an active session recovery
+  explicitly requires a governed restore.
 - Preserve exact blocked responses when changing workflow ownership.
 - Keep scripts deterministic; do not replace scriptable gates with prose.
 - Maintain focused smoke tests for startup, classification, refresh, commit,
@@ -77,18 +81,19 @@ canonical `scripts/00.chat/...` capability paths.
 4. Added audit coverage for the chat-layer package script surface.
 5. Kept focused smoke tests for startup, classification, refresh, commit,
    reporting, cleanup, commands, and package scripts.
+6. Audited active session metadata and retired redundant shared chat lifecycle
+   pointers, duplicate before-commit compatibility checklist, and placeholder
+   default workflows.
 
 ## Deferred Migration Queue
 
-1. Audit session metadata to determine when legacy workflow paths can be
-   retired.
-2. Add governed cleanup for temporary preflight branches and worktrees once the
+1. Add governed cleanup for temporary preflight branches and worktrees once the
    desired retention policy is explicit.
-3. Review whether `change-shared-process.md` should keep chat lifecycle notes
+2. Review whether `change-shared-process.md` should keep chat lifecycle notes
    or narrow itself to cross-layer process only.
-4. Add a conflict classifier script after the conflict type standard has been
+3. Add a conflict classifier script after the conflict type standard has been
    exercised by at least one main-refresh recovery.
-5. Add a verification gate that compares unresolved or resolved preflight
+4. Add a verification gate that compares unresolved or resolved preflight
    conflict paths with `## Main Refresh Conflicts` entries before promotion.
 
 Do not treat deferred items as permission to improvise. Complete them only when
@@ -102,8 +107,8 @@ Run:
 bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh
 ```
 
-The audit reports required canonical files, remaining workflow/checklist
-compatibility paths, and remaining legacy shared workflow references in
+The audit reports required canonical files, retired compatibility paths that
+should stay absent, and remaining retired compatibility references in
 source/process files. It also inventories policy references to the retired
 aggregate summary so future chats can tell intentional "do not recreate this"
 guidance apart from generated-artifact regression. It does not treat historical

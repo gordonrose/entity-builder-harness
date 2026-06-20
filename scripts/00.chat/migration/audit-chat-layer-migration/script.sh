@@ -3,7 +3,7 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Verify canonical chat-layer files and compatibility references.
+#   purpose: Verify canonical chat-layer files and retired compatibility paths.
 #   domain: migration
 #   portability: llm-workbench-required
 #   used_by:
@@ -28,11 +28,13 @@ required_paths=(
   ".agentic/00.chat/skills/session-summary.md"
 )
 
-compatibility_paths=(
+retired_paths=(
   ".agentic/shared/workflows/chat-start-interview.md"
   ".agentic/shared/workflows/main-updated.md"
   ".agentic/shared/workflows/local-convergence.md"
   ".agentic/shared/checklists/before-commit.md"
+  ".agentic/shared/workflows/default.md"
+  ".agentic/harness/workflows/default.md"
 )
 
 failures=0
@@ -49,32 +51,45 @@ check_file() {
   fi
 }
 
+check_absent() {
+  local path="$1"
+  local label="$2"
+
+  if [ -e "$path" ]; then
+    echo "ERROR: retired ${label} still exists: ${path}" >&2
+    failures=$((failures + 1))
+  else
+    echo "OK: retired ${label} absent: ${path}"
+  fi
+}
+
 echo "Canonical chat layer files"
 for path in "${required_paths[@]}"; do
   check_file "$path" "canonical file"
 done
 
 echo
-echo "Compatibility files"
-for path in "${compatibility_paths[@]}"; do
-  check_file "$path" "compatibility file"
+echo "Retired compatibility paths"
+for path in "${retired_paths[@]}"; do
+  check_absent "$path" "path"
 done
 
 echo
-echo "Legacy shared workflow references"
-legacy_matches="$(
+echo "Retired compatibility references"
+retired_matches="$(
   grep -RIlE \
-    '\.agentic/shared/workflows/(chat-start-interview|main-updated|local-convergence)\.md|\.agentic/shared/checklists/before-commit\.md' \
+    '\.agentic/shared/workflows/(chat-start-interview|main-updated|local-convergence|default)\.md|\.agentic/shared/checklists/before-commit\.md|\.agentic/harness/workflows/default\.md' \
     .agentic scripts docs 2>/dev/null \
     | grep -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/00\.chat/migration/audit-chat-layer-migration/script\.sh$' \
     || true
 )"
 
-if [ -z "$legacy_matches" ]; then
-  echo "OK: no legacy shared chat workflow references found."
+if [ -z "$retired_matches" ]; then
+  echo "OK: no retired compatibility references found."
 else
-  echo "Legacy reference files:"
-  printf '%s\n' "$legacy_matches"
+  echo "Retired compatibility reference files:"
+  printf '%s\n' "$retired_matches"
+  failures=$((failures + 1))
 fi
 
 echo

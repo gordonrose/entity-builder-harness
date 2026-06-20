@@ -16,8 +16,7 @@ used_by:
 Use this when a request changes cross-layer git, commit, merge, handoff,
 deployment, release, or context-preservation process.
 
-Chat lifecycle changes belong to `.agentic/00.chat/`, even while some legacy
-workflow and script paths remain under `.agentic/shared/` or `scripts/shared/`.
+Chat lifecycle changes belong to `.agentic/00.chat/`.
 
 ## Required Gates
 
@@ -52,7 +51,7 @@ Do not edit files while blocked.
 - After explicit write permission for the chat, routine session bookkeeping may
   be staged without another prompt when limited to the current chat session log.
 - Preserve unrelated user changes in a dirty worktree.
-- Before any commit, complete the shared before-commit checklist.
+- Before any commit, complete the chat before-commit checklist.
 
 ## Chat-Owned Worktree
 
