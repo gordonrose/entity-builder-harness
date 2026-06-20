@@ -11,12 +11,12 @@ workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-06-20T08:23:26Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-20T08:50:15Z
+latest_commit_sha: 41f1fe2
+chat_duration: 1609s (00:00:26:49)
+estimated_chat_tokens: 384524 estimated from chat transcript bytes (1538096 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl)
+estimated_chat_cost: USD 11.54 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -66,9 +66,26 @@ Verification:
 - `bash scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh`
 - `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh`
 
+
+### 2026-06-20T08:50:15Z - Commit recorded
+
+Commit: `41f1fe2`
+
+Message: Close preflight cleanup migration item
+
+Summary: Moves governed preflight branch/worktree cleanup from the deferred 00.chat migration queue to the completed queue after confirming existing refresh apply behavior and smoke coverage.
+
+ADR impact: No ADR; documentation closeout for existing governed behavior.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `41f1fe2`
+  Time UTC: 2026-06-20T08:50:15Z
+  Message: Close preflight cleanup migration item
+  Summary: Moves governed preflight branch/worktree cleanup from the deferred 00.chat migration queue to the completed queue after confirming existing refresh apply behavior and smoke coverage.
+  ADR impact: No ADR; documentation closeout for existing governed behavior.
 
 ## Main Refresh Conflicts
 
@@ -84,12 +101,12 @@ preflight cleanup behavior and tests satisfy one deferred migration item.
 ## Session Metrics
 
 Raised at UTC: 2026-06-20T08:23:26Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-20T08:50:15Z
+Latest commit SHA: 41f1fe2
+Chat duration: 1609s (00:00:26:49)
+Estimated chat tokens: 384524 estimated from chat transcript bytes (1538096 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl)
+Estimated chat cost: USD 11.54 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
