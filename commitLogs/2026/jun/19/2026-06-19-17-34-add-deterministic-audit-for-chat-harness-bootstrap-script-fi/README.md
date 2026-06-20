@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-20T00:07:13Z
-latest_commit_sha: cc60dca
-chat_duration: 27147s (00:07:32:27)
-estimated_chat_tokens: 4576968 estimated from chat transcript bytes (18307870 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 137.31 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-20T00:18:06Z
+latest_commit_sha: f1ef225
+chat_duration: 27800s (00:07:43:20)
+estimated_chat_tokens: 4742738 estimated from chat transcript bytes (18970950 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 142.28 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -782,6 +782,17 @@ Summary: Updated historical ADR language so retired shared chat/git script paths
 
 ADR impact: ADR 0009 and ADR 0017 now encode the historical-reference standard for retired script paths.
 
+
+### 2026-06-20T00:18:06Z - Commit recorded
+
+Commit: `f1ef225`
+
+Message: Add chat script README coverage
+
+Summary: Added educational README coverage for every scripts/00.chat folder, added a current script layout guide, updated the harness index, and removed empty retired shared chat/git directories from the workspace.
+
+ADR impact: No new ADR; docs follow ADR 0017's canonical script layout.
+
 ## Commits
 
 
@@ -1240,6 +1251,13 @@ ADR impact: ADR 0009 and ADR 0017 now encode the historical-reference standard f
   Summary: Updated historical ADR language so retired shared chat/git script paths are described as previous locations with current canonical replacements, rather than runnable live examples or compatibility files to preserve.
   ADR impact: ADR 0009 and ADR 0017 now encode the historical-reference standard for retired script paths.
 
+
+- Commit: `f1ef225`
+  Time UTC: 2026-06-20T00:18:06Z
+  Message: Add chat script README coverage
+  Summary: Added educational README coverage for every scripts/00.chat folder, added a current script layout guide, updated the harness index, and removed empty retired shared chat/git directories from the workspace.
+  ADR impact: No new ADR; docs follow ADR 0017's canonical script layout.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1255,11 +1273,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-20T00:07:13Z
-Latest commit SHA: cc60dca
-Chat duration: 27147s (00:07:32:27)
-Estimated chat tokens: 4576968 estimated from chat transcript bytes (18307870 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 137.31 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-20T00:18:06Z
+Latest commit SHA: f1ef225
+Chat duration: 27800s (00:07:43:20)
+Estimated chat tokens: 4742738 estimated from chat transcript bytes (18970950 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 142.28 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
