@@ -59,12 +59,14 @@ Initial candidate paths:
 - `.agentic/shared/standards/`
 - `.agentic/shared/workflows/` entries required by chat startup, commit, and
   promotion compatibility
-- `package.json` chat command scripts
+- `package.json` chat command scripts as an upstream template, not a direct
+  source-repo copy
 - `scripts/00.chat/` canonical chat capability scripts required by the audit
 - `scripts/shared/harness/` gates required by chat startup, commit, classifier,
   governed script, and deterministic process checks
 - `docs/harness/architecture/adrs/` entries that explain the portable chat
   architecture
+- `docs/harness/architecture/chat-workbench-public-repo-readiness.md`
 
 Do not copy the source repo `README.md` directly. It describes the source repo,
 not the upstream workbench.
@@ -93,6 +95,10 @@ creates the target repo's own `commitLogs/`.
 Use `scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh` to distinguish
 required scripts from candidate unreferenced scripts before copying scripts
 into the upstream repo.
+
+Use `docs/harness/architecture/chat-workbench-public-repo-readiness.md` to
+separate files that can be copied as-is from files that must be transformed for
+the public repo.
 
 ## Required Exclusions
 

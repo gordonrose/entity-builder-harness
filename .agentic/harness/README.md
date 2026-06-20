@@ -20,6 +20,7 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 ## Architecture
 
+- `docs/harness/architecture/chat-workbench-public-repo-readiness.md` - defines the current export boundary for bootstrapping a standalone public chat workbench repo.
 - `docs/harness/architecture/script-layout.md` - explains the current script layout after the chat harness script migration.
 
 ## Data
