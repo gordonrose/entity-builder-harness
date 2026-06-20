@@ -84,16 +84,19 @@ canonical `scripts/00.chat/...` capability paths.
 6. Audited active session metadata and retired redundant shared chat lifecycle
    pointers, duplicate before-commit compatibility checklist, and placeholder
    default workflows.
+7. Added governed cleanup for temporary preflight branches and worktrees when a
+   rehearsed main refresh is applied. The apply helper removes the promoted
+   preflight branch/worktree, removes clean stale sibling preflights that are
+   already ancestors of the promoted chat branch, and reports unsafe stale
+   preflights without deleting them.
 
 ## Deferred Migration Queue
 
-1. Add governed cleanup for temporary preflight branches and worktrees once the
-   desired retention policy is explicit.
-2. Review whether `change-shared-process.md` should keep chat lifecycle notes
+1. Review whether `change-shared-process.md` should keep chat lifecycle notes
    or narrow itself to cross-layer process only.
-3. Add a conflict classifier script after the conflict type standard has been
+2. Add a conflict classifier script after the conflict type standard has been
    exercised by at least one main-refresh recovery.
-4. Add a verification gate that compares unresolved or resolved preflight
+3. Add a verification gate that compares unresolved or resolved preflight
    conflict paths with `## Main Refresh Conflicts` entries before promotion.
 
 Do not treat deferred items as permission to improvise. Complete them only when
