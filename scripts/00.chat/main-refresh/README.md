@@ -18,5 +18,12 @@ The domain is split into inspection, readiness classification, rehearsal, and
 apply steps. Rehearsal lets the harness discover conflicts in a disposable
 preflight branch/worktree before the real chat branch is changed.
 
-These scripts do not push. They coordinate local chat branch refresh behavior.
+Conflict capabilities in this domain:
 
+- `classify-conflict/` classifies known main-refresh conflict shapes using the
+  governed conflict type standard.
+- `verify-conflict-audit/` checks that conflicted paths have matching
+  `## Main Refresh Conflicts` session-log entries before a resolved preflight
+  is applied or promoted.
+
+These scripts do not push. They coordinate local chat branch refresh behavior.

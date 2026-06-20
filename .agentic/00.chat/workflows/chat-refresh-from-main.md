@@ -135,13 +135,15 @@ refresh should be rehearsed before mutating the active chat worktree.
 3. If preflight reports conflicts, stop before resolving. Classify each
    conflicted path with:
 
-   ```txt
-   .agentic/00.chat/standards/main-refresh-conflict-types.md
+   ```bash
+   bash scripts/00.chat/main-refresh/classify-conflict/script.sh <conflicted-path>
    ```
 
-   Resolve only conflicts with deterministic actions in that standard. If no
-   existing type fits, use the missing-governance stop response and propose a
-   new type or expansion before resolving.
+   Use `.agentic/00.chat/standards/main-refresh-conflict-types.md` as the
+   authority for the classification. Resolve only conflicts with deterministic
+   actions in that standard. If no existing type fits, use the
+   missing-governance stop response and propose a new type or expansion before
+   resolving.
 
    Record every conflict classification and resolution under `## Main Refresh
    Conflicts` in the current chat session log with:
@@ -154,9 +156,12 @@ refresh should be rehearsed before mutating the active chat worktree.
    trail for every conflicted path.
 4. If the user already approved the main-refresh preflight, and the preflight
    branch is clean, fully resolved, tested, and contains the intended merge
-   result, apply it back to the chat branch automatically:
+   result, verify the session-log audit trail, then apply it back to the chat
+   branch automatically:
 
    ```bash
+   bash scripts/00.chat/main-refresh/verify-conflict-audit/script.sh \
+     --path <conflicted-path> ...
    bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
    ```
 
