@@ -46,6 +46,11 @@ esac
 COMMAND_NAME="$1"
 shift
 
+if [ "$COMMAND_NAME" = "open" ] && [ "${1:-}" = "window" ]; then
+  COMMAND_NAME="open-window"
+  shift
+fi
+
 case "$COMMAND_NAME" in
   *[!a-zA-Z0-9_-]*|'')
     echo "ERROR: invalid chat command name: $COMMAND_NAME" >&2

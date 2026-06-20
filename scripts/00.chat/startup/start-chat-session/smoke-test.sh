@@ -36,6 +36,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree" \
+  "$REPO/scripts/00.chat/worktree/open-window" \
   "$REPO/scripts/00.chat/worktree/paths"
 
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
@@ -44,7 +45,8 @@ cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO
 cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
+chmod +x "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
@@ -53,6 +55,7 @@ git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' c
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=skip \
+CHAT_OPEN_WORKTREE_WINDOW=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
     bash scripts/00.chat/startup/start-chat-session/script.sh "test chat worktree session" \
     >/tmp/chat-worktree-session.out
@@ -115,6 +118,7 @@ chmod +x "$FAKE_BIN/clip.exe"
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=copy \
+CHAT_OPEN_WORKTREE_WINDOW=skip \
 PATH="$FAKE_BIN:$PATH" \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
     bash scripts/00.chat/startup/start-chat-session/script.sh "test clipboard fallback session" \

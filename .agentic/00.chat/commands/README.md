@@ -47,6 +47,8 @@ npm run chat:list
 
 - `new <task summary>` - starts a new chat session from an explicit task
   summary.
+- `open window [worktree-path|session-log]` - opens a new VS Code window for the
+  current or specified chat-owned worktree.
 - `close` - prints or copies a governed prompt for committing approved work, if
   needed, then promoting the chat branch into local `main`.
 
