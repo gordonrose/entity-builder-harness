@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-20T00:29:27Z
-latest_commit_sha: 8a05a18
-chat_duration: 28481s (00:07:54:41)
-estimated_chat_tokens: 4856212 estimated from chat transcript bytes (19424846 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 145.69 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-20T00:40:01Z
+latest_commit_sha: 5ebdfbc
+chat_duration: 29115s (00:08:05:15)
+estimated_chat_tokens: 4931810 estimated from chat transcript bytes (19727240 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 147.95 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -815,6 +815,17 @@ Summary: Added source templates for the llm-workbench public repo shell, includi
 
 ADR impact: No new ADR; template implements current-state guidance under ADR 0015 and ADR 0017.
 
+
+### 2026-06-20T00:40:01Z - Commit recorded
+
+Commit: `5ebdfbc`
+
+Message: Add public workbench bootstrap planner
+
+Summary: Added a dry-run planner for bootstrapping llm-workbench into a target Git repo, including package.json chat-script merge classification, path-by-path create/same/conflict planning, preservation of unrelated shared files, conflict exits, smoke coverage, and bootstrap/readiness doc wiring.
+
+ADR impact: No new ADR; implements the safe materialization step described by ADR 0015 and ADR 0017.
+
 ## Commits
 
 
@@ -1294,6 +1305,13 @@ ADR impact: No new ADR; template implements current-state guidance under ADR 001
   Summary: Added source templates for the llm-workbench public repo shell, including AGENTS.md, package.json, README, install docs, workflow docs, adapting guidance, minimal example, installer, uninstaller, and install smoke test templates; linked the template from readiness and bootstrap docs.
   ADR impact: No new ADR; template implements current-state guidance under ADR 0015 and ADR 0017.
 
+
+- Commit: `5ebdfbc`
+  Time UTC: 2026-06-20T00:40:01Z
+  Message: Add public workbench bootstrap planner
+  Summary: Added a dry-run planner for bootstrapping llm-workbench into a target Git repo, including package.json chat-script merge classification, path-by-path create/same/conflict planning, preservation of unrelated shared files, conflict exits, smoke coverage, and bootstrap/readiness doc wiring.
+  ADR impact: No new ADR; implements the safe materialization step described by ADR 0015 and ADR 0017.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1309,11 +1327,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-20T00:29:27Z
-Latest commit SHA: 8a05a18
-Chat duration: 28481s (00:07:54:41)
-Estimated chat tokens: 4856212 estimated from chat transcript bytes (19424846 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 145.69 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-20T00:40:01Z
+Latest commit SHA: 5ebdfbc
+Chat duration: 29115s (00:08:05:15)
+Estimated chat tokens: 4931810 estimated from chat transcript bytes (19727240 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 147.95 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
