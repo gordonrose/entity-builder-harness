@@ -50,8 +50,8 @@ are there unfinished migration plans in our repo somewhere still?
 - Narrow `change-shared-process.md` so shared-process governance delegates
   duplicated chat lifecycle commit/session bookkeeping to the canonical
   `.agentic/00.chat/checklists/before-commit.md`.
-- Leave conflict classifier scripting and preflight conflict verification as
-  deferred migration items until real main-refresh recovery evidence exists.
+- Use the recorded June 16 main-refresh recovery as evidence to complete the
+  conflict classifier and preflight conflict audit verification migration items.
 
 ## Activity Log
 
@@ -82,6 +82,26 @@ Verification:
 
 - `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh`
 - `bash scripts/shared/harness/check-deterministic-process-drift.sh --paths .agentic/shared/workflows/change-shared-process.md .agentic/00.chat/migration-plan.md`
+
+### 2026-06-20T08:55:51Z - Conflict migration items completed
+
+Added `scripts/00.chat/main-refresh/classify-conflict/` to classify known
+main-refresh conflict shapes from Git conflict stages, using the conflict type
+standard and the June 16 recovery evidence.
+
+Added `scripts/00.chat/main-refresh/verify-conflict-audit/` to verify that
+conflict paths have matching `## Main Refresh Conflicts` entries before a
+resolved preflight refresh is applied. Updated the chat refresh workflow,
+conflict standard, main-refresh script index, and migration plan so no deferred
+00.chat migration items remain.
+
+Verification:
+
+- `bash scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh`
+- `bash scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh`
+- `bash -n scripts/00.chat/main-refresh/classify-conflict/script.sh scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh scripts/00.chat/main-refresh/verify-conflict-audit/script.sh scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh`
+- `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh`
+- `bash scripts/shared/harness/check-deterministic-process-drift.sh --paths .agentic/00.chat/workflows/chat-refresh-from-main.md .agentic/00.chat/standards/main-refresh-conflict-types.md .agentic/00.chat/migration-plan.md scripts/00.chat/main-refresh/README.md`
 
 
 ### 2026-06-20T08:50:15Z - Commit recorded

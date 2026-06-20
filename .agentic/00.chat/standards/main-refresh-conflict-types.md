@@ -7,6 +7,8 @@ portability: llm-workbench-required
 used_by:
   - .agentic/00.chat/workflows/chat-refresh-from-main.md
   - scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
+  - scripts/00.chat/main-refresh/classify-conflict/script.sh
+  - scripts/00.chat/main-refresh/verify-conflict-audit/script.sh
 -->
 
 # Main Refresh Conflict Types
@@ -18,6 +20,16 @@ Classify conflicts found while refreshing a chat branch from `main`.
 Use this standard after preflight reports conflicts and before resolving any
 conflicted path. Resolve only conflicts with a deterministic action. If no type
 fits, stop and propose either a new type or an expansion of an existing type.
+
+Use the deterministic classifier for known conflict shapes:
+
+```bash
+bash scripts/00.chat/main-refresh/classify-conflict/script.sh <conflicted-path>
+```
+
+The classifier is a guardrail, not a substitute for judgment. If the classifier
+returns `normal-repo-conflict` or `unsupported-conflict`, stop before resolving
+unless the user approves the next step or the harness is updated.
 
 ## Classification Method
 
@@ -83,6 +95,8 @@ After every conflicted path has a `## Main Refresh Conflicts` audit entry and
 the required checks pass, apply the preflight branch automatically with:
 
 ```bash
+bash scripts/00.chat/main-refresh/verify-conflict-audit/script.sh \
+  --path <conflicted-path> ...
 bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
 ```
 
