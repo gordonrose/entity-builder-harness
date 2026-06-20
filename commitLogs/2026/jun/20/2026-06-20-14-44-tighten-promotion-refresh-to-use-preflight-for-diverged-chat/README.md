@@ -11,12 +11,12 @@ workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-06-20T13:44:33Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-19-18-019ee41c-e2b4-7bb2-a38c-bd5bb063dab4.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-20T13:46:14Z
+latest_commit_sha: f5cdbc0
+chat_duration: 101s (00:00:01:41)
+estimated_chat_tokens: 459777 estimated from chat transcript bytes (1839108 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-19-18-019ee41c-e2b4-7bb2-a38c-bd5bb063dab4.jsonl)
+estimated_chat_cost: USD 13.79 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -66,9 +66,26 @@ Verification:
 - `bash scripts/01.harness/check-deterministic-process-drift.sh --paths .agentic/00.chat/workflows/chat-promote-to-main.md`
 - `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh`
 
+
+### 2026-06-20T13:46:14Z - Commit recorded
+
+Commit: `f5cdbc0`
+
+Message: Route promotion refresh through preflight
+
+Summary: Updates chat promotion guidance so blocked-behind and blocked-diverged merge requests use the rehearsed preflight refresh flow before mutating the active chat branch.
+
+ADR impact: No ADR; aligns existing promotion guidance with governed preflight refresh capability.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `f5cdbc0`
+  Time UTC: 2026-06-20T13:46:14Z
+  Message: Route promotion refresh through preflight
+  Summary: Updates chat promotion guidance so blocked-behind and blocked-diverged merge requests use the rehearsed preflight refresh flow before mutating the active chat branch.
+  ADR impact: No ADR; aligns existing promotion guidance with governed preflight refresh capability.
 
 ## Main Refresh Conflicts
 
@@ -84,12 +101,12 @@ with the already-governed rehearsed refresh/preflight capability.
 ## Session Metrics
 
 Raised at UTC: 2026-06-20T13:44:33Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-20T13:46:14Z
+Latest commit SHA: f5cdbc0
+Chat duration: 101s (00:00:01:41)
+Estimated chat tokens: 459777 estimated from chat transcript bytes (1839108 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-19-18-019ee41c-e2b4-7bb2-a38c-bd5bb063dab4.jsonl)
+Estimated chat cost: USD 13.79 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
