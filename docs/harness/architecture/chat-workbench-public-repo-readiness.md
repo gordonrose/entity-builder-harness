@@ -38,6 +38,8 @@ bootstrap, subject to the normal upstream inspection gates:
 - `.agentic/shared/standards/upstream-repo-bootstrap.md`
 - `.agentic/shared/workflows/` entries required by chat startup, commit,
   refresh, convergence, and capability resolution
+- `.agentic/harness/` standards and workflows required by metadata,
+  deterministic process, governed script, and harness-maintenance checks
 - `scripts/00.chat/`
 - `scripts/shared/harness/`
 - `docs/harness/architecture/script-layout.md`
@@ -47,6 +49,14 @@ The exact script set should be confirmed with:
 
 ```bash
 npm run chat:audit-bootstrap
+```
+
+The target repo materialization plan should be inspected with:
+
+```bash
+bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
+  --target <upstream-repo> \
+  --dry-run
 ```
 
 ## Transform Before Copying
@@ -134,7 +144,9 @@ Before bootstrapping or updating `llm-workbench`:
 - decide whether the upstream repo is empty or already initialized
 - transform `AGENTS.md` and `package.json`
 - create the public README, docs, install scripts, example repo, and smoke test
+<!-- deterministic-check: allow reason="readiness checks are listed for human review; bootstrap planner and install smoke test own executable validation" -->
 - verify no excluded source-specific paths are copied
+- verify the dry-run planner has no conflicts
 - verify `npm run chat:list` works in the upstream repo
 - verify the install smoke test creates a target repo's own `commitLogs/`
 - commit only after explicit approval

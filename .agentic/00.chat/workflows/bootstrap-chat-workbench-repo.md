@@ -59,6 +59,8 @@ Initial candidate paths:
 - `.agentic/shared/standards/`
 - `.agentic/shared/workflows/` entries required by chat startup, commit, and
   promotion compatibility
+- `.agentic/harness/` standards and workflows required by metadata,
+  deterministic process, governed script, and harness-maintenance checks
 - `package.json` chat command scripts as an upstream template, not a direct
   source-repo copy
 - `scripts/00.chat/` canonical chat capability scripts required by the audit
@@ -105,6 +107,14 @@ into the upstream repo.
 Use `docs/harness/architecture/chat-workbench-public-repo-readiness.md` to
 separate files that can be copied as-is from files that must be transformed for
 the public repo.
+
+Before apply mode exists or before writing manually, run the dry-run planner:
+
+```bash
+bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
+  --target <upstream-repo> \
+  --dry-run
+```
 
 ## Required Exclusions
 
