@@ -51,11 +51,11 @@ Do not edit files while blocked.
 - After explicit write permission for the chat, routine session bookkeeping may
   be staged without another prompt when limited to the current chat session log.
 - Preserve unrelated user changes in a dirty worktree.
-- Before any commit, complete the chat before-commit checklist.
+- Before any commit, complete `.agentic/00.chat/checklists/before-commit.md`.
 
-## Chat-Owned Worktree
+## Chat Harness Delegation
 
-Before writing, run:
+Shared-process changes still run inside the chat harness. Before writing, run:
 
 ```bash
 bash scripts/00.chat/worktree/check-write-location/script.sh
@@ -72,85 +72,10 @@ The chat-owned worktree has its own files and index. Stage only approved
 repository-relative paths inside that worktree. The root worktree remains the
 local convergence console.
 
-## Prerequisite Branch State
+Do not duplicate chat lifecycle, commit recording, transcript metrics,
+bookkeeping checkpoint, or commit-log deletion rules here. Use the canonical
+before-commit checklist for those gates:
 
-Run:
-
-```bash
-bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 ```
-
-<!-- deterministic-check: allow reason="requires human approval before merge or cherry-pick repair" -->
-If this reports missing workflow, checklist, or gate files, stop the task
-commit. Ask for explicit approval before merging or cherry-picking the
-shared-process commit that introduced the missing files, then rerun this
-workflow from the before-commit checklist.
-
-Do not bypass the gate just because it is missing on the current branch.
-
-## Deterministic Process Drift
-
-For commit-gate scope, run:
-
-```bash
-bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
+.agentic/00.chat/checklists/before-commit.md
 ```
-
-For broader audits, run the same script with `--commit <sha>`, `--paths
-<path>...`, or `--all`.
-
-<!-- deterministic-check: allow reason="requires human review and approval before editing process prose" -->
-If the check flags scriptable process prose, propose the script or gate change
-for approval. Do not rewrite prose automatically.
-
-## Commit Log Deletions
-
-Run:
-
-```bash
-bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
-```
-
-Empty, unsaved session logs may be deleted by intentional cleanup. Do not delete
-commit logs that record commits or are explicitly marked for retention. If this
-gate fails, restore the protected logs or remove them from the staged deletion
-set before committing.
-
-## Before Commit
-
-Run:
-
-```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
-```
-
-This verifies that the session log records decisions and an ADR disposition,
-without marking the chat as complete.
-
-Do not commit if the preparation gate fails.
-
-## After Commit
-
-Run:
-
-```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
-```
-
-This appends the commit to the session log and updates the rolling
-`latest_commit_*` session metrics. If a later commit happens in the same chat,
-record it the same way; the latest commit is the current session endpoint.
-
-<!-- deterministic-check: allow reason="checkpoint helper enforces narrow file scope; prose states the human-readable policy" -->
-If recording a user-approved task commit leaves only session bookkeeping dirty,
-the prior chat write permission authorizes creating a session-log checkpoint
-commit without another prompt:
-
-```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
-```
-
-<!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
-The checkpoint commit is bookkeeping only and must contain no files except the
-current chat session log. Stop and ask if any other path is staged, unstaged,
-or would be committed.

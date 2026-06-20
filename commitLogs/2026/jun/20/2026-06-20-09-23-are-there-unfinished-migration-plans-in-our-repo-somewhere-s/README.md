@@ -47,8 +47,11 @@ are there unfinished migration plans in our repo somewhere still?
 - Treat governed preflight cleanup as completed because the refresh apply helper
   and smoke coverage already enforce safe cleanup of promoted and stale sibling
   preflight branches/worktrees.
-- Leave shared workflow narrowing, conflict classifier scripting, and preflight
-  conflict verification as deferred migration items.
+- Narrow `change-shared-process.md` so shared-process governance delegates
+  duplicated chat lifecycle commit/session bookkeeping to the canonical
+  `.agentic/00.chat/checklists/before-commit.md`.
+- Leave conflict classifier scripting and preflight conflict verification as
+  deferred migration items until real main-refresh recovery evidence exists.
 
 ## Activity Log
 
@@ -65,6 +68,20 @@ Verification:
 
 - `bash scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh`
 - `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh`
+
+### 2026-06-20T08:51:23Z - Shared workflow migration item closed
+
+Updated `.agentic/shared/workflows/change-shared-process.md` to keep
+shared-process ownership and chat harness entry gates while delegating
+duplicated chat lifecycle commit/session bookkeeping rules to
+`.agentic/00.chat/checklists/before-commit.md`. Updated
+`.agentic/00.chat/migration-plan.md` to move that deferred item to the
+completed queue.
+
+Verification:
+
+- `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh`
+- `bash scripts/shared/harness/check-deterministic-process-drift.sh --paths .agentic/shared/workflows/change-shared-process.md .agentic/00.chat/migration-plan.md`
 
 
 ### 2026-06-20T08:50:15Z - Commit recorded

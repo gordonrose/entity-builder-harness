@@ -89,14 +89,16 @@ canonical `scripts/00.chat/...` capability paths.
    preflight branch/worktree, removes clean stale sibling preflights that are
    already ancestors of the promoted chat branch, and reports unsafe stale
    preflights without deleting them.
+8. Narrowed `.agentic/shared/workflows/change-shared-process.md` so it keeps
+   shared-process ownership and chat harness entry gates, while delegating
+   chat lifecycle commit recording, transcript metrics, bookkeeping checkpoint,
+   and commit-log deletion rules to `.agentic/00.chat/checklists/before-commit.md`.
 
 ## Deferred Migration Queue
 
-1. Review whether `change-shared-process.md` should keep chat lifecycle notes
-   or narrow itself to cross-layer process only.
-2. Add a conflict classifier script after the conflict type standard has been
+1. Add a conflict classifier script after the conflict type standard has been
    exercised by at least one main-refresh recovery.
-3. Add a verification gate that compares unresolved or resolved preflight
+2. Add a verification gate that compares unresolved or resolved preflight
    conflict paths with `## Main Refresh Conflicts` entries before promotion.
 
 Do not treat deferred items as permission to improvise. Complete them only when
