@@ -16,9 +16,10 @@ Date: 2026-06-19
 
 ## Context
 
-The current script tree grew while the harness was primarily solving chat
-workbench problems. Many scripts live under `scripts/shared/git/`, but their
-metadata now says they are owned by `00.chat` with `domain: git`.
+The script tree grew while the harness was primarily solving chat workbench
+problems. Before this migration, many chat-owned scripts lived under
+`scripts/shared/git/`, while their metadata said they were owned by `00.chat`
+with `domain: git`.
 
 That mismatch makes ownership harder to reason about:
 
@@ -73,9 +74,13 @@ Keep executable capability files under `scripts/`, not under `.agentic/`,
 because scripts are runnable implementation artifacts. Use metadata headers to
 preserve owner/domain details inside each file.
 
-Do not move the full tree in one change. Migrate by capability with
-compatibility wrappers at old paths until workflows and downstream users are
-updated.
+The migration was performed by capability. Old compatibility paths were removed
+after workflows, package scripts, smoke tests, bootstrap audits, and governed
+runner allowlists pointed at canonical paths.
+
+Historical references to retired paths should say what previously lived there
+and point to the current canonical capability path. Do not keep retired files
+solely to make historical examples work.
 
 ## Migration Plan
 
@@ -86,7 +91,8 @@ updated.
 - Teach bootstrap/audit scripts to understand both old paths and capability
   folders.
 - Require moved scripts to keep metadata headers at the new path.
-- Keep old paths as wrappers that delegate to new capability scripts.
+- During migration, keep old paths as wrappers that delegate to new capability
+  scripts. Retire those wrappers after canonical paths own the live surface.
 
 ### Phase 2: Pilot One Capability
 
@@ -95,7 +101,7 @@ Pilot with `cleanup-empty-chat-branches` because it has:
 - clear `00.chat` ownership
 - `domain: git`
 - a public command surface
-- a shared implementation under `scripts/shared/git/`
+- a previous shared implementation under `scripts/shared/git/`
 - a matching smoke test
 
 Target pilot shape:
@@ -106,7 +112,7 @@ scripts/00.chat/git/cleanup-empty-chat-branches/
   smoke-test.sh
 ```
 
-Compatibility paths initially remained:
+Compatibility paths initially remained during migration:
 
 ```txt
 scripts/shared/git/cleanup-empty-chat-branches.sh
@@ -121,7 +127,7 @@ Pilot result:
   `scripts/00.chat/git/cleanup-empty-chat-branches/script.sh`
 - canonical smoke test:
   `scripts/00.chat/git/cleanup-empty-chat-branches/smoke-test.sh`
-- compatibility wrappers:
+- retired compatibility wrappers:
   `scripts/shared/git/cleanup-empty-chat-branches.sh` and
   `scripts/shared/git/smoke-test-cleanup-empty-chat-branches.sh`
 - public command now exposed by:
@@ -155,9 +161,9 @@ Reporting batch result:
   `scripts/shared/chat/smoke-test-generate-commit-log-summary.sh`
 - public commands now exposed by:
   `package.json` `chat:report-workspaces` and `chat:commit-log-summary`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  shared wrapper paths until the governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now points at canonical
+  reporting paths for live approved actions.
 
 Audit batch result:
 
@@ -169,9 +175,9 @@ Audit batch result:
   `scripts/shared/chat/audit-chat-bootstrap-file-set.sh`
 - public command now exposed by:
   `package.json` `chat:audit-layer-migration`
-- governed runner exception:
-  `scripts/shared/harness/run-governed-script.sh` still allowlists the old
-  shared wrapper paths until the governed-runner path policy is migrated.
+- governed runner update:
+  `scripts/shared/harness/run-governed-script.sh` now points at canonical audit
+  paths for live approved actions.
 
 Classification batch result:
 
@@ -368,7 +374,7 @@ Main refresh status/readiness batch result:
 - direct callers migrated:
   `.agentic/00.chat/workflows/chat-refresh-from-main.md`,
   `docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md`,
-  `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
+  and the retired `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
 - governed runner update:
   `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
   canonical main-refresh status/readiness script paths. The old read-only
@@ -434,11 +440,11 @@ Local merge visibility batch result:
   canonical read-only local merge visibility script paths. The old shared
   wrappers were later removed from the allowlist.
 
-Remaining shared git inventory after commit-boundary batch:
+Retired shared git inventory after commit-boundary batch:
 
-All remaining `scripts/shared/git/*.sh` files currently declare
-`owner: 00.chat`. None are classified as genuinely cross-layer shared Git
-primitives by metadata. They fall into three groups:
+The remaining `scripts/shared/git/*.sh` files at that point declared
+`owner: 00.chat`. None were classified as genuinely cross-layer shared Git
+primitives by metadata. They were retired after reconciliation:
 
 1. Retired superseded isolated chat branch execution helpers:
 
@@ -452,13 +458,11 @@ primitives by metadata. They fall into three groups:
    Prefer `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh`
    for wrong-worktree recovery imports.
 
-Next migration recommendation:
+Retirement result:
 
-- Keep existing shared paths as wrappers while governed runner allowlists,
-  workflow docs, and old external users still reference them.
-- Run a retirement pass for superseded isolated execution helpers after command
-  discovery, governed runner path policy, and bootstrap install surfaces no
-  longer depend on the old path.
+- no `scripts/shared/git/*.sh` files remain as live source files
+- canonical chat behavior lives under `scripts/00.chat/...`
+- `scripts/shared/harness/` remains the shared governance script surface
 
 Compatibility wrapper retirement map:
 
@@ -489,9 +493,8 @@ Bootstrap/install compatibility audit result:
   actual chat capabilities.
 - `scripts/shared/harness/run-governed-script.sh` and the deterministic harness
   checks remain required shared process primitives, not chat wrappers.
-- Several `scripts/shared/chat/...` and `scripts/shared/git/...` paths remain
-  required only because seeded workflows, standards, runner compatibility, or
-  public aliases still reference them.
+- Retired `scripts/shared/chat/...` and `scripts/shared/git/...` paths remain
+  only as historical documentation references or negative test fixtures.
 - The audit's "validation and compatibility candidates" section is not the
   install-critical path. Those files are either smoke-test wrappers, old-path
   compatibility wrappers, or validation helpers that can be retired after their
@@ -692,10 +695,10 @@ Start chat session batch result:
   `scripts/00.chat/startup/start-chat-session/README.md`
 - canonical smoke test:
   `scripts/00.chat/startup/start-chat-session/smoke-test.sh`
-- request-initialization compatibility wrapper:
-  `scripts/shared/chat/request-initialization/start-chat-session.sh` remains
-  executable while smoke fixtures, downstream references, and any external users
-  migrate to the canonical startup path.
+- retired request-initialization compatibility wrapper:
+  `scripts/shared/chat/request-initialization/start-chat-session.sh` was
+  removed after smoke fixtures, downstream references, and public startup
+  instructions moved to the canonical startup path.
 - smoke-test compatibility wrapper:
   `scripts/shared/git/smoke-test-chat-worktree-session.sh` was retired after
   callers migrated to the canonical startup smoke-test path.

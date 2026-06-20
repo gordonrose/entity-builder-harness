@@ -39,11 +39,9 @@ made the user's checkout move during commit-boundary operations.
 
 ## Decision
 
-Approved commit-boundary operations originally ran through:
+Previously, approved commit-boundary operations used:
 
-```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- <command> [args...]
-```
+- `scripts/shared/git/with-chat-branch.sh`
 
 This was the normal commit-boundary model when this ADR was accepted. It is now
 historical context only. Normal task work happens directly in the chat-owned
@@ -78,12 +76,11 @@ Reuse was intentional. The helper left the isolated worktree in place so
 approved staging and task commit steps can happen across multiple
 commit-boundary commands. Cleanup is manual and requires explicit user approval.
 
-When active-worktree edits needed to become an approved task commit, agents
-mirrored only explicit approved paths into the isolated worktree with:
+When active-worktree edits needed to become an approved task commit, the old
+model mirrored only explicit approved paths into the isolated worktree with:
 
-```bash
-bash scripts/shared/git/with-chat-branch.sh <session-log> -- bash scripts/shared/git/stage-active-worktree-paths.sh <path>...
-```
+- `scripts/shared/git/with-chat-branch.sh`
+- `scripts/shared/git/stage-active-worktree-paths.sh`
 
 The staging helper accepted repository-relative paths, copied existing files or
 directories from the active worktree into the isolated worktree, and stages
