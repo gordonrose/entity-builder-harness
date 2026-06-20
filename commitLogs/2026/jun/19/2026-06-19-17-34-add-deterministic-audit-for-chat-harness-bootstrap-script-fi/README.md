@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-20T00:47:56Z
-latest_commit_sha: 6b7f4e8
-chat_duration: 29590s (00:08:13:10)
-estimated_chat_tokens: 5012859 estimated from chat transcript bytes (20051434 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 150.39 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-20T00:56:12Z
+latest_commit_sha: 3c65109
+chat_duration: 30086s (00:08:21:26)
+estimated_chat_tokens: 5086127 estimated from chat transcript bytes (20344506 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 152.58 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -837,6 +837,17 @@ Summary: Added guarded apply mode to the llm-workbench bootstrap planner. Apply 
 
 ADR impact: No new ADR; implements the safe apply step described by ADR 0015 and ADR 0017.
 
+
+### 2026-06-20T00:56:12Z - Commit recorded
+
+Commit: `3c65109`
+
+Message: Select public chat workbench ADRs
+
+Summary: Added a public chat workbench ADR export manifest and updated the bootstrap planner to copy only the selected public chat ADRs. The planner now excludes older historical ADRs and the non-chat AWS ADR while keeping smoke coverage to catch future accidental ADR export drift.
+
+ADR impact: No new ADR; refines the public bootstrap boundary under ADR 0015 and ADR 0017.
+
 ## Commits
 
 
@@ -1330,6 +1341,13 @@ ADR impact: No new ADR; implements the safe apply step described by ADR 0015 and
   Summary: Added guarded apply mode to the llm-workbench bootstrap planner. Apply now reuses the conflict-aware plan, refuses mismatched chat scripts before writing, copies clean create actions, merges only workbench-owned package.json chat scripts, preserves target-owned shared files, and passes an end-to-end throwaway public repo install smoke test.
   ADR impact: No new ADR; implements the safe apply step described by ADR 0015 and ADR 0017.
 
+
+- Commit: `3c65109`
+  Time UTC: 2026-06-20T00:56:12Z
+  Message: Select public chat workbench ADRs
+  Summary: Added a public chat workbench ADR export manifest and updated the bootstrap planner to copy only the selected public chat ADRs. The planner now excludes older historical ADRs and the non-chat AWS ADR while keeping smoke coverage to catch future accidental ADR export drift.
+  ADR impact: No new ADR; refines the public bootstrap boundary under ADR 0015 and ADR 0017.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1345,11 +1363,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-20T00:47:56Z
-Latest commit SHA: 6b7f4e8
-Chat duration: 29590s (00:08:13:10)
-Estimated chat tokens: 5012859 estimated from chat transcript bytes (20051434 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 150.39 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-20T00:56:12Z
+Latest commit SHA: 3c65109
+Chat duration: 30086s (00:08:21:26)
+Estimated chat tokens: 5086127 estimated from chat transcript bytes (20344506 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 152.58 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
