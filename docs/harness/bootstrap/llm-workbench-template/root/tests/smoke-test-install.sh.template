@@ -31,6 +31,7 @@ git -C "$TARGET_REPO" commit -q -m "Install llm-workbench harness"
   cd "$TARGET_REPO"
   AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
   CHAT_COPY_PROMPT=skip CHAT_CLEANUP_EMPTY_BRANCHES=skip \
+  CHAT_OPEN_WORKTREE_WINDOW=skip \
     npm run --silent chat:new -- "smoke test first chat startup" >/dev/null
 )
 

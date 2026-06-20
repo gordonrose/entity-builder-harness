@@ -35,6 +35,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/command/close" \
   "$REPO/scripts/00.chat/command/dispatcher" \
   "$REPO/scripts/00.chat/command/new" \
+  "$REPO/scripts/00.chat/command/open-window" \
   "$REPO/scripts/00.chat/classification/classify-task" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/00.chat/session-log/paths" \
@@ -42,21 +43,24 @@ mkdir -p \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
   "$REPO/scripts/00.chat/startup/start-new-chat" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree" \
+  "$REPO/scripts/00.chat/worktree/open-window" \
   "$REPO/scripts/00.chat/worktree/paths"
 
 cp "$SOURCE_ROOT/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/new/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/close/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
@@ -69,10 +73,12 @@ CHAT_COPY_PROMPT=skip \
 
 grep -q '^  new$' "$TMP_ROOT/list.out" || fail "new command was not listed"
 grep -q '^  close$' "$TMP_ROOT/list.out" || fail "close command was not listed"
+grep -q '^  open-window$' "$TMP_ROOT/list.out" || fail "open-window command was not listed"
 
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=skip \
+CHAT_OPEN_WORKTREE_WINDOW=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
     bash scripts/00.chat/command/dispatcher/script.sh new "test command-created session" \
     >"$TMP_ROOT/new.out"
@@ -83,6 +89,7 @@ grep -q 'Paste this into Codex / Claude / Mistral:' "$TMP_ROOT/new.out" || fail 
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=skip \
+CHAT_OPEN_WORKTREE_WINDOW=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
     bash scripts/00.chat/startup/auto-start-missing-session/script.sh "test opening prompt session" \
     >"$TMP_ROOT/auto-start.out"
@@ -111,6 +118,25 @@ worktree_path="$(
 if [ -z "$worktree_path" ]; then
   fail "new command did not create a chat worktree"
 fi
+
+FAKE_BIN="$TMP_ROOT/fake-bin"
+mkdir -p "$FAKE_BIN"
+cat > "$FAKE_BIN/code" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" > "$CODE_ARGS_FILE"
+EOF
+chmod +x "$FAKE_BIN/code"
+
+CODE_ARGS_FILE="$TMP_ROOT/code-args.out" \
+PATH="$FAKE_BIN:$PATH" \
+  bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
+    bash scripts/00.chat/command/dispatcher/script.sh open window \
+    >"$TMP_ROOT/open-window.out"
+
+grep -q "Opened VS Code window: $worktree_path" "$TMP_ROOT/open-window.out" \
+  || fail "open window command did not report opened worktree"
+grep -Fxq -- "--new-window $worktree_path" "$TMP_ROOT/code-args.out" \
+  || fail "open window command did not call code with the chat worktree"
 
 CHAT_COPY_PROMPT=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
