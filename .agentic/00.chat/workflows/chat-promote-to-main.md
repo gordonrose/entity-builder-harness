@@ -67,6 +67,10 @@ Do not change branches or edit files while blocked.
   user explicitly asks to inspect before refresh.
 - Prefer merging `main` into a chat branch because it preserves recorded commit
   SHAs and session evidence.
+- When promotion verification reports `blocked-behind` or `blocked-diverged`,
+  use the rehearsed preflight refresh flow in
+  `.agentic/00.chat/workflows/chat-refresh-from-main.md` before mutating the
+  active chat branch.
 - Rebase rewrites chat branch commits and requires explicit user approval.
 - Never refresh by discarding dirty work.
 - If conflicts appear, stop after Git reports the conflict set. Summarize the
@@ -78,26 +82,31 @@ If verification reports `blocked-behind`, do not merge the chat branch into
 `main`. If the user already requested merge or promotion to `main`, refresh the
 chat branch from `main` without asking for a second approval.
 
-For the approved non-rewriting refresh, run from the chat-owned worktree:
+For the approved non-rewriting refresh, use the rehearsed preflight refresh flow
+from `.agentic/00.chat/workflows/chat-refresh-from-main.md`:
 
 ```bash
-git merge --no-ff main
+bash scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 ```
 
-Then rerun the relevant checks and rerun local merge verification.
+If the preflight succeeds, run the required checks, apply the rehearsed refresh
+with `scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh`, then
+rerun local merge verification.
 
 ### Diverged From `main`
 
 If verification reports `blocked-diverged`, do not merge the chat branch into
 `main`. Explain that both `main` and the chat branch have unique commits.
 
-If the user already requested merge or promotion to `main`, merge `main` into
-the chat branch from the chat-owned worktree without asking for a second
-approval. Rebase rewrites chat branch commits and requires separate explicit
-approval.
+If the user already requested merge or promotion to `main`, run the rehearsed
+preflight refresh flow from `.agentic/00.chat/workflows/chat-refresh-from-main.md`
+without asking for a second approval. Rebase rewrites chat branch commits and
+requires separate explicit approval.
 
-If conflicts appear, stop after Git reports the conflict set. Summarize the
-conflicting files and ask before resolving them.
+If preflight conflicts appear, stop before resolving. Classify and record them
+using `.agentic/00.chat/standards/main-refresh-conflict-types.md`, then follow
+the preflight conflict audit and apply gates before mutating the active chat
+branch.
 
 ### Dirty Chat Worktree
 
