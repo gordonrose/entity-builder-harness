@@ -11,11 +11,11 @@ workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-06-20T08:23:26Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl
-latest_commit_at_utc: 2026-06-20T08:52:03Z
-latest_commit_sha: 06fadfc
-chat_duration: 1717s (00:00:28:37)
-estimated_chat_tokens: 402641 estimated from chat transcript bytes (1610563 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl)
-estimated_chat_cost: USD 12.08 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-20T08:56:32Z
+latest_commit_sha: 3018248
+chat_duration: 1986s (00:00:33:06)
+estimated_chat_tokens: 436471 estimated from chat transcript bytes (1745884 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl)
+estimated_chat_cost: USD 13.09 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -125,6 +125,17 @@ Summary: Narrows the shared process workflow so it keeps shared-process ownershi
 
 ADR impact: No ADR; completes a deferred 00.chat migration ownership cleanup.
 
+
+### 2026-06-20T08:56:32Z - Commit recorded
+
+Commit: `3018248`
+
+Message: Add main refresh conflict audit gates
+
+Summary: Adds deterministic main-refresh conflict classification and session-log audit verification gates, wires them into chat refresh governance, and closes the remaining 00.chat migration queue.
+
+ADR impact: No ADR; completes the existing 00.chat migration plan using recorded main-refresh recovery evidence.
+
 ## Commits
 
 
@@ -142,6 +153,13 @@ ADR impact: No ADR; completes a deferred 00.chat migration ownership cleanup.
   Summary: Narrows the shared process workflow so it keeps shared-process ownership and chat harness entry gates while delegating duplicated chat lifecycle commit/session bookkeeping rules to the canonical 00.chat before-commit checklist.
   ADR impact: No ADR; completes a deferred 00.chat migration ownership cleanup.
 
+
+- Commit: `3018248`
+  Time UTC: 2026-06-20T08:56:32Z
+  Message: Add main refresh conflict audit gates
+  Summary: Adds deterministic main-refresh conflict classification and session-log audit verification gates, wires them into chat refresh governance, and closes the remaining 00.chat migration queue.
+  ADR impact: No ADR; completes the existing 00.chat migration plan using recorded main-refresh recovery evidence.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -156,11 +174,11 @@ preflight cleanup behavior and tests satisfy one deferred migration item.
 ## Session Metrics
 
 Raised at UTC: 2026-06-20T08:23:26Z
-Latest commit at UTC: 2026-06-20T08:52:03Z
-Latest commit SHA: 06fadfc
-Chat duration: 1717s (00:00:28:37)
-Estimated chat tokens: 402641 estimated from chat transcript bytes (1610563 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl)
-Estimated chat cost: USD 12.08 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-20T08:56:32Z
+Latest commit SHA: 3018248
+Chat duration: 1986s (00:00:33:06)
+Estimated chat tokens: 436471 estimated from chat transcript bytes (1745884 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/20/rollout-2026-06-20T09-18-32-019ee41c-2bad-73d0-a908-ad000745a61e.jsonl)
+Estimated chat cost: USD 13.09 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
