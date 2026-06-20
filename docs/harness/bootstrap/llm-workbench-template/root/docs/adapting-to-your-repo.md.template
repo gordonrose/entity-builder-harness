@@ -1,0 +1,29 @@
+# Adapting To Your Repo
+
+The workbench is intentionally small at the root and detailed in the harness
+folders.
+
+## Keep AGENTS.md Small
+
+Use `AGENTS.md` as a router. Put detailed rules in workflows, standards,
+checklists, and scripts.
+
+## Add A Layer Deliberately
+
+If your repo needs product, infrastructure, docs, or education governance, add
+a layer under `.agentic/` and update `AGENTS.md` only with the routing summary.
+
+## Prefer Scripts For Repeatable Checks
+
+If a process can be checked deterministically, add or update a governed script
+instead of relying only on prose.
+
+## Keep Session History Local To The Repo
+
+Do not import another repo's `commitLogs/`. The first chat in your repo creates
+your repo's own session history.
+
+## Promote Reusable Lessons Upstream
+
+When a target repo teaches you something reusable about the workbench, promote
+that lesson back to `llm-workbench` instead of letting each repo drift.

@@ -1,0 +1,12 @@
+# Minimal Target Repo
+
+This example represents the smallest kind of repo that can install the
+workbench:
+
+- it is a Git repo
+- it has no existing harness
+- it can receive `AGENTS.md`, `.agentic/`, `scripts/`, and `package.json`
+- its first chat startup creates its own `commitLogs/`
+
+The install smoke test creates a throwaway repo with this shape rather than
+modifying this example directory in place.

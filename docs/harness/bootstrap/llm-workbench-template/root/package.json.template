@@ -1,0 +1,20 @@
+{
+  "name": "llm-workbench",
+  "private": true,
+  "version": "0.0.0",
+  "description": "A portable chat harness for governed agentic development workflows.",
+  "scripts": {
+    "chat": "bash scripts/00.chat/command/dispatcher/script.sh",
+    "chat:list": "bash scripts/00.chat/command/dispatcher/script.sh list",
+    "chat:new": "bash scripts/00.chat/command/dispatcher/script.sh new",
+    "chat:close": "bash scripts/00.chat/command/dispatcher/script.sh close",
+    "chat:audit-bootstrap": "bash scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh",
+    "chat:audit-layer-migration": "bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh",
+    "chat:cleanup-empty-branches": "bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh",
+    "chat:commit-log-summary": "bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh",
+    "chat:record-main-refresh-conflict": "bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh",
+    "chat:report-workspaces": "bash scripts/00.chat/reporting/report-chat-workspaces/script.sh",
+    "chat:smoke-package-scripts": "bash scripts/00.chat/command/package-scripts/smoke-test.sh",
+    "test:install": "bash tests/smoke-test-install.sh"
+  }
+}

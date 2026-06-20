@@ -1,0 +1,46 @@
+# Install
+
+## Requirements
+
+- Git
+- Bash
+- Node.js and npm for the `npm run chat:*` command surface
+
+## Install Into A Target Repo
+
+From the `llm-workbench` repo:
+
+```bash
+bash scripts/install.sh /path/to/target/repo
+```
+
+The installer copies the workbench harness into the target Git repo. It does
+not copy `commitLogs/` from the workbench repo.
+
+## Verify The Install
+
+From the target repo:
+
+```bash
+npm run chat:list
+```
+
+The command should run without requiring a chat session.
+
+## First Chat
+
+Open the target repo with your coding agent. The first chat startup should
+create that repo's own `commitLogs/` tree and use the target repo as the source
+of truth.
+
+## Uninstall
+
+From the `llm-workbench` repo:
+
+```bash
+bash scripts/uninstall.sh /path/to/target/repo
+```
+
+Uninstall removes harness files that were installed by the workbench. It should
+not remove target repo product code or committed session history unless you
+explicitly choose to clean those files yourself.

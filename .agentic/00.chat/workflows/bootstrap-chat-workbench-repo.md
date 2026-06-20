@@ -88,6 +88,12 @@ outside engineer would use it:
 - `scripts/uninstall.sh`
 - `tests/smoke-test-install.sh`
 
+Starter templates for those files live in:
+
+```txt
+docs/harness/bootstrap/llm-workbench-template/root/
+```
+
 The install smoke test must install the workbench into a throwaway Git repo,
 verify the public command surface works, and verify the first chat startup
 creates the target repo's own `commitLogs/`.

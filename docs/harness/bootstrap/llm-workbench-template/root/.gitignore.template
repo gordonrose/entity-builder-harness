@@ -1,0 +1,16 @@
+# Local editor and OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Node and package manager output
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime scratch space
+.tmp/
+tmp/
+
+# Local generated chat worktrees should live outside the repo by default.

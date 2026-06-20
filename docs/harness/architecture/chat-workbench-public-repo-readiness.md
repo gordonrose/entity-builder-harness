@@ -85,6 +85,12 @@ engineers need a product-shaped entry point, not only internal harness files:
 - `scripts/uninstall.sh`
 - `tests/smoke-test-install.sh`
 
+Starter templates for these files live under:
+
+```txt
+docs/harness/bootstrap/llm-workbench-template/root/
+```
+
 The install smoke test must prove that a throwaway Git repo can install the
 workbench, run the public command surface, and create its own `commitLogs/` on
 first chat startup.

@@ -23,6 +23,10 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 - `docs/harness/architecture/chat-workbench-public-repo-readiness.md` - defines the current export boundary for bootstrapping a standalone public chat workbench repo.
 - `docs/harness/architecture/script-layout.md` - explains the current script layout after the chat harness script migration.
 
+## Bootstrap Templates
+
+- `docs/harness/bootstrap/llm-workbench-template/` - starter public repo shell files for the first `llm-workbench` bootstrap.
+
 ## Data
 
 - `data/openai-chat-pricing.json` - versioned pricing snapshot used by chat cost estimation scripts.

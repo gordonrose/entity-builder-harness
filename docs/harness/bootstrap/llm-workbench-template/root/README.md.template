@@ -1,0 +1,47 @@
+# llm-workbench
+
+`llm-workbench` is a portable chat harness for governed agentic development.
+
+It gives a Git repo a repeatable way to start work in chat-owned branches and
+worktrees, record session logs, run commit gates, refresh from local `main`, and
+promote reusable lessons back upstream.
+
+## What You Get
+
+- chat startup and session logs under `commitLogs/`
+- chat-owned worktrees for implementation work
+- public `npm run chat:*` commands
+- governed script execution for repeatable helper commands
+- local merge readiness and main-refresh checks
+- onboarding docs for every chat script folder
+
+## Quick Start
+
+```bash
+git clone <llm-workbench-repo-url>
+cd llm-workbench
+npm run chat:list
+```
+
+To install the workbench into another Git repo:
+
+```bash
+bash scripts/install.sh /path/to/target/repo
+```
+
+Then open that target repo with your coding agent and follow its `AGENTS.md`.
+
+## Important Boundaries
+
+The workbench does not push to remotes, rewrite history, discard local work, or
+delete branches without explicit human approval.
+
+The first chat in a target repo creates that repo's own `commitLogs/`. The
+workbench does not copy session history from another repo.
+
+## Learn More
+
+- `docs/concepts.md`
+- `docs/install.md`
+- `docs/workflows.md`
+- `docs/adapting-to-your-repo.md`
