@@ -35,8 +35,11 @@ material for the public product shell.
 ## Template Paths
 
 - `root/AGENTS.md.template`
+- `root/CONTRIBUTING.md.template`
+- `root/LICENSE.template`
 - `root/package.json.template`
 - `root/README.md.template`
+- `root/SECURITY.md.template`
 - `root/.gitignore.template`
 - `root/docs/concepts.md.template`
 - `root/docs/install.md.template`
