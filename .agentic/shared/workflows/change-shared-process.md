@@ -5,7 +5,7 @@ purpose: Govern changes to cross-layer shared process.
 domain: process
 portability: llm-workbench-required
 used_by:
-  - .agentic/harness/workflows/change-harness.md
+  - .agentic/01.harness/workflows/change-harness.md
   - AGENTS.md
 -->
 

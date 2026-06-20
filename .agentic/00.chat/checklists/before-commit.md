@@ -6,7 +6,7 @@ domain: git
 portability: llm-workbench-required
 used_by:
   - .agentic/00.chat/workflows/chat-commit.md
-  - .agentic/harness/workflows/change-harness.md
+  - .agentic/01.harness/workflows/change-harness.md
 -->
 
 # Chat Before-Commit Checklist
@@ -42,7 +42,7 @@ introduced the missing files, then rerun this checklist.
 Run:
 
 ```bash
-bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
+bash scripts/01.harness/check-deterministic-process-drift.sh --staged
 ```
 
 <!-- deterministic-check: allow reason="requires human review and approval before editing process prose" -->
@@ -54,7 +54,7 @@ script or gate, or keeping the prose with an allow marker and reason.
 Run:
 
 ```bash
-bash scripts/shared/harness/check-artifact-metadata-headers.sh --staged-added
+bash scripts/01.harness/check-artifact-metadata-headers.sh --staged-added
 ```
 
 New scripts and harness/process Markdown documents must declare metadata
@@ -98,7 +98,7 @@ bash scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 ```
 
 Do not commit if the gate fails.
@@ -108,7 +108,7 @@ Do not commit if the gate fails.
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
 ```
 
 Record every commit in the chat. The latest recorded commit is treated as the
@@ -131,7 +131,7 @@ If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
 write permission for the chat authorizes the bookkeeping checkpoint commit:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
@@ -160,7 +160,7 @@ that as recovery. Import only explicit approved paths into the chat-owned
 worktree before continuing:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action \
+bash scripts/01.harness/run-governed-script.sh --approved-action \
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
   --session-log <session-log> \
   --source-worktree <active-worktree> \

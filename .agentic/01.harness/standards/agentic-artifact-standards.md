@@ -1,3 +1,15 @@
+<!-- agentic-artifact:
+owner: harness
+kind: standard
+purpose: Define which harness artifact type should own new rules, procedures, capabilities, and checks.
+domain: governance
+portability: llm-workbench-required
+used_by:
+  - .agentic/01.harness/workflows/change-harness.md
+  - .agentic/01.harness/workflows/build-capability-workflow.md
+  - .agentic/01.harness/README.md
+-->
+
 # Agentic Artifact Standards
 
 ## Purpose
@@ -148,7 +160,7 @@ support dry-run mode first.
 - Support dry-run mode before any delete, move, commit, push, clean, overwrite,
   or other destructive behavior.
 - Include an `agentic-script` metadata header as defined in
-  `.agentic/harness/standards/artifact-metadata-headers.md`.
+  `.agentic/01.harness/standards/artifact-metadata-headers.md`.
 
 ### Gate
 

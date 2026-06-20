@@ -5,7 +5,7 @@ purpose: Define metadata headers for scripts and harness process documents.
 domain: metadata
 portability: llm-workbench-required
 used_by:
-  - .agentic/harness/standards/agentic-artifact-standards.md
+  - .agentic/01.harness/standards/agentic-artifact-standards.md
   - .agentic/00.chat/checklists/before-commit.md
 -->
 
@@ -123,7 +123,7 @@ standard, or checker that treats that validation as part of the harness.
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh scripts/shared/harness/check-artifact-metadata-headers.sh --staged-added
+bash scripts/01.harness/run-governed-script.sh scripts/01.harness/check-artifact-metadata-headers.sh --staged-added
 ```
 
 The staged-added mode is required before commits so newly created scripts and

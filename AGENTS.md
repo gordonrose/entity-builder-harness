@@ -21,7 +21,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 * `.agentic/00.chat/` governs chat lifecycle, including chat sessions, chat worktrees, session logs, chat refresh, chat closeout, cleanup, shortcuts, and chat reporting.
 * `.agentic/shared/` governs cross-layer process primitives, including git approval rules, handoff, deployment process, and context compaction.
-* `.agentic/harness/` governs changes to the agentic harness itself.
+* `.agentic/01.harness/` governs changes to the agentic harness itself.
 * `.agentic/education/` governs educational resources derived from repo work.
 * `.agentic/aws/` governs AWS infrastructure, environments, runtime operations, and cloud deployment targets.
 * `.agentic/product/` governs Kanbien product/code work.
@@ -31,7 +31,7 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 * Session state: current branch’s `commitLogs/<session>/README.md`
 * Chat lifecycle process: `.agentic/00.chat/`
 * Shared operating process: `.agentic/shared/`
-* Harness maintenance process: `.agentic/harness/`
+* Harness maintenance process: `.agentic/01.harness/`
 * Education resources process: `.agentic/education/`
 * AWS infrastructure and operations process: `.agentic/aws/`
 * Product/code process: `.agentic/product/`

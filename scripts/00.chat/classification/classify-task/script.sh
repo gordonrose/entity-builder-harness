@@ -70,7 +70,7 @@ case "$TASK" in
   *governed\ script*|*governed\ checkpoint*|*approval\ prompt*|*permission\ prompt*|*codex*approval*|*allow*bash*|*bash*permission*|*shell*permission*|*tool*permission*|*.codex*|*.claude*|*.vibe*|*codex*claude*mistral*|*vendor*adapter*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/harness/workflows/change-harness.md"
+    echo "Workflow: .agentic/01.harness/workflows/change-harness.md"
     ;;
   *chat\ start*|*start\ chat*|*chat\ startup*|*session\ metadata*|*session\ log*|*session\ logs*|*chat\ session*|*chat*worktree*session*|*chat-owned\ worktree*)
     echo "Layer: chat"
@@ -120,7 +120,7 @@ case "$TASK" in
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/harness/workflows/change-harness.md"
+    echo "Workflow: .agentic/01.harness/workflows/change-harness.md"
     ;;
   *education*|*educational*|*teaching*|*teacher*|*lecture*|*lecturer*|*classroom*|*blog\ post*|*blogpost*|*talk*|*talks*|*content\ mining*|*voice\ profile*|*humor\ profile*|*humour\ profile*|*storytelling*|*teaching\ asset*|*teaching\ assets*)
     echo "Layer: education"
@@ -140,7 +140,7 @@ case "$TASK" in
   *capability*|*capabilities*|*skill*|*skills*|*agent*|*gate*|*gates*|*adapter*|*token*|*tokens*|*instruction*|*harness*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/harness/workflows/change-harness.md"
+    echo "Workflow: .agentic/01.harness/workflows/change-harness.md"
     ;;
   *code*|*feature*|*design\ system*|*auth*|*tenant*|*database*|*test*|*CI*|*CD*)
     echo "Layer: product"

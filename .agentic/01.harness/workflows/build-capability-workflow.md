@@ -1,3 +1,14 @@
+<!-- agentic-artifact:
+owner: harness
+kind: workflow
+purpose: Govern how to choose and create the smallest safe artifact set for a new repeatable capability.
+domain: governance
+portability: llm-workbench-required
+used_by:
+  - .agentic/shared/workflows/capability-resolution-workflow.md
+  - .agentic/01.harness/standards/agentic-artifact-standards.md
+-->
+
 # Build Capability Workflow
 
 ## Use When
@@ -32,7 +43,7 @@ Example:
 ```txt
 Task: update my harness so whenever I start a new chat, empty branches and commitLogs are cleaned up
 Layer: shared
-Workflow: .agentic/harness/workflows/build-capability.md
+Workflow: .agentic/01.harness/workflows/build-capability.md
 ```
 
 ## Step 2: Check Existing Artifacts
@@ -75,7 +86,7 @@ Use this decision table:
 | coordination across multiple agents/workflows | orchestrator |
 
 For detailed placement rules, use
-`.agentic/harness/standards/agentic-artifact-standards.md`.
+`.agentic/01.harness/standards/agentic-artifact-standards.md`.
 
 Prefer fewer artifacts.
 

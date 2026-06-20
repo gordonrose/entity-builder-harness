@@ -9,7 +9,7 @@ set -euo pipefail
 #   used_by:
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 #     - .agentic/shared/standards/upstream-repo-bootstrap.md
-#     - scripts/shared/harness/run-governed-script.sh
+#     - scripts/01.harness/run-governed-script.sh
 #   effects: read-only
 
 usage() {
@@ -78,9 +78,12 @@ add_tree_if_exists ".agentic/00.chat"
 add_tree_if_exists ".agentic/shared/standards"
 add_tree_if_exists ".agentic/shared/workflows"
 add_if_exists "package.json"
-add_if_exists "scripts/shared/harness/run-governed-script.sh"
-add_if_exists "scripts/shared/harness/check-deterministic-process-drift.sh"
-add_if_exists "scripts/shared/harness/check-governed-script-command-drift.sh"
+add_if_exists "scripts/01.harness/run-governed-script.sh"
+add_if_exists "scripts/01.harness/check-deterministic-process-drift.sh"
+add_if_exists "scripts/01.harness/check-artifact-metadata-headers.sh"
+add_if_exists "scripts/01.harness/check-governed-script-command-drift.sh"
+add_if_exists "scripts/01.harness/plan-artifact-path-migration.sh"
+add_if_exists "scripts/01.harness/check-artifact-path-migration.sh"
 
 sort -u "$SEEDS" > "$QUEUE"
 
@@ -89,7 +92,7 @@ extract_script_refs() {
   local dir
 
   grep -Eo 'scripts/[A-Za-z0-9._/-]+\.(sh|js|mjs|cjs|tsv|json)' "$path" 2>/dev/null \
-    | grep -E '^scripts/(00\.chat|chat|harness|shared)/' || true
+    | grep -E '^scripts/(00\.chat|01\.harness|chat|harness|shared)/' || true
 
   case "$path" in
     scripts/*)

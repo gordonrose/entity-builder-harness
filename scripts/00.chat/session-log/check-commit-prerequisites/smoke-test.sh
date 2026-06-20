@@ -36,7 +36,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/check-commit-prerequisites" \
   "$REPO/scripts/00.chat/session-log/read-current-chat-log" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/scripts/shared/harness"
+  "$REPO/scripts/01.harness"
 
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/check-commit-prerequisites/script.sh" "$REPO/scripts/00.chat/session-log/check-commit-prerequisites/script.sh"

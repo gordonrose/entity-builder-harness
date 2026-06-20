@@ -117,7 +117,7 @@ required action and rerun verification.
 
 If the required recovery path is not covered by this workflow, a script, a gate,
 or a standard, use the missing-governance stop response from
-`.agentic/harness/standards/missing-governance-stop-condition.md`.
+`.agentic/01.harness/standards/missing-governance-stop-condition.md`.
 
 ## Promotion Policy
 

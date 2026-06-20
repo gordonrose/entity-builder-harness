@@ -35,14 +35,14 @@ Do not add project-specific or procedural rules here.
 * `.agentic/shared/` governs cross-layer process primitives, including git
   approval rules, handoff, context compaction, and upstream repo bootstrap
   standards.
-* `.agentic/harness/` governs changes to the workbench harness itself.
+* `.agentic/01.harness/` governs changes to the workbench harness itself.
 
 ## Source Of Truth
 
 * Session state: current branch's `commitLogs/<session>/README.md`
 * Chat lifecycle process: `.agentic/00.chat/`
 * Shared operating process: `.agentic/shared/`
-* Harness maintenance process: `.agentic/harness/`
+* Harness maintenance process: `.agentic/01.harness/`
 * Executable checks: `scripts/`
 * Human documentation: `docs/`
 * Commit/task logs: `commitLogs/`

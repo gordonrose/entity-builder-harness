@@ -44,7 +44,7 @@ layers:
       - task changes vendor adapters for Codex, Claude, or Mistral
       - task changes governed script permissions or agent shell allowlists
       - task improves token usage or instruction loading
-    workflow_index: .agentic/harness/workflows/README.md
+    workflow_index: .agentic/01.harness/workflows/README.md
 
   education:
     use_when:

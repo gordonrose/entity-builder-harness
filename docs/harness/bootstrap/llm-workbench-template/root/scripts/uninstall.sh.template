@@ -31,7 +31,7 @@ rm -rf \
   "$TARGET_REPO/.agentic/00.chat" \
   "$TARGET_REPO/.agentic/shared" \
   "$TARGET_REPO/scripts/00.chat" \
-  "$TARGET_REPO/scripts/shared/harness"
+  "$TARGET_REPO/scripts/01.harness"
 
 echo "Removed llm-workbench harness directories from: $TARGET_REPO"
 echo "Review AGENTS.md and package.json manually before deleting them."

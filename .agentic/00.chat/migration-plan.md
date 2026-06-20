@@ -50,7 +50,7 @@ canonical chat layer:
 - `.agentic/shared/workflows/local-convergence.md`
 - `.agentic/shared/checklists/before-commit.md`
 - `.agentic/shared/workflows/default.md`
-- `.agentic/harness/workflows/default.md`
+- `.agentic/01.harness/workflows/default.md`
 
 Script compatibility wrappers under `scripts/shared/chat/` and
 `scripts/shared/git/` have been retired. Keep historical references for audit

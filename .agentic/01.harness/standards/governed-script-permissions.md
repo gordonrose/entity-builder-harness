@@ -5,8 +5,8 @@ purpose: Define persistent tool permission policy for governed repository script
 domain: governance
 portability: llm-workbench-required
 used_by:
-  - scripts/shared/harness/run-governed-script.sh
-  - scripts/shared/harness/smoke-test-governed-script-runner.sh
+  - scripts/01.harness/run-governed-script.sh
+  - scripts/01.harness/smoke-test-governed-script-runner.sh
 -->
 
 # Governed Script Permissions
@@ -27,7 +27,7 @@ Persistent vendor permission must target the governed script runner, not raw
 Agents may be configured to run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh <script> [args...]
+bash scripts/01.harness/run-governed-script.sh <script> [args...]
 ```
 
 Do not grant persistent approval for unrestricted shell commands such as
@@ -37,7 +37,7 @@ hide unrelated behavior.
 ## Ownership
 
 - This standard owns the policy and approval classes.
-- `scripts/shared/harness/run-governed-script.sh` owns deterministic
+- `scripts/01.harness/run-governed-script.sh` owns deterministic
   enforcement.
 - Vendor configuration owns only vendor-specific permission mechanics.
 - Workflows still own when a class of action is approved for the current chat.
@@ -79,7 +79,7 @@ an approval-sensitive governed script as an executable command, route it through
 the governed runner:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action <script> [args...]
+bash scripts/01.harness/run-governed-script.sh --approved-action <script> [args...]
 ```
 
 `--approved-action` does not grant approval by itself. It only records that the
@@ -95,7 +95,7 @@ approval such as `git clone`, prefer a narrowly scoped governed helper and route
 it through the runner. For the reusable lesson upstream workbench, use:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
 ```
 
 ### Never Persistent-Auto-Approved

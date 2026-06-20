@@ -57,12 +57,12 @@ Initial candidate paths:
 - `.agentic/shared/standards/`
 - `.agentic/shared/workflows/` entries required by cross-layer process and
   capability resolution
-- `.agentic/harness/` standards and workflows required by metadata,
+- `.agentic/01.harness/` standards and workflows required by metadata,
   deterministic process, governed script, and harness-maintenance checks
 - `package.json` chat command scripts as an upstream template, not a direct
   source-repo copy
 - `scripts/00.chat/` canonical chat capability scripts required by the audit
-- `scripts/shared/harness/` gates required by chat startup, commit, classifier,
+- `scripts/01.harness/` gates required by chat startup, commit, classifier,
   governed script, and deterministic process checks
 - `docs/harness/architecture/public-chat-workbench-adrs.md`
 - ADRs listed in `docs/harness/architecture/public-chat-workbench-adrs.md`

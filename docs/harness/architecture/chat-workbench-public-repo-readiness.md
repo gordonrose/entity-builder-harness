@@ -36,10 +36,10 @@ bootstrap, subject to the normal upstream inspection gates:
 - `.agentic/shared/standards/upstream-repo-bootstrap.md`
 - `.agentic/shared/workflows/` entries required by cross-layer process and
   capability resolution
-- `.agentic/harness/` standards and workflows required by metadata,
+- `.agentic/01.harness/` standards and workflows required by metadata,
   deterministic process, governed script, and harness-maintenance checks
 - `scripts/00.chat/`
-- `scripts/shared/harness/`
+- `scripts/01.harness/`
 - `docs/harness/architecture/script-layout.md`
 - `docs/harness/architecture/public-chat-workbench-adrs.md`
 - ADRs listed in `docs/harness/architecture/public-chat-workbench-adrs.md`

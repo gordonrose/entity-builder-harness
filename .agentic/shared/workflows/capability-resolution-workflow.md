@@ -92,7 +92,7 @@ Examples:
 ```text
 Layer: harness
 Mode: planning
-Workflow: .agentic/harness/workflows/build-capability-workflow.md
+Workflow: .agentic/01.harness/workflows/build-capability-workflow.md
 ```
 
 ```text
@@ -118,7 +118,7 @@ At minimum:
 - `unknown` must not proceed to edits or commands that mutate state.
 - If a required action, recovery path, workaround, or substitution is not
   governed by the selected workflow, gate, script, or standard, follow
-  `.agentic/harness/standards/missing-governance-stop-condition.md`.
+  `.agentic/01.harness/standards/missing-governance-stop-condition.md`.
 
 Workflows may define stricter gates.
 

@@ -59,7 +59,7 @@ if (!/^\d+$/.test(tokenValue)) {
 const tokenCount = Number(tokenValue);
 const repoRoot = findRepoRoot(process.cwd());
 const pricingPath = process.env.CHAT_COST_PRICING_FILE ||
-  path.join(repoRoot, '.agentic/harness/data/openai-chat-pricing.json');
+  path.join(repoRoot, '.agentic/01.harness/data/openai-chat-pricing.json');
 
 if (!fs.existsSync(pricingPath)) {
   unavailable('pricing snapshot not found');

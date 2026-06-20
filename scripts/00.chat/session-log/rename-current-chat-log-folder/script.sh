@@ -8,8 +8,8 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-start.md
-#     - .agentic/harness/standards/governed-script-permissions.md
-#     - scripts/shared/harness/run-governed-script.sh
+#     - .agentic/01.harness/standards/governed-script-permissions.md
+#     - scripts/01.harness/run-governed-script.sh
 #   effects: writes-files
 
 # shellcheck source=../paths/lib.sh

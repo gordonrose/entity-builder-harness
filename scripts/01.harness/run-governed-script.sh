@@ -7,7 +7,7 @@ set -euo pipefail
 #   domain: governance
 #   portability: llm-workbench-required
 #   used_by:
-#     - .agentic/harness/standards/governed-script-permissions.md
+#     - .agentic/01.harness/standards/governed-script-permissions.md
 #     - .agentic/00.chat/workflows/chat-start.md
 #   effects: read-only
 
@@ -53,9 +53,11 @@ always scripts/00.chat/worktree/dirty-worktree-check/script.sh
 always scripts/00.chat/main-refresh/show-main-update-status/script.sh
 always scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 always scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
-always scripts/shared/harness/check-deterministic-process-drift.sh
-always scripts/shared/harness/check-artifact-metadata-headers.sh
-always scripts/shared/harness/check-governed-script-command-drift.sh
+always scripts/01.harness/check-deterministic-process-drift.sh
+always scripts/01.harness/check-artifact-metadata-headers.sh
+always scripts/01.harness/check-governed-script-command-drift.sh
+always scripts/01.harness/plan-artifact-path-migration.sh
+always scripts/01.harness/check-artifact-path-migration.sh
 approved scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh
 approved scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
 approved scripts/00.chat/startup/auto-start-missing-session/script.sh
@@ -108,7 +110,12 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
   scripts/00.chat/session-log/record-chat-commit/script.sh|\
   scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
-  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh)
+  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
+  scripts/01.harness/check-deterministic-process-drift.sh|\
+  scripts/01.harness/check-artifact-metadata-headers.sh|\
+  scripts/01.harness/check-governed-script-command-drift.sh|\
+  scripts/01.harness/plan-artifact-path-migration.sh|\
+  scripts/01.harness/check-artifact-path-migration.sh)
     ;;
   *)
     echo "ERROR: refused script outside governed shared script paths: $SCRIPT_PATH" >&2
@@ -133,9 +140,11 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
   scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
-  scripts/shared/harness/check-deterministic-process-drift.sh|\
-  scripts/shared/harness/check-artifact-metadata-headers.sh|\
-  scripts/shared/harness/check-governed-script-command-drift.sh)
+  scripts/01.harness/check-deterministic-process-drift.sh|\
+  scripts/01.harness/check-artifact-metadata-headers.sh|\
+  scripts/01.harness/check-governed-script-command-drift.sh|\
+  scripts/01.harness/plan-artifact-path-migration.sh|\
+  scripts/01.harness/check-artifact-path-migration.sh)
     RUN_CLASS="always"
     ;;
   scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\

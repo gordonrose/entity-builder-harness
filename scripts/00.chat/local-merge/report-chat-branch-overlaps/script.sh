@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/00.chat/workflows/chat-refresh-from-main.md
-#     - scripts/shared/harness/run-governed-script.sh
+#     - scripts/01.harness/run-governed-script.sh
 #   effects: read-only
 
 BASE_BRANCH="${1:-main}"

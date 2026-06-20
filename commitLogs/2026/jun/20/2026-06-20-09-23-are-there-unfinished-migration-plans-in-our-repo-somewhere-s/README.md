@@ -136,6 +136,17 @@ Summary: Adds deterministic main-refresh conflict classification and session-log
 
 ADR impact: No ADR; completes the existing 00.chat migration plan using recorded main-refresh recovery evidence.
 
+
+### 2026-06-20T09:15:56Z - Main refresh conflict recorded
+
+Path: `.agentic/shared/workflows/change-shared-process.md`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: kept this branch's canonical before-commit checklist delegation and allowed unrelated main artifact-path migration changes to remain merged
+
 ## Commits
 
 
@@ -162,7 +173,17 @@ ADR impact: No ADR; completes the existing 00.chat migration plan using recorded
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/shared/workflows/change-shared-process.md`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored shared-process workflow conflict between this branch's delegation model and main's artifact-path migration update
+  Action: kept this branch's canonical before-commit checklist delegation and allowed unrelated main artifact-path migration changes to remain merged
+  Preflight branch: `direct-main-refresh`
+  Preflight worktree: `/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-06-20-09-23-are-there-unfinished-migration-plans-in-our-repo-somewhere-s-2048380506`
+  Files changed by resolution: .agentic/shared/workflows/change-shared-process.md
+  Checks: chat layer migration audit; conflict classifier smoke test; conflict audit verifier smoke test; conflict marker scan
 
 ## ADR Disposition
 

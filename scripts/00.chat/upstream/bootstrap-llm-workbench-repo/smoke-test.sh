@@ -95,7 +95,7 @@ grep -q '^PRESERVE scripts/shared/custom/tool.sh$' "$TMP_ROOT/preserve.out" || f
 grep -q '^conflicts: 0$' "$TMP_ROOT/preserve.out" || fail "preserve repo reported conflicts"
 run_apply "$PRESERVE_REPO" "$TMP_ROOT/preserve-apply.out"
 test -f "$PRESERVE_REPO/scripts/shared/custom/tool.sh" || fail "apply removed target-owned shared script"
-test -f "$PRESERVE_REPO/scripts/shared/harness/run-governed-script.sh" || fail "apply did not create shared harness script"
+test -f "$PRESERVE_REPO/scripts/01.harness/run-governed-script.sh" || fail "apply did not create shared harness script"
 
 CONFLICT_REPO="$TMP_ROOT/conflict"
 make_repo "$CONFLICT_REPO"

@@ -1,3 +1,15 @@
+<!-- agentic-artifact:
+owner: harness
+kind: standard
+purpose: Define the missing-governance stop-condition policy that prevents improvised recovery.
+domain: governance
+portability: llm-workbench-required
+used_by:
+  - AGENTS.md
+  - .agentic/01.harness/workflows/change-harness.md
+  - .agentic/shared/workflows/capability-resolution-workflow.md
+-->
+
 # Missing Governance Stop Condition
 
 ## Purpose
