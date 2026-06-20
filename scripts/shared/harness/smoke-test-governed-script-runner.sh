@@ -29,8 +29,6 @@ mkdir -p \
   "$REPO/scripts/00.chat/startup/auto-start-missing-session" \
   "$REPO/scripts/00.chat/upstream/ensure-llm-workbench-repo" \
   "$REPO/scripts/00.chat/worktree/check-write-location" \
-  "$REPO/scripts/shared/chat" \
-  "$REPO/scripts/shared/git" \
   "$REPO/scripts/shared/harness" \
   "$REPO/scripts/local"
 

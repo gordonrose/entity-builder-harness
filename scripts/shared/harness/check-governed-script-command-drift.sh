@@ -53,8 +53,6 @@ collect_default_paths() {
     [ -f AGENTS.md ] && printf '%s\n' AGENTS.md
     [ -d .agentic ] && find .agentic -type f
     [ -d docs/harness ] && find docs/harness -type f
-    [ -d scripts/shared/chat/commands ] && find scripts/shared/chat/commands -type f
-    [ -d scripts/shared/chat/request-initialization ] && find scripts/shared/chat/request-initialization -maxdepth 1 -type f
   } | sort -u
 }
 
@@ -80,9 +78,6 @@ is_scannable_path() {
       return 1
       ;;
     AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
-      return 0
-      ;;
-    scripts/shared/chat/commands/*.sh|scripts/shared/chat/request-initialization/*.sh)
       return 0
       ;;
     *)
