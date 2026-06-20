@@ -98,7 +98,7 @@ docs/harness/bootstrap/llm-workbench-template/root/
 
 The install smoke test must install the workbench into a throwaway Git repo,
 verify the public command surface works, and verify the first chat startup
-creates the target repo's own `commitLogs/`.
+creates the target repo's own `commitLogs/` inside a chat-owned worktree.
 
 Use `scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh` to distinguish
 required scripts from candidate unreferenced scripts before copying scripts
@@ -108,13 +108,16 @@ Use `docs/harness/architecture/chat-workbench-public-repo-readiness.md` to
 separate files that can be copied as-is from files that must be transformed for
 the public repo.
 
-Before apply mode exists or before writing manually, run the dry-run planner:
+Before writing, run the dry-run planner:
 
 ```bash
 bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
   --target <upstream-repo> \
   --dry-run
 ```
+
+Only run `--apply` after reviewing a clean plan. Apply mode must refuse to
+write when the plan contains conflicts.
 
 ## Required Exclusions
 
@@ -140,7 +143,8 @@ For an empty upstream repo:
    upstream repo.
 
 Do not create or copy `commitLogs/` during bootstrap. The first upstream chat
-startup creates the upstream repo's first session log.
+startup creates the upstream repo's first session log inside a chat-owned
+worktree.
 
 ## Bootstrap Prompt Shape
 
@@ -179,7 +183,8 @@ history into llm-workbench.
 Ask before writing upstream files.
 Ask before committing.
 Do not push unless explicitly approved separately.
-Do not copy source commitLogs; first upstream chat startup creates commitLogs.
+Do not copy source commitLogs; first upstream chat startup creates commitLogs
+inside a chat-owned worktree.
 ```
 
 ## Stop Conditions

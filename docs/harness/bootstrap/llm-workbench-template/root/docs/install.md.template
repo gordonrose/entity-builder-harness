@@ -30,8 +30,8 @@ The command should run without requiring a chat session.
 ## First Chat
 
 Open the target repo with your coding agent. The first chat startup should
-create that repo's own `commitLogs/` tree and use the target repo as the source
-of truth.
+create that repo's own `commitLogs/` tree inside the chat-owned worktree and
+use the target repo as the source of truth.
 
 ## Uninstall
 

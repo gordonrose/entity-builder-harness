@@ -14,13 +14,14 @@ used_by:
 This capability plans how the portable chat workbench would be materialized
 into a target Git repo.
 
-The first implementation is dry-run only. It does not copy files, merge
-`package.json`, or write into the target repo. It produces an action plan that
-can be reviewed before any apply mode exists.
+It always produces a plan first. In `--dry-run` mode it writes nothing. In
+`--apply` mode it refuses to write when the plan contains conflicts, then copies
+missing files and merges workbench-owned `chat:*` scripts into `package.json`.
 
 ## Files
 
-- `script.sh` inspects a target repo and prints the bootstrap plan.
+- `script.sh` inspects a target repo, prints the bootstrap plan, and can apply
+  a clean plan.
 - `smoke-test.sh` exercises empty, existing-package, preserved-shared-file, and
   conflicting-package-script scenarios in throwaway repos.
 
@@ -45,12 +46,23 @@ The planner classifies target paths as:
 Conflicts make the dry-run exit non-zero. That lets future workflows use the
 planner as a gate before an apply step.
 
+Apply mode uses the same conflict detection. It only writes after the plan is
+clean.
+
 ## Usage
 
 ```bash
 bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
   --target /path/to/llm-workbench \
   --dry-run
+```
+
+After reviewing a clean plan:
+
+```bash
+bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
+  --target /path/to/llm-workbench \
+  --apply
 ```
 
 ## Boundaries

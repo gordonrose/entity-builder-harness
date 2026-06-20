@@ -6,7 +6,8 @@ workbench:
 - it is a Git repo
 - it has no existing harness
 - it can receive `AGENTS.md`, `.agentic/`, `scripts/`, and `package.json`
-- its first chat startup creates its own `commitLogs/`
+- its first chat startup creates its own `commitLogs/` inside a chat-owned
+  worktree
 
 The install smoke test creates a throwaway repo with this shape rather than
 modifying this example directory in place.

@@ -21,7 +21,7 @@ instead of relying only on prose.
 ## Keep Session History Local To The Repo
 
 Do not import another repo's `commitLogs/`. The first chat in your repo creates
-your repo's own session history.
+your repo's own session history inside the chat-owned worktree.
 
 ## Promote Reusable Lessons Upstream
 

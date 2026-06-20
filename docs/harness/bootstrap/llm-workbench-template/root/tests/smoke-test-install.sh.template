@@ -29,12 +29,11 @@ git -C "$TARGET_REPO" commit -q -m "Install llm-workbench harness"
 
 (
   cd "$TARGET_REPO"
+  AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
   CHAT_COPY_PROMPT=skip CHAT_CLEANUP_EMPTY_BRANCHES=skip \
-  bash scripts/shared/harness/run-governed-script.sh \
-    --approved-action scripts/00.chat/startup/start-chat-session/script.sh \
-    "smoke test first chat startup" >/dev/null
+    npm run --silent chat:new -- "smoke test first chat startup" >/dev/null
 )
 
-test -d "$TARGET_REPO/commitLogs"
+find "$TMP_ROOT/worktrees" -path '*/commitLogs/*/README.md' -type f | grep -q .
 
 echo "Install smoke test passed."

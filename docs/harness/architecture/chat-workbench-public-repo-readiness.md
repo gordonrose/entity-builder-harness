@@ -102,8 +102,8 @@ docs/harness/bootstrap/llm-workbench-template/root/
 ```
 
 The install smoke test must prove that a throwaway Git repo can install the
-workbench, run the public command surface, and create its own `commitLogs/` on
-first chat startup.
+workbench, run the public command surface, and create its own `commitLogs/`
+inside a chat-owned worktree on first chat startup.
 
 ## Exclude
 
@@ -147,7 +147,9 @@ Before bootstrapping or updating `llm-workbench`:
 <!-- deterministic-check: allow reason="readiness checks are listed for human review; bootstrap planner and install smoke test own executable validation" -->
 - verify no excluded source-specific paths are copied
 - verify the dry-run planner has no conflicts
+- apply only after reviewing a clean dry-run plan
 - verify `npm run chat:list` works in the upstream repo
 - verify the install smoke test creates a target repo's own `commitLogs/`
+  inside a chat-owned worktree
 - commit only after explicit approval
 - push only after separate explicit approval

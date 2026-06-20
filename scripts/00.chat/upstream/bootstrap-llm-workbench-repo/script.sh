@@ -3,26 +3,27 @@ set -euo pipefail
 
 # agentic-script:
 #   owner: 00.chat
-#   purpose: Dry-run the file and package merge plan for bootstrapping llm-workbench.
+#   purpose: Plan or apply the file and package merge for bootstrapping llm-workbench.
 #   domain: upstream
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/README.md
 #     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#   effects: read-only
+#   effects: read-only, writes-files
 
 usage() {
   cat <<'EOF'
 Usage:
   bootstrap-llm-workbench-repo.sh --target <git-repo> --dry-run
+  bootstrap-llm-workbench-repo.sh --target <git-repo> --apply
 
-Plans how the portable chat workbench would be materialized into a target Git
-repo. This implementation is dry-run only and writes nothing to the target.
+Plans or applies how the portable chat workbench is materialized into a target
+Git repo. Apply mode refuses to write when the plan contains conflicts.
 EOF
 }
 
 TARGET_REPO=""
-DRY_RUN="no"
+MODE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -35,7 +36,19 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --dry-run)
-      DRY_RUN="yes"
+      if [ -n "$MODE" ]; then
+        echo "ERROR: choose exactly one mode: --dry-run or --apply." >&2
+        exit 2
+      fi
+      MODE="dry-run"
+      shift
+      ;;
+    --apply)
+      if [ -n "$MODE" ]; then
+        echo "ERROR: choose exactly one mode: --dry-run or --apply." >&2
+        exit 2
+      fi
+      MODE="apply"
       shift
       ;;
     -h|--help)
@@ -50,7 +63,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ -z "$TARGET_REPO" ] || [ "$DRY_RUN" != "yes" ]; then
+if [ -z "$TARGET_REPO" ] || [ -z "$MODE" ]; then
   usage >&2
   exit 2
 fi
@@ -65,6 +78,7 @@ TEMPLATE_ROOT="$SOURCE_REPO/docs/harness/bootstrap/llm-workbench-template/root"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-bootstrap-plan.XXXXXX")"
 PLAN_PATHS="$TMP_DIR/planned-paths.txt"
 PACKAGE_OUTPUT="$TMP_DIR/package-output.txt"
+FILE_ACTIONS="$TMP_DIR/file-actions.tsv"
 
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -72,6 +86,7 @@ cleanup() {
 trap cleanup EXIT
 
 : > "$PLAN_PATHS"
+: > "$FILE_ACTIONS"
 
 CREATE_COUNT=0
 SAME_COUNT=0
@@ -86,7 +101,7 @@ print_header() {
   head="$(git -C "$TARGET_REPO" rev-parse --verify HEAD 2>/dev/null || true)"
   branch="$(git -C "$TARGET_REPO" branch --show-current 2>/dev/null || true)"
 
-  echo "llm-workbench bootstrap dry-run"
+  echo "llm-workbench bootstrap ${MODE}"
   echo
   echo "Source repo: $SOURCE_REPO"
   echo "Target repo: $TARGET_REPO"
@@ -105,13 +120,16 @@ plan_file() {
   if [ -e "$target" ]; then
     if cmp -s "$source" "$target"; then
       echo "SAME $relative_path"
+      printf 'SAME\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
       SAME_COUNT=$((SAME_COUNT + 1))
     else
       echo "CONFLICT $relative_path"
+      printf 'CONFLICT\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
       CONFLICT_COUNT=$((CONFLICT_COUNT + 1))
     fi
   else
     echo "CREATE $relative_path"
+    printf 'CREATE\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
     CREATE_COUNT=$((CREATE_COUNT + 1))
   fi
 }
@@ -161,9 +179,12 @@ plan_package_json() {
 
   if [ ! -f "$target_package" ]; then
     echo "CREATE package.json"
+    printf 'CREATE_PACKAGE\t%s\tpackage.json\n' "$template_package" >> "$FILE_ACTIONS"
     CREATE_COUNT=$((CREATE_COUNT + 1))
     return 0
   fi
+
+  printf 'MERGE_PACKAGE\t%s\tpackage.json\n' "$template_package" >> "$FILE_ACTIONS"
 
   if ! node - "$target_package" "$template_package" > "$PACKAGE_OUTPUT" <<'NODE'
 const fs = require('fs');
@@ -231,6 +252,7 @@ plan_preserved_target_owned_files() {
       relative_path="${file#$TARGET_REPO/}"
       if ! grep -Fxq "$relative_path" "$PLAN_PATHS"; then
         echo "PRESERVE $relative_path"
+        printf 'PRESERVE\t%s\t%s\n' "$file" "$relative_path" >> "$FILE_ACTIONS"
         PRESERVE_COUNT=$((PRESERVE_COUNT + 1))
       fi
     done < <(find "$TARGET_REPO/$target_subtree" -type f | sort)
@@ -288,8 +310,81 @@ echo "same: $SAME_COUNT"
 echo "preserve: $PRESERVE_COUNT"
 echo "conflicts: $CONFLICT_COUNT"
 echo "package_conflicts: $PACKAGE_CONFLICTS"
-echo "mode: dry-run"
+echo "mode: $MODE"
 
 if [ "$CONFLICT_COUNT" -gt 0 ]; then
   exit 1
+fi
+
+merge_package_json() {
+  local target_package="$TARGET_REPO/package.json"
+  local template_package="$TEMPLATE_ROOT/package.json.template"
+
+  node - "$target_package" "$template_package" <<'NODE'
+const fs = require('fs');
+const targetPath = process.argv[2];
+const templatePath = process.argv[3];
+
+const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+
+target.scripts = target.scripts || {};
+for (const [name, expected] of Object.entries(template.scripts || {})) {
+  if (target.scripts[name] === undefined || target.scripts[name] === expected) {
+    target.scripts[name] = expected;
+  } else {
+    throw new Error(`conflicting script during apply: ${name}`);
+  }
+}
+
+fs.writeFileSync(targetPath, `${JSON.stringify(target, null, 2)}\n`);
+NODE
+}
+
+copy_file() {
+  local source="$1"
+  local relative_path="$2"
+  local target="$TARGET_REPO/$relative_path"
+
+  mkdir -p "$(dirname "$target")"
+  cp "$source" "$target"
+}
+
+apply_plan() {
+  local action
+  local source
+  local relative_path
+
+  echo
+  echo "Applying clean plan..."
+
+  while IFS=$'\t' read -r action source relative_path; do
+    case "$action" in
+      CREATE)
+        copy_file "$source" "$relative_path"
+        echo "APPLIED_CREATE $relative_path"
+        ;;
+      CREATE_PACKAGE)
+        copy_file "$source" "$relative_path"
+        echo "APPLIED_CREATE package.json"
+        ;;
+      MERGE_PACKAGE)
+        merge_package_json
+        echo "APPLIED_MERGE package.json"
+        ;;
+      SAME|PRESERVE)
+        :
+        ;;
+      *)
+        echo "ERROR: unexpected action in clean plan: $action" >&2
+        exit 1
+        ;;
+    esac
+  done < "$FILE_ACTIONS"
+
+  echo "Apply completed."
+}
+
+if [ "$MODE" = "apply" ]; then
+  apply_plan
 fi

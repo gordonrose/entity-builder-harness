@@ -36,8 +36,9 @@ Then open that target repo with your coding agent and follow its `AGENTS.md`.
 The workbench does not push to remotes, rewrite history, discard local work, or
 delete branches without explicit human approval.
 
-The first chat in a target repo creates that repo's own `commitLogs/`. The
-workbench does not copy session history from another repo.
+The first chat in a target repo creates that repo's own `commitLogs/` inside
+the chat-owned worktree. The workbench does not copy session history from
+another repo.
 
 ## Learn More
 

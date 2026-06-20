@@ -37,12 +37,23 @@ run_plan() {
   bash "$SCRIPT" --target "$repo" --dry-run > "$output"
 }
 
+run_apply() {
+  local repo="$1"
+  local output="$2"
+  bash "$SCRIPT" --target "$repo" --apply > "$output"
+}
+
 EMPTY_REPO="$TMP_ROOT/empty"
 make_repo "$EMPTY_REPO"
 run_plan "$EMPTY_REPO" "$TMP_ROOT/empty.out"
 grep -q '^CREATE package.json$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan package creation"
 grep -q '^CREATE scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan upstream planner script"
 grep -q '^conflicts: 0$' "$TMP_ROOT/empty.out" || fail "empty repo reported conflicts"
+run_apply "$EMPTY_REPO" "$TMP_ROOT/empty-apply.out"
+test -f "$EMPTY_REPO/AGENTS.md" || fail "apply did not create AGENTS.md"
+test -f "$EMPTY_REPO/package.json" || fail "apply did not create package.json"
+test -f "$EMPTY_REPO/scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh" || fail "apply did not create planner script"
+node -e "const p=require(process.argv[1]); if (p.name !== 'llm-workbench') process.exit(1); if (!p.scripts.chat) process.exit(1)" "$EMPTY_REPO/package.json" || fail "created package.json did not match template"
 
 PACKAGE_REPO="$TMP_ROOT/package"
 make_repo "$PACKAGE_REPO"
@@ -61,6 +72,8 @@ run_plan "$PACKAGE_REPO" "$TMP_ROOT/package.out"
 grep -q '^PACKAGE_ADD_SCRIPT chat ' "$TMP_ROOT/package.out" || fail "existing package did not plan chat script add"
 grep -q '^PACKAGE_PRESERVE_SCRIPT build echo build$' "$TMP_ROOT/package.out" || fail "existing package did not preserve unrelated script"
 grep -q '^conflicts: 0$' "$TMP_ROOT/package.out" || fail "existing package reported conflicts"
+run_apply "$PACKAGE_REPO" "$TMP_ROOT/package-apply.out"
+node -e "const p=require(process.argv[1]); if (p.name !== 'existing-target') process.exit(1); if (p.scripts.build !== 'echo build') process.exit(1); if (!p.scripts['chat:new']) process.exit(1); if (!p.dependencies['left-pad']) process.exit(1)" "$PACKAGE_REPO/package.json" || fail "package merge did not preserve existing data and add chat scripts"
 
 PRESERVE_REPO="$TMP_ROOT/preserve"
 make_repo "$PRESERVE_REPO"
@@ -69,6 +82,9 @@ printf '#!/usr/bin/env bash\n' > "$PRESERVE_REPO/scripts/shared/custom/tool.sh"
 run_plan "$PRESERVE_REPO" "$TMP_ROOT/preserve.out"
 grep -q '^PRESERVE scripts/shared/custom/tool.sh$' "$TMP_ROOT/preserve.out" || fail "target-owned shared script was not preserved"
 grep -q '^conflicts: 0$' "$TMP_ROOT/preserve.out" || fail "preserve repo reported conflicts"
+run_apply "$PRESERVE_REPO" "$TMP_ROOT/preserve-apply.out"
+test -f "$PRESERVE_REPO/scripts/shared/custom/tool.sh" || fail "apply removed target-owned shared script"
+test -f "$PRESERVE_REPO/scripts/shared/harness/run-governed-script.sh" || fail "apply did not create shared harness script"
 
 CONFLICT_REPO="$TMP_ROOT/conflict"
 make_repo "$CONFLICT_REPO"
@@ -85,5 +101,9 @@ if run_plan "$CONFLICT_REPO" "$TMP_ROOT/conflict.out"; then
 fi
 grep -q '^PACKAGE_CONFLICT_SCRIPT chat:new ' "$TMP_ROOT/conflict.out" || fail "conflicting package script was not reported"
 grep -q '^package_conflicts: yes$' "$TMP_ROOT/conflict.out" || fail "package conflict summary missing"
+if run_apply "$CONFLICT_REPO" "$TMP_ROOT/conflict-apply.out"; then
+  fail "conflicting package script did not fail apply"
+fi
+test ! -e "$CONFLICT_REPO/AGENTS.md" || fail "conflicting apply wrote files before refusing"
 
-echo "llm-workbench bootstrap planner smoke test passed."
+echo "llm-workbench bootstrap planner/apply smoke test passed."
