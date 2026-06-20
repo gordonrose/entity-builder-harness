@@ -5,7 +5,7 @@ purpose: Plan the migration from flat shared script folders to owner/domain/capa
 domain: scripts
 portability: llm-workbench-required
 used_by:
-  - .agentic/harness/standards/artifact-metadata-headers.md
+  - .agentic/01.harness/standards/artifact-metadata-headers.md
   - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 -->
 
@@ -162,7 +162,7 @@ Reporting batch result:
 - public commands now exposed by:
   `package.json` `chat:report-workspaces` and `chat:commit-log-summary`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now points at canonical
+  `scripts/01.harness/run-governed-script.sh` now points at canonical
   reporting paths for live approved actions.
 
 Audit batch result:
@@ -176,7 +176,7 @@ Audit batch result:
 - public command now exposed by:
   `package.json` `chat:audit-layer-migration`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now points at canonical audit
+  `scripts/01.harness/run-governed-script.sh` now points at canonical audit
   paths for live approved actions.
 
 Classification batch result:
@@ -222,7 +222,7 @@ Session-log executable batch result:
   `scripts/shared/chat/ensure-chat-worktree.sh` was removed after shared startup
   and downstream smoke fixtures moved to the canonical worktree helper.
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts the canonical
   `scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh` path
   and rejects the old shared wrapper path.
 
@@ -254,7 +254,7 @@ Record chat commit batch result:
   `scripts/shared/git/record-chat-commit.sh` and
   `scripts/shared/git/smoke-test-record-chat-commit-metrics.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   record-chat-commit path for this action.
 
 Checkpoint chat session log batch result:
@@ -266,7 +266,7 @@ Checkpoint chat session log batch result:
 - retired compatibility wrapper:
   `scripts/shared/git/checkpoint-chat-session-log.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   path for this action.
 
 Prepare chat session before commit batch result:
@@ -278,7 +278,7 @@ Prepare chat session before commit batch result:
 - retired compatibility wrapper:
   `scripts/shared/git/prepare-chat-session-before-commit.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   path for this action.
 
 Check commit prerequisites batch result:
@@ -293,7 +293,7 @@ Check commit prerequisites batch result:
   `scripts/shared/git/check-commit-prerequisites.sh` and
   `scripts/shared/git/smoke-test-commit-prerequisites.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   path for this action.
 
 Check commit log deletions batch result:
@@ -308,7 +308,7 @@ Check commit log deletions batch result:
   `scripts/shared/git/check-commitlog-deletions.sh` and
   `scripts/shared/git/smoke-test-commitlog-deletions.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   path for this action.
 
 Check write location batch result:
@@ -320,7 +320,7 @@ Check write location batch result:
 - retired compatibility wrapper:
   `scripts/shared/git/check-write-location.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   path for this action.
 
 Dirty worktree check batch result:
@@ -332,7 +332,7 @@ Dirty worktree check batch result:
 - retired compatibility wrapper:
   `scripts/shared/git/dirty-worktree-check.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` now accepts only the canonical
+  `scripts/01.harness/run-governed-script.sh` now accepts only the canonical
   path for this action.
 
 Recovery import batch result:
@@ -350,7 +350,7 @@ Recovery import batch result:
 - retired superseded compatibility smoke test:
   `scripts/shared/git/smoke-test-with-chat-branch.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  `scripts/01.harness/run-governed-script.sh` narrowly allowlists the new
   canonical recovery script path. The old shared wrapper was later removed from
   the allowlist.
 
@@ -376,7 +376,7 @@ Main refresh status/readiness batch result:
   `docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md`,
   and the retired `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  `scripts/01.harness/run-governed-script.sh` narrowly allowlists the new
   canonical main-refresh status/readiness script paths. The old read-only
   shared wrappers were later removed from the allowlist.
 
@@ -400,7 +400,7 @@ Main refresh rehearse/apply batch result:
   `.agentic/00.chat/standards/main-refresh-conflict-types.md`, and
   `.agentic/00.chat/workflows/chat-cleanup.md`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the
+  `scripts/01.harness/run-governed-script.sh` narrowly allowlists the
   read-only/mutating rehearsal script path while leaving the destructive apply
   path outside the always-approved runner surface.
 
@@ -418,7 +418,7 @@ Local merge readiness batch result:
 - direct callers migrated:
   `.agentic/00.chat/workflows/chat-promote-to-main.md`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  `scripts/01.harness/run-governed-script.sh` narrowly allowlists the new
   canonical read-only local merge readiness verifier path. The old shared
   wrapper was later removed from the allowlist.
 
@@ -436,7 +436,7 @@ Local merge visibility batch result:
 - direct callers migrated:
   `.agentic/00.chat/workflows/chat-refresh-from-main.md`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh` narrowly allowlists the new
+  `scripts/01.harness/run-governed-script.sh` narrowly allowlists the new
   canonical read-only local merge visibility script paths. The old shared
   wrappers were later removed from the allowlist.
 
@@ -462,7 +462,7 @@ Retirement result:
 
 - no `scripts/shared/git/*.sh` files remain as live source files
 - canonical chat behavior lives under `scripts/00.chat/...`
-- `scripts/shared/harness/` remains the shared governance script surface
+- `scripts/01.harness/` remains the shared governance script surface
 
 Compatibility wrapper retirement map:
 
@@ -472,7 +472,7 @@ canonical replacement.
 
 Governed runner canonical-surface batch result:
 
-- `scripts/shared/harness/run-governed-script.sh --list` now advertises
+- `scripts/01.harness/run-governed-script.sh --list` now advertises
   canonical `scripts/00.chat/...` paths for chat-owned capabilities.
 - old `scripts/shared/...` paths remain accepted by the runner as compatibility
   inputs while existing sessions and external callers migrate.
@@ -491,7 +491,7 @@ Bootstrap/install compatibility audit result:
   for a bootstrapped workbench.
 - Canonical `scripts/00.chat/...` implementations are now required for the
   actual chat capabilities.
-- `scripts/shared/harness/run-governed-script.sh` and the deterministic harness
+- `scripts/01.harness/run-governed-script.sh` and the deterministic harness
   checks remain required shared process primitives, not chat wrappers.
 - Retired `scripts/shared/chat/...` and `scripts/shared/git/...` paths remain
   only as historical documentation references or negative test fixtures.
@@ -511,10 +511,10 @@ Upstream repo availability batch result:
 - retired compatibility wrapper:
   `scripts/shared/chat/ensure-llm-workbench-repo.sh`
 - governed runner update:
-  `scripts/shared/harness/run-governed-script.sh --list` advertises the
+  `scripts/01.harness/run-governed-script.sh --list` advertises the
   canonical upstream path and rejects the old shared path.
 - direct callers migrated:
-  `.agentic/harness/standards/governed-script-permissions.md`
+  `.agentic/01.harness/standards/governed-script-permissions.md`
 
 Bootstrap compatibility classifications:
 
@@ -534,10 +534,10 @@ Bootstrap compatibility classifications:
 
 2. Shared governance primitives to keep:
 
-   - `scripts/shared/harness/run-governed-script.sh`
-   - `scripts/shared/harness/check-artifact-metadata-headers.sh`
-   - `scripts/shared/harness/check-deterministic-process-drift.sh`
-   - `scripts/shared/harness/check-governed-script-command-drift.sh`
+   - `scripts/01.harness/run-governed-script.sh`
+   - `scripts/01.harness/check-artifact-metadata-headers.sh`
+   - `scripts/01.harness/check-deterministic-process-drift.sh`
+   - `scripts/01.harness/check-governed-script-command-drift.sh`
 
 3. Validation-only compatibility candidates:
 

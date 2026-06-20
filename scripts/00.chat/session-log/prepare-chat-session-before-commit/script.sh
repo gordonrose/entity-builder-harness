@@ -16,9 +16,9 @@ source "scripts/00.chat/session-log/paths/lib.sh"
 bash scripts/00.chat/worktree/check-write-location/script.sh
 bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
-bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
-bash scripts/shared/harness/check-artifact-metadata-headers.sh --staged-added
-bash scripts/shared/harness/check-governed-script-command-drift.sh
+bash scripts/01.harness/check-deterministic-process-drift.sh --staged
+bash scripts/01.harness/check-artifact-metadata-headers.sh --staged-added
+bash scripts/01.harness/check-governed-script-command-drift.sh
 
 BRANCH="$(git branch --show-current)"
 

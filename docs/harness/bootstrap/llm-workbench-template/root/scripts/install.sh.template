@@ -42,7 +42,7 @@ copy_path "$SOURCE_REPO/package.json" "$TARGET_REPO/package.json"
 copy_path "$SOURCE_REPO/.agentic/00.chat" "$TARGET_REPO/.agentic/00.chat"
 copy_path "$SOURCE_REPO/.agentic/shared" "$TARGET_REPO/.agentic/shared"
 copy_path "$SOURCE_REPO/scripts/00.chat" "$TARGET_REPO/scripts/00.chat"
-copy_path "$SOURCE_REPO/scripts/shared/harness" "$TARGET_REPO/scripts/shared/harness"
+copy_path "$SOURCE_REPO/scripts/01.harness" "$TARGET_REPO/scripts/01.harness"
 
 echo "Installed llm-workbench harness into: $TARGET_REPO"
 echo "Next: cd \"$TARGET_REPO\" && npm run chat:list"

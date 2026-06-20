@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: source-only
 #   used_by:
 #     - scripts/00.chat/upstream/ensure-llm-workbench-repo/README.md
-#     - .agentic/harness/standards/governed-script-permissions.md
+#     - .agentic/01.harness/standards/governed-script-permissions.md
 #     - .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
 #   effects: network, writes-files
 

@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
-#     - scripts/shared/harness/run-governed-script.sh
+#     - scripts/01.harness/run-governed-script.sh
 #   effects: read-only
 
 usage() {

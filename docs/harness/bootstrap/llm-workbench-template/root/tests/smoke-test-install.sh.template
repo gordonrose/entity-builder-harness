@@ -20,7 +20,7 @@ bash "$WORKBENCH_REPO/scripts/install.sh" "$TARGET_REPO"
 test -f "$TARGET_REPO/AGENTS.md"
 test -d "$TARGET_REPO/.agentic/00.chat"
 test -d "$TARGET_REPO/scripts/00.chat"
-test -d "$TARGET_REPO/scripts/shared/harness"
+test -d "$TARGET_REPO/scripts/01.harness"
 
 npm --prefix "$TARGET_REPO" run --silent chat:list >/dev/null
 

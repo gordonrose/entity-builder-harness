@@ -8,7 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
-#     - .agentic/harness/standards/governed-script-permissions.md
+#     - .agentic/01.harness/standards/governed-script-permissions.md
 #   effects: read-only
 
 usage() {
@@ -86,7 +86,7 @@ is_scannable_path() {
   esac
 }
 
-APPROVED_SCRIPTS="$(bash scripts/shared/harness/run-governed-script.sh --list \
+APPROVED_SCRIPTS="$(bash scripts/01.harness/run-governed-script.sh --list \
   | awk '$1 == "approved" { print $2 }')"
 
 if [ -z "${APPROVED_SCRIPTS// }" ]; then
@@ -117,7 +117,7 @@ scan_file() {
       case "$text" in
         *"$script"*)
           case "$text" in
-            *"bash scripts/shared/harness/run-governed-script.sh --approved-action $script"*)
+            *"bash scripts/01.harness/run-governed-script.sh --approved-action $script"*)
               ;;
             *)
               case "$path:$text" in
@@ -126,7 +126,7 @@ scan_file() {
                   ;;
               esac
               case "$previous_text" in
-                *"bash scripts/shared/harness/run-governed-script.sh --approved-action \\"*)
+                *"bash scripts/01.harness/run-governed-script.sh --approved-action \\"*)
                   continue
                   ;;
               esac
@@ -140,7 +140,7 @@ scan_file() {
                   ;;
               esac
               printf '  Text: %s\n' "$text"
-              printf '  Suggestion: Use bash scripts/shared/harness/run-governed-script.sh --approved-action %s\n\n' "$script"
+              printf '  Suggestion: Use bash scripts/01.harness/run-governed-script.sh --approved-action %s\n\n' "$script"
               FINDINGS=$((FINDINGS + 1))
               break
               ;;

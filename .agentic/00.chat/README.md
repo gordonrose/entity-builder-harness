@@ -29,7 +29,7 @@ cleanup, shortcuts, and on-demand chat reports.
 - Chat command shortcuts: `.agentic/00.chat/commands/`
 - Chat lifecycle migration plan: `.agentic/00.chat/migration-plan.md`
 - Public chat commands: `package.json` `chat:*` scripts
-- Shared harness governance helpers: `scripts/shared/harness/`
+- Shared harness governance helpers: `scripts/01.harness/`
 
 ## Migration Policy
 

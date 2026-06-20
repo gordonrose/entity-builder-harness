@@ -37,7 +37,7 @@ After the user first grants write permission for the chat, rename the current
 session log folder to a concise summary:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh "<short-summary>"
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh "<short-summary>"
 ```
 
 <!-- deterministic-check: allow reason="register-codex-session-log.sh owns discovery and mutation; workflow governs when to invoke it" -->
@@ -70,7 +70,7 @@ Do not create a session until the user provides a task summary.
 Otherwise run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/startup/auto-start-missing-session/script.sh "<opening user message>"
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/auto-start-missing-session/script.sh "<opening user message>"
 ```
 
 After the command succeeds, use the generated session log, layer, mode,

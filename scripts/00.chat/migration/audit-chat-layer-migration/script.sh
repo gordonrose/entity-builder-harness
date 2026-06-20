@@ -34,7 +34,7 @@ retired_paths=(
   ".agentic/shared/workflows/local-convergence.md"
   ".agentic/shared/checklists/before-commit.md"
   ".agentic/shared/workflows/default.md"
-  ".agentic/harness/workflows/default.md"
+  ".agentic/01.harness/workflows/default.md"
 )
 
 failures=0
@@ -78,7 +78,7 @@ echo
 echo "Retired compatibility references"
 retired_matches="$(
   grep -RIlE \
-    '\.agentic/shared/workflows/(chat-start-interview|main-updated|local-convergence|default)\.md|\.agentic/shared/checklists/before-commit\.md|\.agentic/harness/workflows/default\.md' \
+    '\.agentic/shared/workflows/(chat-start-interview|main-updated|local-convergence|default)\.md|\.agentic/shared/checklists/before-commit\.md|\.agentic/01.harness/workflows/default\.md' \
     .agentic scripts docs 2>/dev/null \
     | grep -v -E '^\.agentic/00\.chat/migration-plan\.md$|^scripts/00\.chat/migration/audit-chat-layer-migration/script\.sh$' \
     || true

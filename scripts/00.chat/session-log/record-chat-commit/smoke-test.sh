@@ -35,7 +35,7 @@ mkdir -p "$REPO/scripts/00.chat/transcript/discover-codex-session-log" \
   "$REPO/scripts/00.chat/metrics/estimate-chat-cost" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/.agentic/harness/data" "$REPO/${LOG_FILE%/README.md}"
+  "$REPO/.agentic/01.harness/data" "$REPO/${LOG_FILE%/README.md}"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/record-chat-commit/script.sh" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" \
@@ -44,8 +44,8 @@ cp "$SOURCE_ROOT/scripts/00.chat/transcript/discover-codex-session-log/script.sh
   "$REPO/scripts/00.chat/transcript/discover-codex-session-log/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/metrics/estimate-chat-cost/script.js" \
   "$REPO/scripts/00.chat/metrics/estimate-chat-cost/script.js"
-cp "$SOURCE_ROOT/.agentic/harness/data/openai-chat-pricing.json" \
-  "$REPO/.agentic/harness/data/openai-chat-pricing.json"
+cp "$SOURCE_ROOT/.agentic/01.harness/data/openai-chat-pricing.json" \
+  "$REPO/.agentic/01.harness/data/openai-chat-pricing.json"
 chmod +x "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh" \
   "$REPO/scripts/00.chat/transcript/discover-codex-session-log/script.sh"
 

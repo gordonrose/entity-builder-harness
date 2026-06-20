@@ -7,8 +7,8 @@ set -euo pipefail
 #   domain: validation
 #   portability: llm-workbench-validation
 #   used_by:
-#     - .agentic/harness/standards/governed-script-permissions.md
-#     - scripts/shared/harness/check-governed-script-command-drift.sh
+#     - .agentic/01.harness/standards/governed-script-permissions.md
+#     - scripts/01.harness/check-governed-script-command-drift.sh
 #   effects: writes-files, commits
 
 fail() {
@@ -25,12 +25,12 @@ mkdir -p \
   "$REPO/.agentic/00.chat/checklists" \
   "$REPO/.agentic/00.chat/workflows" \
   "$REPO/docs/harness/architecture/adrs" \
-  "$REPO/scripts/shared/harness"
+  "$REPO/scripts/01.harness"
 
-cp "$SOURCE_ROOT/scripts/shared/harness/run-governed-script.sh" \
-  "$REPO/scripts/shared/harness/run-governed-script.sh"
-cp "$SOURCE_ROOT/scripts/shared/harness/check-governed-script-command-drift.sh" \
-  "$REPO/scripts/shared/harness/check-governed-script-command-drift.sh"
+cp "$SOURCE_ROOT/scripts/01.harness/run-governed-script.sh" \
+  "$REPO/scripts/01.harness/run-governed-script.sh"
+cp "$SOURCE_ROOT/scripts/01.harness/check-governed-script-command-drift.sh" \
+  "$REPO/scripts/01.harness/check-governed-script-command-drift.sh"
 
 git -C "$REPO" init --quiet
 cd "$REPO"
@@ -43,7 +43,7 @@ bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 EOF
 
-if bash scripts/shared/harness/check-governed-script-command-drift.sh \
+if bash scripts/01.harness/check-governed-script-command-drift.sh \
     --paths .agentic/00.chat/checklists/bad.md \
     > "$TMP_ROOT/bad.out" 2>&1; then
   fail "direct approval-sensitive command was not flagged"
@@ -56,11 +56,11 @@ cat > .agentic/00.chat/checklists/good.md <<'EOF'
 # Good
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 EOF
 
-bash scripts/shared/harness/check-governed-script-command-drift.sh \
+bash scripts/01.harness/check-governed-script-command-drift.sh \
   --paths .agentic/00.chat/checklists/good.md \
   > "$TMP_ROOT/good.out"
 
@@ -70,7 +70,7 @@ cat > .agentic/00.chat/workflows/prose.md <<'EOF'
 The checkpoint helper lives at scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh.
 EOF
 
-if bash scripts/shared/harness/check-governed-script-command-drift.sh \
+if bash scripts/01.harness/check-governed-script-command-drift.sh \
     --paths .agentic/00.chat/workflows/prose.md \
     > "$TMP_ROOT/prose.out" 2>&1; then
   fail "bare approval-sensitive script reference was not flagged"
@@ -85,7 +85,7 @@ cat > .agentic/00.chat/workflows/basename-prose.md <<'EOF'
 The checkpoint-chat-session-log.sh helper is approval-sensitive.
 EOF
 
-bash scripts/shared/harness/check-governed-script-command-drift.sh \
+bash scripts/01.harness/check-governed-script-command-drift.sh \
   --paths .agentic/00.chat/workflows/basename-prose.md \
   > "$TMP_ROOT/basename-prose.out"
 
@@ -97,7 +97,7 @@ bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 EOF
 
-bash scripts/shared/harness/check-governed-script-command-drift.sh \
+bash scripts/01.harness/check-governed-script-command-drift.sh \
   --paths docs/harness/architecture/adrs/0001-example.md \
   > "$TMP_ROOT/adr.out"
 

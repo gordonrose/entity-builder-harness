@@ -5,7 +5,7 @@ purpose: Explain the current script layout after the chat harness script migrati
 domain: scripts
 portability: llm-workbench-required
 used_by:
-  - .agentic/harness/README.md
+  - .agentic/01.harness/README.md
   - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 
@@ -25,7 +25,7 @@ scripts/00.chat/<domain>/<capability>/
 Shared harness governance scripts live under:
 
 ```txt
-scripts/shared/harness/
+scripts/01.harness/
 ```
 
 That split is intentional:
@@ -33,7 +33,7 @@ That split is intentional:
 - `scripts/00.chat/` owns chat startup, commands, reporting, session logs,
   recovery, worktrees, main refresh, local merge checks, and upstream bootstrap
   support.
-- `scripts/shared/harness/` owns cross-layer harness checks such as metadata,
+- `scripts/01.harness/` owns cross-layer harness checks such as metadata,
   deterministic process drift, governed command drift, and the governed script
   runner.
 
@@ -59,7 +59,7 @@ Humans should usually use `package.json` `chat:*` scripts. Those package
 scripts delegate to canonical `scripts/00.chat/...` paths.
 
 Harness workflows, checklists, standards, and gates should point directly at
-canonical `scripts/00.chat/...` paths or at `scripts/shared/harness/...` when
+canonical `scripts/00.chat/...` paths or at `scripts/01.harness/...` when
 the behavior is genuinely shared governance.
 
 ## Historical Paths

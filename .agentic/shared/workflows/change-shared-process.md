@@ -5,7 +5,7 @@ purpose: Govern changes to cross-layer shared process.
 domain: process
 portability: llm-workbench-required
 used_by:
-  - .agentic/harness/workflows/change-harness.md
+  - .agentic/01.harness/workflows/change-harness.md
   - AGENTS.md
 -->
 
@@ -93,7 +93,7 @@ Do not bypass the gate just because it is missing on the current branch.
 For commit-gate scope, run:
 
 ```bash
-bash scripts/shared/harness/check-deterministic-process-drift.sh --staged
+bash scripts/01.harness/check-deterministic-process-drift.sh --staged
 ```
 
 For broader audits, run the same script with `--commit <sha>`, `--paths
@@ -121,7 +121,7 @@ set before committing.
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 ```
 
 This verifies that the session log records decisions and an ADR disposition,
@@ -134,7 +134,7 @@ Do not commit if the preparation gate fails.
 Run:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
 ```
 
 This appends the commit to the session log and updates the rolling
@@ -147,7 +147,7 @@ the prior chat write permission authorizes creating a session-log checkpoint
 commit without another prompt:
 
 ```bash
-bash scripts/shared/harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
