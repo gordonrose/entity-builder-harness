@@ -180,7 +180,8 @@ echo "Created branch: $BRANCH"
 echo "Created log: $LOG_FILE"
 echo "Created worktree: $WORKTREE_PATH"
 
-bash scripts/00.chat/worktree/open-window/script.sh "$WORKTREE_PATH"
+CHAT_OPEN_WORKTREE_WINDOW="${CHAT_OPEN_WORKTREE_WINDOW:-skip}" \
+  bash scripts/00.chat/worktree/open-window/script.sh "$WORKTREE_PATH"
 
 FIRST_PROMPT="Task: ${QUESTION}
 Session log: ${LOG_FILE}
