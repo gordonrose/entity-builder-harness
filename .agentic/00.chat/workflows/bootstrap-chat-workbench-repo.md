@@ -66,8 +66,8 @@ Initial candidate paths:
 - `scripts/00.chat/` canonical chat capability scripts required by the audit
 - `scripts/shared/harness/` gates required by chat startup, commit, classifier,
   governed script, and deterministic process checks
-- `docs/harness/architecture/adrs/` entries that explain the portable chat
-  architecture
+- `docs/harness/architecture/public-chat-workbench-adrs.md`
+- ADRs listed in `docs/harness/architecture/public-chat-workbench-adrs.md`
 - `docs/harness/architecture/chat-workbench-public-repo-readiness.md`
 
 Do not copy the source repo `README.md` directly. It describes the source repo,

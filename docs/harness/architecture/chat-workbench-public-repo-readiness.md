@@ -43,7 +43,8 @@ bootstrap, subject to the normal upstream inspection gates:
 - `scripts/00.chat/`
 - `scripts/shared/harness/`
 - `docs/harness/architecture/script-layout.md`
-- architecture ADRs that explain the portable chat harness decisions
+- `docs/harness/architecture/public-chat-workbench-adrs.md`
+- ADRs listed in `docs/harness/architecture/public-chat-workbench-adrs.md`
 
 The exact script set should be confirmed with:
 
@@ -133,6 +134,9 @@ These are known issues to resolve before pushing an initial public bootstrap:
 - Historical ADRs mention retired script paths. That is acceptable when framed
   as migration history, but public onboarding docs should point to canonical
   paths and package commands only.
+- ADR export is intentionally selective. Future chat workbench ADRs should be
+  added to `docs/harness/architecture/public-chat-workbench-adrs.md` when they
+  explain current public workbench behavior; non-chat ADRs should stay out.
 
 ## Readiness Checklist
 

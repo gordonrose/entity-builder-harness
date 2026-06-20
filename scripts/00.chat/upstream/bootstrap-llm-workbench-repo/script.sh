@@ -75,6 +75,7 @@ fi
 
 SOURCE_REPO="$(git rev-parse --show-toplevel)"
 TEMPLATE_ROOT="$SOURCE_REPO/docs/harness/bootstrap/llm-workbench-template/root"
+PUBLIC_ADR_MANIFEST="$SOURCE_REPO/docs/harness/architecture/public-chat-workbench-adrs.md"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-bootstrap-plan.XXXXXX")"
 PLAN_PATHS="$TMP_DIR/planned-paths.txt"
 PACKAGE_OUTPUT="$TMP_DIR/package-output.txt"
@@ -152,6 +153,23 @@ plan_selected_file() {
 
   [ -f "$SOURCE_REPO/$path" ] || return 0
   plan_file "$SOURCE_REPO/$path" "$path"
+}
+
+plan_public_adrs() {
+  local path
+
+  if [ ! -f "$PUBLIC_ADR_MANIFEST" ]; then
+    echo "ERROR: public ADR manifest missing: ${PUBLIC_ADR_MANIFEST#$SOURCE_REPO/}" >&2
+    exit 1
+  fi
+
+  while IFS= read -r path; do
+    case "$path" in
+      docs/harness/architecture/adrs/*.md)
+        plan_selected_file "$path"
+        ;;
+    esac
+  done < "$PUBLIC_ADR_MANIFEST"
 }
 
 plan_templates() {
@@ -277,22 +295,9 @@ plan_tree "scripts/00.chat"
 plan_tree "scripts/shared/harness"
 plan_selected_file "docs/harness/architecture/script-layout.md"
 plan_selected_file "docs/harness/architecture/chat-workbench-public-repo-readiness.md"
+plan_selected_file "docs/harness/architecture/public-chat-workbench-adrs.md"
 plan_selected_file "docs/harness/architecture/adrs/README.md"
-plan_selected_file "docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md"
-plan_selected_file "docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md"
-plan_selected_file "docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md"
-plan_selected_file "docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md"
-plan_selected_file "docs/harness/architecture/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md"
-plan_selected_file "docs/harness/architecture/adrs/0006-use-session-metadata-for-routing-after-chat-start.md"
-plan_selected_file "docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md"
-plan_selected_file "docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md"
-plan_selected_file "docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md"
-plan_selected_file "docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md"
-plan_selected_file "docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md"
-plan_selected_file "docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md"
-plan_selected_file "docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md"
-plan_selected_file "docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md"
-plan_selected_file "docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md"
+plan_public_adrs
 plan_preserved_target_owned_files
 echo
 
