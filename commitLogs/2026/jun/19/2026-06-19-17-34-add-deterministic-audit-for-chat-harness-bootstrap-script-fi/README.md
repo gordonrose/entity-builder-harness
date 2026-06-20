@@ -11,11 +11,11 @@ workflow: .agentic/harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-19T16:34:46Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl
-latest_commit_at_utc: 2026-06-19T23:54:33Z
-latest_commit_sha: 358cab4
-chat_duration: 26387s (00:07:19:47)
-estimated_chat_tokens: 4424342 estimated from chat transcript bytes (17697366 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-estimated_chat_cost: USD 132.73 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-19T23:59:39Z
+latest_commit_sha: 7217f55
+chat_duration: 26693s (00:07:24:53)
+estimated_chat_tokens: 4486674 estimated from chat transcript bytes (17946694 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+estimated_chat_cost: USD 134.60 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -749,6 +749,17 @@ Summary: Removed the superseded shared git isolated-command runner, active-workt
 
 ADR impact: ADR 0009 now records the isolated-runner model as historical, and ADR 0017 records the legacy trio as retired superseded paths.
 
+
+### 2026-06-19T23:59:39Z - Commit recorded
+
+Commit: `7217f55`
+
+Message: Reconcile chat docs after shared git retirement
+
+Summary: Updated chat-layer README, migration plan, and bootstrap workflow so human instructions point at canonical scripts/00.chat capabilities and shared harness governance instead of the retired scripts/shared/git surface; also removed stale empty shared-git fixture directories from canonical smoke tests.
+
+ADR impact: No new ADR; this reconciles docs and validation fixtures after ADR 0017 retired the shared git compatibility paths.
+
 ## Commits
 
 
@@ -1186,6 +1197,13 @@ ADR impact: ADR 0009 now records the isolated-runner model as historical, and AD
   Summary: Removed the superseded shared git isolated-command runner, active-worktree staging wrapper, and legacy smoke test after proving canonical chat-owned worktrees plus the recovery import cover the useful behavior and no active bootstrap, install, workflow, or governed runner surface depends on the old paths.
   ADR impact: ADR 0009 now records the isolated-runner model as historical, and ADR 0017 records the legacy trio as retired superseded paths.
 
+
+- Commit: `7217f55`
+  Time UTC: 2026-06-19T23:59:39Z
+  Message: Reconcile chat docs after shared git retirement
+  Summary: Updated chat-layer README, migration plan, and bootstrap workflow so human instructions point at canonical scripts/00.chat capabilities and shared harness governance instead of the retired scripts/shared/git surface; also removed stale empty shared-git fixture directories from canonical smoke tests.
+  ADR impact: No new ADR; this reconciles docs and validation fixtures after ADR 0017 retired the shared git compatibility paths.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1201,11 +1219,11 @@ architecture decision.
 ## Session Metrics
 
 Raised at UTC: 2026-06-19T16:34:46Z
-Latest commit at UTC: 2026-06-19T23:54:33Z
-Latest commit SHA: 358cab4
-Chat duration: 26387s (00:07:19:47)
-Estimated chat tokens: 4424342 estimated from chat transcript bytes (17697366 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
-Estimated chat cost: USD 132.73 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-19T23:59:39Z
+Latest commit SHA: 7217f55
+Chat duration: 26693s (00:07:24:53)
+Estimated chat tokens: 4486674 estimated from chat transcript bytes (17946694 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/19/rollout-2026-06-19T15-57-23-019ee062-f943-71b2-a975-e5a9172decbe.jsonl)
+Estimated chat cost: USD 134.60 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
