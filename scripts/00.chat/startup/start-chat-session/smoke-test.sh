@@ -55,10 +55,13 @@ git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' c
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
 CHAT_COPY_PROMPT=skip \
-CHAT_OPEN_WORKTREE_WINDOW=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
     bash scripts/00.chat/startup/start-chat-session/script.sh "test chat worktree session" \
-    >/tmp/chat-worktree-session.out
+    >"$TMP_ROOT/chat-worktree-session.out"
+
+if ! grep -q 'Skipping VS Code window open:' "$TMP_ROOT/chat-worktree-session.out"; then
+  fail "startup did not skip VS Code window open by default"
+fi
 
 root_branch="$(git -C "$REPO" branch --show-current)"
 if [ "$root_branch" != "main" ]; then

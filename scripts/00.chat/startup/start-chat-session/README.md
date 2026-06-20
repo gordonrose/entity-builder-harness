@@ -116,7 +116,13 @@ to present or pass the session packet in their own way.
    worktree. It starts with machine-readable session metadata and human-readable
    sections for activity, decisions, issues, commits, conflicts, and metrics.
 
-7. Print or copy the first prompt for terminal use.
+7. Offer a chat worktree window.
+
+   Startup does not open a VS Code window by default. Set
+   `CHAT_OPEN_WORKTREE_WINDOW=open` to opt into opening the new chat worktree.
+   The explicit `chat:open-window` command remains available after startup.
+
+8. Print or copy the first prompt for terminal use.
 
    The prompt is the bridge from startup automation into the next agent turn. It
    names the task, session log, worktree, layer, mode, workflow, and the
@@ -124,13 +130,13 @@ to present or pass the session packet in their own way.
    app integrations should treat those fields as structured startup data rather
    than depending on clipboard behavior.
 
-8. Clean empty chat branches.
+9. Clean empty chat branches.
 
    Startup can run the empty-chat-branch cleanup script after creating the new
    session. This keeps abandoned zero-commit chat branches from accumulating
    while still routing cleanup through a governed script.
 
-9. Stage the session log in the chat worktree.
+10. Stage the session log in the chat worktree.
 
    The log is staged so the first real task commit can include the session
    record if appropriate. The root worktree is left alone.
@@ -151,14 +157,16 @@ After a successful run, expect:
 - a sibling chat worktree
 - a staged session log inside that worktree
 - a first prompt printed or copied for the next agent
+- no VS Code window unless `CHAT_OPEN_WORKTREE_WINDOW=open` is set
 - the original root worktree still on its original branch
 
 ## Smoke Test
 
 `smoke-test.sh` creates a throwaway Git repo and runs startup there. It verifies
 that startup leaves the root repo on `main`, creates a separate chat worktree,
-stages the session log in that chat worktree, records chat startup metadata, and
-falls back to printed terminal handoff when clipboard copy fails.
+stages the session log in that chat worktree, records chat startup metadata,
+skips opening a VS Code window by default, and falls back to printed terminal
+handoff when clipboard copy fails.
 
 ## Compatibility
 
