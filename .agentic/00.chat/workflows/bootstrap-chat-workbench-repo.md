@@ -54,11 +54,9 @@ Initial candidate paths:
 
 - `AGENTS.md` as an upstream template, not a direct source-repo copy
 - `.agentic/00.chat/`
-- `.agentic/shared/checklists/`
-- `.agentic/shared/gates/`
 - `.agentic/shared/standards/`
-- `.agentic/shared/workflows/` entries required by chat startup, commit, and
-  promotion compatibility
+- `.agentic/shared/workflows/` entries required by cross-layer process and
+  capability resolution
 - `.agentic/harness/` standards and workflows required by metadata,
   deterministic process, governed script, and harness-maintenance checks
 - `package.json` chat command scripts as an upstream template, not a direct

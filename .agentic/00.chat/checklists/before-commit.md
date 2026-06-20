@@ -5,7 +5,8 @@ purpose: Define the required checks before committing approved chat task work.
 domain: git
 portability: llm-workbench-required
 used_by:
-  - .agentic/shared/checklists/before-commit.md
+  - .agentic/00.chat/workflows/chat-commit.md
+  - .agentic/harness/workflows/change-harness.md
 -->
 
 # Chat Before-Commit Checklist
