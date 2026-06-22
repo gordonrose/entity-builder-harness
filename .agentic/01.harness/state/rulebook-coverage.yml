@@ -42,6 +42,11 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rule-packs/create-entity.yml
         note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
+      - source_sections:
+          - "7. Harness"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential conflict with kanbien-typescript-architecture-guide.md harness/ section: this guide frames Harness as governance and generation, while the TypeScript guide frames harness/ as testing and development support."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: unreviewed
@@ -94,6 +99,11 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rule-packs/create-entity.yml
         note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
+      - source_sections:
+          - "7. harness/"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential conflict with kanbien-typescript-architecture-guide.md harness/ section: this guide places entity-definition under harness/, while the TypeScript guide says entity definitions should not live in harness/."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: unreviewed
@@ -151,6 +161,11 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rule-packs/create-entity.yml
         note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
+      - source_sections:
+          - "harness/"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential conflict with kanbien-modular-monorepo-entity-builder.md and kanbien-architecture-full-discussion.md: this guide frames harness/ as testing and development support and says entity definitions should not live there."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: unreviewed
@@ -174,11 +189,30 @@ artifact_coverage:
     note: "Source refs manually checked while creating the create-entity rule pack."
 
 candidate_queue:
-  - docs/harness/architecture/rules/layers/harness.yml
   - docs/harness/architecture/rules/layers/tools.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
 
-deferred_human_decisions: []
+deferred_human_decisions:
+  - id: harness-layer-ownership
+    title: Decide whether harness is test/development support, entity-builder governance/generation, or split into separate layers.
+    status: open
+    affected_candidate: docs/harness/architecture/rules/layers/harness.yml
+    source_refs:
+      - doc: "kanbien-typescript-architecture-guide.md"
+        sections:
+          - "harness/"
+      - doc: "kanbien-modular-monorepo-entity-builder.md"
+        sections:
+          - "7. harness/"
+      - doc: "kanbien-architecture-full-discussion.md"
+        sections:
+          - "7. Harness"
+    summary: >
+      The TypeScript guide describes harness/ as testing and development
+      support and says entity definitions should not live there. The modular
+      monorepo and full discussion guides describe harness as the entity-builder
+      brain or governance/generation layer. Do not create harness.yml until this
+      ownership model is decided.
 
 notes:
   - "Do not mark existing artifacts as covered until their source_refs have been manually checked against the named source sections."

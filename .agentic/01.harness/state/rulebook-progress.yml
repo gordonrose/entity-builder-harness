@@ -12,7 +12,6 @@ created_artifacts:
     - docs/harness/architecture/rule-packs/create-entity.yml
 
 recommended_next_artifacts:
-  - docs/harness/architecture/rules/layers/harness.yml
   - docs/harness/architecture/rules/layers/tools.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
 

@@ -42,6 +42,10 @@ start architecture rulebook harvest coverage tracker
 - Raised: Generated-code overlap with dependency direction
   Resolution: Resolved by declaring dependency-direction.yml as a related ruleset; generated-code.yml expands lifecycle, placement, idempotence, and freshness rules rather than replacing the import-boundary rule.
 
+
+- Raised: Harness layer ownership conflict
+  Resolution: Deferred docs/harness/architecture/rules/layers/harness.yml because source guides conflict on whether harness owns entity-builder governance/generation or only testing and development support.
+
 ## Decisions Made
 
 - Decision: Use harness implementation workflow for rulebook harvest coverage tracker
@@ -66,6 +70,10 @@ start architecture rulebook harvest coverage tracker
 
 - Decision: Create-entity source refs manually verified
   Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking create-entity coverage entries covered.
+
+
+- Decision: Defer harness.yml
+  Rationale: Moved harness.yml out of the active candidate queue and recorded harness-layer-ownership as an open deferred human decision in rulebook coverage state.
 
 ## Activity Log
 
@@ -165,6 +173,20 @@ Message: Add create entity rule pack
 Summary: Created docs/harness/architecture/rule-packs/create-entity.yml as a task-shaped pack composing generated-code and dependency-direction rules; updated rulebook progress and coverage state.
 
 ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:14:48Z - Issue
+
+Raised: Harness layer ownership conflict
+
+Resolution: Deferred docs/harness/architecture/rules/layers/harness.yml because source guides conflict on whether harness owns entity-builder governance/generation or only testing and development support.
+
+
+### 2026-06-22T23:14:48Z - Decision
+
+Decision: Defer harness.yml
+
+Rationale: Moved harness.yml out of the active candidate queue and recorded harness-layer-ownership as an open deferred human decision in rulebook coverage state.
 
 ## Commits
 
