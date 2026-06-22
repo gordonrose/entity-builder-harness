@@ -27,6 +27,8 @@ does not create executable checks or generated architecture artifacts by itself.
 - Do not duplicate concern rules inside rule packs; reference rulesets instead.
 - Manually check each `source_refs` entry against the named source document and
   section before treating it as accurate.
+- Update `state/rulebook-coverage.yml` when an artifact covers, defers, or
+  deliberately excludes guide content.
 - Validate YAML after editing.
 - Print final paths and assumptions.
 - Stop after the requested artifact.
@@ -62,11 +64,13 @@ docs/harness/architecture/rule-packs/*.yml
 ## Default Flow
 
 1. Inspect source guides.
-2. Inspect existing rules and rule packs.
-3. Choose one small artifact to create.
-4. Use the correct template.
-5. Preserve source references.
-6. Manually confirm each source reference points to the claimed source content.
-7. Validate YAML.
-8. Summarize assumptions.
-9. Stop.
+2. Inspect `state/rulebook-coverage.yml`.
+3. Inspect existing rules and rule packs.
+4. Choose one small artifact to create.
+5. Use the correct template.
+6. Preserve source references.
+7. Manually confirm each source reference points to the claimed source content.
+8. Update coverage status for the source content touched.
+9. Validate YAML.
+10. Summarize assumptions.
+11. Stop.

@@ -1,0 +1,122 @@
+version: 1
+status: active
+
+purpose: >
+  Track coverage of canonical architecture guide content as Codex creates
+  layer rulesets, concern rulesets, and task rule packs one artifact at a time.
+
+completion_criteria:
+  - Every material source-guide section is marked covered, duplicate-of, background-only, out-of-scope, or deferred-human-decision.
+  - Every covered section points to at least one architecture rule, concern rule, rule pack, checklist, or reference artifact.
+  - Every source reference in generated artifacts has been manually checked against the named source document and section.
+  - Duplication, contradiction, weak source support, or architectural uncertainty is recorded as deferred-human-decision instead of being resolved by guesswork.
+  - YAML validation has passed for every created or updated YAML artifact.
+
+coverage_statuses:
+  unreviewed: "Source content has not been reviewed for rulebook coverage yet."
+  in_progress: "Source content is being reviewed or partially mapped."
+  covered: "Source content is represented by committed rulebook artifacts."
+  duplicate-of: "Source content repeats another tracked section or artifact."
+  background-only: "Source content explains context but does not need a rulebook artifact."
+  out-of-scope: "Source content is outside the architecture rulebook scope."
+  deferred-human-decision: "Source content needs human judgment before encoding."
+
+source_guides:
+  - path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+    line_count: 109
+    status: unreviewed
+    coverage_entries: []
+  - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+    line_count: 4310
+    status: unreviewed
+    coverage_entries:
+      - source_sections:
+          - "What a shared core package is"
+          - "Code dependency direction"
+          - "Principles to guide Kanbien for the next 10 years"
+        status: in_progress
+        artifacts:
+          - docs/harness/architecture/rules/layers/packages-core.yml
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "Seed artifacts exist; manual source-reference coverage review is still required before marking covered."
+  - path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
+    line_count: 3136
+    status: unreviewed
+    coverage_entries:
+      - source_sections:
+          - "How the layers depend on each other"
+          - "Recommended dependency rules"
+        status: in_progress
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction artifact cites these sections; manual source-reference coverage review is still required before marking covered."
+  - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+    line_count: 218
+    status: unreviewed
+    coverage_entries:
+      - source_sections:
+          - "packages/core"
+          - "tools/build"
+          - "The core entity flow"
+        status: in_progress
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "Core and generated-code material are partly represented or queued; manual source-reference coverage review is still required before marking covered."
+  - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
+    line_count: 3124
+    status: unreviewed
+    coverage_entries:
+      - source_sections:
+          - "The clean mental model"
+          - "platform/server/"
+          - "The business app mounting contract"
+          - "How /platform differs from shared core libraries"
+          - "What should move into packages/core"
+        status: in_progress
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "Seed artifacts cite these sections; manual source-reference coverage review is still required before marking covered."
+  - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
+    line_count: 2583
+    status: unreviewed
+    coverage_entries:
+      - source_sections:
+          - "Kanbien monorepo structure"
+          - "Generated code must be checked, not trusted"
+          - "For generated code"
+          - "Linting"
+        status: in_progress
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency and generated-code material are partly represented or queued; manual source-reference coverage review is still required before marking covered."
+  - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+    line_count: 900
+    status: unreviewed
+    coverage_entries: []
+
+artifact_coverage:
+  - artifact: docs/harness/architecture/rules/layers/packages-core.yml
+    status: in_progress
+    note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+  - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    status: in_progress
+    note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+  - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
+    status: in_progress
+    note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+
+candidate_queue:
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/harness/architecture/rule-packs/create-entity.yml
+  - docs/harness/architecture/rules/layers/harness.yml
+  - docs/harness/architecture/rules/layers/tools.yml
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+
+deferred_human_decisions: []
+
+notes:
+  - "Do not mark existing artifacts as covered until their source_refs have been manually checked against the named source sections."
+  - "Prefer concern rules before task packs when multiple future packs need the same rule."
+  - "Record duplication or contradiction here instead of resolving by inference."

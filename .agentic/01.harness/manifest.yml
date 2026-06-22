@@ -8,6 +8,7 @@ purpose: >
 read_order:
   - .agentic/01.harness/manifest.yml
   - .agentic/01.harness/operator-guide.md
+  - .agentic/01.harness/state/rulebook-coverage.yml
   - .agentic/01.harness/state/rulebook-progress.yml
   - relevant workflow under .agentic/01.harness/workflows
   - relevant template under .agentic/01.harness/templates

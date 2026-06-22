@@ -44,6 +44,10 @@ start architecture rulebook harvest coverage tracker
 - Decision: Use harness implementation workflow for rulebook harvest coverage tracker
   Rationale: User classified the task as layer harness and mode implementation after classifier returned unknown.
 
+
+- Decision: Add rulebook coverage ledger first
+  Rationale: Create state/rulebook-coverage.yml before generating more rules so guide coverage, deferred decisions, duplication, and source-reference review are auditable.
+
 ## Activity Log
 
 ### 2026-06-22T23:02:37Z - Session started
@@ -61,6 +65,20 @@ Summary: Brought the previously approved .agentic/01.harness operating pack onto
 
 ADR impact: No new ADR required; baseline alignment for approved rulebook harvest work.
 
+
+### 2026-06-22T23:06:56Z - Decision
+
+Decision: Add rulebook coverage ledger first
+
+Rationale: Create state/rulebook-coverage.yml before generating more rules so guide coverage, deferred decisions, duplication, and source-reference review are auditable.
+
+
+### 2026-06-22T23:06:56Z - ADR disposition
+
+ADR needed: no
+
+Reason: This slice adds rulebook tracking state and continuation guidance; it does not introduce a durable harness architecture decision requiring an ADR.
+
 ## Commits
 
 
@@ -77,9 +95,9 @@ ADR impact: No new ADR required; baseline alignment for approved rulebook harves
 
 ## ADR Disposition
 
-ADR needed: unknown
-ADR path:
-Reason:
+ADR needed: no
+ADR path: 
+Reason: This slice adds rulebook tracking state and continuation guidance; it does not introduce a durable harness architecture decision requiring an ADR.
 
 ## Session Metrics
 

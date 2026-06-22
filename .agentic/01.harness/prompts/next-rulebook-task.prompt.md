@@ -11,6 +11,7 @@ used_by:
 # Next Rulebook Task Prompt
 
 Read `.agentic/01.harness/manifest.yml` and
+`.agentic/01.harness/state/rulebook-coverage.yml`, then
 `.agentic/01.harness/state/rulebook-progress.yml`.
 
 Inspect current rules and rule packs under `docs/harness/architecture/rules`
