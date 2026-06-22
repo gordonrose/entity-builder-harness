@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T22:11:35Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl
-latest_commit_at_utc: 2026-06-22T22:21:15Z
-latest_commit_sha: b78d966
-chat_duration: 580s (00:00:09:40)
-estimated_chat_tokens: 122486 estimated from chat transcript bytes (489944 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl)
-estimated_chat_cost: USD 3.67 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T22:41:29Z
+latest_commit_sha: 60e4eb7
+chat_duration: 1794s (00:00:29:54)
+estimated_chat_tokens: 223722 estimated from chat transcript bytes (894886 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl)
+estimated_chat_cost: USD 6.71 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -87,6 +87,17 @@ Decision: Added dependency direction concern and linked core rule pack
 
 Rationale: Created the dependency-direction concern ruleset and updated add-core-module to require both core admission rules and repo-wide dependency direction validation.
 
+
+### 2026-06-22T22:41:29Z - Commit recorded
+
+Commit: `60e4eb7`
+
+Message: Add dependency direction rules
+
+Summary: Created docs/harness/architecture/rules/concerns/dependency-direction.yml and updated add-core-module.yml to require both packages/core admission rules and repo-wide dependency direction validation.
+
+ADR impact: ADR not needed; extends source-backed architecture rule files without a new durable process decision.
+
 ## Commits
 
 
@@ -96,6 +107,13 @@ Rationale: Created the dependency-direction concern ruleset and updated add-core
   Message: Add core module rule pack
   Summary: Created docs/harness/architecture/rule-packs/add-core-module.yml, a task-shaped pack for packages/core changes that references the core layer ruleset and source architecture guide sections.
   ADR impact: ADR not needed; derived rule-pack artifact only.
+
+
+- Commit: `60e4eb7`
+  Time UTC: 2026-06-22T22:41:29Z
+  Message: Add dependency direction rules
+  Summary: Created docs/harness/architecture/rules/concerns/dependency-direction.yml and updated add-core-module.yml to require both packages/core admission rules and repo-wide dependency direction validation.
+  ADR impact: ADR not needed; extends source-backed architecture rule files without a new durable process decision.
 
 ## Main Refresh Conflicts
 
@@ -110,11 +128,11 @@ Reason: This adds a narrow task rule pack derived from existing architecture gui
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T22:11:35Z
-Latest commit at UTC: 2026-06-22T22:21:15Z
-Latest commit SHA: b78d966
-Chat duration: 580s (00:00:09:40)
-Estimated chat tokens: 122486 estimated from chat transcript bytes (489944 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl)
-Estimated chat cost: USD 3.67 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T22:41:29Z
+Latest commit SHA: 60e4eb7
+Chat duration: 1794s (00:00:29:54)
+Estimated chat tokens: 223722 estimated from chat transcript bytes (894886 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl)
+Estimated chat cost: USD 6.71 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
