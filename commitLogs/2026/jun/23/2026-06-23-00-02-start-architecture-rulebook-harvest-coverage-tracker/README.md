@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:25:27Z
-latest_commit_sha: 2025224017817a07a5d48e10c3e9c33db322b552
-chat_duration: 1370s (00:00:22:50)
-estimated_chat_tokens: 470663 estimated from chat transcript bytes (1882650 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 14.12 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:27:47Z
+latest_commit_sha: 794a5ca5c1e09e63c551df5ca09d0c0b4fbb48d2
+chat_duration: 1510s (00:00:25:10)
+estimated_chat_tokens: 503056 estimated from chat transcript bytes (2012223 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 15.09 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -276,6 +276,17 @@ Summary: Added a manually verified platform adapter consumption concern ruleset 
 
 ADR impact: No ADR impact; extends the architecture rulebook artifact library.
 
+
+### 2026-06-22T23:27:47Z - Commit recorded
+
+Commit: `794a5ca5c1e09e63c551df5ca09d0c0b4fbb48d2`
+
+Message: Add platform adapter rule pack
+
+Summary: Added a task-shaped add-platform-adapter rule pack that composes platform-adapter-consumption and dependency-direction rules for adapter, profile, and bootstrap work.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
 ## Commits
 
 
@@ -335,6 +346,13 @@ ADR impact: No ADR impact; extends the architecture rulebook artifact library.
   Summary: Added a manually verified platform adapter consumption concern ruleset and marked the platform adapter consumption guide covered in the rulebook tracker.
   ADR impact: No ADR impact; extends the architecture rulebook artifact library.
 
+
+- Commit: `794a5ca5c1e09e63c551df5ca09d0c0b4fbb48d2`
+  Time UTC: 2026-06-22T23:27:47Z
+  Message: Add platform adapter rule pack
+  Summary: Added a task-shaped add-platform-adapter rule pack that composes platform-adapter-consumption and dependency-direction rules for adapter, profile, and bootstrap work.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -348,11 +366,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:25:27Z
-Latest commit SHA: 2025224017817a07a5d48e10c3e9c33db322b552
-Chat duration: 1370s (00:00:22:50)
-Estimated chat tokens: 470663 estimated from chat transcript bytes (1882650 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 14.12 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:27:47Z
+Latest commit SHA: 794a5ca5c1e09e63c551df5ca09d0c0b4fbb48d2
+Chat duration: 1510s (00:00:25:10)
+Estimated chat tokens: 503056 estimated from chat transcript bytes (2012223 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 15.09 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
