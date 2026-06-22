@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:35:43Z
-latest_commit_sha: 7229c1fd6738f44d4767e2c46f3647d74e4378ab
-chat_duration: 1986s (00:00:33:06)
-estimated_chat_tokens: 651911 estimated from chat transcript bytes (2607644 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 19.56 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:38:22Z
+latest_commit_sha: cdfa2449947ed114a5fa311e3e2fc7ed55fe068d
+chat_duration: 2145s (00:00:35:45)
+estimated_chat_tokens: 696551 estimated from chat transcript bytes (2786203 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 20.90 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -320,6 +320,17 @@ Summary: Refined dependency-direction with source-verified package runtime bound
 
 ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
 
+
+### 2026-06-22T23:38:22Z - Commit recorded
+
+Commit: `cdfa2449947ed114a5fa311e3e2fc7ed55fe068d`
+
+Message: Add design system layer rules
+
+Summary: Added a source-verified design-system layer ruleset covering tokens, resolvers, primitives, patterns, components, templates, pages, governance, accessibility, and coverage state.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
 ## Commits
 
 
@@ -407,6 +418,13 @@ ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
   Summary: Refined dependency-direction with source-verified package runtime boundaries, platform runtime/product-neutral boundaries, design-system one-way layer details, and coverage updates.
   ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
 
+
+- Commit: `cdfa2449947ed114a5fa311e3e2fc7ed55fe068d`
+  Time UTC: 2026-06-22T23:38:22Z
+  Message: Add design system layer rules
+  Summary: Added a source-verified design-system layer ruleset covering tokens, resolvers, primitives, patterns, components, templates, pages, governance, accessibility, and coverage state.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -420,11 +438,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:35:43Z
-Latest commit SHA: 7229c1fd6738f44d4767e2c46f3647d74e4378ab
-Chat duration: 1986s (00:00:33:06)
-Estimated chat tokens: 651911 estimated from chat transcript bytes (2607644 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 19.56 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:38:22Z
+Latest commit SHA: cdfa2449947ed114a5fa311e3e2fc7ed55fe068d
+Chat duration: 2145s (00:00:35:45)
+Estimated chat tokens: 696551 estimated from chat transcript bytes (2786203 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 20.90 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
