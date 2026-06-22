@@ -75,6 +75,14 @@ start architecture rulebook harvest coverage tracker
 - Decision: Defer harness.yml
   Rationale: Moved harness.yml out of the active candidate queue and recorded harness-layer-ownership as an open deferred human decision in rulebook coverage state.
 
+
+- Decision: Create tools layer ruleset
+  Rationale: Selected tools.yml after deferring harness.yml; verified TypeScript tools/, modular tools/build, and full-discussion Build and Code Generation sections before encoding tools layer rules.
+
+
+- Decision: Tools source refs manually verified
+  Rationale: Checked the cited tools/build and tools/ sections before marking tools coverage entries covered.
+
 ## Activity Log
 
 ### 2026-06-22T23:02:37Z - Session started
@@ -198,6 +206,20 @@ Message: Defer harness layer ownership decision
 Summary: Recorded an open human decision for harness layer ownership because source guides conflict on whether harness is testing support or entity-builder governance/generation; removed harness.yml from the active candidate queue.
 
 ADR impact: No ADR required; deferred coverage decision only.
+
+
+### 2026-06-22T23:17:34Z - Decision
+
+Decision: Create tools layer ruleset
+
+Rationale: Selected tools.yml after deferring harness.yml; verified TypeScript tools/, modular tools/build, and full-discussion Build and Code Generation sections before encoding tools layer rules.
+
+
+### 2026-06-22T23:17:34Z - Decision
+
+Decision: Tools source refs manually verified
+
+Rationale: Checked the cited tools/build and tools/ sections before marking tools coverage entries covered.
 
 ## Commits
 

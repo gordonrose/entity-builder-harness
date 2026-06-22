@@ -47,6 +47,12 @@ source_guides:
         status: deferred-human-decision
         artifacts: []
         note: "Potential conflict with kanbien-typescript-architecture-guide.md harness/ section: this guide frames Harness as governance and generation, while the TypeScript guide frames harness/ as testing and development support."
+      - source_sections:
+          - "8. Build and Code Generation"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/tools.yml
+        note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: unreviewed
@@ -104,6 +110,12 @@ source_guides:
         status: deferred-human-decision
         artifacts: []
         note: "Potential conflict with kanbien-typescript-architecture-guide.md harness/ section: this guide places entity-definition under harness/, while the TypeScript guide says entity definitions should not live in harness/."
+      - source_sections:
+          - "8. tools/build"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/tools.yml
+        note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: unreviewed
@@ -166,6 +178,12 @@ source_guides:
         status: deferred-human-decision
         artifacts: []
         note: "Potential conflict with kanbien-modular-monorepo-entity-builder.md and kanbien-architecture-full-discussion.md: this guide frames harness/ as testing and development support and says entity definitions should not live there."
+      - source_sections:
+          - "tools/"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/tools.yml
+        note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: unreviewed
@@ -175,6 +193,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/packages-core.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+  - artifact: docs/harness/architecture/rules/layers/tools.yml
+    status: covered
+    note: "Source refs manually checked while creating the tools layer ruleset."
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
@@ -189,7 +210,6 @@ artifact_coverage:
     note: "Source refs manually checked while creating the create-entity rule pack."
 
 candidate_queue:
-  - docs/harness/architecture/rules/layers/tools.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
 
 deferred_human_decisions:

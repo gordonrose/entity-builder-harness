@@ -1,0 +1,84 @@
+id: layer.tools
+title: tools layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing repo automation, generators, migration helpers, lint rules,
+  release tooling, and developer CLI code under tools.
+
+applies_to:
+  paths:
+    - "tools/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+
+rules:
+  - id: tools.repo-automation-only
+    title: Tools own developer and repository automation
+    severity: error
+    summary: >
+      tools/ should contain code that helps engineers change, generate,
+      validate, release, or inspect the system safely.
+    must:
+      - "Use tools/** for entity generators, migration generators, codegen, repo validation scripts, lint rules, release tooling, dependency graph checks, architecture conformance checks, and local developer CLI commands."
+      - "Keep tools focused on changing or validating the repo, not serving production runtime behavior."
+      - "Keep stable CLI tools buildable when they are reused or published internally."
+    must_not:
+      - "Do not put deployed runtime code in tools/**."
+      - "Do not put product business logic in tools/**."
+      - "Do not put shared domain types, API handlers, or product UI components in tools/**."
+    agent_guidance: >
+      If the code exists to generate, validate, migrate, lint, release, or help
+      developers operate the repository, tools is a candidate. If deployed code
+      needs it at runtime, tools is the wrong owner.
+
+  - id: tools.generators-produce-outputs-not-runtime-dependencies
+    title: Tools may generate production artifacts but must not become runtime dependencies
+    severity: error
+    summary: >
+      Generated output may be production code, but generator runtime code should
+      remain in tools or another approved generation owner.
+    must:
+      - "Let tools generate schemas, types, migrations, tests, API contracts, UI config, and other generated artifacts."
+      - "Place generated outputs in their approved package-local or shared generated output locations."
+      - "Keep generation deterministic and idempotent."
+    must_not:
+      - "Do not import tools/** from runtime apps, packages, or platform code."
+      - "Do not mix generated outputs with generator implementation code."
+      - "Do not let repeated generation create duplicate files or bloated output."
+    agent_guidance: >
+      When a runtime package needs generated output, depend on the generated
+      output location, not the generator under tools.
+
+  - id: tools.must-be-tested-and-typechecked
+    title: Tools must be tested and typechecked
+    severity: error
+    summary: >
+      A broken generator, migration helper, lint rule, or repo validation script
+      can create false confidence or bad generated output.
+    must:
+      - "Typecheck tools code in CI."
+      - "Add unit tests for generator functions."
+      - "Use golden-file tests for generated output where useful."
+      - "Use temp-workspace integration tests for generators where useful."
+      - "Add regression tests for migration generators and migration helpers."
+    must_not:
+      - "Do not leave critical tools untested because they are not production runtime code."
+      - "Do not skip validation for generators that create production artifacts."
+    agent_guidance: >
+      Treat tools as production-grade support code. It may not run in production,
+      but its output and checks can shape production code.
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "tools/"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "8. tools/build"
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "8. Build and Code Generation"

@@ -4,6 +4,7 @@ status: active
 created_artifacts:
   layer_rulesets:
     - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/tools.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
@@ -12,7 +13,6 @@ created_artifacts:
     - docs/harness/architecture/rule-packs/create-entity.yml
 
 recommended_next_artifacts:
-  - docs/harness/architecture/rules/layers/tools.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
 
 notes:
