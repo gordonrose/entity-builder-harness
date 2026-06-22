@@ -37,7 +37,12 @@ guardrails:
 current_known_artifacts:
   layer_rulesets:
     - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/tools.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/harness/architecture/rules/concerns/ci-quality.yml
+    - docs/harness/architecture/rules/concerns/generated-code.yml
+    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
+    - docs/harness/architecture/rule-packs/create-entity.yml

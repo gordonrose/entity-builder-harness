@@ -9,13 +9,16 @@ created_artifacts:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
+    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
     - docs/harness/architecture/rule-packs/create-entity.yml
 
-recommended_next_artifacts: []
+recommended_next_artifacts:
+  - docs/harness/architecture/rule-packs/add-platform-adapter.yml
 
 notes:
   - "Rule packs should compose layer and concern rulesets."
   - "Do not duplicate full rulesets inside rule packs."
   - "Work one artifact at a time."
+  - "The platform adapter guide is now covered by a concern ruleset; the next candidate is a task-shaped pack that composes it for adding a platform adapter."

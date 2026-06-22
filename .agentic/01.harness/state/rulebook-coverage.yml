@@ -198,8 +198,28 @@ source_guides:
         note: "CI-quality source refs were manually checked while creating docs/harness/architecture/rules/concerns/ci-quality.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
-    status: unreviewed
-    coverage_entries: []
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "1. Executive Summary"
+          - "The rule"
+          - "2. The Core Decision"
+          - "3. Why Predictable Consumption Matters"
+          - "4. The Three-Level Consumption Model"
+          - "5. Recommended Option B Structure"
+          - "6. Standard Adapter Package Contract"
+          - "7. Platform Profiles"
+          - "8. Backwards Compatibility Strategy"
+          - "9. Provider Compatibility and Capability Interfaces"
+          - "10. Consumption Rules"
+          - "11. Final Kanbien Folder Structure"
+          - "12. What Lives Where"
+          - "13. Implementation Checklist"
+          - "14. The Simple Answer"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+        note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml."
 
 artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/packages-core.yml
@@ -217,6 +237,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/generated-code.yml
     status: covered
     note: "Source refs manually checked while creating the generated-code concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    status: covered
+    note: "Source refs manually checked while creating the platform-adapter-consumption concern ruleset."
   - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
