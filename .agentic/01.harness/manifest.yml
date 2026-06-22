@@ -48,6 +48,7 @@ current_known_artifacts:
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
     - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - docs/harness/architecture/rules/concerns/tenancy.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
     - docs/harness/architecture/rule-packs/add-design-system-component.yml
