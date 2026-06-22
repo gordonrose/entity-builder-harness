@@ -1,0 +1,109 @@
+id: pack.add-design-system-component
+title: Add or modify a design-system component
+version: 1
+status: active
+
+description: >
+  A task rule pack for safely adding or changing application-facing
+  design-system components and their supporting token, primitive, pattern,
+  provider, documentation, and test artifacts.
+
+task_type: add_design_system_component
+
+applies_when:
+  - "A task creates a new component under packages/design-system/components/**."
+  - "A task changes a component public API, variant, size, state, accessibility behavior, token usage, visual behavior, docs, stories, or tests."
+  - "A task adds supporting primitives, patterns, builder tokens, generated token artifacts, or application usage examples for a design-system component."
+
+required_rulesets:
+  - "../rules/layers/design-system.yml"
+  - "../rules/concerns/design-label-theming.yml"
+  - "../rules/concerns/dependency-direction.yml"
+  - "../rules/concerns/ci-quality.yml"
+
+required_checks:
+  - "Confirm the component follows the chain: design label -> foundation tokens -> semantic tokens -> builder tokens -> primitive -> pattern -> component -> application usage."
+  - "Confirm design labels change visual values only, not component behavior or public API."
+  - "Confirm foundation tokens are raw visual inputs and are not consumed directly by product components."
+  - "Confirm semantic tokens express stable UI roles."
+  - "Confirm builder tokens define component construction and are consumed through generated CSS variables."
+  - "Confirm generated CSS variables and TypeScript token artifacts are produced from token source data."
+  - "Confirm the primitive owns native HTML element choice and basic accessibility posture."
+  - "Confirm the pattern maps component intent to classes, states, and CSS variables without knowing the active design label."
+  - "Confirm the component public API expresses product intent through stable props such as variant, size, loading, disabled, or fullWidth."
+  - "Confirm the component does not import application packages, routing, API clients, business permissions, domain objects, tenant-specific logic, or product copy."
+  - "Confirm package exports expose the component and public types from approved entry points."
+  - "Confirm application usage imports the same component across design labels without changing app code for visual differences."
+  - "Confirm typecheck, lint, unit tests, accessibility tests, token graph validation, and visual regression checks are run or reported missing."
+
+agent_steps:
+  - id: map-component-chain
+    instruction: >
+      Map the proposed component through design label, foundation tokens,
+      semantic tokens, builder tokens, primitive, pattern, component, and
+      application usage. Identify which artifacts already exist and which must
+      be created or changed.
+
+  - id: design-token-surfaces
+    instruction: >
+      Define or reuse foundation, semantic, and builder tokens. Keep semantic
+      names role-based and builder tokens component-construction focused. Plan
+      generated CSS variables and TypeScript token artifacts.
+
+  - id: build-primitive-and-pattern
+    instruction: >
+      Use a primitive for native element and accessibility posture, then use a
+      pattern to map component intent to implementation classes and CSS
+      variables. Keep both domain-neutral.
+
+  - id: implement-component-api
+    instruction: >
+      Implement the public component API with stable props that express UI
+      intent. Keep product behavior, permissions, routes, analytics, data
+      fetching, domain objects, and tenant-specific logic outside the component.
+
+  - id: wire-provider-and-exports
+    instruction: >
+      Ensure generated token CSS is imported at an approved provider or shell
+      boundary, design label scope is set with a data attribute or class, and
+      package entry points export the component and public types.
+
+  - id: validate-component
+    instruction: >
+      Run or identify typecheck, lint, unit tests, accessibility tests, token
+      graph validation, visual regression across relevant design labels, and
+      application usage smoke tests. Report missing checks explicitly.
+
+must_not:
+  - "Do not create a design-label-specific React component fork for a visual difference."
+  - "Do not let builder tokens mutate React components at runtime."
+  - "Do not hardcode brand values in React components."
+  - "Do not make components import raw token JSON files to compute visual decisions."
+  - "Do not put product behavior, routing, permissions, analytics, data fetching, domain objects, tenant-specific logic, or hardcoded product copy in the design-system component."
+  - "Do not use divs or spans where native HTML elements provide required accessibility behavior."
+  - "Do not add a new visual variant without checking whether an existing variant, tone, size, state, or semantic token covers the intent."
+  - "Do not add a component without documentation, tests, accessibility notes, and migration notes when a public surface changes."
+
+success_criteria:
+  - "The rule pack exists at docs/harness/architecture/rule-packs/add-design-system-component.yml."
+  - "The rule pack references ../rules/layers/design-system.yml."
+  - "The rule pack references ../rules/concerns/design-label-theming.yml."
+  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The rule pack references ../rules/concerns/ci-quality.yml."
+  - "The task preserves stable component APIs across design labels."
+  - "The task keeps token, primitive, pattern, component, provider, app usage, docs, and tests in their correct owners."
+  - "The task validates typecheck, lint, accessibility, token graph, visual regression, and app usage checks where applicable."
+  - "The rule pack includes manually verified source_refs back to the frontend design-system guide."
+
+source_refs:
+  - doc: "kanbien-frontend-design-system-guide.md"
+    sections:
+      - "Part 5: Complete worked example - Button"
+      - "Step 1: Design Label"
+      - "Step 2: Foundation Tokens"
+      - "Step 3: Semantic Tokens"
+      - "Step 4: Builder Tokens"
+      - "Step 5: Primitive"
+      - "Step 6: Pattern"
+      - "Step 7: Component"
+      - "Step 8: Application Usage"

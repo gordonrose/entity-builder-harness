@@ -148,6 +148,20 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/design-label-theming.yml
         note: "Design-label theming source refs were manually checked while creating docs/harness/architecture/rules/concerns/design-label-theming.yml."
+      - source_sections:
+          - "Part 5: Complete worked example - Button"
+          - "Step 1: Design Label"
+          - "Step 2: Foundation Tokens"
+          - "Step 3: Semantic Tokens"
+          - "Step 4: Builder Tokens"
+          - "Step 5: Primitive"
+          - "Step 6: Pattern"
+          - "Step 7: Component"
+          - "Step 8: Application Usage"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-design-system-component.yml
+        note: "add-design-system-component source refs were manually checked while creating docs/harness/architecture/rule-packs/add-design-system-component.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
     line_count: 218
     status: unreviewed
@@ -327,6 +341,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
     status: covered
     note: "Source refs manually checked while refining the add-core-module rule pack."
+  - artifact: docs/harness/architecture/rule-packs/add-design-system-component.yml
+    status: covered
+    note: "Source refs manually checked while creating the add-design-system-component rule pack."
   - artifact: docs/harness/architecture/rule-packs/create-entity.yml
     status: covered
     note: "Source refs manually checked while creating the create-entity rule pack."
