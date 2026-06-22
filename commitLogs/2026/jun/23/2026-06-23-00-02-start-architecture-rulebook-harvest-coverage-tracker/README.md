@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:18:09Z
-latest_commit_sha: 264c589
-chat_duration: 932s (00:00:15:32)
-estimated_chat_tokens: 363020 estimated from chat transcript bytes (1452078 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 10.89 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:20:39Z
+latest_commit_sha: 2689bae
+chat_duration: 1082s (00:00:18:02)
+estimated_chat_tokens: 389554 estimated from chat transcript bytes (1558215 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 11.69 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -254,6 +254,17 @@ Decision: CI-quality source refs manually verified
 
 Rationale: Checked the cited TypeScript architecture guide sections before marking CI-quality coverage entries covered.
 
+
+### 2026-06-22T23:20:39Z - Commit recorded
+
+Commit: `2689bae`
+
+Message: Add CI quality concern rules
+
+Summary: Created docs/harness/architecture/rules/concerns/ci-quality.yml for baseline CI gates, boundary/contract checks, generated freshness, and surface-appropriate tests; updated rulebook coverage and progress state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Commits
 
 
@@ -299,6 +310,13 @@ Rationale: Checked the cited TypeScript architecture guide sections before marki
   Summary: Created docs/harness/architecture/rules/layers/tools.yml for repo automation, generators, runtime dependency boundaries, and tools validation; updated rulebook coverage and progress state.
   ADR impact: No ADR required; source-backed rulebook artifact.
 
+
+- Commit: `2689bae`
+  Time UTC: 2026-06-22T23:20:39Z
+  Message: Add CI quality concern rules
+  Summary: Created docs/harness/architecture/rules/concerns/ci-quality.yml for baseline CI gates, boundary/contract checks, generated freshness, and surface-appropriate tests; updated rulebook coverage and progress state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -312,11 +330,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:18:09Z
-Latest commit SHA: 264c589
-Chat duration: 932s (00:00:15:32)
-Estimated chat tokens: 363020 estimated from chat transcript bytes (1452078 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 10.89 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:20:39Z
+Latest commit SHA: 2689bae
+Chat duration: 1082s (00:00:18:02)
+Estimated chat tokens: 389554 estimated from chat transcript bytes (1558215 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 11.69 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
