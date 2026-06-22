@@ -7,13 +7,13 @@ created_artifacts:
     - docs/harness/architecture/rules/layers/tools.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
     - docs/harness/architecture/rule-packs/create-entity.yml
 
-recommended_next_artifacts:
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
+recommended_next_artifacts: []
 
 notes:
   - "Rule packs should compose layer and concern rulesets."

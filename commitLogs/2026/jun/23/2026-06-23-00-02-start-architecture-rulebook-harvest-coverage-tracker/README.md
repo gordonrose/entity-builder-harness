@@ -83,6 +83,14 @@ start architecture rulebook harvest coverage tracker
 - Decision: Tools source refs manually verified
   Rationale: Checked the cited tools/build and tools/ sections before marking tools coverage entries covered.
 
+
+- Decision: Create CI quality concern ruleset
+  Rationale: Selected ci-quality.yml after tools.yml; verified TypeScript guide sections for linting, formatting, type checking, testing, code generation, CI checks, and tools before encoding CI quality rules.
+
+
+- Decision: CI-quality source refs manually verified
+  Rationale: Checked the cited TypeScript architecture guide sections before marking CI-quality coverage entries covered.
+
 ## Activity Log
 
 ### 2026-06-22T23:02:37Z - Session started
@@ -231,6 +239,20 @@ Message: Add tools layer rules
 Summary: Created docs/harness/architecture/rules/layers/tools.yml for repo automation, generators, runtime dependency boundaries, and tools validation; updated rulebook coverage and progress state.
 
 ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:19:46Z - Decision
+
+Decision: Create CI quality concern ruleset
+
+Rationale: Selected ci-quality.yml after tools.yml; verified TypeScript guide sections for linting, formatting, type checking, testing, code generation, CI checks, and tools before encoding CI quality rules.
+
+
+### 2026-06-22T23:19:47Z - Decision
+
+Decision: CI-quality source refs manually verified
+
+Rationale: Checked the cited TypeScript architecture guide sections before marking CI-quality coverage entries covered.
 
 ## Commits
 

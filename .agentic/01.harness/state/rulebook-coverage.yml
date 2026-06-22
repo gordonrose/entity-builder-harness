@@ -184,6 +184,18 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+      - source_sections:
+          - "Linting"
+          - "Formatting"
+          - "Type checking"
+          - "Testing"
+          - "Code generation"
+          - "CI checks"
+          - "tools/"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/ci-quality.yml
+        note: "CI-quality source refs were manually checked while creating docs/harness/architecture/rules/concerns/ci-quality.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: unreviewed
@@ -199,6 +211,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+  - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
+    status: covered
+    note: "Source refs manually checked while creating the CI quality concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/generated-code.yml
     status: covered
     note: "Source refs manually checked while creating the generated-code concern ruleset."
@@ -209,8 +224,7 @@ artifact_coverage:
     status: covered
     note: "Source refs manually checked while creating the create-entity rule pack."
 
-candidate_queue:
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
+candidate_queue: []
 
 deferred_human_decisions:
   - id: harness-layer-ownership

@@ -1,0 +1,104 @@
+id: concern.ci-quality
+title: CI quality rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for CI quality gates, formatting, linting, type checking,
+  generated artifact freshness, dependency boundaries, and test coverage.
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/**"
+    - "platform/**"
+    - "harness/**"
+    - "tools/**"
+    - "infra/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+
+rules:
+  - id: ci.baseline-quality-gates
+    title: CI must run baseline quality gates
+    severity: error
+    summary: >
+      Pull-request CI should prove formatting, generation freshness, linting,
+      type checking, tests, and builds for the affected project set.
+    must:
+      - "Run dependency installation with a frozen lockfile."
+      - "Run formatting checks."
+      - "Run generated artifact freshness checks where generators exist."
+      - "Run lint, typecheck, test, and build tasks for affected projects."
+      - "Run full lint, typecheck, test, and build tasks on the main branch."
+    must_not:
+      - "Do not rely on application builds to type-check the whole repo."
+      - "Do not skip generated artifact freshness checks when generator inputs or generator code change."
+      - "Do not treat local fast-loop checks as substitutes for CI."
+    agent_guidance: >
+      When proposing a change, identify which quality gates should run. If a
+      needed gate does not exist yet, report that gap instead of claiming the
+      change is fully validated.
+
+  - id: ci.boundary-and-contract-checks
+    title: CI should protect architecture boundaries and contracts
+    severity: error
+    summary: >
+      CI should enforce dependency boundaries and contract compatibility so
+      architectural drift is caught before merge.
+    must:
+      - "Use lint or package-boundary tooling to enforce module boundaries."
+      - "Run API contract diff or contract tests where API schemas are generated or shared."
+      - "Run DB migration checks where generated or hand-authored migrations are affected."
+      - "Run dependency boundary checks."
+      - "Run security and dependency scans where available."
+    must_not:
+      - "Do not rely on code review alone for import boundary enforcement."
+      - "Do not merge API or migration changes without the relevant contract or migration validation."
+    agent_guidance: >
+      Boundary and contract checks are part of the architecture rules, not just
+      project hygiene. If the repo lacks an automated boundary check, call that
+      out as residual risk.
+
+  - id: ci.test-the-right-surface
+    title: Tests must match the changed surface
+    severity: error
+    summary: >
+      Different layers need different test surfaces, including unit,
+      integration, contract, E2E, type-level, golden-file, generated, and smoke
+      tests.
+    must:
+      - "Use unit tests for pure logic, generator functions, and app-specific wiring."
+      - "Use integration tests for routes, repositories, adapters, and temp-workspace generation."
+      - "Use contract tests for API schemas and package boundaries."
+      - "Use type-level tests for inference and public API shape where useful."
+      - "Use golden-file or snapshot tests for generated output where useful."
+      - "Use E2E and smoke tests for deployment or browser-critical paths where appropriate."
+    must_not:
+      - "Do not add tests only at a distant layer when the changed package owns a closer, more precise test surface."
+      - "Do not leave generators, harness utilities, or test helpers untested because they are not production runtime code."
+      - "Do not use snapshot tests as a substitute for contract, validation, or type-level checks where those are more precise."
+    agent_guidance: >
+      Choose tests from the ownership and failure mode of the change. Prefer the
+      closest test that proves the contract, then add broader tests only when
+      the behavior crosses a boundary.
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "Linting"
+      - "Formatting"
+      - "Type checking"
+      - "Testing"
+      - "Code generation"
+      - "CI checks"
+      - "tools/"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/ci-quality.yml."
+  - "It defines baseline CI quality gates."
+  - "It covers formatting, linting, typecheck, tests, build, generated freshness, dependency boundaries, contracts, migrations, and scans."
+  - "It maps test type to changed surface."
+  - "It includes manually verified source_refs back to the markdown guides."
