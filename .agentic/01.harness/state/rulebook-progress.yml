@@ -10,6 +10,7 @@ created_artifacts:
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
     - docs/harness/architecture/rules/concerns/design-label-theming.yml
+    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
@@ -28,3 +29,4 @@ notes:
   - "The platform adapter guide is covered by a concern ruleset and a task-shaped pack for adding platform adapters."
   - "The frontend design-system guide has a layer ruleset, design-label concern, and task-shaped pack for adding design-system components."
   - "The platform layer guide is covered by the platform layer ruleset, plus existing core and dependency-direction coverage."
+  - "The core guide's events, messaging, and async sections are covered by the events-messaging-async concern."

@@ -1,0 +1,197 @@
+id: concern.events-messaging-async
+title: Events, messaging, and async rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for domain events, event buses, queues, async jobs,
+  scheduled jobs, workers, outbox publication, dead-letter handling,
+  idempotency, and ownership splits across core, apps, platform, and infra.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: async.events-are-facts-not-commands
+    title: Domain events are past-tense facts
+    severity: error
+    summary: >
+      A domain event records something business-meaningful that already
+      happened. It should not be named or used as a command to make one
+      specific consumer perform one specific action.
+    must:
+      - "Name domain events as past-tense facts such as UserCreated, InvoicePaid, FileUploaded, ReportGenerated, or TenantProvisioned."
+      - "Let multiple consumers react independently to the same event where useful."
+      - "Use commands, jobs, or direct service calls when the intent is to ask one owner to do specific work."
+    must_not:
+      - "Do not name events as imperative commands such as CreateUser, SendEmail, or UpdateInvoice."
+      - "Do not hide product workflows behind event names that are really instructions."
+      - "Do not assume an event bus provides exactly-once delivery."
+    agent_guidance: >
+      If the name sounds like an instruction, it is probably a command or job,
+      not a domain event.
+
+  - id: async.core-contracts-platform-runtime-app-meaning
+    title: Ownership split must stay explicit
+    severity: error
+    summary: >
+      Core defines stable event, queue, scheduler, job, retry, and dead-letter
+      contracts. Apps define business events, decisions, handlers, and schedules.
+      Platform implements runtime mechanics. Infra provisions the external
+      resources.
+    must:
+      - "Put DomainEvent, EventEnvelope, EventBus, Queue, QueueMessage, QueueHandler, Job, JobHandler, RetryPolicy, DLQ metadata, Scheduler, correlation ID, causation ID, serialization, and versioning contracts in packages/core when they are stable and reused."
+      - "Put business event definitions, business decisions to emit events, business decisions to enqueue jobs, job handlers, scheduled job definitions, and resource-specific authorization in apps or feature packages."
+      - "Put event bus implementations, queue consumers, worker runtime, scheduler runtime, outbox publisher, retry processor, DLQ tooling, and provider integrations in platform."
+      - "Put actual topics, queues, DLQs, IAM permissions, worker deployments, cron resources, and autoscaling rules in infra."
+    must_not:
+      - "Do not put Kafka, SNS/SQS, RabbitMQ, NATS, Redis, queue clients, worker processes, provider SDK integrations, product event definitions, or event-triggered business workflows in packages/core."
+      - "Do not put app job handlers, business-specific scheduled jobs, or business event meaning in platform runtime code."
+      - "Do not put cloud resource definitions, queue provisioning, IAM, worker deployment resources, or cron infrastructure in platform or apps."
+    agent_guidance: >
+      When async work crosses layers, name the owner of the contract, business
+      meaning, runtime implementation, and provisioned resource separately.
+
+  - id: async.envelopes-carry-governance-metadata
+    title: Event and message envelopes carry governance metadata
+    severity: error
+    summary: >
+      Events, queue messages, and jobs need metadata for tenancy, lineage,
+      replay, retention, debugging, and safe consumer ownership.
+    must:
+      - "Include event or message type, schema version where relevant, payload, unique ID, tenant ID where relevant, occurred or created timestamp, correlation ID, causation ID where relevant, actor ID where relevant, attempt count where relevant, and idempotency key where relevant."
+      - "Version domain events and govern schema compatibility before consumers depend on them."
+      - "Carry tenant context through events, queues, jobs, workers, audit, analytics, and notifications where tenant isolation matters."
+      - "Apply PII controls, retention policy, lineage tracking, and consumer ownership for enterprise event streams."
+    must_not:
+      - "Do not publish anonymous unversioned payload blobs that consumers must reverse engineer."
+      - "Do not drop correlation or causation context when moving from request to event to queue to worker."
+      - "Do not put sensitive data in events or queue payloads without an explicit PII and retention decision."
+    agent_guidance: >
+      Treat envelope metadata as part of the contract. Missing metadata is an
+      architecture defect, not just an implementation detail.
+
+  - id: async.outbox-protects-state-and-publication
+    title: Outbox protects state changes and event publication
+    severity: error
+    summary: >
+      When a database state change must produce an event, record the event in
+      the same transaction and publish it asynchronously. This prevents saved
+      state from becoming invisible to the rest of the system after a publish
+      failure.
+    must:
+      - "Record outbox events in the same transaction as the business state change when publication matters."
+      - "Publish outbox events through a platform-owned publisher or worker and mark them published only after successful publication."
+      - "Make outbox publication observable and retryable."
+    must_not:
+      - "Do not save business state and then rely on an immediate best-effort external publish as the only event record."
+      - "Do not let outbox publication lose tenant, actor, correlation, causation, or event version metadata."
+      - "Do not put provider-specific outbox publisher implementation in packages/core."
+    agent_guidance: >
+      For workflows like UserCreated, ask whether state and event publication
+      can fail separately. If yes, use an outbox-shaped design or record the
+      consistency risk for human review.
+
+  - id: async.queues-and-jobs-are-retryable-and-observable
+    title: Queues and jobs are retryable and observable
+    severity: error
+    summary: >
+      Queues buffer work and isolate failures. Async jobs should carry enough
+      structure for retry, dead-letter handling, tenant fairness, and
+      operations.
+    must:
+      - "Define jobs with type, payload, tenant context where relevant, idempotency key where relevant, attempt count, timestamps, retry policy, and handler ownership."
+      - "Use queues for slow, unreliable, bursty, retryable, or request-path-external work."
+      - "Provide retry backoff, dead-letter queues, poison-message handling, queue depth monitoring, job observability, and operational DLQ workflows."
+      - "Consider throughput, back-pressure, ordering, tenant fairness, replay, encryption, and regional isolation when choosing queue behavior."
+    must_not:
+      - "Do not enqueue jobs without idempotency strategy when duplicates would cause harm."
+      - "Do not retry forever without a dead-letter path."
+      - "Do not ignore queue depth, poison messages, tenant starvation, or failed-job visibility."
+    agent_guidance: >
+      A queue without retry, DLQ, and observability rules is only postponing
+      failure. Make the failure path explicit.
+
+  - id: async.workers-and-schedulers-run-app-owned-work
+    title: Workers and schedulers run app-owned work
+    severity: error
+    summary: >
+      Platform owns worker and scheduler mechanics, but apps own the actual
+      business work performed by handlers and scheduled definitions.
+    must:
+      - "Let platform workers consume registered jobs, validate payloads, create job context, enforce retry/DLQ policy, log outcomes, emit metrics, and shut down gracefully."
+      - "Let apps own job handlers such as notifications.sendWelcomeEmail, report generation, file processing, integration sync, and app-specific scheduled jobs."
+      - "Use scheduled jobs for time-based work such as nightly cleanup, weekly reports, or hourly sync only when the app owner defines the business meaning."
+      - "Keep worker processes and API processes as explicit entrypoints when they have different runtime responsibilities."
+    must_not:
+      - "Do not put business job behavior inside the platform worker runtime."
+      - "Do not let apps bypass platform worker mechanics for shared queues and retries."
+      - "Do not treat scheduled jobs as infrastructure-only when the schedule has product meaning."
+    agent_guidance: >
+      Platform runs the machinery; apps decide what the work means. Keep those
+      responsibilities visible in code placement and tests.
+
+  - id: async.consumers-are-idempotent-and-owned
+    title: Event consumers are idempotent and owned
+    severity: error
+    summary: >
+      Event and queue consumers must tolerate retries, duplicates, replay, and
+      independent failure. Each consumer needs an owner and clear compatibility
+      expectations.
+    must:
+      - "Make event subscribers and queue handlers idempotent where duplicate delivery is possible."
+      - "Document or encode consumer ownership for event streams that support multiple independent reactions."
+      - "Keep analytics, audit, notification, sync, and other consumers independently failure-tolerant where practical."
+      - "Use contract tests or integration tests for important event-to-job and job-to-worker flows."
+    must_not:
+      - "Do not rely on consumer execution order unless the contract explicitly guarantees ordering."
+      - "Do not let one failed consumer block unrelated consumers without an explicit decision."
+      - "Do not couple independent consumers through shared mutable state without an owner and retry model."
+    agent_guidance: >
+      Every async consumer is a small distributed system participant. Ask who
+      owns it, how it retries, and what happens on duplicates.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "async-jobs/ deep dive"
+      - "events/ deep dive"
+      - "queues/ deep dive"
+      - "Part 5: Events, Messaging, and Async Systems"
+      - "Event-driven architecture"
+      - "Domain events"
+      - "Event buses"
+      - "Message queues"
+      - "Dead-letter queues"
+      - "Background workers"
+      - "Async jobs"
+      - "Scheduled jobs"
+      - "How they relate"
+      - "What belongs in core, apps, platform, and infra"
+      - "Complete worked example: UserCreated"
+      - "App creates user and records an outbox event"
+      - "Event publisher publishes UserCreated"
+      - "Event subscriber creates a queue job"
+      - "Worker processes the job"
+      - "Audit is recorded"
+      - "Analytics is tracked"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/events-messaging-async.yml."
+  - "It distinguishes domain events from commands."
+  - "It defines ownership splits for core contracts, app business meaning, platform runtime mechanics, and infra resources."
+  - "It requires event/message/job envelope metadata for tenancy, correlation, causation, versioning, attempts, idempotency, and observability where relevant."
+  - "It requires outbox-shaped consistency for state changes that must publish events."
+  - "It requires queues and jobs to have retry, dead-letter, idempotency, and observability handling."
+  - "It keeps workers and schedulers platform-run but app-owned in business meaning."
+  - "It requires async consumers to be idempotent and owned."
+  - "It includes manually verified source_refs back to the core architecture guide."

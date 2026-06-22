@@ -58,6 +58,32 @@ source_guides:
     status: unreviewed
     coverage_entries:
       - source_sections:
+          - "async-jobs/ deep dive"
+          - "events/ deep dive"
+          - "queues/ deep dive"
+          - "Part 5: Events, Messaging, and Async Systems"
+          - "Event-driven architecture"
+          - "Domain events"
+          - "Event buses"
+          - "Message queues"
+          - "Dead-letter queues"
+          - "Background workers"
+          - "Async jobs"
+          - "Scheduled jobs"
+          - "How they relate"
+          - "What belongs in core, apps, platform, and infra"
+          - "Complete worked example: UserCreated"
+          - "App creates user and records an outbox event"
+          - "Event publisher publishes UserCreated"
+          - "Event subscriber creates a queue job"
+          - "Worker processes the job"
+          - "Audit is recorded"
+          - "Analytics is tracked"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+        note: "Events, messaging, and async source refs were manually checked while creating docs/harness/architecture/rules/concerns/events-messaging-async.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -364,6 +390,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/design-label-theming.yml
     status: covered
     note: "Source refs manually checked while creating the design-label-theming concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    status: covered
+    note: "Source refs manually checked while creating the events, messaging, and async concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."
