@@ -11,6 +11,7 @@ created_artifacts:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
     - docs/harness/architecture/rules/concerns/design-label-theming.yml
     - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    - docs/harness/architecture/rules/concerns/i18n-localization.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
@@ -34,3 +35,4 @@ notes:
   - "The core guide's events, messaging, and async sections are covered by the events-messaging-async concern."
   - "The core guide's reporting, analytics, audit, logging, monitoring, and observability sections are covered by the reporting-analytics-audit concern."
   - "The core guide's multi-tenancy sections are covered by the tenancy concern."
+  - "The core guide's internationalization and localization sections are covered by the i18n-localization concern."

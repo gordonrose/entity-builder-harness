@@ -121,6 +121,22 @@ source_guides:
           - docs/harness/architecture/rules/concerns/tenancy.yml
         note: "Multi-tenancy source refs were manually checked while creating docs/harness/architecture/rules/concerns/tenancy.yml."
       - source_sections:
+          - "i18n/ deep dive"
+          - "localization/ deep dive"
+          - "Part 8: Internationalization and Localization"
+          - "i18n"
+          - "l10n"
+          - "Translations"
+          - "Locale management"
+          - "Currency handling"
+          - "Timezone handling"
+          - "Regional formatting"
+          - "Responsibility split"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/i18n-localization.yml
+        note: "Internationalization and localization source refs were manually checked while creating docs/harness/architecture/rules/concerns/i18n-localization.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -430,6 +446,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/events-messaging-async.yml
     status: covered
     note: "Source refs manually checked while creating the events, messaging, and async concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/i18n-localization.yml
+    status: covered
+    note: "Source refs manually checked while creating the internationalization and localization concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."
