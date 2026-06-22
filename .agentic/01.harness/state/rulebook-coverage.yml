@@ -59,14 +59,40 @@ source_guides:
     coverage_entries:
       - source_sections:
           - "What a shared core package is"
+          - "What problems shared core packages solve"
+          - "What problems shared core packages create when used incorrectly"
+          - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
+          - "When a shared core layer becomes a dumping ground and how to prevent it"
           - "Code dependency direction"
+          - "Designing packages/core"
+          - "Ideal packages/core folder structure"
+          - "Why each folder exists and what consumes it"
+          - "How core connects to apps, platform, harness, and infrastructure"
+          - "Most common mistakes founders make"
+          - "Most common mistakes engineers make"
+          - "Principles to guide Kanbien for the next 10 years"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/packages-core.yml
+        note: "packages/core layer source refs were manually checked while refining docs/harness/architecture/rules/layers/packages-core.yml."
+      - source_sections:
+          - "Code dependency direction"
+        status: in_progress
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction artifact cites this section; manual source-reference coverage review is still required before marking that artifact covered."
+      - source_sections:
+          - "What a shared core package is"
+          - "What problems shared core packages create when used incorrectly"
+          - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
+          - "When a shared core layer becomes a dumping ground and how to prevent it"
+          - "Code dependency direction"
+          - "Designing packages/core"
           - "Principles to guide Kanbien for the next 10 years"
         status: in_progress
         artifacts:
-          - docs/harness/architecture/rules/layers/packages-core.yml
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
           - docs/harness/architecture/rule-packs/add-core-module.yml
-        note: "Seed artifacts exist; manual source-reference coverage review is still required before marking covered."
+        note: "add-core-module artifact cites these sections; manual source-reference coverage review is still required before marking that artifact covered."
   - path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
     line_count: 3136
     status: unreviewed
@@ -224,8 +250,8 @@ source_guides:
 
 artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/packages-core.yml
-    status: in_progress
-    note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+    status: covered
+    note: "Source refs manually checked while refining the packages/core layer ruleset."
   - artifact: docs/harness/architecture/rules/layers/tools.yml
     status: covered
     note: "Source refs manually checked while creating the tools layer ruleset."
