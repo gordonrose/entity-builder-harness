@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:51:32Z
-latest_commit_sha: 734b3b1
-chat_duration: 2935s (00:00:48:55)
-estimated_chat_tokens: 918380 estimated from chat transcript bytes (3673517 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 27.55 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:53:23Z
+latest_commit_sha: b0700c1
+chat_duration: 3046s (00:00:50:46)
+estimated_chat_tokens: 944691 estimated from chat transcript bytes (3778762 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 28.34 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -386,6 +386,17 @@ Summary: Added the reporting-analytics-audit concern to distinguish reporting, a
 
 ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+### 2026-06-22T23:53:23Z - Commit recorded
+
+Commit: `b0700c1`
+
+Message: Add tenancy rules
+
+Summary: Added the tenancy concern for tenant identity, resolution, propagation, isolation models, cross-tenant security, noisy-neighbor controls, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Commits
 
 
@@ -515,6 +526,13 @@ ADR impact: No ADR impact; source-backed concern added from manually checked cor
   Summary: Added the reporting-analytics-audit concern to distinguish reporting, analytics, BI, audit, logging, monitoring, and observability, and to define core/app/platform/infra ownership splits; updated manifest, progress, and coverage.
   ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+- Commit: `b0700c1`
+  Time UTC: 2026-06-22T23:53:23Z
+  Message: Add tenancy rules
+  Summary: Added the tenancy concern for tenant identity, resolution, propagation, isolation models, cross-tenant security, noisy-neighbor controls, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -528,11 +546,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:51:32Z
-Latest commit SHA: 734b3b1
-Chat duration: 2935s (00:00:48:55)
-Estimated chat tokens: 918380 estimated from chat transcript bytes (3673517 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 27.55 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:53:23Z
+Latest commit SHA: b0700c1
+Chat duration: 3046s (00:00:50:46)
+Estimated chat tokens: 944691 estimated from chat transcript bytes (3778762 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 28.34 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
