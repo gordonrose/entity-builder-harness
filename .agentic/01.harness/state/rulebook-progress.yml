@@ -18,6 +18,7 @@ created_artifacts:
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
     - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
     - docs/harness/architecture/rules/concerns/tenancy.yml
+    - docs/harness/architecture/rules/concerns/validation-api-errors.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
     - docs/harness/architecture/rule-packs/add-design-system-component.yml
@@ -38,3 +39,4 @@ notes:
   - "The core guide's multi-tenancy sections are covered by the tenancy concern."
   - "The core guide's internationalization and localization sections are covered by the i18n-localization concern."
   - "The core guide's authentication, authorization, and security sections are covered by the identity-access-security concern."
+  - "The core guide's validation and API error-shape sections are covered by the validation-api-errors concern."

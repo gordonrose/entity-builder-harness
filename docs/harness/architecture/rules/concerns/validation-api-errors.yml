@@ -1,0 +1,141 @@
+id: concern.validation-api-errors
+title: Validation and API error rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for validating unknown input, normalizing values,
+  standardizing validation result and error shapes, mapping validation failures
+  to consistent API responses, keeping errors PII-safe and localizable, and
+  splitting ownership across core, apps, platform, and generated artifacts.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/harness/architecture/rules/concerns/i18n-localization.yml
+  - docs/harness/architecture/rules/concerns/identity-access-security.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "packages/**"
+
+rules:
+  - id: validation-api-errors.server-validates-unknown-input
+    title: Server-side validation turns unknown input into typed values
+    severity: error
+    summary: >
+      Bad input causes bugs, security issues, and inconsistent user
+      experiences. Runtime validation must transform unknown input into known
+      typed values before business logic relies on it.
+    must:
+      - "Validate API payloads, route params, query params, uploaded file metadata, generated contract inputs, and other external inputs at runtime."
+      - "Normalize values such as trimmed strings only through explicit validation or normalization helpers."
+      - "Compose core low-level validators with app or feature-specific schemas."
+      - "Treat TypeScript types as compile-time consistency, not proof that external input is valid."
+    must_not:
+      - "Do not validate only on the frontend."
+      - "Do not let unknown request input reach business logic as trusted domain data."
+      - "Do not rely only on database constraints for user-facing validation behavior."
+    agent_guidance: >
+      If input came from outside the trusted process, ask where it becomes a
+      typed validated value.
+
+  - id: validation-api-errors.result-shape-is-standard
+    title: Validation result shape is standard
+    severity: error
+    summary: >
+      Validation should use a shared result and error shape so handlers,
+      generated schemas, contract tests, and clients can reason about failures
+      consistently.
+    must:
+      - "Use a stable ValidationResult shape such as ok/value or ok/errors."
+      - "Use structured ValidationError fields such as path, code, and message."
+      - "Prefer stable error codes over free-text-only errors."
+      - "Include enough path context to point users and clients to the failing input."
+      - "Keep messages localizable where they reach users."
+    must_not:
+      - "Do not return vague validation errors with no path or code."
+      - "Do not invent a different validation error shape for every endpoint or app."
+      - "Do not leak secrets, raw credentials, full tokens, or unnecessary PII in validation errors."
+    agent_guidance: >
+      A validation error is part of an API contract. Make it structured before
+      making it pretty.
+
+  - id: validation-api-errors.api-errors-are-consistent
+    title: API validation errors map to consistent responses
+    severity: error
+    summary: >
+      API handlers should map validation failures to a consistent bad-request
+      response instead of hand-rolling error payloads per endpoint.
+    must:
+      - "Use platform or shared API error mapping helpers for validation failures."
+      - "Keep response status, top-level error shape, request/correlation identifier, and field error shape consistent across apps."
+      - "Use contract tests where API schemas or error responses are generated or shared."
+      - "Version schemas or API contracts when validation changes affect clients."
+    must_not:
+      - "Do not return incompatible validation response shapes from different endpoints."
+      - "Do not hide validation failures behind generic 500 responses."
+      - "Do not return internal stack traces, provider errors, or raw schema library internals to clients."
+    agent_guidance: >
+      Once clients consume an error shape, it is a contract. Treat response
+      consistency as architecture, not polish.
+
+  - id: validation-api-errors.validation-is-not-permission
+    title: Validation is not permission
+    severity: error
+    summary: >
+      Validation decides whether input is well-shaped. Authorization decides
+      whether a principal may perform an action on a resource.
+    must:
+      - "Validate shape and normalize values before business logic."
+      - "Run authorization before state changes or sensitive reads."
+      - "Keep validation errors distinct from access-denied and unauthenticated errors."
+    must_not:
+      - "Do not use validation schemas to make resource permission decisions."
+      - "Do not return validation errors for access-denied cases just to avoid revealing resource existence unless the security policy explicitly calls for that behavior."
+      - "Do not mix form visibility, UI state, and server permission enforcement into one validation layer."
+    agent_guidance: >
+      If the question is "is this value acceptable?", validation owns it. If
+      the question is "may this actor do this?", authorization owns it.
+
+  - id: validation-api-errors.layer-ownership-is-explicit
+    title: Validation ownership is explicit
+    severity: error
+    summary: >
+      Core owns reusable validation primitives and result shapes. Apps own
+      feature-specific schemas and business input rules. Platform owns API error
+      mapping. Generators may produce schemas, but generated output still needs
+      freshness and contract checks.
+    must:
+      - "Put ValidationResult, ValidationError, common low-level validators, input normalization helpers, schema wrapper conventions, and reusable API error shaping helpers in packages/core when framework-independent."
+      - "Put app-specific form schemas, route schemas, feature input rules, and product-specific validation messages in apps or product packages."
+      - "Put API response mapping and platform-wide badRequest/error helpers in platform where they are runtime mechanisms."
+      - "Use generated schemas from approved generated output locations and verify freshness when generator inputs change."
+    must_not:
+      - "Do not put every app-specific form schema in packages/core."
+      - "Do not put authorization logic, database constraints only, UI-only validation, or provider-specific schema internals in core validation contracts."
+      - "Do not hand-edit generated validation schemas unless a generated-file policy explicitly allows it."
+    agent_guidance: >
+      Keep reusable validation vocabulary in core, product-specific rules near
+      the product, and response mapping at the runtime boundary.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "validation/ deep dive"
+      - "Part 9: Building Kanbien v1"
+      - "validation"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/validation-api-errors.yml."
+  - "It requires server-side runtime validation for unknown input."
+  - "It standardizes ValidationResult and ValidationError shapes with path, code, and message."
+  - "It requires consistent API validation error responses."
+  - "It keeps validation separate from authorization."
+  - "It keeps validation errors PII-safe and localizable where user-facing."
+  - "It defines ownership splits across core primitives, app schemas, platform API error mapping, and generated validation schemas."
+  - "It includes manually verified source_refs back to the core architecture guide."
