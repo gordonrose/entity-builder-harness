@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:57:08Z
-latest_commit_sha: 9b38ecb
-chat_duration: 3271s (00:00:54:31)
-estimated_chat_tokens: 996531 estimated from chat transcript bytes (3986122 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 29.90 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:58:49Z
+latest_commit_sha: 050d68c
+chat_duration: 3372s (00:00:56:12)
+estimated_chat_tokens: 1020714 estimated from chat transcript bytes (4082856 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 30.62 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -419,6 +419,17 @@ Summary: Added the identity-access-security concern for authn/authz separation, 
 
 ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+### 2026-06-22T23:58:49Z - Commit recorded
+
+Commit: `050d68c`
+
+Message: Add validation API error rules
+
+Summary: Added the validation-api-errors concern for runtime input validation, ValidationResult/ValidationError shapes, consistent API bad-request responses, validation/authz separation, and ownership across core, apps, platform, and generated schemas; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Commits
 
 
@@ -569,6 +580,13 @@ ADR impact: No ADR impact; source-backed concern added from manually checked cor
   Summary: Added the identity-access-security concern for authn/authz separation, principal contracts, authorization decisions, security primitives, ownership splits, and v1 seams; updated manifest, progress, and coverage.
   ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+- Commit: `050d68c`
+  Time UTC: 2026-06-22T23:58:49Z
+  Message: Add validation API error rules
+  Summary: Added the validation-api-errors concern for runtime input validation, ValidationResult/ValidationError shapes, consistent API bad-request responses, validation/authz separation, and ownership across core, apps, platform, and generated schemas; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -582,11 +600,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:57:08Z
-Latest commit SHA: 9b38ecb
-Chat duration: 3271s (00:00:54:31)
-Estimated chat tokens: 996531 estimated from chat transcript bytes (3986122 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 29.90 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:58:49Z
+Latest commit SHA: 050d68c
+Chat duration: 3372s (00:00:56:12)
+Estimated chat tokens: 1020714 estimated from chat transcript bytes (4082856 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 30.62 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
