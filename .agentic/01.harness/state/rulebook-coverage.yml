@@ -219,7 +219,8 @@ source_guides:
         status: covered
         artifacts:
           - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-        note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml."
+          - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+        note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml and docs/harness/architecture/rule-packs/add-platform-adapter.yml."
 
 artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/packages-core.yml
@@ -246,6 +247,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rule-packs/create-entity.yml
     status: covered
     note: "Source refs manually checked while creating the create-entity rule pack."
+  - artifact: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    status: covered
+    note: "Source refs manually checked while creating the add-platform-adapter rule pack."
 
 candidate_queue: []
 

@@ -46,3 +46,4 @@ current_known_artifacts:
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
     - docs/harness/architecture/rule-packs/create-entity.yml
+    - docs/harness/architecture/rule-packs/add-platform-adapter.yml
