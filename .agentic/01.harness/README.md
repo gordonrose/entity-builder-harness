@@ -14,6 +14,22 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 Use `workflows/migrate-artifact-paths.md` for moving, renaming, retiring, or removing committed files or directories.
 
+## Architecture Rulebook Operating Pack
+
+This folder includes operating guidance for Codex while building the architecture
+rules and rule packs. It is not the runtime harness, and it does not replace
+`docs/harness/architecture`.
+
+Canonical architecture source remains
+`docs/harness/architecture/guides/markdown`.
+
+Canonical rules remain `docs/harness/architecture/rules`.
+
+Canonical rule packs remain `docs/harness/architecture/rule-packs`.
+
+Future Codex sessions continuing rulebook work should start by reading
+`manifest.yml` and `operator-guide.md`.
+
 ## Standards
 
 - `standards/agentic-artifact-standards.md` - decides which artifact type should own new harness capabilities, including workflows, skills, standards, gates, hooks, evals, templates, examples, memory, agents, adapters, and scripts.

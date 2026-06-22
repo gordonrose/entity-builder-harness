@@ -1,0 +1,29 @@
+id: layer.example
+title: Example layer rules
+version: 1
+status: active
+
+description: >
+  ...
+
+applies_to:
+  paths:
+    - "example/**"
+
+rules:
+  - id: example.rule-id
+    title: Example rule
+    severity: error
+    summary: >
+      ...
+    must:
+      - "..."
+    must_not:
+      - "..."
+    agent_guidance: >
+      ...
+
+source_refs:
+  - doc: "example.md"
+    sections:
+      - "Example section"

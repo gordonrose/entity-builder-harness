@@ -1,0 +1,42 @@
+id: agentic.01.harness
+title: Architecture rulebook operating pack
+status: active
+purpose: >
+  Teach Codex sessions how to continue creating architecture rules and rule
+  packs from canonical markdown guides without building runtime harness code.
+
+read_order:
+  - .agentic/01.harness/manifest.yml
+  - .agentic/01.harness/operator-guide.md
+  - .agentic/01.harness/state/rulebook-progress.yml
+  - relevant workflow under .agentic/01.harness/workflows
+  - relevant template under .agentic/01.harness/templates
+  - relevant checklist under .agentic/01.harness/checklists
+
+canonical_paths:
+  source_guides: docs/harness/architecture/guides/markdown
+  layer_rules: docs/harness/architecture/rules/layers
+  concern_rules: docs/harness/architecture/rules/concerns
+  rule_packs: docs/harness/architecture/rule-packs
+
+generated_by_human_or_codex: codex
+
+guardrails:
+  - Do not build the MCP server.
+  - Do not build the full agentic harness.
+  - Do not create executable runtime code.
+  - Do not create eval runners.
+  - Do not modify production repo code.
+  - Do not edit the source markdown guides.
+  - Do not create architecture rules or rule packs unless that artifact is the requested task.
+  - Work one artifact at a time.
+  - Validate YAML after editing YAML files.
+  - Summarize assumptions before stopping.
+
+current_known_artifacts:
+  layer_rulesets:
+    - docs/harness/architecture/rules/layers/packages-core.yml
+  concern_rulesets:
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  rule_packs:
+    - docs/harness/architecture/rule-packs/add-core-module.yml

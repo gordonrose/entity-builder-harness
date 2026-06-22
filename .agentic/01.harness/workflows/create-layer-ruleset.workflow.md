@@ -1,0 +1,24 @@
+<!-- agentic-artifact:
+owner: harness
+kind: workflow
+purpose: Govern creation of one layer architecture ruleset.
+domain: architecture-rulebook
+portability: llm-workbench-required
+used_by:
+  - .agentic/01.harness/prompts/create-layer-ruleset.prompt.md
+-->
+
+# Create Layer Ruleset Workflow
+
+Use this for repo layers such as packages-core, platform, apps, design-system,
+tools, infra, and harness.
+
+1. Read the manifest and operator guide.
+2. Inspect relevant source guide sections.
+3. Inspect existing layer examples.
+4. Use `templates/layer-ruleset.template.yml`.
+5. Include `applies_to.paths`.
+6. Include rules with `id`, `title`, `severity`, `summary`, `must`,
+   `must_not`, `agent_guidance`, and `source_refs`.
+7. Validate YAML.
+8. Summarize source refs, assumptions, and final path.
