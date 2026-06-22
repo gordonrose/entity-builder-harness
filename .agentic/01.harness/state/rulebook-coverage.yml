@@ -84,6 +84,26 @@ source_guides:
           - docs/harness/architecture/rules/concerns/events-messaging-async.yml
         note: "Events, messaging, and async source refs were manually checked while creating docs/harness/architecture/rules/concerns/events-messaging-async.yml."
       - source_sections:
+          - "logging/ deep dive"
+          - "monitoring/ deep dive"
+          - "audit/ deep dive"
+          - "reporting/ deep dive"
+          - "analytics/ deep dive"
+          - "Part 6: Reporting vs Analytics vs Audit"
+          - "Reporting"
+          - "Analytics"
+          - "Business Intelligence"
+          - "Audit"
+          - "Observability"
+          - "Monitoring"
+          - "Logging"
+          - "Relationship diagram"
+          - "Quick comparison"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+        note: "Reporting, analytics, audit, logging, monitoring, and observability source refs were manually checked while creating docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -402,6 +422,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
     status: covered
     note: "Source refs manually checked while creating the platform-adapter-consumption concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    status: covered
+    note: "Source refs manually checked while creating the reporting, analytics, audit, and observability concern ruleset."
   - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
     status: covered
     note: "Source refs manually checked while refining the add-core-module rule pack."

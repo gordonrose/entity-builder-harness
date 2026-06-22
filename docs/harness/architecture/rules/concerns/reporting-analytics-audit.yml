@@ -1,0 +1,199 @@
+id: concern.reporting-analytics-audit
+title: Reporting, analytics, audit, and observability rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for keeping reporting, analytics, business intelligence,
+  audit, logging, monitoring, and observability distinct, governed, secure,
+  tenant-aware, and placed in the correct architectural layer.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: reporting-analytics-audit.keep-concerns-distinct
+    title: Keep evidence, insight, outputs, and operations distinct
+    severity: error
+    summary: >
+      Reporting, analytics, business intelligence, audit, logging, monitoring,
+      and observability all describe what happened, but they serve different
+      audiences, retention models, trust requirements, and owners.
+    must:
+      - "Use reporting for structured repeatable operational or business outputs for customers, admins, finance, operations, or account teams."
+      - "Use analytics for product and user behavior insight governed by privacy, consent, taxonomy, and regional data rules."
+      - "Use business intelligence for cross-domain strategic analysis backed by governed warehouse or mart data."
+      - "Use audit for formal accountability evidence of who did what, when, to which resource, in which tenant, and under whose authority."
+      - "Use logging for operational execution details and debugging."
+      - "Use monitoring for health detection, metrics, probes, SLOs, and alerting."
+      - "Use observability as the engineering ability to understand system behavior from logs, metrics, traces, and sometimes events."
+    must_not:
+      - "Do not use analytics as audit evidence."
+      - "Do not treat debug logs as audit records."
+      - "Do not use monitoring metrics as customer-facing reports without a governed reporting model."
+      - "Do not confuse product analytics dashboards with business intelligence governance."
+    agent_guidance: >
+      If a change says "track this" or "record this", ask who the audience is
+      and what trust/retention model applies before choosing the concern.
+
+  - id: reporting-analytics-audit.audit-is-accountability-evidence
+    title: Audit is durable accountability evidence
+    severity: error
+    summary: >
+      Audit records must support enterprise accountability, compliance,
+      customer review, legal discovery, and privileged action review.
+    must:
+      - "Record significant user and system actions at important control points."
+      - "Include actor, tenant where applicable, resource, action, timestamp, correlation ID where available, source context such as IP address where relevant, and changes where relevant."
+      - "Use append-oriented durable storage with tamper-resistance expectations appropriate to the risk."
+      - "Control access to audit records and audit access to audit records where appropriate."
+      - "Define retention, exportability, and privileged action review requirements before treating an audit path as complete."
+    must_not:
+      - "Do not omit actor, tenant, resource, or action from enterprise audit events when those facts exist."
+      - "Do not make audit records mutable operational logs."
+      - "Do not store audit evidence only in analytics, transient logs, or product screens."
+    agent_guidance: >
+      Audit answers accountability questions. Prefer boring, durable, explicit
+      records over clever reuse of logs or analytics events.
+
+  - id: reporting-analytics-audit.reporting-has-lifecycle-and-access
+    title: Reporting has lifecycle, access, and export controls
+    severity: error
+    summary: >
+      Reports are repeatable outputs, often user-facing and auditable. Heavy or
+      large reports need lifecycle management, authorization, storage, and audit.
+    must:
+      - "Model report requests, parameters, requestedBy, tenant, format, generated report metadata, file or output ID, generated timestamp, and status where useful."
+      - "Check authorization before generating or exporting reports."
+      - "Use async generation for large or slow reports."
+      - "Audit report generation and export where the output is sensitive, customer-facing, or compliance-relevant."
+      - "Apply tenant filtering, PII handling, retention, freshness, correctness, and large-export controls."
+    must_not:
+      - "Do not run heavy reports against write databases without an explicit decision."
+      - "Do not put every product-specific report query in packages/core."
+      - "Do not confuse report lifecycle contracts with BI dashboards or analytics taxonomy."
+    agent_guidance: >
+      Reports are product outputs with permissions and lifecycle. Treat export
+      paths like product features, not incidental database queries.
+
+  - id: reporting-analytics-audit.analytics-is-governed-behavior-signal
+    title: Analytics is governed behavior signal
+    severity: error
+    summary: >
+      Analytics events help product and leadership understand behavior, but they
+      require privacy, consent, taxonomy, data minimization, and regional
+      governance.
+    must:
+      - "Use named analytics events and identify calls through stable analytics contracts."
+      - "Govern event names, properties, traits, taxonomy, and owner expectations."
+      - "Apply consent, privacy, data minimization, regional rules, customer isolation, and retention requirements."
+      - "Forward analytics through approved adapters or providers rather than importing vendor SDKs throughout app code."
+    must_not:
+      - "Do not track unnecessary PII."
+      - "Do not use analytics events as audit evidence."
+      - "Do not create one-off ungoverned event names or properties that drift by app."
+      - "Do not couple funnel definitions tightly into universal core contracts."
+    agent_guidance: >
+      Analytics wants insight, not proof. Keep it privacy-aware and taxonomy-led.
+
+  - id: reporting-analytics-audit.logging-is-structured-operational-detail
+    title: Logging is structured operational detail
+    severity: error
+    summary: >
+      Logs explain execution paths for developers and operators. They should be
+      structured, contextual, redacted, searchable, and cost-aware.
+    must:
+      - "Use structured fields, log levels, child loggers or context propagation, correlation IDs, tenant IDs where appropriate, and redaction helpers."
+      - "Log useful operational events such as request started/completed, job failed, permission denied, external timeout, and report generated."
+      - "Apply PII redaction, retention, searchability, incident response, cost control, and sampling decisions."
+    must_not:
+      - "Do not log raw secrets, tokens, credentials, or unnecessary PII."
+      - "Do not rely on plain strings only when structured fields are needed."
+      - "Do not use logs as the only audit storage."
+      - "Do not create so much noise that important signals disappear."
+    agent_guidance: >
+      Logs help explain a path. They are not the accountability record, product
+      taxonomy, or customer report.
+
+  - id: reporting-analytics-audit.monitoring-alerts-on-health
+    title: Monitoring alerts on health and SLOs
+    severity: error
+    summary: >
+      Monitoring detects health problems and alerts humans or automation. It
+      needs metrics, health checks, probes, SLO thinking, routing, and alert
+      hygiene.
+    must:
+      - "Define metrics, health checks, readiness/liveness types, counters, gauges, timers, and basic SLI conventions where useful."
+      - "Monitor API latency, error rates, queue depth, job failure rate, notification delivery, database health, and other critical paths."
+      - "Define alert routing, incident response expectations, capacity planning signals, and customer-facing uptime commitments where relevant."
+      - "Keep observability signals connected through correlation IDs and shared runtime context where possible."
+    must_not:
+      - "Do not add monitoring only after incidents."
+      - "Do not create noisy alerts with no owner or response path."
+      - "Do not measure only infrastructure while ignoring app and worker behavior."
+      - "Do not put cloud alarm provisioning in packages/core or app business code."
+    agent_guidance: >
+      Monitoring is an operational contract. A metric without ownership or an
+      alert response is often just decoration.
+
+  - id: reporting-analytics-audit.layer-ownership-is-explicit
+    title: Layer ownership is explicit
+    severity: error
+    summary: >
+      Core should define stable contracts. Apps should decide product meaning
+      and emit records/events at business points. Platform should implement
+      durable storage, providers, exports, log/metric shipping, and runtime
+      hooks. Infra should provision external resources.
+    must:
+      - "Put stable contracts such as AuditEvent, AuditService, ReportRequest, ReportGenerator, AnalyticsEvent, Analytics, Logger, Metrics, and HealthCheck in packages/core only when reused and framework-independent."
+      - "Keep product-specific audit screens, report queries, analytics taxonomy usage, dashboard definitions, and business event meanings in apps or product packages."
+      - "Put provider implementations, durable audit storage adapters, analytics adapters, report output storage, log shipping, metrics export, tracing export, and health endpoint aggregation in platform."
+      - "Put warehouses, log sinks, metric backends, alarms, dashboards, retention infrastructure, and cloud permissions in infra."
+    must_not:
+      - "Do not import Datadog, CloudWatch, analytics vendor SDKs, storage clients, or warehouse clients into packages/core contracts."
+      - "Do not put app-specific dashboards, product report queries, or business audit decisions in platform shared runtime code."
+      - "Do not put cloud resource provisioning in platform runtime code."
+    agent_guidance: >
+      For every reporting, analytics, audit, log, or monitoring change, identify
+      the contract owner, business owner, runtime provider owner, and
+      infrastructure owner separately.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "logging/ deep dive"
+      - "monitoring/ deep dive"
+      - "audit/ deep dive"
+      - "reporting/ deep dive"
+      - "analytics/ deep dive"
+      - "Part 6: Reporting vs Analytics vs Audit"
+      - "Reporting"
+      - "Analytics"
+      - "Business Intelligence"
+      - "Audit"
+      - "Observability"
+      - "Monitoring"
+      - "Logging"
+      - "Relationship diagram"
+      - "Quick comparison"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml."
+  - "It keeps reporting, analytics, business intelligence, audit, logging, monitoring, and observability distinct."
+  - "It requires audit records to be durable accountability evidence with actor, tenant, resource, action, timestamp, retention, access, and integrity expectations."
+  - "It gives reports lifecycle, access, export, tenant, retention, and audit handling."
+  - "It keeps analytics privacy-aware, consent-aware, taxonomy-governed, and distinct from audit."
+  - "It requires structured redacted logging with correlation context."
+  - "It requires monitoring and observability to have health/SLO signals, ownership, and alert response paths."
+  - "It defines ownership splits across core contracts, app business meaning, platform implementations, and infra resources."
+  - "It includes manually verified source_refs back to the core architecture guide."

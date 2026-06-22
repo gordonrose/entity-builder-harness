@@ -14,6 +14,7 @@ created_artifacts:
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
     - docs/harness/architecture/rule-packs/add-design-system-component.yml
@@ -30,3 +31,4 @@ notes:
   - "The frontend design-system guide has a layer ruleset, design-label concern, and task-shaped pack for adding design-system components."
   - "The platform layer guide is covered by the platform layer ruleset, plus existing core and dependency-direction coverage."
   - "The core guide's events, messaging, and async sections are covered by the events-messaging-async concern."
+  - "The core guide's reporting, analytics, audit, logging, monitoring, and observability sections are covered by the reporting-analytics-audit concern."
