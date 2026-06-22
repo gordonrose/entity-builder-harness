@@ -45,6 +45,7 @@ current_known_artifacts:
     - docs/harness/architecture/rules/concerns/design-label-theming.yml
     - docs/harness/architecture/rules/concerns/events-messaging-async.yml
     - docs/harness/architecture/rules/concerns/i18n-localization.yml
+    - docs/harness/architecture/rules/concerns/identity-access-security.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml

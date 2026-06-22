@@ -137,6 +137,19 @@ source_guides:
           - docs/harness/architecture/rules/concerns/i18n-localization.yml
         note: "Internationalization and localization source refs were manually checked while creating docs/harness/architecture/rules/concerns/i18n-localization.yml."
       - source_sections:
+          - "authn/ deep dive"
+          - "authz/ deep dive"
+          - "security/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "authn"
+          - "authz"
+          - "security"
+          - "Enterprise Future"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/identity-access-security.yml
+        note: "Authentication, authorization, and security source refs were manually checked while creating docs/harness/architecture/rules/concerns/identity-access-security.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -449,6 +462,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/i18n-localization.yml
     status: covered
     note: "Source refs manually checked while creating the internationalization and localization concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/identity-access-security.yml
+    status: covered
+    note: "Source refs manually checked while creating the identity, access, and security concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."
