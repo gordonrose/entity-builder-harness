@@ -1,0 +1,245 @@
+id: layer.platform
+title: platform layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing platform/ as Kanbien's runtime composition layer: process
+  startup, app mounting, route and job registries, request handling, security
+  hooks, observability, health, config, workers, resource lifecycle, and
+  platform/app contract tests.
+
+applies_to:
+  paths:
+    - "platform/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+runtime_modules:
+  - id: contracts
+    purpose: "Stable public TypeScript contract between business apps and the platform."
+    public_to_apps: true
+  - id: config
+    purpose: "Typed global and namespaced app configuration loading and validation."
+    public_to_apps: partly
+  - id: runtime
+    purpose: "Request context, resource lifecycle, error helpers, flags, and lifecycle primitives."
+    public_to_apps: through_contracts
+  - id: server
+    purpose: "HTTP API process startup, app mounting, route adaptation, middleware, and versioning."
+    public_to_apps: false
+  - id: security
+    purpose: "Authentication hooks, coarse route authorization, CORS, and rate limiting."
+    public_to_apps: through_policies
+  - id: observability
+    purpose: "Structured logging, request logging, metrics, and tracing hooks."
+    public_to_apps: through_context
+  - id: health
+    purpose: "Liveness, readiness, health aggregation, and exposed health routes."
+    public_to_apps: through_registry
+  - id: workers
+    purpose: "Background job runtime, queue mechanics, scheduling, retries, and worker shutdown."
+    public_to_apps: through_registry
+  - id: testing
+    purpose: "Fakes and helpers for platform/app contract tests."
+    public_to_apps: test_only
+
+rules:
+  - id: platform.runtime-composition-only
+    title: Platform owns runtime composition
+    severity: error
+    summary: >
+      platform/ is the runtime host for business apps. It answers how Kanbien
+      starts, accepts traffic, authenticates, routes work, runs jobs, observes
+      itself, exposes health, and shuts down safely.
+    must:
+      - "Use platform/** for process startup, HTTP server creation, route registration, middleware ordering, auth integration, request context creation, error mapping, logging, health checks, config loading, feature flag access, job execution, runtime resources, and graceful shutdown."
+      - "Keep platform behavior boring, deterministic, and enterprise-ready before adding broader abstractions."
+      - "Keep platform changes tied to runtime model changes rather than ordinary product feature changes."
+    must_not:
+      - "Do not put CRM, billing, onboarding, invoice, lead, account, subscription, campaign, customer lifecycle, or other product-specific logic in platform/**."
+      - "Do not use platform as a dumping ground for shared code."
+      - "Do not build plugin marketplaces, custom dependency injection frameworks, multi-transport RPC frameworks, custom workflow engines, service mesh abstractions, generic repository frameworks, or multi-database abstractions before real need exists."
+    agent_guidance: >
+      If code answers a product question, move it to the owning app or business
+      package. If code answers a runtime question, platform may be the owner.
+
+  - id: platform.contracts-are-the-app-boundary
+    title: Apps integrate through platform contracts
+    severity: error
+    summary: >
+      Apps should contribute routes, permissions, jobs, health checks, optional
+      config schemas, and lifecycle hooks through a stable mount contract. They
+      should not control platform internals directly.
+    must:
+      - "Expose stable app-facing contracts from platform/contracts/** or another explicitly approved public contract entry point."
+      - "Let apps mount through app.mount.ts files that register routes, permissions, jobs, health checks, optional config schemas, and optional lifecycle hooks."
+      - "Give apps registries and mount dependencies, not raw HTTP server instances."
+      - "Validate app identity, route namespacing, duplicate routes, duplicate permissions, duplicate jobs, duplicate health checks, and unknown permission references before serving traffic."
+    must_not:
+      - "Do not pass Fastify, Express, Hono, or another raw server object into business apps as their integration surface."
+      - "Do not let apps install global middleware, start servers, configure CORS, parse JWTs, or install process signal handlers."
+      - "Do not let apps mount at root or steal reserved platform paths such as health, metrics, or admin paths unless explicitly allowed."
+    agent_guidance: >
+      Preserve the contract boundary. Apps register intent; platform translates
+      it into concrete server, worker, health, and operational behavior.
+
+  - id: platform.composition-root-is-the-only-app-importer
+    title: Only composition roots import app mounts
+    severity: error
+    summary: >
+      platform may import business apps only at approved composition roots that
+      mount app public integration modules. Other platform modules should not
+      know app internals exist.
+    must:
+      - "Keep app imports limited to approved composition root files such as platform/server/mount.ts and platform/workers/mount.ts."
+      - "Import only app public mount modules from composition roots."
+      - "Let platform/server/** and platform/workers/** share the same app registry contract while using separate executable entrypoints."
+    must_not:
+      - "Do not import app services, repositories, controllers, route handlers, job handlers, health implementations, migrations, domain models, or business rules from platform internals."
+      - "Do not make ordinary platform modules depend on CRM, billing, admin, onboarding, or other business app names."
+    allowed_exceptions:
+      - from: "platform/server/mount.ts"
+        to: "apps/**/app.mount.ts"
+      - from: "platform/workers/mount.ts"
+        to: "apps/**/app.mount.ts"
+    agent_guidance: >
+      If platform needs an app service directly, the app boundary is leaking.
+      Move the call behind app.mount.ts registration or back into the app.
+
+  - id: platform.server-and-middleware-are-centralized
+    title: Server startup and middleware are centralized
+    severity: error
+    summary: >
+      Platform owns startup order, HTTP server creation, route adaptation,
+      middleware order, API versioning, CORS, rate limiting, authentication,
+      request context, authorization, validation, error mapping, response
+      logging, and shutdown.
+    must:
+      - "Start API processes through platform/server/main.ts or another approved platform server entrypoint."
+      - "Use a deterministic startup sequence: load config, create logger, create resources, mount apps, validate registries, create server, install middleware, register health routes, register app routes, start listening, and install shutdown handlers."
+      - "Register routes declaratively with method, path, API version, auth requirement, permissions, rate-limit policy, schemas where applicable, and handler."
+      - "Apply API versioning and app base paths in platform rather than requiring each app to expose fully qualified external paths."
+      - "Own global middleware order for request IDs, correlation IDs, request logging, CORS, security headers, parsing, rate limiting, auth, context, authorization, validation, handlers, error mapping, and response logging."
+    must_not:
+      - "Do not let business apps call server.listen, app.listen, process.on('SIGTERM'), server.use, fastify.addHook, or equivalent runtime-control APIs."
+      - "Do not let apps decide global CORS policy, platform rate-limit enforcement, API versioning strategy, or shared error response shape."
+      - "Do not confuse API version with app package version."
+    agent_guidance: >
+      Apps should declare route policies. Platform should enforce and adapt
+      those declarations consistently.
+
+  - id: platform.runtime-context-is-shared-facts-not-business-services
+    title: Runtime context carries shared facts
+    severity: error
+    summary: >
+      Request and job contexts should provide common runtime facts and helpers:
+      identifiers, tenant, principal, logger, flags, config, resources, clock,
+      and abort signal where relevant.
+    must:
+      - "Create RequestContext and JobContext inside platform runtime/server/worker code."
+      - "Include request or job identifiers, correlation identifiers, tenant and principal where available, structured logger, feature flag reader, config reader, clock, resources where appropriate, and cancellation signal where appropriate."
+      - "Let apps construct their own business dependencies intentionally inside app code."
+    must_not:
+      - "Do not turn context into a service locator for CRM services, billing services, every repository, every workflow, or arbitrary app dependencies."
+      - "Do not put product-specific meaning in platform context fields."
+    agent_guidance: >
+      Context should make runtime facts easy to access. It should not hide app
+      dependency construction or become a product service container.
+
+  - id: platform.security-and-observability-are-mechanisms
+    title: Platform owns security and observability mechanisms
+    severity: error
+    summary: >
+      Platform should centralize authentication, coarse permission enforcement,
+      CORS, rate limiting, structured logs, metrics, tracing hooks, health
+      aggregation, and standard error responses without taking over business
+      meaning.
+    must:
+      - "Authenticate requests, parse credentials, create principals, enforce route-level permissions, and attach identity to context."
+      - "Keep resource-specific business authorization inside the owning app after resource loading."
+      - "Own structured log format, request logging, common telemetry hooks, and safe error mapping."
+      - "Expose standard health endpoints such as /livez and /readyz, and aggregate app-provided readiness checks."
+      - "Ensure health output and logs do not leak secrets."
+    must_not:
+      - "Do not put CRM-specific permission logic, business quotas, feature-specific analytics, expensive business audits, or domain-specific health decisions in platform."
+      - "Do not let apps create their own logging frameworks for normal platform-managed runtime behavior."
+      - "Do not use liveness checks to test external dependencies that belong in readiness."
+    agent_guidance: >
+      Platform provides mechanisms and consistent enforcement. Apps provide
+      business meaning, business events, and resource-specific decisions.
+
+  - id: platform.config-resources-workers-and-shutdown-are-owned-by-runtime
+    title: Runtime owns config, resources, workers, and shutdown
+    severity: error
+    summary: >
+      Platform owns global config validation, resource lifecycle, worker process
+      startup, queue mechanics, retry/dead-letter behavior, scheduled jobs,
+      feature flag provider integration, and graceful shutdown.
+    must:
+      - "Load and validate platform environment config once at startup."
+      - "Allow apps to register namespaced app config schemas while keeping app-specific config meaning in the app."
+      - "Create, expose, and close runtime resources such as database, cache, queues, and feature flag providers through approved runtime contracts."
+      - "Start worker processes through platform/workers/main.ts or another approved worker entrypoint."
+      - "Let apps register jobs while platform handles queue connection, payload validation, retry policy, dead-letter handling, logging, metrics, and graceful worker shutdown."
+      - "On shutdown, mark readiness false, stop accepting work, drain requests/jobs where possible, run app hooks, close resources, flush telemetry, and exit cleanly."
+    must_not:
+      - "Do not let apps independently connect global runtime resources, own platform signal handlers, or bypass platform worker mechanics."
+      - "Do not build a custom feature flag platform for v1 when a simple provider abstraction is enough."
+      - "Do not put infrastructure provisioning code such as Terraform, Pulumi, Kubernetes manifests, cloud resource definitions, networking, or IAM in platform/**."
+    agent_guidance: >
+      Keep infra creation in infra/. Keep resource lifecycle and runtime use in
+      platform/. Keep product behavior in apps.
+
+  - id: platform.testing-proves-the-contract
+    title: Platform tests prove app/runtime contracts
+    severity: error
+    summary: >
+      Platform testing should prove that apps can mount, invalid registrations
+      fail early, runtime policies are enforced, health is aggregated, workers
+      process jobs correctly, and secrets are not exposed.
+    must:
+      - "Provide platform/testing/** fakes and helpers for app mount contract tests."
+      - "Test fake app mounting, invalid app identity, duplicate routes, unknown permissions, duplicate jobs, duplicate health checks, auth failures, permission failures, route response wrapping, error mapping, health aggregation, job retry/dead-letter behavior, config parsing, and graceful shutdown."
+      - "Keep reusable platform testing helpers out of production bundles."
+    must_not:
+      - "Do not rely only on app tests to prove platform registry, route, worker, health, security, and config behavior."
+      - "Do not require real external services by default in platform contract tests."
+    agent_guidance: >
+      A platform boundary that is not tested will become a convention. Use
+      fakes and contract tests to keep it executable.
+
+source_refs:
+  - doc: "kanbien-platform-layer-architecture.md"
+    sections:
+      - "The clean mental model"
+      - "What a platform layer is"
+      - "Why it should be separate from apps, features, and core packages"
+      - "What problems /platform solves"
+      - "What problems /platform should not solve"
+      - "How /platform differs from backend business logic"
+      - "How /platform differs from infrastructure"
+      - "How /platform differs from shared core libraries"
+      - "When a platform layer becomes over-engineered"
+      - "Proposed /platform structure"
+      - "How /platform should handle each runtime concern"
+      - "Folder-by-folder design"
+      - "The business app mounting contract"
+      - "Example platform contract"
+      - "Worked example: apps/crm/app.mount.ts"
+      - "How route registration becomes real"
+      - "What should remain inside apps/crm"
+      - "What belongs in /platform"
+      - "Minimal v1 platform architecture"
+      - "The simple v1 runtime flow"
+      - "The most important design rule"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/platform.yml."
+  - "It defines platform/ as the runtime composition layer for startup, server, app mounting, route/job registries, security hooks, observability, health, config, workers, resource lifecycle, shutdown, and contract testing."
+  - "It keeps product workflows, business permission meaning, app services, app repositories, product health decisions, business quotas, and domain-specific jobs inside apps or business packages."
+  - "It limits app imports to approved platform composition roots and app mount modules."
+  - "It keeps infrastructure provisioning outside platform/."
+  - "It references dependency-direction for cross-layer import rules."
+  - "It includes manually verified source_refs back to the platform layer guide."

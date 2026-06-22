@@ -38,6 +38,7 @@ current_known_artifacts:
   layer_rulesets:
     - docs/harness/architecture/rules/layers/design-system.yml
     - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/platform.yml
     - docs/harness/architecture/rules/layers/tools.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml

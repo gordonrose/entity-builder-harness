@@ -201,8 +201,34 @@ source_guides:
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
-    status: unreviewed
+    status: covered
     coverage_entries:
+      - source_sections:
+          - "The clean mental model"
+          - "What a platform layer is"
+          - "Why it should be separate from apps, features, and core packages"
+          - "What problems /platform solves"
+          - "What problems /platform should not solve"
+          - "How /platform differs from backend business logic"
+          - "How /platform differs from infrastructure"
+          - "How /platform differs from shared core libraries"
+          - "When a platform layer becomes over-engineered"
+          - "Proposed /platform structure"
+          - "How /platform should handle each runtime concern"
+          - "Folder-by-folder design"
+          - "The business app mounting contract"
+          - "Example platform contract"
+          - "Worked example: apps/crm/app.mount.ts"
+          - "How route registration becomes real"
+          - "What should remain inside apps/crm"
+          - "What belongs in /platform"
+          - "Minimal v1 platform architecture"
+          - "The simple v1 runtime flow"
+          - "The most important design rule"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/platform.yml
+        note: "Platform layer source refs were manually checked while creating docs/harness/architecture/rules/layers/platform.yml."
       - source_sections:
           - "How /platform differs from shared core libraries"
           - "What should move into packages/core"
@@ -276,6 +302,12 @@ source_guides:
           - docs/harness/architecture/rules/layers/tools.yml
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
       - source_sections:
+          - "platform/"
+          - "tools/"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential scope tension: this guide places entity-core, entity-runtime, and entity-codegen under platform and says tools may depend on platform/entity-codegen, while the dedicated platform-layer guide treats platform as runtime composition and existing tools/generated-code artifacts keep generator ownership in tools."
+      - source_sections:
           - "Linting"
           - "Formatting"
           - "Type checking"
@@ -320,6 +352,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/packages-core.yml
     status: covered
     note: "Source refs manually checked while refining the packages/core layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/platform.yml
+    status: covered
+    note: "Source refs manually checked while creating the platform layer ruleset."
   - artifact: docs/harness/architecture/rules/layers/tools.yml
     status: covered
     note: "Source refs manually checked while creating the tools layer ruleset."
@@ -374,6 +409,33 @@ deferred_human_decisions:
       monorepo and full discussion guides describe harness as the entity-builder
       brain or governance/generation layer. Do not create harness.yml until this
       ownership model is decided.
+  - id: platform-entity-codegen-ownership
+    title: Decide whether entity-core, entity-runtime, and entity-codegen are platform primitives, tools-owned generators, or split across both.
+    status: open
+    affected_candidate: docs/harness/architecture/rules/layers/platform.yml
+    source_refs:
+      - doc: "kanbien-typescript-architecture-guide.md"
+        sections:
+          - "platform/"
+          - "tools/"
+      - doc: "kanbien-platform-layer-architecture.md"
+        sections:
+          - "The clean mental model"
+          - "What belongs in /platform"
+      - doc: "kanbien-modular-monorepo-entity-builder.md"
+        sections:
+          - "8. tools/build"
+      - doc: "kanbien-architecture-full-discussion.md"
+        sections:
+          - "8. Build and Code Generation"
+    summary: >
+      The TypeScript guide describes platform/ as reusable platform primitives
+      and engines, including entity-core, entity-runtime, and entity-codegen,
+      and says tools may depend on platform/entity-codegen. The dedicated
+      platform-layer guide treats platform/ as runtime composition. Existing
+      generated-code and tools artifacts place generator implementation under
+      tools. Do not broaden platform.yml to own entity/codegen engines until
+      this ownership model is decided.
 
 notes:
   - "Do not mark existing artifacts as covered until their source_refs have been manually checked against the named source sections."
