@@ -56,6 +56,52 @@ rules:
       - "Do not import apps/* internals from tools/** at runtime."
       - "Do not import apps/* internals from infra/**."
 
+  - id: dependency.package-runtime-boundaries
+    title: Package runtime code must not depend on apps, infra, tools, or harness
+    severity: error
+    summary: >
+      Packages are reusable product, domain, core, generated, or support
+      libraries. Runtime package code may depend on approved packages and
+      approved platform contracts, but it must not become app, infra, tools, or
+      harness code in disguise.
+    must:
+      - "Give each package a clear public API and import from package entry points rather than random internal files."
+      - "Allow packages to depend on other packages when domain boundaries permit it."
+      - "Allow non-core packages to depend on approved platform contracts or platform adapters when the package's ownership model explicitly allows that dependency."
+      - "Apply the stricter packages/core rules when the package path is packages/core/**."
+    must_not:
+      - "Do not import apps/** from packages/**."
+      - "Do not import infra/** from runtime package code."
+      - "Do not import tools/** from runtime package code."
+      - "Do not import harness/** from runtime package code outside tests."
+      - "Do not hide app bootstrapping, deployment logic, entity-builder engine internals, or raw infrastructure provisioning inside ordinary packages."
+    agent_guidance: >
+      When a package needs app, infra, tools, or harness code, stop and choose a
+      better owner. If the package is packages/core, apply the stricter
+      no-platform and no-vendor-client rules from the core layer.
+
+  - id: dependency.platform-stays-runtime-and-product-neutral
+    title: Platform stays runtime-owned and product-neutral
+    severity: error
+    summary: >
+      platform/ owns runtime lifecycle and shared runtime machinery. It should
+      not import product workflows, define business concepts, or provision
+      infrastructure resources.
+    must:
+      - "Use platform for process startup, HTTP server creation, route registration, middleware, auth integration, request context, error mapping, logging, health checks, config loading, job execution, and shutdown."
+      - "Let platform depend on packages/core and approved runtime/provider clients."
+      - "Expose platform contracts that apps can implement or consume at approved boundaries."
+      - "Keep app mounting imports in composition roots such as platform/server/mount.ts."
+    must_not:
+      - "Do not put CRM, billing, onboarding, invoice, lead, account, subscription, campaign, or other product-specific concepts in platform."
+      - "Do not import app-specific services, repositories, routes, jobs, or business logic from platform internals."
+      - "Do not put Terraform, Pulumi, Kubernetes manifests, cloud provisioning, or IAM resource definitions in platform."
+      - "Do not make normal product features require platform changes unless the runtime contract itself is changing."
+    agent_guidance: >
+      If platform code starts answering product questions instead of runtime
+      questions, move that code into the owning app or package and keep only the
+      runtime contract in platform.
+
   - id: dependency.platform-composition-root-exception
     title: Platform may import app mounts only at the composition root
     severity: error
@@ -82,7 +128,11 @@ rules:
       dependency direction from tokens to primitives to patterns to components
       to applications.
     must:
-      - "Keep tokens independent of React and application code."
+      - "Keep foundation tokens independent of React and application code."
+      - "Let token resolvers depend on tokens, not components or applications."
+      - "Let primitives depend on generated token artifacts."
+      - "Let patterns depend on primitives and generated token artifacts."
+      - "Let components depend on primitives and patterns."
       - "Let applications consume design-system components."
       - "Keep design-system components free of business logic, routing, permissions, and product workflows."
     must_not:
@@ -184,8 +234,8 @@ source_refs:
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - "It defines repo-wide dependency direction rules."
-  - "It covers apps, packages/core, platform, design-system, harness, tools, infra, and generated code."
+  - "It covers apps, reusable packages, packages/core, platform, design-system, harness, tools, infra, and generated code."
   - "It includes the platform composition-root exception for importing app mounts."
-  - "It includes source_refs back to the relevant markdown guides."
+  - "It includes manually verified source_refs back to the relevant markdown guides."
   - "It does not duplicate the full contents of packages-core.yml, but it may reference overlapping core dependency principles."
   - "No unrelated files are changed."

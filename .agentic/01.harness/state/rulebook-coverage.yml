@@ -77,10 +77,13 @@ source_guides:
         note: "packages/core layer source refs were manually checked while refining docs/harness/architecture/rules/layers/packages-core.yml."
       - source_sections:
           - "Code dependency direction"
-        status: in_progress
+          - "What depends on what"
+          - "What should never depend on what"
+          - "Principles to guide Kanbien for the next 10 years"
+        status: covered
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction artifact cites this section; manual source-reference coverage review is still required before marking that artifact covered."
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
       - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
@@ -101,10 +104,10 @@ source_guides:
       - source_sections:
           - "How the layers depend on each other"
           - "Recommended dependency rules"
-        status: in_progress
+        status: covered
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction artifact cites these sections; manual source-reference coverage review is still required before marking covered."
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
     line_count: 218
     status: unreviewed
@@ -157,23 +160,27 @@ source_guides:
           - "The clean mental model"
           - "platform/server/"
           - "The business app mounting contract"
-        status: in_progress
+        status: covered
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction artifact cites these sections; manual source-reference coverage review is still required before marking that artifact covered."
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
     status: unreviewed
     coverage_entries:
       - source_sections:
           - "Kanbien monorepo structure"
-          - "Generated code must be checked, not trusted"
-          - "For generated code"
           - "Linting"
-        status: in_progress
+          - "apps/"
+          - "packages/"
+          - "platform/"
+          - "harness/"
+          - "tools/"
+          - "infra/"
+        status: covered
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency and generated-code material are partly represented or queued; manual source-reference coverage review is still required before marking covered."
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
       - source_sections:
           - "My architectural recommendation for Kanbien"
           - "Generated code must be checked, not trusted"
@@ -260,8 +267,8 @@ artifact_coverage:
     status: covered
     note: "Source refs manually checked while creating the tools layer ruleset."
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
-    status: in_progress
-    note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+    status: covered
+    note: "Source refs manually checked while refining the dependency-direction concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."
