@@ -35,6 +35,13 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/generated-code.yml
         note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+      - source_sections:
+          - "11. Entity Builder Flow"
+          - "12. Architectural Recommendations"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: unreviewed
@@ -80,6 +87,13 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/generated-code.yml
         note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+      - source_sections:
+          - "harness/"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: unreviewed
@@ -120,6 +134,23 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/generated-code.yml
         note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+      - source_sections:
+          - "How TypeScript should support the entity-builder idea"
+          - "What TypeScript enforces"
+          - "What TypeScript cannot enforce alone"
+          - "Worked User example"
+          - "1. Entity definition"
+          - "3. Generated validation schema"
+          - "4. API input/output contract"
+          - "5. Persistence model"
+          - "6. Frontend form config"
+          - "7. Frontend table config"
+          - "8. Generated tests"
+          - "The key design lesson"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: unreviewed
@@ -138,9 +169,11 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+  - artifact: docs/harness/architecture/rule-packs/create-entity.yml
+    status: covered
+    note: "Source refs manually checked while creating the create-entity rule pack."
 
 candidate_queue:
-  - docs/harness/architecture/rule-packs/create-entity.yml
   - docs/harness/architecture/rules/layers/harness.yml
   - docs/harness/architecture/rules/layers/tools.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml

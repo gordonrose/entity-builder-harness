@@ -59,6 +59,14 @@ start architecture rulebook harvest coverage tracker
 - Decision: Generated-code source refs manually verified
   Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking the generated-code coverage entries covered.
 
+
+- Decision: Create entity rule pack
+  Rationale: Selected create-entity.yml as the next task-shaped pack because generated-code.yml is now available and the entity-builder guides describe a complete entity-to-contract-to-CI flow.
+
+
+- Decision: Create-entity source refs manually verified
+  Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking create-entity coverage entries covered.
+
 ## Activity Log
 
 ### 2026-06-22T23:02:37Z - Session started
@@ -132,6 +140,20 @@ Message: Add generated code concern rules
 Summary: Created docs/harness/architecture/rules/concerns/generated-code.yml with deterministic generation, generator/runtime boundary, generated output placement, and no-manual-edit rules; updated rulebook coverage and progress state.
 
 ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:12:48Z - Decision
+
+Decision: Create entity rule pack
+
+Rationale: Selected create-entity.yml as the next task-shaped pack because generated-code.yml is now available and the entity-builder guides describe a complete entity-to-contract-to-CI flow.
+
+
+### 2026-06-22T23:12:48Z - Decision
+
+Decision: Create-entity source refs manually verified
+
+Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking create-entity coverage entries covered.
 
 ## Commits
 
