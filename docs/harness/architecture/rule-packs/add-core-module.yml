@@ -1,0 +1,98 @@
+id: pack.add-core-module
+title: Add or modify a packages/core module
+version: 1
+status: active
+description: >
+  A task rule pack for safely adding or changing shared core contracts,
+  primitives, or modules.
+
+task_type: add_core_module
+
+applies_when:
+  - "A task creates a new file under packages/core/**."
+  - "A task modifies an existing packages/core module."
+  - "A task proposes moving shared logic into packages/core."
+
+required_rulesets:
+  - "../rules/layers/packages-core.yml"
+  - "../rules/concerns/dependency-direction.yml"
+
+required_checks:
+  - "Confirm the proposed concept is stable, cross-cutting, product-neutral, and genuinely shared."
+  - "Confirm the change satisfies packages/core admission rules."
+  - "Confirm the change satisfies repo-wide dependency direction rules."
+  - "Confirm packages/core does not import apps/**, platform/**, infra/**, cloud SDKs, ORMs, web servers, queue providers, or vendor runtime clients."
+  - "Confirm core defines contracts or primitives, not runtime implementations."
+  - "Confirm product-specific behavior remains in apps or feature/domain packages."
+  - "Confirm concrete runtime implementations remain in platform where appropriate."
+  - "Confirm the concept has a real owner and current consumers, not only imagined reuse."
+
+agent_steps:
+  - id: classify-core-change
+    instruction: >
+      Identify whether the requested change is a type, contract, interface,
+      error, policy, pure helper, testing fake, or implementation.
+
+  - id: run-core-admission-check
+    instruction: >
+      Decide whether the code really belongs in packages/core. If it is
+      product-specific, unstable, implementation-specific, or only
+      hypothetically reusable, keep it out of core.
+
+  - id: check-dependency-direction
+    instruction: >
+      Validate the proposed core code against the dependency-direction concern
+      ruleset. packages/core must not import from apps, platform, infra, cloud
+      providers, ORMs, HTTP frameworks, queue clients, or other runtime
+      provider implementations.
+
+  - id: place-implementation-correctly
+    instruction: >
+      If the task needs a concrete runtime implementation, place only the
+      contract in packages/core and leave the implementation for platform.
+
+  - id: propose-files
+    instruction: >
+      Propose the exact files to create or edit before editing them.
+
+  - id: validate-output
+    instruction: >
+      After changes, run the appropriate available checks such as typecheck,
+      lint, tests, or dependency-boundary validation. If no automated check
+      exists yet, report that clearly.
+
+must_not:
+  - "Do not add product workflows to packages/core."
+  - "Do not add provider-specific implementation code to packages/core."
+  - "Do not add code to core merely because it might be reused one day."
+  - "Do not import from apps/**, platform/**, or infra/** inside packages/core."
+  - "Do not create a generic abstraction unless the docs justify it and the need is real."
+  - "Do not use packages/core as a dumping ground for anything shared."
+
+success_criteria:
+  - "The rule pack exists at docs/harness/architecture/rule-packs/add-core-module.yml."
+  - "The rule pack references ../rules/layers/packages-core.yml."
+  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The rule pack is task-shaped, not layer-shaped."
+  - "The rule pack is concise and usable by an agent."
+  - "The rule pack includes source_refs pointing back to the relevant markdown guides/sections."
+  - "No unrelated files are changed."
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "What a shared core package is"
+      - "What problems shared core packages create when used incorrectly"
+      - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
+      - "When a shared core layer becomes a dumping ground and how to prevent it"
+      - "Code dependency direction"
+      - "Designing packages/core"
+      - "Principles to guide Kanbien for the next 10 years"
+  - doc: "kanbien-platform-layer-architecture.md"
+    sections:
+      - "How /platform differs from shared core libraries"
+      - "What should move into packages/core"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "packages/core"
+      - "The core entity flow"
