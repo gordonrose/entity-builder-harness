@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:11:15Z
-latest_commit_sha: 9f7ce33
-chat_duration: 518s (00:00:08:38)
-estimated_chat_tokens: 291115 estimated from chat transcript bytes (1164460 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 8.73 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:13:18Z
+latest_commit_sha: 83f0b90
+chat_duration: 641s (00:00:10:41)
+estimated_chat_tokens: 317162 estimated from chat transcript bytes (1268647 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 9.51 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -155,6 +155,17 @@ Decision: Create-entity source refs manually verified
 
 Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking create-entity coverage entries covered.
 
+
+### 2026-06-22T23:13:18Z - Commit recorded
+
+Commit: `83f0b90`
+
+Message: Add create entity rule pack
+
+Summary: Created docs/harness/architecture/rule-packs/create-entity.yml as a task-shaped pack composing generated-code and dependency-direction rules; updated rulebook progress and coverage state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Commits
 
 
@@ -179,6 +190,13 @@ Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.m
   Summary: Created docs/harness/architecture/rules/concerns/generated-code.yml with deterministic generation, generator/runtime boundary, generated output placement, and no-manual-edit rules; updated rulebook coverage and progress state.
   ADR impact: No ADR required; source-backed rulebook artifact.
 
+
+- Commit: `83f0b90`
+  Time UTC: 2026-06-22T23:13:18Z
+  Message: Add create entity rule pack
+  Summary: Created docs/harness/architecture/rule-packs/create-entity.yml as a task-shaped pack composing generated-code and dependency-direction rules; updated rulebook progress and coverage state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -192,11 +210,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:11:15Z
-Latest commit SHA: 9f7ce33
-Chat duration: 518s (00:00:08:38)
-Estimated chat tokens: 291115 estimated from chat transcript bytes (1164460 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 8.73 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:13:18Z
+Latest commit SHA: 83f0b90
+Chat duration: 641s (00:00:10:41)
+Estimated chat tokens: 317162 estimated from chat transcript bytes (1268647 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 9.51 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
