@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:46:55Z
-latest_commit_sha: bda06cb
-chat_duration: 2658s (00:00:44:18)
-estimated_chat_tokens: 847842 estimated from chat transcript bytes (3391368 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 25.44 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:49:30Z
+latest_commit_sha: 170cc90
+chat_duration: 2813s (00:00:46:53)
+estimated_chat_tokens: 888857 estimated from chat transcript bytes (3555427 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 26.67 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -364,6 +364,17 @@ Summary: Added the platform layer ruleset for runtime composition, app mounting,
 
 ADR impact: No ADR impact; deferred platform entity/codegen ownership for human decision due source tension between the TypeScript guide and platform-layer guide.
 
+
+### 2026-06-22T23:49:30Z - Commit recorded
+
+Commit: `170cc90`
+
+Message: Add events messaging async rules
+
+Summary: Added the events-messaging-async concern for domain events, event buses, queues, async jobs, scheduled jobs, workers, outbox publication, DLQ handling, idempotency, and core/apps/platform/infra ownership splits; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Commits
 
 
@@ -479,6 +490,13 @@ ADR impact: No ADR impact; deferred platform entity/codegen ownership for human 
   Summary: Added the platform layer ruleset for runtime composition, app mounting, server and worker entrypoints, security, observability, health, config, resources, shutdown, and platform/app contract testing; updated manifest, progress, and coverage.
   ADR impact: No ADR impact; deferred platform entity/codegen ownership for human decision due source tension between the TypeScript guide and platform-layer guide.
 
+
+- Commit: `170cc90`
+  Time UTC: 2026-06-22T23:49:30Z
+  Message: Add events messaging async rules
+  Summary: Added the events-messaging-async concern for domain events, event buses, queues, async jobs, scheduled jobs, workers, outbox publication, DLQ handling, idempotency, and core/apps/platform/infra ownership splits; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -492,11 +510,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:46:55Z
-Latest commit SHA: bda06cb
-Chat duration: 2658s (00:00:44:18)
-Estimated chat tokens: 847842 estimated from chat transcript bytes (3391368 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 25.44 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:49:30Z
+Latest commit SHA: 170cc90
+Chat duration: 2813s (00:00:46:53)
+Estimated chat tokens: 888857 estimated from chat transcript bytes (3555427 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 26.67 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
