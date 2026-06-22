@@ -83,16 +83,17 @@ source_guides:
         note: "Dependency-direction artifact cites this section; manual source-reference coverage review is still required before marking that artifact covered."
       - source_sections:
           - "What a shared core package is"
+          - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
           - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
           - "When a shared core layer becomes a dumping ground and how to prevent it"
           - "Code dependency direction"
           - "Designing packages/core"
           - "Principles to guide Kanbien for the next 10 years"
-        status: in_progress
+        status: covered
         artifacts:
           - docs/harness/architecture/rule-packs/add-core-module.yml
-        note: "add-core-module artifact cites these sections; manual source-reference coverage review is still required before marking that artifact covered."
+        note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
     line_count: 3136
     status: unreviewed
@@ -110,12 +111,11 @@ source_guides:
     coverage_entries:
       - source_sections:
           - "packages/core"
-          - "tools/build"
           - "The core entity flow"
-        status: in_progress
+        status: covered
         artifacts:
           - docs/harness/architecture/rule-packs/add-core-module.yml
-        note: "Core and generated-code material are partly represented or queued; manual source-reference coverage review is still required before marking covered."
+        note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
       - source_sections:
           - "8. tools/build"
           - "9. Persistence"
@@ -147,16 +147,20 @@ source_guides:
     status: unreviewed
     coverage_entries:
       - source_sections:
+          - "How /platform differs from shared core libraries"
+          - "What should move into packages/core"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
+      - source_sections:
           - "The clean mental model"
           - "platform/server/"
           - "The business app mounting contract"
-          - "How /platform differs from shared core libraries"
-          - "What should move into packages/core"
         status: in_progress
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
-          - docs/harness/architecture/rule-packs/add-core-module.yml
-        note: "Seed artifacts cite these sections; manual source-reference coverage review is still required before marking covered."
+        note: "Dependency-direction artifact cites these sections; manual source-reference coverage review is still required before marking that artifact covered."
   - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
     status: unreviewed
@@ -268,8 +272,8 @@ artifact_coverage:
     status: covered
     note: "Source refs manually checked while creating the platform-adapter-consumption concern ruleset."
   - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
-    status: in_progress
-    note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+    status: covered
+    note: "Source refs manually checked while refining the add-core-module rule pack."
   - artifact: docs/harness/architecture/rule-packs/create-entity.yml
     status: covered
     note: "Source refs manually checked while creating the create-entity rule pack."
