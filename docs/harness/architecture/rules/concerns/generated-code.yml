@@ -1,0 +1,126 @@
+id: concern.generated-code
+title: Generated code rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for deterministic generated code, generator ownership,
+  generated artifact placement, and freshness checks.
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/**"
+    - "platform/**"
+    - "harness/**"
+    - "tools/**"
+
+rules:
+  - id: generated.deterministic-and-idempotent
+    title: Generation must be deterministic and idempotent
+    severity: error
+    summary: >
+      Running a generator repeatedly from the same source inputs must produce
+      the same outputs without duplicating or bloating generated files.
+    must:
+      - "Use Kanbien-owned generators for entity-builder artifacts."
+      - "Make entity definitions or typed metadata the source of truth for generated artifacts."
+      - "Ensure repeated generation produces stable output."
+      - "Check generated output freshness in CI."
+    must_not:
+      - "Do not rely on clever runtime reflection as the primary generation model."
+      - "Do not let repeated generation create duplicate code, migrations, tests, or configuration."
+      - "Do not treat generated output as trusted until typecheck, runtime validation, and contract checks pass."
+    agent_guidance: >
+      If a task changes generator inputs, plan to regenerate outputs and verify
+      that a second run is clean. If no freshness check exists, report that gap.
+
+  - id: generated.generators-are-not-runtime-dependencies
+    title: Generator runtime code must not become production runtime dependency
+    severity: error
+    summary: >
+      Production code may import generated artifacts from approved output
+      locations, but it must not import the generator implementation itself.
+    must:
+      - "Keep generator implementations in tools/** or harness-owned generation code."
+      - "Let production code import generated artifacts only from approved generated output paths."
+      - "Keep generator tests close to the generator implementation."
+    must_not:
+      - "Do not import tools/** from runtime apps, packages, or platform code."
+      - "Do not put deployable runtime behavior inside tools/**."
+      - "Do not mix generator implementation code with generated production artifacts."
+    agent_guidance: >
+      When generated output is needed at runtime, import the output package or
+      generated folder, not the generator that created it.
+
+  - id: generated.output-placement-matches-ownership
+    title: Generated output placement must match ownership and sharing scope
+    severity: error
+    summary: >
+      Generated artifacts should live in package-local generated folders when
+      owned by one feature, or in generated packages when shared broadly.
+    must:
+      - "Use package-local generated folders for artifacts owned by one feature or package."
+      - "Use generated packages for artifacts shared broadly across packages or apps."
+      - "Generate migrations into the owning application's ordered migration stream."
+      - "Keep generated schemas, types, API contracts, UI metadata, tests, and migrations in predictable output locations."
+    must_not:
+      - "Do not scatter generated outputs across unrelated ownership boundaries."
+      - "Do not let entity folders own unordered app-wide migration streams."
+      - "Do not place generated shared contracts in product-specific folders when they are consumed broadly."
+    agent_guidance: >
+      Pick the generated output location by asking who owns the artifact and who
+      consumes it. Broadly shared generated contracts need a shared generated
+      package. Feature-owned artifacts can stay package-local.
+
+  - id: generated.no-manual-edits-without-policy
+    title: Generated files must not be manually edited without an explicit policy
+    severity: error
+    summary: >
+      Generated files should be regenerated from their source inputs. Manual
+      edits risk stale, non-repeatable artifacts unless a generated-file policy
+      explicitly allows them.
+    must:
+      - "Change generator inputs or generator code instead of editing generated output."
+      - "Run the relevant generator after changing entity definitions or generation metadata."
+      - "Use golden-file, typecheck, runtime-validation, contract, and freshness checks where available."
+    must_not:
+      - "Do not hand-edit generated files unless a generated-file policy explicitly allows it."
+      - "Do not commit generated artifacts that fail typecheck, runtime validation, or expected contract checks."
+      - "Do not leave generated outputs stale after changing their source definitions."
+    agent_guidance: >
+      If a requested fix touches generated output directly, stop and identify
+      the source input or generator that should produce the change.
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "My architectural recommendation for Kanbien"
+      - "Generated code must be checked, not trusted"
+      - "Build outputs"
+      - "tools/"
+      - "Code generation"
+      - "CI checks"
+      - "The key design lesson"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "8. tools/build"
+      - "9. Persistence"
+      - "11. The core entity flow"
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "7. Harness"
+      - "8. Build and Code Generation"
+      - "9. Persistence"
+      - "11. Entity Builder Flow"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/generated-code.yml."
+  - "It defines deterministic and idempotent generation rules."
+  - "It keeps generator runtime code out of production runtime dependencies."
+  - "It distinguishes generated package outputs from package-local generated folders."
+  - "It requires generated output freshness and validation checks."
+  - "It includes manually verified source_refs back to the markdown guides."

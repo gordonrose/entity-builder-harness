@@ -37,7 +37,10 @@ start architecture rulebook harvest coverage tracker
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Generated-code overlap with dependency direction
+  Resolution: Resolved by declaring dependency-direction.yml as a related ruleset; generated-code.yml expands lifecycle, placement, idempotence, and freshness rules rather than replacing the import-boundary rule.
 
 ## Decisions Made
 
@@ -47,6 +50,14 @@ start architecture rulebook harvest coverage tracker
 
 - Decision: Add rulebook coverage ledger first
   Rationale: Create state/rulebook-coverage.yml before generating more rules so guide coverage, deferred decisions, duplication, and source-reference review are auditable.
+
+
+- Decision: Create generated-code concern ruleset
+  Rationale: Selected generated-code.yml as the next concern because it was first in the queue and the TypeScript, modular monorepo, and full discussion guides all contain concrete generated-code governance.
+
+
+- Decision: Generated-code source refs manually verified
+  Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking the generated-code coverage entries covered.
 
 ## Activity Log
 
@@ -89,6 +100,27 @@ Message: Add architecture rulebook coverage tracker
 Summary: Added rulebook coverage tracking state and wired the rulebook continuation guidance to read and update coverage before creating further artifacts.
 
 ADR impact: No ADR required; tracking state and workflow guidance only.
+
+
+### 2026-06-22T23:10:45Z - Decision
+
+Decision: Create generated-code concern ruleset
+
+Rationale: Selected generated-code.yml as the next concern because it was first in the queue and the TypeScript, modular monorepo, and full discussion guides all contain concrete generated-code governance.
+
+
+### 2026-06-22T23:10:45Z - Decision
+
+Decision: Generated-code source refs manually verified
+
+Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking the generated-code coverage entries covered.
+
+
+### 2026-06-22T23:10:45Z - Issue
+
+Raised: Generated-code overlap with dependency direction
+
+Resolution: Resolved by declaring dependency-direction.yml as a related ruleset; generated-code.yml expands lifecycle, placement, idempotence, and freshness rules rather than replacing the import-boundary rule.
 
 ## Commits
 

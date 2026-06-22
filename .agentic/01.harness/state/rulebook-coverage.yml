@@ -25,7 +25,16 @@ source_guides:
   - path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
     line_count: 109
     status: unreviewed
-    coverage_entries: []
+    coverage_entries:
+      - source_sections:
+          - "7. Harness"
+          - "8. Build and Code Generation"
+          - "9. Persistence"
+          - "11. Entity Builder Flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: unreviewed
@@ -63,6 +72,14 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rule-packs/add-core-module.yml
         note: "Core and generated-code material are partly represented or queued; manual source-reference coverage review is still required before marking covered."
+      - source_sections:
+          - "8. tools/build"
+          - "9. Persistence"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: unreviewed
@@ -91,6 +108,18 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
         note: "Dependency and generated-code material are partly represented or queued; manual source-reference coverage review is still required before marking covered."
+      - source_sections:
+          - "My architectural recommendation for Kanbien"
+          - "Generated code must be checked, not trusted"
+          - "Build outputs"
+          - "tools/"
+          - "Code generation"
+          - "CI checks"
+          - "The key design lesson"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: unreviewed
@@ -103,12 +132,14 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
+  - artifact: docs/harness/architecture/rules/concerns/generated-code.yml
+    status: covered
+    note: "Source refs manually checked while creating the generated-code concern ruleset."
   - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
     status: in_progress
     note: "Existing seed artifact; source_refs need manual coverage review before its cited sections are marked covered."
 
 candidate_queue:
-  - docs/harness/architecture/rules/concerns/generated-code.yml
   - docs/harness/architecture/rule-packs/create-entity.yml
   - docs/harness/architecture/rules/layers/harness.yml
   - docs/harness/architecture/rules/layers/tools.yml

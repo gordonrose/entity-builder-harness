@@ -6,11 +6,11 @@ created_artifacts:
     - docs/harness/architecture/rules/layers/packages-core.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/harness/architecture/rules/concerns/generated-code.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
 
 recommended_next_artifacts:
-  - docs/harness/architecture/rules/concerns/generated-code.yml
   - docs/harness/architecture/rule-packs/create-entity.yml
   - docs/harness/architecture/rules/layers/harness.yml
   - docs/harness/architecture/rules/layers/tools.yml
