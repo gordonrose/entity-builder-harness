@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:38:22Z
-latest_commit_sha: cdfa2449947ed114a5fa311e3e2fc7ed55fe068d
-chat_duration: 2145s (00:00:35:45)
-estimated_chat_tokens: 696551 estimated from chat transcript bytes (2786203 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 20.90 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:40:38Z
+latest_commit_sha: 012dac9c9de893e84bc78f2d3b1fca14e8ea85e5
+chat_duration: 2281s (00:00:38:01)
+estimated_chat_tokens: 726768 estimated from chat transcript bytes (2907072 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 21.80 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -331,6 +331,17 @@ Summary: Added a source-verified design-system layer ruleset covering tokens, re
 
 ADR impact: No ADR impact; extends the architecture rulebook artifact library.
 
+
+### 2026-06-22T23:40:38Z - Commit recorded
+
+Commit: `012dac9c9de893e84bc78f2d3b1fca14e8ea85e5`
+
+Message: Add design label theming rules
+
+Summary: Added a source-verified design-label theming concern covering design labels as visual systems, generated CSS variable scope, flicker avoidance, accessibility/layout validation, resolver token-graph checks, and coverage state.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
 ## Commits
 
 
@@ -425,6 +436,13 @@ ADR impact: No ADR impact; extends the architecture rulebook artifact library.
   Summary: Added a source-verified design-system layer ruleset covering tokens, resolvers, primitives, patterns, components, templates, pages, governance, accessibility, and coverage state.
   ADR impact: No ADR impact; extends the architecture rulebook artifact library.
 
+
+- Commit: `012dac9c9de893e84bc78f2d3b1fca14e8ea85e5`
+  Time UTC: 2026-06-22T23:40:38Z
+  Message: Add design label theming rules
+  Summary: Added a source-verified design-label theming concern covering design labels as visual systems, generated CSS variable scope, flicker avoidance, accessibility/layout validation, resolver token-graph checks, and coverage state.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -438,11 +456,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:38:22Z
-Latest commit SHA: cdfa2449947ed114a5fa311e3e2fc7ed55fe068d
-Chat duration: 2145s (00:00:35:45)
-Estimated chat tokens: 696551 estimated from chat transcript bytes (2786203 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 20.90 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:40:38Z
+Latest commit SHA: 012dac9c9de893e84bc78f2d3b1fca14e8ea85e5
+Chat duration: 2281s (00:00:38:01)
+Estimated chat tokens: 726768 estimated from chat transcript bytes (2907072 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 21.80 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
