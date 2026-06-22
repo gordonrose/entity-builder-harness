@@ -11,12 +11,12 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T22:11:35Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-22T22:21:15Z
+latest_commit_sha: b78d966
+chat_duration: 580s (00:00:09:40)
+estimated_chat_tokens: 122486 estimated from chat transcript bytes (489944 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl)
+estimated_chat_cost: USD 3.67 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -65,9 +65,26 @@ ADR needed: no
 
 Reason: This adds a narrow task rule pack derived from existing architecture guide and layer rules; it does not introduce a durable harness architecture decision.
 
+
+### 2026-06-22T22:21:15Z - Commit recorded
+
+Commit: `b78d966`
+
+Message: Add core module rule pack
+
+Summary: Created docs/harness/architecture/rule-packs/add-core-module.yml, a task-shaped pack for packages/core changes that references the core layer ruleset and source architecture guide sections.
+
+ADR impact: ADR not needed; derived rule-pack artifact only.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b78d966`
+  Time UTC: 2026-06-22T22:21:15Z
+  Message: Add core module rule pack
+  Summary: Created docs/harness/architecture/rule-packs/add-core-module.yml, a task-shaped pack for packages/core changes that references the core layer ruleset and source architecture guide sections.
+  ADR impact: ADR not needed; derived rule-pack artifact only.
 
 ## Main Refresh Conflicts
 
@@ -82,12 +99,12 @@ Reason: This adds a narrow task rule pack derived from existing architecture gui
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T22:11:35Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-22T22:21:15Z
+Latest commit SHA: b78d966
+Chat duration: 580s (00:00:09:40)
+Estimated chat tokens: 122486 estimated from chat transcript bytes (489944 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-11-07-019ef163-2527-7bc2-9363-b3e161ae3846.jsonl)
+Estimated chat cost: USD 3.67 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
