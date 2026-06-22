@@ -102,6 +102,29 @@ source_guides:
     status: unreviewed
     coverage_entries:
       - source_sections:
+          - "What a design system actually is"
+          - "The design-system layer model"
+          - "Design tokens"
+          - "Foundation tokens"
+          - "Semantic tokens"
+          - "Builder tokens"
+          - "Primitives"
+          - "Patterns"
+          - "Components"
+          - "Templates"
+          - "Pages"
+          - "How the layers depend on each other"
+          - "Which layers should be reusable across products?"
+          - "Which layers should be application-specific?"
+          - "Common mistakes teams make when building design systems"
+          - "Part 3: Design-system package structure in a TypeScript monorepo"
+          - "Recommended dependency rules"
+          - "Part 6: Final recommended Kanbien architecture"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/design-system.yml
+        note: "Design-system layer source refs were manually checked while creating docs/harness/architecture/rules/layers/design-system.yml."
+      - source_sections:
           - "How the layers depend on each other"
           - "Recommended dependency rules"
         status: covered
@@ -260,6 +283,9 @@ source_guides:
         note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml and docs/harness/architecture/rule-packs/add-platform-adapter.yml."
 
 artifact_coverage:
+  - artifact: docs/harness/architecture/rules/layers/design-system.yml
+    status: covered
+    note: "Source refs manually checked while creating the design-system layer ruleset."
   - artifact: docs/harness/architecture/rules/layers/packages-core.yml
     status: covered
     note: "Source refs manually checked while refining the packages/core layer ruleset."
