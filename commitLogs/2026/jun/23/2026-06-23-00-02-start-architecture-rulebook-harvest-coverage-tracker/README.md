@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:15:19Z
-latest_commit_sha: a97ecea
-chat_duration: 762s (00:00:12:42)
-estimated_chat_tokens: 339765 estimated from chat transcript bytes (1359059 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 10.19 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:18:09Z
+latest_commit_sha: 264c589
+chat_duration: 932s (00:00:15:32)
+estimated_chat_tokens: 363020 estimated from chat transcript bytes (1452078 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 10.89 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -221,6 +221,17 @@ Decision: Tools source refs manually verified
 
 Rationale: Checked the cited tools/build and tools/ sections before marking tools coverage entries covered.
 
+
+### 2026-06-22T23:18:09Z - Commit recorded
+
+Commit: `264c589`
+
+Message: Add tools layer rules
+
+Summary: Created docs/harness/architecture/rules/layers/tools.yml for repo automation, generators, runtime dependency boundaries, and tools validation; updated rulebook coverage and progress state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Commits
 
 
@@ -259,6 +270,13 @@ Rationale: Checked the cited tools/build and tools/ sections before marking tool
   Summary: Recorded an open human decision for harness layer ownership because source guides conflict on whether harness is testing support or entity-builder governance/generation; removed harness.yml from the active candidate queue.
   ADR impact: No ADR required; deferred coverage decision only.
 
+
+- Commit: `264c589`
+  Time UTC: 2026-06-22T23:18:09Z
+  Message: Add tools layer rules
+  Summary: Created docs/harness/architecture/rules/layers/tools.yml for repo automation, generators, runtime dependency boundaries, and tools validation; updated rulebook coverage and progress state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -272,11 +290,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:15:19Z
-Latest commit SHA: a97ecea
-Chat duration: 762s (00:00:12:42)
-Estimated chat tokens: 339765 estimated from chat transcript bytes (1359059 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 10.19 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:18:09Z
+Latest commit SHA: 264c589
+Chat duration: 932s (00:00:15:32)
+Estimated chat tokens: 363020 estimated from chat transcript bytes (1452078 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 10.89 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
