@@ -1,0 +1,92 @@
+id: layer.packages-core
+title: packages/core rules
+version: 1
+status: active
+
+description: >
+  Rules governing what may live in packages/core and how agents should treat
+  core as a stable shared foundation.
+
+applies_to:
+  paths:
+    - "packages/core/**"
+
+rules:
+  - id: core.stable-cross-cutting-only
+    title: Only stable cross-cutting concepts belong in core
+    severity: error
+    summary: >
+      Code belongs in packages/core only when it defines a stable, cross-cutting
+      Kanbien concept or contract that multiple parts of the system must use
+      consistently.
+    must:
+      - Define stable contracts, types, interfaces, errors, policies, or small pure helpers.
+      - Prefer concepts such as TenantId, Principal, Permission, AuditEvent, EventEnvelope, Locale, and CorrelationId.
+      - Start local first, then extract to core only after the abstraction is stable and genuinely reused.
+    must_not:
+      - Do not add code to core merely because it might be reused.
+      - Do not put product-specific workflows in core.
+      - Do not put unstable experiments in core.
+      - Do not add a core module without a clear owner.
+    agent_guidance: >
+      When deciding whether to place code in packages/core, ask:
+      Is this stable? Is it cross-cutting? Is it product-neutral?
+      Does multiple code need the same contract? If not, keep it outside core.
+
+  - id: core.no-upward-imports
+    title: Core must not import apps, platform, or infra
+    severity: error
+    summary: >
+      packages/core must remain independent of applications, runtime implementations,
+      and infrastructure.
+    must:
+      - Keep core dependency-light and framework-independent.
+      - Let apps import core.
+      - Let platform implement core contracts.
+    must_not:
+      - Do not import from apps/** inside packages/core.
+      - Do not import from platform/** inside packages/core.
+      - Do not import from infra/** inside packages/core.
+      - Do not import cloud SDKs, ORMs, web servers, or vendor clients into core.
+    forbidden_imports:
+      - "apps/**"
+      - "platform/**"
+      - "infra/**"
+    agent_guidance: >
+      If a proposed core change requires importing an app, platform module,
+      cloud SDK, ORM, or infrastructure resource, the plan is wrong. Move the
+      implementation to platform or the product-specific behavior to apps.
+
+  - id: core.contracts-not-implementations
+    title: Core defines contracts, platform provides implementations
+    severity: error
+    summary: >
+      Core should define the shared contract. Runtime-specific implementations
+      belong in platform. Product workflows belong in apps.
+    must:
+      - Define ports and contracts in core.
+      - Put concrete provider integrations in platform.
+      - Put product-specific behavior in apps or feature packages.
+    must_not:
+      - Do not put S3, Kafka, Redis, Fastify, Prisma, or cloud-provider implementation code in core.
+      - Do not put CRM, billing, onboarding, or workflow-specific behavior in core.
+    examples:
+      good:
+        - "packages/core/files defines FileStorage."
+        - "platform/storage-s3 implements S3FileStorage."
+        - "apps/crm decides when to store or retrieve a CRM document."
+      bad:
+        - "packages/core imports an S3 client."
+        - "packages/core imports apps/crm."
+        - "packages/core contains CRMUser or BillingPlan."
+    agent_guidance: >
+      Use core for the shape of the dependency, not the concrete runtime behavior.
+      The contract goes in core. The implementation goes in platform. The business
+      decision goes in apps.
+
+source_refs:
+  - doc: kanbien-core-architecture-guide.md
+    sections:
+      - "When a shared core layer becomes a dumping ground and how to prevent it"
+      - "Code dependency direction"
+      - "Principles to guide Kanbien for the next 10 years"
