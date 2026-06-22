@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-22T23:07:45Z
-latest_commit_sha: ffb7e62
-chat_duration: 308s (00:00:05:08)
-estimated_chat_tokens: 249731 estimated from chat transcript bytes (998921 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 7.49 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-22T23:11:15Z
+latest_commit_sha: 9f7ce33
+chat_duration: 518s (00:00:08:38)
+estimated_chat_tokens: 291115 estimated from chat transcript bytes (1164460 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 8.73 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -122,6 +122,17 @@ Raised: Generated-code overlap with dependency direction
 
 Resolution: Resolved by declaring dependency-direction.yml as a related ruleset; generated-code.yml expands lifecycle, placement, idempotence, and freshness rules rather than replacing the import-boundary rule.
 
+
+### 2026-06-22T23:11:15Z - Commit recorded
+
+Commit: `9f7ce33`
+
+Message: Add generated code concern rules
+
+Summary: Created docs/harness/architecture/rules/concerns/generated-code.yml with deterministic generation, generator/runtime boundary, generated output placement, and no-manual-edit rules; updated rulebook coverage and progress state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Commits
 
 
@@ -139,6 +150,13 @@ Resolution: Resolved by declaring dependency-direction.yml as a related ruleset;
   Summary: Added rulebook coverage tracking state and wired the rulebook continuation guidance to read and update coverage before creating further artifacts.
   ADR impact: No ADR required; tracking state and workflow guidance only.
 
+
+- Commit: `9f7ce33`
+  Time UTC: 2026-06-22T23:11:15Z
+  Message: Add generated code concern rules
+  Summary: Created docs/harness/architecture/rules/concerns/generated-code.yml with deterministic generation, generator/runtime boundary, generated output placement, and no-manual-edit rules; updated rulebook coverage and progress state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -152,11 +170,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-22T23:07:45Z
-Latest commit SHA: ffb7e62
-Chat duration: 308s (00:00:05:08)
-Estimated chat tokens: 249731 estimated from chat transcript bytes (998921 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 7.49 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-22T23:11:15Z
+Latest commit SHA: 9f7ce33
+Chat duration: 518s (00:00:08:38)
+Estimated chat tokens: 291115 estimated from chat transcript bytes (1164460 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 8.73 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
