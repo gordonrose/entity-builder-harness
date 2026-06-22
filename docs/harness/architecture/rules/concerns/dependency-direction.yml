@@ -1,0 +1,191 @@
+id: concern.dependency-direction
+title: Dependency direction rules
+version: 1
+status: active
+
+description: >
+  Repo-wide dependency direction rules for preserving architectural boundaries
+  across apps, packages, platform, harness, tools, infra, and design-system code.
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/**"
+    - "platform/**"
+    - "harness/**"
+    - "tools/**"
+    - "infra/**"
+
+rules:
+  - id: dependency.core-has-no-upward-imports
+    title: Core must not import apps, platform, or infra
+    severity: error
+    summary: >
+      packages/core is a foundational shared layer. It must not depend on
+      applications, runtime platform implementations, or infrastructure.
+    must:
+      - "Allow apps to import packages/core."
+      - "Allow platform to import packages/core."
+      - "Allow harness and tests to use packages/core where appropriate."
+    must_not:
+      - "Do not import apps/** from packages/core/**."
+      - "Do not import platform/** from packages/core/**."
+      - "Do not import infra/** from packages/core/**."
+      - "Do not import cloud SDKs, ORMs, web servers, queue providers, or vendor runtime clients into packages/core."
+    forbidden_imports:
+      from:
+        - "packages/core/**"
+      to:
+        - "apps/**"
+        - "platform/**"
+        - "infra/**"
+
+  - id: dependency.apps-are-not-foundations
+    title: Apps must not be imported as shared foundations
+    severity: error
+    summary: >
+      Applications are deployable or mountable business compositions. Shared
+      packages, platform modules, tools, and infrastructure should not depend on
+      app internals.
+    must:
+      - "Keep app-specific business behavior inside apps/*."
+      - "Expose app integration through explicit mount files or manifests."
+    must_not:
+      - "Do not import apps/* internals from packages/**."
+      - "Do not import apps/* internals from platform/** except approved composition-root mount files."
+      - "Do not import apps/* internals from tools/** at runtime."
+      - "Do not import apps/* internals from infra/**."
+
+  - id: dependency.platform-composition-root-exception
+    title: Platform may import app mounts only at the composition root
+    severity: error
+    summary: >
+      The platform runtime may import app mount modules only from approved
+      composition-root files such as platform/server/mount.ts or platform/workers/mount.ts.
+    must:
+      - "Let platform composition roots mount apps through app.mount.ts files."
+      - "Keep the rest of platform unaware of business app internals."
+    must_not:
+      - "Do not import app services, repositories, routes, or business logic directly into platform internals."
+      - "Do not let platform modules depend on CRM, billing, onboarding, or other product-specific concepts."
+    allowed_exceptions:
+      - from: "platform/server/mount.ts"
+        to: "apps/**/app.mount.ts"
+      - from: "platform/workers/mount.ts"
+        to: "apps/**/app.mount.ts"
+
+  - id: dependency.design-system-one-way
+    title: Design-system dependencies must flow from tokens to applications
+    severity: error
+    summary: >
+      Design-system layers must remain domain-neutral and follow one-way
+      dependency direction from tokens to primitives to patterns to components
+      to applications.
+    must:
+      - "Keep tokens independent of React and application code."
+      - "Let applications consume design-system components."
+      - "Keep design-system components free of business logic, routing, permissions, and product workflows."
+    must_not:
+      - "Do not import apps/** into packages/design-system/**."
+      - "Do not let tokens import React."
+      - "Do not let primitives import higher-level components."
+      - "Do not let design-system components import product domain models."
+
+  - id: dependency.production-must-not-depend-on-harness
+    title: Production code must not depend on harness
+    severity: error
+    summary: >
+      The harness is for test, local development, governance, generation, and
+      validation support. Production runtime code must not import it.
+    must:
+      - "Use harness for tests, fixtures, fakes, contract validation, and development orchestration."
+    must_not:
+      - "Do not import harness/** from production apps, packages, or platform code."
+      - "Do not put production runtime validation or business logic in harness."
+
+  - id: dependency.production-must-not-depend-on-tools
+    title: Production code must not depend on tools
+    severity: error
+    summary: >
+      tools/ contains generators, scripts, migration helpers, lint rules, and
+      repo automation. Production code may use generated outputs but must not
+      import generator runtime code.
+    must:
+      - "Let tools generate artifacts."
+      - "Let production code import generated artifacts only from their intended output locations."
+    must_not:
+      - "Do not import tools/** from runtime apps, packages, or platform code."
+      - "Do not put deployable runtime behavior inside tools/**."
+
+  - id: dependency.infra-consumes-artifacts-not-runtime-internals
+    title: Infra consumes deployment metadata, not runtime internals
+    severity: error
+    summary: >
+      infra/ owns infrastructure-as-code and deployment resources. It should
+      consume manifests, config, or generated deployment metadata rather than
+      importing app implementation internals.
+    must:
+      - "Use app manifests or generated metadata to drive deployment."
+      - "Keep Terraform, cloud resources, secrets, networking, and CI/CD infrastructure in infra/."
+    must_not:
+      - "Do not import app services, repositories, route handlers, or product business logic into infra/**."
+      - "Do not put infrastructure provisioning code in platform or packages/core."
+
+  - id: dependency.generated-code-boundary
+    title: Generated code is an output, generators are not runtime dependencies
+    severity: error
+    summary: >
+      Generated files may be used by production code when they are checked into
+      the appropriate package or app output location. The generator itself should
+      remain in tools or harness code.
+    must:
+      - "Keep generation deterministic and idempotent."
+      - "Import generated artifacts only from approved generated output paths."
+    must_not:
+      - "Do not import generator implementation code into production runtime code."
+      - "Do not hand-edit generated files unless the generated-file policy explicitly allows it."
+
+agent_guidance: >
+  When an agent proposes a change, it must identify which layer owns the code,
+  then verify that every import follows the dependency direction rules. If a
+  dependency violates these rules, the agent should stop, explain the violation,
+  and propose a corrected file placement.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "Code dependency direction"
+      - "What depends on what"
+      - "What should never depend on what"
+      - "Principles to guide Kanbien for the next 10 years"
+
+  - doc: "kanbien-platform-layer-architecture.md"
+    sections:
+      - "The clean mental model"
+      - "platform/server/"
+      - "The business app mounting contract"
+
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "Kanbien monorepo structure"
+      - "apps/"
+      - "packages/"
+      - "platform/"
+      - "harness/"
+      - "tools/"
+      - "infra/"
+      - "Linting"
+
+  - doc: "kanbien-frontend-design-system-guide.md"
+    sections:
+      - "How the layers depend on each other"
+      - "Recommended dependency rules"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/dependency-direction.yml."
+  - "It defines repo-wide dependency direction rules."
+  - "It covers apps, packages/core, platform, design-system, harness, tools, infra, and generated code."
+  - "It includes the platform composition-root exception for importing app mounts."
+  - "It includes source_refs back to the relevant markdown guides."
+  - "It does not duplicate the full contents of packages-core.yml, but it may reference overlapping core dependency principles."
+  - "No unrelated files are changed."

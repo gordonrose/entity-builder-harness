@@ -45,6 +45,10 @@ Create docs/harness/architecture/rule-packs/add-core-module.yml from architectur
 - Decision: Created add-core-module task rule pack
   Rationale: Added docs/harness/architecture/rule-packs/add-core-module.yml as the first task-shaped rule pack for packages/core changes, referencing the packages-core layer ruleset and source architecture guides.
 
+
+- Decision: Added dependency direction concern and linked core rule pack
+  Rationale: Created the dependency-direction concern ruleset and updated add-core-module to require both core admission rules and repo-wide dependency direction validation.
+
 ## Activity Log
 
 ### 2026-06-22T22:11:35Z - Session started
@@ -75,6 +79,13 @@ Message: Add core module rule pack
 Summary: Created docs/harness/architecture/rule-packs/add-core-module.yml, a task-shaped pack for packages/core changes that references the core layer ruleset and source architecture guide sections.
 
 ADR impact: ADR not needed; derived rule-pack artifact only.
+
+
+### 2026-06-22T22:40:58Z - Decision
+
+Decision: Added dependency direction concern and linked core rule pack
+
+Rationale: Created the dependency-direction concern ruleset and updated add-core-module to require both core admission rules and repo-wide dependency direction validation.
 
 ## Commits
 
