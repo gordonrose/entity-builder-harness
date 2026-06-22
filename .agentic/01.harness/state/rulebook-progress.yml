@@ -8,6 +8,7 @@ created_artifacts:
     - docs/harness/architecture/rules/layers/tools.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/harness/architecture/rules/concerns/design-label-theming.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
@@ -16,10 +17,12 @@ created_artifacts:
     - docs/harness/architecture/rule-packs/create-entity.yml
     - docs/harness/architecture/rule-packs/add-platform-adapter.yml
 
-recommended_next_artifacts: []
+recommended_next_artifacts:
+  - docs/harness/architecture/rule-packs/add-design-system-component.yml
 
 notes:
   - "Rule packs should compose layer and concern rulesets."
   - "Do not duplicate full rulesets inside rule packs."
   - "Work one artifact at a time."
   - "The platform adapter guide is covered by a concern ruleset and a task-shaped pack for adding platform adapters."
+  - "The frontend design-system guide now has a layer ruleset and design-label concern; the worked Button example is a candidate for a task-shaped add-design-system-component pack."

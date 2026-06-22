@@ -131,6 +131,23 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
         note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+      - source_sections:
+          - "Part 4: Evaluating the design-label architecture"
+          - "Do not let builder tokens directly mutate React components at runtime"
+          - "Is this a good architecture?"
+          - "Potential pitfalls"
+          - "Pitfall 1: Design labels become hidden product forks"
+          - "Pitfall 2: Layout shifts across design labels"
+          - "Pitfall 3: Accessibility regressions"
+          - "Pitfall 4: Token alias cycles"
+          - "Pitfall 5: Runtime token loading creates flicker"
+          - "Pitfall 6: Third-party components ignore your tokens"
+          - "Pitfall 7: Too many design labels"
+          - "How to implement this cleanly in React"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/design-label-theming.yml
+        note: "Design-label theming source refs were manually checked while creating docs/harness/architecture/rules/concerns/design-label-theming.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
     line_count: 218
     status: unreviewed
@@ -295,6 +312,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
     status: covered
     note: "Source refs manually checked while refining the dependency-direction concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/design-label-theming.yml
+    status: covered
+    note: "Source refs manually checked while creating the design-label-theming concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."
