@@ -54,6 +54,12 @@ source_guides:
           - docs/harness/architecture/rules/layers/tools.yml
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
       - source_sections:
+          - "2. Front-End Architecture"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
+      - source_sections:
           - "6. Applications"
           - "9. Persistence"
           - "12. Architectural Recommendations"
@@ -301,6 +307,18 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rule-packs/add-design-system-component.yml
         note: "add-design-system-component source refs were manually checked while creating docs/harness/architecture/rule-packs/add-design-system-component.yml."
+      - source_sections:
+          - "What React is not"
+          - "Problem 2: Reusing UI safely"
+          - "Problem 3: Managing complex interaction"
+          - "Problem 4: Building large applications with many teams"
+          - "Tradeoff 3: Too much architectural freedom"
+          - "Tradeoff 5: Accessibility is not automatic"
+          - "Part 6: Final recommended Kanbien architecture"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
     line_count: 218
     status: unreviewed
@@ -338,6 +356,12 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+      - source_sections:
+          - "3. packages/frontend-kit"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
       - source_sections:
           - "6. apps/"
           - "9. Persistence"
@@ -460,6 +484,13 @@ source_guides:
           - docs/harness/architecture/rule-packs/create-entity.yml
         note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
       - source_sections:
+          - "6. Frontend form config"
+          - "7. Frontend table config"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
+      - source_sections:
           - "harness/"
         status: deferred-human-decision
         artifacts: []
@@ -561,6 +592,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/apps.yml
     status: covered
     note: "Source refs manually checked while creating the apps layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/frontend-kit.yml
+    status: covered
+    note: "Source refs manually checked while creating the frontend-kit layer ruleset."
   - artifact: docs/harness/architecture/rules/layers/infra.yml
     status: covered
     note: "Source refs manually checked while creating the infra layer ruleset."

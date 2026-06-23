@@ -38,6 +38,7 @@ current_known_artifacts:
   layer_rulesets:
     - docs/harness/architecture/rules/layers/apps.yml
     - docs/harness/architecture/rules/layers/design-system.yml
+    - docs/harness/architecture/rules/layers/frontend-kit.yml
     - docs/harness/architecture/rules/layers/infra.yml
     - docs/harness/architecture/rules/layers/packages-core.yml
     - docs/harness/architecture/rules/layers/platform.yml

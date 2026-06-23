@@ -1,0 +1,163 @@
+id: layer.frontend-kit
+title: frontend-kit layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing packages/frontend-kit and closely related app-facing
+  frontend utility packages as Kanbien's portable React product shell:
+  entity pages, CRUD layouts, forms, tables, navigation, interaction patterns,
+  generated UI config consumption, accessibility behavior, and app-independent
+  rendering of product data.
+
+applies_to:
+  paths:
+    - "packages/frontend-kit/**"
+    - "packages/ui-forms/**"
+    - "packages/ui-table/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/apps.yml
+  - docs/harness/architecture/rules/layers/design-system.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+
+frontend_surfaces:
+  - id: entity_pages
+    purpose: "Generic entity page shells such as list, detail, create, and edit pages."
+  - id: crud_layouts
+    purpose: "Reusable CRUD layout and workflow scaffolding without product-specific business meaning."
+  - id: forms
+    purpose: "Typed form renderers driven by generated or app-provided form config."
+  - id: tables
+    purpose: "Typed table renderers driven by generated or app-provided table config."
+  - id: navigation
+    purpose: "Reusable navigation composition helpers that apps configure with product-owned routes."
+
+rules:
+  - id: frontend-kit.is-portable-product-shell
+    title: Frontend kit is a portable product shell
+    severity: error
+    summary: >
+      frontend-kit code should know how to render entity-like product surfaces,
+      forms, tables, navigation, and CRUD layouts without knowing what a User,
+      Invoice, Project, or Lead means.
+    must:
+      - "Use packages/frontend-kit/** for portable entity pages, CRUD layouts, forms, tables, navigation, interaction scaffolds, and app-facing frontend composition helpers."
+      - "Keep frontend-kit APIs data-driven and typed so apps can provide product-owned routes, data sources, permissions, labels, actions, and generated config."
+      - "Keep frontend-kit reusable across multiple applications without app-specific forks."
+    must_not:
+      - "Do not hardcode app names, domain entities, business workflows, tenant-specific behavior, product routes, or product copy in frontend-kit."
+      - "Do not put routed pages that belong to one app in frontend-kit."
+      - "Do not make frontend-kit the owner of product decisions just because it renders the UI."
+    agent_guidance: >
+      If a component knows what the product action means, it probably belongs
+      in an app or product package. If it knows how to render a generic pattern,
+      frontend-kit may own it.
+
+  - id: frontend-kit.composes-design-system
+    title: Frontend kit composes the design system
+    severity: error
+    summary: >
+      frontend-kit should use design-system components and patterns as its UI
+      building blocks. It should not mutate tokens, primitives, or design-system
+      internals to satisfy app-specific behavior.
+    must:
+      - "Import public design-system components, providers, and documented patterns through package entry points."
+      - "Use design-system components for accessibility, focus behavior, state styling, and visual consistency wherever those components exist."
+      - "Keep application visual changes behind design labels, semantic tokens, or app-owned composition rather than frontend-kit forks."
+    must_not:
+      - "Do not modify design-system tokens, primitives, patterns, components, or providers from frontend-kit."
+      - "Do not deep-import design-system internals."
+      - "Do not duplicate design-system primitives inside frontend-kit to bypass design-system governance."
+    agent_guidance: >
+      frontend-kit is a consumer of the design system. If the primitive or
+      component is wrong, update the design-system artifact instead.
+
+  - id: frontend-kit.consumes-generated-ui-config
+    title: Frontend kit consumes typed UI config
+    severity: error
+    summary: >
+      Generated or semi-generated form and table config should drive generic
+      renderers without letting frontend-kit become the source of entity truth.
+    must:
+      - "Accept typed form, table, entity-page, and navigation config from generated artifacts, product packages, or app-owned configuration."
+      - "Use TypeScript generics and satisfies-style checks so UI config keys match the entity or DTO type they render."
+      - "Keep generated config in its approved generated output location and import it through public package paths."
+      - "Treat generated UI config as checked output, not trusted magic."
+    must_not:
+      - "Do not infer entity fields by scanning app internals at runtime."
+      - "Do not hand-edit generated UI config unless the generated-file policy explicitly allows it."
+      - "Do not put entity-definition source-of-truth logic in frontend-kit."
+    agent_guidance: >
+      frontend-kit renders from contracts. It does not decide the contract.
+
+  - id: frontend-kit.apps-own-routing-data-and-permissions
+    title: Apps own routing, data, and permissions
+    severity: error
+    summary: >
+      Apps decide which frontend-kit surfaces appear, where they route, what
+      data they fetch, which permissions apply, and which product actions are
+      available.
+    must:
+      - "Let apps supply route bindings, data loaders, mutation handlers, resource-specific permissions, app navigation structure, product copy, and analytics meaning."
+      - "Let frontend-kit expose extension points for app-owned behavior without importing app internals."
+      - "Keep app-specific error handling, feature flags, workflow orchestration, and product state in apps or product packages."
+    must_not:
+      - "Do not import apps/** from frontend-kit."
+      - "Do not make frontend-kit call app repositories, app APIs, route handlers, or platform runtime services directly."
+      - "Do not hide product authorization or workflow decisions inside generic UI renderers."
+    agent_guidance: >
+      A generic table can render an action slot. The app decides whether a
+      specific user can run the action and what the action does.
+
+  - id: frontend-kit.accessibility-and-interaction-are-shared
+    title: Shared interactions need shared tests
+    severity: error
+    summary: >
+      Because React does not make accessibility, state management, or complex
+      interaction behavior automatic, frontend-kit must test reusable forms,
+      tables, navigation, and CRUD layouts as shared interaction surfaces.
+    must:
+      - "Test keyboard behavior, focus management, loading states, empty states, error states, validation display, pagination, sorting, filtering, and permission-denied states for reusable surfaces."
+      - "Use contract or type tests for public config APIs such as FormConfig<T> and TableConfig<T>."
+      - "Use visual or interaction regression tests where shared layout behavior is likely to drift."
+      - "Document public props and extension points for app teams."
+    must_not:
+      - "Do not rely on each app to rediscover accessibility behavior for shared forms, tables, and navigation."
+      - "Do not expose broad untyped escape hatches that let apps bypass shared interaction contracts."
+      - "Do not treat React component reuse as sufficient without tests for behavior and accessibility."
+    agent_guidance: >
+      Shared UI behavior becomes architecture. If many apps rely on it, prove
+      it with reusable tests in the frontend-kit layer.
+
+source_refs:
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "2. Front-End Architecture"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "3. packages/frontend-kit"
+  - doc: "kanbien-frontend-design-system-guide.md"
+    sections:
+      - "What React is not"
+      - "Problem 2: Reusing UI safely"
+      - "Problem 3: Managing complex interaction"
+      - "Problem 4: Building large applications with many teams"
+      - "Tradeoff 3: Too much architectural freedom"
+      - "Tradeoff 5: Accessibility is not automatic"
+      - "Part 6: Final recommended Kanbien architecture"
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "6. Frontend form config"
+      - "7. Frontend table config"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/frontend-kit.yml."
+  - "It defines frontend-kit as a portable React product shell rather than app-specific UI."
+  - "It keeps entity-specific product meaning, routing, data loading, permissions, workflow decisions, and product copy in apps or product packages."
+  - "It requires frontend-kit to compose public design-system APIs rather than mutate tokens, primitives, patterns, or components."
+  - "It requires typed/generated UI config consumption for forms, tables, entity pages, and navigation without making frontend-kit the entity source of truth."
+  - "It defines shared interaction and accessibility test expectations."
+  - "It includes manually verified source_refs back to the full discussion, modular monorepo, frontend design-system, and TypeScript guides."

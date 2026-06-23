@@ -5,6 +5,7 @@ created_artifacts:
   layer_rulesets:
     - docs/harness/architecture/rules/layers/apps.yml
     - docs/harness/architecture/rules/layers/design-system.yml
+    - docs/harness/architecture/rules/layers/frontend-kit.yml
     - docs/harness/architecture/rules/layers/infra.yml
     - docs/harness/architecture/rules/layers/packages-core.yml
     - docs/harness/architecture/rules/layers/platform.yml
@@ -52,3 +53,4 @@ notes:
   - "The TypeScript guide's configuration, strictness, module resolution, package boundary, workspace, and monorepo tooling sections are covered by the typescript-monorepo-tooling concern."
   - "The full discussion, modular monorepo, TypeScript, and platform guides' app ownership and app integration sections are covered by the apps layer ruleset."
   - "The full discussion, modular monorepo, TypeScript, and platform guides' infra provisioning and deployment sections are covered by the infra layer ruleset."
+  - "The full discussion, modular monorepo, frontend design-system, and TypeScript guides' portable React frontend-kit sections are covered by the frontend-kit layer ruleset."
