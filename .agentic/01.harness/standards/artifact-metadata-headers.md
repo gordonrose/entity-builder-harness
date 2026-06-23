@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 owner: harness
 kind: standard
-purpose: Define metadata headers for scripts and harness process documents.
+purpose: Define metadata headers for scripts, harness process documents, and harness YAML artifacts.
 domain: metadata
 portability: llm-workbench-required
 used_by:
@@ -14,8 +14,9 @@ used_by:
 ## Purpose
 
 Use metadata headers to make harness artifacts self-describing. A reader should
-be able to open a script or harness document and see who owns it, why it exists,
-where it is used, and whether it is portable to upstream repos.
+be able to open a script, harness document, or harness YAML artifact and see who
+owns it, why it exists, where it is used, and whether it is portable to upstream
+repos.
 
 ## Scope
 
@@ -24,6 +25,7 @@ This standard applies to new:
 - scripts under `scripts/`
 - harness/process Markdown documents under `.agentic/`
 - harness architecture and process documents under `docs/harness/`
+- harness YAML artifacts under `docs/harness/`
 
 Existing files should be backfilled in focused batches. Until backfill is
 complete, the commit gate enforces metadata for newly added files.
@@ -105,6 +107,30 @@ Common `kind` values:
 - `skill`
 - `gate`
 - `doc`
+
+## YAML Header
+
+Harness YAML artifacts must declare metadata at the top of the file using YAML
+comments:
+
+```yaml
+# agentic-artifact:
+#   owner: harness
+#   kind: rule-pack
+#   purpose: Govern package core module changes.
+#   domain: architecture
+#   portability: source-only
+#   used_by:
+#     - docs/harness/architecture/rule-packs/add-core-module.yml
+```
+
+Common `kind` values:
+
+- `rule-pack`
+- `ruleset`
+- `fixture`
+- `manifest`
+- `config`
 
 ## Used-By Rules
 
