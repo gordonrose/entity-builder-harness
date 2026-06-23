@@ -158,6 +158,15 @@ source_guides:
           - docs/harness/architecture/rules/concerns/validation-api-errors.yml
         note: "Validation and API error-shape source refs were manually checked while creating docs/harness/architecture/rules/concerns/validation-api-errors.yml."
       - source_sections:
+          - "persistence/ deep dive"
+          - "files/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "persistence"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+        note: "Persistence and files source refs were manually checked while creating docs/harness/architecture/rules/concerns/persistence-files-storage.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -482,6 +491,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
     status: covered
     note: "Source refs manually checked while creating the platform-adapter-consumption concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    status: covered
+    note: "Source refs manually checked while creating the persistence and files concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
     status: covered
     note: "Source refs manually checked while creating the reporting, analytics, audit, and observability concern ruleset."
