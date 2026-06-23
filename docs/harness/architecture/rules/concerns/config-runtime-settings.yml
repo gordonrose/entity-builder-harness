@@ -1,0 +1,141 @@
+id: concern.config-runtime-settings
+title: Configuration and runtime settings rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for typed configuration access, startup validation,
+  required keys, environment names, secret references, environment parity,
+  feature flag access patterns, regional config, change audit, and ownership
+  splits across core, apps, platform, and infra.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/identity-access-security.yml
+  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: config-runtime-settings.config-is-typed-and-validated
+    title: Configuration is typed and validated at startup
+    severity: error
+    summary: >
+      Missing configuration and configuration drift are common deployment
+      failures. Runtime config should be typed, validated early, and accessed
+      through stable contracts.
+    must:
+      - "Use typed configuration access such as ConfigProvider, EnvironmentName, requireConfig, getString, getOptionalString, getNumber, and getBoolean where reused."
+      - "Validate required config keys at startup before serving requests or consuming jobs."
+      - "Fail fast for missing or invalid required config."
+      - "Keep config schemas or validation close to the runtime or app surface that owns the setting."
+    must_not:
+      - "Do not scatter raw process.env access through app business logic."
+      - "Do not let missing required config fail only on first production request."
+      - "Do not hide environment-specific behavior in hardcoded conditionals instead of governed config."
+    agent_guidance: >
+      If a value changes by environment, ask where it is typed, validated, and
+      failed fast.
+
+  - id: config-runtime-settings.secrets-are-references-not-code
+    title: Secrets are references, not code
+    severity: error
+    summary: >
+      Config may reference secrets, but actual secrets should be fetched through
+      controlled runtime mechanisms and provisioned infrastructure.
+    must:
+      - "Represent secret references or required secret keys without storing secret values in code."
+      - "Fetch secrets through platform-owned secret manager integrations or approved runtime mechanisms."
+      - "Account for secret rotation, access controls, redaction, and change audit where secrets are involved."
+    must_not:
+      - "Do not check secrets into source code, config defaults, test fixtures, generated artifacts, or docs."
+      - "Do not log secret values while validating config."
+      - "Do not put cloud secret manager implementation code in packages/core."
+    agent_guidance: >
+      A config contract can name the need for a secret. The secret value belongs
+      in controlled runtime and infrastructure paths.
+
+  - id: config-runtime-settings.feature-flags-are-governed-config
+    title: Feature flags are governed config
+    severity: error
+    summary: >
+      Feature flags are runtime settings with product meaning, operational risk,
+      fallback behavior, and lifecycle. They should not become unowned string
+      checks scattered through the codebase.
+    must:
+      - "Use a stable feature flag reader or config-backed flag abstraction where flags are reused."
+      - "Define flag owner, name, fallback behavior, expected lifetime, and cleanup path for non-permanent flags."
+      - "Keep product behavior tied to app-owned flag meaning while platform owns provider integration and evaluation mechanics."
+      - "Support regional or tenant-aware flag context only when the ownership model is explicit."
+    must_not:
+      - "Do not scatter ungoverned string flag checks across unrelated modules."
+      - "Do not let feature flags replace authorization, tenancy, or rollout governance."
+      - "Do not build a complex flag platform before the product needs it."
+    agent_guidance: >
+      A flag is a temporary fork in behavior unless intentionally permanent.
+      Ask who owns closing it.
+
+  - id: config-runtime-settings.environments-are-parity-checked
+    title: Environments are parity-checked
+    severity: error
+    summary: >
+      Development, test, staging, and production settings should be explicit
+      enough to avoid surprise drift while still allowing environment-specific
+      differences.
+    must:
+      - "Use named environment concepts such as development, test, staging, and production where runtime behavior depends on environment."
+      - "Document environment-specific differences such as auth issuer, log level, queue names, region, CORS origins, rate-limit store, and feature flag provider."
+      - "Validate regional config and tenant-specific config where those values affect runtime behavior."
+      - "Audit changes to sensitive or production-impacting config where appropriate."
+    must_not:
+      - "Do not assume local defaults are safe in staging or production."
+      - "Do not create hidden environment hacks with no validation or documentation."
+      - "Do not mix config values with business rules that belong in apps."
+    agent_guidance: >
+      Environment drift is quiet until deploy time. Keep the differences named,
+      validated, and reviewable.
+
+  - id: config-runtime-settings.layer-ownership-is-explicit
+    title: Configuration ownership is explicit
+    severity: error
+    summary: >
+      Core defines provider-neutral config contracts. Platform loads values from
+      environment variables, files, or secret managers. Apps own namespaced app
+      config meaning. Infra provisions secrets and environment resources.
+    must:
+      - "Put ConfigProvider, EnvironmentName, requireConfig, config errors, and secret reference concepts in packages/core when reused and framework-independent."
+      - "Put global config loading, startup validation runtime, config provider bindings, secret-manager integrations, feature flag provider integration, and regional config resolution in platform."
+      - "Put feature-specific business constants, app config schemas, product flag meaning, and app-owned required keys in apps or product packages."
+      - "Put actual secrets, secret manager resources, environment variables, parameter store paths, IAM, and deployment-time config resources in infra or deployment configuration."
+    must_not:
+      - "Do not put actual secrets, cloud secret manager implementations, feature-specific business constants, or hardcoded environment hacks in packages/core."
+      - "Do not put product-specific config meaning in platform shared runtime code."
+      - "Do not put config validation only in docs with no executable startup check."
+    agent_guidance: >
+      Separate the config contract, config source, product meaning, and
+      provisioned secret/resource.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "config/ deep dive"
+      - "Part 9: Building Kanbien v1"
+      - "config"
+      - "Enterprise Future"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/config-runtime-settings.yml."
+  - "It requires typed config access and startup validation."
+  - "It prevents scattered process.env access and late missing-config failures."
+  - "It keeps secrets out of code and requires controlled secret references."
+  - "It treats feature flags as governed runtime settings."
+  - "It requires environment parity checks, regional config awareness, and change audit where relevant."
+  - "It defines ownership splits across core contracts, platform runtime loading, app config meaning, and infra resources."
+  - "It includes manually verified source_refs back to the core architecture guide."

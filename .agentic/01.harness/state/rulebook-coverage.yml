@@ -173,6 +173,15 @@ source_guides:
           - docs/harness/architecture/rules/concerns/notifications.yml
         note: "Notification source refs were manually checked while creating docs/harness/architecture/rules/concerns/notifications.yml."
       - source_sections:
+          - "config/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "config"
+          - "Enterprise Future"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+        note: "Configuration source refs were manually checked while creating docs/harness/architecture/rules/concerns/config-runtime-settings.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -461,6 +470,9 @@ source_guides:
         note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml and docs/harness/architecture/rule-packs/add-platform-adapter.yml."
 
 artifact_coverage:
+  - artifact: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    status: covered
+    note: "Source refs manually checked while creating the configuration and runtime settings concern ruleset."
   - artifact: docs/harness/architecture/rules/layers/design-system.yml
     status: covered
     note: "Source refs manually checked while creating the design-system layer ruleset."

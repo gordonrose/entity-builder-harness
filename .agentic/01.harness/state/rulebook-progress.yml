@@ -8,6 +8,7 @@ created_artifacts:
     - docs/harness/architecture/rules/layers/platform.yml
     - docs/harness/architecture/rules/layers/tools.yml
   concern_rulesets:
+    - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
     - docs/harness/architecture/rules/concerns/design-label-theming.yml
     - docs/harness/architecture/rules/concerns/events-messaging-async.yml
@@ -44,3 +45,4 @@ notes:
   - "The core guide's validation and API error-shape sections are covered by the validation-api-errors concern."
   - "The core guide's persistence and files sections are covered by the persistence-files-storage concern."
   - "The core guide's notification sections are covered by the notifications concern."
+  - "The core guide's configuration sections are covered by the config-runtime-settings concern."
