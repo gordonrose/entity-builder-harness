@@ -37,14 +37,19 @@ Future Codex sessions continuing rulebook work should start by reading
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.
 
-## Architecture
+## Chat Workbench Docs
 
-- `docs/harness/architecture/chat-workbench-public-repo-readiness.md` - defines the current export boundary for bootstrapping a standalone public chat workbench repo.
-- `docs/harness/architecture/script-layout.md` - explains the current script layout after the chat harness script migration.
+- `docs/00.chat/` - indexes chat-owned docs for portable chat harness and public workbench bootstrap behavior.
+- `docs/00.chat/chat-workbench-public-repo-readiness.md` - defines the current export boundary for bootstrapping a standalone public chat workbench repo.
+- `docs/00.chat/script-layout.md` - explains the current script layout after the chat harness script migration.
 
 ## Bootstrap Templates
 
 - `docs/harness/bootstrap/llm-workbench-template/` - starter public repo shell files for the first `llm-workbench` bootstrap.
+
+## Scripts
+
+- `scripts/01.harness/check-rule-test-taxonomy.py` - validates architecture rulebook layer test taxonomy structure and CI vocabulary references.
 
 ## Data
 

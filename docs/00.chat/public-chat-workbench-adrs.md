@@ -44,4 +44,5 @@ docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md
 docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
 docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
 ```

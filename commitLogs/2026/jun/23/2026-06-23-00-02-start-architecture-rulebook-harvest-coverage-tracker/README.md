@@ -789,4 +789,22 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
 
 ## Notes
 
-- None recorded yet.
+- Artifact path migration: moved chat-owned workbench docs from
+  `docs/harness/architecture/{script-layout.md,chat-workbench-public-repo-readiness.md,public-chat-workbench-adrs.md}`
+  to `docs/00.chat/`.
+- Compatibility choice: `retired` for the three old doc paths after active
+  references were updated to `docs/00.chat/`; no pointer retained because the
+  migration checks reported no active old-path references.
+- Active reference buckets updated: workflow, bootstrap, script, and
+  architecture references; bootstrap planner now copies `docs/00.chat/`.
+- ADR disposition: added
+  `docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md`; centralized
+  ADR files remain under `docs/harness/architecture/adrs/`, with public export
+  still selected by `docs/00.chat/public-chat-workbench-adrs.md`.
+- Checks run: dirty worktree gate; three
+  `check-artifact-path-migration.sh` checks; targeted
+  `check-artifact-metadata-headers.sh --paths`; `smoke-test-artifact-path-migration.sh`;
+  `bootstrap-llm-workbench-repo/smoke-test.sh`; `git diff --check`.
+- Note: `check-artifact-metadata-headers.sh --all` still fails on existing
+  unbackfilled metadata headers outside this change; the targeted metadata check
+  for the moved/new artifacts passed.

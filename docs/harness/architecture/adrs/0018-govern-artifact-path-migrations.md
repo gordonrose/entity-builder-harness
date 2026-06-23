@@ -7,7 +7,7 @@ portability: llm-workbench-required
 used_by:
   - .agentic/01.harness/workflows/migrate-artifact-paths.md
   - .agentic/01.harness/standards/artifact-path-migrations.md
-  - docs/harness/architecture/public-chat-workbench-adrs.md
+  - docs/00.chat/public-chat-workbench-adrs.md
 -->
 
 # 0018 Govern Artifact Path Migrations

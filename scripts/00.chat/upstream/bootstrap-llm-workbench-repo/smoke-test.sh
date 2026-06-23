@@ -48,7 +48,7 @@ make_repo "$EMPTY_REPO"
 run_plan "$EMPTY_REPO" "$TMP_ROOT/empty.out"
 grep -q '^CREATE package.json$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan package creation"
 grep -q '^CREATE scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan upstream planner script"
-grep -q '^CREATE docs/harness/architecture/public-chat-workbench-adrs.md$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan public ADR manifest"
+grep -q '^CREATE docs/00.chat/public-chat-workbench-adrs.md$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan public ADR manifest"
 grep -q '^CREATE docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md$' "$TMP_ROOT/empty.out" || fail "empty repo did not plan selected chat ADR"
 if grep -q '^CREATE docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md$' "$TMP_ROOT/empty.out"; then
   fail "empty repo planned historical non-public ADR"

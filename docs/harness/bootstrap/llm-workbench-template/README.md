@@ -6,7 +6,7 @@ domain: bootstrap
 portability: llm-workbench-required
 used_by:
   - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-  - docs/harness/architecture/chat-workbench-public-repo-readiness.md
+  - docs/00.chat/chat-workbench-public-repo-readiness.md
 -->
 
 # llm-workbench Template

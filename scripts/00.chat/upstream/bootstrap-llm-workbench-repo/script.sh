@@ -75,7 +75,7 @@ fi
 
 SOURCE_REPO="$(git rev-parse --show-toplevel)"
 TEMPLATE_ROOT="$SOURCE_REPO/docs/harness/bootstrap/llm-workbench-template/root"
-PUBLIC_ADR_MANIFEST="$SOURCE_REPO/docs/harness/architecture/public-chat-workbench-adrs.md"
+PUBLIC_ADR_MANIFEST="$SOURCE_REPO/docs/00.chat/public-chat-workbench-adrs.md"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-bootstrap-plan.XXXXXX")"
 PLAN_PATHS="$TMP_DIR/planned-paths.txt"
 PACKAGE_OUTPUT="$TMP_DIR/package-output.txt"
@@ -291,9 +291,7 @@ plan_tree ".agentic/shared/workflows"
 plan_tree ".agentic/01.harness"
 plan_tree "scripts/00.chat"
 plan_tree "scripts/01.harness"
-plan_selected_file "docs/harness/architecture/script-layout.md"
-plan_selected_file "docs/harness/architecture/chat-workbench-public-repo-readiness.md"
-plan_selected_file "docs/harness/architecture/public-chat-workbench-adrs.md"
+plan_tree "docs/00.chat"
 plan_selected_file "docs/harness/architecture/adrs/README.md"
 plan_public_adrs
 plan_preserved_target_owned_files

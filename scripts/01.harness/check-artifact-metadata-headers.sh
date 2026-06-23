@@ -21,7 +21,7 @@ Usage:
   check-artifact-metadata-headers.sh --paths <path> [path...]
   check-artifact-metadata-headers.sh --all
 
-Checks scripts and harness Markdown documents for required agentic metadata
+Checks scripts and agentic Markdown documents for required metadata
 headers. --staged-added enforces only newly added files so existing files can be
 backfilled in batches.
 EOF
@@ -83,7 +83,7 @@ is_script_artifact() {
 
 is_markdown_artifact() {
   case "$1" in
-    .agentic/*.md|.agentic/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
+    .agentic/*.md|.agentic/**/*.md|docs/00.chat/*.md|docs/00.chat/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
       return 0
       ;;
     *)
@@ -123,6 +123,7 @@ collect_all_paths() {
   {
     [ -d scripts ] && find scripts -type f
     [ -d .agentic ] && find .agentic -type f -name '*.md'
+    [ -d docs/00.chat ] && find docs/00.chat -type f -name '*.md'
     [ -d docs/harness ] && find docs/harness -type f -name '*.md'
   } | sort -u
 }
@@ -150,14 +151,14 @@ validate_used_by_paths() {
 
     [ -n "$ref" ] || continue
     case "$ref" in
-      AGENTS.md|.agentic/*|docs/harness/*|scripts/*)
+      AGENTS.md|.agentic/*|docs/00.chat/*|docs/harness/*|scripts/*)
         if [ ! -e "$ref" ]; then
           echo "ERROR: $path references missing used_by path: $ref" >&2
           failures=$((failures + 1))
         fi
         ;;
     esac
-  done < <(header_block "$path" | grep -E '^[#/]?[[:space:]]*- (AGENTS.md|\.agentic/|docs/harness/|scripts/)' || true)
+  done < <(header_block "$path" | grep -E '^[#/]?[[:space:]]*- (AGENTS.md|\.agentic/|docs/00\.chat/|docs/harness/|scripts/)' || true)
 
   return "$failures"
 }
