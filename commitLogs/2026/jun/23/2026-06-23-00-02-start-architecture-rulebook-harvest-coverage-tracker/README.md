@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T00:00:50Z
-latest_commit_sha: fa50403
-chat_duration: 3493s (00:00:58:13)
-estimated_chat_tokens: 1049379 estimated from chat transcript bytes (4197514 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 31.48 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-23T00:02:37Z
+latest_commit_sha: c415985
+chat_duration: 3600s (00:01:00:00)
+estimated_chat_tokens: 1070474 estimated from chat transcript bytes (4281896 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 32.11 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -441,6 +441,17 @@ Summary: Added the persistence-files-storage concern for database-agnostic persi
 
 ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+### 2026-06-23T00:02:37Z - Commit recorded
+
+Commit: `c415985`
+
+Message: Add notification rules
+
+Summary: Added the notifications concern for provider-neutral notification contracts, templates/copy/preferences ownership, delivery tracking and retries, privacy/consent/security checks, localization, audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Commits
 
 
@@ -605,6 +616,13 @@ ADR impact: No ADR impact; source-backed concern added from manually checked cor
   Summary: Added the persistence-files-storage concern for database-agnostic persistence contracts, transactions, pagination, optimistic locking, outbox support, file storage contracts, metadata, access, retention, tenant isolation, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
   ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+- Commit: `c415985`
+  Time UTC: 2026-06-23T00:02:37Z
+  Message: Add notification rules
+  Summary: Added the notifications concern for provider-neutral notification contracts, templates/copy/preferences ownership, delivery tracking and retries, privacy/consent/security checks, localization, audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -618,11 +636,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T00:00:50Z
-Latest commit SHA: fa50403
-Chat duration: 3493s (00:00:58:13)
-Estimated chat tokens: 1049379 estimated from chat transcript bytes (4197514 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 31.48 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-23T00:02:37Z
+Latest commit SHA: c415985
+Chat duration: 3600s (00:01:00:00)
+Estimated chat tokens: 1070474 estimated from chat transcript bytes (4281896 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 32.11 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
