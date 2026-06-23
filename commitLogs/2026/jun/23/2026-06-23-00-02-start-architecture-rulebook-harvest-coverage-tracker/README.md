@@ -1,0 +1,1162 @@
+# Chat Session: 2026-06-23-00-02 start-architecture-rulebook-harvest-coverage-tracker
+
+<!-- agentic-session
+id: 2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker
+task: start architecture rulebook harvest coverage tracker
+branch: chat/2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-3087629013
+layer: harness
+mode: implementation
+workflow: .agentic/01.harness/workflows/change-harness.md
+status: ready
+raised_at_utc: 2026-06-22T23:02:37Z
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
+latest_commit_at_utc: 2026-06-23T17:55:52Z
+latest_commit_sha: 633fff8
+chat_duration: 67995s (00:18:53:15)
+estimated_chat_tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 46.94 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
+-->
+
+## Initial Intent
+
+start architecture rulebook harvest coverage tracker
+
+## Session Log
+
+- Session started.
+- Branch created.
+- Chat-owned worktree created.
+- Commit log initialized.
+
+## Questions Asked
+
+- Asked: I cannot classify this safely yet. What layer and mode should this use?
+  Response: layer: harness - mode: implementation
+
+## Issues Raised
+
+
+
+- Raised: Generated-code overlap with dependency direction
+  Resolution: Resolved by declaring dependency-direction.yml as a related ruleset; generated-code.yml expands lifecycle, placement, idempotence, and freshness rules rather than replacing the import-boundary rule.
+
+
+- Raised: Harness layer ownership conflict
+  Resolution: Deferred docs/harness/architecture/rules/layers/harness.yml because source guides conflict on whether harness owns entity-builder governance/generation or only testing and development support.
+
+## Decisions Made
+
+- Decision: Use harness implementation workflow for rulebook harvest coverage tracker
+  Rationale: User classified the task as layer harness and mode implementation after classifier returned unknown.
+
+
+- Decision: Add rulebook coverage ledger first
+  Rationale: Create state/rulebook-coverage.yml before generating more rules so guide coverage, deferred decisions, duplication, and source-reference review are auditable.
+
+
+- Decision: Create generated-code concern ruleset
+  Rationale: Selected generated-code.yml as the next concern because it was first in the queue and the TypeScript, modular monorepo, and full discussion guides all contain concrete generated-code governance.
+
+
+- Decision: Generated-code source refs manually verified
+  Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking the generated-code coverage entries covered.
+
+
+- Decision: Create entity rule pack
+  Rationale: Selected create-entity.yml as the next task-shaped pack because generated-code.yml is now available and the entity-builder guides describe a complete entity-to-contract-to-CI flow.
+
+
+- Decision: Create-entity source refs manually verified
+  Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking create-entity coverage entries covered.
+
+
+- Decision: Defer harness.yml
+  Rationale: Moved harness.yml out of the active candidate queue and recorded harness-layer-ownership as an open deferred human decision in rulebook coverage state.
+
+
+- Decision: Create tools layer ruleset
+  Rationale: Selected tools.yml after deferring harness.yml; verified TypeScript tools/, modular tools/build, and full-discussion Build and Code Generation sections before encoding tools layer rules.
+
+
+- Decision: Tools source refs manually verified
+  Rationale: Checked the cited tools/build and tools/ sections before marking tools coverage entries covered.
+
+
+- Decision: Create CI quality concern ruleset
+  Rationale: Selected ci-quality.yml after tools.yml; verified TypeScript guide sections for linting, formatting, type checking, testing, code generation, CI checks, and tools before encoding CI quality rules.
+
+
+- Decision: CI-quality source refs manually verified
+  Rationale: Checked the cited TypeScript architecture guide sections before marking CI-quality coverage entries covered.
+
+
+- Decision: Add CI test taxonomy matrices
+  Rationale: User identified that the rulebook needed both test-type and test-category expectations per layer, including explicit coverage intent for critical paths, validation, edge cases, security, failure modes, contracts, generated output, observability, and accessibility.
+
+## Activity Log
+
+### 2026-06-22T23:02:37Z - Session started
+
+Initial intent: start architecture rulebook harvest coverage tracker
+
+
+### 2026-06-22T23:05:15Z - Commit recorded
+
+Commit: `9a62452`
+
+Message: Add architecture rulebook operating pack
+
+Summary: Brought the previously approved .agentic/01.harness operating pack onto the current rulebook-harvest branch so the coverage tracker can build on the current architecture-rule baseline.
+
+ADR impact: No new ADR required; baseline alignment for approved rulebook harvest work.
+
+
+### 2026-06-22T23:06:56Z - Decision
+
+Decision: Add rulebook coverage ledger first
+
+Rationale: Create state/rulebook-coverage.yml before generating more rules so guide coverage, deferred decisions, duplication, and source-reference review are auditable.
+
+
+### 2026-06-22T23:06:56Z - ADR disposition
+
+ADR needed: no
+
+Reason: This slice adds rulebook tracking state and continuation guidance; it does not introduce a durable harness architecture decision requiring an ADR.
+
+
+### 2026-06-22T23:07:45Z - Commit recorded
+
+Commit: `ffb7e62`
+
+Message: Add architecture rulebook coverage tracker
+
+Summary: Added rulebook coverage tracking state and wired the rulebook continuation guidance to read and update coverage before creating further artifacts.
+
+ADR impact: No ADR required; tracking state and workflow guidance only.
+
+
+### 2026-06-22T23:10:45Z - Decision
+
+Decision: Create generated-code concern ruleset
+
+Rationale: Selected generated-code.yml as the next concern because it was first in the queue and the TypeScript, modular monorepo, and full discussion guides all contain concrete generated-code governance.
+
+
+### 2026-06-22T23:10:45Z - Decision
+
+Decision: Generated-code source refs manually verified
+
+Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking the generated-code coverage entries covered.
+
+
+### 2026-06-22T23:10:45Z - Issue
+
+Raised: Generated-code overlap with dependency direction
+
+Resolution: Resolved by declaring dependency-direction.yml as a related ruleset; generated-code.yml expands lifecycle, placement, idempotence, and freshness rules rather than replacing the import-boundary rule.
+
+
+### 2026-06-22T23:11:15Z - Commit recorded
+
+Commit: `9f7ce33`
+
+Message: Add generated code concern rules
+
+Summary: Created docs/harness/architecture/rules/concerns/generated-code.yml with deterministic generation, generator/runtime boundary, generated output placement, and no-manual-edit rules; updated rulebook coverage and progress state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:12:48Z - Decision
+
+Decision: Create entity rule pack
+
+Rationale: Selected create-entity.yml as the next task-shaped pack because generated-code.yml is now available and the entity-builder guides describe a complete entity-to-contract-to-CI flow.
+
+
+### 2026-06-22T23:12:48Z - Decision
+
+Decision: Create-entity source refs manually verified
+
+Rationale: Checked the cited sections in kanbien-typescript-architecture-guide.md, kanbien-modular-monorepo-entity-builder.md, and kanbien-architecture-full-discussion.md before marking create-entity coverage entries covered.
+
+
+### 2026-06-22T23:13:18Z - Commit recorded
+
+Commit: `83f0b90`
+
+Message: Add create entity rule pack
+
+Summary: Created docs/harness/architecture/rule-packs/create-entity.yml as a task-shaped pack composing generated-code and dependency-direction rules; updated rulebook progress and coverage state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:14:48Z - Issue
+
+Raised: Harness layer ownership conflict
+
+Resolution: Deferred docs/harness/architecture/rules/layers/harness.yml because source guides conflict on whether harness owns entity-builder governance/generation or only testing and development support.
+
+
+### 2026-06-22T23:14:48Z - Decision
+
+Decision: Defer harness.yml
+
+Rationale: Moved harness.yml out of the active candidate queue and recorded harness-layer-ownership as an open deferred human decision in rulebook coverage state.
+
+
+### 2026-06-22T23:15:19Z - Commit recorded
+
+Commit: `a97ecea`
+
+Message: Defer harness layer ownership decision
+
+Summary: Recorded an open human decision for harness layer ownership because source guides conflict on whether harness is testing support or entity-builder governance/generation; removed harness.yml from the active candidate queue.
+
+ADR impact: No ADR required; deferred coverage decision only.
+
+
+### 2026-06-22T23:17:34Z - Decision
+
+Decision: Create tools layer ruleset
+
+Rationale: Selected tools.yml after deferring harness.yml; verified TypeScript tools/, modular tools/build, and full-discussion Build and Code Generation sections before encoding tools layer rules.
+
+
+### 2026-06-22T23:17:34Z - Decision
+
+Decision: Tools source refs manually verified
+
+Rationale: Checked the cited tools/build and tools/ sections before marking tools coverage entries covered.
+
+
+### 2026-06-22T23:18:09Z - Commit recorded
+
+Commit: `264c589`
+
+Message: Add tools layer rules
+
+Summary: Created docs/harness/architecture/rules/layers/tools.yml for repo automation, generators, runtime dependency boundaries, and tools validation; updated rulebook coverage and progress state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:19:46Z - Decision
+
+Decision: Create CI quality concern ruleset
+
+Rationale: Selected ci-quality.yml after tools.yml; verified TypeScript guide sections for linting, formatting, type checking, testing, code generation, CI checks, and tools before encoding CI quality rules.
+
+
+### 2026-06-22T23:19:47Z - Decision
+
+Decision: CI-quality source refs manually verified
+
+Rationale: Checked the cited TypeScript architecture guide sections before marking CI-quality coverage entries covered.
+
+
+### 2026-06-22T23:20:39Z - Commit recorded
+
+Commit: `2689bae`
+
+Message: Add CI quality concern rules
+
+Summary: Created docs/harness/architecture/rules/concerns/ci-quality.yml for baseline CI gates, boundary/contract checks, generated freshness, and surface-appropriate tests; updated rulebook coverage and progress state.
+
+ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+### 2026-06-22T23:25:27Z - Commit recorded
+
+Commit: `2025224017817a07a5d48e10c3e9c33db322b552`
+
+Message: Add platform adapter consumption rules
+
+Summary: Added a manually verified platform adapter consumption concern ruleset and marked the platform adapter consumption guide covered in the rulebook tracker.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+### 2026-06-22T23:27:47Z - Commit recorded
+
+Commit: `794a5ca5c1e09e63c551df5ca09d0c0b4fbb48d2`
+
+Message: Add platform adapter rule pack
+
+Summary: Added a task-shaped add-platform-adapter rule pack that composes platform-adapter-consumption and dependency-direction rules for adapter, profile, and bootstrap work.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+### 2026-06-22T23:31:02Z - Commit recorded
+
+Commit: `4120d4f45c1d0174c58ebb4fd18e050eed3e03c1`
+
+Message: Refine packages core rules
+
+Summary: Refined the packages/core layer ruleset with source-verified admission rules, ownership/current-need checks, a contract-shaped capability module catalog, and coverage updates.
+
+ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
+
+
+### 2026-06-22T23:33:11Z - Commit recorded
+
+Commit: `3c1d89d606bf5d37e47fa90594098eac4f7a2fdf`
+
+Message: Refine add core module rule pack
+
+Summary: Refined add-core-module with source-verified framework-independence, reuse, ownership, capability-family, and placement checks; split coverage so unrelated platform sections remain in progress.
+
+ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
+
+
+### 2026-06-22T23:35:43Z - Commit recorded
+
+Commit: `7229c1fd6738f44d4767e2c46f3647d74e4378ab`
+
+Message: Refine dependency direction rules
+
+Summary: Refined dependency-direction with source-verified package runtime boundaries, platform runtime/product-neutral boundaries, design-system one-way layer details, and coverage updates.
+
+ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
+
+
+### 2026-06-22T23:38:22Z - Commit recorded
+
+Commit: `cdfa2449947ed114a5fa311e3e2fc7ed55fe068d`
+
+Message: Add design system layer rules
+
+Summary: Added a source-verified design-system layer ruleset covering tokens, resolvers, primitives, patterns, components, templates, pages, governance, accessibility, and coverage state.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+### 2026-06-22T23:40:38Z - Commit recorded
+
+Commit: `012dac9c9de893e84bc78f2d3b1fca14e8ea85e5`
+
+Message: Add design label theming rules
+
+Summary: Added a source-verified design-label theming concern covering design labels as visual systems, generated CSS variable scope, flicker avoidance, accessibility/layout validation, resolver token-graph checks, and coverage state.
+
+ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+### 2026-06-22T23:43:16Z - Commit recorded
+
+Commit: `a5022cc`
+
+Message: Add design system component rule pack
+
+Summary: Added the add-design-system-component rule pack and updated manifest, progress, and coverage to connect the frontend design-system Button workflow to layer, label-theming, dependency, and CI rules.
+
+ADR impact: No ADR impact; source-backed rulebook artifact added from reviewed guide sections.
+
+
+### 2026-06-22T23:46:55Z - Commit recorded
+
+Commit: `bda06cb`
+
+Message: Add platform layer rules
+
+Summary: Added the platform layer ruleset for runtime composition, app mounting, server and worker entrypoints, security, observability, health, config, resources, shutdown, and platform/app contract testing; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; deferred platform entity/codegen ownership for human decision due source tension between the TypeScript guide and platform-layer guide.
+
+
+### 2026-06-22T23:49:30Z - Commit recorded
+
+Commit: `170cc90`
+
+Message: Add events messaging async rules
+
+Summary: Added the events-messaging-async concern for domain events, event buses, queues, async jobs, scheduled jobs, workers, outbox publication, DLQ handling, idempotency, and core/apps/platform/infra ownership splits; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-22T23:51:32Z - Commit recorded
+
+Commit: `734b3b1`
+
+Message: Add reporting analytics audit rules
+
+Summary: Added the reporting-analytics-audit concern to distinguish reporting, analytics, BI, audit, logging, monitoring, and observability, and to define core/app/platform/infra ownership splits; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-22T23:53:23Z - Commit recorded
+
+Commit: `b0700c1`
+
+Message: Add tenancy rules
+
+Summary: Added the tenancy concern for tenant identity, resolution, propagation, isolation models, cross-tenant security, noisy-neighbor controls, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-22T23:55:08Z - Commit recorded
+
+Commit: `8406a67`
+
+Message: Add i18n localization rules
+
+Summary: Added the i18n-localization concern for translation readiness, locale resolution, safe interpolation, fallback behavior, pluralization, RTL support, timezone correctness, currency/regional formatting, and core/design-system/app/platform ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-22T23:57:08Z - Commit recorded
+
+Commit: `9b38ecb`
+
+Message: Add identity access security rules
+
+Summary: Added the identity-access-security concern for authn/authz separation, principal contracts, authorization decisions, security primitives, ownership splits, and v1 seams; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-22T23:58:49Z - Commit recorded
+
+Commit: `050d68c`
+
+Message: Add validation API error rules
+
+Summary: Added the validation-api-errors concern for runtime input validation, ValidationResult/ValidationError shapes, consistent API bad-request responses, validation/authz separation, and ownership across core, apps, platform, and generated schemas; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-23T00:00:50Z - Commit recorded
+
+Commit: `fa50403`
+
+Message: Add persistence files storage rules
+
+Summary: Added the persistence-files-storage concern for database-agnostic persistence contracts, transactions, pagination, optimistic locking, outbox support, file storage contracts, metadata, access, retention, tenant isolation, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-23T00:02:37Z - Commit recorded
+
+Commit: `c415985`
+
+Message: Add notification rules
+
+Summary: Added the notifications concern for provider-neutral notification contracts, templates/copy/preferences ownership, delivery tracking and retries, privacy/consent/security checks, localization, audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-23T00:04:19Z - Commit recorded
+
+Commit: `4cbc7dc`
+
+Message: Add config runtime settings rules
+
+Summary: Added the config-runtime-settings concern for typed config access, startup validation, secret references, environment parity, feature flags, regional config, change audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+### 2026-06-23T00:08:01Z - Commit recorded
+
+Commit: `765ae42`
+
+Message: Add TypeScript monorepo tooling rules
+
+Summary: Added the typescript-monorepo-tooling concern for layered tsconfig setup, strict defaults, package boundaries, path alias discipline, project references, runtime-specific module resolution, ESM-first packages, workspaces, and monorepo orchestration; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked TypeScript guide sections.
+
+
+### 2026-06-23T00:13:27Z - Commit recorded
+
+Commit: `f3f6efc`
+
+Message: Add apps layer rules
+
+Summary: Added the apps layer ruleset for deployable and mountable app composition, product behavior ownership, explicit app mounts and manifests, app-owned ordered migrations, downward dependency flow, and app wiring/contract/smoke test expectations; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed layer added from manually checked app sections. Added deferred human decision for canonical entity-definition source-of-truth location.
+
+
+### 2026-06-23T00:16:33Z - Commit recorded
+
+Commit: `19111b6`
+
+Message: Add infra layer rules
+
+Summary: Added the infra layer ruleset for infrastructure-as-code and deployment definitions, provisioning ownership, app manifest/generated metadata consumption, controlled secrets and environments, platform/app lifecycle separation, and deployment validation expectations; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed layer added from manually checked infra/deployment sections.
+
+
+### 2026-06-23T00:19:10Z - Commit recorded
+
+Commit: `28d3fdb`
+
+Message: Add frontend-kit layer rules
+
+Summary: Added the frontend-kit layer ruleset for portable React product shells, generic entity pages/CRUD layouts/forms/tables/navigation, public design-system composition, typed/generated UI config consumption, app-owned routing/data/permissions, and shared accessibility/interaction test expectations; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed layer added from manually checked frontend-kit and React frontend sections.
+
+
+### 2026-06-23T00:21:40Z - Commit recorded
+
+Commit: `ffb9cbd`
+
+Message: Close architecture guide coverage tracking
+
+Summary: Marked all source guides as covered by mapping remaining sections to covered, duplicate-of, background-only, or deferred-human-decision statuses; added the missing TypeScript guide '2. Inferred TypeScript type' source ref to create-entity.
+
+ADR impact: No ADR impact; coverage tracking closure and source-ref correction only.
+
+
+### 2026-06-23T16:25:06Z - ADR disposition
+
+ADR needed: no
+
+Reason: No ADR required; this is a source-backed rulebook hardening pass that refines existing CI quality and layer rules without introducing a new harness architecture primitive.
+
+
+### 2026-06-23T16:25:12Z - Decision
+
+Decision: Add CI test taxonomy matrices
+
+Rationale: User identified that the rulebook needed both test-type and test-category expectations per layer, including explicit coverage intent for critical paths, validation, edge cases, security, failure modes, contracts, generated output, observability, and accessibility.
+
+
+### 2026-06-23T16:25:52Z - Commit recorded
+
+Commit: `1dcc51c`
+
+Message: Add CI test taxonomy matrices
+
+Summary: Added shared CI test type/category vocabulary and layer-specific test taxonomy matrices across active architecture layer rules.
+
+ADR impact: No ADR required; source-backed rulebook hardening only.
+
+
+### 2026-06-23T16:43:15Z - Commit recorded
+
+Commit: `e1c187f`
+
+Message: Move chat workbench docs
+
+Summary: Moved chat-owned workbench docs into docs/00.chat, added a chat docs README, updated bootstrap/export references and metadata coverage, and recorded ADR 0019 for the docs namespace while leaving ADR files centralized.
+
+ADR impact: ADR added: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
+
+
+### 2026-06-23T17:01:20Z - Commit recorded
+
+Commit: `11738ea`
+
+Message: Harden CI test taxonomy rules
+
+Summary: Tightened CI taxonomy rules so layer matrices require minimum evidence and explicit weak-test exclusions, added negative-proof expectations across active layer rule files, and added a deterministic taxonomy checker.
+
+ADR impact: No ADR required; this hardens source-backed rulebook validation without adding a new architecture primitive.
+
+
+### 2026-06-23T17:09:22Z - Commit recorded
+
+Commit: `5b0ab21`
+
+Message: Record scripts namespace direction
+
+Summary: Recorded ADR 0020 for numbered scripts namespaces as the durable executable command surface, updated script-layout docs, and clarified future product/deployment command surfaces.
+
+ADR impact: ADR added: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+
+
+### 2026-06-23T17:11:13Z - Migration outcome recorded
+
+Old path: `docs/harness/bootstrap`
+
+New path: `docs/00.chat/bootstrap`
+
+Compatibility choice: `retired`
+
+Active reference buckets updated: workflow, script, bootstrap.
+
+Checks run: `plan-artifact-path-migration.sh docs/harness/bootstrap docs/00.chat/bootstrap`; `check-artifact-path-migration.sh docs/harness/bootstrap docs/00.chat/bootstrap`; `smoke-test-artifact-path-migration.sh`; `audit-chat-bootstrap-file-set/script.sh`; `bootstrap-llm-workbench-repo/smoke-test.sh`; `check-artifact-metadata-headers.sh --paths docs/00.chat/bootstrap/llm-workbench-template/README.md`.
+
+ADR impact: No new ADR required; this follows the existing `docs/00.chat` namespace direction for chat-owned public workbench docs and templates.
+
+
+### 2026-06-23T17:17:05Z - Commit recorded
+
+Commit: `5534f59`
+
+Message: Harden rule taxonomy and move chat bootstrap templates
+
+Summary: Hardened CI taxonomy validation with scoped layer files, negative-evidence guardrails, and a self-test, then moved public llm-workbench bootstrap templates under docs/00.chat/bootstrap with active references and migration checks updated.
+
+ADR impact: No new ADR required for the template move because it follows ADR 0019; taxonomy hardening remains source-backed validation work without a new architecture primitive.
+
+
+### 2026-06-23T17:18:28Z - Commit recorded
+
+Commit: `58b6b85`
+
+Message: Align tools rulebook with scripts surfaces
+
+Summary: Updated the historical tools layer rulebook to describe numbered scripts command surfaces, future product/deployment script namespaces, and script capability testing expectations while keeping the file in place until a governed path migration renames it.
+
+ADR impact: No new ADR required; this implements the scripts namespace direction already recorded in ADR 0020.
+
+
+### 2026-06-23T17:19:18Z - Commit recorded
+
+Commit: `8b197bc`
+
+Message: Update rulebook references to scripts surfaces
+
+Summary: Updated rule packs and concern/layer rule files to refer to numbered scripts command surfaces instead of the retired tools namespace, keeping dependency-direction and generated-code guidance aligned with ADR 0020.
+
+ADR impact: No new ADR required; this applies the scripts namespace direction already recorded in ADR 0020.
+
+
+### 2026-06-23T17:20:15Z - Commit recorded
+
+Commit: `bbd05fe`
+
+Message: Update rulebook coverage for scripts surfaces
+
+Summary: Updated rulebook coverage state and remaining source-reference notes so the coverage tracker reflects ADR 0020's numbered scripts command-surface direction.
+
+ADR impact: No new ADR required; this updates state and notes for the ADR 0020 direction.
+
+
+### 2026-06-23T17:22:16Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: stopped before resolution; requires user approval for normal repo conflict resolution
+
+
+### 2026-06-23T17:22:16Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: stopped before resolution; requires user approval for normal repo conflict resolution
+
+
+### 2026-06-23T17:52:40Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Approved resolution kept the chat branch's fuller packages-core rulebook content, including capability-module rule, full source refs, and success criteria.
+
+
+### 2026-06-23T17:52:40Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Approved resolution combined chat docs scanning with main's harness YAML metadata-header scanning.
+
+
+### 2026-06-23T17:52:43Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: kept chat's capability-module rule and full source_refs/success_criteria while preserving main's source-ref coverage
+
+
+### 2026-06-23T17:52:43Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: combined chat Markdown scanning with harness YAML scanning and kept usage text naming both surfaces
+
+
+### 2026-06-23T17:55:52Z - Commit recorded
+
+Commit: `633fff8`
+
+Message: Rename tools ruleset to scripts command surface
+
+Summary: Renamed the historical tools layer rulebook to scripts-command-surface.yml, updated rulebook manifest/progress/coverage and CI taxonomy scope, retired the old path with no active old-path references, and added YAML artifact metadata for the new ruleset.
+
+ADR impact: No new ADR required; this completes the layer-layout consequence of ADR 0020.
+
+
+### 2026-06-23T19:29:31Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Approved resolution kept chat's capability-module rule, full source refs, and success criteria while preserving main's source-ref coverage.
+
+
+### 2026-06-23T19:29:31Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Approved resolution combined docs/00.chat Markdown scanning with docs/harness Markdown and YAML scanning.
+
+## Commits
+
+
+
+- Commit: `9a62452`
+  Time UTC: 2026-06-22T23:05:15Z
+  Message: Add architecture rulebook operating pack
+  Summary: Brought the previously approved .agentic/01.harness operating pack onto the current rulebook-harvest branch so the coverage tracker can build on the current architecture-rule baseline.
+  ADR impact: No new ADR required; baseline alignment for approved rulebook harvest work.
+
+
+- Commit: `ffb7e62`
+  Time UTC: 2026-06-22T23:07:45Z
+  Message: Add architecture rulebook coverage tracker
+  Summary: Added rulebook coverage tracking state and wired the rulebook continuation guidance to read and update coverage before creating further artifacts.
+  ADR impact: No ADR required; tracking state and workflow guidance only.
+
+
+- Commit: `9f7ce33`
+  Time UTC: 2026-06-22T23:11:15Z
+  Message: Add generated code concern rules
+  Summary: Created docs/harness/architecture/rules/concerns/generated-code.yml with deterministic generation, generator/runtime boundary, generated output placement, and no-manual-edit rules; updated rulebook coverage and progress state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+- Commit: `83f0b90`
+  Time UTC: 2026-06-22T23:13:18Z
+  Message: Add create entity rule pack
+  Summary: Created docs/harness/architecture/rule-packs/create-entity.yml as a task-shaped pack composing generated-code and dependency-direction rules; updated rulebook progress and coverage state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+- Commit: `a97ecea`
+  Time UTC: 2026-06-22T23:15:19Z
+  Message: Defer harness layer ownership decision
+  Summary: Recorded an open human decision for harness layer ownership because source guides conflict on whether harness is testing support or entity-builder governance/generation; removed harness.yml from the active candidate queue.
+  ADR impact: No ADR required; deferred coverage decision only.
+
+
+- Commit: `264c589`
+  Time UTC: 2026-06-22T23:18:09Z
+  Message: Add tools layer rules
+  Summary: Created docs/harness/architecture/rules/layers/tools.yml for repo automation, generators, runtime dependency boundaries, and tools validation; updated rulebook coverage and progress state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+- Commit: `2689bae`
+  Time UTC: 2026-06-22T23:20:39Z
+  Message: Add CI quality concern rules
+  Summary: Created docs/harness/architecture/rules/concerns/ci-quality.yml for baseline CI gates, boundary/contract checks, generated freshness, and surface-appropriate tests; updated rulebook coverage and progress state.
+  ADR impact: No ADR required; source-backed rulebook artifact.
+
+
+- Commit: `2025224017817a07a5d48e10c3e9c33db322b552`
+  Time UTC: 2026-06-22T23:25:27Z
+  Message: Add platform adapter consumption rules
+  Summary: Added a manually verified platform adapter consumption concern ruleset and marked the platform adapter consumption guide covered in the rulebook tracker.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+- Commit: `794a5ca5c1e09e63c551df5ca09d0c0b4fbb48d2`
+  Time UTC: 2026-06-22T23:27:47Z
+  Message: Add platform adapter rule pack
+  Summary: Added a task-shaped add-platform-adapter rule pack that composes platform-adapter-consumption and dependency-direction rules for adapter, profile, and bootstrap work.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+- Commit: `4120d4f45c1d0174c58ebb4fd18e050eed3e03c1`
+  Time UTC: 2026-06-22T23:31:02Z
+  Message: Refine packages core rules
+  Summary: Refined the packages/core layer ruleset with source-verified admission rules, ownership/current-need checks, a contract-shaped capability module catalog, and coverage updates.
+  ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
+
+
+- Commit: `3c1d89d606bf5d37e47fa90594098eac4f7a2fdf`
+  Time UTC: 2026-06-22T23:33:11Z
+  Message: Refine add core module rule pack
+  Summary: Refined add-core-module with source-verified framework-independence, reuse, ownership, capability-family, and placement checks; split coverage so unrelated platform sections remain in progress.
+  ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
+
+
+- Commit: `7229c1fd6738f44d4767e2c46f3647d74e4378ab`
+  Time UTC: 2026-06-22T23:35:43Z
+  Message: Refine dependency direction rules
+  Summary: Refined dependency-direction with source-verified package runtime boundaries, platform runtime/product-neutral boundaries, design-system one-way layer details, and coverage updates.
+  ADR impact: No ADR impact; refines source-backed architecture rulebook artifact.
+
+
+- Commit: `cdfa2449947ed114a5fa311e3e2fc7ed55fe068d`
+  Time UTC: 2026-06-22T23:38:22Z
+  Message: Add design system layer rules
+  Summary: Added a source-verified design-system layer ruleset covering tokens, resolvers, primitives, patterns, components, templates, pages, governance, accessibility, and coverage state.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+- Commit: `012dac9c9de893e84bc78f2d3b1fca14e8ea85e5`
+  Time UTC: 2026-06-22T23:40:38Z
+  Message: Add design label theming rules
+  Summary: Added a source-verified design-label theming concern covering design labels as visual systems, generated CSS variable scope, flicker avoidance, accessibility/layout validation, resolver token-graph checks, and coverage state.
+  ADR impact: No ADR impact; extends the architecture rulebook artifact library.
+
+
+- Commit: `a5022cc`
+  Time UTC: 2026-06-22T23:43:16Z
+  Message: Add design system component rule pack
+  Summary: Added the add-design-system-component rule pack and updated manifest, progress, and coverage to connect the frontend design-system Button workflow to layer, label-theming, dependency, and CI rules.
+  ADR impact: No ADR impact; source-backed rulebook artifact added from reviewed guide sections.
+
+
+- Commit: `bda06cb`
+  Time UTC: 2026-06-22T23:46:55Z
+  Message: Add platform layer rules
+  Summary: Added the platform layer ruleset for runtime composition, app mounting, server and worker entrypoints, security, observability, health, config, resources, shutdown, and platform/app contract testing; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; deferred platform entity/codegen ownership for human decision due source tension between the TypeScript guide and platform-layer guide.
+
+
+- Commit: `170cc90`
+  Time UTC: 2026-06-22T23:49:30Z
+  Message: Add events messaging async rules
+  Summary: Added the events-messaging-async concern for domain events, event buses, queues, async jobs, scheduled jobs, workers, outbox publication, DLQ handling, idempotency, and core/apps/platform/infra ownership splits; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `734b3b1`
+  Time UTC: 2026-06-22T23:51:32Z
+  Message: Add reporting analytics audit rules
+  Summary: Added the reporting-analytics-audit concern to distinguish reporting, analytics, BI, audit, logging, monitoring, and observability, and to define core/app/platform/infra ownership splits; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `b0700c1`
+  Time UTC: 2026-06-22T23:53:23Z
+  Message: Add tenancy rules
+  Summary: Added the tenancy concern for tenant identity, resolution, propagation, isolation models, cross-tenant security, noisy-neighbor controls, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `8406a67`
+  Time UTC: 2026-06-22T23:55:08Z
+  Message: Add i18n localization rules
+  Summary: Added the i18n-localization concern for translation readiness, locale resolution, safe interpolation, fallback behavior, pluralization, RTL support, timezone correctness, currency/regional formatting, and core/design-system/app/platform ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `9b38ecb`
+  Time UTC: 2026-06-22T23:57:08Z
+  Message: Add identity access security rules
+  Summary: Added the identity-access-security concern for authn/authz separation, principal contracts, authorization decisions, security primitives, ownership splits, and v1 seams; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `050d68c`
+  Time UTC: 2026-06-22T23:58:49Z
+  Message: Add validation API error rules
+  Summary: Added the validation-api-errors concern for runtime input validation, ValidationResult/ValidationError shapes, consistent API bad-request responses, validation/authz separation, and ownership across core, apps, platform, and generated schemas; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `fa50403`
+  Time UTC: 2026-06-23T00:00:50Z
+  Message: Add persistence files storage rules
+  Summary: Added the persistence-files-storage concern for database-agnostic persistence contracts, transactions, pagination, optimistic locking, outbox support, file storage contracts, metadata, access, retention, tenant isolation, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `c415985`
+  Time UTC: 2026-06-23T00:02:37Z
+  Message: Add notification rules
+  Summary: Added the notifications concern for provider-neutral notification contracts, templates/copy/preferences ownership, delivery tracking and retries, privacy/consent/security checks, localization, audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `4cbc7dc`
+  Time UTC: 2026-06-23T00:04:19Z
+  Message: Add config runtime settings rules
+  Summary: Added the config-runtime-settings concern for typed config access, startup validation, secret references, environment parity, feature flags, regional config, change audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
+
+
+- Commit: `765ae42`
+  Time UTC: 2026-06-23T00:08:01Z
+  Message: Add TypeScript monorepo tooling rules
+  Summary: Added the typescript-monorepo-tooling concern for layered tsconfig setup, strict defaults, package boundaries, path alias discipline, project references, runtime-specific module resolution, ESM-first packages, workspaces, and monorepo orchestration; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked TypeScript guide sections.
+
+
+- Commit: `f3f6efc`
+  Time UTC: 2026-06-23T00:13:27Z
+  Message: Add apps layer rules
+  Summary: Added the apps layer ruleset for deployable and mountable app composition, product behavior ownership, explicit app mounts and manifests, app-owned ordered migrations, downward dependency flow, and app wiring/contract/smoke test expectations; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed layer added from manually checked app sections. Added deferred human decision for canonical entity-definition source-of-truth location.
+
+
+- Commit: `19111b6`
+  Time UTC: 2026-06-23T00:16:33Z
+  Message: Add infra layer rules
+  Summary: Added the infra layer ruleset for infrastructure-as-code and deployment definitions, provisioning ownership, app manifest/generated metadata consumption, controlled secrets and environments, platform/app lifecycle separation, and deployment validation expectations; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed layer added from manually checked infra/deployment sections.
+
+
+- Commit: `28d3fdb`
+  Time UTC: 2026-06-23T00:19:10Z
+  Message: Add frontend-kit layer rules
+  Summary: Added the frontend-kit layer ruleset for portable React product shells, generic entity pages/CRUD layouts/forms/tables/navigation, public design-system composition, typed/generated UI config consumption, app-owned routing/data/permissions, and shared accessibility/interaction test expectations; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed layer added from manually checked frontend-kit and React frontend sections.
+
+
+- Commit: `ffb9cbd`
+  Time UTC: 2026-06-23T00:21:40Z
+  Message: Close architecture guide coverage tracking
+  Summary: Marked all source guides as covered by mapping remaining sections to covered, duplicate-of, background-only, or deferred-human-decision statuses; added the missing TypeScript guide '2. Inferred TypeScript type' source ref to create-entity.
+  ADR impact: No ADR impact; coverage tracking closure and source-ref correction only.
+
+
+- Commit: `1dcc51c`
+  Time UTC: 2026-06-23T16:25:52Z
+  Message: Add CI test taxonomy matrices
+  Summary: Added shared CI test type/category vocabulary and layer-specific test taxonomy matrices across active architecture layer rules.
+  ADR impact: No ADR required; source-backed rulebook hardening only.
+
+
+- Commit: `e1c187f`
+  Time UTC: 2026-06-23T16:43:15Z
+  Message: Move chat workbench docs
+  Summary: Moved chat-owned workbench docs into docs/00.chat, added a chat docs README, updated bootstrap/export references and metadata coverage, and recorded ADR 0019 for the docs namespace while leaving ADR files centralized.
+  ADR impact: ADR added: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
+
+
+- Commit: `11738ea`
+  Time UTC: 2026-06-23T17:01:20Z
+  Message: Harden CI test taxonomy rules
+  Summary: Tightened CI taxonomy rules so layer matrices require minimum evidence and explicit weak-test exclusions, added negative-proof expectations across active layer rule files, and added a deterministic taxonomy checker.
+  ADR impact: No ADR required; this hardens source-backed rulebook validation without adding a new architecture primitive.
+
+
+- Commit: `5b0ab21`
+  Time UTC: 2026-06-23T17:09:22Z
+  Message: Record scripts namespace direction
+  Summary: Recorded ADR 0020 for numbered scripts namespaces as the durable executable command surface, updated script-layout docs, and clarified future product/deployment command surfaces.
+  ADR impact: ADR added: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+
+
+- Commit: `5534f59`
+  Time UTC: 2026-06-23T17:17:05Z
+  Message: Harden rule taxonomy and move chat bootstrap templates
+  Summary: Hardened CI taxonomy validation with scoped layer files, negative-evidence guardrails, and a self-test, then moved public llm-workbench bootstrap templates under docs/00.chat/bootstrap with active references and migration checks updated.
+  ADR impact: No new ADR required for the template move because it follows ADR 0019; taxonomy hardening remains source-backed validation work without a new architecture primitive.
+
+
+- Commit: `58b6b85`
+  Time UTC: 2026-06-23T17:18:28Z
+  Message: Align tools rulebook with scripts surfaces
+  Summary: Updated the historical tools layer rulebook to describe numbered scripts command surfaces, future product/deployment script namespaces, and script capability testing expectations while keeping the file in place until a governed path migration renames it.
+  ADR impact: No new ADR required; this implements the scripts namespace direction already recorded in ADR 0020.
+
+
+- Commit: `8b197bc`
+  Time UTC: 2026-06-23T17:19:18Z
+  Message: Update rulebook references to scripts surfaces
+  Summary: Updated rule packs and concern/layer rule files to refer to numbered scripts command surfaces instead of the retired tools namespace, keeping dependency-direction and generated-code guidance aligned with ADR 0020.
+  ADR impact: No new ADR required; this applies the scripts namespace direction already recorded in ADR 0020.
+
+
+- Commit: `bbd05fe`
+  Time UTC: 2026-06-23T17:20:15Z
+  Message: Update rulebook coverage for scripts surfaces
+  Summary: Updated rulebook coverage state and remaining source-reference notes so the coverage tracker reflects ADR 0020's numbered scripts command-surface direction.
+  ADR impact: No new ADR required; this updates state and notes for the ADR 0020 direction.
+
+
+- Commit: `633fff8`
+  Time UTC: 2026-06-23T17:55:52Z
+  Message: Rename tools ruleset to scripts command surface
+  Summary: Renamed the historical tools layer rulebook to scripts-command-surface.yml, updated rulebook manifest/progress/coverage and CI taxonomy scope, retired the old path with no active old-path references, and added YAML artifact metadata for the new ruleset.
+  ADR impact: No new ADR required; this completes the layer-layout consequence of ADR 0020.
+
+## Main Refresh Conflicts
+
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: authored repository content has no more specific governed conflict type
+  Action: stopped before resolution; requires user approval for normal repo conflict resolution
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: unresolved conflict in docs/harness/architecture/rules/layers/packages-core.yml
+  Checks: classification only; resolution checks pending
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: authored repository content has no more specific governed conflict type
+  Action: stopped before resolution; requires user approval for normal repo conflict resolution
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: unresolved conflict in scripts/01.harness/check-artifact-metadata-headers.sh
+  Checks: classification only; resolution checks pending
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored rulebook prose conflict; classifier had no narrower governed type.
+  Action: Approved resolution kept the chat branch's fuller packages-core rulebook content, including capability-module rule, full source refs, and success criteria.
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: docs/harness/architecture/rules/layers/packages-core.yml
+  Checks: python YAML parse passed; check-rule-test-taxonomy.sh passed
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored script conflict; classifier had no narrower governed type.
+  Action: Approved resolution combined chat docs scanning with main's harness YAML metadata-header scanning.
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: scripts/01.harness/check-artifact-metadata-headers.sh
+  Checks: bash -n passed; check-artifact-metadata-headers.sh --paths script passed
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored packages-core source_refs overlapped with main while chat added richer core capability module rules
+  Action: kept chat's capability-module rule and full source_refs/success_criteria while preserving main's source-ref coverage
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: resolved docs/harness/architecture/rules/layers/packages-core.yml in preflight merge commit e87f1db
+  Checks: metadata headers scoped check; rule taxonomy self-test; artifact path migration check; chat bootstrap audit
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored metadata checker usage and path collection overlapped between chat's docs/00.chat support and main's YAML artifact support
+  Action: combined chat Markdown scanning with harness YAML scanning and kept usage text naming both surfaces
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: resolved scripts/01.harness/check-artifact-metadata-headers.sh in preflight merge commit e87f1db
+  Checks: metadata headers scoped check; rule taxonomy self-test; artifact path migration check; chat bootstrap audit
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored packages-core source refs overlapped with main while chat kept fuller core capability module rules.
+  Action: Approved resolution kept chat's capability-module rule, full source refs, and success criteria while preserving main's source-ref coverage.
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623192832`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623192832`
+  Files changed by resolution: docs/harness/architecture/rules/layers/packages-core.yml
+  Checks: python YAML parse; check-rule-test-taxonomy.sh
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored metadata checker path collection overlapped between chat docs support and main YAML artifact support.
+  Action: Approved resolution combined docs/00.chat Markdown scanning with docs/harness Markdown and YAML scanning.
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623192832`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623192832`
+  Files changed by resolution: scripts/01.harness/check-artifact-metadata-headers.sh
+  Checks: bash -n; check-artifact-metadata-headers.sh --paths script
+
+## ADR Disposition
+
+ADR needed: no
+ADR path: 
+Reason: No ADR required; this is a source-backed rulebook hardening pass that refines existing CI quality and layer rules without introducing a new harness architecture primitive.
+
+## Session Metrics
+
+Raised at UTC: 2026-06-22T23:02:37Z
+Latest commit at UTC: 2026-06-23T17:55:52Z
+Latest commit SHA: 633fff8
+Chat duration: 67995s (00:18:53:15)
+Estimated chat tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 46.94 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
+
+## Notes
+
+- Artifact path migration: moved chat-owned workbench docs from
+  `docs/harness/architecture/{script-layout.md,chat-workbench-public-repo-readiness.md,public-chat-workbench-adrs.md}`
+  to `docs/00.chat/`.
+- Compatibility choice: `retired` for the three old doc paths after active
+  references were updated to `docs/00.chat/`; no pointer retained because the
+  migration checks reported no active old-path references.
+- Active reference buckets updated: workflow, bootstrap, script, and
+  architecture references; bootstrap planner now copies `docs/00.chat/`.
+- ADR disposition: added
+  `docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md`; centralized
+  ADR files remain under `docs/harness/architecture/adrs/`, with public export
+  still selected by `docs/00.chat/public-chat-workbench-adrs.md`.
+- Checks run: dirty worktree gate; three
+  `check-artifact-path-migration.sh` checks; targeted
+  `check-artifact-metadata-headers.sh --paths`; `smoke-test-artifact-path-migration.sh`;
+  `bootstrap-llm-workbench-repo/smoke-test.sh`; `git diff --check`.
+- Note: `check-artifact-metadata-headers.sh --all` still fails on existing
+  unbackfilled metadata headers outside this change; the targeted metadata check
+  for the moved/new artifacts passed.
+- Artifact path migration: renamed
+  `docs/harness/architecture/rules/layers/tools.yml` to
+  `docs/harness/architecture/rules/layers/scripts-command-surface.yml`.
+- Compatibility choice: `retired` for the old `tools.yml` path after active
+  references were updated; no pointer retained because only session-history
+  references remain.
+- Active reference buckets updated: workflow and architecture references in
+  `.agentic/01.harness/manifest.yml`,
+  `.agentic/01.harness/state/rulebook-progress.yml`,
+  `.agentic/01.harness/state/rulebook-coverage.yml`, and
+  `docs/harness/architecture/rules/concerns/ci-quality.yml`.
+- ADR disposition: no new ADR required; ADR 0020 already records the durable
+  numbered scripts command-surface direction, and this rename applies it.
+- Checks run: dirty worktree gate; `plan-artifact-path-migration.sh`;
+  `check-artifact-path-migration.sh`; `check-rule-test-taxonomy.sh`; YAML parse
+  check; targeted `check-deterministic-process-drift.sh`;
+  `smoke-test-artifact-path-migration.sh`; targeted
+  `check-artifact-metadata-headers.sh --paths`.

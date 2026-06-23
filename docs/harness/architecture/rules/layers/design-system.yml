@@ -1,0 +1,284 @@
+id: layer.design-system
+title: design-system layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing packages/design-system as Kanbien's governed UI
+  infrastructure: tokens, resolvers, primitives, patterns, components,
+  providers, documentation, tests, and contribution governance.
+
+applies_to:
+  paths:
+    - "packages/design-system/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+layer_model:
+  - id: tokens
+    purpose: "Source-of-truth design decisions as data."
+    reusable_across_products: true
+  - id: resolvers
+    purpose: "Token graph validation and generation of safe runtime artifacts."
+    reusable_across_products: true
+  - id: primitives
+    purpose: "Low-level accessible, domain-neutral UI building blocks."
+    reusable_across_products: true
+  - id: patterns
+    purpose: "Reusable styling, interaction, and domain-neutral UX recipes."
+    reusable_across_products: partly
+  - id: components
+    purpose: "Stable documented application-facing React controls."
+    reusable_across_products: true
+  - id: templates
+    purpose: "Generic page-level structures where they remain product-neutral."
+    reusable_across_products: partly
+  - id: pages
+    purpose: "Routed product screens; these belong to applications, not the design-system package."
+    reusable_across_products: false
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    minimum_evidence:
+      - "Exercise token resolvers, variants, contrast rules, component state helpers, required props, missing tokens, alias cycles, disabled/loading/empty states, long labels, themes, keyboard behavior, focus, ARIA, and announcements."
+    must_not:
+      - "Do not count rendered snapshots or visual diffs as proof of token validation, accessibility behavior, invalid props, keyboard/focus handling, or state helper logic."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Token resolvers, primitives, component state helpers, variant logic, and accessibility helpers behave as stable UI infrastructure."
+      - id: validation
+        should_prove:
+          - "Token schemas, required props, variant values, contrast rules, and resolver inputs accept and reject the right shapes."
+      - id: edge_cases
+        should_prove:
+          - "Missing tokens, alias cycles, disabled states, loading states, empty content, long labels, density variants, and theme variants behave intentionally."
+      - id: accessibility_interaction
+        should_prove:
+          - "Keyboard behavior, focus management, ARIA relationships, screen-reader labels, and state announcements work for primitives and components."
+  - type: type_level
+    role: primary
+    minimum_evidence:
+      - "Include compile-pass and compile-fail assertions for public component props, token names, generated token types, required accessibility props, and unsupported component combinations."
+    must_not:
+      - "Do not rely on Storybook/examples, screenshots, or runtime rendering alone to prove invalid token names, variant values, or accessibility prop requirements are rejected."
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public component props, token names, generated token types, provider APIs, and polymorphic component types remain compatible."
+      - id: validation
+        should_prove:
+          - "Invalid token names, variant values, required accessibility props, and unsupported component combinations fail at compile time where possible."
+  - type: integration
+    role: primary
+    minimum_evidence:
+      - "Render representative providers, generated CSS variables, themes, primitives, components, dialogs, menus, selects, tooltips, forms, navigation controls, portals, long translated labels, disabled content, and theme switching together."
+    must_not:
+      - "Do not accept visual-only integration checks that skip keyboard navigation, focus trapping/restoration, ARIA relationships, responsive density, long labels, and portal behavior."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Providers, generated CSS variables, themes, components, primitives, and patterns work together in representative render trees."
+      - id: accessibility_interaction
+        should_prove:
+          - "Reusable widgets such as dialogs, menus, selects, tooltips, forms, and navigation controls preserve focus and keyboard behavior together."
+      - id: edge_cases
+        should_prove:
+          - "Nested providers, theme switching, responsive density, long translated labels, disabled content, and portal behavior are stable."
+  - type: visual_regression
+    role: primary
+    minimum_evidence:
+      - "Capture critical visual states for tokens, primitives, patterns, focus rings, disabled states, contrast-sensitive states, motion states, density, responsive layout, generated CSS variables, and themes."
+    must_not:
+      - "Do not use visual regression as a substitute for unit, type-level, integration, keyboard, focus, ARIA, contrast-rule, or token-schema assertions."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Core visual states for tokens, primitives, patterns, and public components do not drift unintentionally."
+      - id: accessibility_interaction
+        should_prove:
+          - "Focus rings, disabled states, contrast-sensitive states, motion states, density, and responsive layout remain usable."
+      - id: generated_output
+        should_prove:
+          - "Generated token artifacts and CSS variables render expected themes and component states."
+  - type: golden
+    role: conditional
+    minimum_evidence:
+      - "Compare generated token docs, CSS variables, TypeScript token artifacts, and design-label outputs against reviewed fixtures and stable public names."
+    must_not:
+      - "Do not let generated artifact snapshots replace token validation, contract or type-level public API compatibility, accessibility behavior, or visual-state coverage."
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Generated token docs, CSS variables, TypeScript token artifacts, and design-label outputs match reviewed fixtures."
+      - id: compatibility_contracts
+        should_prove:
+          - "Generated design-system artifacts keep stable names and public consumption contracts."
+
+rules:
+  - id: design-system.governed-ui-infrastructure
+    title: Design system is governed UI infrastructure
+    severity: error
+    summary: >
+      The design system is not just a Figma file, style guide, or component
+      library. It is the governed relationship between design decisions, code,
+      documentation, tests, contribution process, versioning, and accessibility.
+    must:
+      - "Treat packages/design-system as a platform capability for consistent UI at scale."
+      - "Maintain owners, review process, versioning, breaking-change policy, contribution process, deprecation policy, accessibility standards, documentation requirements, and visual regression coverage."
+      - "Require design review, accessibility review, changelog updates, and visual regression checks for changes to visual foundations where relevant."
+    must_not:
+      - "Do not treat a Figma library alone as the design system."
+      - "Do not treat a React component package alone as the design system."
+      - "Do not let packages/design-system become an ownerless dumping ground."
+    agent_guidance: >
+      If a design-system change lacks ownership, accessibility review, docs, or
+      migration handling for public surfaces, record the governance gap before
+      accepting the change.
+
+  - id: design-system.tokens-are-source-of-truth
+    title: Tokens are the source of truth for visual decisions
+    severity: error
+    summary: >
+      Tokens should express design decisions as data. Foundation tokens are raw
+      values, semantic tokens name roles, and builder tokens define
+      component/pattern construction decisions.
+    must:
+      - "Store foundation, semantic, builder, schema, and generated token artifacts under packages/design-system/tokens/**."
+      - "Use semantic tokens for application-facing intent such as color.action.primary.bg instead of raw foundation token values."
+      - "Keep builder tokens private to the design system package unless an explicit customization surface exposes them."
+      - "Generate CSS variables, TypeScript types, token names, and token documentation from token source data."
+    must_not:
+      - "Do not let product components use raw foundation tokens such as color.blue.600 directly."
+      - "Do not import React, application code, routing, API clients, business logic, CSS-in-JS runtime, environment variables, or database access from token source files."
+      - "Do not name semantic tokens after one-off visual values such as color.blueButton, color.grayText, or color.marketingPurple."
+    agent_guidance: >
+      When a product wants a visual value, map the product intent to semantic
+      tokens. Application extension tokens may exist, but they should map back
+      to semantic tokens wherever possible.
+
+  - id: design-system.resolvers-generate-safe-artifacts
+    title: Resolvers generate safe runtime artifacts
+    severity: error
+    summary: >
+      Resolvers convert token source files and design labels into validated CSS
+      variables, TypeScript artifacts, token docs, and scoped design outputs.
+    must:
+      - "Use resolvers for design-label resolution, token alias resolution, CSS variable creation, contrast validation, token graph validation, and token builds."
+      - "Validate cycles, missing required tokens, and contrast requirements."
+      - "Keep resolver correctness owned by front-end platform and design-system engineering."
+    must_not:
+      - "Do not import React, React DOM, application packages, component packages, feature flags, or runtime API clients into resolvers."
+      - "Do not let builder tokens directly mutate React components at runtime."
+      - "Do not create runtime token loading that causes avoidable flicker when static generation is possible."
+    agent_guidance: >
+      Prefer generated CSS variables scoped by design label. Components should
+      read the generated artifacts rather than recomputing visual decisions.
+
+  - id: design-system.primitives-are-accessible-and-domain-neutral
+    title: Primitives are accessible and domain-neutral
+    severity: error
+    summary: >
+      Primitives are low-level React building blocks for layout and
+      accessibility. They should be boring, stable, and free of product meaning.
+    must:
+      - "Use primitives for low-level layout and accessibility building blocks such as Box, Text, Stack, Inline, Grid, Icon, VisuallyHidden, FocusRing, and ButtonPrimitive."
+      - "Use native elements where they carry important accessibility behavior."
+      - "Require accessibility review for primitives because mistakes spread widely."
+    must_not:
+      - "Do not put invoice, project, customer, risk, approval, route, API, auth, analytics, business logic, feature flag, domain model, or higher-level component knowledge in primitives."
+      - "Do not expose so many public primitives that application teams can bypass the design system and create inconsistent UI."
+    agent_guidance: >
+      Expose primitives for layout and accessibility. Use components for
+      user-facing controls unless a lower-level escape hatch is explicitly
+      governed.
+
+  - id: design-system.patterns-stay-domain-neutral
+    title: Patterns stay domain-neutral
+    severity: error
+    summary: >
+      Patterns are reusable implementation recipes and domain-neutral UX
+      structures. Product-specific workflows belong in applications.
+    must:
+      - "Use patterns for button, field, focus ring, surface, density, loading, empty state, error state, confirmation dialog, filter toolbar, bulk action bar, and other domain-neutral recipes."
+      - "Let patterns depend on primitives, generated token contracts, CSS variables, small class-name utilities, and accessibility helpers."
+      - "Keep design-system designers, front-end architects, and accessibility specialists involved in pattern ownership."
+    must_not:
+      - "Do not put application routes, API clients, domain-specific copy, business state machines, product-specific data models, or workflow-specific patterns in packages/design-system/patterns/**."
+      - "Do not put highly domain-specific UX such as InvoiceDisputeResolutionEmptyState in the design system."
+    agent_guidance: >
+      If a pattern names a business domain or workflow, move it to the owning
+      application or product package and keep only the reusable recipe in the
+      design system.
+
+  - id: design-system.components-are-public-stable-controls
+    title: Components are public stable controls
+    severity: error
+    summary: >
+      Components are the main application-facing API of the design system. They
+      should be stable, documented, tested, accessible, themeable, and versioned.
+    must:
+      - "Package structure, style, states, accessibility, keyboard behavior, variants, tests, docs, and token usage behind stable component APIs."
+      - "Include API documentation, usage examples, accessibility notes, keyboard behavior notes, visual regression coverage, unit tests where useful, stories or equivalent examples, and migration notes for breaking changes."
+      - "Use mature accessibility primitives for complex widgets such as Dialog, Popover, Menu, Select, and Tooltip when the team lacks deep accessibility expertise."
+    must_not:
+      - "Do not import application packages, API clients, global app stores, routing, business permissions, domain objects, hardcoded product copy, or tenant-specific logic into components."
+      - "Do not create components with business-logic props such as showOnlyForAdminUsers."
+      - "Do not overload variants until the component API becomes uncontrolled complexity."
+    agent_guidance: >
+      The application decides product intent. The component expresses UI. If a
+      component needs product permissions, routes, data fetching, analytics, or
+      workflow state, that behavior belongs outside the design system.
+
+  - id: design-system.templates-are-generic-pages-are-app-owned
+    title: Templates are generic; pages are app-owned
+    severity: error
+    summary: >
+      The design system may provide generic page-level templates, but routed
+      pages and concrete product composition belong to applications.
+    must:
+      - "Use templates only for reusable product-neutral structures such as ListPageTemplate, DetailPageTemplate, SettingsPageTemplate, DashboardTemplate, AuthenticationLayout, AdminShell, or SplitPaneTemplate."
+      - "Let applications own routes, routed pages, data fetching, permissions, analytics, business rules, workflow orchestration, error boundaries, application state, copy, and domain-specific components."
+      - "Allow application extension tokens only when they map back to semantic tokens wherever possible."
+    must_not:
+      - "Do not put routed pages in packages/design-system/**."
+      - "Do not put product-specific templates such as CustomerCreditRiskReviewPage in the design system."
+      - "Do not put business workflows, authorization logic, analytics events, feature flags, or domain-specific copy in design-system templates."
+    agent_guidance: >
+      If a template starts owning product workflow or route-specific behavior,
+      split the generic structure back into the design system and move the page
+      composition to the application.
+
+source_refs:
+  - doc: "kanbien-frontend-design-system-guide.md"
+    sections:
+      - "What a design system actually is"
+      - "The design-system layer model"
+      - "Design tokens"
+      - "Foundation tokens"
+      - "Semantic tokens"
+      - "Builder tokens"
+      - "Primitives"
+      - "Patterns"
+      - "Components"
+      - "Templates"
+      - "Pages"
+      - "How the layers depend on each other"
+      - "Which layers should be reusable across products?"
+      - "Which layers should be application-specific?"
+      - "Common mistakes teams make when building design systems"
+      - "Part 3: Design-system package structure in a TypeScript monorepo"
+      - "Recommended dependency rules"
+      - "Part 6: Final recommended Kanbien architecture"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/design-system.yml."
+  - "It defines packages/design-system ownership for tokens, resolvers, primitives, patterns, components, templates, providers, docs, tests, and governance."
+  - "It keeps design-system code domain-neutral, accessible, documented, tested, and versioned."
+  - "It keeps routed pages, product workflows, data fetching, permissions, analytics, and business logic in applications."
+  - "It references dependency-direction for one-way design-system layer dependencies."
+  - "It maps design-system test types to token, component, accessibility, interaction, visual-regression, generated-output, compatibility, and edge-case categories."
+  - "It includes manually verified source_refs back to the frontend design-system guide."

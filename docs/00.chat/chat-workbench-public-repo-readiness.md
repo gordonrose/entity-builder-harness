@@ -40,9 +40,8 @@ bootstrap, subject to the normal upstream inspection gates:
   deterministic process, governed script, and harness-maintenance checks
 - `scripts/00.chat/`
 - `scripts/01.harness/`
-- `docs/harness/architecture/script-layout.md`
-- `docs/harness/architecture/public-chat-workbench-adrs.md`
-- ADRs listed in `docs/harness/architecture/public-chat-workbench-adrs.md`
+- `docs/00.chat/`
+- ADRs listed in `docs/00.chat/public-chat-workbench-adrs.md`
 
 The exact script set should be confirmed with:
 
@@ -97,7 +96,7 @@ engineers need a product-shaped entry point, not only internal harness files:
 Starter templates for these files live under:
 
 ```txt
-docs/harness/bootstrap/llm-workbench-template/root/
+docs/00.chat/bootstrap/llm-workbench-template/root/
 ```
 
 The install smoke test must prove that a throwaway Git repo can install the
@@ -133,7 +132,7 @@ These are known issues to resolve before pushing an initial public bootstrap:
   as migration history, but public onboarding docs should point to canonical
   paths and package commands only.
 - ADR export is intentionally selective. Future chat workbench ADRs should be
-  added to `docs/harness/architecture/public-chat-workbench-adrs.md` when they
+  added to `docs/00.chat/public-chat-workbench-adrs.md` when they
   explain current public workbench behavior; non-chat ADRs should stay out.
 
 ## Readiness Checklist

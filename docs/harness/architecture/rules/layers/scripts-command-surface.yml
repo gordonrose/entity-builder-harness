@@ -1,0 +1,191 @@
+# agentic-artifact:
+#   owner: harness
+#   kind: layer-ruleset
+#   purpose: Define architecture rules for numbered script command surfaces.
+#   domain: architecture-rulebook
+#   portability: llm-workbench-required
+#   used_by:
+#     - docs/harness/architecture/rules/concerns/ci-quality.yml
+#     - .agentic/01.harness/manifest.yml
+#
+
+id: layer.scripts-command-surface
+title: scripts command-surface layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing repo automation, generators, migration helpers, lint rules,
+  release tooling, and developer CLI code through numbered scripts layer
+  command surfaces.
+
+applies_to:
+  paths:
+    - "scripts/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    minimum_evidence:
+      - "Exercise deterministic parser, analyzer, generator, migration, lint-rule, release-helper, and developer CLI decisions with valid input, malformed input, missing files, duplicate definitions, path variants, repeated runs, and actionable errors."
+    must_not:
+      - "Do not count CLI smoke output or golden fixtures as proof of invalid-input handling, idempotency, path portability, or non-destructive failures."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Script capability functions, parsers, analyzers, generators, migration helpers, and lint-rule logic make the intended deterministic decisions."
+      - id: validation
+        should_prove:
+          - "CLI args, config files, schemas, source inputs, and generator options accept valid input and reject invalid input."
+      - id: edge_cases
+        should_prove:
+          - "Empty projects, missing files, duplicate definitions, unusual paths, ordering differences, and repeated runs behave intentionally."
+      - id: failure_modes
+        should_prove:
+          - "Tool errors are actionable, non-destructive, and leave workspaces in a recoverable state."
+  - type: integration
+    role: primary
+    minimum_evidence:
+      - "Run representative script capabilities against a temp workspace that includes realistic source inputs, stale output, malformed files, pre-existing files, missing dependencies, interrupted/rejected operations, and repeated generation."
+    must_not:
+      - "Do not accept tests that only run the happy path or inspect final files while ignoring diagnostics, partial output, workspace recovery, and false-success prevention."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Script capabilities can read, write, generate, migrate, lint, release, or validate a representative repository or temp workspace."
+      - id: use_case_scenarios
+        should_prove:
+          - "Realistic generator, migration, release, and validation workflows exercise source inputs, outputs, and filesystem behavior."
+      - id: validation
+        should_prove:
+          - "Invalid workspace state, missing dependencies, stale generated output, and malformed source files fail with useful diagnostics."
+      - id: edge_cases
+        should_prove:
+          - "Idempotency, path portability, pre-existing files, partial outputs, and repeated generation are handled."
+      - id: failure_modes
+        should_prove:
+          - "Interrupted writes, rejected migrations, validation failures, and missing external tools do not create false success."
+  - type: golden
+    role: primary
+    minimum_evidence:
+      - "Compare reviewed generated output while also identifying the source input, generator version or implementation path, and intended public contract change."
+    must_not:
+      - "Do not use golden files as the only proof of parser validation, migration safety, contract compatibility, idempotency, hand-edit detection, or failure behavior."
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Generated files, migrations, API contracts, lint fixes, and documentation output match reviewed fixtures."
+      - id: compatibility_contracts
+        should_prove:
+          - "Generated output keeps public package, API, migration, and deployment contracts stable unless intentionally changed."
+  - type: generated_freshness
+    role: primary
+    minimum_evidence:
+      - "Prove checked-in generated artifacts are current and that stale or hand-edited artifacts fail before merge."
+    must_not:
+      - "Do not rely on snapshots or successful generation alone without a stale-output or hand-edit rejection case."
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Checked-in generated artifacts are current with source definitions and generator implementations."
+      - id: failure_modes
+        should_prove:
+          - "Stale or hand-edited generated artifacts are detected before merge."
+  - type: smoke
+    role: primary
+    minimum_evidence:
+      - "Run the safest representative script command through argument parsing and user-facing diagnostics without mutating production state."
+    must_not:
+      - "Do not treat command startup as proof of generator correctness, workspace safety, validation, compatibility, or generated freshness."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Published or reused CLI commands start, parse arguments, and run their safest representative path."
+      - id: observability_health
+        should_prove:
+          - "Tool output is concise, actionable, and exposes success or failure without requiring source inspection."
+
+rules:
+  - id: scripts.command-surface-owned-by-numbered-layers
+    title: Scripts own developer and repository automation command surfaces
+    severity: error
+    summary: >
+      scripts/ should expose deterministic command capabilities that help
+      engineers change, generate, validate, release, or inspect the system
+      safely.
+    must:
+      - "Use scripts/<numbered-layer>/<domain>/<capability>/ for entity generators, migration generators, codegen, repo validation scripts, lint rules, release tooling, dependency graph checks, architecture conformance checks, and local developer CLI commands."
+      - "Map chat lifecycle automation to scripts/00.chat/** and harness governance automation to scripts/01.harness/**."
+      - "Reserve future product-owned automation for scripts/02.product/** and deployment or release automation for scripts/03.deployment/** unless an ADR chooses a different numbered layer."
+      - "Keep script capabilities focused on changing or validating the repo, not serving production runtime behavior."
+      - "Keep stable CLI command surfaces buildable or runnable when they are reused or published internally."
+    must_not:
+      - "Do not add a new top-level tools/** command namespace for harness automation."
+      - "Do not put deployed runtime code in scripts/**."
+      - "Do not put product business logic in scripts/**."
+      - "Do not put shared domain types, API handlers, or product UI components in scripts/**."
+    agent_guidance: >
+      If the code exists to generate, validate, migrate, lint, release, or help
+      developers operate the repository, choose the numbered scripts layer that
+      owns the behavior. If deployed code needs it at runtime, scripts is the
+      wrong owner.
+
+  - id: scripts.generators-produce-outputs-not-runtime-dependencies
+    title: Scripts may generate production artifacts but must not become runtime dependencies
+    severity: error
+    summary: >
+      Generated output may be production code, but generator runtime code should
+      remain in scripts or another approved generation owner.
+    must:
+      - "Let numbered script capabilities generate schemas, types, migrations, tests, API contracts, UI config, and other generated artifacts."
+      - "Place generated outputs in their approved package-local or shared generated output locations."
+      - "Keep generation deterministic and idempotent."
+    must_not:
+      - "Do not import scripts/** from runtime apps, packages, or platform code."
+      - "Do not mix generated outputs with generator implementation code."
+      - "Do not let repeated generation create duplicate files or bloated output."
+    agent_guidance: >
+      When a runtime package needs generated output, depend on the generated
+      output location, not the script capability that generated it.
+
+  - id: scripts.must-be-tested-and-typechecked
+    title: Script capabilities must be tested and typechecked when applicable
+    severity: error
+    summary: >
+      A broken generator, migration helper, lint rule, or repo validation script
+      can create false confidence or bad generated output.
+    must:
+      - "Typecheck script capability implementation code in CI when it is TypeScript or otherwise participates in the typed monorepo."
+      - "Add unit tests for generator functions."
+      - "Use golden-file tests for generated output where useful."
+      - "Use temp-workspace integration tests for generators where useful."
+      - "Add regression tests for migration generators and migration helpers."
+    must_not:
+      - "Do not leave critical script capabilities untested because they are not production runtime code."
+      - "Do not skip validation for generators that create production artifacts."
+    agent_guidance: >
+      Treat script capabilities as production-grade support code. They may not
+      run in production, but their output and checks can shape production code.
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "tools/"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "8. tools/build"
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "8. Build and Code Generation"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/scripts-command-surface.yml."
+  - "It defines numbered scripts layer namespaces as the home for repo automation, generators, migration helpers, lint rules, release tooling, and developer CLI command surfaces."
+  - "It keeps scripts out of deployed runtime behavior and product business logic."
+  - "It requires script capabilities to be tested, typechecked where applicable, deterministic, and validated when they generate production artifacts."
+  - "It maps script capability test types to critical path, validation, edge case, generated-output, compatibility, failure-mode, and smoke categories."

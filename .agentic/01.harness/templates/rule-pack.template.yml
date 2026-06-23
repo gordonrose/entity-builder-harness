@@ -1,0 +1,35 @@
+id: pack.example-task
+title: Example task rule pack
+version: 1
+status: active
+
+description: >
+  ...
+
+task_type: example_task
+
+applies_when:
+  - "..."
+
+required_rulesets:
+  - "../rules/layers/example.yml"
+  - "../rules/concerns/example.yml"
+
+required_checks:
+  - "..."
+
+agent_steps:
+  - id: example-step
+    instruction: >
+      ...
+
+must_not:
+  - "..."
+
+success_criteria:
+  - "..."
+
+source_refs:
+  - doc: "example.md"
+    sections:
+      - "Example section"

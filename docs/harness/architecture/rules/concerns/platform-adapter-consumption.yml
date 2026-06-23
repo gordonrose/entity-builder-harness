@@ -1,0 +1,186 @@
+id: concern.platform-adapter-consumption
+title: Platform adapter consumption rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for keeping platform adapter packages predictable,
+  backwards-compatible, and safely consumed by application layers.
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+
+rules:
+  - id: adapter-consumption.feature-code-uses-core-contracts
+    title: Feature code consumes core contracts only
+    severity: error
+    summary: >
+      Application feature logic should depend on stable Kanbien contracts from
+      packages/core, not platform profiles, adapter packages, or vendor SDKs.
+    must:
+      - "Pass core contracts such as FileStorage, Queue, EventBus, AuditService, Logger, Metrics, or ConfigProvider into feature services as dependencies."
+      - "Keep product and feature logic independent of deployment provider choices."
+      - "Use dependency injection or service construction so feature code can be tested against core contract implementations."
+    must_not:
+      - "Do not import platform profiles from app feature modules."
+      - "Do not import individual platform adapter packages from app feature modules."
+      - "Do not import AWS, Azure, OSS, queue, storage, notification, or monitoring SDK clients from feature code."
+    agent_guidance: >
+      If feature code needs a provider-backed capability, identify the
+      packages/core interface it should consume. If no stable core contract
+      exists, treat that as a core-contract design task before wiring a provider.
+
+  - id: adapter-consumption.bootstrap-is-provider-boundary
+    title: App bootstrap is the provider boundary
+    severity: error
+    summary: >
+      Application bootstrap may choose the deployment provider by consuming a
+      platform profile, then pass the resulting core contract implementations
+      into application services.
+    must:
+      - "Confine platform profile imports to bootstrap or composition-root files such as apps/api/src/bootstrap/platform.ts."
+      - "Make provider choice explicit in bootstrap configuration."
+      - "Pass platform capabilities into services through stable core contracts."
+    must_not:
+      - "Do not scatter provider selection across product features."
+      - "Do not let multiple unrelated app modules wire their own platform adapter packages."
+      - "Do not hide provider selection inside product business logic."
+    agent_guidance: >
+      When provider-specific imports appear outside bootstrap, move the
+      provider selection to an app composition root and pass only core
+      interfaces beyond that boundary.
+
+  - id: adapter-consumption.adapters-expose-standard-public-api
+    title: Adapter packages expose a standard public API
+    severity: error
+    summary: >
+      Each platform adapter package should implement one or more packages/core
+      contracts and expose a predictable factory-based API.
+    must:
+      - "Expose a createX(config) factory that returns the relevant packages/core interface."
+      - "Expose an explicit XConfig type and runtime configuration schema."
+      - "Expose adapterMetadata that identifies provider, capability, implementation, and package identity."
+      - "Provide health checks for remote or stateful dependencies where useful."
+      - "Provide lifecycle hooks for adapters that maintain connections or resources."
+    must_not:
+      - "Do not expose a vendor SDK client as the primary app-facing API."
+      - "Do not use inconsistent construction names such as initS3, connectQueue, buildEventBridge, or makeNotifications."
+      - "Do not let adapter consumers discover configuration requirements only at first production request."
+    agent_guidance: >
+      For a new adapter, verify that the factory returns a core interface and
+      that startup configuration can be validated before handling requests.
+
+  - id: adapter-consumption.profiles-compose-adapters
+    title: Platform profiles compose individual adapters
+    severity: error
+    summary: >
+      With one package per adapter, platform profiles should assemble adapter
+      packages into stable app-facing platform objects so apps do not wire
+      many individual adapters themselves.
+    must:
+      - "Create platform profiles such as local-dev, aws-standard, aws-enterprise, azure-standard, or oss-local when app bootstrap would otherwise wire many adapter packages directly."
+      - "Let profiles import individual adapter packages and compose them into app-facing platform objects."
+      - "Define app-appropriate platform surfaces such as ApiPlatform or WorkerPlatform instead of one giant universal platform object."
+      - "Keep profile contracts stable enough for app bootstrap to consume safely."
+    must_not:
+      - "Do not require every app bootstrap file to manually wire 10-20 individual adapter packages."
+      - "Do not expose every provider capability to every app type when the app only needs a smaller platform surface."
+      - "Do not make feature code import a profile just to access one adapter."
+    agent_guidance: >
+      If direct adapter imports accumulate in app bootstrap, consider whether a
+      platform profile should own that deployment recipe.
+
+  - id: adapter-consumption.capabilities-avoid-vendor-leakage
+    title: Capability interfaces avoid vendor-specific leakage
+    severity: error
+    summary: >
+      Core contracts should model Kanbien capabilities around product needs
+      instead of pretending every provider has identical vendor-specific
+      features.
+    must:
+      - "Create smaller capability interfaces when a new provider feature is needed."
+      - "Make provider compatibility explicit by documenting which capabilities each adapter implements."
+      - "Keep core capability interfaces focused on product semantics, not vendor API details."
+    must_not:
+      - "Do not add S3, Azure, RabbitMQ, NATS, Kafka, or other provider-specific methods to universal core interfaces."
+      - "Do not bloat an existing core interface to cover every provider-specific feature."
+      - "Do not hide provider differences that affect ordering, retries, dead-lettering, visibility timeouts, delivery guarantees, fanout, or consumer groups."
+    agent_guidance: >
+      When an adapter needs a provider-specific feature, first ask whether the
+      product needs a new core capability interface. If the answer is unclear,
+      defer the interface design for human decision.
+
+  - id: adapter-consumption.compatibility-lives-at-core-and-profile-boundaries
+    title: Backwards compatibility lives at core and profile boundaries
+    severity: error
+    summary: >
+      Adapter implementations can evolve independently when core contracts,
+      profile contracts, factory names, config patterns, versioning, and
+      deprecation policy stay predictable.
+    must:
+      - "Prefer additive changes to core interfaces and platform profile contracts."
+      - "Use semantic versioning for adapter packages."
+      - "Validate adapter configuration at startup so platform failures are explicit and early."
+      - "Support deprecated methods or config options for a defined period and provide migration notes before removal in a major version."
+    must_not:
+      - "Do not make breaking core or profile changes without treating them as major compatibility changes."
+      - "Do not rename factories or config surfaces casually."
+      - "Do not remove deprecated adapter surfaces without the documented compatibility window."
+    agent_guidance: >
+      When changing an adapter or profile public API, identify whether the
+      compatibility boundary is core, profile, or adapter package versioning,
+      then choose additive, deprecated, or major-change handling deliberately.
+
+  - id: adapter-consumption.platform-shared-stays-provider-neutral
+    title: Platform shared code stays provider-neutral
+    severity: error
+    summary: >
+      platform/shared may provide implementation utilities for adapters, but it
+      should not define Kanbien product meaning or provider-specific behavior.
+    must:
+      - "Use platform/shared for provider-neutral retry, serialization, idempotency, adapter errors, and observability helpers."
+      - "Keep product concepts and stable business contracts in packages/core or app-owned code."
+      - "Keep provider-specific implementation code inside provider adapter packages."
+    must_not:
+      - "Do not put Kanbien domain meaning in platform/shared."
+      - "Do not put AWS, Azure, OSS, or vendor SDK-specific behavior in platform/shared."
+      - "Do not use platform/shared as a dumping ground for code that lacks an owner."
+    agent_guidance: >
+      If shared platform helper code starts naming product concepts or a
+      provider SDK, move it to the correct core, app, or adapter owner.
+
+source_refs:
+  - doc: "kanbien_platform_adapter_consumption_model_guide.md"
+    sections:
+      - "1. Executive Summary"
+      - "The rule"
+      - "2. The Core Decision"
+      - "3. Why Predictable Consumption Matters"
+      - "4. The Three-Level Consumption Model"
+      - "5. Recommended Option B Structure"
+      - "6. Standard Adapter Package Contract"
+      - "7. Platform Profiles"
+      - "8. Backwards Compatibility Strategy"
+      - "9. Provider Compatibility and Capability Interfaces"
+      - "10. Consumption Rules"
+      - "11. Final Kanbien Folder Structure"
+      - "12. What Lives Where"
+      - "13. Implementation Checklist"
+      - "14. The Simple Answer"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml."
+  - "Feature code consumes packages/core contracts and avoids platform, adapter, and vendor SDK imports."
+  - "App bootstrap is treated as the provider selection boundary."
+  - "Adapter packages expose predictable factories, config types and schemas, metadata, health checks where useful, and lifecycle hooks where useful."
+  - "Platform profiles compose one-package-per-adapter implementations into stable app-facing platform objects."
+  - "Capability interfaces avoid vendor-specific leakage into core contracts."
+  - "Backwards compatibility is managed at core contract and platform profile boundaries."
+  - "platform/shared remains provider-neutral and domain-neutral."
+  - "The ruleset includes manually verified source_refs back to the platform adapter consumption guide."

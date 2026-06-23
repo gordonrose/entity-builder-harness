@@ -64,9 +64,8 @@ Initial candidate paths:
 - `scripts/00.chat/` canonical chat capability scripts required by the audit
 - `scripts/01.harness/` gates required by chat startup, commit, classifier,
   governed script, and deterministic process checks
-- `docs/harness/architecture/public-chat-workbench-adrs.md`
-- ADRs listed in `docs/harness/architecture/public-chat-workbench-adrs.md`
-- `docs/harness/architecture/chat-workbench-public-repo-readiness.md`
+- `docs/00.chat/`
+- ADRs listed in `docs/00.chat/public-chat-workbench-adrs.md`
 
 Do not copy the source repo `README.md` directly. It describes the source repo,
 not the upstream workbench.
@@ -91,7 +90,7 @@ outside engineer would use it:
 Starter templates for those files live in:
 
 ```txt
-docs/harness/bootstrap/llm-workbench-template/root/
+docs/00.chat/bootstrap/llm-workbench-template/root/
 ```
 
 The install smoke test must install the workbench into a throwaway Git repo,
@@ -102,7 +101,7 @@ Use `scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh` to disti
 required scripts from candidate unreferenced scripts before copying scripts
 into the upstream repo.
 
-Use `docs/harness/architecture/chat-workbench-public-repo-readiness.md` to
+Use `docs/00.chat/chat-workbench-public-repo-readiness.md` to
 separate files that can be copied as-is from files that must be transformed for
 the public repo.
 

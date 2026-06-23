@@ -1,0 +1,117 @@
+id: pack.add-platform-adapter
+title: Add or modify a platform adapter
+version: 1
+status: active
+
+description: >
+  A task rule pack for safely adding or changing platform adapter packages,
+  platform profiles, or app bootstrap wiring that consumes platform profiles.
+
+task_type: add_platform_adapter
+
+applies_when:
+  - "A task creates a new platform adapter package under platform/**."
+  - "A task changes an adapter package public API, configuration, metadata, health check, lifecycle hook, or provider implementation."
+  - "A task adds or changes a platform profile under platform/profiles/**."
+  - "A task changes app bootstrap code that consumes a platform profile."
+
+required_rulesets:
+  - "../rules/concerns/platform-adapter-consumption.yml"
+  - "../rules/concerns/dependency-direction.yml"
+
+required_checks:
+  - "Confirm the adapter implements one or more packages/core contracts."
+  - "If no stable packages/core contract exists, stop and route the core-contract design through the add-core-module rule pack before adding provider wiring."
+  - "Confirm feature code consumes only packages/core interfaces and does not import platform profiles, adapter packages, or vendor SDKs."
+  - "Confirm vendor SDK imports are confined to provider adapter packages."
+  - "Confirm packages/core does not import platform adapters, platform profiles, or vendor SDKs."
+  - "Confirm the adapter exposes a predictable createX(config) factory returning the core interface."
+  - "Confirm the adapter exports an explicit XConfig type, runtime config schema, and adapterMetadata."
+  - "Confirm remote or stateful dependencies include a health check where useful."
+  - "Confirm connection-owning adapters include lifecycle hooks where useful."
+  - "Confirm adapter configuration is validated at startup."
+  - "Confirm provider-specific errors are mapped into Kanbien adapter errors."
+  - "Confirm correlation IDs, tenant IDs, and relevant metadata are preserved where the capability carries them."
+  - "Confirm retry, timeout, idempotency, dead-letter, ordering, and delivery behavior is documented where relevant."
+  - "Confirm app bootstrap consumes a platform profile rather than scattering adapter imports through feature code."
+  - "Confirm unit tests exercise the adapter against the core contract."
+  - "Confirm integration tests use the real service or an emulator where practical, or report the missing check explicitly."
+
+agent_steps:
+  - id: identify-capability-and-contract
+    instruction: >
+      Identify the Kanbien capability being implemented and the packages/core
+      contract it satisfies. If the task needs a new or changed core contract,
+      stop this pack and apply the add-core-module pack first.
+
+  - id: choose-adapter-location
+    instruction: >
+      Place the adapter in the provider-first, capability-second platform
+      structure, such as platform/aws/files-s3 or platform/oss/queues-rabbitmq.
+
+  - id: design-public-api
+    instruction: >
+      Define the adapter public API with a createX(config) factory, XConfig
+      type, runtime config schema, adapterMetadata, and health or lifecycle
+      exports where the dependency requires them.
+
+  - id: check-provider-boundaries
+    instruction: >
+      Verify that vendor SDK imports stay inside provider adapter packages,
+      packages/core remains provider-neutral, and feature code receives only
+      core contracts.
+
+  - id: update-profile-or-bootstrap
+    instruction: >
+      Add the adapter to an appropriate platform profile when app bootstrap
+      would otherwise need to wire multiple adapter packages directly. Keep
+      app feature modules free of platform and provider imports.
+
+  - id: handle-compatibility
+    instruction: >
+      Decide whether the change is additive, deprecated, or breaking at the
+      core contract, adapter package, or platform profile boundary. Apply
+      semantic versioning and migration notes when a public surface changes.
+
+  - id: validate-adapter
+    instruction: >
+      Run or identify typecheck, lint, core-contract unit tests, config-schema
+      tests, profile wiring tests, and real-service or emulator integration
+      tests where practical. Report missing checks explicitly.
+
+must_not:
+  - "Do not expose a vendor SDK client as the main app-facing API."
+  - "Do not add platform adapter imports to app feature code."
+  - "Do not add vendor SDK imports to packages/core or app feature code."
+  - "Do not make packages/core depend on platform/**."
+  - "Do not use inconsistent factory names such as initS3, connectQueue, buildEventBridge, makeNotifications, or newAwsFiles."
+  - "Do not put product domain meaning or provider-specific behavior in platform/shared."
+  - "Do not hide provider-specific ordering, retry, delivery, dead-letter, or timeout differences behind a misleading universal interface."
+  - "Do not remove deprecated adapter or profile surfaces without the documented compatibility window."
+
+success_criteria:
+  - "The rule pack exists at docs/harness/architecture/rule-packs/add-platform-adapter.yml."
+  - "The rule pack references ../rules/concerns/platform-adapter-consumption.yml."
+  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The adapter implements a packages/core contract or explicitly routes missing core-contract work to the add-core-module pack."
+  - "Feature code remains free of platform, adapter, and vendor SDK imports."
+  - "App bootstrap consumes platform profiles at the provider boundary."
+  - "Adapter packages expose predictable factories, config contracts, metadata, health checks where useful, and lifecycle hooks where useful."
+  - "Provider-specific behavior is documented and mapped through Kanbien capability and error contracts."
+  - "The task validates typecheck, lint, contract tests, profile wiring, and integration tests where applicable, or reports missing checks."
+  - "The rule pack includes manually verified source_refs back to the platform adapter consumption guide."
+
+source_refs:
+  - doc: "kanbien_platform_adapter_consumption_model_guide.md"
+    sections:
+      - "2. The Core Decision"
+      - "4. The Three-Level Consumption Model"
+      - "5. Recommended Option B Structure"
+      - "6. Standard Adapter Package Contract"
+      - "7. Platform Profiles"
+      - "8. Backwards Compatibility Strategy"
+      - "9. Provider Compatibility and Capability Interfaces"
+      - "10. Consumption Rules"
+      - "12. What Lives Where"
+      - "13. Implementation Checklist"
+      - "14. The Simple Answer"

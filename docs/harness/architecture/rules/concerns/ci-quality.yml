@@ -1,0 +1,340 @@
+id: concern.ci-quality
+title: CI quality rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for CI quality gates, formatting, linting, type checking,
+  generated artifact freshness, dependency boundaries, and test coverage.
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/**"
+    - "platform/**"
+    - "scripts/**"
+    - "infra/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+
+test_types:
+  - id: unit
+    purpose: "Prove isolated logic, small policy decisions, pure helpers, and narrow wiring."
+  - id: integration
+    purpose: "Prove multiple owned pieces work together across routes, adapters, repositories, workers, filesystems, workspaces, or UI interaction surfaces."
+  - id: contract
+    purpose: "Prove compatibility at public boundaries such as API schemas, package entry points, platform mounts, manifests, and generated contracts."
+  - id: type_level
+    purpose: "Prove TypeScript inference, public API shape, generic constraints, and compile-time compatibility."
+  - id: golden
+    purpose: "Prove generated or rendered output remains intentional by comparing stable fixtures, snapshots, or synthesized artifacts; golden tests do not replace contract, validation, type-level, policy, or interaction assertions."
+  - id: generated_freshness
+    purpose: "Prove generated artifacts are current with their source inputs and generator implementations."
+  - id: visual_regression
+    purpose: "Prove shared visual states, layout, theme behavior, and UI regressions where visual drift would be costly."
+  - id: e2e
+    purpose: "Prove user-visible or system-critical flows through the deployed or browser/runtime stack; E2E tests do not replace closer layer-owned checks."
+  - id: smoke
+    purpose: "Prove entrypoints, startup, deployment health, CLI commands, and critical wiring fail fast when broken; smoke tests do not replace validation, contract, policy, or failure-mode checks."
+  - id: static_validation
+    purpose: "Prove source, configuration, infrastructure, or generated definitions satisfy deterministic static checks."
+  - id: policy
+    purpose: "Prove security, permission, dependency, deployment, or governance policies hold before merge or promotion."
+
+test_role_semantics:
+  - id: primary
+    purpose: "Expected close proof for layer-owned behavior when that test type matches the changed surface."
+  - id: secondary
+    purpose: "Useful close proof for focused sub-surfaces, but not the main evidence for the layer's broad runtime contract."
+  - id: conditional
+    purpose: "Required only when the changed surface crosses the condition named by the layer row; it cannot replace closer primary proof."
+
+substitute_limits:
+  - type: smoke
+    cannot_replace:
+      - unit
+      - integration
+      - contract
+      - type_level
+      - policy
+      - static_validation
+      - generated_freshness
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+      - generated_output
+      - accessibility_interaction
+  - type: e2e
+    cannot_replace:
+      - unit
+      - integration
+      - contract
+      - type_level
+      - policy
+      - static_validation
+      - generated_freshness
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+      - generated_output
+      - accessibility_interaction
+  - type: golden
+    cannot_replace:
+      - contract
+      - type_level
+      - policy
+      - static_validation
+      - generated_freshness
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+      - accessibility_interaction
+  - type: visual_regression
+    cannot_replace:
+      - unit
+      - integration
+      - type_level
+      - contract
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+
+layer_test_taxonomy_scope:
+  layer_files:
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/harness/architecture/rules/layers/design-system.yml
+    - docs/harness/architecture/rules/layers/frontend-kit.yml
+  excluded_paths:
+    - path: "harness/**"
+      reason: "Harness process work is governed by .agentic/01.harness workflows, standards, and scripts rather than an architecture layer matrix."
+
+category_evidence_requirements:
+  - id: validation
+    must_name_negative_evidence:
+      - rejected input
+      - reject
+      - invalid
+      - malformed config
+      - invalid shape
+      - duplicate definition
+      - missing
+  - id: security_permissions
+    must_name_negative_evidence:
+      - auth
+      - deny
+      - denied user
+      - permission
+      - invalid permission
+      - tenant
+      - tenant isolation
+      - secret
+      - secret handling
+      - policy
+      - policy violation
+  - id: failure_modes
+    must_name_negative_evidence:
+      - fail
+      - failure
+      - error
+      - dependency failure
+      - provider failure
+      - unsafe success
+      - retry
+      - dead-letter
+      - recovery
+      - interrupted
+  - id: compatibility_contracts
+    must_name_negative_evidence:
+      - compatible
+      - incompatible
+      - contract
+      - incompatible contract
+      - public API
+      - public API break
+      - migration
+      - migration incompatibility
+      - consumer
+      - consumer mismatch
+  - id: generated_output
+    must_name_negative_evidence:
+      - stale
+      - stale output
+      - hand
+      - hand edit
+      - generator
+      - generator drift
+      - generated
+      - unreviewed snapshot
+  - id: observability_health
+    must_name_negative_evidence:
+      - safe
+      - unsafe
+      - log
+      - unsafe log
+      - readiness
+      - missing readiness
+      - liveness
+      - health
+      - secret
+      - leaked secret
+      - ambiguous health
+  - id: accessibility_interaction
+    must_name_negative_evidence:
+      - keyboard
+      - keyboard trap
+      - focus
+      - lost focus
+      - ARIA
+      - missing ARIA
+      - screen-reader
+      - inaccessible
+      - inaccessible state
+
+test_categories:
+  - id: critical_path
+    purpose: "Primary behavior that must work for the layer to be usable."
+  - id: use_case_scenarios
+    purpose: "Representative real workflows, data shapes, and interaction paths."
+  - id: validation
+    purpose: "Accepted and rejected input, configuration, schema, and command validation."
+  - id: edge_cases
+    purpose: "Boundary values, optional fields, empty states, ordering, retries, concurrency, and unusual but valid states."
+  - id: security_permissions
+    purpose: "Authentication, authorization, tenant isolation, policy enforcement, secret handling, and defensive behavior."
+  - id: failure_modes
+    purpose: "Expected behavior when dependencies, user input, generated output, providers, or runtime resources fail."
+  - id: compatibility_contracts
+    purpose: "Backward compatibility, public API stability, schema compatibility, mount compatibility, and migration safety."
+  - id: generated_output
+    purpose: "Generator determinism, generated artifact shape, generated freshness, and hand-edit protection."
+  - id: observability_health
+    purpose: "Logging, metrics, tracing, health checks, readiness, liveness, auditability, and safe error reporting."
+  - id: accessibility_interaction
+    purpose: "Keyboard behavior, focus management, screen-reader semantics, visual states, and interaction ergonomics."
+
+rules:
+  - id: ci.baseline-quality-gates
+    title: CI must run baseline quality gates
+    severity: error
+    summary: >
+      Pull-request CI should prove formatting, generation freshness, linting,
+      type checking, tests, and builds for the affected project set.
+    must:
+      - "Run dependency installation with a frozen lockfile."
+      - "Run formatting checks."
+      - "Run generated artifact freshness checks where generators exist."
+      - "Run lint, typecheck, test, and build tasks for affected projects."
+      - "Run full lint, typecheck, test, and build tasks on the main branch."
+    must_not:
+      - "Do not rely on application builds to type-check the whole repo."
+      - "Do not skip generated artifact freshness checks when generator inputs or generator code change."
+      - "Do not treat local fast-loop checks as substitutes for CI."
+    agent_guidance: >
+      When proposing a change, identify which quality gates should run. If a
+      needed gate does not exist yet, report that gap instead of claiming the
+      change is fully validated.
+
+  - id: ci.boundary-and-contract-checks
+    title: CI should protect architecture boundaries and contracts
+    severity: error
+    summary: >
+      CI should enforce dependency boundaries and contract compatibility so
+      architectural drift is caught before merge.
+    must:
+      - "Use lint or package-boundary tooling to enforce module boundaries."
+      - "Run API contract diff or contract tests where API schemas are generated or shared."
+      - "Run DB migration checks where generated or hand-authored migrations are affected."
+      - "Run dependency boundary checks."
+      - "Run security and dependency scans where available."
+    must_not:
+      - "Do not rely on code review alone for import boundary enforcement."
+      - "Do not merge API or migration changes without the relevant contract or migration validation."
+    agent_guidance: >
+      Boundary and contract checks are part of the architecture rules, not just
+      project hygiene. If the repo lacks an automated boundary check, call that
+      out as residual risk.
+
+  - id: ci.test-the-right-surface
+    title: Tests must match the changed surface
+    severity: error
+    summary: >
+      Different layers need different test surfaces, including unit,
+      integration, contract, E2E, type-level, golden-file, generated, and smoke
+      tests.
+    must:
+      - "Use unit tests for pure logic, generator functions, and app-specific wiring."
+      - "Use integration tests for routes, repositories, adapters, and temp-workspace generation."
+      - "Use contract tests for API schemas and package boundaries."
+      - "Use type-level tests for inference and public API shape where useful."
+      - "Use golden-file or snapshot tests for generated output where useful."
+      - "Use E2E and smoke tests for deployment or browser-critical paths where appropriate."
+      - "Use the shared test_types and test_categories vocabulary when writing or reviewing layer-specific test expectations."
+    must_not:
+      - "Do not add tests only at a distant layer when the changed package owns a closer, more precise test surface."
+      - "Do not leave generators, harness utilities, or test helpers untested because they are not production runtime code."
+      - "Do not use snapshot tests as a substitute for contract, validation, or type-level checks where those are more precise."
+      - "Do not use smoke or E2E tests as a substitute for closer layer-owned unit, integration, contract, type-level, policy, validation, permission, or failure-mode checks."
+      - "Do not count happy-path-only tests as coverage for validation, edge-case, security, permission, tenant-isolation, accessibility, observability, or failure-mode categories."
+    agent_guidance: >
+      Choose tests from the ownership and failure mode of the change. Prefer the
+      closest test that proves the contract, then add broader tests only when
+      the behavior crosses a boundary.
+
+  - id: ci.layer-test-taxonomy
+    title: Layer rules must map test types to test categories
+    severity: error
+    summary: >
+      Each layer ruleset should explain what relevant test types are expected to
+      prove for that layer, grouped by the failure categories the layer owns.
+    must:
+      - "Define a layer-specific test_taxonomy section for active layer rulesets."
+      - "For each primary or conditional test type, name the categories it should cover for that layer."
+      - "Use category ids from test_categories so agents can compare expectations across layers."
+      - "For each test_taxonomy row, include minimum_evidence explaining the concrete proof required."
+      - "For each test_taxonomy row, include must_not entries that name weak substitutes or anti-patterns that must not be accepted as satisfying the row."
+      - "For categories listed in category_evidence_requirements, name the negative evidence the category must reject or fail, not only the happy path it should prove."
+      - "Apply substitute_limits so smoke, E2E, golden, visual-regression, snapshots, generated diffs, successful builds, and startup checks cannot stand alone for closer layer-owned proof."
+      - "Treat category coverage as risk-based; not every test type needs every category."
+      - "Prefer the layer that owns the behavior as the primary home for the closest precise test."
+    must_not:
+      - "Do not require every layer to run every test type."
+      - "Do not hide layer-specific critical paths, validation paths, edge cases, security checks, or failure modes inside generic CI language."
+      - "Do not duplicate a broader E2E or smoke test when a closer unit, integration, contract, or type-level test proves the same layer-owned contract more precisely."
+      - "Do not let snapshots, rendered output diffs, startup checks, or deployed-flow checks stand in for explicit rejected-input, malformed-config, invalid-permission, tenant-isolation, policy, type, contract, or accessibility evidence."
+    agent_guidance: >
+      When a layer test taxonomy is missing or too generic for the changed
+      surface, report that as a rulebook gap instead of guessing the intended
+      coverage.
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "Linting"
+      - "Formatting"
+      - "Type checking"
+      - "Testing"
+      - "Code generation"
+      - "CI checks"
+      - "tools/"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/ci-quality.yml."
+  - "It defines baseline CI quality gates."
+  - "It covers formatting, linting, typecheck, tests, build, generated freshness, dependency boundaries, contracts, migrations, and scans."
+  - "It defines shared test_types and test_categories vocabulary."
+  - "It requires layer rulesets to map relevant test types to layer-owned categories."
+  - "It includes manually verified source_refs back to the markdown guides."

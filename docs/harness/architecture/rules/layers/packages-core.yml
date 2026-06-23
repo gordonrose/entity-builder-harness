@@ -20,6 +20,144 @@ applies_to:
   paths:
     - "packages/core/**"
 
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+recommended_modules:
+  - id: shared
+    purpose: "Common primitives such as IDs, results, errors, clocks, context, and lifecycle."
+    consumed_by: "apps, platform, tests"
+  - id: config
+    purpose: "Configuration access and validation contracts."
+    consumed_by: "runtime apps and platform services"
+  - id: logging
+    purpose: "Structured log, redaction, and logger contracts."
+    consumed_by: "apps, workers, platform"
+  - id: monitoring
+    purpose: "Health check and metrics contracts."
+    consumed_by: "apps, workers, platform"
+  - id: security
+    purpose: "Defensive primitives and security contracts."
+    consumed_by: "apps and platform security adapters"
+  - id: authn
+    purpose: "Principal and authentication contracts."
+    consumed_by: "apps and platform identity integrations"
+  - id: authz
+    purpose: "Permission and policy decision contracts."
+    consumed_by: "apps and feature packages"
+  - id: tenancy
+    purpose: "Tenant context and isolation primitives."
+    consumed_by: "apps, platform, and most runtime modules"
+  - id: validation
+    purpose: "Standard validation and error models."
+    consumed_by: "APIs, apps, and possibly frontend packages"
+  - id: persistence
+    purpose: "Transaction, pagination, repository, and outbox contracts."
+    consumed_by: "apps and platform persistence implementations"
+  - id: events
+    purpose: "Event envelopes, buses, and versioning contracts."
+    consumed_by: "apps, workers, platform messaging"
+  - id: queues
+    purpose: "Queue messages, consumers, retry, and dead-letter concepts."
+    consumed_by: "workers and platform queue adapters"
+  - id: async-jobs
+    purpose: "Background job contracts and lifecycle."
+    consumed_by: "apps and workers"
+  - id: notifications
+    purpose: "Notification contracts and delivery model."
+    consumed_by: "apps, workers, and provider adapters"
+  - id: files
+    purpose: "File storage and metadata contracts."
+    consumed_by: "apps and platform storage adapters"
+  - id: audit
+    purpose: "Audit event model and recorder interface."
+    consumed_by: "apps and platform audit storage"
+  - id: reporting
+    purpose: "Report request, generation, and export contracts."
+    consumed_by: "apps and workers"
+  - id: analytics
+    purpose: "Product tracking and identity contracts."
+    consumed_by: "apps and analytics adapters"
+  - id: i18n
+    purpose: "Translation and message catalog contracts."
+    consumed_by: "apps, notifications, and design system"
+  - id: localization
+    purpose: "Date, time, locale, currency, and regional formatting contracts."
+    consumed_by: "apps, notifications, and design system"
+  - id: testing
+    purpose: "In-memory and no-op implementations for local tests and CI."
+    consumed_by: "apps, harness, and CI tests"
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    minimum_evidence:
+      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, security/tenancy helpers, and result/error shapes without runtime dependencies."
+    must_not:
+      - "Do not count downstream app or platform tests as proof of core-owned primitive, validation, security, tenancy, or failure behavior."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Core primitives, result/error helpers, policies, clocks, context helpers, and small pure functions behave as stable foundations."
+      - id: validation
+        should_prove:
+          - "Validation contracts, error models, config contracts, IDs, and defensive primitives accept and reject expected values."
+      - id: edge_cases
+        should_prove:
+          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, retry limits, and optional metadata behave intentionally."
+      - id: security_permissions
+        should_prove:
+          - "Authn, authz, tenancy, security, redaction, and audit primitives preserve isolation and defensive defaults."
+      - id: failure_modes
+        should_prove:
+          - "Core error/result shapes and no-op or in-memory testing implementations fail predictably without runtime dependencies."
+  - type: type_level
+    role: primary
+    minimum_evidence:
+      - "Include compile-pass and compile-fail assertions for public exports, generic constraints, branded identifiers, discriminated unions, and invalid contract shapes where TypeScript can express the rule."
+    must_not:
+      - "Do not rely only on runtime tests, snapshots, or successful package builds to prove intended type rejection or inference behavior."
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public core entry points, exported types, generic constraints, and inference behavior remain stable for apps, platform, and tests."
+      - id: validation
+        should_prove:
+          - "Compile-time constraints reject invalid contract shapes where TypeScript can express the rule."
+      - id: edge_cases
+        should_prove:
+          - "Optional fields, branded identifiers, discriminated unions, and extension points preserve intended narrowing and exhaustiveness."
+  - type: contract
+    role: primary
+    minimum_evidence:
+      - "Prove ports, policy facts, error states, lifecycle states, and testing implementations remain implementable by platform and consumable by apps without runtime leakage."
+    must_not:
+      - "Do not accept tests that instantiate concrete platform providers, app workflows, cloud SDKs, or product-specific behavior as core contract proof."
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Ports and contracts remain implementable by platform and consumable by apps without leaking runtime implementations into core."
+      - id: security_permissions
+        should_prove:
+          - "Auth, tenancy, permission, audit, and security contracts preserve the required policy facts across consumers."
+      - id: failure_modes
+        should_prove:
+          - "Contract-defined errors, retries, and lifecycle states are explicit enough for platform implementations and app consumers."
+  - type: integration
+    role: conditional
+    minimum_evidence:
+      - "Exercise in-memory or no-op helpers through realistic app/platform test scenarios while preserving the same public contracts concrete implementations must satisfy."
+    must_not:
+      - "Do not let helper integration tests mask missing unit, type-level, or contract evidence for the core surface itself."
+    categories:
+      - id: use_case_scenarios
+        should_prove:
+          - "In-memory or no-op test implementations support realistic app and platform test scenarios without external services."
+      - id: compatibility_contracts
+        should_prove:
+          - "Core testing helpers exercise the same contracts that concrete platform implementations must satisfy."
+
 rules:
   - id: core.stable-cross-cutting-only
     title: Only stable cross-cutting concepts belong in core
@@ -32,6 +170,7 @@ rules:
       - Define stable contracts, types, interfaces, errors, policies, or small pure helpers.
       - Prefer concepts such as TenantId, Principal, Permission, AuditEvent, EventEnvelope, Locale, and CorrelationId.
       - Start local first, then extract to core only after the abstraction is stable and genuinely reused.
+      - Add core concepts only when they reduce inconsistency, operational risk, security risk, or repeated reinvention.
     must_not:
       - Do not add code to core merely because it might be reused.
       - Do not put product-specific workflows in core.
@@ -41,6 +180,26 @@ rules:
       When deciding whether to place code in packages/core, ask:
       Is this stable? Is it cross-cutting? Is it product-neutral?
       Does multiple code need the same contract? If not, keep it outside core.
+
+  - id: core.admission-requires-owner-and-current-need
+    title: Core admission requires ownership and current need
+    severity: error
+    summary: >
+      A core module is a long-lived shared foundation. It needs a clear owner,
+      present consumers, tests, and documentation before it moves into core.
+    must:
+      - Use the sequence: start local, observe repetition, extract a stable abstraction, document it, test it, then move it to core.
+      - Identify the owning team, module owner, or explicit maintenance owner before adding a core surface.
+      - Identify current consumers that need the same contract or concept now.
+      - Document the contract, allowed dependencies, and intended consumers.
+    must_not:
+      - Do not add a core module because reuse is only hypothetical.
+      - Do not add a core module without an owner.
+      - Do not add abstract frameworks before real product needs exist.
+      - Do not use core as a convenience utility drawer.
+    agent_guidance: >
+      If ownership or real reuse is unclear, keep the code local and record the
+      admission gap instead of moving it into packages/core.
 
   - id: core.no-upward-imports
     title: Core must not import apps, platform, or infra
@@ -93,9 +252,49 @@ rules:
       The contract goes in core. The implementation goes in platform. The business
       decision goes in apps.
 
+  - id: core.capability-modules-stay-contract-shaped
+    title: Core capability modules stay contract-shaped
+    severity: error
+    summary: >
+      Core modules should expose clear capability contracts and small primitives,
+      not empty ceremony, product workflow engines, or concrete runtime hosts.
+    must:
+      - Organize core around capability modules such as authn, authz, tenancy, validation, persistence, files, events, queues, logging, monitoring, audit, config, security, reporting, analytics, i18n, and localization.
+      - Prefer module files such as index.ts, types.ts, errors.ts, ports.ts, policy.ts, and testing.ts when those files clarify ownership.
+      - Include in-memory or no-op test implementations only when they support tests, local development, harness work, or CI.
+      - Keep concepts visible in types, especially tenant, principal, permission, audit event, event envelope, locale, currency, and correlation identifiers.
+    must_not:
+      - Do not create empty module ceremony when a module does not need every file.
+      - Do not put concrete worker processes, provider SDK integrations, product-specific handlers, UI, infrastructure definitions, or deployment resources in core modules.
+      - Do not confuse logs, audit, analytics, monitoring, reporting, and observability; keep each concern explicit.
+    agent_guidance: >
+      When adding a core module, choose the smallest contract-shaped surface
+      that names the Kanbien concept clearly and leaves implementation details
+      to apps, platform, or infrastructure.
+
 source_refs:
-  - doc: kanbien-core-architecture-guide.md
+  - doc: "kanbien-core-architecture-guide.md"
     sections:
+      - "What a shared core package is"
+      - "What problems shared core packages solve"
+      - "What problems shared core packages create when used incorrectly"
       - "When a shared core layer becomes a dumping ground and how to prevent it"
+      - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
       - "Code dependency direction"
+      - "Designing packages/core"
+      - "Ideal packages/core folder structure"
+      - "Why each folder exists and what consumes it"
+      - "How core connects to apps, platform, harness, and infrastructure"
+      - "Most common mistakes founders make"
+      - "Most common mistakes engineers make"
       - "Principles to guide Kanbien for the next 10 years"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/packages-core.yml."
+  - "It defines packages/core admission rules for stable, cross-cutting, product-neutral concepts and contracts."
+  - "It requires ownership, current need, documentation, and tests before adding new core surfaces."
+  - "It keeps packages/core independent from apps, platform, infra, cloud SDKs, ORMs, web servers, and vendor clients."
+  - "It distinguishes core contracts from platform implementations and app product workflows."
+  - "It records the recommended core capability module families and their intended consumers."
+  - "It maps core test types to contract compatibility, validation, edge case, security, failure-mode, and test-helper scenarios."
+  - "It includes manually verified source_refs back to the core architecture guide."

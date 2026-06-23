@@ -1,0 +1,263 @@
+id: layer.infra
+title: infra layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing infra/ as Kanbien's infrastructure-as-code and deployment
+  definition layer: cloud resources, networking, IAM, secrets, databases,
+  queues, storage, CI/CD infrastructure, environment models, policy checks,
+  deployment metadata consumption, synthesized infrastructure tests, and
+  deployment smoke validation.
+
+applies_to:
+  paths:
+    - "infra/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/apps.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+
+deployment_surfaces:
+  - id: infrastructure_as_code
+    purpose: "Cloud resource definitions and deployment topology."
+    typical_paths:
+      - "infra/terraform/**"
+      - "infra/cdk/**"
+      - "infra/pulumi/**"
+      - "infra/k8s/**"
+  - id: environments
+    purpose: "Environment models, environment config validation, and deployment inputs."
+    typical_paths:
+      - "infra/environments/**"
+  - id: ci_cd_infrastructure
+    purpose: "CI/CD infrastructure definitions and deployment workflow resources."
+    typical_paths:
+      - "infra/github-actions/**"
+      - "infra/ci-cd/**"
+  - id: deployment_metadata
+    purpose: "Generated or declarative metadata consumed from apps and config packages."
+    typical_paths:
+      - "apps/*/app.manifest.ts"
+      - "generated/**"
+
+test_taxonomy:
+  - type: static_validation
+    role: primary
+    minimum_evidence:
+      - "Run deterministic IaC, manifest, workflow, variable, target-selection, dependency-order, and malformed-plan checks before apply or deployment."
+    must_not:
+      - "Do not treat successful compilation, formatting, or app tests as proof that infrastructure sources, generated plans, variables, or target selection are valid."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Infrastructure source, environment definitions, deployment workflow definitions, and IaC files satisfy the tool's static checks."
+      - id: validation
+        should_prove:
+          - "Required environment inputs, variable shapes, deployment targets, and config references are present and valid, while invalid targets or missing references are rejected."
+      - id: edge_cases
+        should_prove:
+          - "Optional resources, disabled features, environment-specific overrides, naming limits, and dependency ordering are handled intentionally."
+      - id: failure_modes
+        should_prove:
+          - "Invalid plans, missing resources, malformed manifests, and unsafe target selection fail before apply or deployment."
+  - type: policy
+    role: primary
+    minimum_evidence:
+      - "Assert IAM, network exposure, public access, encryption, retention, secret references, destructive changes, and promotion controls block unsafe output with actionable diagnostics."
+    must_not:
+      - "Do not accept synthesized templates, plan snapshots, or manual review as substitutes for explicit policy assertions on security-sensitive or destructive changes."
+    categories:
+      - id: security_permissions
+        should_prove:
+          - "IAM, network exposure, public access, encryption, retention, secret references, and destructive-change policies are enforced."
+      - id: compatibility_contracts
+        should_prove:
+          - "Deployment resources remain compatible with app manifests, platform config contracts, environment models, and promotion controls."
+      - id: failure_modes
+        should_prove:
+          - "Policy violations fail promotion with actionable diagnostics before unsafe changes can proceed."
+  - type: golden
+    role: primary
+    minimum_evidence:
+      - "Compare synthesized plans/templates/manifests against reviewed output and identify resource names, access boundaries, secret references, and migration-sensitive resources that must remain stable."
+    must_not:
+      - "Do not let golden or plan snapshots stand in for IAM, networking, public exposure, encryption, retention, secret, destructive-change, policy, or deployment-health validation."
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Synthesized templates, plans, Kubernetes manifests, generated deployment metadata, or CI/CD definitions match reviewed output."
+      - id: compatibility_contracts
+        should_prove:
+          - "Synthesized output preserves expected resource names, interfaces, manifests, config contracts, and migration-sensitive resources."
+      - id: security_permissions
+        should_prove:
+          - "Reviewed infrastructure output does not accidentally widen access, expose secrets, or weaken security defaults."
+  - type: integration
+    role: conditional
+    minimum_evidence:
+      - "Exercise environment config, deployment metadata, app manifests, platform config, provider lookup, missing metadata, invalid environment combinations, and dependency failures together."
+    must_not:
+      - "Do not accept environment happy-path validation that ignores missing resources, invalid target combinations, provider lookup failures, or ambiguous deployment state."
+    categories:
+      - id: use_case_scenarios
+        should_prove:
+          - "Environment config, deployment metadata, app manifests, and platform config validation work together for representative targets."
+      - id: validation
+        should_prove:
+          - "Invalid environment combinations and missing deployment metadata fail before apply or release."
+      - id: failure_modes
+        should_prove:
+          - "Provider, dependency, or environment lookup failures do not produce ambiguous deployment state."
+  - type: smoke
+    role: conditional
+    minimum_evidence:
+      - "Verify deployed app/platform entrypoints, readiness/liveness, DNS/routing, queue/storage health where relevant, and safe status output without unsafe credentials."
+    must_not:
+      - "Do not use deployment smoke checks to replace static validation, policy checks, generated-plan review, secret handling checks, or destructive-change controls."
+    categories:
+      - id: critical_path
+        should_prove:
+          - "A deployed environment exposes the expected app and platform entrypoints after promotion."
+      - id: observability_health
+        should_prove:
+          - "Liveness, readiness, DNS/routing, queue health, storage health, and safe status output are visible where the environment supports them."
+      - id: security_permissions
+        should_prove:
+          - "Deployment smoke checks do not require unsafe credentials or expose secret values."
+
+rules:
+  - id: infra.owns-provisioning
+    title: Infra owns provisioning
+    severity: error
+    summary: >
+      infra/ creates and configures the external environment that deployed
+      code runs inside: networks, databases, queues, storage, DNS, secrets, IAM,
+      load balancers, container resources, and CI/CD deployment resources.
+    must:
+      - "Use infra/** for Terraform, CDK, Pulumi, Docker, Kubernetes, GitHub Actions infrastructure, environment definitions, and deployment resource definitions."
+      - "Put cloud resources, networking, IAM, secrets, DNS, databases, caches, queues, object storage, container services, load balancers, and deployment topology in infra."
+      - "Keep infrastructure provisioning separate from platform runtime code and app product behavior."
+    must_not:
+      - "Do not put Terraform, Pulumi, Kubernetes manifests, cloud resource definitions, networking, IAM, or secrets provisioning in platform, packages/core, or apps."
+      - "Do not put product business logic, API implementations, UI code, entity-builder runtime code, or app runtime services in infra."
+      - "Do not make infra depend on app internals to discover what should be deployed."
+    agent_guidance: >
+      Infra says what external resources exist. Platform owns runtime clients
+      and lifecycle. Apps own product queries and workflows.
+
+  - id: infra.consumes-manifests-not-app-internals
+    title: Infra consumes manifests
+    severity: error
+    summary: >
+      Deployment behavior should be driven by app manifests, config packages,
+      platform config validation packages, or generated deployment metadata,
+      not by importing app implementation files.
+    must:
+      - "Consume app manifests such as apps/*/app.manifest.ts or generated deployment metadata when deployment needs app-owned facts."
+      - "Use config packages, generated environment contracts, or platform config validation packages for typed environment inputs."
+      - "Keep deployment metadata declarative and stable enough for infra tools to consume."
+    must_not:
+      - "Do not import app services, repositories, route handlers, feature internals, product business logic, UI components, or test harness internals into infra."
+      - "Do not infer deployment behavior by scanning arbitrary app implementation code."
+      - "Do not let deployment manifests become a hidden second implementation of app business logic."
+    agent_guidance: >
+      If infra needs app facts, ask for a manifest or generated metadata
+      artifact. Do not cross the implementation boundary.
+
+  - id: infra.secrets-and-environments-are-controlled
+    title: Secrets and environments are controlled
+    severity: error
+    summary: >
+      Infrastructure and deployment configuration need explicit environment
+      models, validation, secret provisioning, policy checks, and promotion
+      controls so dev, staging, and production do not drift accidentally.
+    must:
+      - "Model allowed environments explicitly, such as dev, staging, and production."
+      - "Validate deployment inputs before applying infrastructure changes."
+      - "Provision secrets and secret references through approved secret-management resources."
+      - "Keep environment-specific values out of source code unless the repository explicitly allows non-secret declarative config."
+      - "Use policy checks for IAM, networking, public exposure, retention, encryption, and destructive changes where applicable."
+    must_not:
+      - "Do not hardcode production secrets, cloud credentials, tenant credentials, or provider tokens in infra source."
+      - "Do not bypass environment validation with one-off shell edits or hand-applied console changes."
+      - "Do not promote infrastructure changes without an explicit environment target."
+    agent_guidance: >
+      Treat infra edits as deployment-affecting even when they are small.
+      Identify the target environment and validation path.
+
+  - id: infra.runtime-lifecycle-stays-in-platform
+    title: Runtime lifecycle stays in platform
+    severity: error
+    summary: >
+      Infra creates resources; platform connects to them, manages clients,
+      handles shutdown, and exposes runtime health. Apps use those platform
+      contracts for product behavior.
+    must:
+      - "Let infra create resources such as databases, Redis, queues, storage, DNS, secrets, networking, IAM, and deployment services."
+      - "Let platform own database client lifecycle, queue connection lifecycle, resource closing, health aggregation, runtime config loading, and graceful shutdown."
+      - "Let apps own product repository queries, workflow decisions, and business use of platform resources."
+    must_not:
+      - "Do not put platform resource lifecycle code in infra modules."
+      - "Do not put app repository queries or product workflow decisions in infra."
+      - "Do not let platform or apps create long-lived cloud resources outside infra unless an emergency process explicitly permits it."
+    agent_guidance: >
+      Use the split from the guides: infra creates the database, platform owns
+      the client lifecycle, apps own the CRM repository query.
+
+  - id: infra.tests-and-smoke-checks-prove-deployment
+    title: Infra tests prove deployment safety
+    severity: error
+    summary: >
+      Infrastructure changes should have static validation, policy-as-code,
+      synthesized-output checks, environment config validation, and deployment
+      smoke tests appropriate to the IaC tool and environment.
+    must:
+      - "Run static validation for the chosen IaC tool."
+      - "Use policy-as-code tests for security-sensitive resources."
+      - "Use snapshot or synthesized-output tests when the IaC tool emits generated plans or templates."
+      - "Validate environment config before deployment."
+      - "Run deployment smoke tests for deployed app and platform health where the environment supports it."
+      - "Type-check TypeScript-based IaC such as CDK or Pulumi according to tool expectations."
+    must_not:
+      - "Do not rely only on app tests to prove infrastructure wiring, IAM, networking, secrets, or deployment health."
+      - "Do not skip validation because the change is only configuration."
+      - "Do not treat synthesized infrastructure output as trusted without review when it affects production resources."
+    agent_guidance: >
+      For infra, successful compilation is not enough. Look for plan,
+      policy, environment, and smoke evidence.
+
+source_refs:
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "10. Infrastructure and Deployment"
+      - "12. Architectural Recommendations"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "10. Infra"
+      - "11. The core entity flow"
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "infra/"
+      - "Purpose"
+      - "TypeScript code that should live there"
+      - "What should not live there"
+      - "Dependency rules"
+      - "Testing approach"
+      - "Build approach"
+  - doc: "kanbien-platform-layer-architecture.md"
+    sections:
+      - "How /platform differs from infrastructure"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/infra.yml."
+  - "It defines infra/ as Kanbien's infrastructure-as-code and deployment definition layer."
+  - "It keeps cloud resources, networking, IAM, secrets, databases, queues, storage, DNS, deployment topology, and CI/CD infrastructure in infra."
+  - "It requires infra to consume app manifests, config packages, platform config validation packages, or generated deployment metadata instead of app internals."
+  - "It separates infra provisioning from platform runtime lifecycle and app product behavior."
+  - "It defines validation expectations for IaC static checks, policy checks, synthesized-output checks, environment config validation, and deployment smoke tests."
+  - "It maps infra test types to static validation, policy, synthesized-output, integration, smoke, security, failure-mode, and deployment-health categories."
+  - "It includes manually verified source_refs back to the full discussion, modular monorepo, TypeScript, and platform layer guides."

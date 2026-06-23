@@ -1,0 +1,66 @@
+id: agentic.01.harness
+title: Architecture rulebook operating pack
+status: active
+purpose: >
+  Teach Codex sessions how to continue creating architecture rules and rule
+  packs from canonical markdown guides without building runtime harness code.
+
+read_order:
+  - .agentic/01.harness/manifest.yml
+  - .agentic/01.harness/operator-guide.md
+  - .agentic/01.harness/state/rulebook-coverage.yml
+  - .agentic/01.harness/state/rulebook-progress.yml
+  - relevant workflow under .agentic/01.harness/workflows
+  - relevant template under .agentic/01.harness/templates
+  - relevant checklist under .agentic/01.harness/checklists
+
+canonical_paths:
+  source_guides: docs/harness/architecture/guides/markdown
+  layer_rules: docs/harness/architecture/rules/layers
+  concern_rules: docs/harness/architecture/rules/concerns
+  rule_packs: docs/harness/architecture/rule-packs
+
+generated_by_human_or_codex: codex
+
+guardrails:
+  - Do not build the MCP server.
+  - Do not build the full agentic harness.
+  - Do not create executable runtime code.
+  - Do not create eval runners.
+  - Do not modify production repo code.
+  - Do not edit the source markdown guides.
+  - Do not create architecture rules or rule packs unless that artifact is the requested task.
+  - Work one artifact at a time.
+  - Validate YAML after editing YAML files.
+  - Summarize assumptions before stopping.
+
+current_known_artifacts:
+  layer_rulesets:
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/layers/design-system.yml
+    - docs/harness/architecture/rules/layers/frontend-kit.yml
+    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+  concern_rulesets:
+    - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/harness/architecture/rules/concerns/design-label-theming.yml
+    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    - docs/harness/architecture/rules/concerns/i18n-localization.yml
+    - docs/harness/architecture/rules/concerns/identity-access-security.yml
+    - docs/harness/architecture/rules/concerns/notifications.yml
+    - docs/harness/architecture/rules/concerns/ci-quality.yml
+    - docs/harness/architecture/rules/concerns/generated-code.yml
+    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - docs/harness/architecture/rules/concerns/tenancy.yml
+    - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+    - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+  rule_packs:
+    - docs/harness/architecture/rule-packs/add-core-module.yml
+    - docs/harness/architecture/rule-packs/add-design-system-component.yml
+    - docs/harness/architecture/rule-packs/create-entity.yml
+    - docs/harness/architecture/rule-packs/add-platform-adapter.yml

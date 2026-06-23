@@ -1,0 +1,139 @@
+id: concern.design-label-theming
+title: Design-label theming rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for design labels, token resolution, generated CSS
+  variables, runtime theme scope, accessibility validation, and design-label
+  governance.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/design-system.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/design-system/**"
+
+rules:
+  - id: design-label.visual-system-not-product-behavior
+    title: Design labels select visual systems, not product behavior
+    severity: error
+    summary: >
+      A design label may change visual values and density within governed
+      limits, but it must not fork product behavior or component APIs.
+    must:
+      - "Use design labels such as kanbien-core, kanbien-compact, or partner-acme to select visual systems."
+      - "Keep the same component API across design labels."
+      - "Make behavioral differences explicit in product code instead of hiding them behind a design label."
+    must_not:
+      - "Do not render a different special component only because a design label is active."
+      - "Do not make one design label submit a form while another opens an approval modal."
+      - "Do not let partner or white-label themes become hidden product forks."
+    agent_guidance: >
+      If a design-label change affects behavior, route handling, permissions,
+      workflow, data fetching, or analytics, move it out of theming and into
+      explicit application code.
+
+  - id: design-label.resolve-to-generated-css-variables
+    title: Design labels resolve to generated CSS variables
+    severity: error
+    summary: >
+      Token resolution should produce scoped CSS variables and generated
+      TypeScript artifacts. Primitives, patterns, and components should consume
+      those artifacts rather than raw token files.
+    must:
+      - "Resolve design-label token graphs at build time where possible."
+      - "Generate CSS variable files, TypeScript token names, and token types from token source files."
+      - "Scope generated CSS variables with a data attribute or class such as data-kb-design."
+      - "Let components keep stable APIs while generated CSS variable values change per design label."
+    must_not:
+      - "Do not let builder tokens directly mutate React components at runtime."
+      - "Do not make components import raw token JSON files to compute visual decisions."
+      - "Do not hardcode brand values in React components."
+    agent_guidance: >
+      Prefer the model: design label selected, resolver validates and resolves
+      the token graph, CSS variables are generated and scoped, then components
+      read those variables through CSS classes.
+
+  - id: design-label.runtime-scope-avoids-flicker
+    title: Runtime design scope avoids flicker
+    severity: error
+    summary: >
+      Runtime switching should set an early design scope while using prebuilt
+      CSS, so users do not see unstyled or wrongly styled UI.
+    must:
+      - "Import generated token CSS once through the design-system provider or application shell."
+      - "Use a DesignProvider or equivalent shell boundary to set the design label data attribute or class."
+      - "Prefer precompiled CSS, server-rendered design-label attributes, and early critical CSS for first paint."
+    must_not:
+      - "Do not load token JSON after initial render when that creates a flash of unstyled or incorrectly styled UI."
+      - "Do not require individual components to know which design label is active."
+      - "Do not scatter design-label attributes through arbitrary feature components."
+    agent_guidance: >
+      If runtime theming flickers or requires every component to understand the
+      design label, move scope handling up to the provider or application shell.
+
+  - id: design-label.validate-accessibility-and-layout
+    title: Every design label needs accessibility and layout validation
+    severity: error
+    summary: >
+      Each design label multiplies visual, layout, and accessibility risk.
+      Labels need automated validation and documented variation limits.
+    must:
+      - "Validate text contrast, button contrast, focus ring visibility, disabled-state contrast, status colors, and dark mode contrast for every design label where relevant."
+      - "Define min/max control heights, density modes, supported layout variation ranges, and layout regression tests."
+      - "Require an owner, accessibility approval, and regression-testing plan before adding a new design label."
+    must_not:
+      - "Do not allow a label to change component dimensions so far that pages break without layout tests."
+      - "Do not add a new design label without asking whether semantic token overrides are enough."
+      - "Do not skip accessibility validation because the component API did not change."
+    agent_guidance: >
+      Treat a new design label as a testing multiplier. Before approving it,
+      identify who owns visual regression, accessibility approval, and supported
+      variation ranges.
+
+  - id: design-label.resolvers-guard-token-graph
+    title: Resolvers guard the token graph
+    severity: error
+    summary: >
+      Token resolvers must reject cycles, missing values, unsafe aliases, and
+      third-party UI escapes that would bypass Kanbien token governance.
+    must:
+      - "Detect token alias cycles."
+      - "Detect required token gaps before generated artifacts are consumed."
+      - "Wrap or adapt third-party components so they consume Kanbien token variables where practical."
+    must_not:
+      - "Do not allow circular aliases such as semantic tokens pointing to builder tokens while builder tokens point back to semantic tokens."
+      - "Do not let ungoverned third-party UI leak directly into product screens."
+      - "Do not create design labels faster than the team can test and govern them."
+    agent_guidance: >
+      When a token graph, third-party component, or new label bypasses
+      validation, record the governance gap and add resolver or wrapper work
+      before product use.
+
+source_refs:
+  - doc: "kanbien-frontend-design-system-guide.md"
+    sections:
+      - "Part 4: Evaluating the design-label architecture"
+      - "Do not let builder tokens directly mutate React components at runtime"
+      - "Is this a good architecture?"
+      - "Potential pitfalls"
+      - "Pitfall 1: Design labels become hidden product forks"
+      - "Pitfall 2: Layout shifts across design labels"
+      - "Pitfall 3: Accessibility regressions"
+      - "Pitfall 4: Token alias cycles"
+      - "Pitfall 5: Runtime token loading creates flicker"
+      - "Pitfall 6: Third-party components ignore your tokens"
+      - "Pitfall 7: Too many design labels"
+      - "How to implement this cleanly in React"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/design-label-theming.yml."
+  - "It defines design labels as visual-system selectors, not product behavior forks."
+  - "It requires generated CSS variables and stable component APIs across labels."
+  - "It requires provider or application-shell runtime scope that avoids token-loading flicker."
+  - "It requires accessibility, layout, contrast, token-graph, and regression validation for each design label."
+  - "It includes manually verified source_refs back to the frontend design-system guide."

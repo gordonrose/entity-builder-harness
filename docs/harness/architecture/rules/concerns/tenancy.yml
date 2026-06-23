@@ -1,0 +1,181 @@
+id: concern.tenancy
+title: Tenancy rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for tenant identity, tenant context, tenant resolution,
+  tenant propagation, data isolation, noisy-neighbor control, data residency,
+  and ownership splits across core, apps, platform, and infra.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: tenancy.must-be-designed-from-v1
+    title: Tenancy must be designed from v1
+    severity: error
+    summary: >
+      Multi-tenancy is expensive and risky to retrofit after data, workflows,
+      jobs, files, audit records, and permissions already exist.
+    must:
+      - "Introduce tenant identity, tenant context, tenant propagation, and tenant isolation rules before product data or workflows assume a single tenant."
+      - "Use TenantId and TenantContext in stable contracts where tenant isolation matters."
+      - "Preserve room for future isolation upgrades such as separate schemas, separate databases, dedicated regions, or dedicated deployments."
+    must_not:
+      - "Do not defer tenancy until after persistence, files, jobs, audit, analytics, notifications, and permissions are already built without tenant context."
+      - "Do not mix tenant identity with billing account, subscription, customer display name, or user organization concepts without an explicit model."
+    agent_guidance: >
+      If a path stores, reads, emits, queues, audits, reports, or notifies
+      tenant-scoped data, verify tenant context before accepting the design.
+
+  - id: tenancy.resolution-uses-trusted-sources
+    title: Tenant resolution uses trusted sources
+    severity: error
+    summary: >
+      A request should be mapped to a tenant through trusted runtime context,
+      membership, and authorization. Request body tenant IDs are not sufficient.
+    must:
+      - "Resolve tenants from trusted sources such as hostname, authenticated principal memberships, approved route parameters, tenant-aware sessions, or platform-owned request context."
+      - "Verify principal membership and authorization before accepting a requested tenant."
+      - "Expose tenant resolution through stable contracts such as TenantResolver.resolve and requireTenant where reused."
+      - "Carry region, locale, and timezone in TenantContext only when those values are tenant-owned runtime facts."
+    must_not:
+      - "Do not trust tenantId from request body without verifying membership and authority."
+      - "Do not let apps create ad hoc tenant resolution rules that bypass platform authn/authz."
+      - "Do not let a missing tenant silently become a cross-tenant query."
+    agent_guidance: >
+      Tenant resolution is a security boundary. Treat unverified tenant input as
+      hostile until membership and authorization prove otherwise.
+
+  - id: tenancy.context-propagates-through-all-cross-cutting-paths
+    title: Tenant context propagates through cross-cutting paths
+    severity: error
+    summary: >
+      Tenant context must flow through runtime, data, async, file, audit,
+      analytics, logging, monitoring, notification, and authorization paths.
+    must:
+      - "Propagate tenant context through repositories, queries, events, queues, jobs, files, audit, analytics, logs, monitoring tags, notifications, and app service calls where tenant isolation matters."
+      - "Include tenant IDs in event/message/job envelopes, audit records, report requests, analytics events, log fields, and storage keys where relevant."
+      - "Use tenant-aware tests for repository filters, app handlers, workers, reports, exports, file access, and notifications."
+    must_not:
+      - "Do not drop tenant context when moving from request to event, queue, worker, audit, analytics, report, notification, or file storage."
+      - "Do not rely on implicit global tenant state that tests cannot see."
+      - "Do not emit tenant-scoped operational signals without tenant tags when tenant-level operations or incident response needs them."
+    agent_guidance: >
+      Follow the tenant through the workflow. The place where it disappears is
+      often the place where leakage begins.
+
+  - id: tenancy.isolation-model-is-explicit
+    title: Isolation model is explicit
+    severity: error
+    summary: >
+      Shared schema, separate schemas, separate databases, separate deployments,
+      and hybrid models trade cost, isolation, operations, residency, backups,
+      and future flexibility differently.
+    must:
+      - "Document the chosen isolation model for a tenant-scoped subsystem before adding persistence or storage behavior."
+      - "For shared database/shared schema, require tenant_id filters, indexes, repository tests, and leakage-focused review."
+      - "For separate schema/database/deployment models, account for migration complexity, backup/restore, region, operational cost, and version drift."
+      - "Use a hybrid model only with clear routing and ownership for which tenants receive stronger isolation."
+    must_not:
+      - "Do not build all mature SaaS isolation models on day one."
+      - "Do not choose shared-schema tenancy without query discipline and test coverage."
+      - "Do not choose dedicated deployments casually without version drift and operational scale controls."
+    agent_guidance: >
+      Shared schema can be a good v1 choice when implemented carefully. The
+      design should still avoid blocking future dedicated isolation.
+
+  - id: tenancy.security-prevents-cross-tenant-actions
+    title: Tenant security prevents cross-tenant actions
+    severity: error
+    summary: >
+      Tenant isolation must prevent one tenant from seeing, changing, triggering,
+      receiving, or administering another tenant's data, files, jobs,
+      notifications, users, and settings.
+    must:
+      - "Prevent Tenant A from seeing Tenant B data, triggering Tenant B jobs, accessing Tenant B files, receiving Tenant B notifications, or administering Tenant B users."
+      - "Apply tenant-aware authn, authz, persistence filters, storage routing, queue routing, file routing, audit, analytics, logging, monitoring, and notification rules."
+      - "Use tenant-level audit for sensitive cross-tenant or privileged actions."
+    must_not:
+      - "Do not assume authentication alone proves tenant authorization."
+      - "Do not let tenant admins manage users or settings outside their tenant without explicit delegated authority."
+      - "Do not allow background jobs to operate without tenant context when work is tenant-scoped."
+    agent_guidance: >
+      Ask the five leak questions: data, jobs, files, notifications, and admin
+      actions. If any answer is unclear, the design is not ready.
+
+  - id: tenancy.noisy-neighbor-control-is-designed
+    title: Noisy-neighbor control is designed
+    severity: error
+    summary: >
+      Shared tenants can hurt each other through imports, heavy reports, queue
+      backlog, database load, storage pressure, or notification volume.
+    must:
+      - "Use mitigations such as tenant-level rate limits, queue partitioning, tenant_id indexes, read replicas, per-tenant quotas, background job fairness, and dedicated infrastructure for large tenants where needed."
+      - "Monitor tenant-level resource usage and saturation for paths that can affect other tenants."
+      - "Use tenant-aware throttling or scheduling for heavy imports, exports, reports, integrations, and jobs."
+    must_not:
+      - "Do not let one tenant's large import, report, sync, or queue backlog degrade other tenants without controls."
+      - "Do not hide tenant-level saturation behind only aggregate platform metrics."
+    agent_guidance: >
+      Tenancy is operational too. Isolation includes performance and fairness,
+      not only access control.
+
+  - id: tenancy.layer-ownership-is-explicit
+    title: Tenancy ownership is explicit
+    severity: error
+    summary: >
+      Core defines stable tenant concepts. Apps own tenant product behavior.
+      Platform implements runtime isolation. Infra provisions physical or
+      regional isolation resources.
+    must:
+      - "Put TenantId, TenantContext, TenantResolver interfaces, tenant propagation helpers, requireTenant, and isolation errors in packages/core when reused."
+      - "Put tenant onboarding, tenant settings, tenant billing logic, tenant admin UI, customer-specific product behavior, and tenant-specific workflows in apps or product packages."
+      - "Put tenant resolution implementation, database routing, row-level security integration, tenant-specific storage routing, and region selection in platform."
+      - "Put databases, schemas, buckets, queues, regions, IAM boundaries, networks, and dedicated tenant infrastructure in infra."
+    must_not:
+      - "Do not put tenant billing plan workflows, tenant admin UI, dedicated database provisioning code, or customer onboarding screens in packages/core."
+      - "Do not put customer-specific product behavior in platform runtime code."
+      - "Do not put infrastructure provisioning in app or core code."
+    agent_guidance: >
+      Separate tenant identity and isolation primitives from tenant product
+      features and from physical infrastructure.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "tenancy/ deep dive"
+      - "Part 7: Multi-Tenancy"
+      - "What multi-tenancy is"
+      - "Tenant isolation models"
+      - "Shared database, shared schema"
+      - "Shared database, separate schemas"
+      - "Separate database per tenant"
+      - "Separate deployment per tenant"
+      - "Hybrid model"
+      - "Security implications"
+      - "Performance implications"
+      - "Where tenancy support belongs"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/tenancy.yml."
+  - "It requires tenancy to be designed before tenant-scoped workflows assume a single tenant."
+  - "It requires tenant resolution from trusted sources and verified membership or authorization."
+  - "It requires tenant context propagation through persistence, events, queues, files, audit, analytics, logging, monitoring, notifications, reports, and jobs."
+  - "It requires explicit isolation model choices and test coverage for shared-schema tenant filters."
+  - "It prevents cross-tenant data, job, file, notification, and admin-action leakage."
+  - "It includes noisy-neighbor controls for tenant-heavy operations."
+  - "It defines ownership splits across core contracts, app product behavior, platform runtime isolation, and infra resources."
+  - "It includes manually verified source_refs back to the core architecture guide."

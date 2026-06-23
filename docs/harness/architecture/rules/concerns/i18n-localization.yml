@@ -1,0 +1,169 @@
+id: concern.i18n-localization
+title: Internationalization and localization rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for translation readiness, locale management, localized
+  copy, safe interpolation, fallback behavior, pluralization, right-to-left
+  support, timezone correctness, currency formatting, regional formatting, and
+  ownership splits across core, design-system, and apps.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/design-system.yml
+  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "packages/design-system/**"
+    - "platform/**"
+
+rules:
+  - id: i18n-localization.i18n-is-preparation-l10n-is-execution
+    title: Internationalization prepares; localization executes
+    severity: error
+    summary: >
+      Internationalization designs the system so it can support multiple
+      languages and regions. Localization adapts the product for a specific
+      language, country, region, format, copy set, or writing direction.
+    must:
+      - "Use internationalization for translation keys, catalog contracts, locale negotiation, fallback strategy, pluralization, safe interpolation, and translation-ready validation messages."
+      - "Use localization for concrete copy, locale-specific formats, dates, times, numbers, currency, units, addresses, week-start rules, notification text, and right-to-left behavior."
+      - "Keep the i18n mechanism separate from localized product copy."
+    must_not:
+      - "Do not treat hardcoded English strings as acceptable long-term product copy in user-facing flows."
+      - "Do not mix translation mechanism ownership with product copy ownership."
+      - "Do not assume localization only means translating words."
+    agent_guidance: >
+      Ask whether the change prepares the system for localization or supplies a
+      locale-specific outcome. The owner and tests are usually different.
+
+  - id: i18n-localization.translation-keys-not-concatenated-strings
+    title: Use translation keys and safe interpolation
+    severity: error
+    summary: >
+      Apps should refer to translation keys. Catalogs map keys to localized
+      strings. Translators resolve locale with fallback and interpolate
+      parameters safely.
+    must:
+      - "Use translation keys for user-facing product messages, validation errors, notification subjects, and localized UI text."
+      - "Use translator.t or an equivalent stable contract with typed or validated translation params where practical."
+      - "Provide fallback locale behavior for missing locale catalogs or missing keys."
+      - "Support pluralization and right-to-left requirements where the product surface needs them."
+      - "Use safe interpolation for values such as names, dates, counts, and amounts."
+    must_not:
+      - "Do not concatenate translated strings to build sentences."
+      - "Do not inline localized strings throughout product logic when a catalog should own them."
+      - "Do not ship locale support with no fallback locale."
+      - "Do not rely on raw string replacement when escaping or formatting rules matter."
+    agent_guidance: >
+      Concatenation is the small crack that becomes expensive later. Prefer
+      complete translatable messages with named parameters.
+
+  - id: i18n-localization.locale-resolution-is-explicit
+    title: Locale resolution is explicit
+    severity: error
+    summary: >
+      Locale can come from user profile, tenant settings, browser headers,
+      request parameters, or a system default. The resolution order should be
+      explicit and testable.
+    must:
+      - "Define locale values with stable Locale contracts where reused."
+      - "Choose and document the locale resolution order for each runtime surface."
+      - "Use tenant defaults and user preferences deliberately when both exist."
+      - "Validate locale identifiers such as en, en-GB, fr-FR, de-DE, and ja-JP before using them in formatting or catalog lookup."
+    must_not:
+      - "Do not infer locale from untrusted request values without validation."
+      - "Do not make every component or handler invent its own fallback order."
+      - "Do not ignore tenant default locale where tenant-scoped behavior needs it."
+    agent_guidance: >
+      Locale resolution should be a small contract, not scattered if/else logic
+      across handlers and components.
+
+  - id: i18n-localization.timezone-and-time-are-canonical
+    title: Store canonical time and render local time
+    severity: error
+    summary: >
+      Canonical timestamps should be stored in UTC. User-facing rendering
+      should use the user or tenant timezone and locale-aware formatting.
+    must:
+      - "Store canonical timestamps in UTC."
+      - "Render dates and times using the resolved user or tenant timezone."
+      - "Test daylight saving time, timezone conversion, date-only boundaries, scheduled jobs, reports, and notifications where relevant."
+    must_not:
+      - "Do not store local timestamps as the source of truth."
+      - "Do not assume the server timezone is the user's timezone."
+      - "Do not render tenant/user-visible dates without an explicit locale and timezone decision where correctness matters."
+    agent_guidance: >
+      Time bugs are quiet until they are customer-facing. Keep storage and
+      presentation rules separate.
+
+  - id: i18n-localization.currency-and-regional-formatting-are-not-just-display
+    title: Currency and regional formatting need explicit models
+    severity: error
+    summary: >
+      Currency handling involves currency code, minor units, rounding, invoices,
+      tax, and sometimes exchange rates. Regional formatting includes date,
+      time, number, currency, percentage, phone, address, unit, and week-start
+      conventions.
+    must:
+      - "Represent currency with explicit currency codes and minor-unit expectations where money is more than display text."
+      - "Use locale-aware formatting for dates, times, numbers, currency, percentages, phone numbers, addresses, units, and week-start rules where relevant."
+      - "Treat invoice, tax, rounding, and exchange-rate correctness as product or finance domain work when formatting alone is not enough."
+    must_not:
+      - "Do not assume one currency, one date format, one number format, or one week-start rule."
+      - "Do not use display formatting as a substitute for a correct Money or billing model."
+      - "Do not bury country-specific legal policy inside generic localization helpers."
+    agent_guidance: >
+      V1 can start with formatting, but financial correctness eventually needs
+      explicit money and billing rules.
+
+  - id: i18n-localization.layer-ownership-is-explicit
+    title: I18n and localization ownership is explicit
+    severity: error
+    summary: >
+      Core owns stable mechanisms. The design system owns reusable rendering
+      behavior. Apps own most product copy, catalogs, preferences, tenant
+      defaults, and notification templates.
+    must:
+      - "Put Locale, Translator, MessageCatalog, TranslationParams, fallback rules, LocalizationService, date/time formatting primitives, currency formatting primitives, and validation message localization mechanisms in packages/core when reused and framework-independent."
+      - "Put LocalizedText, DateDisplay, CurrencyDisplay, RTL layout support, and localized form error rendering in packages/design-system where they are domain-neutral UI behavior."
+      - "Put translation catalogs, product copy, user locale preferences, tenant locale defaults, notification templates, marketing copy workflows, and product-specific localized messages in apps or product-owned packages."
+      - "Put provider integrations or runtime locale negotiation hooks in platform only when they are runtime mechanisms rather than product copy."
+    must_not:
+      - "Do not put all product copy in packages/core."
+      - "Do not put UI components in core i18n/localization modules."
+      - "Do not put product-specific notification templates or marketing copy workflows in the design system."
+      - "Do not put pricing strategy, country-specific legal advice, or jurisdiction-specific policy in generic localization helpers."
+    agent_guidance: >
+      Keep mechanisms reusable and copy owned by the product surface that says
+      the words.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "i18n/ deep dive"
+      - "localization/ deep dive"
+      - "Part 8: Internationalization and Localization"
+      - "i18n"
+      - "l10n"
+      - "Translations"
+      - "Locale management"
+      - "Currency handling"
+      - "Timezone handling"
+      - "Regional formatting"
+      - "Responsibility split"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/i18n-localization.yml."
+  - "It distinguishes internationalization preparation from localization execution."
+  - "It requires translation keys, safe interpolation, fallback locale behavior, pluralization strategy, and RTL support where relevant."
+  - "It requires explicit locale resolution and validation."
+  - "It stores canonical timestamps in UTC and renders using user or tenant timezone."
+  - "It treats currency and regional formatting as explicit model choices rather than simple display strings."
+  - "It defines ownership splits across core mechanisms, design-system rendering, app-owned copy/catalogs/preferences, and platform runtime mechanisms."
+  - "It includes manually verified source_refs back to the core architecture guide."

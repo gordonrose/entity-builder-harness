@@ -1,0 +1,141 @@
+id: concern.persistence-files-storage
+title: Persistence, files, and storage rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for database-agnostic persistence contracts, transaction
+  boundaries, repository conventions, pagination, optimistic locking, outbox
+  support, file storage contracts, file metadata, retention, access, tenant
+  isolation, and ownership splits across core, apps, platform, and infra.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: persistence-files-storage.core-contracts-are-database-agnostic
+    title: Core persistence contracts are database-agnostic
+    severity: error
+    summary: >
+      Core may define common data-access contracts and concepts, but it must not
+      couple Kanbien to a database, ORM, query language, or app schema.
+    must:
+      - "Use packages/core for stable contracts such as TransactionManager, TransactionContext, PageRequest, Page, VersionedEntity, repository conventions, and Outbox interfaces where reused."
+      - "Keep core persistence concepts usable without starting the Kanbien backend or connecting a real database."
+      - "Keep app-specific schemas, migrations, SQL queries, ORM models, and repository implementations outside packages/core."
+    must_not:
+      - "Do not put Prisma models, SQL queries, Mongo-specific operations, database clients, app-specific schema, or app migrations in packages/core."
+      - "Do not leak DB-specific types through core contracts."
+      - "Do not create generic repository frameworks before real product patterns require them."
+    agent_guidance: >
+      Core defines the filing-cabinet contract. Platform and apps choose and
+      operate the actual cabinet.
+
+  - id: persistence-files-storage.transactions-are-explicit
+    title: Transactions are explicit atomic boundaries
+    severity: error
+    summary: >
+      Data changes that must succeed or fail together need explicit transaction
+      boundaries. Event publication should not be separated from state changes
+      without an outbox-shaped consistency plan.
+    must:
+      - "Use TransactionManager.run or an equivalent explicit transaction contract for multi-step state changes that must be atomic."
+      - "Pass transaction context intentionally to repositories or outbox writers."
+      - "Record outbox events in the same transaction as the business state change when event publication matters."
+      - "Define optimistic locking or version concepts where concurrent writes can conflict."
+    must_not:
+      - "Do not publish events outside the database transaction when failure would leave saved state invisible to the rest of the system."
+      - "Do not hide transaction boundaries inside unrelated helpers where callers cannot reason about atomicity."
+      - "Do not ignore concurrent update behavior for mutable business records."
+    agent_guidance: >
+      When a handler writes data and emits a fact, ask what happens if the
+      second operation fails. If the answer is bad, use the outbox path.
+
+  - id: persistence-files-storage.pagination-and-retention-are-contracts
+    title: Pagination and retention are contracts
+    severity: error
+    summary: >
+      List endpoints, exports, reports, and data lifecycles need stable
+      pagination, retention, tenant partitioning, read-replica, residency, and
+      encryption decisions.
+    must:
+      - "Use stable pagination contracts such as PageRequest and Page where list behavior is shared."
+      - "Document cursor, limit, sort, filter, and next-cursor behavior for API-facing pagination."
+      - "Account for retention, tenant partitioning, read replicas, data residency, and encryption in persistence designs where relevant."
+      - "Use tests for pagination edge cases and tenant filters."
+    must_not:
+      - "Do not make each endpoint invent incompatible pagination shapes."
+      - "Do not return unbounded lists from tenant-scoped or customer-facing APIs."
+      - "Do not ignore data residency or retention when persistence stores sensitive or customer-controlled data."
+    agent_guidance: >
+      Pagination and retention drift quietly. Make them visible contracts before
+      clients and data stores depend on them.
+
+  - id: persistence-files-storage.files-are-high-risk-storage
+    title: Files are high-risk storage
+    severity: error
+    summary: >
+      Files are large, user-controlled, and often sensitive. File handling needs
+      explicit metadata, access, validation, retention, and storage contracts.
+    must:
+      - "Use stable file contracts such as PutFileInput, StoredFile, FileObject, and FileStorage where file storage is reused."
+      - "Capture metadata such as filename, content type, size, tenant ID where relevant, createdAt, and product metadata where allowed."
+      - "Validate content type and size policy before accepting uploads."
+      - "Mediate access with authorization and signed URL or equivalent access contracts where direct storage access is needed."
+      - "Define deletion, retention, legal hold, tenant isolation, data residency, encryption, virus scanning, and access logging requirements where relevant."
+    must_not:
+      - "Do not accidentally expose public buckets or public file URLs."
+      - "Do not store large file bodies in ordinary database rows unless an explicit design approves it."
+      - "Do not skip content-type validation, access audit, retention policy, or tenant isolation for sensitive files."
+    agent_guidance: >
+      Treat files as security-sensitive data stores. The body, metadata, access
+      path, and retention policy all need owners.
+
+  - id: persistence-files-storage.layer-ownership-is-explicit
+    title: Persistence and file ownership is explicit
+    severity: error
+    summary: >
+      Core defines contracts. Apps own product schemas and workflows. Platform
+      implements storage providers and runtime integrations. Infra provisions
+      physical data stores and permissions.
+    must:
+      - "Put database-agnostic persistence and file contracts in packages/core when reused and framework-independent."
+      - "Put product-specific repository methods, app schemas, app migrations, product document workflows, report output meaning, and business retention choices in apps or product packages."
+      - "Put ORM/database adapters, transaction implementations, outbox publishers, file storage adapters, signed URL implementations, virus scanner integrations, and storage provider integrations in platform."
+      - "Put database instances, buckets, storage policies, backup resources, KMS keys, IAM permissions, data residency resources, queues, and networks in infra."
+    must_not:
+      - "Do not put S3/GCS/Azure SDK code, image-processing implementation, virus scanner implementation, ORM provider code, or database-specific queries in packages/core."
+      - "Do not put product-specific document workflows or app schemas in platform shared runtime code."
+      - "Do not put cloud storage provisioning in app or core code."
+    agent_guidance: >
+      For every data or file change, identify the contract, product meaning,
+      provider implementation, and provisioned resource separately.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "persistence/ deep dive"
+      - "files/ deep dive"
+      - "Part 9: Building Kanbien v1"
+      - "persistence"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/persistence-files-storage.yml."
+  - "It keeps packages/core persistence contracts database-agnostic."
+  - "It requires explicit transaction boundaries, optimistic locking where needed, and outbox support for state-plus-event consistency."
+  - "It standardizes pagination and retention expectations."
+  - "It treats files as high-risk storage with metadata, content validation, access, retention, tenant isolation, encryption, virus scanning, legal hold, and access logging where relevant."
+  - "It defines ownership splits across core contracts, app schemas/workflows, platform implementations, and infra resources."
+  - "It includes manually verified source_refs back to the core architecture guide."

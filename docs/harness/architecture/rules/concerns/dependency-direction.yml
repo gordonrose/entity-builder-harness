@@ -14,7 +14,8 @@ status: active
 
 description: >
   Repo-wide dependency direction rules for preserving architectural boundaries
-  across apps, packages, platform, harness, tools, infra, and design-system code.
+  across apps, packages, platform, harness, script command surfaces, infra, and
+  design-system code.
 
 applies_to:
   paths:
@@ -22,7 +23,7 @@ applies_to:
     - "packages/**"
     - "platform/**"
     - "harness/**"
-    - "tools/**"
+    - "scripts/**"
     - "infra/**"
 
 rules:
@@ -54,16 +55,62 @@ rules:
     severity: error
     summary: >
       Applications are deployable or mountable business compositions. Shared
-      packages, platform modules, tools, and infrastructure should not depend on
-      app internals.
+      packages, platform modules, script capabilities, and infrastructure
+      should not depend on app internals.
     must:
       - "Keep app-specific business behavior inside apps/*."
       - "Expose app integration through explicit mount files or manifests."
     must_not:
       - "Do not import apps/* internals from packages/**."
       - "Do not import apps/* internals from platform/** except approved composition-root mount files."
-      - "Do not import apps/* internals from tools/** at runtime."
+      - "Do not import apps/* internals from scripts/** at runtime."
       - "Do not import apps/* internals from infra/**."
+
+  - id: dependency.package-runtime-boundaries
+    title: Package runtime code must not depend on apps, infra, scripts, or harness
+    severity: error
+    summary: >
+      Packages are reusable product, domain, core, generated, or support
+      libraries. Runtime package code may depend on approved packages and
+      approved platform contracts, but it must not become app, infra, scripts,
+      or harness code in disguise.
+    must:
+      - "Give each package a clear public API and import from package entry points rather than random internal files."
+      - "Allow packages to depend on other packages when domain boundaries permit it."
+      - "Allow non-core packages to depend on approved platform contracts or platform adapters when the package's ownership model explicitly allows that dependency."
+      - "Apply the stricter packages/core rules when the package path is packages/core/**."
+    must_not:
+      - "Do not import apps/** from packages/**."
+      - "Do not import infra/** from runtime package code."
+      - "Do not import scripts/** from runtime package code."
+      - "Do not import harness/** from runtime package code outside tests."
+      - "Do not hide app bootstrapping, deployment logic, entity-builder engine internals, or raw infrastructure provisioning inside ordinary packages."
+    agent_guidance: >
+      When a package needs app, infra, script command-surface, or harness code,
+      stop and choose a better owner. If the package is packages/core, apply
+      the stricter no-platform and no-vendor-client rules from the core layer.
+
+  - id: dependency.platform-stays-runtime-and-product-neutral
+    title: Platform stays runtime-owned and product-neutral
+    severity: error
+    summary: >
+      platform/ owns runtime lifecycle and shared runtime machinery. It should
+      not import product workflows, define business concepts, or provision
+      infrastructure resources.
+    must:
+      - "Use platform for process startup, HTTP server creation, route registration, middleware, auth integration, request context, error mapping, logging, health checks, config loading, job execution, and shutdown."
+      - "Let platform depend on packages/core and approved runtime/provider clients."
+      - "Expose platform contracts that apps can implement or consume at approved boundaries."
+      - "Keep app mounting imports in composition roots such as platform/server/mount.ts."
+    must_not:
+      - "Do not put CRM, billing, onboarding, invoice, lead, account, subscription, campaign, or other product-specific concepts in platform."
+      - "Do not import app-specific services, repositories, routes, jobs, or business logic from platform internals."
+      - "Do not put Terraform, Pulumi, Kubernetes manifests, cloud provisioning, or IAM resource definitions in platform."
+      - "Do not make normal product features require platform changes unless the runtime contract itself is changing."
+    agent_guidance: >
+      If platform code starts answering product questions instead of runtime
+      questions, move that code into the owning app or package and keep only the
+      runtime contract in platform.
 
   - id: dependency.platform-composition-root-exception
     title: Platform may import app mounts only at the composition root
@@ -91,7 +138,11 @@ rules:
       dependency direction from tokens to primitives to patterns to components
       to applications.
     must:
-      - "Keep tokens independent of React and application code."
+      - "Keep foundation tokens independent of React and application code."
+      - "Let token resolvers depend on tokens, not components or applications."
+      - "Let primitives depend on generated token artifacts."
+      - "Let patterns depend on primitives and generated token artifacts."
+      - "Let components depend on primitives and patterns."
       - "Let applications consume design-system components."
       - "Keep design-system components free of business logic, routing, permissions, and product workflows."
     must_not:
@@ -112,19 +163,20 @@ rules:
       - "Do not import harness/** from production apps, packages, or platform code."
       - "Do not put production runtime validation or business logic in harness."
 
-  - id: dependency.production-must-not-depend-on-tools
-    title: Production code must not depend on tools
+  - id: dependency.production-must-not-depend-on-scripts
+    title: Production code must not depend on script command surfaces
     severity: error
     summary: >
-      tools/ contains generators, scripts, migration helpers, lint rules, and
-      repo automation. Production code may use generated outputs but must not
-      import generator runtime code.
+      scripts/ contains numbered layer command capabilities for generators,
+      migration helpers, lint rules, release helpers, and repo automation.
+      Production code may use generated outputs but must not import generator
+      or command runtime code.
     must:
-      - "Let tools generate artifacts."
+      - "Let numbered script capabilities generate artifacts."
       - "Let production code import generated artifacts only from their intended output locations."
     must_not:
-      - "Do not import tools/** from runtime apps, packages, or platform code."
-      - "Do not put deployable runtime behavior inside tools/**."
+      - "Do not import scripts/** from runtime apps, packages, or platform code."
+      - "Do not put deployable runtime behavior inside scripts/**."
 
   - id: dependency.infra-consumes-artifacts-not-runtime-internals
     title: Infra consumes deployment metadata, not runtime internals
@@ -146,7 +198,7 @@ rules:
     summary: >
       Generated files may be used by production code when they are checked into
       the appropriate package or app output location. The generator itself should
-      remain in tools or harness code.
+      remain in a numbered script capability or harness code.
     must:
       - "Keep generation deterministic and idempotent."
       - "Import generated artifacts only from approved generated output paths."
@@ -193,8 +245,8 @@ source_refs:
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - "It defines repo-wide dependency direction rules."
-  - "It covers apps, packages/core, platform, design-system, harness, tools, infra, and generated code."
+  - "It covers apps, reusable packages, packages/core, platform, design-system, harness, script command surfaces, infra, and generated code."
   - "It includes the platform composition-root exception for importing app mounts."
-  - "It includes source_refs back to the relevant markdown guides."
+  - "It includes manually verified source_refs back to the relevant markdown guides."
   - "It does not duplicate the full contents of packages-core.yml, but it may reference overlapping core dependency principles."
   - "No unrelated files are changed."

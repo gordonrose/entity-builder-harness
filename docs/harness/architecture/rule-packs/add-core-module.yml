@@ -29,13 +29,16 @@ required_rulesets:
 
 required_checks:
   - "Confirm the proposed concept is stable, cross-cutting, product-neutral, and genuinely shared."
+  - "Confirm the concept is framework-independent and usable from a CLI script, web app, worker, or unit test without starting the Kanbien backend."
   - "Confirm the change satisfies packages/core admission rules."
   - "Confirm the change satisfies repo-wide dependency direction rules."
   - "Confirm packages/core does not import apps/**, platform/**, infra/**, cloud SDKs, ORMs, web servers, queue providers, or vendor runtime clients."
   - "Confirm core defines contracts or primitives, not runtime implementations."
   - "Confirm product-specific behavior remains in apps or feature/domain packages."
   - "Confirm concrete runtime implementations remain in platform where appropriate."
-  - "Confirm the concept has a real owner and current consumers, not only imagined reuse."
+  - "Confirm the concept has a real owner, current consumers, documentation, and tests, not only imagined reuse."
+  - "Confirm reuse has been observed in real code, preferably after the second or third real consumer."
+  - "Confirm the module belongs to a known core capability family or records why a new family is needed."
 
 agent_steps:
   - id: classify-core-change
@@ -49,6 +52,20 @@ agent_steps:
       product-specific, unstable, implementation-specific, or only
       hypothetically reusable, keep it out of core.
 
+  - id: verify-reuse-and-ownership
+    instruction: >
+      Identify current consumers, the owning maintainer, and the tests and
+      documentation that will keep the shared contract trustworthy. If reuse
+      is only imagined, keep the concept local until repetition proves it.
+
+  - id: choose-core-capability-family
+    instruction: >
+      Place the concept in an existing packages/core capability family such as
+      shared, config, logging, monitoring, security, authn, authz, tenancy,
+      validation, persistence, events, queues, async-jobs, notifications,
+      files, audit, reporting, analytics, i18n, localization, or testing. If
+      no family fits, record why a new family is justified.
+
   - id: check-dependency-direction
     instruction: >
       Validate the proposed core code against the dependency-direction concern
@@ -60,6 +77,8 @@ agent_steps:
     instruction: >
       If the task needs a concrete runtime implementation, place only the
       contract in packages/core and leave the implementation for platform.
+      Keep CRM, billing, onboarding, feature workflows, repositories, database
+      schema, cloud resources, and provider clients outside core.
 
   - id: propose-files
     instruction: >
@@ -78,6 +97,8 @@ must_not:
   - "Do not import from apps/**, platform/**, or infra/** inside packages/core."
   - "Do not create a generic abstraction unless the docs justify it and the need is real."
   - "Do not use packages/core as a dumping ground for anything shared."
+  - "Do not move CRMUser, SalesPipeline, LeadStatus, BillingPlan, InvoiceLifecycle, or other business domain concepts into core."
+  - "Do not put HTTP servers, Redis clients, Fastify plugins, background workers, cloud SDKs, or ORM implementations in core."
 
 success_criteria:
   - "The rule pack exists at docs/harness/architecture/rule-packs/add-core-module.yml."
@@ -85,13 +106,16 @@ success_criteria:
   - "The rule pack references ../rules/concerns/dependency-direction.yml."
   - "The rule pack is task-shaped, not layer-shaped."
   - "The rule pack is concise and usable by an agent."
-  - "The rule pack includes source_refs pointing back to the relevant markdown guides/sections."
+  - "The rule pack requires owner, current consumers, documentation, tests, and framework independence for new core surfaces."
+  - "The rule pack routes runtime implementations to platform and product workflows to apps or feature packages."
+  - "The rule pack includes manually verified source_refs pointing back to the relevant markdown guides/sections."
   - "No unrelated files are changed."
 
 source_refs:
   - doc: "kanbien-core-architecture-guide.md"
     sections:
       - "What a shared core package is"
+      - "What problems shared core packages solve"
       - "What problems shared core packages create when used incorrectly"
       - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
       - "When a shared core layer becomes a dumping ground and how to prevent it"

@@ -1,0 +1,56 @@
+version: 1
+status: active
+
+created_artifacts:
+  layer_rulesets:
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/layers/design-system.yml
+    - docs/harness/architecture/rules/layers/frontend-kit.yml
+    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+  concern_rulesets:
+    - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/harness/architecture/rules/concerns/design-label-theming.yml
+    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    - docs/harness/architecture/rules/concerns/i18n-localization.yml
+    - docs/harness/architecture/rules/concerns/identity-access-security.yml
+    - docs/harness/architecture/rules/concerns/notifications.yml
+    - docs/harness/architecture/rules/concerns/ci-quality.yml
+    - docs/harness/architecture/rules/concerns/generated-code.yml
+    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - docs/harness/architecture/rules/concerns/tenancy.yml
+    - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+    - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+  rule_packs:
+    - docs/harness/architecture/rule-packs/add-core-module.yml
+    - docs/harness/architecture/rule-packs/add-design-system-component.yml
+    - docs/harness/architecture/rule-packs/create-entity.yml
+    - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+
+recommended_next_artifacts: []
+
+notes:
+  - "Rule packs should compose layer and concern rulesets."
+  - "Do not duplicate full rulesets inside rule packs."
+  - "Work one artifact at a time."
+  - "The platform adapter guide is covered by a concern ruleset and a task-shaped pack for adding platform adapters."
+  - "The frontend design-system guide has a layer ruleset, design-label concern, and task-shaped pack for adding design-system components."
+  - "The platform layer guide is covered by the platform layer ruleset, plus existing core and dependency-direction coverage."
+  - "The core guide's events, messaging, and async sections are covered by the events-messaging-async concern."
+  - "The core guide's reporting, analytics, audit, logging, monitoring, and observability sections are covered by the reporting-analytics-audit concern."
+  - "The core guide's multi-tenancy sections are covered by the tenancy concern."
+  - "The core guide's internationalization and localization sections are covered by the i18n-localization concern."
+  - "The core guide's authentication, authorization, and security sections are covered by the identity-access-security concern."
+  - "The core guide's validation and API error-shape sections are covered by the validation-api-errors concern."
+  - "The core guide's persistence and files sections are covered by the persistence-files-storage concern."
+  - "The core guide's notification sections are covered by the notifications concern."
+  - "The core guide's configuration sections are covered by the config-runtime-settings concern."
+  - "The TypeScript guide's configuration, strictness, module resolution, package boundary, workspace, and monorepo tooling sections are covered by the typescript-monorepo-tooling concern."
+  - "The full discussion, modular monorepo, TypeScript, and platform guides' app ownership and app integration sections are covered by the apps layer ruleset."
+  - "The full discussion, modular monorepo, TypeScript, and platform guides' infra provisioning and deployment sections are covered by the infra layer ruleset."
+  - "The full discussion, modular monorepo, frontend design-system, and TypeScript guides' portable React frontend-kit sections are covered by the frontend-kit layer ruleset."

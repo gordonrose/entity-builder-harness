@@ -1,0 +1,109 @@
+id: pack.create-entity
+title: Create an entity through the entity-builder flow
+version: 1
+status: active
+
+description: >
+  A task rule pack for creating or materially changing a Kanbien entity and
+  its generated contract chain.
+
+task_type: create_entity
+
+applies_when:
+  - "A task creates a new entity definition."
+  - "A task changes entity fields, validation, permissions, persistence intent, API contracts, UI metadata, or generated tests."
+  - "A task regenerates backend schema, API contracts, frontend config, migrations, or entity tests."
+
+required_rulesets:
+  - "../rules/concerns/generated-code.yml"
+  - "../rules/concerns/dependency-direction.yml"
+
+required_checks:
+  - "Confirm the entity definition is the source of truth for downstream artifacts."
+  - "Confirm the entity definition is TypeScript-checked declarative metadata, not a loose JSON blob."
+  - "Confirm generated schemas, types, API contracts, persistence metadata, UI config, and tests are regenerated from the entity definition."
+  - "Confirm migrations enter the owning application's ordered migration stream."
+  - "Confirm generated output satisfies generated-code rules for determinism, placement, freshness, and no manual edits."
+  - "Confirm dependency direction is respected across apps, packages, platform, harness, numbered scripts command surfaces, and generated outputs."
+  - "Confirm runtime validation, contract tests, migration checks, generated tests, typecheck, and CI freshness checks are run or reported missing."
+
+agent_steps:
+  - id: identify-entity-source
+    instruction: >
+      Identify the entity definition file and the fields, validation rules,
+      permissions, workflows, persistence intent, and UI metadata it owns.
+
+  - id: map-contract-chain
+    instruction: >
+      List the downstream artifacts expected from the entity definition,
+      including generated types, runtime validation schemas, API contracts,
+      persistence metadata, form/table configuration, generated tests, and
+      migrations where applicable.
+
+  - id: choose-output-ownership
+    instruction: >
+      Decide whether generated outputs are package-local or shared generated
+      packages, and confirm migrations belong to the owning app migration stream.
+
+  - id: apply-generation-rules
+    instruction: >
+      Follow the generated-code concern ruleset. Change generator inputs or
+      generator code instead of hand-editing generated files.
+
+  - id: check-boundaries
+    instruction: >
+      Follow the dependency-direction concern ruleset. Production code may
+      consume generated outputs from approved locations, but it must not import
+      generator runtime code from numbered scripts command surfaces or harness.
+
+  - id: validate-contract-chain
+    instruction: >
+      Run or identify the relevant generation, typecheck, runtime validation,
+      contract, migration, generated-test, and freshness checks. Report any
+      missing checks explicitly.
+
+must_not:
+  - "Do not make a loose JSON blob the source of truth for an entity."
+  - "Do not hand-edit generated files unless an explicit generated-file policy allows it."
+  - "Do not scatter generated outputs across unrelated ownership boundaries."
+  - "Do not let entity folders own unordered app-wide migration streams."
+  - "Do not import generator runtime code into production apps, packages, or platform code."
+  - "Do not rely on TypeScript alone for runtime inputs, database rows, migrations, authorization policy, or cross-language API clients."
+
+success_criteria:
+  - "The rule pack exists at docs/harness/architecture/rule-packs/create-entity.yml."
+  - "The rule pack references ../rules/concerns/generated-code.yml."
+  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The entity definition is treated as the source of truth."
+  - "Generated artifacts are placed according to ownership and sharing scope."
+  - "Generated migrations enter an ordered app migration stream."
+  - "The task validates compile-time types, runtime schemas, API contracts, persistence mappings, generated tests, and generated artifact freshness where applicable."
+  - "The rule pack includes manually verified source_refs back to the relevant markdown guides."
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "How TypeScript should support the entity-builder idea"
+      - "What TypeScript enforces"
+      - "What TypeScript cannot enforce alone"
+      - "Worked User example"
+      - "1. Entity definition"
+      - "2. Inferred TypeScript type"
+      - "3. Generated validation schema"
+      - "4. API input/output contract"
+      - "5. Persistence model"
+      - "6. Frontend form config"
+      - "7. Frontend table config"
+      - "8. Generated tests"
+      - "The key design lesson"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "harness/"
+      - "8. tools/build"
+      - "9. Persistence"
+      - "11. The core entity flow"
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "7. Harness"
+      - "11. Entity Builder Flow"
+      - "12. Architectural Recommendations"

@@ -1,0 +1,166 @@
+id: concern.identity-access-security
+title: Identity, access, and security rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for authentication, authorization, principals, service
+  identities, permission decisions, secure helper contracts, redaction,
+  sensitive value handling, secret hashing, secure randomness, rate limiting,
+  auditability, and ownership splits across core, apps, platform, and infra.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: identity-access-security.authn-and-authz-are-separate
+    title: Authentication and authorization are separate
+    severity: error
+    summary: >
+      Authentication establishes who or what is making a request.
+      Authorization decides whether that principal may perform an action on a
+      resource in a tenant and context.
+    must:
+      - "Authenticate credentials such as tokens, API keys, or sessions before evaluating permissions."
+      - "Create and propagate a Principal through request or job context where identity is needed."
+      - "Evaluate authorization separately with actor, tenant, action, resource, and contextual attributes where relevant."
+      - "Treat identity as necessary but insufficient for permission."
+    must_not:
+      - "Do not put permission decisions inside credential verification."
+      - "Do not assume authenticated users are authorized for tenant-scoped resources."
+      - "Do not rely on UI-only visibility checks for server-side authorization."
+    agent_guidance: >
+      If a check says "is logged in" when the risk is "can do this", ask for
+      an explicit authorization decision.
+
+  - id: identity-access-security.principal-model-is-consistent
+    title: Principal model is consistent from day one
+    severity: error
+    summary: >
+      Kanbien should define a consistent Principal model and authentication
+      interface early, even if the first implementation is simple.
+    must:
+      - "Model principals with subject, type, optional email/display name, tenant memberships, and scopes where relevant."
+      - "Support user and service identities where both appear in runtime workflows."
+      - "Use stable authentication contracts such as Authenticator.authenticate, AuthenticationInput, requirePrincipal, and UnauthenticatedError where reused."
+      - "Leave room for SSO, MFA, SAML/OIDC, SCIM, service accounts, session revocation, and privileged access logging without forcing enterprise implementation on day one."
+    must_not:
+      - "Do not trust unverified tokens, sessions, API keys, or request body identity claims."
+      - "Do not hardcode one identity provider throughout app business logic."
+      - "Do not make service accounts masquerade as ordinary users without an explicit principal type."
+    agent_guidance: >
+      Keep identity provider details at the platform boundary. Apps should see
+      stable principal contracts.
+
+  - id: identity-access-security.authorization-decisions-are-explicit
+    title: Authorization decisions are explicit
+    severity: error
+    summary: >
+      Authorization should produce an allow or deny decision for a principal,
+      tenant, action, resource, and context. Apps must enforce decisions before
+      state changes or sensitive reads.
+    must:
+      - "Model authorization requests with principalId, tenantId where relevant, action, resource type/id/attributes, and context where needed."
+      - "Return explicit allow or deny decisions with optional reason."
+      - "Use helper contracts such as Authorizer.authorize and requireAllowed where reused."
+      - "Start with simple role-based checks where sufficient, but preserve room for ABAC, delegated administration, custom roles, policy auditability, and separation of duties."
+      - "Audit privileged, denied, delegated, or sensitive access decisions where policy requires evidence."
+    must_not:
+      - "Do not scatter inconsistent permission checks across handlers."
+      - "Do not use roles for everything when resource attributes or tenant context matter."
+      - "Do not perform state changes before required authorization."
+      - "Do not hide product-specific permission definitions in generic core contracts."
+    agent_guidance: >
+      Authorization is a control point. If a handler mutates state, identify
+      the explicit decision that allowed it.
+
+  - id: identity-access-security.security-primitives-are-boring-and-reviewed
+    title: Security primitives are boring and reviewed
+    severity: error
+    summary: >
+      Security helpers should be consistent, reviewed, and boring. Ad hoc
+      security code creates risk.
+    must:
+      - "Use shared contracts or helpers for redaction, sensitive value handling, secure random token generation, secret hashing, rate limiting, and security error types where reused."
+      - "Redact sensitive keys such as password, token, authorization, secret, apiKey, and cookie before logs or error payloads leave the process."
+      - "Use proven platform libraries or managed services for cryptography, hashing, KMS, secrets, and identity-provider integrations."
+      - "Define secure defaults, input size limits, key rotation paths, PII classification, vulnerability response expectations, and threat-model review for sensitive surfaces."
+    must_not:
+      - "Do not invent cryptography."
+      - "Do not log secrets, credentials, tokens, cookies, or unnecessary PII."
+      - "Do not store actual secrets in packages/core or app code."
+      - "Do not create app-specific security exceptions without explicit review."
+    agent_guidance: >
+      Security code should be unsurprising. Prefer reviewed primitives and
+      provider-backed implementations over local cleverness.
+
+  - id: identity-access-security.layer-ownership-is-explicit
+    title: Identity and security ownership is explicit
+    severity: error
+    summary: >
+      Core defines stable contracts and safe helpers. Platform binds them to
+      providers and proven libraries. Apps own product permission vocabulary and
+      business enforcement points. Infra owns external identity, secrets, IAM,
+      and managed security resources.
+    must:
+      - "Put Principal, Authenticator, AuthenticationInput, UnauthenticatedError, Authorizer, AuthorizationRequest, AuthorizationDecision, Permission types, AccessDenied errors, redaction helpers, SecureRandom, SecretHasher, RateLimiter interfaces, and security constants in packages/core when reused and framework-independent."
+      - "Put identity provider integrations, session/JWT/API-key verification implementations, KMS clients, secret store adapters, rate-limit store implementations, and platform auth hooks in platform."
+      - "Put product-specific permission definitions, role meanings, resource-specific authorization, workflow-specific security decisions, login UI, password reset screens, and tenant admin behavior in apps or product packages."
+      - "Put IAM resources, identity provider configuration, secret provisioning, KMS keys, network security resources, and security scanning infrastructure in infra."
+    must_not:
+      - "Do not put Auth0, Cognito, SAML/OIDC provider SDKs, KMS implementations, cloud secret stores, or database-specific permission queries in packages/core."
+      - "Do not put app-specific roles, UI-only visibility rules, or product workflow permissions in platform runtime mechanisms."
+      - "Do not put actual secrets or cloud IAM provisioning in app or core code."
+    agent_guidance: >
+      Identify whether the change is a contract, provider binding, product
+      decision, or infrastructure resource before choosing its owner.
+
+  - id: identity-access-security.v1-seams-before-enterprise-complexity
+    title: Create v1 seams before enterprise complexity
+    severity: error
+    summary: >
+      Kanbien should create clean identity, authorization, and security seams
+      early without pretending to be a large enterprise platform on day one.
+    must:
+      - "Define Principal, authentication interface, authorization decision model, redaction, secure token generation contract, secret hashing contract, and sensitive-field conventions from the start."
+      - "Start with simple role-based authorization where it is enough."
+      - "Avoid blocking future SSO/SAML/OIDC, SCIM, customer-specific roles, regional data residency, customer-managed encryption keys, secure SDLC evidence, and compliance automation."
+    must_not:
+      - "Do not build a complex policy engine, full identity governance platform, or enterprise security program before the product needs it."
+      - "Do not skip the contract seams because the first implementation is simple."
+    agent_guidance: >
+      Keep the seam. Keep the first implementation modest. That is the useful
+      middle path here.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "authn/ deep dive"
+      - "authz/ deep dive"
+      - "security/ deep dive"
+      - "Part 9: Building Kanbien v1"
+      - "authn"
+      - "authz"
+      - "security"
+      - "Enterprise Future"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/identity-access-security.yml."
+  - "It keeps authentication and authorization separate."
+  - "It defines day-one Principal and Authenticator expectations without hardcoding one identity provider."
+  - "It requires explicit authorization decisions before state changes or sensitive reads."
+  - "It defines reviewed security primitives for redaction, secure random values, secret hashing, rate limiting, and sensitive value handling."
+  - "It defines ownership splits across core contracts, platform provider bindings, app product permissions, and infra resources."
+  - "It creates early seams without requiring enterprise complexity on day one."
+  - "It includes manually verified source_refs back to the core architecture guide."

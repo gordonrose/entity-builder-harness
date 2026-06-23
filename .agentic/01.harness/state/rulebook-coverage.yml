@@ -1,0 +1,825 @@
+version: 1
+status: active
+
+purpose: >
+  Track coverage of canonical architecture guide content as Codex creates
+  layer rulesets, concern rulesets, and task rule packs one artifact at a time.
+
+completion_criteria:
+  - Every material source-guide section is marked covered, duplicate-of, background-only, out-of-scope, or deferred-human-decision.
+  - Every covered section points to at least one architecture rule, concern rule, rule pack, checklist, or reference artifact.
+  - Every source reference in generated artifacts has been manually checked against the named source document and section.
+  - Duplication, contradiction, weak source support, or architectural uncertainty is recorded as deferred-human-decision instead of being resolved by guesswork.
+  - YAML validation has passed for every created or updated YAML artifact.
+
+coverage_statuses:
+  unreviewed: "Source content has not been reviewed for rulebook coverage yet."
+  in_progress: "Source content is being reviewed or partially mapped."
+  covered: "Source content is represented by committed rulebook artifacts."
+  duplicate-of: "Source content repeats another tracked section or artifact."
+  background-only: "Source content explains context but does not need a rulebook artifact."
+  out-of-scope: "Source content is outside the architecture rulebook scope."
+  deferred-human-decision: "Source content needs human judgment before encoding."
+
+source_guides:
+  - path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+    line_count: 109
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "1. Original Context"
+        status: background-only
+        artifacts: []
+        note: "Context for why the architecture was redesigned; no rulebook artifact needed beyond the concrete section coverage below."
+      - source_sections:
+          - "7. Harness"
+          - "8. Build and Code Generation"
+          - "9. Persistence"
+          - "11. Entity Builder Flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+      - source_sections:
+          - "11. Entity Builder Flow"
+          - "12. Architectural Recommendations"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
+      - source_sections:
+          - "7. Harness"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential conflict with kanbien-typescript-architecture-guide.md harness/ section: this guide frames Harness as governance and generation, while the TypeScript guide frames harness/ as testing and development support."
+      - source_sections:
+          - "8. Build and Code Generation"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+        note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
+      - source_sections:
+          - "2. Front-End Architecture"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
+      - source_sections:
+          - "6. Applications"
+          - "9. Persistence"
+          - "12. Architectural Recommendations"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml; entity-definition source-of-truth placement is deferred separately."
+      - source_sections:
+          - "10. Infrastructure and Deployment"
+          - "12. Architectural Recommendations"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+  - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+    line_count: 4310
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "Why shared core packages exist"
+          - "Why enterprise teams create a shared core layer"
+          - "Conceptual stack"
+          - "Why dependency direction matters"
+          - "How poor dependency management causes architectural decay"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/packages-core.yml
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Core foundation context is covered by packages-core and dependency-direction rules; source refs were manually checked while refining those artifacts."
+      - source_sections:
+          - "async-jobs/ deep dive"
+          - "events/ deep dive"
+          - "queues/ deep dive"
+          - "Part 5: Events, Messaging, and Async Systems"
+          - "Event-driven architecture"
+          - "Domain events"
+          - "Event buses"
+          - "Message queues"
+          - "Dead-letter queues"
+          - "Background workers"
+          - "Async jobs"
+          - "Scheduled jobs"
+          - "How they relate"
+          - "What belongs in core, apps, platform, and infra"
+          - "Complete worked example: UserCreated"
+          - "App creates user and records an outbox event"
+          - "Event publisher publishes UserCreated"
+          - "Event subscriber creates a queue job"
+          - "Worker processes the job"
+          - "Audit is recorded"
+          - "Analytics is tracked"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+        note: "Events, messaging, and async source refs were manually checked while creating docs/harness/architecture/rules/concerns/events-messaging-async.yml."
+      - source_sections:
+          - "logging/ deep dive"
+          - "monitoring/ deep dive"
+          - "audit/ deep dive"
+          - "reporting/ deep dive"
+          - "analytics/ deep dive"
+          - "Part 6: Reporting vs Analytics vs Audit"
+          - "Reporting"
+          - "Analytics"
+          - "Business Intelligence"
+          - "Audit"
+          - "Observability"
+          - "Monitoring"
+          - "Logging"
+          - "Relationship diagram"
+          - "Quick comparison"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+        note: "Reporting, analytics, audit, logging, monitoring, and observability source refs were manually checked while creating docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml."
+      - source_sections:
+          - "tenancy/ deep dive"
+          - "Part 7: Multi-Tenancy"
+          - "What multi-tenancy is"
+          - "Tenant isolation models"
+          - "Shared database, shared schema"
+          - "Shared database, separate schemas"
+          - "Separate database per tenant"
+          - "Separate deployment per tenant"
+          - "Hybrid model"
+          - "Security implications"
+          - "Performance implications"
+          - "Where tenancy support belongs"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/tenancy.yml
+        note: "Multi-tenancy source refs were manually checked while creating docs/harness/architecture/rules/concerns/tenancy.yml."
+      - source_sections:
+          - "i18n/ deep dive"
+          - "localization/ deep dive"
+          - "Part 8: Internationalization and Localization"
+          - "i18n"
+          - "l10n"
+          - "Translations"
+          - "Locale management"
+          - "Currency handling"
+          - "Timezone handling"
+          - "Regional formatting"
+          - "Responsibility split"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/i18n-localization.yml
+        note: "Internationalization and localization source refs were manually checked while creating docs/harness/architecture/rules/concerns/i18n-localization.yml."
+      - source_sections:
+          - "authn/ deep dive"
+          - "authz/ deep dive"
+          - "security/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "authn"
+          - "authz"
+          - "security"
+          - "Enterprise Future"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/identity-access-security.yml
+        note: "Authentication, authorization, and security source refs were manually checked while creating docs/harness/architecture/rules/concerns/identity-access-security.yml."
+      - source_sections:
+          - "validation/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "validation"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+        note: "Validation and API error-shape source refs were manually checked while creating docs/harness/architecture/rules/concerns/validation-api-errors.yml."
+      - source_sections:
+          - "persistence/ deep dive"
+          - "files/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "persistence"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+        note: "Persistence and files source refs were manually checked while creating docs/harness/architecture/rules/concerns/persistence-files-storage.yml."
+      - source_sections:
+          - "notifications/ deep dive"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/notifications.yml
+        note: "Notification source refs were manually checked while creating docs/harness/architecture/rules/concerns/notifications.yml."
+      - source_sections:
+          - "config/ deep dive"
+          - "Part 9: Building Kanbien v1"
+          - "config"
+          - "Enterprise Future"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+        note: "Configuration source refs were manually checked while creating docs/harness/architecture/rules/concerns/config-runtime-settings.yml."
+      - source_sections:
+          - "What a shared core package is"
+          - "What problems shared core packages solve"
+          - "What problems shared core packages create when used incorrectly"
+          - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
+          - "When a shared core layer becomes a dumping ground and how to prevent it"
+          - "Code dependency direction"
+          - "Designing packages/core"
+          - "Ideal packages/core folder structure"
+          - "Why each folder exists and what consumes it"
+          - "How core connects to apps, platform, harness, and infrastructure"
+          - "Most common mistakes founders make"
+          - "Most common mistakes engineers make"
+          - "Principles to guide Kanbien for the next 10 years"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/packages-core.yml
+        note: "packages/core layer source refs were manually checked while refining docs/harness/architecture/rules/layers/packages-core.yml."
+      - source_sections:
+          - "Code dependency direction"
+          - "What depends on what"
+          - "What should never depend on what"
+          - "Principles to guide Kanbien for the next 10 years"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+      - source_sections:
+          - "What a shared core package is"
+          - "What problems shared core packages solve"
+          - "What problems shared core packages create when used incorrectly"
+          - "How core differs from applications, features, platform, infrastructure, design systems, and utilities"
+          - "When a shared core layer becomes a dumping ground and how to prevent it"
+          - "Code dependency direction"
+          - "Designing packages/core"
+          - "Principles to guide Kanbien for the next 10 years"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
+      - source_sections:
+          - "Must Have on day one"
+          - "Should Have as the platform grows"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+          - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+          - docs/harness/architecture/rules/concerns/identity-access-security.yml
+          - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+          - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+          - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+          - docs/harness/architecture/rules/concerns/tenancy.yml
+          - docs/harness/architecture/rules/concerns/notifications.yml
+          - docs/harness/architecture/rules/concerns/i18n-localization.yml
+        note: "Core v1 prioritization sections are covered by the committed concern rulesets for each named capability."
+  - path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
+    line_count: 3136
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "What React is"
+          - "Why React became dominant"
+          - "Problem 1: Keeping UI synchronized with state"
+          - "Tradeoff 1: More tooling"
+          - "Tradeoff 2: Learning curve"
+          - "Tradeoff 4: Performance mistakes are easy"
+          - "When React is the wrong choice"
+          - "How React differs from Angular, Vue, Svelte, and Web Components"
+          - "Why most enterprise software teams choose React today"
+        status: background-only
+        artifacts: []
+        note: "Introductory React framework context; material Kanbien rules are covered by design-system, frontend-kit, apps, and TypeScript tooling artifacts."
+      - source_sections:
+          - "What a design system actually is"
+          - "The design-system layer model"
+          - "Design tokens"
+          - "Foundation tokens"
+          - "Semantic tokens"
+          - "Builder tokens"
+          - "Primitives"
+          - "Patterns"
+          - "Components"
+          - "Templates"
+          - "Pages"
+          - "How the layers depend on each other"
+          - "Which layers should be reusable across products?"
+          - "Which layers should be application-specific?"
+          - "Common mistakes teams make when building design systems"
+          - "Part 3: Design-system package structure in a TypeScript monorepo"
+          - "Recommended dependency rules"
+          - "Part 6: Final recommended Kanbien architecture"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/design-system.yml
+        note: "Design-system layer source refs were manually checked while creating docs/harness/architecture/rules/layers/design-system.yml."
+      - source_sections:
+          - "How the layers depend on each other"
+          - "Recommended dependency rules"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+      - source_sections:
+          - "Part 4: Evaluating the design-label architecture"
+          - "Do not let builder tokens directly mutate React components at runtime"
+          - "Is this a good architecture?"
+          - "Potential pitfalls"
+          - "Pitfall 1: Design labels become hidden product forks"
+          - "Pitfall 2: Layout shifts across design labels"
+          - "Pitfall 3: Accessibility regressions"
+          - "Pitfall 4: Token alias cycles"
+          - "Pitfall 5: Runtime token loading creates flicker"
+          - "Pitfall 6: Third-party components ignore your tokens"
+          - "Pitfall 7: Too many design labels"
+          - "How to implement this cleanly in React"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/design-label-theming.yml
+        note: "Design-label theming source refs were manually checked while creating docs/harness/architecture/rules/concerns/design-label-theming.yml."
+      - source_sections:
+          - "Part 5: Complete worked example - Button"
+          - "Step 1: Design Label"
+          - "Step 2: Foundation Tokens"
+          - "Step 3: Semantic Tokens"
+          - "Step 4: Builder Tokens"
+          - "Step 5: Primitive"
+          - "Step 6: Pattern"
+          - "Step 7: Component"
+          - "Step 8: Application Usage"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-design-system-component.yml
+        note: "add-design-system-component source refs were manually checked while creating docs/harness/architecture/rule-packs/add-design-system-component.yml."
+      - source_sections:
+          - "What React is not"
+          - "Problem 2: Reusing UI safely"
+          - "Problem 3: Managing complex interaction"
+          - "Problem 4: Building large applications with many teams"
+          - "Tradeoff 3: Too much architectural freedom"
+          - "Tradeoff 5: Accessibility is not automatic"
+          - "Part 6: Final recommended Kanbien architecture"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
+  - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+    line_count: 218
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "1. Repo root"
+        status: duplicate-of
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+        note: "Repo-root zone list repeats monorepo structure already covered by dependency-direction and TypeScript monorepo tooling."
+      - source_sections:
+          - "packages/core"
+          - "The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
+      - source_sections:
+          - "8. tools/build"
+          - "9. Persistence"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+      - source_sections:
+          - "harness/"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
+      - source_sections:
+          - "7. harness/"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential conflict with kanbien-typescript-architecture-guide.md harness/ section: this guide places entity-definition under harness/, while the TypeScript guide says entity definitions should not live in harness/."
+      - source_sections:
+          - "8. tools/build"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+        note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
+      - source_sections:
+          - "3. packages/frontend-kit"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
+      - source_sections:
+          - "6. apps/"
+          - "9. Persistence"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml; entity-definition source-of-truth placement is deferred separately."
+      - source_sections:
+          - "10. Infra"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+  - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
+    line_count: 3124
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "The clean mental model"
+          - "What a platform layer is"
+          - "Why it should be separate from apps, features, and core packages"
+          - "What problems /platform solves"
+          - "What problems /platform should not solve"
+          - "How /platform differs from backend business logic"
+          - "How /platform differs from infrastructure"
+          - "How /platform differs from shared core libraries"
+          - "When a platform layer becomes over-engineered"
+          - "Proposed /platform structure"
+          - "How /platform should handle each runtime concern"
+          - "Folder-by-folder design"
+          - "The business app mounting contract"
+          - "Example platform contract"
+          - "Worked example: apps/crm/app.mount.ts"
+          - "How route registration becomes real"
+          - "What should remain inside apps/crm"
+          - "What belongs in /platform"
+          - "Minimal v1 platform architecture"
+          - "The simple v1 runtime flow"
+          - "The most important design rule"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/platform.yml
+        note: "Platform layer source refs were manually checked while creating docs/harness/architecture/rules/layers/platform.yml."
+      - source_sections:
+          - "How /platform differs from shared core libraries"
+          - "What should move into packages/core"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/add-core-module.yml
+        note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
+      - source_sections:
+          - "The clean mental model"
+          - "platform/server/"
+          - "The business app mounting contract"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+      - source_sections:
+          - "The business app mounting contract"
+          - "Worked example: apps/crm/app.mount.ts"
+          - "What should remain inside apps/crm"
+          - "The simple v1 runtime flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
+      - source_sections:
+          - "How /platform differs from infrastructure"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+  - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
+    line_count: 2583
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "1. What TypeScript is"
+          - "2. Why TypeScript exists"
+          - "3. How TypeScript differs from JavaScript"
+          - "7. Why enterprise software teams commonly choose TypeScript"
+          - "8. When TypeScript is the wrong choice"
+        status: background-only
+        artifacts: []
+        note: "Introductory TypeScript language-selection context; material Kanbien rules are covered by TypeScript tooling, validation, generated-code, and create-entity artifacts."
+      - source_sections:
+          - "4. What problems TypeScript solves"
+          - "5. What problems TypeScript does not solve"
+          - "6. What tradeoffs TypeScript introduces"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+          - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "TypeScript problem/tradeoff material is represented by strict tooling, runtime validation, generated-code, and entity contract-chain rules."
+      - source_sections:
+          - "Kanbien monorepo structure"
+          - "Linting"
+          - "apps/"
+          - "packages/"
+          - "platform/"
+          - "harness/"
+          - "tools/"
+          - "infra/"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+      - source_sections:
+          - "My architectural recommendation for Kanbien"
+          - "Generated code must be checked, not trusted"
+          - "Build outputs"
+          - "tools/"
+          - "Code generation"
+          - "CI checks"
+          - "The key design lesson"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+      - source_sections:
+          - "How TypeScript should support the entity-builder idea"
+          - "What TypeScript enforces"
+          - "What TypeScript cannot enforce alone"
+          - "Worked User example"
+          - "1. Entity definition"
+          - "2. Inferred TypeScript type"
+          - "3. Generated validation schema"
+          - "4. API input/output contract"
+          - "5. Persistence model"
+          - "6. Frontend form config"
+          - "7. Frontend table config"
+          - "8. Generated tests"
+          - "The key design lesson"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "Create-entity source refs were manually checked while creating docs/harness/architecture/rule-packs/create-entity.yml."
+      - source_sections:
+          - "6. Frontend form config"
+          - "7. Frontend table config"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/frontend-kit.yml
+        note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
+      - source_sections:
+          - "harness/"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential conflict with kanbien-modular-monorepo-entity-builder.md and kanbien-architecture-full-discussion.md: this guide frames harness/ as testing and development support and says entity definitions should not live there."
+      - source_sections:
+          - "tools/"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+        note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
+      - source_sections:
+          - "platform/"
+          - "tools/"
+        status: deferred-human-decision
+        artifacts: []
+        note: "Potential scope tension: this guide places entity-core, entity-runtime, and entity-codegen under platform and says tools may depend on platform/entity-codegen, while the dedicated platform-layer guide treats platform as runtime composition and ADR 0020 maps generator command surfaces to numbered scripts."
+      - source_sections:
+          - "Linting"
+          - "Formatting"
+          - "Type checking"
+          - "Testing"
+          - "Code generation"
+          - "CI checks"
+          - "tools/"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/ci-quality.yml
+        note: "CI-quality source refs were manually checked while creating docs/harness/architecture/rules/concerns/ci-quality.yml."
+      - source_sections:
+          - "My architectural recommendation for Kanbien"
+          - "TypeScript configuration setup"
+          - "Recommended config files"
+          - "Package-level tsconfig.json"
+          - "App-level tsconfig.json"
+          - "Path aliases"
+          - "Project references"
+          - "Strict mode"
+          - "Module resolution"
+          - "ESM vs CommonJS"
+          - "Recommended clean setup for Kanbien"
+          - "Package manager"
+          - "Monorepo tooling"
+          - "TypeScript compiler settings"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+        note: "TypeScript monorepo tooling source refs were manually checked while creating docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml."
+      - source_sections:
+          - "apps/"
+          - "Purpose"
+          - "TypeScript code that should live there"
+          - "What should not live there"
+          - "Dependency rules"
+          - "Testing approach"
+          - "Build approach"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
+      - source_sections:
+          - "infra/"
+          - "Purpose"
+          - "TypeScript code that should live there"
+          - "What should not live there"
+          - "Dependency rules"
+          - "Testing approach"
+          - "Build approach"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+  - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+    line_count: 900
+    status: covered
+    coverage_entries:
+      - source_sections:
+          - "1. Executive Summary"
+          - "The rule"
+          - "2. The Core Decision"
+          - "3. Why Predictable Consumption Matters"
+          - "4. The Three-Level Consumption Model"
+          - "5. Recommended Option B Structure"
+          - "6. Standard Adapter Package Contract"
+          - "7. Platform Profiles"
+          - "8. Backwards Compatibility Strategy"
+          - "9. Provider Compatibility and Capability Interfaces"
+          - "10. Consumption Rules"
+          - "11. Final Kanbien Folder Structure"
+          - "12. What Lives Where"
+          - "13. Implementation Checklist"
+          - "14. The Simple Answer"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+          - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+        note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml and docs/harness/architecture/rule-packs/add-platform-adapter.yml."
+
+artifact_coverage:
+  - artifact: docs/harness/architecture/rules/layers/apps.yml
+    status: covered
+    note: "Source refs manually checked while creating the apps layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/frontend-kit.yml
+    status: covered
+    note: "Source refs manually checked while creating the frontend-kit layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/infra.yml
+    status: covered
+    note: "Source refs manually checked while creating the infra layer ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    status: covered
+    note: "Source refs manually checked while creating the configuration and runtime settings concern ruleset."
+  - artifact: docs/harness/architecture/rules/layers/design-system.yml
+    status: covered
+    note: "Source refs manually checked while creating the design-system layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/packages-core.yml
+    status: covered
+    note: "Source refs manually checked while refining the packages/core layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/platform.yml
+    status: covered
+    note: "Source refs manually checked while creating the platform layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/scripts-command-surface.yml
+    status: covered
+    note: "Source refs manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
+  - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    status: covered
+    note: "Source refs manually checked while refining the dependency-direction concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/design-label-theming.yml
+    status: covered
+    note: "Source refs manually checked while creating the design-label-theming concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    status: covered
+    note: "Source refs manually checked while creating the events, messaging, and async concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/i18n-localization.yml
+    status: covered
+    note: "Source refs manually checked while creating the internationalization and localization concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/identity-access-security.yml
+    status: covered
+    note: "Source refs manually checked while creating the identity, access, and security concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/notifications.yml
+    status: covered
+    note: "Source refs manually checked while creating the notifications concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
+    status: covered
+    note: "Source refs manually checked while creating the CI quality concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/generated-code.yml
+    status: covered
+    note: "Source refs manually checked while creating the generated-code concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    status: covered
+    note: "Source refs manually checked while creating the platform-adapter-consumption concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    status: covered
+    note: "Source refs manually checked while creating the persistence and files concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    status: covered
+    note: "Source refs manually checked while creating the reporting, analytics, audit, and observability concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/tenancy.yml
+    status: covered
+    note: "Source refs manually checked while creating the tenancy concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+    status: covered
+    note: "Source refs manually checked while creating the TypeScript monorepo tooling concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/validation-api-errors.yml
+    status: covered
+    note: "Source refs manually checked while creating the validation and API error concern ruleset."
+  - artifact: docs/harness/architecture/rule-packs/add-core-module.yml
+    status: covered
+    note: "Source refs manually checked while refining the add-core-module rule pack."
+  - artifact: docs/harness/architecture/rule-packs/add-design-system-component.yml
+    status: covered
+    note: "Source refs manually checked while creating the add-design-system-component rule pack."
+  - artifact: docs/harness/architecture/rule-packs/create-entity.yml
+    status: covered
+    note: "Source refs manually checked while creating the create-entity rule pack."
+  - artifact: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    status: covered
+    note: "Source refs manually checked while creating the add-platform-adapter rule pack."
+
+candidate_queue: []
+
+deferred_human_decisions:
+  - id: harness-layer-ownership
+    title: Decide whether harness is test/development support, entity-builder governance/generation, or split into separate layers.
+    status: open
+    affected_candidate: docs/harness/architecture/rules/layers/harness.yml
+    source_refs:
+      - doc: "kanbien-typescript-architecture-guide.md"
+        sections:
+          - "harness/"
+      - doc: "kanbien-modular-monorepo-entity-builder.md"
+        sections:
+          - "7. harness/"
+      - doc: "kanbien-architecture-full-discussion.md"
+        sections:
+          - "7. Harness"
+    summary: >
+      The TypeScript guide describes harness/ as testing and development
+      support and says entity definitions should not live there. The modular
+      monorepo and full discussion guides describe harness as the entity-builder
+      brain or governance/generation layer. Do not create harness.yml until this
+      ownership model is decided.
+  - id: platform-entity-codegen-ownership
+    title: Decide whether entity-core, entity-runtime, and entity-codegen are platform primitives, numbered-script generator capabilities, or split across both.
+    status: open
+    affected_candidate: docs/harness/architecture/rules/layers/platform.yml
+    source_refs:
+      - doc: "kanbien-typescript-architecture-guide.md"
+        sections:
+          - "platform/"
+          - "tools/"
+      - doc: "kanbien-platform-layer-architecture.md"
+        sections:
+          - "The clean mental model"
+          - "What belongs in /platform"
+      - doc: "kanbien-modular-monorepo-entity-builder.md"
+        sections:
+          - "8. tools/build"
+      - doc: "kanbien-architecture-full-discussion.md"
+        sections:
+          - "8. Build and Code Generation"
+    summary: >
+      The TypeScript guide describes platform/ as reusable platform primitives
+      and engines, including entity-core, entity-runtime, and entity-codegen,
+      and says tools may depend on platform/entity-codegen. The dedicated
+      platform-layer guide treats platform/ as runtime composition. ADR 0020
+      maps generator command surfaces to numbered scripts. Do not broaden
+      platform.yml to own entity/codegen engines until this ownership model is
+      decided.
+  - id: entity-definition-source-of-truth-location
+    title: Decide where canonical entity definitions live before tightening app, harness, platform, or create-entity rules.
+    status: open
+    affected_candidate: docs/harness/architecture/rule-packs/create-entity.yml
+    source_refs:
+      - doc: "kanbien-modular-monorepo-entity-builder.md"
+        sections:
+          - "6. apps/"
+          - "7. harness/"
+          - "11. The core entity flow"
+      - doc: "kanbien-architecture-full-discussion.md"
+        sections:
+          - "7. Harness"
+          - "11. Entity Builder Flow"
+      - doc: "kanbien-typescript-architecture-guide.md"
+        sections:
+          - "apps/"
+          - "harness/"
+          - "How TypeScript should support the entity-builder idea"
+          - "1. Entity definition"
+    summary: >
+      The modular monorepo guide shows entity.schema.ts under apps/crm/entities,
+      while the TypeScript guide says entity definitions should not live in
+      apps/ or harness/ and frames the entity-builder as a platform primitive.
+      The full discussion says the harness captures entity definitions. Keep
+      app rules focused on composition, mounting, manifests, migrations, and
+      product behavior until the canonical entity-definition location is
+      decided.
+
+notes:
+  - "Do not mark existing artifacts as covered until their source_refs have been manually checked against the named source sections."
+  - "Prefer concern rules before task packs when multiple future packs need the same rule."
+  - "Record duplication or contradiction here instead of resolving by inference."
