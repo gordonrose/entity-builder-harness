@@ -639,6 +639,28 @@ Summary: Updated rulebook coverage state and remaining source-reference notes so
 
 ADR impact: No new ADR required; this updates state and notes for the ADR 0020 direction.
 
+
+### 2026-06-23T17:22:16Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: stopped before resolution; requires user approval for normal repo conflict resolution
+
+
+### 2026-06-23T17:22:16Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: stopped before resolution; requires user approval for normal repo conflict resolution
+
 ## Commits
 
 
@@ -910,7 +932,28 @@ ADR impact: No new ADR required; this updates state and notes for the ADR 0020 d
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: authored repository content has no more specific governed conflict type
+  Action: stopped before resolution; requires user approval for normal repo conflict resolution
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: unresolved conflict in docs/harness/architecture/rules/layers/packages-core.yml
+  Checks: classification only; resolution checks pending
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: authored repository content has no more specific governed conflict type
+  Action: stopped before resolution; requires user approval for normal repo conflict resolution
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: unresolved conflict in scripts/01.harness/check-artifact-metadata-headers.sh
+  Checks: classification only; resolution checks pending
 
 ## ADR Disposition
 
