@@ -21,9 +21,9 @@ Usage:
   check-artifact-metadata-headers.sh --paths <path> [path...]
   check-artifact-metadata-headers.sh --all
 
-Checks scripts and agentic Markdown documents for required metadata
-headers. --staged-added enforces only newly added files so existing files can be
-backfilled in batches.
+Checks scripts, chat Markdown documents, harness Markdown documents, and harness
+YAML artifacts for required agentic metadata headers. --staged-added enforces
+only newly added files so existing files can be backfilled in batches.
 EOF
 }
 
@@ -92,8 +92,19 @@ is_markdown_artifact() {
   esac
 }
 
+is_yaml_artifact() {
+  case "$1" in
+    docs/harness/*.yml|docs/harness/**/*.yml|docs/harness/*.yaml|docs/harness/**/*.yaml)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 is_relevant_path() {
-  is_script_artifact "$1" || is_markdown_artifact "$1"
+  is_script_artifact "$1" || is_markdown_artifact "$1" || is_yaml_artifact "$1"
 }
 
 collect_staged_added_paths() {
@@ -124,7 +135,7 @@ collect_all_paths() {
     [ -d scripts ] && find scripts -type f
     [ -d .agentic ] && find .agentic -type f -name '*.md'
     [ -d docs/00.chat ] && find docs/00.chat -type f -name '*.md'
-    [ -d docs/harness ] && find docs/harness -type f -name '*.md'
+    [ -d docs/harness ] && find docs/harness -type f \( -name '*.md' -o -name '*.yml' -o -name '*.yaml' \)
   } | sort -u
 }
 
@@ -225,6 +236,37 @@ check_markdown_header() {
   validate_used_by_paths "$path"
 }
 
+check_yaml_header() {
+  local path="$1"
+  local header
+
+  header="$(header_block "$path")"
+
+  if ! printf '%s\n' "$header" | grep -q 'agentic-artifact:'; then
+    echo "ERROR: missing agentic-artifact metadata header: $path" >&2
+    return 1
+  fi
+
+  for field in owner kind purpose domain portability used_by; do
+    if ! printf '%s\n' "$header" | grep -Eq "^#[[:space:]]+${field}:"; then
+      echo "ERROR: missing ${field} in YAML artifact metadata header: $path" >&2
+      return 1
+    fi
+  done
+
+  if ! printf '%s\n' "$header" | grep -Eq '^#[[:space:]]+portability: (llm-workbench-required|llm-workbench-validation|llm-workbench-compatibility|source-only|internal)$'; then
+    echo "ERROR: invalid portability value in YAML artifact metadata header: $path" >&2
+    return 1
+  fi
+
+  if ! printf '%s\n' "$header" | grep -Eq '^#[[:space:]]+owner: (00\.chat|shared|harness|aws|product|education)$'; then
+    echo "ERROR: invalid owner value in YAML artifact metadata header: $path" >&2
+    return 1
+  fi
+
+  validate_used_by_paths "$path"
+}
+
 case "$MODE" in
   staged-added)
     PATHS="$(collect_staged_added_paths)"
@@ -250,6 +292,8 @@ while IFS= read -r path; do
     check_script_header "$path" || FAILURES=$((FAILURES + 1))
   elif is_markdown_artifact "$path"; then
     check_markdown_header "$path" || FAILURES=$((FAILURES + 1))
+  elif is_yaml_artifact "$path"; then
+    check_yaml_header "$path" || FAILURES=$((FAILURES + 1))
   fi
 done <<< "$PATHS"
 

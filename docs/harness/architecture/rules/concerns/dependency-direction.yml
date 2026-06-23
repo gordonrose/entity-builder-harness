@@ -1,3 +1,12 @@
+# agentic-artifact:
+#   owner: harness
+#   kind: ruleset
+#   purpose: Define repo-wide dependency direction architecture rules for agents.
+#   domain: architecture
+#   portability: source-only
+#   used_by:
+#     - docs/harness/architecture/rule-packs/add-core-module.yml
+
 id: concern.dependency-direction
 title: Dependency direction rules
 version: 1
