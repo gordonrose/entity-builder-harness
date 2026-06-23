@@ -1,5 +1,5 @@
 <!-- agentic-artifact:
-owner: harness
+owner: 00.chat
 kind: doc
 purpose: Explain the public llm-workbench starter template files.
 domain: bootstrap

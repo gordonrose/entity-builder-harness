@@ -45,11 +45,11 @@ Future Codex sessions continuing rulebook work should start by reading
 
 ## Bootstrap Templates
 
-- `docs/harness/bootstrap/llm-workbench-template/` - starter public repo shell files for the first `llm-workbench` bootstrap.
+- `docs/00.chat/bootstrap/llm-workbench-template/` - starter public repo shell files for the first `llm-workbench` bootstrap.
 
 ## Scripts
 
-- `scripts/01.harness/check-rule-test-taxonomy.sh` - validates architecture rulebook layer test taxonomy structure and CI vocabulary references.
+- `scripts/01.harness/check-rule-test-taxonomy.sh` - validates declared architecture rulebook layer test taxonomy scope, CI vocabulary references, substitute limits, and negative-evidence guardrails.
 
 ## Data
 

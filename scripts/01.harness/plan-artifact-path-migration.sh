@@ -53,7 +53,7 @@ bucket_for_path() {
     .agentic/*)
       printf '%s\n' "workflow"
       ;;
-    docs/00.chat/*|docs/harness/bootstrap/*|scripts/00.chat/bootstrap/*|scripts/00.chat/upstream/*)
+    docs/00.chat/*|scripts/00.chat/bootstrap/*|scripts/00.chat/upstream/*)
       printf '%s\n' "bootstrap"
       ;;
     scripts/*)

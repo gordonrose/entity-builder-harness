@@ -74,7 +74,7 @@ if [ ! -d "$TARGET_REPO/.git" ]; then
 fi
 
 SOURCE_REPO="$(git rev-parse --show-toplevel)"
-TEMPLATE_ROOT="$SOURCE_REPO/docs/harness/bootstrap/llm-workbench-template/root"
+TEMPLATE_ROOT="$SOURCE_REPO/docs/00.chat/bootstrap/llm-workbench-template/root"
 PUBLIC_ADR_MANIFEST="$SOURCE_REPO/docs/00.chat/public-chat-workbench-adrs.md"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-bootstrap-plan.XXXXXX")"
 PLAN_PATHS="$TMP_DIR/planned-paths.txt"

@@ -90,7 +90,7 @@ outside engineer would use it:
 Starter templates for those files live in:
 
 ```txt
-docs/harness/bootstrap/llm-workbench-template/root/
+docs/00.chat/bootstrap/llm-workbench-template/root/
 ```
 
 The install smoke test must install the workbench into a throwaway Git repo,

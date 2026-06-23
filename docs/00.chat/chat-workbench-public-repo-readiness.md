@@ -96,7 +96,7 @@ engineers need a product-shaped entry point, not only internal harness files:
 Starter templates for these files live under:
 
 ```txt
-docs/harness/bootstrap/llm-workbench-template/root/
+docs/00.chat/bootstrap/llm-workbench-template/root/
 ```
 
 The install smoke test must prove that a throwaway Git repo can install the

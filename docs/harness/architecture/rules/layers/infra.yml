@@ -57,7 +57,7 @@ test_taxonomy:
           - "Infrastructure source, environment definitions, deployment workflow definitions, and IaC files satisfy the tool's static checks."
       - id: validation
         should_prove:
-          - "Required environment inputs, variable shapes, deployment targets, and config references are present and valid."
+          - "Required environment inputs, variable shapes, deployment targets, and config references are present and valid, while invalid targets or missing references are rejected."
       - id: edge_cases
         should_prove:
           - "Optional resources, disabled features, environment-specific overrides, naming limits, and dependency ordering are handled intentionally."
@@ -79,7 +79,7 @@ test_taxonomy:
           - "Deployment resources remain compatible with app manifests, platform config contracts, environment models, and promotion controls."
       - id: failure_modes
         should_prove:
-          - "Policy violations block promotion with actionable diagnostics."
+          - "Policy violations fail promotion with actionable diagnostics before unsafe changes can proceed."
   - type: golden
     role: primary
     minimum_evidence:

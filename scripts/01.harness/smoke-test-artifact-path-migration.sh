@@ -28,7 +28,7 @@ git -C "$REPO" init -q
 mkdir -p \
   "$REPO/.agentic/01.harness/workflows" \
   "$REPO/scripts/01.harness" \
-  "$REPO/docs/harness/bootstrap" \
+  "$REPO/docs/00.chat/bootstrap" \
   "$REPO/commitLogs/2026/jun/20/example"
 
 cat > "$REPO/AGENTS.md" <<'EOF'
@@ -44,7 +44,7 @@ cat > "$REPO/scripts/01.harness/example.sh" <<'EOF'
 echo .agentic/01.harness
 EOF
 
-cat > "$REPO/docs/harness/bootstrap/example.md" <<'EOF'
+cat > "$REPO/docs/00.chat/bootstrap/example.md" <<'EOF'
 Bootstrap .agentic/01.harness.
 EOF
 

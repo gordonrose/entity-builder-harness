@@ -12,7 +12,6 @@ applies_to:
     - "apps/**"
     - "packages/**"
     - "platform/**"
-    - "harness/**"
     - "tools/**"
     - "infra/**"
 
@@ -43,6 +42,167 @@ test_types:
     purpose: "Prove source, configuration, infrastructure, or generated definitions satisfy deterministic static checks."
   - id: policy
     purpose: "Prove security, permission, dependency, deployment, or governance policies hold before merge or promotion."
+
+test_role_semantics:
+  - id: primary
+    purpose: "Expected close proof for layer-owned behavior when that test type matches the changed surface."
+  - id: secondary
+    purpose: "Useful close proof for focused sub-surfaces, but not the main evidence for the layer's broad runtime contract."
+  - id: conditional
+    purpose: "Required only when the changed surface crosses the condition named by the layer row; it cannot replace closer primary proof."
+
+substitute_limits:
+  - type: smoke
+    cannot_replace:
+      - unit
+      - integration
+      - contract
+      - type_level
+      - policy
+      - static_validation
+      - generated_freshness
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+      - generated_output
+      - accessibility_interaction
+  - type: e2e
+    cannot_replace:
+      - unit
+      - integration
+      - contract
+      - type_level
+      - policy
+      - static_validation
+      - generated_freshness
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+      - generated_output
+      - accessibility_interaction
+  - type: golden
+    cannot_replace:
+      - contract
+      - type_level
+      - policy
+      - static_validation
+      - generated_freshness
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+      - accessibility_interaction
+  - type: visual_regression
+    cannot_replace:
+      - unit
+      - integration
+      - type_level
+      - contract
+    forbidden_as_sole_proof_for_categories:
+      - validation
+      - security_permissions
+      - failure_modes
+      - compatibility_contracts
+
+layer_test_taxonomy_scope:
+  layer_files:
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/tools.yml
+    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/harness/architecture/rules/layers/design-system.yml
+    - docs/harness/architecture/rules/layers/frontend-kit.yml
+  excluded_paths:
+    - path: "harness/**"
+      reason: "Harness process work is governed by .agentic/01.harness workflows, standards, and scripts rather than an architecture layer matrix."
+
+category_evidence_requirements:
+  - id: validation
+    must_name_negative_evidence:
+      - rejected input
+      - reject
+      - invalid
+      - malformed config
+      - invalid shape
+      - duplicate definition
+      - missing
+  - id: security_permissions
+    must_name_negative_evidence:
+      - auth
+      - deny
+      - denied user
+      - permission
+      - invalid permission
+      - tenant
+      - tenant isolation
+      - secret
+      - secret handling
+      - policy
+      - policy violation
+  - id: failure_modes
+    must_name_negative_evidence:
+      - fail
+      - failure
+      - error
+      - dependency failure
+      - provider failure
+      - unsafe success
+      - retry
+      - dead-letter
+      - recovery
+      - interrupted
+  - id: compatibility_contracts
+    must_name_negative_evidence:
+      - compatible
+      - incompatible
+      - contract
+      - incompatible contract
+      - public API
+      - public API break
+      - migration
+      - migration incompatibility
+      - consumer
+      - consumer mismatch
+  - id: generated_output
+    must_name_negative_evidence:
+      - stale
+      - stale output
+      - hand
+      - hand edit
+      - generator
+      - generator drift
+      - generated
+      - unreviewed snapshot
+  - id: observability_health
+    must_name_negative_evidence:
+      - safe
+      - unsafe
+      - log
+      - unsafe log
+      - readiness
+      - missing readiness
+      - liveness
+      - health
+      - secret
+      - leaked secret
+      - ambiguous health
+  - id: accessibility_interaction
+    must_name_negative_evidence:
+      - keyboard
+      - keyboard trap
+      - focus
+      - lost focus
+      - ARIA
+      - missing ARIA
+      - screen-reader
+      - inaccessible
+      - inaccessible state
 
 test_categories:
   - id: critical_path
@@ -146,6 +306,8 @@ rules:
       - "Use category ids from test_categories so agents can compare expectations across layers."
       - "For each test_taxonomy row, include minimum_evidence explaining the concrete proof required."
       - "For each test_taxonomy row, include must_not entries that name weak substitutes or anti-patterns that must not be accepted as satisfying the row."
+      - "For categories listed in category_evidence_requirements, name the negative evidence the category must reject or fail, not only the happy path it should prove."
+      - "Apply substitute_limits so smoke, E2E, golden, visual-regression, snapshots, generated diffs, successful builds, and startup checks cannot stand alone for closer layer-owned proof."
       - "Treat category coverage as risk-based; not every test type needs every category."
       - "Prefer the layer that owns the behavior as the primary home for the closest precise test."
     must_not:

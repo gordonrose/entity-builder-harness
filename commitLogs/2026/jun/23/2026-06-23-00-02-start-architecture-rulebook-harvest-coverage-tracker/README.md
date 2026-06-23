@@ -11,9 +11,9 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T17:01:20Z
-latest_commit_sha: 11738ea
-chat_duration: 64723s (00:17:58:43)
+latest_commit_at_utc: 2026-06-23T17:09:22Z
+latest_commit_sha: 5b0ab21
+chat_duration: 65205s (00:18:06:45)
 estimated_chat_tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
 estimated_chat_cost: USD 46.94 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
@@ -569,6 +569,32 @@ Summary: Tightened CI taxonomy rules so layer matrices require minimum evidence 
 
 ADR impact: No ADR required; this hardens source-backed rulebook validation without adding a new architecture primitive.
 
+
+### 2026-06-23T17:09:22Z - Commit recorded
+
+Commit: `5b0ab21`
+
+Message: Record scripts namespace direction
+
+Summary: Recorded ADR 0020 for numbered scripts namespaces as the durable executable command surface, updated script-layout docs, and clarified future product/deployment command surfaces.
+
+ADR impact: ADR added: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+
+
+### 2026-06-23T17:11:13Z - Migration outcome recorded
+
+Old path: `docs/harness/bootstrap`
+
+New path: `docs/00.chat/bootstrap`
+
+Compatibility choice: `retired`
+
+Active reference buckets updated: workflow, script, bootstrap.
+
+Checks run: `plan-artifact-path-migration.sh docs/harness/bootstrap docs/00.chat/bootstrap`; `check-artifact-path-migration.sh docs/harness/bootstrap docs/00.chat/bootstrap`; `smoke-test-artifact-path-migration.sh`; `audit-chat-bootstrap-file-set/script.sh`; `bootstrap-llm-workbench-repo/smoke-test.sh`; `check-artifact-metadata-headers.sh --paths docs/00.chat/bootstrap/llm-workbench-template/README.md`.
+
+ADR impact: No new ADR required; this follows the existing `docs/00.chat` namespace direction for chat-owned public workbench docs and templates.
+
 ## Commits
 
 
@@ -803,6 +829,13 @@ ADR impact: No ADR required; this hardens source-backed rulebook validation with
   Summary: Tightened CI taxonomy rules so layer matrices require minimum evidence and explicit weak-test exclusions, added negative-proof expectations across active layer rule files, and added a deterministic taxonomy checker.
   ADR impact: No ADR required; this hardens source-backed rulebook validation without adding a new architecture primitive.
 
+
+- Commit: `5b0ab21`
+  Time UTC: 2026-06-23T17:09:22Z
+  Message: Record scripts namespace direction
+  Summary: Recorded ADR 0020 for numbered scripts namespaces as the durable executable command surface, updated script-layout docs, and clarified future product/deployment command surfaces.
+  ADR impact: ADR added: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -816,9 +849,9 @@ Reason: No ADR required; this is a source-backed rulebook hardening pass that re
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T17:01:20Z
-Latest commit SHA: 11738ea
-Chat duration: 64723s (00:17:58:43)
+Latest commit at UTC: 2026-06-23T17:09:22Z
+Latest commit SHA: 5b0ab21
+Chat duration: 65205s (00:18:06:45)
 Estimated chat tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
 Estimated chat cost: USD 46.94 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing

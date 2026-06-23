@@ -109,7 +109,7 @@ test_taxonomy:
     minimum_evidence:
       - "Compare generated token docs, CSS variables, TypeScript token artifacts, and design-label outputs against reviewed fixtures and stable public names."
     must_not:
-      - "Do not let generated artifact snapshots replace token validation, public API compatibility, accessibility behavior, or visual-state coverage."
+      - "Do not let generated artifact snapshots replace token validation, contract or type-level public API compatibility, accessibility behavior, or visual-state coverage."
     categories:
       - id: generated_output
         should_prove:

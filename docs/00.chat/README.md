@@ -27,6 +27,8 @@ exported to the public workbench.
   transformed, created, and excluded when bootstrapping `llm-workbench`.
 - `public-chat-workbench-adrs.md` is the manifest of centralized harness ADRs
   copied into the public workbench.
+- `bootstrap/llm-workbench-template/` contains starter public repo shell files
+  for the first `llm-workbench` bootstrap.
 
 ## ADRs
 
