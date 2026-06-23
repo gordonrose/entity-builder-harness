@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T00:13:27Z
-latest_commit_sha: f3f6efc
-chat_duration: 4250s (00:01:10:50)
-estimated_chat_tokens: 1240292 estimated from chat transcript bytes (4961167 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 37.21 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-23T00:16:33Z
+latest_commit_sha: 19111b6
+chat_duration: 4436s (00:01:13:56)
+estimated_chat_tokens: 1284863 estimated from chat transcript bytes (5139451 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 38.55 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -485,6 +485,17 @@ Summary: Added the apps layer ruleset for deployable and mountable app compositi
 
 ADR impact: No ADR impact; source-backed layer added from manually checked app sections. Added deferred human decision for canonical entity-definition source-of-truth location.
 
+
+### 2026-06-23T00:16:33Z - Commit recorded
+
+Commit: `19111b6`
+
+Message: Add infra layer rules
+
+Summary: Added the infra layer ruleset for infrastructure-as-code and deployment definitions, provisioning ownership, app manifest/generated metadata consumption, controlled secrets and environments, platform/app lifecycle separation, and deployment validation expectations; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed layer added from manually checked infra/deployment sections.
+
 ## Commits
 
 
@@ -677,6 +688,13 @@ ADR impact: No ADR impact; source-backed layer added from manually checked app s
   Summary: Added the apps layer ruleset for deployable and mountable app composition, product behavior ownership, explicit app mounts and manifests, app-owned ordered migrations, downward dependency flow, and app wiring/contract/smoke test expectations; updated manifest, progress, and coverage.
   ADR impact: No ADR impact; source-backed layer added from manually checked app sections. Added deferred human decision for canonical entity-definition source-of-truth location.
 
+
+- Commit: `19111b6`
+  Time UTC: 2026-06-23T00:16:33Z
+  Message: Add infra layer rules
+  Summary: Added the infra layer ruleset for infrastructure-as-code and deployment definitions, provisioning ownership, app manifest/generated metadata consumption, controlled secrets and environments, platform/app lifecycle separation, and deployment validation expectations; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed layer added from manually checked infra/deployment sections.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -690,11 +708,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T00:13:27Z
-Latest commit SHA: f3f6efc
-Chat duration: 4250s (00:01:10:50)
-Estimated chat tokens: 1240292 estimated from chat transcript bytes (4961167 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 37.21 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-23T00:16:33Z
+Latest commit SHA: 19111b6
+Chat duration: 4436s (00:01:13:56)
+Estimated chat tokens: 1284863 estimated from chat transcript bytes (5139451 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 38.55 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
