@@ -24,7 +24,7 @@ required_checks:
   - "Confirm generated schemas, types, API contracts, persistence metadata, UI config, and tests are regenerated from the entity definition."
   - "Confirm migrations enter the owning application's ordered migration stream."
   - "Confirm generated output satisfies generated-code rules for determinism, placement, freshness, and no manual edits."
-  - "Confirm dependency direction is respected across apps, packages, platform, harness, tools, and generated outputs."
+  - "Confirm dependency direction is respected across apps, packages, platform, harness, numbered scripts command surfaces, and generated outputs."
   - "Confirm runtime validation, contract tests, migration checks, generated tests, typecheck, and CI freshness checks are run or reported missing."
 
 agent_steps:
@@ -54,7 +54,7 @@ agent_steps:
     instruction: >
       Follow the dependency-direction concern ruleset. Production code may
       consume generated outputs from approved locations, but it must not import
-      generator runtime code from tools or harness.
+      generator runtime code from numbered scripts command surfaces or harness.
 
   - id: validate-contract-chain
     instruction: >

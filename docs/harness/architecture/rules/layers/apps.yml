@@ -150,7 +150,7 @@ rules:
       - "Let apps assemble platform services, product packages, routes, UI composition, environment wiring, logging, telemetry, database clients, workers, and deployment-specific behavior."
       - "Keep apps independently runnable where the product boundary requires it, while also allowing platform mounting through approved contracts."
     must_not:
-      - "Do not use apps/** as a shared foundation imported by packages, platform internals, tools, or infra."
+      - "Do not use apps/** as a shared foundation imported by packages, platform internals, script capabilities, or infra."
       - "Do not hide reusable domain logic, shared API contracts, shared UI components, or cross-app utilities in an app because it was the first consumer."
       - "Do not make normal product features require platform changes unless the platform contract itself must change."
     agent_guidance: >
@@ -211,7 +211,7 @@ rules:
       - "Keep app schemas and product-specific repository decisions owned by apps or product packages."
     must_not:
       - "Do not scatter migrations across individual entity folders when the app requires one ordered migration stream."
-      - "Do not put app migration history in packages/core, platform, tools, or infra."
+      - "Do not put app migration history in packages/core, platform, script command surfaces, or infra."
       - "Do not treat generated migrations as trusted until CI and human review prove the output."
     agent_guidance: >
       The entity can describe intended persistence shape. The app owns the
@@ -223,14 +223,14 @@ rules:
     summary: >
       Apps may depend on packages, platform contracts, generated artifacts,
       design-system UI, and app-local code. Production apps must not depend on
-      tools or harness runtime code.
+      scripts or harness runtime code.
     must:
       - "Import reusable business/domain behavior through package public entry points."
       - "Import platform capabilities through app-facing platform contracts, profiles, or adapters."
       - "Import generated artifacts only from approved generated output paths."
       - "Use harness code only from tests or development support paths."
     must_not:
-      - "Do not import generator runtime code from tools/** into production app code."
+      - "Do not import generator runtime code from scripts/** into production app code."
       - "Do not import harness/** from production app code."
       - "Do not deep-import package internals instead of package public APIs."
       - "Do not let other apps import app internals except through published API clients, contracts, or explicitly approved integration modules."
@@ -292,7 +292,7 @@ success_criteria:
   - "It keeps product behavior, route/page composition, app-level permissions, app config meaning, and workflow decisions in apps or product packages."
   - "It requires explicit app.mount.ts and app.manifest.ts style surfaces for platform and infra consumption."
   - "It requires app-owned ordered migration streams."
-  - "It keeps platform runtime mechanisms, infra provisioning, design-system primitives, harness code, and tools runtime code out of production apps."
+  - "It keeps platform runtime mechanisms, infra provisioning, design-system primitives, harness code, and script command-surface runtime code out of production apps."
   - "It defines app testing expectations for wiring, integration, contracts, E2E, and deployment smoke checks."
   - "It maps app test types to critical path, validation, edge case, security, failure-mode, compatibility, generated-output, and health categories."
   - "It includes manually verified source_refs back to the full discussion, modular monorepo, TypeScript, and platform layer guides."

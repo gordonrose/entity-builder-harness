@@ -12,7 +12,7 @@ applies_to:
     - "apps/**"
     - "packages/**"
     - "platform/**"
-    - "tools/**"
+    - "scripts/**"
     - "infra/**"
 
 related_rulesets:
@@ -330,6 +330,7 @@ source_refs:
       - "Code generation"
       - "CI checks"
       - "tools/"
+      - "CI checks"
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/concerns/ci-quality.yml."

@@ -22,7 +22,7 @@ applies_to:
     - "packages/**"
     - "platform/**"
     - "harness/**"
-    - "tools/**"
+    - "scripts/**"
     - "infra/**"
     - "tsconfig*.json"
     - "package.json"
@@ -155,7 +155,7 @@ rules:
       orchestration for dependency graph checks, affected builds, caching,
       boundary enforcement, and CI optimization.
     must:
-      - "Use a workspace manifest that includes apps, packages, platform, harness, tools, and infra workspaces where those folders contain packages."
+      - "Use a workspace manifest that includes apps, packages, platform, harness, numbered script command surfaces, and infra workspaces where those folders contain packages."
       - "Use workspace dependency ranges for local package dependencies."
       - "Use monorepo tooling such as Nx for dependency graph, affected builds, caching, project tagging, boundary enforcement, and CI optimization where adopted."
       - "Treat monorepo tooling as task orchestration unless a specific generation framework is intentionally adopted."

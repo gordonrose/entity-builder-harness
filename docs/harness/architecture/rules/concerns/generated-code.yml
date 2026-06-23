@@ -16,7 +16,7 @@ applies_to:
     - "packages/**"
     - "platform/**"
     - "harness/**"
-    - "tools/**"
+    - "scripts/**"
 
 rules:
   - id: generated.deterministic-and-idempotent
@@ -45,12 +45,12 @@ rules:
       Production code may import generated artifacts from approved output
       locations, but it must not import the generator implementation itself.
     must:
-      - "Keep generator implementations in tools/** or harness-owned generation code."
+      - "Keep generator implementations in the owning numbered scripts/** layer or harness-owned generation code."
       - "Let production code import generated artifacts only from approved generated output paths."
       - "Keep generator tests close to the generator implementation."
     must_not:
-      - "Do not import tools/** from runtime apps, packages, or platform code."
-      - "Do not put deployable runtime behavior inside tools/**."
+      - "Do not import scripts/** from runtime apps, packages, or platform code."
+      - "Do not put deployable runtime behavior inside scripts/**."
       - "Do not mix generator implementation code with generated production artifacts."
     agent_guidance: >
       When generated output is needed at runtime, import the output package or
@@ -102,6 +102,7 @@ source_refs:
       - "Generated code must be checked, not trusted"
       - "Build outputs"
       - "tools/"
+      - "Code generation"
       - "Code generation"
       - "CI checks"
       - "The key design lesson"

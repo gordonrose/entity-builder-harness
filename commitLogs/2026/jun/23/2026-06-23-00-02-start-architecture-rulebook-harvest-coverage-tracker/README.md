@@ -11,9 +11,9 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T17:17:05Z
-latest_commit_sha: 5534f59
-chat_duration: 65668s (00:18:14:28)
+latest_commit_at_utc: 2026-06-23T17:18:28Z
+latest_commit_sha: 58b6b85
+chat_duration: 65751s (00:18:15:51)
 estimated_chat_tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
 estimated_chat_cost: USD 46.94 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
@@ -606,6 +606,17 @@ Summary: Hardened CI taxonomy validation with scoped layer files, negative-evide
 
 ADR impact: No new ADR required for the template move because it follows ADR 0019; taxonomy hardening remains source-backed validation work without a new architecture primitive.
 
+
+### 2026-06-23T17:18:28Z - Commit recorded
+
+Commit: `58b6b85`
+
+Message: Align tools rulebook with scripts surfaces
+
+Summary: Updated the historical tools layer rulebook to describe numbered scripts command surfaces, future product/deployment script namespaces, and script capability testing expectations while keeping the file in place until a governed path migration renames it.
+
+ADR impact: No new ADR required; this implements the scripts namespace direction already recorded in ADR 0020.
+
 ## Commits
 
 
@@ -854,6 +865,13 @@ ADR impact: No new ADR required for the template move because it follows ADR 001
   Summary: Hardened CI taxonomy validation with scoped layer files, negative-evidence guardrails, and a self-test, then moved public llm-workbench bootstrap templates under docs/00.chat/bootstrap with active references and migration checks updated.
   ADR impact: No new ADR required for the template move because it follows ADR 0019; taxonomy hardening remains source-backed validation work without a new architecture primitive.
 
+
+- Commit: `58b6b85`
+  Time UTC: 2026-06-23T17:18:28Z
+  Message: Align tools rulebook with scripts surfaces
+  Summary: Updated the historical tools layer rulebook to describe numbered scripts command surfaces, future product/deployment script namespaces, and script capability testing expectations while keeping the file in place until a governed path migration renames it.
+  ADR impact: No new ADR required; this implements the scripts namespace direction already recorded in ADR 0020.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -867,9 +885,9 @@ Reason: No ADR required; this is a source-backed rulebook hardening pass that re
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T17:17:05Z
-Latest commit SHA: 5534f59
-Chat duration: 65668s (00:18:14:28)
+Latest commit at UTC: 2026-06-23T17:18:28Z
+Latest commit SHA: 58b6b85
+Chat duration: 65751s (00:18:15:51)
 Estimated chat tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
 Estimated chat cost: USD 46.94 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
