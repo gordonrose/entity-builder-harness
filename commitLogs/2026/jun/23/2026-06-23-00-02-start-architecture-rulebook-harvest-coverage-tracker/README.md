@@ -661,6 +661,50 @@ Mode: stopped
 
 Action: stopped before resolution; requires user approval for normal repo conflict resolution
 
+
+### 2026-06-23T17:52:40Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Approved resolution kept the chat branch's fuller packages-core rulebook content, including capability-module rule, full source refs, and success criteria.
+
+
+### 2026-06-23T17:52:40Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Approved resolution combined chat docs scanning with main's harness YAML metadata-header scanning.
+
+
+### 2026-06-23T17:52:43Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: kept chat's capability-module rule and full source_refs/success_criteria while preserving main's source-ref coverage
+
+
+### 2026-06-23T17:52:43Z - Main refresh conflict recorded
+
+Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: combined chat Markdown scanning with harness YAML scanning and kept usage text naming both surfaces
+
 ## Commits
 
 
@@ -954,6 +998,50 @@ Action: stopped before resolution; requires user approval for normal repo confli
   Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
   Files changed by resolution: unresolved conflict in scripts/01.harness/check-artifact-metadata-headers.sh
   Checks: classification only; resolution checks pending
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored rulebook prose conflict; classifier had no narrower governed type.
+  Action: Approved resolution kept the chat branch's fuller packages-core rulebook content, including capability-module rule, full source refs, and success criteria.
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: docs/harness/architecture/rules/layers/packages-core.yml
+  Checks: python YAML parse passed; check-rule-test-taxonomy.sh passed
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored script conflict; classifier had no narrower governed type.
+  Action: Approved resolution combined chat docs scanning with main's harness YAML metadata-header scanning.
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: scripts/01.harness/check-artifact-metadata-headers.sh
+  Checks: bash -n passed; check-artifact-metadata-headers.sh --paths script passed
+
+
+- Path: `docs/harness/architecture/rules/layers/packages-core.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored packages-core source_refs overlapped with main while chat added richer core capability module rules
+  Action: kept chat's capability-module rule and full source_refs/success_criteria while preserving main's source-ref coverage
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: resolved docs/harness/architecture/rules/layers/packages-core.yml in preflight merge commit e87f1db
+  Checks: metadata headers scoped check; rule taxonomy self-test; artifact path migration check; chat bootstrap audit
+
+
+- Path: `scripts/01.harness/check-artifact-metadata-headers.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored metadata checker usage and path collection overlapped between chat's docs/00.chat support and main's YAML artifact support
+  Action: combined chat Markdown scanning with harness YAML scanning and kept usage text naming both surfaces
+  Preflight branch: `agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker-20260623172119`
+  Files changed by resolution: resolved scripts/01.harness/check-artifact-metadata-headers.sh in preflight merge commit e87f1db
+  Checks: metadata headers scoped check; rule taxonomy self-test; artifact path migration check; chat bootstrap audit
 
 ## ADR Disposition
 
