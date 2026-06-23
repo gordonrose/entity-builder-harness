@@ -1,15 +1,17 @@
-id: layer.tools
-title: tools layer rules
+id: layer.scripts-command-surface
+title: scripts command-surface layer rules
 version: 1
 status: active
 
 description: >
   Rules governing repo automation, generators, migration helpers, lint rules,
-  release tooling, and developer CLI code under tools.
+  release tooling, and developer CLI code through numbered scripts layer
+  command surfaces. This ruleset keeps its historical file path until a
+  governed artifact path migration renames it.
 
 applies_to:
   paths:
-    - "tools/**"
+    - "scripts/**"
 
 related_rulesets:
   - docs/harness/architecture/rules/concerns/ci-quality.yml
@@ -20,13 +22,13 @@ test_taxonomy:
   - type: unit
     role: primary
     minimum_evidence:
-      - "Exercise deterministic parser, analyzer, generator, migration, and lint-rule decisions with valid input, malformed input, missing files, duplicate definitions, path variants, repeated runs, and actionable errors."
+      - "Exercise deterministic parser, analyzer, generator, migration, lint-rule, release-helper, and developer CLI decisions with valid input, malformed input, missing files, duplicate definitions, path variants, repeated runs, and actionable errors."
     must_not:
       - "Do not count CLI smoke output or golden fixtures as proof of invalid-input handling, idempotency, path portability, or non-destructive failures."
     categories:
       - id: critical_path
         should_prove:
-          - "Generator functions, parsers, analyzers, migration helpers, and lint-rule logic make the intended deterministic decisions."
+          - "Script capability functions, parsers, analyzers, generators, migration helpers, and lint-rule logic make the intended deterministic decisions."
       - id: validation
         should_prove:
           - "CLI args, config files, schemas, source inputs, and generator options accept valid input and reject invalid input."
@@ -39,13 +41,13 @@ test_taxonomy:
   - type: integration
     role: primary
     minimum_evidence:
-      - "Run representative tools against a temp workspace that includes realistic source inputs, stale output, malformed files, pre-existing files, missing dependencies, interrupted/rejected operations, and repeated generation."
+      - "Run representative script capabilities against a temp workspace that includes realistic source inputs, stale output, malformed files, pre-existing files, missing dependencies, interrupted/rejected operations, and repeated generation."
     must_not:
       - "Do not accept tests that only run the happy path or inspect final files while ignoring diagnostics, partial output, workspace recovery, and false-success prevention."
     categories:
       - id: critical_path
         should_prove:
-          - "Tools can read, write, generate, migrate, lint, or validate a representative repository or temp workspace."
+          - "Script capabilities can read, write, generate, migrate, lint, release, or validate a representative repository or temp workspace."
       - id: use_case_scenarios
         should_prove:
           - "Realistic generator, migration, release, and validation workflows exercise source inputs, outputs, and filesystem behavior."
@@ -87,7 +89,7 @@ test_taxonomy:
   - type: smoke
     role: primary
     minimum_evidence:
-      - "Run the safest representative CLI command through argument parsing and user-facing diagnostics without mutating production state."
+      - "Run the safest representative script command through argument parsing and user-facing diagnostics without mutating production state."
     must_not:
       - "Do not treat command startup as proof of generator correctness, workspace safety, validation, compatibility, or generated freshness."
     categories:
@@ -99,61 +101,66 @@ test_taxonomy:
           - "Tool output is concise, actionable, and exposes success or failure without requiring source inspection."
 
 rules:
-  - id: tools.repo-automation-only
-    title: Tools own developer and repository automation
+  - id: scripts.command-surface-owned-by-numbered-layers
+    title: Scripts own developer and repository automation command surfaces
     severity: error
     summary: >
-      tools/ should contain code that helps engineers change, generate,
-      validate, release, or inspect the system safely.
+      scripts/ should expose deterministic command capabilities that help
+      engineers change, generate, validate, release, or inspect the system
+      safely.
     must:
-      - "Use tools/** for entity generators, migration generators, codegen, repo validation scripts, lint rules, release tooling, dependency graph checks, architecture conformance checks, and local developer CLI commands."
-      - "Keep tools focused on changing or validating the repo, not serving production runtime behavior."
-      - "Keep stable CLI tools buildable when they are reused or published internally."
+      - "Use scripts/<numbered-layer>/<domain>/<capability>/ for entity generators, migration generators, codegen, repo validation scripts, lint rules, release tooling, dependency graph checks, architecture conformance checks, and local developer CLI commands."
+      - "Map chat lifecycle automation to scripts/00.chat/** and harness governance automation to scripts/01.harness/**."
+      - "Reserve future product-owned automation for scripts/02.product/** and deployment or release automation for scripts/03.deployment/** unless an ADR chooses a different numbered layer."
+      - "Keep script capabilities focused on changing or validating the repo, not serving production runtime behavior."
+      - "Keep stable CLI command surfaces buildable or runnable when they are reused or published internally."
     must_not:
-      - "Do not put deployed runtime code in tools/**."
-      - "Do not put product business logic in tools/**."
-      - "Do not put shared domain types, API handlers, or product UI components in tools/**."
+      - "Do not add a new top-level tools/** command namespace for harness automation."
+      - "Do not put deployed runtime code in scripts/**."
+      - "Do not put product business logic in scripts/**."
+      - "Do not put shared domain types, API handlers, or product UI components in scripts/**."
     agent_guidance: >
       If the code exists to generate, validate, migrate, lint, release, or help
-      developers operate the repository, tools is a candidate. If deployed code
-      needs it at runtime, tools is the wrong owner.
+      developers operate the repository, choose the numbered scripts layer that
+      owns the behavior. If deployed code needs it at runtime, scripts is the
+      wrong owner.
 
-  - id: tools.generators-produce-outputs-not-runtime-dependencies
-    title: Tools may generate production artifacts but must not become runtime dependencies
+  - id: scripts.generators-produce-outputs-not-runtime-dependencies
+    title: Scripts may generate production artifacts but must not become runtime dependencies
     severity: error
     summary: >
       Generated output may be production code, but generator runtime code should
-      remain in tools or another approved generation owner.
+      remain in scripts or another approved generation owner.
     must:
-      - "Let tools generate schemas, types, migrations, tests, API contracts, UI config, and other generated artifacts."
+      - "Let numbered script capabilities generate schemas, types, migrations, tests, API contracts, UI config, and other generated artifacts."
       - "Place generated outputs in their approved package-local or shared generated output locations."
       - "Keep generation deterministic and idempotent."
     must_not:
-      - "Do not import tools/** from runtime apps, packages, or platform code."
+      - "Do not import scripts/** from runtime apps, packages, or platform code."
       - "Do not mix generated outputs with generator implementation code."
       - "Do not let repeated generation create duplicate files or bloated output."
     agent_guidance: >
       When a runtime package needs generated output, depend on the generated
-      output location, not the generator under tools.
+      output location, not the script capability that generated it.
 
-  - id: tools.must-be-tested-and-typechecked
-    title: Tools must be tested and typechecked
+  - id: scripts.must-be-tested-and-typechecked
+    title: Script capabilities must be tested and typechecked when applicable
     severity: error
     summary: >
       A broken generator, migration helper, lint rule, or repo validation script
       can create false confidence or bad generated output.
     must:
-      - "Typecheck tools code in CI."
+      - "Typecheck script capability implementation code in CI when it is TypeScript or otherwise participates in the typed monorepo."
       - "Add unit tests for generator functions."
       - "Use golden-file tests for generated output where useful."
       - "Use temp-workspace integration tests for generators where useful."
       - "Add regression tests for migration generators and migration helpers."
     must_not:
-      - "Do not leave critical tools untested because they are not production runtime code."
+      - "Do not leave critical script capabilities untested because they are not production runtime code."
       - "Do not skip validation for generators that create production artifacts."
     agent_guidance: >
-      Treat tools as production-grade support code. It may not run in production,
-      but its output and checks can shape production code.
+      Treat script capabilities as production-grade support code. They may not
+      run in production, but their output and checks can shape production code.
 
 source_refs:
   - doc: "kanbien-typescript-architecture-guide.md"
@@ -168,7 +175,8 @@ source_refs:
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/layers/tools.yml."
-  - "It defines tools/ as the home for repo automation, generators, migration helpers, lint rules, release tooling, and developer CLI code."
-  - "It keeps tools out of deployed runtime behavior and product business logic."
-  - "It requires tools to be tested, typechecked, deterministic, and validated when they generate production artifacts."
-  - "It maps tools test types to critical path, validation, edge case, generated-output, compatibility, failure-mode, and smoke categories."
+  - "It records that the historical tools ruleset has been remediated in place until a governed artifact path migration renames the file."
+  - "It defines numbered scripts layer namespaces as the home for repo automation, generators, migration helpers, lint rules, release tooling, and developer CLI command surfaces."
+  - "It keeps scripts out of deployed runtime behavior and product business logic."
+  - "It requires script capabilities to be tested, typechecked where applicable, deterministic, and validated when they generate production artifacts."
+  - "It maps script capability test types to critical path, validation, edge case, generated-output, compatibility, failure-mode, and smoke categories."
