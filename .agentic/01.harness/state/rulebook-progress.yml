@@ -3,6 +3,7 @@ status: active
 
 created_artifacts:
   layer_rulesets:
+    - docs/harness/architecture/rules/layers/apps.yml
     - docs/harness/architecture/rules/layers/design-system.yml
     - docs/harness/architecture/rules/layers/packages-core.yml
     - docs/harness/architecture/rules/layers/platform.yml
@@ -48,3 +49,4 @@ notes:
   - "The core guide's notification sections are covered by the notifications concern."
   - "The core guide's configuration sections are covered by the config-runtime-settings concern."
   - "The TypeScript guide's configuration, strictness, module resolution, package boundary, workspace, and monorepo tooling sections are covered by the typescript-monorepo-tooling concern."
+  - "The full discussion, modular monorepo, TypeScript, and platform guides' app ownership and app integration sections are covered by the apps layer ruleset."

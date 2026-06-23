@@ -53,6 +53,14 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+      - source_sections:
+          - "6. Applications"
+          - "9. Persistence"
+          - "12. Architectural Recommendations"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml; entity-definition source-of-truth placement is deferred separately."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: unreviewed
@@ -323,6 +331,14 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
         note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+      - source_sections:
+          - "6. apps/"
+          - "9. Persistence"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: covered
@@ -368,6 +384,15 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/dependency-direction.yml
         note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+      - source_sections:
+          - "The business app mounting contract"
+          - "Worked example: apps/crm/app.mount.ts"
+          - "What should remain inside apps/crm"
+          - "The simple v1 runtime flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
     status: unreviewed
@@ -462,6 +487,18 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
         note: "TypeScript monorepo tooling source refs were manually checked while creating docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml."
+      - source_sections:
+          - "apps/"
+          - "Purpose"
+          - "TypeScript code that should live there"
+          - "What should not live there"
+          - "Dependency rules"
+          - "Testing approach"
+          - "Build approach"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/apps.yml
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: covered
@@ -489,6 +526,9 @@ source_guides:
         note: "Platform adapter consumption source refs were manually checked while creating docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml and docs/harness/architecture/rule-packs/add-platform-adapter.yml."
 
 artifact_coverage:
+  - artifact: docs/harness/architecture/rules/layers/apps.yml
+    status: covered
+    note: "Source refs manually checked while creating the apps layer ruleset."
   - artifact: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
     status: covered
     note: "Source refs manually checked while creating the configuration and runtime settings concern ruleset."
@@ -609,6 +649,34 @@ deferred_human_decisions:
       generated-code and tools artifacts place generator implementation under
       tools. Do not broaden platform.yml to own entity/codegen engines until
       this ownership model is decided.
+  - id: entity-definition-source-of-truth-location
+    title: Decide where canonical entity definitions live before tightening app, harness, platform, or create-entity rules.
+    status: open
+    affected_candidate: docs/harness/architecture/rule-packs/create-entity.yml
+    source_refs:
+      - doc: "kanbien-modular-monorepo-entity-builder.md"
+        sections:
+          - "6. apps/"
+          - "7. harness/"
+          - "11. The core entity flow"
+      - doc: "kanbien-architecture-full-discussion.md"
+        sections:
+          - "7. Harness"
+          - "11. Entity Builder Flow"
+      - doc: "kanbien-typescript-architecture-guide.md"
+        sections:
+          - "apps/"
+          - "harness/"
+          - "How TypeScript should support the entity-builder idea"
+          - "1. Entity definition"
+    summary: >
+      The modular monorepo guide shows entity.schema.ts under apps/crm/entities,
+      while the TypeScript guide says entity definitions should not live in
+      apps/ or harness/ and frames the entity-builder as a platform primitive.
+      The full discussion says the harness captures entity definitions. Keep
+      app rules focused on composition, mounting, manifests, migrations, and
+      product behavior until the canonical entity-definition location is
+      decided.
 
 notes:
   - "Do not mark existing artifacts as covered until their source_refs have been manually checked against the named source sections."

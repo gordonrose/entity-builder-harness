@@ -1,0 +1,199 @@
+id: layer.apps
+title: apps layer rules
+version: 1
+status: active
+
+description: >
+  Rules governing apps/ as Kanbien's deployable and mountable product
+  composition layer: application entrypoints, app mounting, product routes,
+  product UI composition, business workflows, app-owned migrations, app
+  manifests, runtime wiring, smoke tests, and deployment-facing metadata.
+
+applies_to:
+  paths:
+    - "apps/**"
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+  - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+
+app_surfaces:
+  - id: app_mount
+    purpose: "Public app integration module consumed by approved platform composition roots."
+    typical_paths:
+      - "apps/*/app.mount.ts"
+  - id: app_manifest
+    purpose: "Deployment-facing app metadata consumed by infra or generated deployment metadata."
+    typical_paths:
+      - "apps/*/app.manifest.ts"
+  - id: migrations
+    purpose: "Ordered migration stream owned by the application."
+    typical_paths:
+      - "apps/*/migrations/**"
+  - id: product_composition
+    purpose: "Product routes, pages, features, workers, workflow wiring, and app-specific dependencies."
+    typical_paths:
+      - "apps/*/src/**"
+      - "apps/*/features/**"
+
+rules:
+  - id: apps.are-composition-roots
+    title: Apps are deployable composition roots
+    severity: error
+    summary: >
+      Apps assemble product packages, platform contracts, routes, UI,
+      environment wiring, telemetry, database clients, workers, and deployment
+      behavior into independently runnable products or services.
+    must:
+      - "Use apps/** for deployable application entrypoints such as web, api, worker, admin, and public-site apps."
+      - "Let apps assemble platform services, product packages, routes, UI composition, environment wiring, logging, telemetry, database clients, workers, and deployment-specific behavior."
+      - "Keep apps independently runnable where the product boundary requires it, while also allowing platform mounting through approved contracts."
+    must_not:
+      - "Do not use apps/** as a shared foundation imported by packages, platform internals, tools, or infra."
+      - "Do not hide reusable domain logic, shared API contracts, shared UI components, or cross-app utilities in an app because it was the first consumer."
+      - "Do not make normal product features require platform changes unless the platform contract itself must change."
+    agent_guidance: >
+      If code starts as app wiring but another app needs it, move the reusable
+      behavior to an owning package and keep only the composition in the app.
+
+  - id: apps.own-product-behavior
+    title: Apps own product behavior
+    severity: error
+    summary: >
+      Applications own business behavior, product-specific route composition,
+      workflow decisions, app pages, app-level permissions, and feature wiring.
+      Shared mechanisms belong in packages, platform, design-system, or infra.
+    must:
+      - "Keep product-specific routes, pages, feature orchestration, workflow decisions, resource-specific authorization, product health decisions, app config meaning, and tenant/admin behavior in the owning app or product package."
+      - "Use packages for reusable domain or product logic once it is shared across app boundaries."
+      - "Use design-system components and patterns for reusable product-neutral UI instead of copying visual primitives into apps."
+    must_not:
+      - "Do not put global platform mechanisms such as server startup, global middleware, CORS, API versioning, shared error mapping, shared auth parsing, process signal handling, or queue mechanics in apps."
+      - "Do not put Terraform, cloud resource definitions, IAM, networking, secrets provisioning, or deployment infrastructure in apps."
+      - "Do not put design-system primitives, reusable tokens, reusable patterns, or product-neutral shared UI components in apps."
+    agent_guidance: >
+      Apps answer product questions. Platform answers runtime questions.
+      Infrastructure answers deployment-resource questions.
+
+  - id: apps.publish-explicit-mounts-and-manifests
+    title: App mounts and manifests are explicit
+    severity: error
+    summary: >
+      Apps should expose narrow, documented integration surfaces for platform
+      mounting and deployment metadata. Other layers should not inspect app
+      internals to discover runtime or deployment behavior.
+    must:
+      - "Expose app mounting through app.mount.ts or another approved public mount module."
+      - "Register routes, permissions, jobs, health checks, optional app config schemas, and optional lifecycle hooks through platform mount contracts."
+      - "Expose deployment-facing metadata through app.manifest.ts or generated deployment metadata when infra needs app deployment behavior."
+      - "Keep app manifests declarative and free of product implementation imports."
+    must_not:
+      - "Do not let platform internals import app services, repositories, route handlers, job handlers, domain models, or business rules directly."
+      - "Do not let infra import app implementation internals to discover images, routes, config, secrets, or deployment settings."
+      - "Do not pass raw server instances to apps as their integration surface."
+    agent_guidance: >
+      When another layer needs app information, expose a public mount,
+      manifest, contract, or generated metadata artifact instead of importing
+      app internals.
+
+  - id: apps.own-ordered-migrations
+    title: Apps own ordered migrations
+    severity: error
+    summary: >
+      Persistence intent may come from entities or product packages, but
+      deployable schema migration history should land in the owning
+      application's ordered migration stream.
+    must:
+      - "Store application migrations under an app-owned ordered migration path such as apps/*/migrations/**."
+      - "Generate migrations into the owning app's migration stream when entity-builder or persistence tooling emits schema changes."
+      - "Review generated migrations as deployment-affecting artifacts before promotion."
+      - "Keep app schemas and product-specific repository decisions owned by apps or product packages."
+    must_not:
+      - "Do not scatter migrations across individual entity folders when the app requires one ordered migration stream."
+      - "Do not put app migration history in packages/core, platform, tools, or infra."
+      - "Do not treat generated migrations as trusted until CI and human review prove the output."
+    agent_guidance: >
+      The entity can describe intended persistence shape. The app owns the
+      ordered migration history that will actually be deployed.
+
+  - id: apps.dependencies-flow-downward
+    title: Apps consume lower layers
+    severity: error
+    summary: >
+      Apps may depend on packages, platform contracts, generated artifacts,
+      design-system UI, and app-local code. Production apps must not depend on
+      tools or harness runtime code.
+    must:
+      - "Import reusable business/domain behavior through package public entry points."
+      - "Import platform capabilities through app-facing platform contracts, profiles, or adapters."
+      - "Import generated artifacts only from approved generated output paths."
+      - "Use harness code only from tests or development support paths."
+    must_not:
+      - "Do not import generator runtime code from tools/** into production app code."
+      - "Do not import harness/** from production app code."
+      - "Do not deep-import package internals instead of package public APIs."
+      - "Do not let other apps import app internals except through published API clients, contracts, or explicitly approved integration modules."
+    agent_guidance: >
+      Before changing an app import, identify whether the imported file is a
+      public package/platform/generated contract or an internal implementation.
+
+  - id: apps.tests-prove-wiring-and-contracts
+    title: App tests prove wiring and contracts
+    severity: error
+    summary: >
+      App tests should prove application wiring, route behavior, contracts,
+      deployment health, and end-to-end flows. Reusable business logic should
+      usually be tested in the package that owns it.
+    must:
+      - "Use unit tests for app-specific wiring and dependency composition."
+      - "Use integration tests for routes, workers, app health checks, and platform mount behavior."
+      - "Use contract tests against generated API schemas and platform mount contracts."
+      - "Use E2E tests and deployment smoke tests where the app boundary requires them."
+      - "Keep most reusable business logic tests close to the package that owns the logic."
+    must_not:
+      - "Do not rely only on package tests to prove that app runtime wiring works."
+      - "Do not duplicate full reusable-domain test suites inside apps after the logic moves to packages."
+      - "Do not skip contract or smoke coverage for deployment-facing app mounts and manifests."
+    agent_guidance: >
+      App tests should catch bad assembly. Package tests should catch reusable
+      behavior bugs.
+
+source_refs:
+  - doc: "kanbien-architecture-full-discussion.md"
+    sections:
+      - "6. Applications"
+      - "9. Persistence"
+      - "12. Architectural Recommendations"
+  - doc: "kanbien-modular-monorepo-entity-builder.md"
+    sections:
+      - "6. apps/"
+      - "9. Persistence"
+      - "11. The core entity flow"
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "apps/"
+      - "Purpose"
+      - "TypeScript code that should live there"
+      - "What should not live there"
+      - "Dependency rules"
+      - "Testing approach"
+      - "Build approach"
+  - doc: "kanbien-platform-layer-architecture.md"
+    sections:
+      - "The business app mounting contract"
+      - "Worked example: apps/crm/app.mount.ts"
+      - "What should remain inside apps/crm"
+      - "The simple v1 runtime flow"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/apps.yml."
+  - "It defines apps/ as Kanbien's deployable and mountable product composition layer."
+  - "It keeps product behavior, route/page composition, app-level permissions, app config meaning, and workflow decisions in apps or product packages."
+  - "It requires explicit app.mount.ts and app.manifest.ts style surfaces for platform and infra consumption."
+  - "It requires app-owned ordered migration streams."
+  - "It keeps platform runtime mechanisms, infra provisioning, design-system primitives, harness code, and tools runtime code out of production apps."
+  - "It defines app testing expectations for wiring, integration, contracts, E2E, and deployment smoke checks."
+  - "It includes manually verified source_refs back to the full discussion, modular monorepo, TypeScript, and platform layer guides."
