@@ -9,7 +9,7 @@ created_artifacts:
     - docs/harness/architecture/rules/layers/infra.yml
     - docs/harness/architecture/rules/layers/packages-core.yml
     - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/tools.yml
+    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
   concern_rulesets:
     - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml

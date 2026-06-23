@@ -1,3 +1,14 @@
+# agentic-artifact:
+#   owner: harness
+#   kind: layer-ruleset
+#   purpose: Define architecture rules for numbered script command surfaces.
+#   domain: architecture-rulebook
+#   portability: llm-workbench-required
+#   used_by:
+#     - docs/harness/architecture/rules/concerns/ci-quality.yml
+#     - .agentic/01.harness/manifest.yml
+#
+
 id: layer.scripts-command-surface
 title: scripts command-surface layer rules
 version: 1
@@ -6,8 +17,7 @@ status: active
 description: >
   Rules governing repo automation, generators, migration helpers, lint rules,
   release tooling, and developer CLI code through numbered scripts layer
-  command surfaces. This ruleset keeps its historical file path until a
-  governed artifact path migration renames it.
+  command surfaces.
 
 applies_to:
   paths:
@@ -174,8 +184,7 @@ source_refs:
       - "8. Build and Code Generation"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/tools.yml."
-  - "It records that the historical tools ruleset has been remediated in place until a governed artifact path migration renames the file."
+  - "The file exists at docs/harness/architecture/rules/layers/scripts-command-surface.yml."
   - "It defines numbered scripts layer namespaces as the home for repo automation, generators, migration helpers, lint rules, release tooling, and developer CLI command surfaces."
   - "It keeps scripts out of deployed runtime behavior and product business logic."
   - "It requires script capabilities to be tested, typechecked where applicable, deterministic, and validated when they generate production artifacts."

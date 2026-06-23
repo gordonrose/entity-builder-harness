@@ -114,7 +114,7 @@ layer_test_taxonomy_scope:
     - docs/harness/architecture/rules/layers/apps.yml
     - docs/harness/architecture/rules/layers/packages-core.yml
     - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/tools.yml
+    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
     - docs/harness/architecture/rules/layers/infra.yml
     - docs/harness/architecture/rules/layers/design-system.yml
     - docs/harness/architecture/rules/layers/frontend-kit.yml

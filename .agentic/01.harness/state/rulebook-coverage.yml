@@ -56,8 +56,8 @@ source_guides:
           - "8. Build and Code Generation"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/tools.yml
-        note: "Tools source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml; ADR 0020 later remediated the active rules in place to target numbered scripts command surfaces."
+          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+        note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
       - source_sections:
           - "2. Front-End Architecture"
         status: covered
@@ -405,8 +405,8 @@ source_guides:
           - "8. tools/build"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/tools.yml
-        note: "Tools source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml; ADR 0020 later remediated the active rules in place to target numbered scripts command surfaces."
+          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+        note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
       - source_sections:
           - "3. packages/frontend-kit"
         status: covered
@@ -571,8 +571,8 @@ source_guides:
           - "tools/"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/tools.yml
-        note: "Tools source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml; ADR 0020 later remediated the active rules in place to target numbered scripts command surfaces."
+          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+        note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
       - source_sections:
           - "platform/"
           - "tools/"
@@ -682,9 +682,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/platform.yml
     status: covered
     note: "Source refs manually checked while creating the platform layer ruleset."
-  - artifact: docs/harness/architecture/rules/layers/tools.yml
+  - artifact: docs/harness/architecture/rules/layers/scripts-command-surface.yml
     status: covered
-    note: "Source refs manually checked while creating the original tools layer ruleset; ADR 0020 remediated the active rules in place to target numbered scripts command surfaces."
+    note: "Source refs manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
     status: covered
     note: "Source refs manually checked while refining the dependency-direction concern ruleset."
