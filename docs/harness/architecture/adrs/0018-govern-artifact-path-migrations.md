@@ -67,8 +67,8 @@ but it is now clearly a compatibility migration. It needs either active
 reference updates plus a temporary compatibility alias, or an explicit decision
 to keep the old path as a durable pointer.
 
-The matching script path still needs a separate namespace decision. ADR 0017
-names `scripts/01.harness/` as the current shared governance script surface
-and describes a future `scripts/harness/...` target shape. A future
-`scripts/01.harness/...` move would update that script-layout decision rather
-than happen incidentally.
+The matching script path later received a separate namespace decision. ADR 0020
+keeps numbered `scripts/<layer>/...` namespaces as the durable executable
+command surface and reserves future product and deployment command surfaces
+under that convention. Any future `scripts/01.harness/...` move would update
+that script-layout decision rather than happen incidentally.

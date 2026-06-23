@@ -20,7 +20,8 @@ exported to the public workbench.
 
 ## Files
 
-- `script-layout.md` explains the current `scripts/00.chat/` and
+- `script-layout.md` explains the numbered `scripts/` layer command-surface
+  convention, including the current `scripts/00.chat/` and
   `scripts/01.harness/` split.
 - `chat-workbench-public-repo-readiness.md` defines what is copied,
   transformed, created, and excluded when bootstrapping `llm-workbench`.

@@ -7,12 +7,13 @@ portability: llm-workbench-required
 used_by:
   - .agentic/01.harness/README.md
   - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  - docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
 -->
 
 # Script Layout
 
 This document describes the current script layout. For the migration history,
-see ADR 0017.
+see ADR 0017. For the numbered layer command-surface direction, see ADR 0020.
 
 ## Current Shape
 
@@ -28,6 +29,13 @@ Shared harness governance scripts live under:
 scripts/01.harness/
 ```
 
+Future product and deployment command surfaces should live under:
+
+```txt
+scripts/02.product/<domain>/<capability>/
+scripts/03.deployment/<domain>/<capability>/
+```
+
 That split is intentional:
 
 - `scripts/00.chat/` owns chat startup, commands, reporting, session logs,
@@ -36,6 +44,17 @@ That split is intentional:
 - `scripts/01.harness/` owns cross-layer harness checks such as metadata,
   deterministic process drift, governed command drift, and the governed script
   runner.
+- `scripts/02.product/` is reserved for future product-owned automation such as
+  entity-builder commands, code generation, migration helpers, product
+  validation, and developer CLI capabilities.
+- `scripts/03.deployment/` is reserved for future deployment-owned automation
+  such as environment checks, release helpers, deployment validation, and
+  operational command wrappers.
+
+Use `scripts/` as the canonical executable command surface. The term `tools`
+describes automation capabilities, not a separate top-level command namespace.
+Future MCP exposure should wrap stable script capabilities through an explicit
+registry or manifest instead of importing layer internals directly.
 
 Do not add new chat lifecycle scripts under `scripts/shared/chat/` or
 `scripts/shared/git/`. Those were compatibility locations from the earlier
@@ -59,8 +78,8 @@ Humans should usually use `package.json` `chat:*` scripts. Those package
 scripts delegate to canonical `scripts/00.chat/...` paths.
 
 Harness workflows, checklists, standards, and gates should point directly at
-canonical `scripts/00.chat/...` paths or at `scripts/01.harness/...` when
-the behavior is genuinely shared governance.
+canonical `scripts/<numbered-layer>/...` paths for the layer that owns the
+behavior.
 
 ## Historical Paths
 
@@ -73,4 +92,3 @@ history:
 
 Negative tests may create retired paths in throwaway repositories when they are
 proving the governed runner rejects old compatibility surfaces.
-

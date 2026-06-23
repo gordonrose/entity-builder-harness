@@ -7,6 +7,7 @@ portability: llm-workbench-required
 used_by:
   - .agentic/shared/workflows/capability-resolution-workflow.md
   - .agentic/01.harness/standards/agentic-artifact-standards.md
+  - docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
 -->
 
 # Build Capability Workflow
@@ -15,7 +16,8 @@ used_by:
 
 Use this when a request needs a new repeatable capability, behaviour, process, automation, skill, workflow, standard, checklist, script, agent, orchestrator, or combination of these.
 
-This workflow may create artifacts for any target layer: `shared`, `harness`, `education`, or `product`.
+This workflow may create artifacts for any target layer: `chat`, `shared`,
+`harness`, `education`, `aws`, `product`, or `mixed`.
 
 ## Goal
 
@@ -33,7 +35,8 @@ Do not reclassify the layer unless the session metadata is missing, incomplete, 
 Expected inputs:
 
 - `task`: from the current chat/session log or pasted startup prompt
-- `layer`: `shared`, `harness`, `education`, `product`, or `mixed`
+- `layer`: `chat`, `shared`, `harness`, `education`, `aws`, `product`, or
+  `mixed`
 - `workflow`: this workflow path
 
 The selected `layer` is the target layer for the capability being built.
@@ -59,9 +62,14 @@ Before proposing a new artifact, inspect only the relevant layer folders:
 - `.agentic/<target-layer>/evals/`
 - `.agentic/<target-layer>/hooks/`
 - `.agentic/<target-layer>/agents/`
-- `scripts/<target-layer>/`
+- the numbered script namespace from `docs/00.chat/script-layout.md`, when the
+  capability needs deterministic command code
 
 Do not scan unrelated layers unless the task clearly crosses layers.
+
+Do not create new scripts under `scripts/shared/`. Shared process work should
+either use an existing layer-owned command surface or first record a governed
+script namespace decision.
 
 ## Step 3: Choose Minimum Artifact Set
 

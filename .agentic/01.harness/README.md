@@ -41,7 +41,7 @@ Future Codex sessions continuing rulebook work should start by reading
 
 - `docs/00.chat/` - indexes chat-owned docs for portable chat harness and public workbench bootstrap behavior.
 - `docs/00.chat/chat-workbench-public-repo-readiness.md` - defines the current export boundary for bootstrapping a standalone public chat workbench repo.
-- `docs/00.chat/script-layout.md` - explains the current script layout after the chat harness script migration.
+- `docs/00.chat/script-layout.md` - explains the numbered `scripts/` layer command-surface convention after the chat harness script migration.
 
 ## Bootstrap Templates
 
