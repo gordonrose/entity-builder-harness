@@ -24,8 +24,13 @@ coverage_statuses:
 source_guides:
   - path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
     line_count: 109
-    status: unreviewed
+    status: covered
     coverage_entries:
+      - source_sections:
+          - "1. Original Context"
+        status: background-only
+        artifacts: []
+        note: "Context for why the architecture was redesigned; no rulebook artifact needed beyond the concrete section coverage below."
       - source_sections:
           - "7. Harness"
           - "8. Build and Code Generation"
@@ -76,8 +81,19 @@ source_guides:
         note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
-    status: unreviewed
+    status: covered
     coverage_entries:
+      - source_sections:
+          - "Why shared core packages exist"
+          - "Why enterprise teams create a shared core layer"
+          - "Conceptual stack"
+          - "Why dependency direction matters"
+          - "How poor dependency management causes architectural decay"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/packages-core.yml
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        note: "Core foundation context is covered by packages-core and dependency-direction rules; source refs were manually checked while refining those artifacts."
       - source_sections:
           - "async-jobs/ deep dive"
           - "events/ deep dive"
@@ -242,10 +258,38 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rule-packs/add-core-module.yml
         note: "add-core-module source refs were manually checked while refining docs/harness/architecture/rule-packs/add-core-module.yml."
+      - source_sections:
+          - "Must Have on day one"
+          - "Should Have as the platform grows"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+          - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+          - docs/harness/architecture/rules/concerns/identity-access-security.yml
+          - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+          - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+          - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+          - docs/harness/architecture/rules/concerns/tenancy.yml
+          - docs/harness/architecture/rules/concerns/notifications.yml
+          - docs/harness/architecture/rules/concerns/i18n-localization.yml
+        note: "Core v1 prioritization sections are covered by the committed concern rulesets for each named capability."
   - path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
     line_count: 3136
-    status: unreviewed
+    status: covered
     coverage_entries:
+      - source_sections:
+          - "What React is"
+          - "Why React became dominant"
+          - "Problem 1: Keeping UI synchronized with state"
+          - "Tradeoff 1: More tooling"
+          - "Tradeoff 2: Learning curve"
+          - "Tradeoff 4: Performance mistakes are easy"
+          - "When React is the wrong choice"
+          - "How React differs from Angular, Vue, Svelte, and Web Components"
+          - "Why most enterprise software teams choose React today"
+        status: background-only
+        artifacts: []
+        note: "Introductory React framework context; material Kanbien rules are covered by design-system, frontend-kit, apps, and TypeScript tooling artifacts."
       - source_sections:
           - "What a design system actually is"
           - "The design-system layer model"
@@ -321,8 +365,15 @@ source_guides:
         note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
     line_count: 218
-    status: unreviewed
+    status: covered
     coverage_entries:
+      - source_sections:
+          - "1. Repo root"
+        status: duplicate-of
+        artifacts:
+          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+        note: "Repo-root zone list repeats monorepo structure already covered by dependency-direction and TypeScript monorepo tooling."
       - source_sections:
           - "packages/core"
           - "The core entity flow"
@@ -439,8 +490,28 @@ source_guides:
         note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
-    status: unreviewed
+    status: covered
     coverage_entries:
+      - source_sections:
+          - "1. What TypeScript is"
+          - "2. Why TypeScript exists"
+          - "3. How TypeScript differs from JavaScript"
+          - "7. Why enterprise software teams commonly choose TypeScript"
+          - "8. When TypeScript is the wrong choice"
+        status: background-only
+        artifacts: []
+        note: "Introductory TypeScript language-selection context; material Kanbien rules are covered by TypeScript tooling, validation, generated-code, and create-entity artifacts."
+      - source_sections:
+          - "4. What problems TypeScript solves"
+          - "5. What problems TypeScript does not solve"
+          - "6. What tradeoffs TypeScript introduces"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+          - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+          - docs/harness/architecture/rules/concerns/generated-code.yml
+          - docs/harness/architecture/rule-packs/create-entity.yml
+        note: "TypeScript problem/tradeoff material is represented by strict tooling, runtime validation, generated-code, and entity contract-chain rules."
       - source_sections:
           - "Kanbien monorepo structure"
           - "Linting"
@@ -472,6 +543,7 @@ source_guides:
           - "What TypeScript cannot enforce alone"
           - "Worked User example"
           - "1. Entity definition"
+          - "2. Inferred TypeScript type"
           - "3. Generated validation schema"
           - "4. API input/output contract"
           - "5. Persistence model"

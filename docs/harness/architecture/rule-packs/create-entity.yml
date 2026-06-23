@@ -88,6 +88,7 @@ source_refs:
       - "What TypeScript cannot enforce alone"
       - "Worked User example"
       - "1. Entity definition"
+      - "2. Inferred TypeScript type"
       - "3. Generated validation schema"
       - "4. API input/output contract"
       - "5. Persistence model"
