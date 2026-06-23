@@ -103,7 +103,6 @@ source_refs:
       - "Build outputs"
       - "tools/"
       - "Code generation"
-      - "Code generation"
       - "CI checks"
       - "The key design lesson"
   - doc: "kanbien-modular-monorepo-entity-builder.md"

@@ -57,7 +57,7 @@ source_guides:
         status: covered
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
-        note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+        note: "Tools source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml; ADR 0020 later remediated the active rules in place to target numbered scripts command surfaces."
       - source_sections:
           - "2. Front-End Architecture"
         status: covered
@@ -406,7 +406,7 @@ source_guides:
         status: covered
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
-        note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+        note: "Tools source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml; ADR 0020 later remediated the active rules in place to target numbered scripts command surfaces."
       - source_sections:
           - "3. packages/frontend-kit"
         status: covered
@@ -572,13 +572,13 @@ source_guides:
         status: covered
         artifacts:
           - docs/harness/architecture/rules/layers/tools.yml
-        note: "Tools layer source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml."
+        note: "Tools source refs were manually checked while creating docs/harness/architecture/rules/layers/tools.yml; ADR 0020 later remediated the active rules in place to target numbered scripts command surfaces."
       - source_sections:
           - "platform/"
           - "tools/"
         status: deferred-human-decision
         artifacts: []
-        note: "Potential scope tension: this guide places entity-core, entity-runtime, and entity-codegen under platform and says tools may depend on platform/entity-codegen, while the dedicated platform-layer guide treats platform as runtime composition and existing tools/generated-code artifacts keep generator ownership in tools."
+        note: "Potential scope tension: this guide places entity-core, entity-runtime, and entity-codegen under platform and says tools may depend on platform/entity-codegen, while the dedicated platform-layer guide treats platform as runtime composition and ADR 0020 maps generator command surfaces to numbered scripts."
       - source_sections:
           - "Linting"
           - "Formatting"
@@ -684,7 +684,7 @@ artifact_coverage:
     note: "Source refs manually checked while creating the platform layer ruleset."
   - artifact: docs/harness/architecture/rules/layers/tools.yml
     status: covered
-    note: "Source refs manually checked while creating the tools layer ruleset."
+    note: "Source refs manually checked while creating the original tools layer ruleset; ADR 0020 remediated the active rules in place to target numbered scripts command surfaces."
   - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
     status: covered
     note: "Source refs manually checked while refining the dependency-direction concern ruleset."
@@ -764,7 +764,7 @@ deferred_human_decisions:
       brain or governance/generation layer. Do not create harness.yml until this
       ownership model is decided.
   - id: platform-entity-codegen-ownership
-    title: Decide whether entity-core, entity-runtime, and entity-codegen are platform primitives, tools-owned generators, or split across both.
+    title: Decide whether entity-core, entity-runtime, and entity-codegen are platform primitives, numbered-script generator capabilities, or split across both.
     status: open
     affected_candidate: docs/harness/architecture/rules/layers/platform.yml
     source_refs:
@@ -786,10 +786,10 @@ deferred_human_decisions:
       The TypeScript guide describes platform/ as reusable platform primitives
       and engines, including entity-core, entity-runtime, and entity-codegen,
       and says tools may depend on platform/entity-codegen. The dedicated
-      platform-layer guide treats platform/ as runtime composition. Existing
-      generated-code and tools artifacts place generator implementation under
-      tools. Do not broaden platform.yml to own entity/codegen engines until
-      this ownership model is decided.
+      platform-layer guide treats platform/ as runtime composition. ADR 0020
+      maps generator command surfaces to numbered scripts. Do not broaden
+      platform.yml to own entity/codegen engines until this ownership model is
+      decided.
   - id: entity-definition-source-of-truth-location
     title: Decide where canonical entity definitions live before tightening app, harness, platform, or create-entity rules.
     status: open

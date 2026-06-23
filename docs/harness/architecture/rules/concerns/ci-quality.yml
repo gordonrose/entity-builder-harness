@@ -330,7 +330,6 @@ source_refs:
       - "Code generation"
       - "CI checks"
       - "tools/"
-      - "CI checks"
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/concerns/ci-quality.yml."
