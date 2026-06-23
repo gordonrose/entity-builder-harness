@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T00:21:40Z
-latest_commit_sha: ffb9cbd
-chat_duration: 4743s (00:01:19:03)
-estimated_chat_tokens: 1361372 estimated from chat transcript bytes (5445485 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 40.84 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-23T16:25:52Z
+latest_commit_sha: 1dcc51c
+chat_duration: 62595s (00:17:23:15)
+estimated_chat_tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 46.94 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -536,6 +536,17 @@ Decision: Add CI test taxonomy matrices
 
 Rationale: User identified that the rulebook needed both test-type and test-category expectations per layer, including explicit coverage intent for critical paths, validation, edge cases, security, failure modes, contracts, generated output, observability, and accessibility.
 
+
+### 2026-06-23T16:25:52Z - Commit recorded
+
+Commit: `1dcc51c`
+
+Message: Add CI test taxonomy matrices
+
+Summary: Added shared CI test type/category vocabulary and layer-specific test taxonomy matrices across active architecture layer rules.
+
+ADR impact: No ADR required; source-backed rulebook hardening only.
+
 ## Commits
 
 
@@ -749,6 +760,13 @@ Rationale: User identified that the rulebook needed both test-type and test-cate
   Summary: Marked all source guides as covered by mapping remaining sections to covered, duplicate-of, background-only, or deferred-human-decision statuses; added the missing TypeScript guide '2. Inferred TypeScript type' source ref to create-entity.
   ADR impact: No ADR impact; coverage tracking closure and source-ref correction only.
 
+
+- Commit: `1dcc51c`
+  Time UTC: 2026-06-23T16:25:52Z
+  Message: Add CI test taxonomy matrices
+  Summary: Added shared CI test type/category vocabulary and layer-specific test taxonomy matrices across active architecture layer rules.
+  ADR impact: No ADR required; source-backed rulebook hardening only.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -762,11 +780,11 @@ Reason: No ADR required; this is a source-backed rulebook hardening pass that re
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T00:21:40Z
-Latest commit SHA: ffb9cbd
-Chat duration: 4743s (00:01:19:03)
-Estimated chat tokens: 1361372 estimated from chat transcript bytes (5445485 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 40.84 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-23T16:25:52Z
+Latest commit SHA: 1dcc51c
+Chat duration: 62595s (00:17:23:15)
+Estimated chat tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 46.94 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
