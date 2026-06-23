@@ -12,8 +12,71 @@ applies_to:
     - "tools/**"
 
 related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Generator functions, parsers, analyzers, migration helpers, and lint-rule logic make the intended deterministic decisions."
+      - id: validation
+        should_prove:
+          - "CLI args, config files, schemas, source inputs, and generator options accept valid input and reject invalid input."
+      - id: edge_cases
+        should_prove:
+          - "Empty projects, missing files, duplicate definitions, unusual paths, ordering differences, and repeated runs behave intentionally."
+      - id: failure_modes
+        should_prove:
+          - "Tool errors are actionable, non-destructive, and leave workspaces in a recoverable state."
+  - type: integration
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Tools can read, write, generate, migrate, lint, or validate a representative repository or temp workspace."
+      - id: use_case_scenarios
+        should_prove:
+          - "Realistic generator, migration, release, and validation workflows exercise source inputs, outputs, and filesystem behavior."
+      - id: validation
+        should_prove:
+          - "Invalid workspace state, missing dependencies, stale generated output, and malformed source files fail with useful diagnostics."
+      - id: edge_cases
+        should_prove:
+          - "Idempotency, path portability, pre-existing files, partial outputs, and repeated generation are handled."
+      - id: failure_modes
+        should_prove:
+          - "Interrupted writes, rejected migrations, validation failures, and missing external tools do not create false success."
+  - type: golden
+    role: primary
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Generated files, migrations, API contracts, lint fixes, and documentation output match reviewed fixtures."
+      - id: compatibility_contracts
+        should_prove:
+          - "Generated output keeps public package, API, migration, and deployment contracts stable unless intentionally changed."
+  - type: generated_freshness
+    role: primary
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Checked-in generated artifacts are current with source definitions and generator implementations."
+      - id: failure_modes
+        should_prove:
+          - "Stale or hand-edited generated artifacts are detected before merge."
+  - type: smoke
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Published or reused CLI commands start, parse arguments, and run their safest representative path."
+      - id: observability_health
+        should_prove:
+          - "Tool output is concise, actionable, and exposes success or failure without requiring source inspection."
 
 rules:
   - id: tools.repo-automation-only
@@ -82,3 +145,10 @@ source_refs:
   - doc: "kanbien-architecture-full-discussion.md"
     sections:
       - "8. Build and Code Generation"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/layers/tools.yml."
+  - "It defines tools/ as the home for repo automation, generators, migration helpers, lint rules, release tooling, and developer CLI code."
+  - "It keeps tools out of deployed runtime behavior and product business logic."
+  - "It requires tools to be tested, typechecked, deterministic, and validated when they generate production artifacts."
+  - "It maps tools test types to critical path, validation, edge case, generated-output, compatibility, failure-mode, and smoke categories."

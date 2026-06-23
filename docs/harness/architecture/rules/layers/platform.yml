@@ -14,6 +14,7 @@ applies_to:
     - "platform/**"
 
 related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 runtime_modules:
@@ -44,6 +45,65 @@ runtime_modules:
   - id: testing
     purpose: "Fakes and helpers for platform/app contract tests."
     public_to_apps: test_only
+
+test_taxonomy:
+  - type: unit
+    role: secondary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Runtime helper logic, registry validation helpers, error mapping, config parsing, and policy normalization behave deterministically."
+      - id: validation
+        should_prove:
+          - "Invalid routes, jobs, health registrations, config values, auth metadata, and duplicate names are rejected before serving traffic."
+      - id: edge_cases
+        should_prove:
+          - "Reserved paths, duplicate registrations, optional app hooks, empty registries, cancellation signals, and shutdown ordering are handled."
+      - id: security_permissions
+        should_prove:
+          - "Auth parsing, coarse permission decisions, CORS/rate-limit policy helpers, and safe error output preserve defensive defaults."
+  - type: integration
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "App mounting, route adaptation, middleware ordering, request context creation, job execution, health aggregation, and resource lifecycle work together."
+      - id: use_case_scenarios
+        should_prove:
+          - "Representative mounted apps, jobs, health checks, config schemas, and lifecycle hooks exercise the runtime model."
+      - id: validation
+        should_prove:
+          - "Bad app identity, duplicate routes, unknown permissions, invalid job payloads, invalid config, and malformed requests fail early."
+      - id: security_permissions
+        should_prove:
+          - "Authentication failures, permission failures, tenant context propagation, rate limits, CORS, and reserved platform paths are enforced."
+      - id: failure_modes
+        should_prove:
+          - "App handler errors, dependency failures, job retry/dead-letter behavior, resource cleanup failures, and graceful shutdown paths behave predictably."
+      - id: observability_health
+        should_prove:
+          - "Request IDs, logs, metrics, traces, health output, readiness, liveness, and safe error mapping are emitted consistently."
+  - type: contract
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public platform contracts, app mount contracts, route/job/health registries, and platform testing helpers remain compatible with apps."
+      - id: security_permissions
+        should_prove:
+          - "Permission declarations, auth requirements, and policy metadata remain compatible with platform enforcement."
+      - id: failure_modes
+        should_prove:
+          - "Contract-level error, lifecycle, retry, health, and shutdown states are explicit for app consumers."
+  - type: smoke
+    role: conditional
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Platform server or worker entrypoints can start, mount apps, expose health, and shut down in the target environment."
+      - id: observability_health
+        should_prove:
+          - "Liveness, readiness, logs, and safe runtime status are available after startup."
 
 rules:
   - id: platform.runtime-composition-only
@@ -238,6 +298,7 @@ source_refs:
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/layers/platform.yml."
   - "It defines platform/ as the runtime composition layer for startup, server, app mounting, route/job registries, security hooks, observability, health, config, workers, resource lifecycle, shutdown, and contract testing."
+  - "It maps platform test types to runtime critical paths, validation, edge cases, security, failure modes, compatibility, and observability/health categories."
   - "It keeps product workflows, business permission meaning, app services, app repositories, product health decisions, business quotas, and domain-specific jobs inside apps or business packages."
   - "It limits app imports to approved platform composition roots and app mount modules."
   - "It keeps infrastructure provisioning outside platform/."

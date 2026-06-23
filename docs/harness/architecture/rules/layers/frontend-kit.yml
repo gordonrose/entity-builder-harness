@@ -19,6 +19,7 @@ applies_to:
 related_rulesets:
   - docs/harness/architecture/rules/layers/apps.yml
   - docs/harness/architecture/rules/layers/design-system.yml
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
   - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
@@ -34,6 +35,77 @@ frontend_surfaces:
     purpose: "Typed table renderers driven by generated or app-provided table config."
   - id: navigation
     purpose: "Reusable navigation composition helpers that apps configure with product-owned routes."
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Generic form, table, entity-page, navigation, CRUD layout, and config-mapping logic behaves without app-specific meaning."
+      - id: validation
+        should_prove:
+          - "Form config, table config, action config, navigation config, and generated UI config accept valid shapes and reject invalid ones."
+      - id: edge_cases
+        should_prove:
+          - "Empty data, missing optional fields, long labels, disabled actions, pagination boundaries, sorting ties, and filter combinations behave intentionally."
+      - id: accessibility_interaction
+        should_prove:
+          - "Keyboard, focus, validation display, loading, empty, error, permission-denied, and selection states are handled by reusable logic."
+  - type: type_level
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public config APIs such as FormConfig<T>, TableConfig<T>, entity-page config, action config, and navigation config remain compatible."
+      - id: validation
+        should_prove:
+          - "Invalid field keys, action payloads, route bindings, generated config keys, and generic constraints fail at compile time where possible."
+  - type: integration
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Reusable forms, tables, navigation, CRUD layouts, generated UI config, and design-system components work together."
+      - id: use_case_scenarios
+        should_prove:
+          - "Representative entity list, detail, create, edit, filter, sort, pagination, selection, and bulk-action scenarios behave correctly."
+      - id: validation
+        should_prove:
+          - "Validation errors, disabled actions, rejected mutations, permission-denied states, and malformed app-provided config render safely."
+      - id: edge_cases
+        should_prove:
+          - "Loading, empty, error, optimistic, stale, long-content, responsive, and partially configured states remain stable."
+      - id: accessibility_interaction
+        should_prove:
+          - "Focus management, keyboard navigation, screen-reader labeling, table semantics, form errors, and modal/menu interactions work across shared surfaces."
+  - type: contract
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Frontend-kit remains compatible with app-provided routes, loaders, mutation handlers, generated UI config, and design-system public APIs."
+      - id: generated_output
+        should_prove:
+          - "Generated form, table, entity-page, or navigation config can be consumed through approved public paths without hand edits."
+  - type: visual_regression
+    role: conditional
+    categories:
+      - id: critical_path
+        should_prove:
+          - "High-reuse forms, tables, navigation, CRUD layouts, and page shells do not drift visually in important states."
+      - id: accessibility_interaction
+        should_prove:
+          - "Focus rings, validation messages, disabled states, selection states, dense layouts, and responsive layouts remain usable."
+  - type: e2e
+    role: conditional
+    categories:
+      - id: use_case_scenarios
+        should_prove:
+          - "App-hosted representative journeys prove frontend-kit surfaces work in a realistic product shell."
+      - id: security_permissions
+        should_prove:
+          - "Permission-denied and hidden-action flows behave correctly when apps supply product authorization decisions."
 
 rules:
   - id: frontend-kit.is-portable-product-shell
@@ -160,4 +232,5 @@ success_criteria:
   - "It requires frontend-kit to compose public design-system APIs rather than mutate tokens, primitives, patterns, or components."
   - "It requires typed/generated UI config consumption for forms, tables, entity pages, and navigation without making frontend-kit the entity source of truth."
   - "It defines shared interaction and accessibility test expectations."
+  - "It maps frontend-kit test types to config validation, generic CRUD scenarios, edge cases, accessibility interaction, compatibility, generated-output, visual-regression, and app-hosted E2E categories."
   - "It includes manually verified source_refs back to the full discussion, modular monorepo, frontend design-system, and TypeScript guides."

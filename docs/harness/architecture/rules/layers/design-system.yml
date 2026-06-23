@@ -13,6 +13,7 @@ applies_to:
     - "packages/design-system/**"
 
 related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 layer_model:
@@ -37,6 +38,65 @@ layer_model:
   - id: pages
     purpose: "Routed product screens; these belong to applications, not the design-system package."
     reusable_across_products: false
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Token resolvers, primitives, component state helpers, variant logic, and accessibility helpers behave as stable UI infrastructure."
+      - id: validation
+        should_prove:
+          - "Token schemas, required props, variant values, contrast rules, and resolver inputs accept and reject the right shapes."
+      - id: edge_cases
+        should_prove:
+          - "Missing tokens, alias cycles, disabled states, loading states, empty content, long labels, density variants, and theme variants behave intentionally."
+      - id: accessibility_interaction
+        should_prove:
+          - "Keyboard behavior, focus management, ARIA relationships, screen-reader labels, and state announcements work for primitives and components."
+  - type: type_level
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public component props, token names, generated token types, provider APIs, and polymorphic component types remain compatible."
+      - id: validation
+        should_prove:
+          - "Invalid token names, variant values, required accessibility props, and unsupported component combinations fail at compile time where possible."
+  - type: integration
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Providers, generated CSS variables, themes, components, primitives, and patterns work together in representative render trees."
+      - id: accessibility_interaction
+        should_prove:
+          - "Reusable widgets such as dialogs, menus, selects, tooltips, forms, and navigation controls preserve focus and keyboard behavior together."
+      - id: edge_cases
+        should_prove:
+          - "Nested providers, theme switching, responsive density, long translated labels, disabled content, and portal behavior are stable."
+  - type: visual_regression
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Core visual states for tokens, primitives, patterns, and public components do not drift unintentionally."
+      - id: accessibility_interaction
+        should_prove:
+          - "Focus rings, disabled states, contrast-sensitive states, motion states, density, and responsive layout remain usable."
+      - id: generated_output
+        should_prove:
+          - "Generated token artifacts and CSS variables render expected themes and component states."
+  - type: golden
+    role: conditional
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Generated token docs, CSS variables, TypeScript token artifacts, and design-label outputs match reviewed fixtures."
+      - id: compatibility_contracts
+        should_prove:
+          - "Generated design-system artifacts keep stable names and public consumption contracts."
 
 rules:
   - id: design-system.governed-ui-infrastructure
@@ -200,4 +260,5 @@ success_criteria:
   - "It keeps design-system code domain-neutral, accessible, documented, tested, and versioned."
   - "It keeps routed pages, product workflows, data fetching, permissions, analytics, and business logic in applications."
   - "It references dependency-direction for one-way design-system layer dependencies."
+  - "It maps design-system test types to token, component, accessibility, interaction, visual-regression, generated-output, compatibility, and edge-case categories."
   - "It includes manually verified source_refs back to the frontend design-system guide."

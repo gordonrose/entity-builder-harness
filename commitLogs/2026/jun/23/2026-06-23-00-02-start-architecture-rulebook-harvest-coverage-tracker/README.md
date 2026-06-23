@@ -91,6 +91,10 @@ start architecture rulebook harvest coverage tracker
 - Decision: CI-quality source refs manually verified
   Rationale: Checked the cited TypeScript architecture guide sections before marking CI-quality coverage entries covered.
 
+
+- Decision: Add CI test taxonomy matrices
+  Rationale: User identified that the rulebook needed both test-type and test-category expectations per layer, including explicit coverage intent for critical paths, validation, edge cases, security, failure modes, contracts, generated output, observability, and accessibility.
+
 ## Activity Log
 
 ### 2026-06-22T23:02:37Z - Session started
@@ -518,6 +522,20 @@ Summary: Marked all source guides as covered by mapping remaining sections to co
 
 ADR impact: No ADR impact; coverage tracking closure and source-ref correction only.
 
+
+### 2026-06-23T16:25:06Z - ADR disposition
+
+ADR needed: no
+
+Reason: No ADR required; this is a source-backed rulebook hardening pass that refines existing CI quality and layer rules without introducing a new harness architecture primitive.
+
+
+### 2026-06-23T16:25:12Z - Decision
+
+Decision: Add CI test taxonomy matrices
+
+Rationale: User identified that the rulebook needed both test-type and test-category expectations per layer, including explicit coverage intent for critical paths, validation, edge cases, security, failure modes, contracts, generated output, observability, and accessibility.
+
 ## Commits
 
 
@@ -739,7 +757,7 @@ ADR impact: No ADR impact; coverage tracking closure and source-ref correction o
 
 ADR needed: no
 ADR path: 
-Reason: This slice adds rulebook tracking state and continuation guidance; it does not introduce a durable harness architecture decision requiring an ADR.
+Reason: No ADR required; this is a source-backed rulebook hardening pass that refines existing CI quality and layer rules without introducing a new harness architecture primitive.
 
 ## Session Metrics
 

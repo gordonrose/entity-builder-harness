@@ -20,6 +20,52 @@ related_rulesets:
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
 
+test_types:
+  - id: unit
+    purpose: "Prove isolated logic, small policy decisions, pure helpers, and narrow wiring."
+  - id: integration
+    purpose: "Prove multiple owned pieces work together across routes, adapters, repositories, workers, filesystems, workspaces, or UI interaction surfaces."
+  - id: contract
+    purpose: "Prove compatibility at public boundaries such as API schemas, package entry points, platform mounts, manifests, and generated contracts."
+  - id: type_level
+    purpose: "Prove TypeScript inference, public API shape, generic constraints, and compile-time compatibility."
+  - id: golden
+    purpose: "Prove generated or rendered output remains intentional by comparing stable fixtures, snapshots, or synthesized artifacts."
+  - id: generated_freshness
+    purpose: "Prove generated artifacts are current with their source inputs and generator implementations."
+  - id: visual_regression
+    purpose: "Prove shared visual states, layout, theme behavior, and UI regressions where visual drift would be costly."
+  - id: e2e
+    purpose: "Prove user-visible or system-critical flows through the deployed or browser/runtime stack."
+  - id: smoke
+    purpose: "Prove entrypoints, startup, deployment health, CLI commands, and critical wiring fail fast when broken."
+  - id: static_validation
+    purpose: "Prove source, configuration, infrastructure, or generated definitions satisfy deterministic static checks."
+  - id: policy
+    purpose: "Prove security, permission, dependency, deployment, or governance policies hold before merge or promotion."
+
+test_categories:
+  - id: critical_path
+    purpose: "Primary behavior that must work for the layer to be usable."
+  - id: use_case_scenarios
+    purpose: "Representative real workflows, data shapes, and interaction paths."
+  - id: validation
+    purpose: "Accepted and rejected input, configuration, schema, and command validation."
+  - id: edge_cases
+    purpose: "Boundary values, optional fields, empty states, ordering, retries, concurrency, and unusual but valid states."
+  - id: security_permissions
+    purpose: "Authentication, authorization, tenant isolation, policy enforcement, secret handling, and defensive behavior."
+  - id: failure_modes
+    purpose: "Expected behavior when dependencies, user input, generated output, providers, or runtime resources fail."
+  - id: compatibility_contracts
+    purpose: "Backward compatibility, public API stability, schema compatibility, mount compatibility, and migration safety."
+  - id: generated_output
+    purpose: "Generator determinism, generated artifact shape, generated freshness, and hand-edit protection."
+  - id: observability_health
+    purpose: "Logging, metrics, tracing, health checks, readiness, liveness, auditability, and safe error reporting."
+  - id: accessibility_interaction
+    purpose: "Keyboard behavior, focus management, screen-reader semantics, visual states, and interaction ergonomics."
+
 rules:
   - id: ci.baseline-quality-gates
     title: CI must run baseline quality gates
@@ -76,6 +122,7 @@ rules:
       - "Use type-level tests for inference and public API shape where useful."
       - "Use golden-file or snapshot tests for generated output where useful."
       - "Use E2E and smoke tests for deployment or browser-critical paths where appropriate."
+      - "Use the shared test_types and test_categories vocabulary when writing or reviewing layer-specific test expectations."
     must_not:
       - "Do not add tests only at a distant layer when the changed package owns a closer, more precise test surface."
       - "Do not leave generators, harness utilities, or test helpers untested because they are not production runtime code."
@@ -84,6 +131,27 @@ rules:
       Choose tests from the ownership and failure mode of the change. Prefer the
       closest test that proves the contract, then add broader tests only when
       the behavior crosses a boundary.
+
+  - id: ci.layer-test-taxonomy
+    title: Layer rules must map test types to test categories
+    severity: error
+    summary: >
+      Each layer ruleset should explain what relevant test types are expected to
+      prove for that layer, grouped by the failure categories the layer owns.
+    must:
+      - "Define a layer-specific test_taxonomy section for active layer rulesets."
+      - "For each primary or conditional test type, name the categories it should cover for that layer."
+      - "Use category ids from test_categories so agents can compare expectations across layers."
+      - "Treat category coverage as risk-based; not every test type needs every category."
+      - "Prefer the layer that owns the behavior as the primary home for the closest precise test."
+    must_not:
+      - "Do not require every layer to run every test type."
+      - "Do not hide layer-specific critical paths, validation paths, edge cases, security checks, or failure modes inside generic CI language."
+      - "Do not duplicate a broader E2E or smoke test when a closer unit, integration, contract, or type-level test proves the same layer-owned contract more precisely."
+    agent_guidance: >
+      When a layer test taxonomy is missing or too generic for the changed
+      surface, report that as a rulebook gap instead of guessing the intended
+      coverage.
 
 source_refs:
   - doc: "kanbien-typescript-architecture-guide.md"
@@ -100,5 +168,6 @@ success_criteria:
   - "The file exists at docs/harness/architecture/rules/concerns/ci-quality.yml."
   - "It defines baseline CI quality gates."
   - "It covers formatting, linting, typecheck, tests, build, generated freshness, dependency boundaries, contracts, migrations, and scans."
-  - "It maps test type to changed surface."
+  - "It defines shared test_types and test_categories vocabulary."
+  - "It requires layer rulesets to map relevant test types to layer-owned categories."
   - "It includes manually verified source_refs back to the markdown guides."

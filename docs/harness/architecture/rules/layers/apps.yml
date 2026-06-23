@@ -15,6 +15,7 @@ applies_to:
 
 related_rulesets:
   - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
   - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
@@ -38,6 +39,83 @@ app_surfaces:
     typical_paths:
       - "apps/*/src/**"
       - "apps/*/features/**"
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "App-specific dependency composition, workflow helpers, and route policy helpers make the intended product decisions."
+      - id: validation
+        should_prove:
+          - "App-owned config, route policy inputs, command inputs, and small request-shaping helpers accept and reject the right values."
+      - id: edge_cases
+        should_prove:
+          - "Optional dependencies, empty app state, feature flags, tenant context variants, and ordering-sensitive helpers behave intentionally."
+      - id: security_permissions
+        should_prove:
+          - "App-level permission helpers and resource authorization decisions allow and deny the correct cases."
+      - id: failure_modes
+        should_prove:
+          - "App-owned error mapping and fallback helpers produce expected failures before broader runtime wiring is involved."
+  - type: integration
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Primary routes, workers, app mounts, health checks, repositories, and platform mount behavior work together."
+      - id: use_case_scenarios
+        should_prove:
+          - "Representative product workflows exercise realistic request data, persistence behavior, jobs, and app service wiring."
+      - id: validation
+        should_prove:
+          - "Invalid request payloads, params, app config, and job payloads are rejected at the app boundary."
+      - id: security_permissions
+        should_prove:
+          - "Authentication requirements, app permissions, tenant isolation, and resource authorization hold through mounted routes or workers."
+      - id: failure_modes
+        should_prove:
+          - "Repository, platform dependency, worker, and app service failures map to the expected response, retry, or dead-letter behavior."
+      - id: observability_health
+        should_prove:
+          - "App health, readiness contributions, audit events, and safe logging work through the runtime integration point."
+  - type: contract
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Generated API schemas, published clients, platform mount contracts, app manifests, and app-owned migration contracts remain compatible."
+      - id: security_permissions
+        should_prove:
+          - "Permission names, route auth declarations, and policy metadata stay compatible with platform enforcement."
+      - id: generated_output
+        should_prove:
+          - "Generated app schemas, clients, migration metadata, or deployment metadata match the source contracts."
+  - type: e2e
+    role: conditional
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Browser-critical or API-critical user paths work through the deployed or realistic runtime stack."
+      - id: use_case_scenarios
+        should_prove:
+          - "Realistic user journeys cover the app's highest-risk product workflows."
+      - id: security_permissions
+        should_prove:
+          - "Login, permission-denied, tenant-isolated, and privileged-user flows behave correctly where the app owns the user experience."
+      - id: failure_modes
+        should_prove:
+          - "User-visible errors, retries, empty states, and recovery paths are acceptable for critical journeys."
+  - type: smoke
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "The app can start, mount, expose key routes or workers, and load app manifests without obvious runtime failure."
+      - id: observability_health
+        should_prove:
+          - "Deployment health, readiness, liveness, and app-provided health checks are visible and safe."
 
 rules:
   - id: apps.are-composition-roots
@@ -196,4 +274,5 @@ success_criteria:
   - "It requires app-owned ordered migration streams."
   - "It keeps platform runtime mechanisms, infra provisioning, design-system primitives, harness code, and tools runtime code out of production apps."
   - "It defines app testing expectations for wiring, integration, contracts, E2E, and deployment smoke checks."
+  - "It maps app test types to critical path, validation, edge case, security, failure-mode, compatibility, generated-output, and health categories."
   - "It includes manually verified source_refs back to the full discussion, modular monorepo, TypeScript, and platform layer guides."

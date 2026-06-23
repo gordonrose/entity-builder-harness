@@ -11,6 +11,10 @@ applies_to:
   paths:
     - "packages/core/**"
 
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
 recommended_modules:
   - id: shared
     purpose: "Common primitives such as IDs, results, errors, clocks, context, and lifecycle."
@@ -75,6 +79,59 @@ recommended_modules:
   - id: testing
     purpose: "In-memory and no-op implementations for local tests and CI."
     consumed_by: "apps, harness, and CI tests"
+
+test_taxonomy:
+  - type: unit
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Core primitives, result/error helpers, policies, clocks, context helpers, and small pure functions behave as stable foundations."
+      - id: validation
+        should_prove:
+          - "Validation contracts, error models, config contracts, IDs, and defensive primitives accept and reject expected values."
+      - id: edge_cases
+        should_prove:
+          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, retry limits, and optional metadata behave intentionally."
+      - id: security_permissions
+        should_prove:
+          - "Authn, authz, tenancy, security, redaction, and audit primitives preserve isolation and defensive defaults."
+      - id: failure_modes
+        should_prove:
+          - "Core error/result shapes and no-op or in-memory testing implementations fail predictably without runtime dependencies."
+  - type: type_level
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Public core entry points, exported types, generic constraints, and inference behavior remain stable for apps, platform, and tests."
+      - id: validation
+        should_prove:
+          - "Compile-time constraints reject invalid contract shapes where TypeScript can express the rule."
+      - id: edge_cases
+        should_prove:
+          - "Optional fields, branded identifiers, discriminated unions, and extension points preserve intended narrowing and exhaustiveness."
+  - type: contract
+    role: primary
+    categories:
+      - id: compatibility_contracts
+        should_prove:
+          - "Ports and contracts remain implementable by platform and consumable by apps without leaking runtime implementations into core."
+      - id: security_permissions
+        should_prove:
+          - "Auth, tenancy, permission, audit, and security contracts preserve the required policy facts across consumers."
+      - id: failure_modes
+        should_prove:
+          - "Contract-defined errors, retries, and lifecycle states are explicit enough for platform implementations and app consumers."
+  - type: integration
+    role: conditional
+    categories:
+      - id: use_case_scenarios
+        should_prove:
+          - "In-memory or no-op test implementations support realistic app and platform test scenarios without external services."
+      - id: compatibility_contracts
+        should_prove:
+          - "Core testing helpers exercise the same contracts that concrete platform implementations must satisfy."
 
 rules:
   - id: core.stable-cross-cutting-only
@@ -214,4 +271,5 @@ success_criteria:
   - "It keeps packages/core independent from apps, platform, infra, cloud SDKs, ORMs, web servers, and vendor clients."
   - "It distinguishes core contracts from platform implementations and app product workflows."
   - "It records the recommended core capability module families and their intended consumers."
+  - "It maps core test types to contract compatibility, validation, edge case, security, failure-mode, and test-helper scenarios."
   - "It includes manually verified source_refs back to the core architecture guide."

@@ -44,6 +44,71 @@ deployment_surfaces:
       - "apps/*/app.manifest.ts"
       - "generated/**"
 
+test_taxonomy:
+  - type: static_validation
+    role: primary
+    categories:
+      - id: critical_path
+        should_prove:
+          - "Infrastructure source, environment definitions, deployment workflow definitions, and IaC files satisfy the tool's static checks."
+      - id: validation
+        should_prove:
+          - "Required environment inputs, variable shapes, deployment targets, and config references are present and valid."
+      - id: edge_cases
+        should_prove:
+          - "Optional resources, disabled features, environment-specific overrides, naming limits, and dependency ordering are handled intentionally."
+      - id: failure_modes
+        should_prove:
+          - "Invalid plans, missing resources, malformed manifests, and unsafe target selection fail before apply or deployment."
+  - type: policy
+    role: primary
+    categories:
+      - id: security_permissions
+        should_prove:
+          - "IAM, network exposure, public access, encryption, retention, secret references, and destructive-change policies are enforced."
+      - id: compatibility_contracts
+        should_prove:
+          - "Deployment resources remain compatible with app manifests, platform config contracts, environment models, and promotion controls."
+      - id: failure_modes
+        should_prove:
+          - "Policy violations block promotion with actionable diagnostics."
+  - type: golden
+    role: primary
+    categories:
+      - id: generated_output
+        should_prove:
+          - "Synthesized templates, plans, Kubernetes manifests, generated deployment metadata, or CI/CD definitions match reviewed output."
+      - id: compatibility_contracts
+        should_prove:
+          - "Synthesized output preserves expected resource names, interfaces, manifests, config contracts, and migration-sensitive resources."
+      - id: security_permissions
+        should_prove:
+          - "Reviewed infrastructure output does not accidentally widen access, expose secrets, or weaken security defaults."
+  - type: integration
+    role: conditional
+    categories:
+      - id: use_case_scenarios
+        should_prove:
+          - "Environment config, deployment metadata, app manifests, and platform config validation work together for representative targets."
+      - id: validation
+        should_prove:
+          - "Invalid environment combinations and missing deployment metadata fail before apply or release."
+      - id: failure_modes
+        should_prove:
+          - "Provider, dependency, or environment lookup failures do not produce ambiguous deployment state."
+  - type: smoke
+    role: conditional
+    categories:
+      - id: critical_path
+        should_prove:
+          - "A deployed environment exposes the expected app and platform entrypoints after promotion."
+      - id: observability_health
+        should_prove:
+          - "Liveness, readiness, DNS/routing, queue health, storage health, and safe status output are visible where the environment supports them."
+      - id: security_permissions
+        should_prove:
+          - "Deployment smoke checks do not require unsafe credentials or expose secret values."
+
 rules:
   - id: infra.owns-provisioning
     title: Infra owns provisioning
@@ -174,4 +239,5 @@ success_criteria:
   - "It requires infra to consume app manifests, config packages, platform config validation packages, or generated deployment metadata instead of app internals."
   - "It separates infra provisioning from platform runtime lifecycle and app product behavior."
   - "It defines validation expectations for IaC static checks, policy checks, synthesized-output checks, environment config validation, and deployment smoke tests."
+  - "It maps infra test types to static validation, policy, synthesized-output, integration, smoke, security, failure-mode, and deployment-health categories."
   - "It includes manually verified source_refs back to the full discussion, modular monorepo, TypeScript, and platform layer guides."
