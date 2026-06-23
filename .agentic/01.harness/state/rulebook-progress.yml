@@ -21,6 +21,7 @@ created_artifacts:
     - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
     - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
     - docs/harness/architecture/rules/concerns/tenancy.yml
+    - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
     - docs/harness/architecture/rules/concerns/validation-api-errors.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
@@ -46,3 +47,4 @@ notes:
   - "The core guide's persistence and files sections are covered by the persistence-files-storage concern."
   - "The core guide's notification sections are covered by the notifications concern."
   - "The core guide's configuration sections are covered by the config-runtime-settings concern."
+  - "The TypeScript guide's configuration, strictness, module resolution, package boundary, workspace, and monorepo tooling sections are covered by the typescript-monorepo-tooling concern."

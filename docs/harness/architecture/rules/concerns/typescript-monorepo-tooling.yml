@@ -1,0 +1,196 @@
+id: concern.typescript-monorepo-tooling
+title: TypeScript monorepo tooling rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for TypeScript as a contract system in the Kanbien
+  monorepo: layered tsconfig files, strict compiler defaults, project
+  references, package exports, workspace dependencies, path alias discipline,
+  Node versus browser module resolution, ESM-first packages, and monorepo task
+  orchestration.
+
+related_rulesets:
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/**"
+    - "platform/**"
+    - "harness/**"
+    - "tools/**"
+    - "infra/**"
+    - "tsconfig*.json"
+    - "package.json"
+    - "pnpm-workspace.yaml"
+    - "nx.json"
+
+rules:
+  - id: typescript-monorepo-tooling.layered-tsconfig
+    title: Use layered TypeScript configs
+    severity: error
+    summary: >
+      A monorepo should not use one magic tsconfig for every runtime. Backend
+      Node packages, frontend apps, test harnesses, codegen tools, and IaC may
+      need different emit and module behavior.
+    must:
+      - "Use a shared tsconfig.base.json for common strict defaults."
+      - "Use a solution-style root tsconfig.json with references and no source compilation of its own where project references are used."
+      - "Use package-level tsconfig.json files for buildable packages and platform modules."
+      - "Use app-level tsconfig.json files for bundled apps and Node apps with runtime-appropriate compiler options."
+    must_not:
+      - "Do not force frontend, backend, test, tooling, and IaC code through one runtime-specific tsconfig."
+      - "Do not make the root tsconfig compile arbitrary source files when it is meant to coordinate referenced projects."
+      - "Do not hide emit behavior in ad hoc scripts instead of package/app configs."
+    agent_guidance: >
+      Check which runtime owns the code before accepting tsconfig changes.
+
+  - id: typescript-monorepo-tooling.strict-by-default
+    title: TypeScript is strict by default
+    severity: error
+    summary: >
+      Kanbien should treat TypeScript as a contract system across modules, APIs,
+      generated artifacts, validation, metadata, and deployment tooling. New
+      code should not start permissive and tighten later.
+    must:
+      - "Enable strict mode for new TypeScript projects."
+      - "Prefer stricter options such as noUncheckedIndexedAccess, exactOptionalPropertyTypes, useUnknownInCatchVariables, noImplicitOverride, noFallthroughCasesInSwitch, and forceConsistentCasingInFileNames where compatible."
+      - "Require an explanation for new any usage."
+      - "Avoid unsafe type assertions around external input."
+      - "Require issue-linked justification for ts-ignore or equivalent suppression."
+    must_not:
+      - "Do not use TypeScript type assertions as runtime validation."
+      - "Do not weaken compiler strictness silently to make generated or boundary code pass."
+      - "Do not use ts-ignore as a permanent design tool."
+    agent_guidance: >
+      If strictness exposes a boundary problem, fix the boundary or record the
+      gap; do not just mute the compiler.
+
+  - id: typescript-monorepo-tooling.packages-are-boundaries
+    title: Packages are boundaries
+    severity: error
+    summary: >
+      A folder is not a boundary. A package with package.json, tsconfig, lint
+      rules, tests, public exports, and declaration output can be a boundary.
+    must:
+      - "Give buildable packages package.json metadata, package exports, type declarations, and typecheck/build scripts."
+      - "Import shared package code through package entry points such as @kanbien/users rather than deep source paths."
+      - "Use package-manager workspaces and workspace dependency ranges for local package relationships."
+      - "Use declaration output for packages consumed across boundaries."
+    must_not:
+      - "Do not bypass package exports with cross-package paths into src files."
+      - "Do not use TypeScript paths to make illegal dependency direction look valid."
+      - "Do not publish or consume package internals as architecture contracts."
+    agent_guidance: >
+      A package boundary is only real if imports, builds, declarations, and
+      tests respect it.
+
+  - id: typescript-monorepo-tooling.path-aliases-are-local-ergonomics
+    title: Path aliases are local ergonomics
+    severity: error
+    summary: >
+      Path aliases can help local app ergonomics, but they should not replace
+      package exports or workspace linking across package boundaries.
+    must:
+      - "Use path aliases mainly for local app/module ergonomics such as @app/*."
+      - "Use package exports and workspace dependencies for cross-package imports."
+      - "Review path aliases for dependency-boundary bypass before accepting them."
+    must_not:
+      - "Do not map @kanbien/package names directly to packages/*/src/index.ts in a way that bypasses package exports."
+      - "Do not add broad aliases such as @kanbien/platform/* to arbitrary source files across platform modules."
+      - "Do not let path aliases hide dependency-direction violations."
+    agent_guidance: >
+      If an alias crosses a package boundary, suspect it until package exports
+      prove the boundary is preserved.
+
+  - id: typescript-monorepo-tooling.project-references-are-deliberate
+    title: Project references are deliberate
+    severity: error
+    summary: >
+      Project references help large TypeScript programs split into smaller
+      pieces, improve build times, enforce logical separation, and produce
+      stable declarations for buildable packages.
+    must:
+      - "Use project references for buildable packages and platform modules when the chosen monorepo tool supports that model."
+      - "Use composite configs and declaration output where packages are consumed by other projects."
+      - "Run tsc --build or equivalent CI checks for referenced projects where applicable."
+      - "Use affected builds and dependency graph tooling to avoid rebuilding everything unnecessarily."
+    must_not:
+      - "Do not add references blindly when the selected monorepo tool discourages or duplicates them."
+      - "Do not reference projects that violate dependency direction."
+      - "Do not let generated artifacts bypass referenced package typechecks."
+    agent_guidance: >
+      References are architecture edges. Treat each one as a declared dependency.
+
+  - id: typescript-monorepo-tooling.module-resolution-matches-runtime
+    title: Module resolution matches runtime
+    severity: error
+    summary: >
+      Node-emitted packages and browser-bundled apps need different module and
+      moduleResolution defaults. Internal Kanbien packages should be ESM-first
+      unless a real consumer needs CommonJS.
+    must:
+      - "Use NodeNext module and moduleResolution for Node-emitted packages and apps."
+      - "Use ESNext module and Bundler moduleResolution for browser-bundled frontend apps."
+      - "Use ESM-first package settings such as type: module for greenfield internal packages."
+      - "Use CommonJS or .cjs only for legacy tooling, compatibility packages, or config files that require it."
+      - "Consider dual ESM/CommonJS output only for external SDKs or real consumers that need it."
+    must_not:
+      - "Do not use frontend bundler module resolution for Node-emitted packages."
+      - "Do not dual-publish internally by default."
+      - "Do not hide runtime module-resolution issues with path aliases or build scripts."
+    agent_guidance: >
+      Module settings are runtime contracts. Match them to where the emitted
+      JavaScript actually runs.
+
+  - id: typescript-monorepo-tooling.workspace-and-orchestration-are-explicit
+    title: Workspace and orchestration are explicit
+    severity: error
+    summary: >
+      Kanbien should use deterministic workspace linking and explicit task
+      orchestration for dependency graph checks, affected builds, caching,
+      boundary enforcement, and CI optimization.
+    must:
+      - "Use a workspace manifest that includes apps, packages, platform, harness, tools, and infra workspaces where those folders contain packages."
+      - "Use workspace dependency ranges for local package dependencies."
+      - "Use monorepo tooling such as Nx for dependency graph, affected builds, caching, project tagging, boundary enforcement, and CI optimization where adopted."
+      - "Treat monorepo tooling as task orchestration unless a specific generation framework is intentionally adopted."
+    must_not:
+      - "Do not rely on registry resolution for local workspace packages."
+      - "Do not let task orchestration generate code or move boundaries without explicit architecture rules."
+      - "Do not adopt experimental compiler/tooling previews as production defaults before they are stable."
+    agent_guidance: >
+      Workspaces and orchestration should make boundaries clearer, not magical.
+
+source_refs:
+  - doc: "kanbien-typescript-architecture-guide.md"
+    sections:
+      - "My architectural recommendation for Kanbien"
+      - "TypeScript configuration setup"
+      - "Recommended config files"
+      - "Package-level tsconfig.json"
+      - "App-level tsconfig.json"
+      - "Path aliases"
+      - "Project references"
+      - "Strict mode"
+      - "Module resolution"
+      - "ESM vs CommonJS"
+      - "Recommended clean setup for Kanbien"
+      - "Package manager"
+      - "Monorepo tooling"
+      - "TypeScript compiler settings"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml."
+  - "It requires layered TypeScript configs instead of one magic tsconfig."
+  - "It requires strict TypeScript defaults and governance for any, unsafe assertions, and suppressions."
+  - "It treats packages as boundaries with package exports, declaration output, workspaces, and public entry points."
+  - "It restricts path aliases to local ergonomics rather than cross-package boundary bypass."
+  - "It makes project references deliberate architecture edges."
+  - "It matches module resolution to runtime and keeps internal packages ESM-first."
+  - "It makes workspace linking and monorepo orchestration explicit."
+  - "It includes manually verified source_refs back to the TypeScript architecture guide."

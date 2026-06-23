@@ -443,6 +443,25 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/concerns/ci-quality.yml
         note: "CI-quality source refs were manually checked while creating docs/harness/architecture/rules/concerns/ci-quality.yml."
+      - source_sections:
+          - "My architectural recommendation for Kanbien"
+          - "TypeScript configuration setup"
+          - "Recommended config files"
+          - "Package-level tsconfig.json"
+          - "App-level tsconfig.json"
+          - "Path aliases"
+          - "Project references"
+          - "Strict mode"
+          - "Module resolution"
+          - "ESM vs CommonJS"
+          - "Recommended clean setup for Kanbien"
+          - "Package manager"
+          - "Monorepo tooling"
+          - "TypeScript compiler settings"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+        note: "TypeScript monorepo tooling source refs were manually checked while creating docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: covered
@@ -521,6 +540,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/tenancy.yml
     status: covered
     note: "Source refs manually checked while creating the tenancy concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+    status: covered
+    note: "Source refs manually checked while creating the TypeScript monorepo tooling concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/validation-api-errors.yml
     status: covered
     note: "Source refs manually checked while creating the validation and API error concern ruleset."

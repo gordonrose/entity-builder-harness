@@ -54,6 +54,7 @@ current_known_artifacts:
     - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
     - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
     - docs/harness/architecture/rules/concerns/tenancy.yml
+    - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
     - docs/harness/architecture/rules/concerns/validation-api-errors.yml
   rule_packs:
     - docs/harness/architecture/rule-packs/add-core-module.yml
