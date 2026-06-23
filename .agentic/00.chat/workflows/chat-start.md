@@ -33,6 +33,22 @@ Do not load unrelated workflows, skills, standards, or documentation.
 If the metadata includes a `worktree` value, use that chat-owned worktree for
 task writes. The root worktree is the local integration console.
 
+If it reports `recorded-session-approval-required`, do not use the existing
+session metadata and do not edit files. Respond exactly:
+
+```txt
+Blocked: existing chat session has recorded commits. Confirm continue this existing chat/worktree, or start a new chat?
+```
+
+If the opening user request explicitly approves continuing the existing
+chat/worktree, rerun:
+
+```bash
+bash scripts/00.chat/session-log/read-current-chat-log/script.sh --allow-recorded-session
+```
+
+Only then may the existing session metadata be used.
+
 After the user first grants write permission for the chat, rename the current
 session log folder to a concise summary:
 

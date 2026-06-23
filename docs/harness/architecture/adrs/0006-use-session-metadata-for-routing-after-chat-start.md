@@ -25,6 +25,11 @@ or marked `unknown`. If a later user request adds a new phase, the agent should
 treat that as a phase within the current chat and still follow the selected
 workflow's gates unless the session metadata itself is invalid.
 
+Recorded sessions are not silently reusable startup context for a new user
+conversation. If the current chat session already has a `latest_commit_sha`,
+the metadata reader must refuse the fast path unless the user explicitly
+approves continuing that existing chat session and worktree.
+
 The routing order remains:
 
 ```txt

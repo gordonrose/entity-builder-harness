@@ -20,3 +20,15 @@ branch, worktree, layer, mode, or workflow without opening the full log.
 The script requires the current branch to be a `chat/*` branch and the matching
 session log to exist. It is read-only.
 
+By default, it refuses to print metadata for a session that already has a
+`latest_commit_sha`. That protects new user conversations from accidentally
+continuing an old chat worktree simply because the process started there.
+
+Use:
+
+```bash
+bash scripts/00.chat/session-log/read-current-chat-log/script.sh --allow-recorded-session
+```
+
+only after the user explicitly approves continuing the existing chat session and
+worktree.
