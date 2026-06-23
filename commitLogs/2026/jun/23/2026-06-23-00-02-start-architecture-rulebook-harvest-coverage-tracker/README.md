@@ -11,9 +11,9 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T17:20:15Z
-latest_commit_sha: bbd05fe
-chat_duration: 65858s (00:18:17:38)
+latest_commit_at_utc: 2026-06-23T17:55:52Z
+latest_commit_sha: 633fff8
+chat_duration: 67995s (00:18:53:15)
 estimated_chat_tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
 estimated_chat_cost: USD 46.94 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
@@ -705,6 +705,17 @@ Mode: manual
 
 Action: combined chat Markdown scanning with harness YAML scanning and kept usage text naming both surfaces
 
+
+### 2026-06-23T17:55:52Z - Commit recorded
+
+Commit: `633fff8`
+
+Message: Rename tools ruleset to scripts command surface
+
+Summary: Renamed the historical tools layer rulebook to scripts-command-surface.yml, updated rulebook manifest/progress/coverage and CI taxonomy scope, retired the old path with no active old-path references, and added YAML artifact metadata for the new ruleset.
+
+ADR impact: No new ADR required; this completes the layer-layout consequence of ADR 0020.
+
 ## Commits
 
 
@@ -974,6 +985,13 @@ Action: combined chat Markdown scanning with harness YAML scanning and kept usag
   Summary: Updated rulebook coverage state and remaining source-reference notes so the coverage tracker reflects ADR 0020's numbered scripts command-surface direction.
   ADR impact: No new ADR required; this updates state and notes for the ADR 0020 direction.
 
+
+- Commit: `633fff8`
+  Time UTC: 2026-06-23T17:55:52Z
+  Message: Rename tools ruleset to scripts command surface
+  Summary: Renamed the historical tools layer rulebook to scripts-command-surface.yml, updated rulebook manifest/progress/coverage and CI taxonomy scope, retired the old path with no active old-path references, and added YAML artifact metadata for the new ruleset.
+  ADR impact: No new ADR required; this completes the layer-layout consequence of ADR 0020.
+
 ## Main Refresh Conflicts
 
 
@@ -1052,9 +1070,9 @@ Reason: No ADR required; this is a source-backed rulebook hardening pass that re
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T17:20:15Z
-Latest commit SHA: bbd05fe
-Chat duration: 65858s (00:18:17:38)
+Latest commit at UTC: 2026-06-23T17:55:52Z
+Latest commit SHA: 633fff8
+Chat duration: 67995s (00:18:53:15)
 Estimated chat tokens: 1564736 estimated from chat transcript bytes (6258942 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
 Estimated chat cost: USD 46.94 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
@@ -1080,3 +1098,21 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
 - Note: `check-artifact-metadata-headers.sh --all` still fails on existing
   unbackfilled metadata headers outside this change; the targeted metadata check
   for the moved/new artifacts passed.
+- Artifact path migration: renamed
+  `docs/harness/architecture/rules/layers/tools.yml` to
+  `docs/harness/architecture/rules/layers/scripts-command-surface.yml`.
+- Compatibility choice: `retired` for the old `tools.yml` path after active
+  references were updated; no pointer retained because only session-history
+  references remain.
+- Active reference buckets updated: workflow and architecture references in
+  `.agentic/01.harness/manifest.yml`,
+  `.agentic/01.harness/state/rulebook-progress.yml`,
+  `.agentic/01.harness/state/rulebook-coverage.yml`, and
+  `docs/harness/architecture/rules/concerns/ci-quality.yml`.
+- ADR disposition: no new ADR required; ADR 0020 already records the durable
+  numbered scripts command-surface direction, and this rename applies it.
+- Checks run: dirty worktree gate; `plan-artifact-path-migration.sh`;
+  `check-artifact-path-migration.sh`; `check-rule-test-taxonomy.sh`; YAML parse
+  check; targeted `check-deterministic-process-drift.sh`;
+  `smoke-test-artifact-path-migration.sh`; targeted
+  `check-artifact-metadata-headers.sh --paths`.
