@@ -61,6 +61,13 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/apps.yml
         note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml; entity-definition source-of-truth placement is deferred separately."
+      - source_sections:
+          - "10. Infrastructure and Deployment"
+          - "12. Architectural Recommendations"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: unreviewed
@@ -338,7 +345,14 @@ source_guides:
         status: covered
         artifacts:
           - docs/harness/architecture/rules/layers/apps.yml
-        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
+        note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml; entity-definition source-of-truth placement is deferred separately."
+      - source_sections:
+          - "10. Infra"
+          - "11. The core entity flow"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: covered
@@ -393,6 +407,12 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/apps.yml
         note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
+      - source_sections:
+          - "How /platform differs from infrastructure"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
     status: unreviewed
@@ -499,6 +519,18 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/apps.yml
         note: "Apps layer source refs were manually checked while creating docs/harness/architecture/rules/layers/apps.yml."
+      - source_sections:
+          - "infra/"
+          - "Purpose"
+          - "TypeScript code that should live there"
+          - "What should not live there"
+          - "Dependency rules"
+          - "Testing approach"
+          - "Build approach"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
   - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
     line_count: 900
     status: covered
@@ -529,6 +561,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/layers/apps.yml
     status: covered
     note: "Source refs manually checked while creating the apps layer ruleset."
+  - artifact: docs/harness/architecture/rules/layers/infra.yml
+    status: covered
+    note: "Source refs manually checked while creating the infra layer ruleset."
   - artifact: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
     status: covered
     note: "Source refs manually checked while creating the configuration and runtime settings concern ruleset."
