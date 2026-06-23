@@ -167,6 +167,12 @@ source_guides:
           - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
         note: "Persistence and files source refs were manually checked while creating docs/harness/architecture/rules/concerns/persistence-files-storage.yml."
       - source_sections:
+          - "notifications/ deep dive"
+        status: covered
+        artifacts:
+          - docs/harness/architecture/rules/concerns/notifications.yml
+        note: "Notification source refs were manually checked while creating docs/harness/architecture/rules/concerns/notifications.yml."
+      - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
           - "What problems shared core packages create when used incorrectly"
@@ -482,6 +488,9 @@ artifact_coverage:
   - artifact: docs/harness/architecture/rules/concerns/identity-access-security.yml
     status: covered
     note: "Source refs manually checked while creating the identity, access, and security concern ruleset."
+  - artifact: docs/harness/architecture/rules/concerns/notifications.yml
+    status: covered
+    note: "Source refs manually checked while creating the notifications concern ruleset."
   - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."

@@ -1,0 +1,139 @@
+id: concern.notifications
+title: Notification rules
+version: 1
+status: active
+
+description: >
+  Cross-cutting rules for provider-neutral notification contracts, recipients,
+  channels, templates, delivery status, preferences, consent, unsubscribe,
+  localization, retries, audit, PII controls, rate limits, and ownership splits
+  across core, apps, platform, and infra.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/i18n-localization.yml
+  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: notifications.use-provider-neutral-contracts
+    title: Notifications use provider-neutral contracts
+    severity: error
+    summary: >
+      Notification code should send messages through stable Kanbien contracts
+      rather than binding app business logic to email, SMS, push, in-app,
+      webhook, or vendor provider implementations.
+    must:
+      - "Use provider-neutral contracts such as Notification, NotificationRecipient, NotificationChannel, NotificationReceipt, and NotificationService where reused."
+      - "Represent notification type, channel, recipient, template reference, data, tenant ID where relevant, and locale where relevant."
+      - "Return delivery acceptance or rejection status and provider message IDs where relevant."
+    must_not:
+      - "Do not import SendGrid, Twilio, push provider, webhook provider, or other vendor SDKs from app business logic."
+      - "Do not send email, SMS, push, in-app, or webhook messages directly from product services when a notification contract exists."
+      - "Do not hardcode provider-specific message IDs or status concepts into core contracts."
+    agent_guidance: >
+      Apps should ask Kanbien to send a notification. Platform chooses and
+      operates the provider path.
+
+  - id: notifications.templates-copy-and-preferences-have-owners
+    title: Templates, copy, and preferences have owners
+    severity: error
+    summary: >
+      Notification mechanisms are shared, but product copy, templates,
+      preference semantics, and marketing or workflow meaning belong to product
+      owners.
+    must:
+      - "Keep notification template references stable and explicit."
+      - "Put product-specific copy, localized template catalogs, workflow-specific message meaning, marketing campaign logic, and UI inbox screens in apps or product packages."
+      - "Define preference and unsubscribe concepts before sending optional, marketing, or recurring notifications."
+      - "Use localized templates when recipient locale or tenant locale matters."
+    must_not:
+      - "Do not put all product notification copy in packages/core."
+      - "Do not put marketing campaign logic or UI inbox screens in core notification contracts."
+      - "Do not ignore recipient preferences, consent, or unsubscribe requirements."
+    agent_guidance: >
+      Core can name the envelope. The product surface owns the words and why
+      the recipient should receive them.
+
+  - id: notifications.delivery-is-trackable-and-retryable
+    title: Delivery is trackable and retryable
+    severity: error
+    summary: >
+      Notifications are failure-prone. Delivery attempts, provider acceptance,
+      retries, rate limits, and sensitive failure paths need explicit handling.
+    must:
+      - "Track delivery acceptance, rejection, provider message IDs, and retryable failure where useful."
+      - "Use queues or async jobs when notification delivery should not block the user request."
+      - "Apply rate limits, deliverability controls, retry policies, and dead-letter handling for failure-prone notification flows."
+      - "Audit sensitive notifications such as security alerts, password resets, privileged action notices, data exports, and regulatory communications where required."
+    must_not:
+      - "Do not fire-and-forget regulated, sensitive, or business-critical notifications with no delivery tracking."
+      - "Do not retry messages forever without dead-letter or escalation handling."
+      - "Do not let high-volume notifications bypass tenant-level or recipient-level rate limits."
+    agent_guidance: >
+      A notification is not done when code calls send. Decide what acceptance,
+      failure, retry, and evidence mean for that message type.
+
+  - id: notifications.privacy-consent-and-security-are-explicit
+    title: Privacy, consent, and security are explicit
+    severity: error
+    summary: >
+      Notifications can contain sensitive data and may be regulated by consent,
+      unsubscribe, PII, localization, tenant isolation, and security rules.
+    must:
+      - "Classify notification data and avoid unnecessary PII in templates and payloads."
+      - "Apply consent, unsubscribe, preference, and regulatory language requirements before sending where relevant."
+      - "Preserve tenant context and recipient identity through notification requests, jobs, logs, audit, and provider metadata where relevant."
+      - "Redact secrets and sensitive values from notification logs and provider error payloads."
+    must_not:
+      - "Do not send Tenant A data or notifications to Tenant B recipients."
+      - "Do not include raw secrets, tokens, credentials, or unnecessary PII in notification data."
+      - "Do not bypass localization requirements for recipient-facing copy where locale is known and supported."
+    agent_guidance: >
+      Before sending, ask: should this recipient receive this message, in this
+      language, with this data, under this tenant?
+
+  - id: notifications.layer-ownership-is-explicit
+    title: Notification ownership is explicit
+    severity: error
+    summary: >
+      Core defines provider-neutral notification contracts. Apps own product
+      meaning and copy. Platform implements rendering and provider adapters.
+      Infra provisions provider resources, secrets, queues, and delivery
+      infrastructure.
+    must:
+      - "Put Notification, NotificationRecipient, NotificationChannel, NotificationReceipt, NotificationService, preference concepts, and template-reference contracts in packages/core when reused and framework-independent."
+      - "Put product-specific notification types, template catalogs, localized copy, recipient selection, workflow meaning, preference UI, and inbox screens in apps or product packages."
+      - "Put provider adapters, template rendering runtime, delivery tracking implementation, retry workers, webhook delivery implementation, and provider error mapping in platform."
+      - "Put provider accounts, DNS/domain authentication, queues, secrets, IAM, rate-limit infrastructure, and delivery monitoring resources in infra."
+    must_not:
+      - "Do not put provider SDKs, provider accounts, marketing campaign workflows, or UI inbox implementation in packages/core."
+      - "Do not put product-specific copy and recipient selection in platform shared runtime code."
+      - "Do not put provider secrets or DNS authentication records in app code."
+    agent_guidance: >
+      Separate the message contract, product reason, provider delivery, and
+      provisioned resources.
+
+source_refs:
+  - doc: "kanbien-core-architecture-guide.md"
+    sections:
+      - "notifications/ deep dive"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/notifications.yml."
+  - "It requires provider-neutral notification contracts."
+  - "It keeps product copy, templates, preferences, and message meaning app-owned."
+  - "It requires delivery tracking, retry, rate limit, and dead-letter handling where relevant."
+  - "It requires consent, unsubscribe, PII controls, tenant isolation, localization, and audit for sensitive notifications."
+  - "It defines ownership splits across core contracts, app message meaning, platform provider implementation, and infra resources."
+  - "It includes manually verified source_refs back to the core architecture guide."

@@ -13,6 +13,7 @@ created_artifacts:
     - docs/harness/architecture/rules/concerns/events-messaging-async.yml
     - docs/harness/architecture/rules/concerns/i18n-localization.yml
     - docs/harness/architecture/rules/concerns/identity-access-security.yml
+    - docs/harness/architecture/rules/concerns/notifications.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
     - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
@@ -42,3 +43,4 @@ notes:
   - "The core guide's authentication, authorization, and security sections are covered by the identity-access-security concern."
   - "The core guide's validation and API error-shape sections are covered by the validation-api-errors concern."
   - "The core guide's persistence and files sections are covered by the persistence-files-storage concern."
+  - "The core guide's notification sections are covered by the notifications concern."
