@@ -42,6 +42,10 @@ layer_model:
 test_taxonomy:
   - type: unit
     role: primary
+    minimum_evidence:
+      - "Exercise token resolvers, variants, contrast rules, component state helpers, required props, missing tokens, alias cycles, disabled/loading/empty states, long labels, themes, keyboard behavior, focus, ARIA, and announcements."
+    must_not:
+      - "Do not count rendered snapshots or visual diffs as proof of token validation, accessibility behavior, invalid props, keyboard/focus handling, or state helper logic."
     categories:
       - id: critical_path
         should_prove:
@@ -57,6 +61,10 @@ test_taxonomy:
           - "Keyboard behavior, focus management, ARIA relationships, screen-reader labels, and state announcements work for primitives and components."
   - type: type_level
     role: primary
+    minimum_evidence:
+      - "Include compile-pass and compile-fail assertions for public component props, token names, generated token types, required accessibility props, and unsupported component combinations."
+    must_not:
+      - "Do not rely on Storybook/examples, screenshots, or runtime rendering alone to prove invalid token names, variant values, or accessibility prop requirements are rejected."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -66,6 +74,10 @@ test_taxonomy:
           - "Invalid token names, variant values, required accessibility props, and unsupported component combinations fail at compile time where possible."
   - type: integration
     role: primary
+    minimum_evidence:
+      - "Render representative providers, generated CSS variables, themes, primitives, components, dialogs, menus, selects, tooltips, forms, navigation controls, portals, long translated labels, disabled content, and theme switching together."
+    must_not:
+      - "Do not accept visual-only integration checks that skip keyboard navigation, focus trapping/restoration, ARIA relationships, responsive density, long labels, and portal behavior."
     categories:
       - id: critical_path
         should_prove:
@@ -78,6 +90,10 @@ test_taxonomy:
           - "Nested providers, theme switching, responsive density, long translated labels, disabled content, and portal behavior are stable."
   - type: visual_regression
     role: primary
+    minimum_evidence:
+      - "Capture critical visual states for tokens, primitives, patterns, focus rings, disabled states, contrast-sensitive states, motion states, density, responsive layout, generated CSS variables, and themes."
+    must_not:
+      - "Do not use visual regression as a substitute for unit, type-level, integration, keyboard, focus, ARIA, contrast-rule, or token-schema assertions."
     categories:
       - id: critical_path
         should_prove:
@@ -90,6 +106,10 @@ test_taxonomy:
           - "Generated token artifacts and CSS variables render expected themes and component states."
   - type: golden
     role: conditional
+    minimum_evidence:
+      - "Compare generated token docs, CSS variables, TypeScript token artifacts, and design-label outputs against reviewed fixtures and stable public names."
+    must_not:
+      - "Do not let generated artifact snapshots replace token validation, public API compatibility, accessibility behavior, or visual-state coverage."
     categories:
       - id: generated_output
         should_prove:

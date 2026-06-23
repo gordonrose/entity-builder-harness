@@ -47,6 +47,10 @@ deployment_surfaces:
 test_taxonomy:
   - type: static_validation
     role: primary
+    minimum_evidence:
+      - "Run deterministic IaC, manifest, workflow, variable, target-selection, dependency-order, and malformed-plan checks before apply or deployment."
+    must_not:
+      - "Do not treat successful compilation, formatting, or app tests as proof that infrastructure sources, generated plans, variables, or target selection are valid."
     categories:
       - id: critical_path
         should_prove:
@@ -62,6 +66,10 @@ test_taxonomy:
           - "Invalid plans, missing resources, malformed manifests, and unsafe target selection fail before apply or deployment."
   - type: policy
     role: primary
+    minimum_evidence:
+      - "Assert IAM, network exposure, public access, encryption, retention, secret references, destructive changes, and promotion controls block unsafe output with actionable diagnostics."
+    must_not:
+      - "Do not accept synthesized templates, plan snapshots, or manual review as substitutes for explicit policy assertions on security-sensitive or destructive changes."
     categories:
       - id: security_permissions
         should_prove:
@@ -74,6 +82,10 @@ test_taxonomy:
           - "Policy violations block promotion with actionable diagnostics."
   - type: golden
     role: primary
+    minimum_evidence:
+      - "Compare synthesized plans/templates/manifests against reviewed output and identify resource names, access boundaries, secret references, and migration-sensitive resources that must remain stable."
+    must_not:
+      - "Do not let golden or plan snapshots stand in for IAM, networking, public exposure, encryption, retention, secret, destructive-change, policy, or deployment-health validation."
     categories:
       - id: generated_output
         should_prove:
@@ -86,6 +98,10 @@ test_taxonomy:
           - "Reviewed infrastructure output does not accidentally widen access, expose secrets, or weaken security defaults."
   - type: integration
     role: conditional
+    minimum_evidence:
+      - "Exercise environment config, deployment metadata, app manifests, platform config, provider lookup, missing metadata, invalid environment combinations, and dependency failures together."
+    must_not:
+      - "Do not accept environment happy-path validation that ignores missing resources, invalid target combinations, provider lookup failures, or ambiguous deployment state."
     categories:
       - id: use_case_scenarios
         should_prove:
@@ -98,6 +114,10 @@ test_taxonomy:
           - "Provider, dependency, or environment lookup failures do not produce ambiguous deployment state."
   - type: smoke
     role: conditional
+    minimum_evidence:
+      - "Verify deployed app/platform entrypoints, readiness/liveness, DNS/routing, queue/storage health where relevant, and safe status output without unsafe credentials."
+    must_not:
+      - "Do not use deployment smoke checks to replace static validation, policy checks, generated-plan review, secret handling checks, or destructive-change controls."
     categories:
       - id: critical_path
         should_prove:

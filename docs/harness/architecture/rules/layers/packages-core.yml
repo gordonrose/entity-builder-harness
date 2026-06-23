@@ -83,6 +83,10 @@ recommended_modules:
 test_taxonomy:
   - type: unit
     role: primary
+    minimum_evidence:
+      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, security/tenancy helpers, and result/error shapes without runtime dependencies."
+    must_not:
+      - "Do not count downstream app or platform tests as proof of core-owned primitive, validation, security, tenancy, or failure behavior."
     categories:
       - id: critical_path
         should_prove:
@@ -101,6 +105,10 @@ test_taxonomy:
           - "Core error/result shapes and no-op or in-memory testing implementations fail predictably without runtime dependencies."
   - type: type_level
     role: primary
+    minimum_evidence:
+      - "Include compile-pass and compile-fail assertions for public exports, generic constraints, branded identifiers, discriminated unions, and invalid contract shapes where TypeScript can express the rule."
+    must_not:
+      - "Do not rely only on runtime tests, snapshots, or successful package builds to prove intended type rejection or inference behavior."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -113,6 +121,10 @@ test_taxonomy:
           - "Optional fields, branded identifiers, discriminated unions, and extension points preserve intended narrowing and exhaustiveness."
   - type: contract
     role: primary
+    minimum_evidence:
+      - "Prove ports, policy facts, error states, lifecycle states, and testing implementations remain implementable by platform and consumable by apps without runtime leakage."
+    must_not:
+      - "Do not accept tests that instantiate concrete platform providers, app workflows, cloud SDKs, or product-specific behavior as core contract proof."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -125,6 +137,10 @@ test_taxonomy:
           - "Contract-defined errors, retries, and lifecycle states are explicit enough for platform implementations and app consumers."
   - type: integration
     role: conditional
+    minimum_evidence:
+      - "Exercise in-memory or no-op helpers through realistic app/platform test scenarios while preserving the same public contracts concrete implementations must satisfy."
+    must_not:
+      - "Do not let helper integration tests mask missing unit, type-level, or contract evidence for the core surface itself."
     categories:
       - id: use_case_scenarios
         should_prove:

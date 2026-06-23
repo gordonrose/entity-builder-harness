@@ -39,6 +39,10 @@ frontend_surfaces:
 test_taxonomy:
   - type: unit
     role: primary
+    minimum_evidence:
+      - "Exercise generic form/table/entity-page/navigation/config logic with valid and invalid config, empty data, long labels, disabled actions, pagination boundaries, sorting/filter combinations, keyboard/focus logic, loading, error, permission-denied, and selection states."
+    must_not:
+      - "Do not count app-hosted E2E, visual snapshots, or design-system component tests as proof of frontend-kit-owned config validation, state logic, keyboard/focus behavior, or edge cases."
     categories:
       - id: critical_path
         should_prove:
@@ -54,6 +58,10 @@ test_taxonomy:
           - "Keyboard, focus, validation display, loading, empty, error, permission-denied, and selection states are handled by reusable logic."
   - type: type_level
     role: primary
+    minimum_evidence:
+      - "Include compile-pass and compile-fail assertions for public config APIs, invalid field keys, action payloads, route bindings, generated config keys, and generic constraints."
+    must_not:
+      - "Do not rely on runtime rendering or app compilation alone to prove frontend-kit generic constraints or invalid config keys are rejected."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -63,6 +71,10 @@ test_taxonomy:
           - "Invalid field keys, action payloads, route bindings, generated config keys, and generic constraints fail at compile time where possible."
   - type: integration
     role: primary
+    minimum_evidence:
+      - "Render reusable forms, tables, navigation, CRUD layouts, generated UI config, and design-system components through realistic list/detail/create/edit/filter/sort/pagination/selection/bulk-action flows with validation, rejected mutations, malformed config, loading, empty, error, stale, long-content, responsive, permission-denied, focus, keyboard, and screen-reader states."
+    must_not:
+      - "Do not accept happy-path render tests that skip rejected config, validation errors, disabled/hidden actions, keyboard/focus behavior, table semantics, long content, loading, empty, error, and permission-denied states."
     categories:
       - id: critical_path
         should_prove:
@@ -81,6 +93,10 @@ test_taxonomy:
           - "Focus management, keyboard navigation, screen-reader labeling, table semantics, form errors, and modal/menu interactions work across shared surfaces."
   - type: contract
     role: primary
+    minimum_evidence:
+      - "Assert compatibility with app-provided routes, loaders, mutation handlers, generated UI config, design-system public APIs, and approved generated config consumption paths."
+    must_not:
+      - "Do not let screenshots, app E2E flows, or generated snapshots replace explicit API compatibility and no-hand-edit generated-config assertions."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -90,6 +106,10 @@ test_taxonomy:
           - "Generated form, table, entity-page, or navigation config can be consumed through approved public paths without hand edits."
   - type: visual_regression
     role: conditional
+    minimum_evidence:
+      - "Capture high-reuse forms, tables, navigation, CRUD layouts, page shells, focus rings, validation messages, disabled/selection states, dense layouts, responsive layouts, loading, empty, and error states."
+    must_not:
+      - "Do not use visual regression as a substitute for keyboard, focus, validation, permission, type-level, contract, or malformed-config checks."
     categories:
       - id: critical_path
         should_prove:
@@ -99,6 +119,10 @@ test_taxonomy:
           - "Focus rings, validation messages, disabled states, selection states, dense layouts, and responsive layouts remain usable."
   - type: e2e
     role: conditional
+    minimum_evidence:
+      - "Exercise app-hosted representative frontend-kit journeys with realistic authorization decisions, permission-denied or hidden-action flows, and shared surface behavior in a product shell."
+    must_not:
+      - "Do not use E2E journeys to replace closer frontend-kit unit, integration, type-level, contract, accessibility, or state coverage."
     categories:
       - id: use_case_scenarios
         should_prove:

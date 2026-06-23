@@ -49,6 +49,10 @@ runtime_modules:
 test_taxonomy:
   - type: unit
     role: secondary
+    minimum_evidence:
+      - "Exercise deterministic runtime helpers with rejected routes, duplicate registrations, invalid config, denied auth/permission inputs, reserved paths, and safe error output."
+    must_not:
+      - "Do not count app integration tests as proof of platform-owned helper validation, policy normalization, or defensive defaults."
     categories:
       - id: critical_path
         should_prove:
@@ -64,6 +68,10 @@ test_taxonomy:
           - "Auth parsing, coarse permission decisions, CORS/rate-limit policy helpers, and safe error output preserve defensive defaults."
   - type: integration
     role: primary
+    minimum_evidence:
+      - "Mount representative apps and jobs through platform runtime seams, including malformed requests, invalid app identity, unknown permissions, auth failures, tenant propagation, dependency failures, retries, health, logging, and shutdown."
+    must_not:
+      - "Do not accept happy-path mounted-app tests that skip policy enforcement, malformed config, tenant context, resource cleanup, retry/dead-letter, or safe observability output."
     categories:
       - id: critical_path
         should_prove:
@@ -85,6 +93,10 @@ test_taxonomy:
           - "Request IDs, logs, metrics, traces, health output, readiness, liveness, and safe error mapping are emitted consistently."
   - type: contract
     role: primary
+    minimum_evidence:
+      - "Assert platform public contracts, registries, testing helpers, auth metadata, retry states, health states, and shutdown states remain compatible with app consumers."
+    must_not:
+      - "Do not use smoke startup or app-owned tests as substitutes for platform mount, registry, policy metadata, lifecycle, or failure-state contracts."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -97,6 +109,10 @@ test_taxonomy:
           - "Contract-level error, lifecycle, retry, health, and shutdown states are explicit for app consumers."
   - type: smoke
     role: conditional
+    minimum_evidence:
+      - "Start the target server or worker, mount apps, expose health, emit safe status/log output, and shut down cleanly in the target-like environment."
+    must_not:
+      - "Do not treat startup success as proof of route adaptation, middleware ordering, authz, tenant propagation, retry policy, config validation, or contract compatibility."
     categories:
       - id: critical_path
         should_prove:

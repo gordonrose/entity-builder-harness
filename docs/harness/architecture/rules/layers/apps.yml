@@ -43,6 +43,10 @@ app_surfaces:
 test_taxonomy:
   - type: unit
     role: primary
+    minimum_evidence:
+      - "Exercise both accepted and rejected app-owned decisions, including permission helpers, malformed inputs, empty state, tenant variants, and app-owned fallback behavior."
+    must_not:
+      - "Do not count route smoke tests or package-only tests as proof of app-owned wiring, validation, permissions, or failure behavior."
     categories:
       - id: critical_path
         should_prove:
@@ -61,6 +65,10 @@ test_taxonomy:
           - "App-owned error mapping and fallback helpers produce expected failures before broader runtime wiring is involved."
   - type: integration
     role: primary
+    minimum_evidence:
+      - "Exercise mounted routes or workers with realistic app dependencies plus rejected payloads, auth failures, permission failures, tenant isolation, dependency failures, and safe health/log output."
+    must_not:
+      - "Do not accept happy-path route tests that skip malformed requests, invalid permissions, tenant isolation, repository failures, or worker retry/dead-letter behavior."
     categories:
       - id: critical_path
         should_prove:
@@ -82,6 +90,10 @@ test_taxonomy:
           - "App health, readiness contributions, audit events, and safe logging work through the runtime integration point."
   - type: contract
     role: primary
+    minimum_evidence:
+      - "Compare public API schemas, app manifests, mount contracts, migration metadata, and permission declarations against the platform or generated contracts that consume them."
+    must_not:
+      - "Do not let generated snapshots stand in for schema compatibility, permission metadata, migration-contract, or platform-mount assertions."
     categories:
       - id: compatibility_contracts
         should_prove:
@@ -94,6 +106,10 @@ test_taxonomy:
           - "Generated app schemas, clients, migration metadata, or deployment metadata match the source contracts."
   - type: e2e
     role: conditional
+    minimum_evidence:
+      - "Cover highest-risk app-owned journeys with realistic users, denied users, tenant-isolated data, visible error/recovery states, and product-critical flows."
+    must_not:
+      - "Do not use E2E coverage to replace closer app integration, contract, validation, or permission tests for the same behavior."
     categories:
       - id: critical_path
         should_prove:
@@ -109,6 +125,10 @@ test_taxonomy:
           - "User-visible errors, retries, empty states, and recovery paths are acceptable for critical journeys."
   - type: smoke
     role: primary
+    minimum_evidence:
+      - "Start the app or worker, load manifests, mount key entrypoints, and verify safe readiness/liveness output for the deployment-facing surface."
+    must_not:
+      - "Do not treat startup success as proof of route correctness, authorization, tenant isolation, app contracts, migrations, or failure handling."
     categories:
       - id: critical_path
         should_prove:

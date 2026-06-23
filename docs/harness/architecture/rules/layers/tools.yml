@@ -19,6 +19,10 @@ related_rulesets:
 test_taxonomy:
   - type: unit
     role: primary
+    minimum_evidence:
+      - "Exercise deterministic parser, analyzer, generator, migration, and lint-rule decisions with valid input, malformed input, missing files, duplicate definitions, path variants, repeated runs, and actionable errors."
+    must_not:
+      - "Do not count CLI smoke output or golden fixtures as proof of invalid-input handling, idempotency, path portability, or non-destructive failures."
     categories:
       - id: critical_path
         should_prove:
@@ -34,6 +38,10 @@ test_taxonomy:
           - "Tool errors are actionable, non-destructive, and leave workspaces in a recoverable state."
   - type: integration
     role: primary
+    minimum_evidence:
+      - "Run representative tools against a temp workspace that includes realistic source inputs, stale output, malformed files, pre-existing files, missing dependencies, interrupted/rejected operations, and repeated generation."
+    must_not:
+      - "Do not accept tests that only run the happy path or inspect final files while ignoring diagnostics, partial output, workspace recovery, and false-success prevention."
     categories:
       - id: critical_path
         should_prove:
@@ -52,6 +60,10 @@ test_taxonomy:
           - "Interrupted writes, rejected migrations, validation failures, and missing external tools do not create false success."
   - type: golden
     role: primary
+    minimum_evidence:
+      - "Compare reviewed generated output while also identifying the source input, generator version or implementation path, and intended public contract change."
+    must_not:
+      - "Do not use golden files as the only proof of parser validation, migration safety, contract compatibility, idempotency, hand-edit detection, or failure behavior."
     categories:
       - id: generated_output
         should_prove:
@@ -61,6 +73,10 @@ test_taxonomy:
           - "Generated output keeps public package, API, migration, and deployment contracts stable unless intentionally changed."
   - type: generated_freshness
     role: primary
+    minimum_evidence:
+      - "Prove checked-in generated artifacts are current and that stale or hand-edited artifacts fail before merge."
+    must_not:
+      - "Do not rely on snapshots or successful generation alone without a stale-output or hand-edit rejection case."
     categories:
       - id: generated_output
         should_prove:
@@ -70,6 +86,10 @@ test_taxonomy:
           - "Stale or hand-edited generated artifacts are detected before merge."
   - type: smoke
     role: primary
+    minimum_evidence:
+      - "Run the safest representative CLI command through argument parsing and user-facing diagnostics without mutating production state."
+    must_not:
+      - "Do not treat command startup as proof of generator correctness, workspace safety, validation, compatibility, or generated freshness."
     categories:
       - id: critical_path
         should_prove:

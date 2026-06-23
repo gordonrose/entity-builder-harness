@@ -49,7 +49,7 @@ Future Codex sessions continuing rulebook work should start by reading
 
 ## Scripts
 
-- `scripts/01.harness/check-rule-test-taxonomy.py` - validates architecture rulebook layer test taxonomy structure and CI vocabulary references.
+- `scripts/01.harness/check-rule-test-taxonomy.sh` - validates architecture rulebook layer test taxonomy structure and CI vocabulary references.
 
 ## Data
 
