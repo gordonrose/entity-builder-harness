@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-22T23:02:37Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl
-latest_commit_at_utc: 2026-06-23T00:04:19Z
-latest_commit_sha: 4cbc7dc
-chat_duration: 3702s (00:01:01:42)
-estimated_chat_tokens: 1088135 estimated from chat transcript bytes (4352539 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-estimated_chat_cost: USD 32.64 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-23T00:08:01Z
+latest_commit_sha: 765ae42
+chat_duration: 3924s (00:01:05:24)
+estimated_chat_tokens: 1141751 estimated from chat transcript bytes (4567004 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+estimated_chat_cost: USD 34.25 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -463,6 +463,17 @@ Summary: Added the config-runtime-settings concern for typed config access, star
 
 ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+### 2026-06-23T00:08:01Z - Commit recorded
+
+Commit: `765ae42`
+
+Message: Add TypeScript monorepo tooling rules
+
+Summary: Added the typescript-monorepo-tooling concern for layered tsconfig setup, strict defaults, package boundaries, path alias discipline, project references, runtime-specific module resolution, ESM-first packages, workspaces, and monorepo orchestration; updated manifest, progress, and coverage.
+
+ADR impact: No ADR impact; source-backed concern added from manually checked TypeScript guide sections.
+
 ## Commits
 
 
@@ -641,6 +652,13 @@ ADR impact: No ADR impact; source-backed concern added from manually checked cor
   Summary: Added the config-runtime-settings concern for typed config access, startup validation, secret references, environment parity, feature flags, regional config, change audit, and core/apps/platform/infra ownership; updated manifest, progress, and coverage.
   ADR impact: No ADR impact; source-backed concern added from manually checked core guide sections.
 
+
+- Commit: `765ae42`
+  Time UTC: 2026-06-23T00:08:01Z
+  Message: Add TypeScript monorepo tooling rules
+  Summary: Added the typescript-monorepo-tooling concern for layered tsconfig setup, strict defaults, package boundaries, path alias discipline, project references, runtime-specific module resolution, ESM-first packages, workspaces, and monorepo orchestration; updated manifest, progress, and coverage.
+  ADR impact: No ADR impact; source-backed concern added from manually checked TypeScript guide sections.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -654,11 +672,11 @@ Reason: This slice adds rulebook tracking state and continuation guidance; it do
 ## Session Metrics
 
 Raised at UTC: 2026-06-22T23:02:37Z
-Latest commit at UTC: 2026-06-23T00:04:19Z
-Latest commit SHA: 4cbc7dc
-Chat duration: 3702s (00:01:01:42)
-Estimated chat tokens: 1088135 estimated from chat transcript bytes (4352539 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
-Estimated chat cost: USD 32.64 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-23T00:08:01Z
+Latest commit SHA: 765ae42
+Chat duration: 3924s (00:01:05:24)
+Estimated chat tokens: 1141751 estimated from chat transcript bytes (4567004 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/22/rollout-2026-06-22T23-37-02-019ef17a-e25c-7491-be90-d9369b0bc3fb.jsonl)
+Estimated chat cost: USD 34.25 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
