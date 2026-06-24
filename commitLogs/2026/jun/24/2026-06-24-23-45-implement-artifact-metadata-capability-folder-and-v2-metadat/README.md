@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-24T22:45:55Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl
-latest_commit_at_utc: 2026-06-24T23:41:08Z
-latest_commit_sha: bf2ded5
-chat_duration: 3313s (00:00:55:13)
-estimated_chat_tokens: 495096 estimated from chat transcript bytes (1980384 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
-estimated_chat_cost: USD 14.85 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-24T23:45:44Z
+latest_commit_sha: bb1de36
+chat_duration: 3589s (00:00:59:49)
+estimated_chat_tokens: 534453 estimated from chat transcript bytes (2137809 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
+estimated_chat_cost: USD 16.03 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -100,6 +100,17 @@ Summary: Added a governed artifact metadata index generator and smoke test, wire
 
 ADR impact: ADR 0021 updated to record JSON index generation as implemented current-index behavior.
 
+
+### 2026-06-24T23:45:44Z - Commit recorded
+
+Commit: `bb1de36`
+
+Message: Backfill artifact metadata capability v2 headers
+
+Summary: Migrated the artifact-metadata capability README, standard, v2 schema, and taxonomy headers to agentic-artifact/v2 with stable IDs, structured used_by references, and multi-target portability.
+
+ADR impact: ADR 0021 unchanged; this implements the existing v2 metadata migration policy.
+
 ## Commits
 
 
@@ -124,6 +135,13 @@ ADR impact: ADR 0021 updated to record JSON index generation as implemented curr
   Summary: Added a governed artifact metadata index generator and smoke test, wired it into the artifact metadata capability docs/schema and governed script runner, and validated scoped metadata/index generation behavior.
   ADR impact: ADR 0021 updated to record JSON index generation as implemented current-index behavior.
 
+
+- Commit: `bb1de36`
+  Time UTC: 2026-06-24T23:45:44Z
+  Message: Backfill artifact metadata capability v2 headers
+  Summary: Migrated the artifact-metadata capability README, standard, v2 schema, and taxonomy headers to agentic-artifact/v2 with stable IDs, structured used_by references, and multi-target portability.
+  ADR impact: ADR 0021 unchanged; this implements the existing v2 metadata migration policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -137,11 +155,11 @@ Reason: This establishes a durable harness metadata and indexing architecture de
 ## Session Metrics
 
 Raised at UTC: 2026-06-24T22:45:55Z
-Latest commit at UTC: 2026-06-24T23:41:08Z
-Latest commit SHA: bf2ded5
-Chat duration: 3313s (00:00:55:13)
-Estimated chat tokens: 495096 estimated from chat transcript bytes (1980384 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
-Estimated chat cost: USD 14.85 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-24T23:45:44Z
+Latest commit SHA: bb1de36
+Chat duration: 3589s (00:00:59:49)
+Estimated chat tokens: 534453 estimated from chat transcript bytes (2137809 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
+Estimated chat cost: USD 16.03 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
