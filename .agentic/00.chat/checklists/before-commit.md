@@ -54,7 +54,7 @@ script or gate, or keeping the prose with an allow marker and reason.
 Run:
 
 ```bash
-bash scripts/01.harness/check-artifact-metadata-headers.sh --staged-added
+bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 ```
 
 New scripts and harness/process Markdown documents must declare metadata

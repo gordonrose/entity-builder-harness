@@ -1,0 +1,20 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.example.artifact-metadata.yaml-v2
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: metadata
+#   disciplines:
+#     - agentic
+#   kind: example
+#   purpose: Provide a minimal YAML example for agentic-artifact/v2 metadata.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#   used_by:
+#     - id: harness.script.artifact-metadata.check-headers
+#       path: scripts/01.harness/artifact-metadata/check-headers/script.sh
+
+example: yaml-v2-metadata

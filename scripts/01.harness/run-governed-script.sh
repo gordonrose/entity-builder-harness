@@ -54,6 +54,7 @@ always scripts/00.chat/main-refresh/show-main-update-status/script.sh
 always scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 always scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
 always scripts/01.harness/check-deterministic-process-drift.sh
+always scripts/01.harness/artifact-metadata/check-headers/script.sh
 always scripts/01.harness/check-artifact-metadata-headers.sh
 always scripts/01.harness/check-governed-script-command-drift.sh
 always scripts/01.harness/plan-artifact-path-migration.sh
@@ -112,6 +113,7 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/01.harness/check-deterministic-process-drift.sh|\
+  scripts/01.harness/artifact-metadata/check-headers/script.sh|\
   scripts/01.harness/check-artifact-metadata-headers.sh|\
   scripts/01.harness/check-governed-script-command-drift.sh|\
   scripts/01.harness/plan-artifact-path-migration.sh|\
@@ -141,6 +143,7 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
   scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
   scripts/01.harness/check-deterministic-process-drift.sh|\
+  scripts/01.harness/artifact-metadata/check-headers/script.sh|\
   scripts/01.harness/check-artifact-metadata-headers.sh|\
   scripts/01.harness/check-governed-script-command-drift.sh|\
   scripts/01.harness/plan-artifact-path-migration.sh|\

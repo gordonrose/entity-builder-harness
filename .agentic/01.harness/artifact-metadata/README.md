@@ -23,20 +23,22 @@ planning, and cross-repo extraction.
   statuses, portability classes, and seed domains.
 - `schema.v2.yml` records the v2 field contract in machine-readable form for
   future checker and index-generator work.
+- `examples/` contains minimal v2 Markdown and YAML fixtures used to keep the
+  checker behavior concrete.
 
 ## Scripts
 
 - `scripts/01.harness/artifact-metadata/check-headers/script.sh` is the
-  capability-scoped entrypoint for metadata header checks. During migration it
-  delegates to the existing compatibility checker at
-  `scripts/01.harness/check-artifact-metadata-headers.sh`.
+  capability-scoped entrypoint for metadata header checks.
+- `scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh` proves the
+  checker accepts v1 and v2 headers and rejects a generated missing-header
+  fixture.
 
 ## Migration
 
-The existing v1 metadata headers remain valid while the checker and repo are
-incrementally migrated. New or materially changed artifacts should prefer the
-v2 schema once the checker supports it.
+The existing v1 metadata headers remain valid while the repo is incrementally
+migrated. New or materially changed artifacts should prefer the v2 schema.
 
-Script metadata is in scope for v2. Existing `agentic-script` headers remain in
-place until the checker supports structured v2 parsing and script-specific
-`effects` validation.
+Script metadata is in scope for v2. Existing `agentic-script` headers remain
+valid during migration, and v2 script artifacts must include `kind: script` plus
+script-specific `effects` validation.

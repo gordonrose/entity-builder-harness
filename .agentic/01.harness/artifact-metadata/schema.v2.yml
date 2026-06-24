@@ -88,3 +88,9 @@ fields:
         path:
           type: string
           required_during_migration: false
+
+fixtures:
+  markdown: .agentic/01.harness/artifact-metadata/examples/markdown.v2.md
+  yaml: .agentic/01.harness/artifact-metadata/examples/yaml.v2.yml
+  script: scripts/01.harness/artifact-metadata/check-headers/script.sh
+  script_smoke_test: scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh

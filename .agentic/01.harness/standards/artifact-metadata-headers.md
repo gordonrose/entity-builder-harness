@@ -155,7 +155,7 @@ standard, or checker that treats that validation as part of the harness.
 Run:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh scripts/01.harness/check-artifact-metadata-headers.sh --staged-added
+bash scripts/01.harness/run-governed-script.sh scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 ```
 
 The staged-added mode is required before commits so newly created scripts and

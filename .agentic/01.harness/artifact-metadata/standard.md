@@ -23,7 +23,7 @@ relationship without reading every file in full.
 
 Existing `agentic-artifact` and `agentic-script` v1 headers remain valid during
 migration. New or materially changed artifacts should prefer
-`agentic-artifact/v2` after the checker supports v2 parsing.
+`agentic-artifact/v2`.
 
 Do not bulk-migrate historical artifacts only to modernize headers. Backfill in
 focused batches with validation evidence.
@@ -52,7 +52,7 @@ portability:
     - entity-builder
 used_by:
   - id: harness.check.artifact-metadata-headers
-    path: scripts/01.harness/check-artifact-metadata-headers.sh
+    path: scripts/01.harness/artifact-metadata/check-headers/script.sh
 -->
 ```
 
@@ -104,8 +104,9 @@ Script artifacts are also in scope for v2. They should eventually use the same
 #       path: .agentic/00.chat/checklists/before-commit.md
 ```
 
-Until the checker supports structured v2 parsing and conditional `effects`
-validation, scripts should keep their current `agentic-script` v1 headers.
+Existing scripts with `agentic-script` v1 headers remain valid during migration.
+New or materially changed scripts should prefer `agentic-artifact/v2` once they
+are intentionally migrated.
 
 ## Fields
 

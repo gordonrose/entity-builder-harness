@@ -52,10 +52,9 @@ harness artifacts. The v2 schema uses:
 - ID-first `used_by` references with optional path hints
 
 Keep existing v1 headers valid during migration, including current
-`agentic-script` headers. New or materially changed artifacts should prefer v2
-after the checker supports v2 parsing. Script migration remains in scope for the
-metadata project, but it requires structured parsing and conditional `effects`
-validation before existing script headers are rewritten.
+`agentic-script` headers. New or materially changed artifacts should prefer v2.
+Script migration remains in scope for the metadata project, and v2 script
+artifacts require structured parsing and conditional `effects` validation.
 
 Future index generation should use metadata headers to generate current
 ID-to-path and metadata indexes. Historical path reconciliation should come
