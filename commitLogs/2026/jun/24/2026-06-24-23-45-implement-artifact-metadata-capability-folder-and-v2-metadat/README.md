@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-24T22:45:55Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl
-latest_commit_at_utc: 2026-06-24T23:09:13Z
-latest_commit_sha: 1295766
-chat_duration: 1398s (00:00:23:18)
-estimated_chat_tokens: 277879 estimated from chat transcript bytes (1111514 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
-estimated_chat_cost: USD 8.34 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-24T23:27:42Z
+latest_commit_sha: 442cdb1
+chat_duration: 2507s (00:00:41:47)
+estimated_chat_tokens: 377708 estimated from chat transcript bytes (1510829 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
+estimated_chat_cost: USD 11.33 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -78,6 +78,17 @@ Summary: Added the artifact-metadata capability home, v2 metadata standard, taxo
 
 ADR impact: ADR: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
 
+
+### 2026-06-24T23:27:42Z - Commit recorded
+
+Commit: `442cdb1`
+
+Message: Teach artifact metadata checker v2 schema
+
+Summary: Moved the real metadata checker into the artifact-metadata capability path, added structured v2 validation for Markdown/YAML/scripts while preserving v1 compatibility, added v2 fixtures and a smoke test, and updated active gates to call the namespaced checker.
+
+ADR impact: ADR: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+
 ## Commits
 
 
@@ -86,6 +97,13 @@ ADR impact: ADR: docs/harness/architecture/adrs/0021-use-versioned-artifact-meta
   Time UTC: 2026-06-24T23:09:13Z
   Message: Add artifact metadata capability standard
   Summary: Added the artifact-metadata capability home, v2 metadata standard, taxonomy, schema contract, checker entrypoint, ADR 0021, and harness index bridge updates.
+  ADR impact: ADR: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+
+
+- Commit: `442cdb1`
+  Time UTC: 2026-06-24T23:27:42Z
+  Message: Teach artifact metadata checker v2 schema
+  Summary: Moved the real metadata checker into the artifact-metadata capability path, added structured v2 validation for Markdown/YAML/scripts while preserving v1 compatibility, added v2 fixtures and a smoke test, and updated active gates to call the namespaced checker.
   ADR impact: ADR: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
 
 ## Main Refresh Conflicts
@@ -101,11 +119,11 @@ Reason: This establishes a durable harness metadata and indexing architecture de
 ## Session Metrics
 
 Raised at UTC: 2026-06-24T22:45:55Z
-Latest commit at UTC: 2026-06-24T23:09:13Z
-Latest commit SHA: 1295766
-Chat duration: 1398s (00:00:23:18)
-Estimated chat tokens: 277879 estimated from chat transcript bytes (1111514 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
-Estimated chat cost: USD 8.34 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-24T23:27:42Z
+Latest commit SHA: 442cdb1
+Chat duration: 2507s (00:00:41:47)
+Estimated chat tokens: 377708 estimated from chat transcript bytes (1510829 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
+Estimated chat cost: USD 11.33 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
