@@ -56,9 +56,9 @@ Keep existing v1 headers valid during migration, including current
 Script migration remains in scope for the metadata project, and v2 script
 artifacts require structured parsing and conditional `effects` validation.
 
-Future index generation should use metadata headers to generate current
-ID-to-path and metadata indexes. Historical path reconciliation should come
-later from Git history after stable IDs are widely adopted.
+Index generation uses metadata headers to generate current ID-to-path and
+metadata indexes as JSON. Historical path reconciliation should come later from
+Git history after stable IDs are widely adopted.
 
 ## Consequences
 

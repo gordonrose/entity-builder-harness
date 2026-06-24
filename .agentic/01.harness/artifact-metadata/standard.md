@@ -203,5 +203,8 @@ to v2.
 The artifact index should be generated from metadata headers, not maintained by
 hand. The first index should map stable IDs to current paths and metadata.
 
+The generator should emit JSON to stdout by default. Existing v1 artifacts may
+appear as legacy entries with provisional IDs until they are migrated to v2.
+
 Historical path reconciliation can come later from Git history after v2 IDs are
 widely adopted.

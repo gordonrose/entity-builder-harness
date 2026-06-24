@@ -33,6 +33,10 @@ planning, and cross-repo extraction.
 - `scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh` proves the
   checker accepts v1 and v2 headers and rejects a generated missing-header
   fixture.
+- `scripts/01.harness/artifact-metadata/generate-index/script.sh` emits a JSON
+  artifact index from v1 and v2 metadata headers.
+- `scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh` proves
+  index generation includes v2 IDs and legacy v1 entries.
 
 ## Migration
 

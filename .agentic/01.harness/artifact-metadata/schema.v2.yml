@@ -94,3 +94,5 @@ fixtures:
   yaml: .agentic/01.harness/artifact-metadata/examples/yaml.v2.yml
   script: scripts/01.harness/artifact-metadata/check-headers/script.sh
   script_smoke_test: scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh
+  index_generator: scripts/01.harness/artifact-metadata/generate-index/script.sh
+  index_generator_smoke_test: scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh
