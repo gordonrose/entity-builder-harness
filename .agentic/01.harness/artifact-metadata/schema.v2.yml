@@ -1,0 +1,90 @@
+# agentic-artifact:
+#   owner: harness
+#   kind: config
+#   purpose: Define the machine-readable field contract for agentic-artifact/v2 metadata.
+#   domain: metadata
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/01.harness/artifact-metadata/standard.md
+#     - scripts/01.harness/artifact-metadata/check-headers/script.sh
+
+schema: agentic-artifact-schema/v1
+artifact_schema: agentic-artifact/v2
+
+required_fields:
+  - schema
+  - id
+  - version
+  - status
+  - layer
+  - domain
+  - disciplines
+  - kind
+  - purpose
+  - portability
+  - used_by
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - agentic-artifact/v2
+  id:
+    type: string
+    format: lower-dot-id
+    stable_across_path_moves: true
+  version:
+    type: integer
+    minimum: 1
+  status:
+    type: enum
+    values_from: taxonomy.statuses
+  layer:
+    type: enum
+    values_from: taxonomy.layers[].id
+  domain:
+    type: string
+    format: lower-dot-domain
+    extensible: true
+  disciplines:
+    type: array
+    items_from: taxonomy.disciplines
+    min_items: 1
+  kind:
+    type: string
+    extensible: true
+  purpose:
+    type: string
+    max_sentences: 1
+  portability:
+    type: object
+    required_fields:
+      - class
+      - targets
+    fields:
+      class:
+        type: enum
+        values_from: taxonomy.portability_classes
+      targets:
+        type: array
+        items_from: taxonomy.seed_targets
+        extensible: true
+  effects:
+    type: array
+    items_from: taxonomy.script_effects
+    required_when:
+      kind: script
+  used_by:
+    type: array
+    min_items: 1
+    item:
+      type: object
+      required_fields:
+        - id
+      fields:
+        id:
+          type: string
+          format: lower-dot-id
+        path:
+          type: string
+          required_during_migration: false

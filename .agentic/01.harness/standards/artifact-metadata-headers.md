@@ -18,6 +18,12 @@ be able to open a script, harness document, or harness YAML artifact and see who
 owns it, why it exists, where it is used, and whether it is portable to upstream
 repos.
 
+## Capability Home
+
+This file defines the compatibility v1 header format used by the current
+checker. The versioned metadata model, taxonomy, stable ID policy, and future
+index contract live in `.agentic/01.harness/artifact-metadata/standard.md`.
+
 ## Scope
 
 This standard applies to new:

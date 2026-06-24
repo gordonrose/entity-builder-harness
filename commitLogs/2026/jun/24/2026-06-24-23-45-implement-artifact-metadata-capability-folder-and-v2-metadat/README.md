@@ -1,0 +1,96 @@
+# Chat Session: 2026-06-24-23-45 implement-artifact-metadata-capability-folder-and-v2-metadat
+
+<!-- agentic-session
+id: 2026-06-24-23-45-implement-artifact-metadata-capability-folder-and-v2-metadat
+task: implement artifact metadata capability folder and v2 metadata standard for artifact indexing
+branch: chat/2026-06-24-23-45-implement-artifact-metadata-capability-folder-and-v2-metadat
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-06-24-23-45-implement-artifact-metadata-capability-folder-and-v2-metadat-1919450755
+layer: harness
+mode: implementation
+workflow: .agentic/01.harness/workflows/change-harness.md
+status: ready
+raised_at_utc: 2026-06-24T22:45:55Z
+codex_session_log_path: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl
+latest_commit_at_utc:
+latest_commit_sha:
+chat_duration:
+estimated_chat_tokens:
+estimated_chat_cost:
+estimated_chat_cost_basis:
+-->
+
+## Initial Intent
+
+implement artifact metadata capability folder and v2 metadata standard for artifact indexing
+
+## Session Log
+
+- Session started.
+- Branch created.
+- Chat-owned worktree created.
+- Commit log initialized.
+
+## Questions Asked
+
+- None recorded yet.
+
+## Issues Raised
+
+- None recorded yet.
+
+## Decisions Made
+
+
+
+- Decision: Use versioned artifact metadata for agent navigation
+  Rationale: Create a dedicated artifact-metadata capability with v2 schema, stable IDs, semantic versions, structured portability, script effects, and ID-first references so future agents can build indexes without scanning every file.
+
+## Activity Log
+
+### 2026-06-24T22:45:55Z - Session started
+
+Initial intent: implement artifact metadata capability folder and v2 metadata standard for artifact indexing
+
+
+### 2026-06-24T23:08:21Z - Decision
+
+Decision: Use versioned artifact metadata for agent navigation
+
+Rationale: Create a dedicated artifact-metadata capability with v2 schema, stable IDs, semantic versions, structured portability, script effects, and ID-first references so future agents can build indexes without scanning every file.
+
+
+### 2026-06-24T23:08:21Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+
+Reason: This establishes a durable harness metadata and indexing architecture decision.
+
+## Commits
+
+- None recorded yet.
+
+## Main Refresh Conflicts
+
+- None recorded yet.
+
+## ADR Disposition
+
+ADR needed: yes
+ADR path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+Reason: This establishes a durable harness metadata and indexing architecture decision.
+
+## Session Metrics
+
+Raised at UTC: 2026-06-24T22:45:55Z
+Latest commit at UTC:
+Latest commit SHA:
+Chat duration:
+Estimated chat tokens:
+Estimated chat cost:
+Estimated chat cost basis:
+
+## Notes
+
+- None recorded yet.

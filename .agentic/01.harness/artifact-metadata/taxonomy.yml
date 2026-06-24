@@ -1,0 +1,76 @@
+# agentic-artifact:
+#   owner: harness
+#   kind: config
+#   purpose: List controlled taxonomy values for versioned artifact metadata.
+#   domain: metadata
+#   portability: llm-workbench-required
+#   used_by:
+#     - .agentic/01.harness/artifact-metadata/standard.md
+#     - .agentic/01.harness/artifact-metadata/schema.v2.yml
+
+layers:
+  - id: 00.chat
+    title: Chat
+    purpose: Chat lifecycle, sessions, worktrees, reporting, and reusable chat harness behavior.
+  - id: 01.harness
+    title: Harness
+    purpose: Agentic harness governance, routing, workflows, standards, gates, and metadata.
+  - id: 02.product
+    title: Product
+    purpose: Product code, application logic, platform code, packages, and requirements.
+  - id: 03.deploy
+    title: Deploy
+    purpose: Deployment, infrastructure, runtime operations, and CI/CD surfaces.
+  - id: 04.education
+    title: Education
+    purpose: Educational resources, prompts, references, templates, and feedback loops.
+  - id: 05.shared
+    title: Shared
+    purpose: Cross-layer process primitives and reusable standards.
+
+disciplines:
+  - agentic
+  - architecture
+  - backend
+  - frontend
+  - requirements
+
+statuses:
+  - draft
+  - active
+  - deprecated
+  - retired
+
+portability_classes:
+  - required
+  - reusable
+  - compatible
+  - source-only
+  - internal
+
+script_effects:
+  - read-only
+  - writes-files
+  - stages-files
+  - commits
+  - branches
+  - worktrees
+  - network
+  - destructive
+
+seed_domains:
+  - git
+  - chat
+  - metadata
+  - packages.design-system
+  - packages.frontend-kit
+  - packages.core
+  - platform
+  - apps.logic
+  - apps.persistence
+  - infra.ci-cd
+
+seed_targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder

@@ -8,6 +8,7 @@ set -euo pipefail
 #   portability: llm-workbench-required
 #   used_by:
 #     - .agentic/01.harness/standards/artifact-metadata-headers.md
+#     - .agentic/01.harness/artifact-metadata/standard.md
 #     - .agentic/00.chat/checklists/before-commit.md
 #   effects: read-only
 
