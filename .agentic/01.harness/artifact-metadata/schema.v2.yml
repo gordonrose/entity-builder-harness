@@ -1,12 +1,25 @@
 # agentic-artifact:
-#   owner: harness
+#   schema: agentic-artifact/v2
+#   id: harness.schema.artifact-metadata-v2
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: metadata
+#   disciplines:
+#     - agentic
 #   kind: config
 #   purpose: Define the machine-readable field contract for agentic-artifact/v2 metadata.
-#   domain: metadata
-#   portability: llm-workbench-required
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
 #   used_by:
-#     - .agentic/01.harness/artifact-metadata/standard.md
-#     - scripts/01.harness/artifact-metadata/check-headers/script.sh
+#     - id: harness.standard.artifact-metadata
+#       path: .agentic/01.harness/artifact-metadata/standard.md
+#     - id: harness.script.artifact-metadata.check-headers
+#       path: scripts/01.harness/artifact-metadata/check-headers/script.sh
 
 schema: agentic-artifact-schema/v1
 artifact_schema: agentic-artifact/v2

@@ -1,13 +1,28 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.standard.artifact-metadata
+version: 1
+status: active
+layer: 01.harness
+domain: metadata
+disciplines:
+  - agentic
+  - architecture
 kind: standard
 purpose: Define the versioned artifact metadata model used for agent navigation, migration planning, and repo indexing.
-domain: metadata
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
 used_by:
-  - .agentic/01.harness/standards/artifact-metadata-headers.md
-  - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
-  - scripts/01.harness/artifact-metadata/check-headers/script.sh
+  - id: harness.standard.artifact-metadata-headers-v1
+    path: .agentic/01.harness/standards/artifact-metadata-headers.md
+  - id: harness.adr.versioned-artifact-metadata
+    path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+  - id: harness.script.artifact-metadata.check-headers
+    path: scripts/01.harness/artifact-metadata/check-headers/script.sh
 -->
 
 # Artifact Metadata Standard

@@ -1,12 +1,25 @@
 # agentic-artifact:
-#   owner: harness
+#   schema: agentic-artifact/v2
+#   id: harness.taxonomy.artifact-metadata
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: metadata
+#   disciplines:
+#     - agentic
 #   kind: config
 #   purpose: List controlled taxonomy values for versioned artifact metadata.
-#   domain: metadata
-#   portability: llm-workbench-required
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
 #   used_by:
-#     - .agentic/01.harness/artifact-metadata/standard.md
-#     - .agentic/01.harness/artifact-metadata/schema.v2.yml
+#     - id: harness.standard.artifact-metadata
+#       path: .agentic/01.harness/artifact-metadata/standard.md
+#     - id: harness.schema.artifact-metadata-v2
+#       path: .agentic/01.harness/artifact-metadata/schema.v2.yml
 
 layers:
   - id: 00.chat

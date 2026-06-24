@@ -1,12 +1,25 @@
 <!-- agentic-artifact:
-owner: harness
-kind: readme
-purpose: Index the harness artifact metadata capability, including the v2 schema, taxonomy, and future index generator.
+schema: agentic-artifact/v2
+id: harness.capability.artifact-metadata
+version: 1
+status: active
+layer: 01.harness
 domain: metadata
-portability: llm-workbench-required
+disciplines:
+  - agentic
+kind: readme
+purpose: Index the harness artifact metadata capability, including the v2 schema, taxonomy, and index generator.
+portability:
+  class: required
+  targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
 used_by:
-  - .agentic/01.harness/README.md
-  - .agentic/01.harness/workflows/change-harness.md
+  - id: harness.readme.01-harness
+    path: .agentic/01.harness/README.md
+  - id: harness.workflow.change-harness
+    path: .agentic/01.harness/workflows/change-harness.md
 -->
 
 # Artifact Metadata Capability
