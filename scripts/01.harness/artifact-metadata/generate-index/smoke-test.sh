@@ -39,11 +39,12 @@ import json, sys
 data = json.load(sys.stdin)
 paths = {artifact["path"]: artifact for artifact in data["artifacts"]}
 assert data["schema"] == "agentic-artifact-index/v1"
-assert data["summary"]["v2_artifacts"] >= 3
-assert data["summary"]["legacy_artifacts"] >= 2
+assert data["summary"]["v2_artifacts"] >= 4
+assert data["summary"]["legacy_artifacts"] == 1
 assert paths[".agentic/01.harness/artifact-metadata/examples/markdown.v2.md"]["id"] == "harness.example.artifact-metadata.markdown-v2"
 assert paths["scripts/01.harness/artifact-metadata/check-headers/script.sh"]["kind"] == "script"
-assert paths["scripts/01.harness/check-artifact-metadata-headers.sh"]["metadata_schema"] == "agentic-script/v1"
+assert paths["scripts/01.harness/check-artifact-metadata-headers.sh"]["metadata_schema"] == "agentic-artifact/v2"
+assert paths["scripts/01.harness/check-artifact-metadata-headers.sh"]["id"] == "harness.script.artifact-metadata.check-headers-compatibility-wrapper"
 ' <<< "$json_output"
 
 echo "Artifact metadata index generator smoke test passed."
