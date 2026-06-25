@@ -94,13 +94,17 @@ final homes.
   and provenance.
 - `schemas/retrieval-policy-pack.schema.yml` - defines the v1 policy-pack
   contract used by retrieval selectors.
+- `schemas/retrieval-policy-dimension.schema.yml` - defines the v1 imported
+  dimension contract for policy-pack dimensions.
 
 ## Policies
 
-- `policies/retrieval-selector/v1.yml` - seed v1 policy pack for prompt,
-  session metadata, layer/mode/workflow, paths, corpus ownership, graph
+- `policies/retrieval-selector/v1.yml` - seed v1 policy-pack manifest for
+  prompt, session metadata, layer/mode/workflow, paths, corpus ownership, graph
   expansion, checks, stops, token budgets, confidence, validation handoff, and
   future semantic recall.
+- `policies/retrieval-selector/v1/dimensions/` - imported per-dimension policy
+  contracts used by the seed v1 policy pack.
 
 ## Guides
 
@@ -109,6 +113,8 @@ final homes.
 - `guides/rulebook-index.md` - teaches the rulebook index mental model, field
   families, migration safety role, graph relationships, and future validator
   expectations.
+- `guides/retrieval-policy-dimension.md` - teaches how to read and author
+  imported retrieval policy dimensions.
 
 ## Plans
 

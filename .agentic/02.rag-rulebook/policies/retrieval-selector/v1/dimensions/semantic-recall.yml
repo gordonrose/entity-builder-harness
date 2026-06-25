@@ -1,0 +1,69 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.semantic-recall
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define the disabled v1 hook for future embedding or semantic search.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: semantic-recall
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Reserve a controlled future hook for embeddings or semantic search.
+required_inputs:
+  - semantic_recall_enabled threshold.
+  - Approved embedding provider policy when enabled in a future version.
+  - Citation parity requirements.
+  - Ranking parity requirements.
+  - Deterministic filter results.
+expected_actions:
+  - Keep semantic recall disabled in v1.
+  - Treat semantic recall as a future supplement, not an authority.
+  - Require citation, ranking, and validation parity before enabling in a future version.
+  - Run deterministic filters before any future semantic recall.
+banned_actions:
+  - Do not enable semantic recall in v1.
+  - Do not let semantic recall run before deterministic filters.
+  - Do not let semantic recall bypass corpus ownership or stop conditions.
+  - Do not select uncited semantic matches.
+output_obligations:
+  - semantic_recall_enabled
+  - semantic_recall_status
+  - semantic_recall_blockers
+  - future_embedding_policy_reference
+gap_or_stop_conditions:
+  - Stop if semantic recall is requested without an approved embedding and citation policy.
+  - Stop if semantic recall would bypass corpus ownership or stop conditions.
+  - Add a policy gap when semantic recall is enabled before deterministic filters are implemented.
+ranking_effects:
+  - V1 semantic recall has no ranking effect because it is disabled.
+  - Future semantic recall may only supplement deterministic ranking after policy approval.
+validation_examples:
+  - name: semantic recall disabled in v1
+    given: Policy thresholds set `semantic_recall_enabled` to false.
+    expect: No semantic search or embedding recall is attempted.
+  - name: enabled semantic recall fails v1 validation
+    given: Policy thresholds set `semantic_recall_enabled` to true.
+    expect: The policy-pack validator rejects the policy.
+can_change_by:
+  - Add approved embedding provider policy.
+  - Add reranking policy.
+  - Add citation parity requirements.

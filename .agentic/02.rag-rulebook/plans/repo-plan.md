@@ -126,6 +126,16 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh`.
 
+7d. Modularize retrieval policy dimensions.
+   - Keep `policies/retrieval-selector/v1.yml` as the active policy-pack
+     manifest.
+   - Move each dimension into an imported file with required inputs, expected
+     actions, banned actions, output obligations, gaps/stops, ranking effects,
+     validation examples, and allowed change paths.
+   - Validate all imports before selector runtime code can depend on them.
+   - Status: present in `schemas/retrieval-policy-dimension.schema.yml` and
+     `policies/retrieval-selector/v1/dimensions/`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -148,5 +158,5 @@ The location is not the final domain corpus model.
 ## Next Small Slice
 
 Add the first read-only retrieval selector fixture that consumes the validated
-policy pack, generated chunks, request text, and session-like metadata before
-emitting a validated context packet.
+compiled policy pack, generated chunks, request text, and session-like metadata
+before emitting a validated context packet.

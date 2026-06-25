@@ -31,8 +31,10 @@ It checks:
 
 - required top-level policy-pack fields
 - policy-pack schema, status, version, and applies-to compatibility
-- required retrieval dimensions
-- dimension instructions and validation requirements
+- required retrieval dimension manifest entries
+- imported dimension file existence and schema compatibility
+- dimension required inputs, expected actions, banned actions, output
+  obligations, gaps/stops, ranking effects, and validation examples
 - precedence rank ordering and required precedence concepts
 - threshold ranges and v1 semantic-recall safety
 - referenced workflows, validators, and smoke fixtures

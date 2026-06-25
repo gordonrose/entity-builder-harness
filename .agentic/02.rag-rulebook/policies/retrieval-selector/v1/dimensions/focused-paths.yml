@@ -1,0 +1,70 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how open, changed, or user-named paths narrow retrieval.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: focused-paths
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Use open, changed, or user-named paths to narrow retrieval.
+required_inputs:
+  - Open editor paths.
+  - Changed git paths.
+  - User-named paths from the prompt.
+  - Artifact metadata paths.
+  - Path-to-corpus ownership mappings.
+expected_actions:
+  - Map focused paths to corpus ownership before broad recall.
+  - Prefer exact path, glob, and artifact metadata matches.
+  - Rank path-specific rulesets above general source guides.
+  - Keep path evidence in the packet request and selected chunks.
+banned_actions:
+  - Do not infer ownership when multiple corpora claim the same path.
+  - Do not retrieve from unrelated corpora just because prompt words are similar.
+  - Do not let semantic recall override exact path ownership.
+  - Do not drop focused-path evidence during token trimming.
+output_obligations:
+  - focused_paths
+  - matched_path_globs
+  - matched_artifacts
+  - matched_corpora
+  - path_ownership_gaps
+gap_or_stop_conditions:
+  - Stop when focused-path ownership is ambiguous.
+  - Add a gap when a focused path has no known corpus owner.
+ranking_effects:
+  - Exact path ownership beats prompt-only similarity.
+  - Path-specific rulesets outrank general source guides.
+  - Focused-path matches raise retrieval confidence.
+validation_examples:
+  - name: exact path ownership wins
+    given: Focused path is `.agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml`.
+    expect: "`corpus.02.rag-rulebook` and the schema artifact rank above broad policy prose."
+  - name: ambiguous path blocks readiness
+    given: Two corpora claim the same focused path.
+    expect: The selector reports a blocking path ownership gap.
+can_change_by:
+  - Add path ownership maps.
+  - Add proposed corpus migration mappings.
+  - Add glob priority rules.

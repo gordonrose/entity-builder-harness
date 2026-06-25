@@ -1,0 +1,198 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.retrieval-policy-dimension
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 schema for an imported retrieval policy dimension.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.schema.retrieval-policy-pack
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml
+#     - id: rag-rulebook.guide.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/guides/retrieval-policy-dimension.md
+#     - id: rag-rulebook.script.validate-retrieval-policy-pack
+#       path: scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
+
+schema: rag-rulebook-retrieval-policy-dimension-schema/v1
+policy_dimension_schema: rag-rulebook/retrieval-policy-dimension/v1
+
+purpose: Define the imported per-dimension policy contract used by a retrieval selector policy pack.
+
+principles:
+  - Keep each dimension small enough to read, review, and test independently.
+  - Make expected behavior and banned behavior equally explicit.
+  - Treat gaps and stop conditions as first-class outputs, not hidden failures.
+  - Require examples that prove the dimension can be validated before selector runtime code depends on it.
+
+required_fields:
+  - schema
+  - dimension_id
+  - version
+  - status
+  - applies_to_policy_pack
+  - purpose
+  - required_inputs
+  - expected_actions
+  - banned_actions
+  - output_obligations
+  - gap_or_stop_conditions
+  - ranking_effects
+  - validation_examples
+  - can_change_by
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/retrieval-policy-dimension/v1
+
+  dimension_id:
+    type: enum
+    allowed_values:
+      - prompt
+      - session-metadata
+      - layer-mode-workflow
+      - focused-paths
+      - corpus-ownership
+      - rule-graph
+      - required-checks
+      - stop-conditions
+      - token-budget
+      - confidence-thresholds
+      - validation-handoff
+      - semantic-recall
+
+  version:
+    type: integer
+    minimum: 1
+
+  status:
+    type: enum
+    allowed_values:
+      - draft
+      - active
+      - superseded
+      - retired
+
+  applies_to_policy_pack:
+    type: string
+    format: policy-pack-id
+
+  purpose:
+    type: string
+
+  required_inputs:
+    type: array
+    items:
+      type: string
+
+  expected_actions:
+    type: array
+    items:
+      type: string
+
+  banned_actions:
+    type: array
+    items:
+      type: string
+
+  output_obligations:
+    type: array
+    items:
+      type: string
+
+  gap_or_stop_conditions:
+    type: array
+    items:
+      type: string
+
+  ranking_effects:
+    type: array
+    items:
+      type: string
+
+  validation_examples:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - name
+        - given
+        - expect
+      fields:
+        name:
+          type: string
+        given:
+          type: string
+        expect:
+          type: string
+
+  can_change_by:
+    type: array
+    items:
+      type: string
+
+field_guide:
+  - path: dimension_id
+    what_it_is: Stable ID for one retrieval selection dimension.
+    what_it_does: Lets a policy pack import and validate the dimension without relying on file names alone.
+    rules:
+      - Must match the importing policy-pack dimension entry.
+      - Must use one of the schema's allowed dimension IDs.
+
+  - path: required_inputs
+    what_it_is: The signals the selector must provide before this dimension can be applied.
+    what_it_does: Prevents selector code from guessing when required context is missing.
+    rules:
+      - Must list concrete inputs such as prompt text, session metadata, paths, chunks, thresholds, or graph edges.
+
+  - path: expected_actions
+    what_it_is: Behaviors this dimension should perform when its inputs are available.
+    what_it_does: Gives selector code a positive contract to execute.
+    rules:
+      - Must be concrete enough to test.
+      - Should explain how the dimension changes selection or packet assembly.
+
+  - path: banned_actions
+    what_it_is: Behaviors this dimension must not perform.
+    what_it_does: Prevents natural-language interpretation, semantic recall, trimming, or convenience from bypassing governance.
+    rules:
+      - Must be non-empty for every dimension.
+      - Should name the failure mode the rule prevents.
+
+  - path: output_obligations
+    what_it_is: Data this dimension must preserve or emit into the selection report or context packet.
+    what_it_does: Keeps important evidence, checks, stops, gaps, and provenance from being lost.
+    rules:
+      - Must include outputs that downstream packet validation can inspect.
+
+  - path: gap_or_stop_conditions
+    what_it_is: Conditions that should create a gap or block packet readiness.
+    what_it_does: Makes uncertainty visible instead of letting retrieval produce overconfident context.
+    rules:
+      - Must name at least one gap or stop behavior.
+      - Blocking conditions must not be downgraded into warnings by selector code.
+
+  - path: ranking_effects
+    what_it_is: How this dimension affects ranking, trimming, graph expansion, or selection priority.
+    what_it_does: Lets the selector keep context small while preserving mandatory evidence.
+    rules:
+      - Must not contradict policy-pack precedence.
+
+  - path: validation_examples
+    what_it_is: Small reviewable cases that prove the dimension's behavior.
+    what_it_does: Gives validators and future fixtures a source of expected behavior.
+    rules:
+      - Each example must include `name`, `given`, and `expect`.
+      - Examples should include at least one happy path or one banned/gap behavior.

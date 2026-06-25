@@ -30,6 +30,9 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 REPORT_FILE="$TMP_DIR/policy-pack-report.json"
 BROKEN_MISSING_DIMENSION="$TMP_DIR/broken-missing-dimension.yml"
+BROKEN_MISSING_DIMENSION_FILE="$TMP_DIR/broken-missing-dimension-file.yml"
+BROKEN_WEAK_DIMENSION="$TMP_DIR/broken-weak-dimension.yml"
+BROKEN_WEAK_DIMENSION_FILE="$TMP_DIR/prompt-weak.yml"
 BROKEN_SEMANTIC_RECALL="$TMP_DIR/broken-semantic-recall.yml"
 
 bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
@@ -46,6 +49,7 @@ from pathlib import Path
 report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert report["ok"], report
 assert report["counts"]["dimensions"] == 12
+assert report["counts"]["dimension_files"] == 12
 assert report["counts"]["precedence"] >= 9
 assert report["counts"]["smoke_fixtures"] >= 1
 assert report["counts"]["validator_scripts"] >= 1
@@ -72,6 +76,52 @@ PY
 if bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
   --policy "$BROKEN_MISSING_DIMENSION" >/dev/null 2>&1; then
   echo "ERROR: retrieval policy-pack validator accepted a missing dimension" >&2
+  exit 1
+fi
+
+python3 - "$BROKEN_MISSING_DIMENSION_FILE" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import yaml
+
+policy_path = Path(".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml")
+policy = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
+policy["dimensions"][0]["path"] = "does/not/exist.yml"
+Path(sys.argv[1]).write_text(yaml.safe_dump(policy, sort_keys=False), encoding="utf-8")
+PY
+
+if bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
+  --policy "$BROKEN_MISSING_DIMENSION_FILE" >/dev/null 2>&1; then
+  echo "ERROR: retrieval policy-pack validator accepted a missing dimension file" >&2
+  exit 1
+fi
+
+python3 - "$BROKEN_WEAK_DIMENSION" "$BROKEN_WEAK_DIMENSION_FILE" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import yaml
+
+policy_out = Path(sys.argv[1])
+dimension_out = Path(sys.argv[2])
+policy_path = Path(".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml")
+dimension_path = Path(".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml")
+policy = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
+dimension = yaml.safe_load(dimension_path.read_text(encoding="utf-8"))
+dimension.pop("banned_actions", None)
+policy["dimensions"][0]["path"] = str(dimension_out)
+policy_out.write_text(yaml.safe_dump(policy, sort_keys=False), encoding="utf-8")
+dimension_out.write_text(yaml.safe_dump(dimension, sort_keys=False), encoding="utf-8")
+PY
+
+if bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
+  --policy "$BROKEN_WEAK_DIMENSION" >/dev/null 2>&1; then
+  echo "ERROR: retrieval policy-pack validator accepted a dimension without banned actions" >&2
   exit 1
 fi
 

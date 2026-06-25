@@ -1,0 +1,72 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.token-budget
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how selected context is kept small without losing mandatory evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: token-budget
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Keep context augmentation small enough to be useful.
+required_inputs:
+  - max_context_tokens threshold.
+  - max_selected_chunks threshold.
+  - Candidate chunks with token estimates.
+  - Mandatory checks, stops, citations, and provenance.
+  - Duplicate or overlapping chunk signals.
+expected_actions:
+  - Select the smallest context that satisfies routing, rules, checks, stops, citations, and provenance.
+  - Trim optional explanatory chunks before rules, checks, stops, citations, or provenance.
+  - Remove duplicate or lower-confidence chunks before mandatory chunks.
+  - Record selected_context_tokens and trim_policy.
+banned_actions:
+  - Do not trim required checks.
+  - Do not trim blocking stop conditions.
+  - Do not trim citations required by selected checks, stops, or chunks.
+  - Do not exceed token or chunk thresholds without reporting a gap.
+output_obligations:
+  - selected_context_tokens
+  - max_context_tokens
+  - selected_chunk_count
+  - max_selected_chunks
+  - trim_policy
+  - trimmed_chunk_ids
+gap_or_stop_conditions:
+  - Add a token-budget gap when mandatory evidence alone exceeds max_context_tokens.
+  - Add a token-budget gap when mandatory chunk count exceeds max_selected_chunks.
+ranking_effects:
+  - Mandatory checks, stops, citations, and provenance are retained before optional explanation.
+  - Duplicate chunks and lower-confidence chunks are trimmed first.
+  - Shorter chunks win ties when evidence quality is equal.
+validation_examples:
+  - name: optional explanation trims first
+    given: Candidate chunks exceed max_context_tokens.
+    expect: Optional explanatory chunks are removed before required checks or stop conditions.
+  - name: mandatory evidence over budget creates gap
+    given: Required checks and stops alone exceed max_context_tokens.
+    expect: The selector reports a token-budget gap instead of dropping mandatory evidence.
+can_change_by:
+  - Tune max tokens.
+  - Tune max chunks.
+  - Add consumer-specific budgets.
+  - Add tie-break trimming rules.

@@ -21,6 +21,8 @@
 #       path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
 #     - id: rag-rulebook.policy.retrieval-selector.v1
 #       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
 #     - id: rag-rulebook.plan.repo
 #       path: .agentic/02.rag-rulebook/plans/repo-plan.md
 #     - id: rag-rulebook.script.validate-retrieval-policy-pack
@@ -28,6 +30,7 @@
 
 schema: rag-rulebook-retrieval-policy-pack-schema/v1
 policy_pack_schema: rag-rulebook/retrieval-policy-pack/v1
+policy_dimension_schema: rag-rulebook/retrieval-policy-dimension/v1
 
 purpose: Define the versioned policy-pack shape used by a retrieval selector to choose small, accurate, validated context packets.
 
@@ -124,9 +127,7 @@ fields:
       type: object
       required_fields:
         - id
-        - purpose
-        - instructions
-        - validation_requirements
+        - path
       fields:
         id:
           type: enum
@@ -143,44 +144,9 @@ fields:
             - confidence-thresholds
             - validation-handoff
             - semantic-recall
-        purpose:
+        path:
           type: string
-        instructions:
-          type: array
-          items:
-            type: string
-        deterministic_rules:
-          type: array
-          items:
-            type: string
-        scoring_rules:
-          type: array
-          items:
-            type: string
-        expansion_rules:
-          type: array
-          items:
-            type: string
-        trimming_rules:
-          type: array
-          items:
-            type: string
-        stop_rules:
-          type: array
-          items:
-            type: string
-        gap_rules:
-          type: array
-          items:
-            type: string
-        validation_requirements:
-          type: array
-          items:
-            type: string
-        can_change_by:
-          type: array
-          items:
-            type: string
+          references_schema: rag-rulebook/retrieval-policy-dimension/v1
 
   precedence:
     type: array
@@ -288,11 +254,12 @@ field_guide:
       - Must name supported corpora.
 
   - path: dimensions
-    what_it_is: The multi-dimensional instruction set for context selection.
-    what_it_does: Lets prompt, session, path, corpus, graph, checks, stops, budget, and confidence mature independently.
+    what_it_is: The import manifest for the multi-dimensional instruction set.
+    what_it_does: Lets prompt, session, path, corpus, graph, checks, stops, budget, and confidence mature independently in their own dimension files while the policy pack remains one active selector contract.
     rules:
-      - Must include validation requirements per dimension.
-      - Must not hide retrieval behavior in prose-only notes.
+      - Must include every required dimension ID exactly once.
+      - Each entry must point to a `rag-rulebook/retrieval-policy-dimension/v1` file.
+      - Dimension behavior belongs in imported files, not inline prose-only notes.
 
   - path: precedence
     what_it_is: Ordered conflict-resolution rules.

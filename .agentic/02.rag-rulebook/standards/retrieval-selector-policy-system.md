@@ -68,6 +68,10 @@ The selector has two parts:
 The engine should be boring. The policy pack should be where retrieval behavior
 is allowed to mature.
 
+The active policy pack is a manifest. Each dimension should live in its own
+imported file so the dimension can be reviewed, taught, validated, and evolved
+without turning the pack into one large prose document.
+
 ## Required Dimensions
 
 Every active selector policy pack must address these dimensions.
@@ -88,6 +92,21 @@ Every active selector policy pack must address these dimensions.
 
 Future dimensions may be added when they are versioned and validated. They must
 not silently change existing dimension meaning.
+
+Every imported dimension file must define:
+
+- required inputs
+- expected actions
+- banned actions
+- output obligations
+- gap or stop conditions
+- ranking effects
+- validation examples
+- allowed change paths
+
+The banned-actions section is not optional. It is how the policy prevents the
+selector from turning vague natural language, semantic similarity, or token
+trimming into hidden governance bypasses.
 
 ## Precedence
 
@@ -137,6 +156,10 @@ Every policy pack should include:
 - thresholds
 - validation requirements
 - examples or smoke fixtures
+
+Policy packs should import dimensions by stable ID and repo-relative path. The
+dimension file must identify the policy pack it applies to. Selector code should
+compile the pack and its imported dimensions before selecting chunks.
 
 ## Evolution Rules
 

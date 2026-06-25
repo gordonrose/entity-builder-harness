@@ -1,0 +1,72 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.validation-handoff
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how selected evidence becomes usable only after packet validation.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: validation-handoff
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Ensure selected context becomes a usable packet only after validation.
+required_inputs:
+  - Compiled policy pack and dimension IDs.
+  - Selected chunks.
+  - Required checks.
+  - Stop conditions.
+  - Citations.
+  - Context-packet validator path.
+expected_actions:
+  - Generate context packets through the schema contract.
+  - Run packet validation after trimming and before returning usable context.
+  - Include policy pack ID and version in provenance when selector runtime exists.
+  - Treat validator success as the final handoff gate.
+banned_actions:
+  - Do not return a usable context packet before validation passes.
+  - Do not skip validation because the fixture looked deterministic.
+  - Do not omit policy pack provenance.
+  - Do not let validation failure become a warning-only condition.
+output_obligations:
+  - validation_status
+  - validator_script
+  - policy_pack_id
+  - policy_pack_version
+  - dimension_ids
+  - packet_provenance
+gap_or_stop_conditions:
+  - Validation failure means packet is unusable.
+  - Missing packet validator is a blocking gap.
+  - Missing policy provenance is a validation gap.
+ranking_effects:
+  - Validation does not improve ranking; it gates whether the selected packet can be used.
+  - Validation runs after trimming so the final emitted packet is checked.
+validation_examples:
+  - name: packet must validate after trimming
+    given: Selector trims optional chunks and emits a packet.
+    expect: "`scripts/02.rag-rulebook/validate-context-packet/script.sh` passes on the final packet."
+  - name: missing validator blocks handoff
+    given: Policy names a validator path that does not exist.
+    expect: The selector reports a blocking validation gap.
+can_change_by:
+  - Add policy-pack validation.
+  - Add stricter packet validators.
+  - Add citation validators.

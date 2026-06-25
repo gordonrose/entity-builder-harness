@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.layer-mode-workflow
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how layer, mode, and workflow boundaries constrain retrieval.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: layer-mode-workflow
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Keep retrieval inside the correct governance boundary.
+required_inputs:
+  - Selected layer.
+  - Selected mode.
+  - Selected workflow path.
+  - Layer-to-corpus mapping.
+  - Workflow rules and required gates.
+expected_actions:
+  - Match layer before mode-specific checks.
+  - Retrieve workflow-specific gates, rules, and stop conditions before general layer prose.
+  - Include cross-layer context only when the policy or graph explicitly allows it.
+  - Preserve selected workflow identity in packet routing metadata.
+banned_actions:
+  - Do not retrieve unrelated domain instructions because they share prompt words.
+  - Do not replace a missing workflow with a guessed workflow.
+  - Do not mix product, deploy, education, and harness rules into one undifferentiated packet.
+  - Do not let semantic recall cross layer boundaries in v1.
+output_obligations:
+  - matched_layer
+  - matched_mode
+  - matched_workflow
+  - workflow_required_checks
+  - workflow_stop_conditions
+  - cross_layer_context_reasons
+gap_or_stop_conditions:
+  - Report a gap when no workflow exists for the selected layer and mode.
+  - Stop when governance coverage for the selected workflow is absent.
+ranking_effects:
+  - Layer and mode matches outrank semantic similarity.
+  - Workflow-specific checks outrank general layer guidance.
+  - Explicit cross-layer graph edges outrank prompt-only cross-layer terms.
+validation_examples:
+  - name: workflow-specific checks survive
+    given: Selected workflow is `.agentic/01.harness/workflows/change-harness.md`.
+    expect: Required harness-change gates are selected before broad harness docs.
+  - name: missing workflow creates gap
+    given: Selected workflow path does not exist.
+    expect: The selector reports a blocking workflow gap.
+can_change_by:
+  - Add new layer/mode pairs.
+  - Add workflow ownership rules.
+  - Add allowed cross-layer retrieval reasons.

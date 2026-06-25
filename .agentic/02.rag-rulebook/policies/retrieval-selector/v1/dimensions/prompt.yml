@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how raw prompt text contributes retrieval hints without overriding governed metadata.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: prompt
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Turn raw user language into retrieval hints without letting natural language override governed metadata.
+required_inputs:
+  - Raw user prompt text.
+  - Normalized prompt tokens.
+  - Known artifact IDs, corpus IDs, path terms, layer names, workflow names, and rule IDs.
+  - Session metadata used to compare prompt inference with governed state.
+expected_actions:
+  - Extract task nouns, verbs, target artifacts, risk words, and explicit asks.
+  - Normalize obvious plurals, aliases, and known synonyms before keyword scoring.
+  - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
+  - Preserve the raw prompt in the context-packet request provenance.
+banned_actions:
+  - Do not let prompt interpretation override complete session metadata.
+  - Do not infer a different layer from prompt words when the session layer is ready and current.
+  - Do not expand into unrelated corpora from vague words such as app, design, deploy, or rule without supporting metadata.
+  - Do not hide prompt/session conflict behind a confident summary.
+output_obligations:
+  - prompt_terms
+  - normalized_prompt_terms
+  - matched_artifact_terms
+  - matched_path_terms
+  - prompt_conflicts
+  - prompt_confidence
+gap_or_stop_conditions:
+  - Add an ambiguity gap when prompt terms conflict with complete session metadata.
+  - Add a low-confidence gap when only broad prompt terms match and no metadata, path, or corpus evidence supports them.
+ranking_effects:
+  - Exact ID and path terms raise ranking.
+  - Risk words raise required-check and stop-condition ranking.
+  - Prompt-only matches rank below session, path, corpus, and graph evidence.
+validation_examples:
+  - name: prompt boosts exact artifact match
+    given: User asks to update `retrieval-policy-pack.schema.yml`.
+    expect: The schema artifact receives a ranking boost without changing the session layer.
+  - name: prompt cannot override ready metadata
+    given: Session metadata says `02.rag-rulebook` and the prompt uses the word product.
+    expect: The selector keeps `02.rag-rulebook` routing and reports no product-corpus expansion unless another signal supports it.
+can_change_by:
+  - Add synonyms.
+  - Add risk words.
+  - Add task vocabulary.
+  - Add artifact aliases.

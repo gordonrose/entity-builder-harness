@@ -24,6 +24,8 @@ set -euo pipefail
 #   used_by:
 #     - id: rag-rulebook.schema.retrieval-policy-pack
 #       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
 #     - id: rag-rulebook.policy.retrieval-selector.v1
 #       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 #     - id: rag-rulebook.plan.repo
@@ -50,11 +52,13 @@ except ImportError:  # pragma: no cover - environment gate
 
 
 POLICY_SCHEMA = "rag-rulebook/retrieval-policy-pack/v1"
+DIMENSION_SCHEMA = "rag-rulebook/retrieval-policy-dimension/v1"
 CONTEXT_PACKET_SCHEMA = "rag-rulebook/context-packet/v1"
 CHUNK_SET_SCHEMA = "rag-rulebook/chunk-set/v1"
 INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
 DEFAULT_POLICY = ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml"
 DEFAULT_SCHEMA = ".agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml"
+DEFAULT_DIMENSION_SCHEMA = ".agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml"
 REQUIRED_TOP_LEVEL = [
     "schema",
     "policy_pack_id",
@@ -83,20 +87,22 @@ REQUIRED_DIMENSIONS = [
     "validation-handoff",
     "semantic-recall",
 ]
-DIMENSION_REQUIRED_RULE_FIELDS = {
-    "prompt": ["deterministic_rules"],
-    "session-metadata": ["deterministic_rules", "stop_rules"],
-    "layer-mode-workflow": ["deterministic_rules", "gap_rules"],
-    "focused-paths": ["deterministic_rules", "gap_rules"],
-    "corpus-ownership": ["deterministic_rules", "stop_rules"],
-    "rule-graph": ["expansion_rules", "gap_rules"],
-    "required-checks": ["deterministic_rules"],
-    "stop-conditions": ["stop_rules"],
-    "token-budget": ["trimming_rules"],
-    "confidence-thresholds": ["deterministic_rules", "gap_rules"],
-    "validation-handoff": ["deterministic_rules"],
-    "semantic-recall": ["deterministic_rules", "stop_rules"],
-}
+REQUIRED_DIMENSION_FIELDS = [
+    "schema",
+    "dimension_id",
+    "version",
+    "status",
+    "applies_to_policy_pack",
+    "purpose",
+    "required_inputs",
+    "expected_actions",
+    "banned_actions",
+    "output_obligations",
+    "gap_or_stop_conditions",
+    "ranking_effects",
+    "validation_examples",
+    "can_change_by",
+]
 PRECEDENCE_CONCEPTS = [
     "stop",
     "session",
@@ -126,7 +132,7 @@ ROOT = repo_root()
 def usage() -> str:
     return """Usage:
   validate-retrieval-policy-pack/script.sh --current [--json]
-  validate-retrieval-policy-pack/script.sh --policy <path> [--schema <path>] [--json]
+  validate-retrieval-policy-pack/script.sh --policy <path> [--schema <path>] [--dimension-schema <path>] [--json]
 
 Validates a rag-rulebook/retrieval-policy-pack/v1 YAML policy pack. The command
 is read-only.
@@ -138,6 +144,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--current", action="store_true")
     parser.add_argument("--policy")
     parser.add_argument("--schema", default=DEFAULT_SCHEMA)
+    parser.add_argument("--dimension-schema", default=DEFAULT_DIMENSION_SCHEMA)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
@@ -159,8 +166,25 @@ def repo_path(path: str) -> Path:
     return path_obj if path_obj.is_absolute() else ROOT / path_obj
 
 
+def resolve_import_path(path: str, policy_path: str) -> Path:
+    path_obj = Path(path)
+    if path_obj.is_absolute():
+        return path_obj
+    if path_should_exist(path):
+        return ROOT / path_obj
+    policy_file = repo_path(policy_path)
+    return policy_file.parent / path_obj
+
+
 def load_yaml(path: str) -> dict[str, Any]:
     data = yaml.safe_load(repo_path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"YAML file must contain an object: {path}")
+    return data
+
+
+def load_yaml_path(path: Path) -> dict[str, Any]:
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError(f"YAML file must contain an object: {path}")
     return data
@@ -215,6 +239,8 @@ def path_should_exist(path: str) -> bool:
 def validate_schema_file(schema: dict[str, Any], errors: list[str], warnings: list[str]) -> None:
     if schema.get("policy_pack_schema") != POLICY_SCHEMA:
         errors.append(f"schema policy_pack_schema must be {POLICY_SCHEMA}")
+    if schema.get("policy_dimension_schema") != DIMENSION_SCHEMA:
+        errors.append(f"schema policy_dimension_schema must be {DIMENSION_SCHEMA}")
     required_fields = list_of_strings(schema.get("required_fields"))
     for field in REQUIRED_TOP_LEVEL:
         if field not in required_fields:
@@ -236,8 +262,37 @@ def validate_schema_file(schema: dict[str, Any], errors: list[str], warnings: li
     for dimension_id in REQUIRED_DIMENSIONS:
         if dimension_id not in allowed_dimensions:
             errors.append(f"schema dimensions allowed_values missing: {dimension_id}")
+    if isinstance(dimensions, dict):
+        item = dimensions.get("item")
+        if isinstance(item, dict):
+            required = list_of_strings(item.get("required_fields"))
+            for field in ["id", "path"]:
+                if field not in required:
+                    errors.append(f"schema dimensions item required_fields missing: {field}")
     if "field_guide" not in schema:
         warnings.append("schema has no field_guide entries")
+
+
+def validate_dimension_schema_file(schema: dict[str, Any], errors: list[str], warnings: list[str]) -> None:
+    if schema.get("policy_dimension_schema") != DIMENSION_SCHEMA:
+        errors.append(f"dimension schema policy_dimension_schema must be {DIMENSION_SCHEMA}")
+    required_fields = list_of_strings(schema.get("required_fields"))
+    for field in REQUIRED_DIMENSION_FIELDS:
+        if field not in required_fields:
+            errors.append(f"dimension schema required_fields missing: {field}")
+    schema_fields = schema.get("fields")
+    if not isinstance(schema_fields, dict):
+        errors.append("dimension schema fields must be an object")
+        return
+    dimension_id_field = schema_fields.get("dimension_id")
+    allowed_dimensions: list[str] = []
+    if isinstance(dimension_id_field, dict):
+        allowed_dimensions = list_of_strings(dimension_id_field.get("allowed_values"))
+    for dimension_id in REQUIRED_DIMENSIONS:
+        if dimension_id not in allowed_dimensions:
+            errors.append(f"dimension schema dimension_id allowed_values missing: {dimension_id}")
+    if "field_guide" not in schema:
+        warnings.append("dimension schema has no field_guide entries")
 
 
 def validate_applies_to(applies_to: dict[str, Any], errors: list[str]) -> None:
@@ -268,7 +323,62 @@ def validate_applies_to(applies_to: dict[str, Any], errors: list[str]) -> None:
             errors.append(f"applies_to workflow path does not exist: {workflow}")
 
 
-def validate_dimensions(dimensions: list[dict[str, Any]], errors: list[str], warnings: list[str]) -> None:
+def validate_dimension_contract(
+    manifest_id: str,
+    dimension_path: Path,
+    dimension: dict[str, Any],
+    policy_pack_id: str,
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    owner = f"dimension[{manifest_id}]"
+    require_fields(owner, dimension, REQUIRED_DIMENSION_FIELDS, errors)
+    if dimension.get("schema") != DIMENSION_SCHEMA:
+        errors.append(f"{owner} schema must be {DIMENSION_SCHEMA}: {dimension_path}")
+    if dimension.get("dimension_id") != manifest_id:
+        errors.append(f"{owner} dimension_id must match manifest id: {dimension_path}")
+    validate_positive_int(dimension.get("version"), f"{owner}.version", errors)
+    if dimension.get("status") not in ALLOWED_STATUS:
+        errors.append(f"{owner} status is invalid: {dimension.get('status')}")
+    if dimension.get("applies_to_policy_pack") != policy_pack_id:
+        errors.append(f"{owner} applies_to_policy_pack must be {policy_pack_id}: {dimension_path}")
+    if not isinstance(dimension.get("purpose"), str) or not dimension.get("purpose"):
+        errors.append(f"{owner} purpose must be a non-empty string")
+    for field in [
+        "required_inputs",
+        "expected_actions",
+        "banned_actions",
+        "output_obligations",
+        "gap_or_stop_conditions",
+        "ranking_effects",
+        "can_change_by",
+    ]:
+        if not list_of_strings(dimension.get(field)):
+            errors.append(f"{owner} {field} must be a non-empty string array")
+    examples = list_of_dicts(dimension.get("validation_examples"))
+    if not examples:
+        errors.append(f"{owner} validation_examples must be a non-empty object array")
+    for index, example in enumerate(examples, start=1):
+        require_fields(f"{owner}.validation_examples[{index}]", example, ["name", "given", "expect"], errors)
+        for field in ["name", "given", "expect"]:
+            if not isinstance(example.get(field), str) or not example.get(field):
+                errors.append(f"{owner}.validation_examples[{index}].{field} must be a non-empty string")
+    if manifest_id == "semantic-recall":
+        combined = "\n".join(list_of_strings(dimension.get("expected_actions")) + list_of_strings(dimension.get("banned_actions"))).lower()
+        if "disabled" not in combined or "do not enable" not in combined:
+            errors.append("dimension semantic-recall must explicitly keep semantic recall disabled in v1")
+    if len(list_of_strings(dimension.get("banned_actions"))) < 2:
+        warnings.append(f"{owner} should include more than one banned action")
+
+
+def validate_dimensions(
+    dimensions: list[dict[str, Any]],
+    policy_path: str,
+    policy_pack_id: str,
+    errors: list[str],
+    warnings: list[str],
+) -> list[dict[str, Any]]:
+    loaded_dimensions: list[dict[str, Any]] = []
     dimension_ids = [item.get("id") for item in dimensions if isinstance(item.get("id"), str)]
     report_duplicate("dimensions[].id", dimension_ids, errors)
     dimension_id_set = set(dimension_ids)
@@ -277,25 +387,35 @@ def validate_dimensions(dimensions: list[dict[str, Any]], errors: list[str], war
             errors.append(f"missing required dimension: {dimension_id}")
     for dimension in dimensions:
         dimension_id = dimension.get("id")
-        require_fields(
-            f"dimension[{dimension_id or '?'}]",
-            dimension,
-            ["id", "purpose", "instructions", "validation_requirements"],
-            errors,
-        )
+        require_fields(f"dimension[{dimension_id or '?'}]", dimension, ["id", "path"], errors)
         if dimension_id not in REQUIRED_DIMENSIONS:
             warnings.append(f"unknown dimension id; ensure schema allows it before selector use: {dimension_id}")
-        if not isinstance(dimension.get("purpose"), str) or not dimension.get("purpose"):
-            errors.append(f"dimension purpose must be a non-empty string: {dimension_id}")
-        if not list_of_strings(dimension.get("instructions")):
-            errors.append(f"dimension instructions must be a non-empty string array: {dimension_id}")
-        if not list_of_strings(dimension.get("validation_requirements")):
-            errors.append(f"dimension validation_requirements must be a non-empty string array: {dimension_id}")
-        for field in DIMENSION_REQUIRED_RULE_FIELDS.get(str(dimension_id), []):
-            if not list_of_strings(dimension.get(field)):
-                errors.append(f"dimension {dimension_id} must include non-empty {field}")
-        if not list_of_strings(dimension.get("can_change_by")):
-            warnings.append(f"dimension should explain can_change_by: {dimension_id}")
+        for inline_field in ["purpose", "instructions", "validation_requirements", "deterministic_rules"]:
+            if inline_field in dimension:
+                errors.append(f"dimension manifest entry must not inline {inline_field}: {dimension_id}")
+        dimension_path_value = dimension.get("path")
+        if not isinstance(dimension_path_value, str) or not dimension_path_value:
+            errors.append(f"dimension path must be a non-empty string: {dimension_id}")
+            continue
+        dimension_path = resolve_import_path(dimension_path_value, policy_path)
+        if not dimension_path.is_file():
+            errors.append(f"dimension path does not exist: {dimension_path_value}")
+            continue
+        try:
+            loaded_dimension = load_yaml_path(dimension_path)
+        except Exception as exc:
+            errors.append(f"failed to load dimension {dimension_id}: {exc}")
+            continue
+        validate_dimension_contract(
+            str(dimension_id),
+            dimension_path,
+            loaded_dimension,
+            policy_pack_id,
+            errors,
+            warnings,
+        )
+        loaded_dimensions.append(loaded_dimension)
+    return loaded_dimensions
 
 
 def validate_precedence(precedence: list[dict[str, Any]], errors: list[str]) -> None:
@@ -384,11 +504,19 @@ def validate_evolution(evolution: dict[str, Any], errors: list[str]) -> None:
         errors.append("evolution.breaking_change_policy must be a non-empty string")
 
 
-def validate(policy: dict[str, Any], schema: dict[str, Any], policy_path: str, schema_path: str) -> dict[str, Any]:
+def validate(
+    policy: dict[str, Any],
+    schema: dict[str, Any],
+    dimension_schema: dict[str, Any],
+    policy_path: str,
+    schema_path: str,
+    dimension_schema_path: str,
+) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
     validate_schema_file(schema, errors, warnings)
+    validate_dimension_schema_file(dimension_schema, errors, warnings)
 
     for field in REQUIRED_TOP_LEVEL:
         if field not in policy:
@@ -414,7 +542,13 @@ def validate(policy: dict[str, Any], schema: dict[str, Any], policy_path: str, s
     dimensions = list_of_dicts(policy.get("dimensions"))
     if not dimensions:
         errors.append("dimensions must be a non-empty array of objects")
-    validate_dimensions(dimensions, errors, warnings)
+    loaded_dimensions = validate_dimensions(
+        dimensions,
+        policy_path,
+        str(policy.get("policy_pack_id") or ""),
+        errors,
+        warnings,
+    )
 
     precedence = list_of_dicts(policy.get("precedence"))
     if not precedence:
@@ -445,8 +579,10 @@ def validate(policy: dict[str, Any], schema: dict[str, Any], policy_path: str, s
         "policy_pack_id": policy.get("policy_pack_id"),
         "policy_path": str(repo_path(policy_path)),
         "schema_path": str(repo_path(schema_path)),
+        "dimension_schema_path": str(repo_path(dimension_schema_path)),
         "counts": {
             "dimensions": len(dimensions),
+            "dimension_files": len(loaded_dimensions),
             "precedence": len(precedence),
             "smoke_fixtures": len(list_of_strings(validation_section.get("smoke_fixtures"))),
             "validator_scripts": len(list_of_strings(validation_section.get("validator_scripts"))),
@@ -477,7 +613,8 @@ def main(argv: list[str]) -> int:
     try:
         policy = load_yaml(args.policy)
         schema = load_yaml(args.schema)
-        report = validate(policy, schema, args.policy, args.schema)
+        dimension_schema = load_yaml(args.dimension_schema)
+        report = validate(policy, schema, dimension_schema, args.policy, args.schema, args.dimension_schema)
     except Exception as exc:
         report = {
             "ok": False,
@@ -485,6 +622,7 @@ def main(argv: list[str]) -> int:
             "policy_pack_id": None,
             "policy_path": args.policy,
             "schema_path": args.schema,
+            "dimension_schema_path": args.dimension_schema,
             "counts": {},
             "errors": [str(exc)],
             "warnings": [],

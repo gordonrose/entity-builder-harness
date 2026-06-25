@@ -61,206 +61,40 @@ applies_to:
 
 dimensions:
   - id: prompt
-    purpose: Turn raw user language into retrieval hints without letting natural language override governed metadata.
-    instructions:
-      - Extract task nouns, verbs, target artifacts, risk words, and explicit asks.
-      - Treat prompt interpretation as evidence, not authority.
-      - Preserve the raw prompt in the context packet request.
-    deterministic_rules:
-      - Normalize obvious plurals and synonyms before keyword scoring.
-      - Prefer exact artifact, path, corpus, and rule IDs over broad terms.
-    gap_rules:
-      - If prompt terms conflict with complete session metadata, report an ambiguity gap instead of silently switching layers.
-    validation_requirements:
-      - Fixture prompts must prove that prompt terms affect ranking without bypassing path or corpus constraints.
-    can_change_by:
-      - Add synonyms.
-      - Add risk words.
-      - Add task vocabulary.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 
   - id: session-metadata
-    purpose: Use chat/session metadata as a strong deterministic routing signal.
-    instructions:
-      - Use recorded layer, mode, workflow, branch, and worktree when metadata is ready.
-      - Do not reclassify when session metadata is complete and current.
-      - Treat missing, unknown, or stale metadata as a gap.
-    deterministic_rules:
-      - Session layer narrows initial corpus candidates.
-      - Session workflow narrows required workflow and check candidates.
-    stop_rules:
-      - Stop when session ownership or worktree state is ambiguous.
-    validation_requirements:
-      - Selector tests must include a ready session and an unknown-session gap case.
-    can_change_by:
-      - Add trusted session fields.
-      - Add stale-session detection rules.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/session-metadata.yml
 
   - id: layer-mode-workflow
-    purpose: Keep retrieval inside the correct governance boundary.
-    instructions:
-      - Match layer before mode-specific checks.
-      - Use workflow metadata to retrieve required gates and stop conditions.
-      - Include cross-layer context only when policy allows it.
-    deterministic_rules:
-      - Layer and mode matches outrank semantic similarity.
-      - Workflow-specific checks outrank general layer prose.
-    gap_rules:
-      - Report a gap when no workflow exists for the selected layer and mode.
-    validation_requirements:
-      - Selector tests must prove layer-specific retrieval does not leak unrelated domain instructions.
-    can_change_by:
-      - Add new layer/mode pairs.
-      - Add workflow ownership rules.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/layer-mode-workflow.yml
 
   - id: focused-paths
-    purpose: Use open, changed, or user-named paths to narrow retrieval.
-    instructions:
-      - Map focused paths to corpus ownership before broad recall.
-      - Prefer exact path, glob, and artifact metadata matches.
-      - Keep path evidence in the packet request and selected chunks.
-    deterministic_rules:
-      - Exact path ownership beats prompt-only similarity.
-      - Path-specific rulesets outrank general source guides.
-    gap_rules:
-      - Report ambiguous path ownership when multiple corpora claim the same path.
-    validation_requirements:
-      - Selector tests must include at least one path-scoped retrieval case.
-    can_change_by:
-      - Add path ownership maps.
-      - Add proposed corpus migration mappings.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
 
   - id: corpus-ownership
-    purpose: Select modular numbered corpora without collapsing all domains into one instruction set.
-    instructions:
-      - Retrieve from named corpora and subcorpora.
-      - Keep corpus IDs on every selected chunk.
-      - Require explicit policy permission for cross-corpus retrieval.
-    deterministic_rules:
-      - Corpus ownership outranks broad semantic recall.
-      - The self-corpus `corpus.02.rag-rulebook` may govern retrieval-service behavior.
-    stop_rules:
-      - Stop when a corpus claims ownership of another numbered corpus without an explicit relationship.
-    validation_requirements:
-      - Selector tests must prove matched_corpora is complete for selected chunks.
-    can_change_by:
-      - Add subcorpora.
-      - Add allowed cross-corpus relationships.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/corpus-ownership.yml
 
   - id: rule-graph
-    purpose: Expand context through explicit graph edges rather than accidental proximity.
-    instructions:
-      - Use rule-pack dependencies, required rulesets, related rulesets, and applies-to edges.
-      - Bound graph expansion before ranking.
-      - Keep graph-expanded chunks cited.
-    expansion_rules:
-      - Start with direct matches.
-      - Add required rulesets before related rulesets.
-      - Limit v1 graph expansion to two hops unless a policy change approves more.
-    gap_rules:
-      - Report unresolved graph references instead of dropping them silently.
-    validation_requirements:
-      - Selector tests must include direct and graph-expanded evidence.
-    can_change_by:
-      - Add edge types.
-      - Tune hop limits.
-      - Tune edge priority.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/rule-graph.yml
 
   - id: required-checks
-    purpose: Preserve checks that must be performed before acting.
-    instructions:
-      - Promote required checks from rule packs and workflows into packet required_checks.
-      - Keep checks even when the source chunk would otherwise be trimmed.
-      - Cite every required check.
-    deterministic_rules:
-      - Required checks outrank optional context.
-      - Required checks survive token trimming.
-    validation_requirements:
-      - Packet validation must fail when required check citations do not resolve.
-    can_change_by:
-      - Add task-specific checks.
-      - Add risk-specific checks.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/required-checks.yml
 
   - id: stop-conditions
-    purpose: Make blockers explicit instead of letting retrieval hide uncertainty.
-    instructions:
-      - Promote blocking governance, ownership, validation, and ambiguity conditions into packet stop_conditions or gaps.
-      - "Do not return `routing.status: ready` when a blocking gap is present."
-      - Keep every stop condition cited when it comes from corpus evidence.
-    stop_rules:
-      - Missing corpus ownership is blocking.
-      - Missing validator for a generated packet is blocking.
-      - Ambiguous path ownership is blocking until resolved.
-    validation_requirements:
-      - Packet validation must reject unresolved stop-condition citations.
-    can_change_by:
-      - Add stop conditions.
-      - Tighten severity.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/stop-conditions.yml
 
   - id: token-budget
-    purpose: Keep context augmentation small enough to be useful.
-    instructions:
-      - Select the smallest context that satisfies routing, rules, checks, and stops.
-      - Trim optional explanatory chunks before rules, checks, stops, citations, or provenance.
-      - Record selected_context_tokens and trim_policy.
-    trimming_rules:
-      - Keep mandatory checks.
-      - Keep blocking stops.
-      - Keep citations.
-      - Remove duplicate or lower-confidence chunks first.
-    validation_requirements:
-      - Packet validation must compare selected_context_tokens with selected chunk estimates.
-    can_change_by:
-      - Tune max tokens.
-      - Tune max chunks.
-      - Add consumer-specific budgets.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/token-budget.yml
 
   - id: confidence-thresholds
-    purpose: Decide when retrieval is strong enough to act.
-    instructions:
-      - Score intent, routing, and retrieval separately.
-      - Use gaps when confidence is below threshold.
-      - Do not use fluent summaries to mask low confidence.
-    deterministic_rules:
-      - Exact metadata and path matches raise confidence.
-      - Prompt-only matches without metadata lower confidence.
-    gap_rules:
-      - Retrieval below threshold creates a non-ready packet unless a workflow allows clarification.
-    validation_requirements:
-      - Selector tests must include a low-confidence gap case.
-    can_change_by:
-      - Tune thresholds.
-      - Add layer-specific thresholds.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/confidence-thresholds.yml
 
   - id: validation-handoff
-    purpose: Ensure selected context becomes a usable packet only after validation.
-    instructions:
-      - Generate context packets through the schema contract.
-      - Run packet validation before returning usable context.
-      - Include policy pack ID and version in provenance when selector runtime exists.
-    deterministic_rules:
-      - Validation failure means packet is unusable.
-      - The validator must run after trimming.
-    validation_requirements:
-      - "`scripts/02.rag-rulebook/validate-context-packet/script.sh` must pass for usable packets."
-    can_change_by:
-      - Add policy-pack validation.
-      - Add stricter packet validators.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/validation-handoff.yml
 
   - id: semantic-recall
-    purpose: Reserve a controlled future hook for embeddings or semantic search.
-    instructions:
-      - Keep semantic recall disabled in v1.
-      - Do not let semantic recall run before deterministic filters.
-      - Require citation, ranking, and validation parity before enabling.
-    deterministic_rules:
-      - Semantic recall is a supplement, not an authority.
-    stop_rules:
-      - Stop if semantic recall is requested without an approved embedding and citation policy.
-    validation_requirements:
-      - Future semantic recall must prove it cannot bypass corpus ownership or stop conditions.
-    can_change_by:
-      - Add approved embedding provider policy.
-      - Add reranking policy.
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/semantic-recall.yml
 
 precedence:
   - rank: 1

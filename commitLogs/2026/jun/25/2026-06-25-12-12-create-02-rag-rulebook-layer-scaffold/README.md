@@ -122,6 +122,12 @@ create 02 rag rulebook layer scaffold
   dimensions, precedence ordering, threshold ranges, referenced workflows,
   validators, smoke fixtures, evolution rules, and v1 semantic-recall safety
   before selector runtime code can rely on a policy pack.
+- Modularize retrieval policy dimensions while keeping one active policy pack.
+  The top-level `policies/retrieval-selector/v1.yml` now acts as the manifest,
+  and each imported dimension file owns required inputs, expected actions,
+  banned actions, output obligations, gaps/stops, ranking effects, validation
+  examples, and allowed change paths so future selector runtime code does not
+  invent behavior that belongs in policy.
 
 ## Activity Log
 

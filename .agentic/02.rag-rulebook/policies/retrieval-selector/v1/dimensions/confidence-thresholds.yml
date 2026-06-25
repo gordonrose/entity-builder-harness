@@ -1,0 +1,72 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.confidence-thresholds
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define when retrieval confidence is sufficient for a usable packet.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: confidence-thresholds
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Decide when retrieval is strong enough to act.
+required_inputs:
+  - min_intent_confidence threshold.
+  - min_routing_confidence threshold.
+  - min_retrieval_confidence threshold.
+  - Intent signals.
+  - Routing signals.
+  - Retrieval evidence signals.
+expected_actions:
+  - Score intent, routing, and retrieval separately.
+  - Use gaps when confidence is below threshold.
+  - Raise confidence for exact metadata, path, corpus, and graph matches.
+  - Lower confidence for prompt-only matches without metadata or path support.
+banned_actions:
+  - Do not use fluent summaries to mask low confidence.
+  - Do not average away a blocking low score in routing or retrieval.
+  - Do not mark a packet ready when any required confidence score is below threshold.
+  - Do not lower thresholds without review.
+output_obligations:
+  - intent_confidence
+  - routing_confidence
+  - retrieval_confidence
+  - confidence_gaps
+  - confidence_basis
+gap_or_stop_conditions:
+  - Retrieval below threshold creates a non-ready packet unless a workflow allows clarification.
+  - Routing below threshold creates a routing gap.
+  - Intent below threshold creates an intent gap.
+ranking_effects:
+  - Exact metadata and path matches raise confidence.
+  - Prompt-only matches without metadata lower confidence.
+  - Low confidence demotes optional chunks and may block readiness.
+validation_examples:
+  - name: low retrieval confidence creates gap
+    given: Only broad prompt terms match candidate chunks.
+    expect: Retrieval confidence falls below threshold and the selector reports a gap.
+  - name: exact path raises confidence
+    given: Focused path exactly matches an artifact path.
+    expect: Retrieval confidence increases with path evidence in the basis.
+can_change_by:
+  - Tune thresholds.
+  - Add layer-specific thresholds.
+  - Add confidence basis categories.

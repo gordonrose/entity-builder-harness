@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.stop-conditions
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how blockers and gaps prevent unsafe context readiness.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: stop-conditions
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Make blockers explicit instead of letting retrieval hide uncertainty.
+required_inputs:
+  - Workflow stop conditions.
+  - Policy stop conditions.
+  - Corpus ownership results.
+  - Path ownership results.
+  - Validation results.
+  - Confidence results.
+expected_actions:
+  - Promote blocking governance, ownership, validation, and ambiguity conditions into packet stop_conditions or gaps.
+  - Keep every stop condition cited when it comes from corpus evidence.
+  - Return non-ready routing when a blocking gap is present.
+  - Preserve stop-condition severity through trimming.
+banned_actions:
+  - Do not return `routing.status: ready` when a blocking gap is present.
+  - Do not downgrade missing governance to optional context.
+  - Do not omit stop conditions because they are inconvenient for the requested action.
+  - Do not emit uncited stop conditions when a source citation exists.
+output_obligations:
+  - stop_conditions
+  - stop_condition_citations
+  - blocking_gaps
+  - routing_status
+  - forbidden_actions
+gap_or_stop_conditions:
+  - Missing corpus ownership is blocking.
+  - Missing validator for a generated packet is blocking.
+  - Ambiguous path ownership is blocking until resolved.
+  - Governance coverage gaps block packet readiness.
+ranking_effects:
+  - Stop conditions beat every retrieval score.
+  - Chunks containing blocking stops receive mandatory retention.
+  - Stops survive token-budget trimming.
+validation_examples:
+  - name: blocking gap prevents ready routing
+    given: Focused path ownership is ambiguous.
+    expect: The packet is non-ready and includes the blocking gap.
+  - name: cited stop is retained
+    given: A workflow stop condition is selected.
+    expect: The stop condition and its citation survive trimming.
+can_change_by:
+  - Add stop conditions.
+  - Tighten severity.
+  - Add forbidden action categories.
