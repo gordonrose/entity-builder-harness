@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T14:48:45Z
-latest_commit_sha: 98fefb8
-chat_duration: 12954s (00:03:35:54)
-estimated_chat_tokens: 1338749 estimated from chat transcript bytes (5354994 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 40.16 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T15:04:25Z
+latest_commit_sha: 7f45e8df92470386ddb125119448ef90ff129439
+chat_duration: 13894s (00:03:51:34)
+estimated_chat_tokens: 1475340 estimated from chat transcript bytes (5901357 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 44.26 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -232,6 +232,17 @@ Summary: Added the read-only rulebook chunk generator command, smoke test, comma
 
 ADR impact: No new ADR; this implements the chunk generation slice planned under ADR 0022 and the RAG/Rulebook repo plan.
 
+
+### 2026-06-25T15:04:25Z - Commit recorded
+
+Commit: `7f45e8df92470386ddb125119448ef90ff129439`
+
+Message: Add RAG context packet validator
+
+Summary: Added the read-only context-packet validator command, smoke test, command docs, schema linkage, and repo-plan status. The validator checks rag-rulebook/context-packet/v1 JSON against generated rag-rulebook/chunk-set/v1 chunks so selected chunks, citations, checks, forbidden actions, stop conditions, budgets, confidence, gaps, routing, and provenance resolve before packet use.
+
+ADR impact: No new ADR; this implements the context-packet validation slice planned under ADR 0022 and the RAG/Rulebook repo plan.
+
 ## Commits
 
 
@@ -312,6 +323,13 @@ ADR impact: No new ADR; this implements the chunk generation slice planned under
   Summary: Added the read-only rulebook chunk generator command, smoke test, command docs, schema linkage, and repo-plan status. The generator validates its source index first, then emits rag-rulebook/chunk-set/v1 JSON by rendering structured chunk_candidates into artifact summary, rule, rule-pack step, and required-check chunks with citations, without arbitrary character windows, durable writes, embeddings, network calls, or corpus moves.
   ADR impact: No new ADR; this implements the chunk generation slice planned under ADR 0022 and the RAG/Rulebook repo plan.
 
+
+- Commit: `7f45e8df92470386ddb125119448ef90ff129439`
+  Time UTC: 2026-06-25T15:04:25Z
+  Message: Add RAG context packet validator
+  Summary: Added the read-only context-packet validator command, smoke test, command docs, schema linkage, and repo-plan status. The validator checks rag-rulebook/context-packet/v1 JSON against generated rag-rulebook/chunk-set/v1 chunks so selected chunks, citations, checks, forbidden actions, stop conditions, budgets, confidence, gaps, routing, and provenance resolve before packet use.
+  ADR impact: No new ADR; this implements the context-packet validation slice planned under ADR 0022 and the RAG/Rulebook repo plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -325,11 +343,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T14:48:45Z
-Latest commit SHA: 98fefb8
-Chat duration: 12954s (00:03:35:54)
-Estimated chat tokens: 1338749 estimated from chat transcript bytes (5354994 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 40.16 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T15:04:25Z
+Latest commit SHA: 7f45e8df92470386ddb125119448ef90ff129439
+Chat duration: 13894s (00:03:51:34)
+Estimated chat tokens: 1475340 estimated from chat transcript bytes (5901357 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 44.26 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
