@@ -39,6 +39,8 @@ validation, and standalone service adapters.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.
+- `generate-context-packet-fixture/script.sh` emits a small validated
+  `rag-rulebook/context-packet/v1` fixture from generated or saved chunks.
 
 Do not add new implementation scripts here until a governed task defines the
 capability boundary, inputs, effects, and validation.

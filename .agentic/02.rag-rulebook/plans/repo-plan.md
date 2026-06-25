@@ -101,6 +101,13 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/validate-context-packet/script.sh`.
 
+7a. Add a deterministic context-packet fixture builder.
+   - Assemble a small packet from generated chunks.
+   - Validate the packet before output.
+   - Keep this as a fixture, not semantic retrieval.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -122,6 +129,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add a first context-packet builder fixture that assembles a small deterministic
-packet from generated chunks, validates it, and proves the end-to-end handoff
-from rulebook index to chunk set to context packet.
+Define the first real retrieval selector contract: inputs, deterministic
+filters, graph expansion, ranking, trimming, gap reporting, and validation
+handoff rules for keeping context augmentation small and accurate.

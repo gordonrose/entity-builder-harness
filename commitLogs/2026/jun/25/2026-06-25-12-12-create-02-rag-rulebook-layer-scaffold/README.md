@@ -104,6 +104,12 @@ create 02 rag rulebook layer scaffold
   generated `rag-rulebook/chunk-set/v1` chunks, proving selected chunks,
   citations, checks, forbidden actions, stop conditions, budgets, confidence,
   gaps, routing, and provenance resolve before a packet is used as LLM context.
+- Add a read-only
+  `scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh` command.
+  The fixture generator assembles a small deterministic
+  `rag-rulebook/context-packet/v1` packet from generated or saved chunks,
+  validates it before output, and proves the current index-to-chunks-to-packet
+  handoff without claiming to be semantic retrieval.
 
 ## Activity Log
 
