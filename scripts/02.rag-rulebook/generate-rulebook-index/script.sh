@@ -1,0 +1,755 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.script.generate-rulebook-index
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: indexing
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: script
+#   purpose: Generate a read-only JSON rulebook index from the current prototype architecture rulebook.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   effects:
+#     - read-only
+#   used_by:
+#     - id: rag-rulebook.schema.rulebook-index
+#       path: .agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.script.generate-rulebook-index.readme
+#       path: scripts/02.rag-rulebook/generate-rulebook-index/README.md
+
+python3 - "$@" <<'PY'
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import glob
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+try:
+    import yaml
+except ImportError:  # pragma: no cover - environment gate
+    print("ERROR: python3 yaml module is required for rulebook indexing.", file=sys.stderr)
+    sys.exit(2)
+
+
+DEFAULT_SOURCE_ROOT = "docs/harness/architecture"
+DEFAULT_MIGRATION_MAP = ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml"
+INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
+GENERATOR_VERSION = "prototype-v1"
+
+
+def repo_root() -> Path:
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+    )
+    return Path(result.stdout.strip())
+
+
+ROOT = repo_root()
+
+
+def run_git(args: list[str]) -> str:
+    result = subprocess.run(["git", *args], check=True, text=True, stdout=subprocess.PIPE)
+    return result.stdout.strip()
+
+
+def usage() -> str:
+    return """Usage:
+  generate-rulebook-index/script.sh [--pretty]
+  generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--pretty]
+
+Emits a rag-rulebook/rulebook-index/v1 JSON document to stdout.
+The command is read-only: it parses current prototype corpus files and prints
+the index without moving files or writing generated artifacts.
+"""
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--source-root", default=DEFAULT_SOURCE_ROOT)
+    parser.add_argument("--migration-map", default=DEFAULT_MIGRATION_MAP)
+    parser.add_argument("--pretty", action="store_true")
+    parser.add_argument("-h", "--help", action="store_true")
+    args = parser.parse_args(argv)
+    if args.help:
+        print(usage(), end="")
+        sys.exit(0)
+    return args
+
+
+def normalize_path(path: Path | str) -> str:
+    path_obj = Path(path)
+    if not path_obj.is_absolute():
+        return os.path.normpath(path_obj.as_posix())
+    try:
+        return path_obj.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return path_obj.as_posix()
+
+
+def repo_path(path: str) -> Path:
+    path_obj = Path(path)
+    return path_obj if path_obj.is_absolute() else ROOT / path_obj
+
+
+def safe_id(value: Any) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", ".", str(value or "unknown").lower()).strip(".")
+    return cleaned or "unknown"
+
+
+def content_hash(path: str) -> str:
+    return hashlib.sha256(repo_path(path).read_bytes()).hexdigest()
+
+
+def load_yaml(path: str) -> dict[str, Any]:
+    with repo_path(path).open("r", encoding="utf-8") as handle:
+        data = yaml.safe_load(handle) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"expected mapping YAML: {path}")
+    return data
+
+
+def strip_comment(line: str) -> str:
+    stripped = line.lstrip()
+    if stripped.startswith("# "):
+        return stripped[2:]
+    if stripped.startswith("#"):
+        return stripped[1:]
+    if stripped.startswith("// "):
+        return stripped[3:]
+    if stripped.startswith("//"):
+        return stripped[2:]
+    return line
+
+
+def parse_metadata_header(path: str) -> dict[str, Any]:
+    lines = repo_path(path).read_text(encoding="utf-8").splitlines()[:120]
+    for index, line in enumerate(lines):
+        if "agentic-artifact:" not in line and "agentic-script:" not in line:
+            continue
+        if line.lstrip().startswith("<!--"):
+            marker = line.replace("<!--", "", 1).strip()
+            body_lines: list[str] = []
+            for following in lines[index + 1 :]:
+                if "-->" in following:
+                    before_end = following.split("-->", 1)[0]
+                    if before_end.strip():
+                        body_lines.append(before_end)
+                    break
+                body_lines.append(following)
+            header_lines = [marker]
+            header_lines.extend(f"  {body_line}" if body_line.strip() else body_line for body_line in body_lines)
+        else:
+            header_lines = [strip_comment(line)]
+            for following in lines[index + 1 :]:
+                stripped = following.lstrip()
+                if stripped.startswith("#") or stripped.startswith("//"):
+                    header_lines.append(strip_comment(following))
+                    continue
+                if not following.strip():
+                    break
+                break
+        parsed = yaml.safe_load("\n".join(header_lines)) or {}
+        return parsed.get("agentic-artifact") or parsed.get("agentic-script") or {}
+    return {}
+
+
+def owner_layer_for_corpus(corpus_id: str) -> str:
+    parts = corpus_id.split(".")
+    if len(parts) >= 3:
+        return f"{parts[1]}.{parts[2]}"
+    if len(parts) >= 2:
+        return parts[1]
+    return "unknown"
+
+
+def artifact_ref_for(rulebook_id: str | None, metadata_id: str | None, path: str) -> str:
+    if rulebook_id:
+        return f"artifact.{safe_id(rulebook_id)}"
+    if metadata_id:
+        return f"artifact.{safe_id(metadata_id)}"
+    return f"artifact.path.{safe_id(path)}"
+
+
+def resolve_ref_path(ref: str, owner_path: str) -> str:
+    if ref.startswith(("docs/", ".agentic/", "scripts/", "AGENTS.md")):
+        return normalize_path(ref)
+    candidate = (repo_path(owner_path).parent / ref).resolve()
+    return normalize_path(candidate)
+
+
+def list_of_strings(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
+
+
+def list_of_dicts(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, dict)]
+
+
+def artifact_type_for_group(group_name: str) -> str:
+    if group_name == "layer_rulesets":
+        return "layer-ruleset"
+    if group_name == "concern_rulesets":
+        return "concern-ruleset"
+    if group_name == "rule_packs":
+        return "rule-pack"
+    return "source-guide"
+
+
+def make_source_ref_id(prefix: str, value: str) -> str:
+    return f"source.{safe_id(prefix)}.{safe_id(value)}"
+
+
+def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
+    git_commit = run_git(["rev-parse", "HEAD"])
+    generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    migration_map = load_yaml(migration_map_path)
+
+    artifacts: list[dict[str, Any]] = []
+    rules: list[dict[str, Any]] = []
+    rule_packs: list[dict[str, Any]] = []
+    chunk_candidates: list[dict[str, Any]] = []
+    graph_edges: list[dict[str, Any]] = []
+    source_references: list[dict[str, Any]] = []
+    path_mappings: list[dict[str, Any]] = []
+    unresolved_references: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    errors: list[str] = []
+
+    corpus_packages = [
+        {
+            "corpus_id": entry["corpus_id"],
+            "owner_layer": owner_layer_for_corpus(entry["corpus_id"]),
+            "status": "proposed",
+            "purpose": entry.get("purpose", ""),
+            "source_root_ids": ["root.prototype", "root.migration-map"],
+        }
+        for entry in list_of_dicts(migration_map.get("target_corpora"))
+        if isinstance(entry.get("corpus_id"), str)
+    ]
+
+    known_corpora = {entry["corpus_id"] for entry in corpus_packages}
+    yaml_entries: list[tuple[str, dict[str, Any]]] = []
+    yaml_artifacts = migration_map.get("yaml_artifacts") or {}
+    if isinstance(yaml_artifacts, dict):
+        for group_name in ("layer_rulesets", "concern_rulesets", "rule_packs"):
+            for entry in list_of_dicts(yaml_artifacts.get(group_name)):
+                yaml_entries.append((group_name, entry))
+
+    path_to_artifact_ref: dict[str, str] = {}
+    artifact_refs: set[str] = set()
+    edge_ids: set[str] = set()
+
+    def add_unresolved(ref: str, ref_type: str, owner_ref: str, severity: str, suggested_resolution: str) -> None:
+        unresolved_references.append(
+            {
+                "ref": ref,
+                "ref_type": ref_type,
+                "owner_ref": owner_ref,
+                "severity": severity,
+                "suggested_resolution": suggested_resolution,
+            }
+        )
+
+    def add_edge(
+        from_ref: str,
+        to_ref: str,
+        edge_type: str,
+        reason: str,
+        source_ref_ids: list[str] | None = None,
+    ) -> None:
+        base_id = f"edge.{safe_id(edge_type)}.{safe_id(from_ref)}.{safe_id(to_ref)}"
+        edge_id = base_id
+        counter = 2
+        while edge_id in edge_ids:
+            edge_id = f"{base_id}.{counter}"
+            counter += 1
+        edge_ids.add(edge_id)
+        graph_edges.append(
+            {
+                "edge_id": edge_id,
+                "from_ref": from_ref,
+                "to_ref": to_ref,
+                "edge_type": edge_type,
+                "reason": reason,
+                "source_ref_ids": source_ref_ids or [],
+            }
+        )
+
+    for group_name, entry in yaml_entries:
+        current_path = entry.get("current_path")
+        if not isinstance(current_path, str):
+            continue
+        metadata_id = entry.get("metadata_id")
+        rulebook_id = entry.get("rulebook_id")
+        artifact_ref = artifact_ref_for(rulebook_id, metadata_id, current_path)
+        path_to_artifact_ref[normalize_path(current_path)] = artifact_ref
+
+    def add_artifact(artifact: dict[str, Any]) -> None:
+        artifact_ref = artifact["artifact_ref"]
+        if artifact_ref in artifact_refs:
+            errors.append(f"duplicate artifact_ref: {artifact_ref}")
+        artifact_refs.add(artifact_ref)
+        artifacts.append(artifact)
+        add_edge(
+            artifact_ref,
+            artifact["corpus_id"],
+            "belongs-to-corpus",
+            "Artifact belongs to the corpus selected by the migration map.",
+            artifact.get("source_ref_ids", []),
+        )
+        chunk_id = f"chunk.summary.{safe_id(artifact_ref)}"
+        chunk_candidates.append(
+            {
+                "chunk_id": chunk_id,
+                "artifact_ref": artifact_ref,
+                "corpus_id": artifact["corpus_id"],
+                "content_kind": "artifact-summary",
+                "section_path": "artifact",
+                "source_path": artifact["current_path"],
+                "token_estimate": max(20, len((artifact.get("title") or artifact_ref).split()) * 8),
+                "source_ref_ids": artifact.get("source_ref_ids", []),
+            }
+        )
+        add_edge(artifact_ref, chunk_id, "contains-chunk", "Artifact summary is a retrievable chunk candidate.")
+
+    def add_path_mapping(entry: dict[str, Any], artifact_ref: str | None = None) -> None:
+        current_path = entry.get("current_path")
+        proposed_path = entry.get("proposed_target_path") or entry.get("proposed_path")
+        proposed_corpus_id = entry.get("proposed_corpus_id")
+        migration_status = entry.get("migration_status")
+        if not all(isinstance(value, str) for value in [current_path, proposed_path, proposed_corpus_id, migration_status]):
+            return
+        mapping = {
+            "current_path": current_path,
+            "proposed_path": proposed_path,
+            "proposed_corpus_id": proposed_corpus_id,
+            "migration_status": migration_status,
+            "update_requirements": migration_map.get("reference_update_requirements") or [],
+        }
+        if artifact_ref:
+            mapping["artifact_ref"] = artifact_ref
+        path_mappings.append(mapping)
+        if artifact_ref:
+            add_edge(
+                artifact_ref,
+                proposed_path,
+                "proposed-migration-target",
+                "Migration map proposes this future path for the artifact.",
+            )
+            if migration_status == "split-review-required":
+                add_edge(
+                    artifact_ref,
+                    proposed_path,
+                    "split-review-needed",
+                    "Migration map marks this artifact as mixed concern requiring review before move.",
+                )
+
+    for guide in list_of_dicts((migration_map.get("source_material") or {}).get("guides")):
+        current_path = guide.get("current_path")
+        corpus_id = guide.get("proposed_corpus_id")
+        if not isinstance(current_path, str) or not isinstance(corpus_id, str):
+            continue
+        artifact_ref = artifact_ref_for(None, None, current_path)
+        source_ref_id = make_source_ref_id("guide", current_path)
+        source_references.append(
+            {
+                "source_ref_id": source_ref_id,
+                "corpus_id": corpus_id,
+                "artifact_ref": artifact_ref,
+                "source_path": current_path,
+                "source_type": "source-guide",
+            }
+        )
+        add_artifact(
+            {
+                "artifact_ref": artifact_ref,
+                "artifact_type": "source-guide",
+                "title": Path(current_path).stem,
+                "status": "active",
+                "corpus_id": corpus_id,
+                "current_path": current_path,
+                "proposed_path": guide.get("proposed_target_path"),
+                "migration_status": guide.get("migration_status", "target-candidate"),
+                "source_ref_ids": [source_ref_id],
+                "diagnostics": [],
+            }
+        )
+        add_path_mapping(guide, artifact_ref)
+
+    adrs = (migration_map.get("source_material") or {}).get("adrs") or {}
+    if isinstance(adrs, dict):
+        current_glob = adrs.get("current_glob")
+        proposed_corpus_id = adrs.get("proposed_corpus_id")
+        proposed_target_pattern = adrs.get("proposed_target_pattern")
+        migration_status = adrs.get("migration_status", "target-candidate")
+        if isinstance(current_glob, str) and isinstance(proposed_corpus_id, str):
+            for absolute in sorted(glob.glob((ROOT / current_glob).as_posix())):
+                current_path = normalize_path(Path(absolute))
+                filename = Path(current_path).name
+                if filename == "README.md":
+                    continue
+                proposed_path = None
+                if isinstance(proposed_target_pattern, str):
+                    proposed_path = proposed_target_pattern.replace("<current-filename>", filename)
+                artifact_ref = artifact_ref_for(None, None, current_path)
+                source_ref_id = make_source_ref_id("adr", current_path)
+                source_references.append(
+                    {
+                        "source_ref_id": source_ref_id,
+                        "corpus_id": proposed_corpus_id,
+                        "artifact_ref": artifact_ref,
+                        "source_path": current_path,
+                        "source_type": "adr",
+                    }
+                )
+                add_artifact(
+                    {
+                        "artifact_ref": artifact_ref,
+                        "artifact_type": "adr",
+                        "title": Path(current_path).stem,
+                        "status": "active",
+                        "corpus_id": proposed_corpus_id,
+                        "current_path": current_path,
+                        "proposed_path": proposed_path,
+                        "migration_status": migration_status,
+                        "source_ref_ids": [source_ref_id],
+                        "diagnostics": [],
+                    }
+                )
+                if proposed_path:
+                    add_path_mapping(
+                        {
+                            "current_path": current_path,
+                            "proposed_target_path": proposed_path,
+                            "proposed_corpus_id": proposed_corpus_id,
+                            "migration_status": migration_status,
+                        },
+                        artifact_ref,
+                    )
+
+    for group_name, entry in yaml_entries:
+        current_path = entry.get("current_path")
+        if not isinstance(current_path, str):
+            continue
+        artifact_ref = path_to_artifact_ref[normalize_path(current_path)]
+        corpus_id = entry.get("proposed_corpus_id")
+        if not isinstance(corpus_id, str):
+            errors.append(f"missing proposed_corpus_id for {current_path}")
+            corpus_id = "unknown"
+        if corpus_id not in known_corpora:
+            add_unresolved(corpus_id, "corpus-manifest", artifact_ref, "error", "Add the corpus to target_corpora.")
+        if not repo_path(current_path).is_file():
+            errors.append(f"missing YAML artifact: {current_path}")
+            yaml_data: dict[str, Any] = {}
+            metadata: dict[str, Any] = {}
+        else:
+            yaml_data = load_yaml(current_path)
+            metadata = parse_metadata_header(current_path)
+
+        source_ref_id = make_source_ref_id("artifact", current_path)
+        source_references.append(
+            {
+                "source_ref_id": source_ref_id,
+                "corpus_id": corpus_id,
+                "artifact_ref": artifact_ref,
+                "source_path": current_path,
+                "source_type": "rule-pack" if group_name == "rule_packs" else "rule",
+            }
+        )
+
+        related_ruleset_refs = list_of_strings(yaml_data.get("related_rulesets"))
+        required_ruleset_refs = list_of_strings(yaml_data.get("required_rulesets"))
+        applies_to_paths = list_of_strings((yaml_data.get("applies_to") or {}).get("paths"))
+        artifact = {
+            "artifact_ref": artifact_ref,
+            "metadata_id": entry.get("metadata_id") or metadata.get("id"),
+            "rulebook_id": entry.get("rulebook_id") or yaml_data.get("id"),
+            "artifact_type": artifact_type_for_group(group_name),
+            "title": entry.get("title") or yaml_data.get("title"),
+            "status": yaml_data.get("status") or "active",
+            "version": yaml_data.get("version") or 1,
+            "corpus_id": corpus_id,
+            "current_path": current_path,
+            "proposed_path": entry.get("proposed_target_path"),
+            "migration_status": entry.get("migration_status", "target-candidate"),
+            "applies_to_paths": applies_to_paths,
+            "related_ruleset_refs": related_ruleset_refs,
+            "required_ruleset_refs": required_ruleset_refs,
+            "source_ref_ids": [source_ref_id],
+            "diagnostics": [],
+        }
+        add_artifact(artifact)
+        add_path_mapping(entry, artifact_ref)
+
+        for path_glob in applies_to_paths:
+            add_edge(artifact_ref, path_glob, "applies-to-path", "Ruleset declares this path glob in applies_to.paths.")
+
+        for ref in related_ruleset_refs:
+            resolved = resolve_ref_path(ref, current_path)
+            target_ref = path_to_artifact_ref.get(resolved)
+            if target_ref:
+                add_edge(artifact_ref, target_ref, "related-ruleset", "Ruleset declares this related ruleset.")
+            else:
+                add_unresolved(ref, "related-ruleset", artifact_ref, "warning", f"Resolve or update path: {resolved}")
+
+        for ref in required_ruleset_refs:
+            resolved = resolve_ref_path(ref, current_path)
+            target_ref = path_to_artifact_ref.get(resolved)
+            if target_ref:
+                add_edge(artifact_ref, target_ref, "required-ruleset", "Artifact declares this required ruleset.")
+            else:
+                add_unresolved(ref, "required-ruleset", artifact_ref, "blocking", f"Resolve or update path: {resolved}")
+
+        for index, rule in enumerate(list_of_dicts(yaml_data.get("rules"))):
+            rule_id = rule.get("id") or f"{yaml_data.get('id', artifact_ref)}.rule-{index + 1}"
+            rule_ref = f"rule.{safe_id(artifact_ref)}.{safe_id(rule_id)}"
+            chunk_id = f"chunk.{safe_id(rule_ref)}"
+            rules.append(
+                {
+                    "rule_ref": rule_ref,
+                    "rule_id": rule_id,
+                    "artifact_ref": artifact_ref,
+                    "corpus_id": corpus_id,
+                    "title": rule.get("title") or rule_id,
+                    "severity": rule.get("severity"),
+                    "summary": rule.get("summary"),
+                    "section_path": f"rules[{index}]",
+                    "source_ref_ids": [source_ref_id],
+                    "chunk_candidate_ids": [chunk_id],
+                }
+            )
+            chunk_candidates.append(
+                {
+                    "chunk_id": chunk_id,
+                    "artifact_ref": artifact_ref,
+                    "rule_ref": rule_ref,
+                    "corpus_id": corpus_id,
+                    "content_kind": "rule",
+                    "section_path": f"rules[{index}]",
+                    "source_path": current_path,
+                    "token_estimate": max(40, len(str(rule.get("summary") or rule.get("title") or rule_id).split()) * 10),
+                    "source_ref_ids": [source_ref_id],
+                }
+            )
+            add_edge(artifact_ref, rule_ref, "contains-rule", "Ruleset contains this rule.", [source_ref_id])
+            add_edge(rule_ref, chunk_id, "contains-chunk", "Rule is a retrievable chunk candidate.", [source_ref_id])
+
+        if group_name == "rule_packs":
+            pack_id = yaml_data.get("id") or entry.get("rulebook_id") or Path(current_path).stem
+            pack_ref = f"pack.{safe_id(pack_id)}"
+            agent_step_ids = [step.get("id") for step in list_of_dicts(yaml_data.get("agent_steps")) if isinstance(step.get("id"), str)]
+            required_checks = list_of_strings(yaml_data.get("required_checks"))
+            pack = {
+                "pack_ref": pack_ref,
+                "pack_id": pack_id,
+                "artifact_ref": artifact_ref,
+                "corpus_id": corpus_id,
+                "task_type": yaml_data.get("task_type"),
+                "applies_when": list_of_strings(yaml_data.get("applies_when")),
+                "required_ruleset_refs": required_ruleset_refs,
+                "required_checks": required_checks,
+                "agent_step_ids": agent_step_ids,
+            }
+            rule_packs.append(pack)
+            add_edge(artifact_ref, pack_ref, "contains-pack", "Rule-pack artifact contains this task pack.", [source_ref_id])
+
+            for ref in required_ruleset_refs:
+                resolved = resolve_ref_path(ref, current_path)
+                target_ref = path_to_artifact_ref.get(resolved)
+                if target_ref:
+                    add_edge(pack_ref, target_ref, "required-ruleset", "Task pack requires this ruleset.", [source_ref_id])
+
+            for index, step in enumerate(list_of_dicts(yaml_data.get("agent_steps"))):
+                step_id = step.get("id") or f"step-{index + 1}"
+                chunk_id = f"chunk.{safe_id(pack_ref)}.step.{safe_id(step_id)}"
+                chunk_candidates.append(
+                    {
+                        "chunk_id": chunk_id,
+                        "artifact_ref": artifact_ref,
+                        "pack_ref": pack_ref,
+                        "corpus_id": corpus_id,
+                        "content_kind": "rule-pack-step",
+                        "section_path": f"agent_steps[{index}]",
+                        "source_path": current_path,
+                        "token_estimate": max(30, len(str(step.get("instruction") or step_id).split()) * 8),
+                        "source_ref_ids": [source_ref_id],
+                    }
+                )
+                add_edge(pack_ref, chunk_id, "contains-chunk", "Task pack step is a retrievable chunk candidate.", [source_ref_id])
+
+            for index, check in enumerate(required_checks):
+                chunk_id = f"chunk.{safe_id(pack_ref)}.required-check.{index + 1}"
+                chunk_candidates.append(
+                    {
+                        "chunk_id": chunk_id,
+                        "artifact_ref": artifact_ref,
+                        "pack_ref": pack_ref,
+                        "corpus_id": corpus_id,
+                        "content_kind": "required-check",
+                        "section_path": f"required_checks[{index}]",
+                        "source_path": current_path,
+                        "token_estimate": max(20, len(check.split()) * 6),
+                        "source_ref_ids": [source_ref_id],
+                    }
+                )
+                add_edge(pack_ref, chunk_id, "contains-chunk", "Task pack check is a retrievable chunk candidate.", [source_ref_id])
+
+            for index, source_ref in enumerate(list_of_dicts(yaml_data.get("source_refs"))):
+                doc = source_ref.get("doc")
+                if not isinstance(doc, str):
+                    continue
+                source_path = f"{source_root}/guides/markdown/{doc}"
+                if not repo_path(source_path).is_file():
+                    source_path = doc
+                extra_source_ref_id = make_source_ref_id(pack_ref, f"{doc}.{index}")
+                source_references.append(
+                    {
+                        "source_ref_id": extra_source_ref_id,
+                        "corpus_id": corpus_id,
+                        "artifact_ref": artifact_ref,
+                        "source_path": source_path,
+                        "source_type": "source-guide",
+                        "section": ", ".join(list_of_strings(source_ref.get("sections"))),
+                    }
+                )
+                add_edge(pack_ref, extra_source_ref_id, "cites-source", "Task pack cites this source guide section.", [source_ref_id])
+
+    def duplicate_values(values: list[str]) -> list[str]:
+        seen: set[str] = set()
+        dupes: set[str] = set()
+        for value in values:
+            if value in seen:
+                dupes.add(value)
+            seen.add(value)
+        return sorted(dupes)
+
+    for label, values in (
+        ("metadata_id", [artifact.get("metadata_id") for artifact in artifacts if artifact.get("metadata_id")]),
+        ("rulebook_id", [artifact.get("rulebook_id") for artifact in artifacts if artifact.get("rulebook_id")]),
+        ("rule_id", [rule.get("rule_id") for rule in rules if rule.get("rule_id")]),
+        ("pack_id", [pack.get("pack_id") for pack in rule_packs if pack.get("pack_id")]),
+    ):
+        for duplicate in duplicate_values([str(value) for value in values]):
+            errors.append(f"duplicate {label}: {duplicate}")
+
+    if any(entry.get("severity") == "blocking" for entry in unresolved_references):
+        errors.append("blocking unresolved references exist")
+
+    if not artifacts:
+        errors.append("no artifacts indexed")
+
+    logical_fingerprint = hashlib.sha256(
+        json.dumps(
+            {
+                "source_root": source_root,
+                "migration_map": migration_map_path,
+                "git_commit": git_commit,
+                "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
+                "rule_refs": [rule["rule_ref"] for rule in rules],
+                "pack_refs": [pack["pack_ref"] for pack in rule_packs],
+                "path_mappings": path_mappings,
+                "unresolved_references": unresolved_references,
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()[:12]
+
+    input_paths = [migration_map_path]
+    input_paths.extend(entry.get("current_path") for _, entry in yaml_entries if isinstance(entry.get("current_path"), str))
+    inputs = []
+    for path in sorted(set(input_paths)):
+        if repo_path(path).is_file():
+            inputs.append({"path": path, "role": "input", "content_hash": content_hash(path)})
+        else:
+            inputs.append({"path": path, "role": "missing"})
+
+    diagnostics = {
+        "ok": not errors,
+        "counts": {
+            "corpus_packages": len(corpus_packages),
+            "artifacts": len(artifacts),
+            "rules": len(rules),
+            "rule_packs": len(rule_packs),
+            "chunk_candidates": len(chunk_candidates),
+            "graph_edges": len(graph_edges),
+            "unresolved_references": len(unresolved_references),
+        },
+        "warnings": warnings,
+        "errors": errors,
+    }
+
+    return {
+        "schema": INDEX_SCHEMA,
+        "index_id": f"index.rulebook.{git_commit[:12]}.{logical_fingerprint}",
+        "generated_at": generated_at,
+        "source_roots": [
+            {
+                "root_id": "root.prototype",
+                "path": source_root,
+                "role": "prototype-corpus",
+                "migration_status": "current",
+            },
+            {
+                "root_id": "root.migration-map",
+                "path": migration_map_path,
+                "role": "migration-map",
+                "migration_status": "proposed",
+            },
+        ],
+        "corpus_packages": corpus_packages,
+        "artifacts": artifacts,
+        "rules": rules,
+        "rule_packs": rule_packs,
+        "chunk_candidates": chunk_candidates,
+        "graph_edges": graph_edges,
+        "source_references": source_references,
+        "path_mappings": path_mappings,
+        "unresolved_references": unresolved_references,
+        "diagnostics": diagnostics,
+        "provenance": {
+            "generator": "scripts/02.rag-rulebook/generate-rulebook-index/script.sh",
+            "generator_version": GENERATOR_VERSION,
+            "git_commit": git_commit,
+            "inputs": inputs,
+        },
+    }
+
+
+def main(argv: list[str]) -> int:
+    args = parse_args(argv)
+    index = build_index(normalize_path(args.source_root), normalize_path(args.migration_map))
+    json.dump(index, sys.stdout, indent=2 if args.pretty else None, sort_keys=True)
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
+PY

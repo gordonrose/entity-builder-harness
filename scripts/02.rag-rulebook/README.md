@@ -8,7 +8,7 @@ domain: scripts
 disciplines:
 - agentic
 kind: script-layer-readme
-purpose: Reserve the RAG and rulebook executable command surface for future standalone retrieval and corpus tooling.
+purpose: Define the RAG and rulebook executable command surface for standalone retrieval and corpus tooling.
 portability:
   class: required
   targets:
@@ -21,9 +21,15 @@ used_by:
 -->
 # 02.rag-rulebook Scripts
 
-This directory is reserved for future RAG/rulebook command capabilities such as
-corpus extraction, rulebook index generation, chunk generation, graph expansion,
-context-packet validation, and standalone service adapters.
+This directory owns RAG/rulebook command capabilities such as corpus extraction,
+rulebook index generation, chunk generation, graph expansion, context-packet
+validation, and standalone service adapters.
 
-Do not add implementation scripts here until a governed task defines the
+## Commands
+
+- `generate-rulebook-index/script.sh` emits a read-only
+  `rag-rulebook/rulebook-index/v1` JSON index for the current prototype
+  architecture rulebook and migration map.
+
+Do not add new implementation scripts here until a governed task defines the
 capability boundary, inputs, effects, and validation.

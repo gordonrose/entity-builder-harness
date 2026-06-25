@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.script.generate-rulebook-index.smoke-test
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: indexing
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: script
+#   purpose: Smoke test the read-only prototype rulebook index generator.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   effects:
+#     - read-only
+#   used_by:
+#     - id: rag-rulebook.script.generate-rulebook-index
+#       path: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+INDEX_FILE="$TMP_DIR/rulebook-index.json"
+
+bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh --pretty > "$INDEX_FILE"
+
+python3 - "$INDEX_FILE" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+index_path = Path(sys.argv[1])
+data = json.loads(index_path.read_text(encoding="utf-8"))
+
+assert data["schema"] == "rag-rulebook/rulebook-index/v1"
+assert data["diagnostics"]["ok"], data["diagnostics"]
+assert data["diagnostics"]["counts"]["corpus_packages"] >= 10
+assert data["diagnostics"]["counts"]["artifacts"] >= 26
+assert data["diagnostics"]["counts"]["rule_packs"] == 4
+assert data["diagnostics"]["counts"]["rules"] > 0
+assert data["diagnostics"]["counts"]["graph_edges"] > 0
+assert data["diagnostics"]["counts"]["chunk_candidates"] > data["diagnostics"]["counts"]["rules"]
+
+print("Rulebook index smoke test passed.")
+print(json.dumps(data["diagnostics"]["counts"], sort_keys=True))
+PY

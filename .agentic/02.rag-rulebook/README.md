@@ -105,6 +105,12 @@ final homes.
   prototype corpus and maps YAML rules, rule packs, source guides, and ADRs to
   proposed numbered corpus packages before any file moves.
 
+## Commands
+
+- `scripts/02.rag-rulebook/generate-rulebook-index/script.sh` - emits a
+  read-only `rag-rulebook/rulebook-index/v1` JSON index from the current
+  prototype architecture rulebook and migration map.
+
 ## Output Locations
 
 Do not create a RAG server, MCP server, or new domain corpus without explicit

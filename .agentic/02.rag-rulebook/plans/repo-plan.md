@@ -78,6 +78,8 @@ The location is not the final domain corpus model.
    - Emit deterministic JSON.
    - Validate duplicate IDs and missing references.
    - Do not use embeddings or network calls.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`.
 
 6. Add a chunk generator.
    - Chunk by YAML structure, not arbitrary character windows.
@@ -108,4 +110,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add a read-only index generator for the current prototype YAML rulebook.
+Add the chunk generator or a dedicated rulebook-index validator on top of the
+generated index contract.

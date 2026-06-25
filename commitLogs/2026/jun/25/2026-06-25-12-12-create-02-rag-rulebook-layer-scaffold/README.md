@@ -81,6 +81,12 @@ create 02 rag rulebook layer scaffold
   candidates, graph edges, source references, path mappings, unresolved
   references, diagnostics, and provenance, and advances the next slice to a
   read-only current-state index generator.
+- Add a read-only `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`
+  command. The generator emits `rag-rulebook/rulebook-index/v1` JSON from the
+  current prototype architecture corpus and migration map, resolves
+  related/required ruleset edges, extracts rule and rule-pack chunk
+  candidates, reports unresolved references, and does not move files, write
+  generated artifacts, use embeddings, or call the network.
 
 ## Activity Log
 
