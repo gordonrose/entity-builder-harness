@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T18:35:50Z
-latest_commit_sha: 25d191bde93e3b968650fb22ccb88ec500618e02
-chat_duration: 26579s (00:07:22:59)
-estimated_chat_tokens: 1707841 estimated from chat transcript bytes (6831364 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 51.24 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T18:52:53Z
+latest_commit_sha: aae2481
+chat_duration: 27602s (00:07:40:02)
+estimated_chat_tokens: 1852256 estimated from chat transcript bytes (7409023 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 55.57 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -283,6 +283,17 @@ Summary: Added the retrieval selector policy system standard, retrieval-policy-p
 
 ADR impact: No new ADR; this elaborates ADR 0022 and updates the RAG/Rulebook repo plan before selector implementation.
 
+
+### 2026-06-25T18:52:53Z - Commit recorded
+
+Commit: `aae2481`
+
+Message: Add RAG retrieval policy validator
+
+Summary: Added the read-only retrieval policy-pack validator command, smoke test, command docs, schema/policy linkage, and repo-plan status. The validator checks retrieval-policy-pack YAML for required fields, required dimensions, per-dimension instruction and validation coverage, precedence ordering, threshold ranges, referenced workflows, validator scripts, smoke fixtures, evolution rules, and v1 semantic-recall safety before selector runtime code can rely on a policy pack.
+
+ADR impact: No new ADR; this implements the policy-pack validation slice planned under ADR 0022 and the RAG/Rulebook repo plan.
+
 ## Commits
 
 
@@ -384,6 +395,13 @@ ADR impact: No new ADR; this elaborates ADR 0022 and updates the RAG/Rulebook re
   Summary: Added the retrieval selector policy system standard, retrieval-policy-pack schema, seed v1 selector policy pack, layer README links, portable service contract linkage, and repo-plan status. The policy system makes context selection evolvable across prompt, session metadata, layer/mode/workflow, focused paths, corpus ownership, rule graph expansion, required checks, stop conditions, token budget, confidence thresholds, validation handoff, and future semantic recall before runtime selector code is added.
   ADR impact: No new ADR; this elaborates ADR 0022 and updates the RAG/Rulebook repo plan before selector implementation.
 
+
+- Commit: `aae2481`
+  Time UTC: 2026-06-25T18:52:53Z
+  Message: Add RAG retrieval policy validator
+  Summary: Added the read-only retrieval policy-pack validator command, smoke test, command docs, schema/policy linkage, and repo-plan status. The validator checks retrieval-policy-pack YAML for required fields, required dimensions, per-dimension instruction and validation coverage, precedence ordering, threshold ranges, referenced workflows, validator scripts, smoke fixtures, evolution rules, and v1 semantic-recall safety before selector runtime code can rely on a policy pack.
+  ADR impact: No new ADR; this implements the policy-pack validation slice planned under ADR 0022 and the RAG/Rulebook repo plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -397,11 +415,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T18:35:50Z
-Latest commit SHA: 25d191bde93e3b968650fb22ccb88ec500618e02
-Chat duration: 26579s (00:07:22:59)
-Estimated chat tokens: 1707841 estimated from chat transcript bytes (6831364 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 51.24 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T18:52:53Z
+Latest commit SHA: aae2481
+Chat duration: 27602s (00:07:40:02)
+Estimated chat tokens: 1852256 estimated from chat transcript bytes (7409023 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 55.57 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
