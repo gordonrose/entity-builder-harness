@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T20:13:47Z
-latest_commit_sha: b7c91a5
-chat_duration: 32456s (00:09:00:56)
-estimated_chat_tokens: 2269290 estimated from chat transcript bytes (9077159 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 68.08 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T20:31:13Z
+latest_commit_sha: 19af7ab
+chat_duration: 33502s (00:09:18:22)
+estimated_chat_tokens: 2439289 estimated from chat transcript bytes (9757156 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 73.18 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -340,6 +340,17 @@ Decision: Add conditional RAG/rulebook commit gate
 
 Rationale: When .agentic/02.rag-rulebook exists, the chat before-commit readiness gate now requires scripts/02.rag-rulebook/commit-gates/script.sh. The RAG/rulebook layer owns the validators inside that gate, including the future recognition-source validator once recognition sources exist.
 
+
+### 2026-06-25T20:31:13Z - Commit recorded
+
+Commit: `19af7ab`
+
+Message: Add conditional RAG rulebook commit gate
+
+Summary: Added a RAG/rulebook commit-gates capability and wired the chat before-commit readiness gate to call it whenever .agentic/02.rag-rulebook exists. The layer gate validates the retrieval policy pack now and requires a recognition-source validator once recognition sources are present.
+
+ADR impact: No new ADR; this implements commit-boundary enforcement for the RAG/Rulebook layer under ADR 0022.
+
 ## Commits
 
 
@@ -462,6 +473,13 @@ Rationale: When .agentic/02.rag-rulebook exists, the chat before-commit readines
   Summary: Added the recognition-source system standard and recognition-source schema, updated the prompt retrieval dimension to use governed generated and curated lookup sources, added prompt extraction rules and structured classification outputs, and strengthened the policy-pack validator/smoke test so the prompt dimension must define recognition-source coverage.
   ADR impact: No new ADR; this extends the RAG/Rulebook retrieval selector architecture under ADR 0022 and the repo plan before selector runtime implementation.
 
+
+- Commit: `19af7ab`
+  Time UTC: 2026-06-25T20:31:13Z
+  Message: Add conditional RAG rulebook commit gate
+  Summary: Added a RAG/rulebook commit-gates capability and wired the chat before-commit readiness gate to call it whenever .agentic/02.rag-rulebook exists. The layer gate validates the retrieval policy pack now and requires a recognition-source validator once recognition sources are present.
+  ADR impact: No new ADR; this implements commit-boundary enforcement for the RAG/Rulebook layer under ADR 0022.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -475,11 +493,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T20:13:47Z
-Latest commit SHA: b7c91a5
-Chat duration: 32456s (00:09:00:56)
-Estimated chat tokens: 2269290 estimated from chat transcript bytes (9077159 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 68.08 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T20:31:13Z
+Latest commit SHA: 19af7ab
+Chat duration: 33502s (00:09:18:22)
+Estimated chat tokens: 2439289 estimated from chat transcript bytes (9757156 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 73.18 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
