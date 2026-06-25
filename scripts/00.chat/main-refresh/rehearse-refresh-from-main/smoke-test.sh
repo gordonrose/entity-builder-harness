@@ -67,7 +67,7 @@ cleanup() {
 trap cleanup EXIT
 
 REPO="$TMP_ROOT/repo"
-SESSION_ID="2026-06-17-00-01-preflight-chat"
+SESSION_ID="2026-06-17-00-01-preflight-chat-with-a-long-trailing-hyphen-name-that-needs-safe-preflight-shortening-"
 SESSION_LOG="commitLogs/2026/jun/17/${SESSION_ID}/README.md"
 
 mkdir -p \
@@ -133,6 +133,12 @@ PREFLIGHT_HEAD="$(printf '%s\n' "$PREFLIGHT_OUTPUT" | sed -n 's/^preflight_head=
 
 if [ -z "$PREFLIGHT_BRANCH" ] || [ -z "$PREFLIGHT_WORKTREE" ] || [ -z "$PREFLIGHT_HEAD" ]; then
   fail "preflight did not report branch, worktree, and head"
+fi
+
+PREFLIGHT_NAMESPACE="${PREFLIGHT_BRANCH%/*}"
+PREFLIGHT_NAMESPACE="${PREFLIGHT_NAMESPACE##*/}"
+if [ "${#PREFLIGHT_NAMESPACE}" -gt 64 ]; then
+  fail "preflight namespace was not shortened: $PREFLIGHT_NAMESPACE"
 fi
 
 if ! printf '%s\n' "$PREFLIGHT_OUTPUT" | grep -q '^result=clean-merge$'; then

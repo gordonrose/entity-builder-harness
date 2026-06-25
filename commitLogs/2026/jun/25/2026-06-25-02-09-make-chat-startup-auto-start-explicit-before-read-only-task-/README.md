@@ -41,6 +41,10 @@ make chat startup auto-start explicit before read-only task mode
 - Raised: Agents treated root main as read-only orientation
   Resolution: Added a startup resolver and clarified the missing-session path so read-current-chat-log on root main routes to auto-start instead of stopping.
 
+
+- Raised: Preflight refresh branch creation failed for this long chat branch
+  Resolution: Updated rehearse-refresh-from-main to shorten the generated preflight namespace and added smoke coverage for long trailing-hyphen chat branch names.
+
 ## Decisions Made
 
 
@@ -85,6 +89,13 @@ Message: Make chat startup auto-start explicit
 Summary: Added a startup resolver, clarified chat-start bootstrap versus task read-only mode, and updated tests/docs for governed auto-start from root main.
 
 ADR impact: No ADR needed; this implements the existing chat-start lifecycle model.
+
+
+### 2026-06-25T08:40:03Z - Issue
+
+Raised: Preflight refresh branch creation failed for this long chat branch
+
+Resolution: Updated rehearse-refresh-from-main to shorten the generated preflight namespace and added smoke coverage for long trailing-hyphen chat branch names.
 
 ## Commits
 
