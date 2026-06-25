@@ -26,7 +26,8 @@ set -euo pipefail
 #   effects:
 #   - read-only
 
-TASK="${*:-}"
+TASK_RAW="${*:-}"
+TASK="$(printf '%s' "$TASK_RAW" | tr '[:upper:]' '[:lower:]')"
 
 classify_mode() {
   case "$TASK" in
@@ -86,7 +87,7 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/01.harness/workflows/change-harness.md"
     ;;
-  *chat\ start*|*start\ chat*|*chat\ startup*|*session\ metadata*|*session\ log*|*session\ logs*|*chat\ session*|*chat*worktree*session*|*chat-owned\ worktree*)
+  *chat\ start*|*start\ chat*|*chat\ startup*|*unknown-classification\ prompt*|*classification\ prompt*|*session\ metadata*|*session\ log*|*session\ logs*|*chat\ session*|*chat*worktree*session*|*chat-owned\ worktree*)
     echo "Layer: chat"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
