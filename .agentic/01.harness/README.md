@@ -53,7 +53,7 @@ Future Codex sessions continuing rulebook work should start by reading
 
 ## Standards
 
-- `standards/agentic-artifact-standards.md` - decides which artifact type should own new harness capabilities, including workflows, skills, standards, gates, hooks, evals, templates, examples, memory, agents, adapters, and scripts.
+- `standards/agentic-artifact-standards.md` - decides which artifact type should own new harness capabilities, including workflows, skills, standards, gates, hooks, evals, templates, schemas, examples, memory, agents, adapters, and scripts.
 - `standards/artifact-metadata-headers.md` - defines the compatibility v1 metadata header format and points to the versioned artifact metadata capability.
 - `standards/artifact-path-migrations.md` - defines compatibility rules for moving, renaming, retiring, or removing repository artifact paths.
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.

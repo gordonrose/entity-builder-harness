@@ -66,6 +66,10 @@ create 02 rag rulebook layer scaffold
 - Teach context packets in two layers: structured `field_guide` entries inside
   the schema for machine-readable field explanations, plus a companion guide
   for human mental models, good and bad packet shapes, and LLM usage rules.
+- Promote the schema teachability pattern into the harness artifact standard:
+  new or materially changed schemas should include structured field
+  explanations, validation rules where deterministic, a companion guide unless
+  explicitly unnecessary, and metadata/index links between schema and guide.
 
 ## Activity Log
 
