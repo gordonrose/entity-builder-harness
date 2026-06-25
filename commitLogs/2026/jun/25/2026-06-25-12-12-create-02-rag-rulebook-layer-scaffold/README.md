@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T13:24:32Z
-latest_commit_sha: 6b2fbb0
-chat_duration: 7901s (00:02:11:41)
-estimated_chat_tokens: 1050165 estimated from chat transcript bytes (4200658 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 31.50 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T13:50:18Z
+latest_commit_sha: 258891a
+chat_duration: 9447s (00:02:37:27)
+estimated_chat_tokens: 1180913 estimated from chat transcript bytes (4723649 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 35.43 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -182,6 +182,17 @@ Summary: Added the reusable rulebook-index v1 schema and companion guide, linked
 
 ADR impact: No new ADR; this schema elaborates ADR 0022 and uses the prototype corpus migration map.
 
+
+### 2026-06-25T13:50:18Z - Commit recorded
+
+Commit: `258891a`
+
+Message: Add RAG rulebook index generator
+
+Summary: Added the read-only RAG/Rulebook index generator command, smoke test, command docs, schema linkage, and repo-plan status. The generator emits rag-rulebook/rulebook-index/v1 JSON from the current prototype architecture corpus and migration map without moving files, writing generated artifacts, using embeddings, or calling the network.
+
+ADR impact: No new ADR; this implements the read-only generator slice planned under ADR 0022 and the RAG/Rulebook repo plan.
+
 ## Commits
 
 
@@ -241,6 +252,13 @@ ADR impact: No new ADR; this schema elaborates ADR 0022 and uses the prototype c
   Summary: Added the reusable rulebook-index v1 schema and companion guide, linked them from the RAG/Rulebook README and repo plan, and advanced the next slice to a read-only current-state index generator.
   ADR impact: No new ADR; this schema elaborates ADR 0022 and uses the prototype corpus migration map.
 
+
+- Commit: `258891a`
+  Time UTC: 2026-06-25T13:50:18Z
+  Message: Add RAG rulebook index generator
+  Summary: Added the read-only RAG/Rulebook index generator command, smoke test, command docs, schema linkage, and repo-plan status. The generator emits rag-rulebook/rulebook-index/v1 JSON from the current prototype architecture corpus and migration map without moving files, writing generated artifacts, using embeddings, or calling the network.
+  ADR impact: No new ADR; this implements the read-only generator slice planned under ADR 0022 and the RAG/Rulebook repo plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -254,11 +272,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T13:24:32Z
-Latest commit SHA: 6b2fbb0
-Chat duration: 7901s (00:02:11:41)
-Estimated chat tokens: 1050165 estimated from chat transcript bytes (4200658 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 31.50 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T13:50:18Z
+Latest commit SHA: 258891a
+Chat duration: 9447s (00:02:37:27)
+Estimated chat tokens: 1180913 estimated from chat transcript bytes (4723649 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 35.43 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
