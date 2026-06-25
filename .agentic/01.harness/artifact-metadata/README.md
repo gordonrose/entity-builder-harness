@@ -46,6 +46,7 @@ planning, and cross-repo extraction.
 - `scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh` proves the
   checker accepts v1 and v2 headers and rejects a generated missing-header
   fixture.
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh --batch <n>` applies one governed v2 backfill batch, validates it, commits it, records the chat commit, and checkpoints the session log.
 - `scripts/01.harness/artifact-metadata/generate-index/script.sh` emits a JSON
   artifact index from v1 and v2 metadata headers.
 - `scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh` proves
