@@ -62,6 +62,7 @@ ALLOWED_SOURCE_KINDS = {
     "schema-name",
     "corpus-id",
     "layer-name",
+    "mode-name",
     "workflow-name",
     "rule-id",
     "rule-pack-id",

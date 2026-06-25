@@ -26,30 +26,43 @@ used_by:
 
 `script.sh` generates committed recognition-source YAML from governed metadata.
 
-The first generated source is:
+The generated sources are:
 
 ```text
 .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+.agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 ```
 
-It is derived from the artifact metadata index. The generator does not parse
-metadata headers itself; it delegates to the existing artifact metadata indexer.
+`artifacts.yml` is derived from the artifact metadata index. The generator does
+not parse metadata headers itself; it delegates to the existing artifact
+metadata indexer.
+
+`routing.yml` is derived from governed routing, layer, workflow, corpus, and
+mode sources.
 
 ## Usage
 
-Regenerate the committed source:
+Regenerate all committed sources:
 
 ```bash
-bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all
+```
+
+Regenerate one committed source:
+
+```bash
+bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh \
+  --source routing \
+  --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 ```
 
 Print generated YAML without writing:
 
 ```bash
-bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --print
+bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --source artifacts --print
 ```
 
-Check the committed source is current:
+Check committed sources are current:
 
 ```bash
 bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
@@ -58,9 +71,11 @@ bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
 ## Maintenance Rule
 
 The RAG/rulebook commit gate runs `--check` when generated recognition sources
-exist. If artifact metadata changes and the generated source is stale, the
-commit gate fails before the task commit.
+exist. If artifact metadata, routing policy, layer taxonomy, workflow files, or
+retrieval policy change and generated sources are stale, the commit gate fails
+before the task commit.
 
 ## Effects
 
-`--print` and `--check` are read-only. `--output` writes the generated YAML file.
+`--print` and `--check` are read-only. `--output` and `--write-all` write
+generated YAML files.

@@ -46,7 +46,7 @@ source_artifacts:
 - .agentic/01.harness/artifact-metadata/taxonomy.yml
 - scripts/01.harness/artifact-metadata/generate-index/script.sh
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
-  --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+  --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
   indexed_artifacts: 368

@@ -83,6 +83,7 @@ fields:
         - schema-name
         - corpus-id
         - layer-name
+        - mode-name
         - workflow-name
         - rule-id
         - rule-pack-id

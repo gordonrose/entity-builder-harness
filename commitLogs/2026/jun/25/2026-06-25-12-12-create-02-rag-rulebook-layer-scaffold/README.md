@@ -148,6 +148,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Generate metadata-backed artifact recognition source
   Rationale: Added recognition.generated.artifacts as the first generated recognition source. It is produced from the existing artifact metadata index, writes exact artifact IDs, file paths, schema names, rule IDs, and rule-pack IDs, and is checked for freshness by the RAG/rulebook commit gate.
 
+
+- Decision: Generate governed routing recognition source
+  Rationale: Extended generate-recognition-sources to generate and freshness-check recognition.generated.routing from governed layer taxonomy, routing policy, retrieval policy corpus/mode definitions, and workflow files. The RAG/rulebook commit gate now checks both generated recognition sources.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -394,6 +398,13 @@ Message: Generate artifact recognition source
 Summary: Added the first generated recognition source from the artifact metadata index, plus a deterministic generator, smoke test, docs, repo-plan updates, and commit-gate freshness checking for generated recognition sources.
 
 ADR impact: No new ADR; this implements the first metadata-backed recognition-source slice under ADR 0022.
+
+
+### 2026-06-25T21:08:20Z - Decision
+
+Decision: Generate governed routing recognition source
+
+Rationale: Extended generate-recognition-sources to generate and freshness-check recognition.generated.routing from governed layer taxonomy, routing policy, retrieval policy corpus/mode definitions, and workflow files. The RAG/rulebook commit gate now checks both generated recognition sources.
 
 ## Commits
 

@@ -79,6 +79,7 @@ recognition_sources:
     source_kinds:
       - corpus-id
       - layer-name
+      - mode-name
       - workflow-name
     generation_mode: generated
     expected_origin: Routing policy, layer metadata, workflow paths, and corpus manifests.

@@ -102,6 +102,8 @@ final homes.
   contract for generated and curated prompt recognition vocabularies.
 - `recognition-sources/generated/artifacts.yml` - generated lookup source for
   exact artifact IDs, paths, schemas, rule IDs, and rule-pack IDs.
+- `recognition-sources/generated/routing.yml` - generated lookup source for
+  governed layer, mode, corpus, and workflow routing terms.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

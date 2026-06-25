@@ -166,6 +166,17 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-recognition-sources/` and
      `recognition-sources/generated/artifacts.yml`.
 
+7h. Generate the routing recognition source.
+   - Generate `recognition.generated.routing` from governed layer taxonomy,
+     routing policy, retrieval policy, corpus IDs, modes, and workflow files.
+   - Commit the generated source at
+     `.agentic/02.rag-rulebook/recognition-sources/generated/routing.yml`.
+   - Keep the same generator, validator, and commit-gate freshness check as
+     the artifact recognition source.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-recognition-sources/` and
+     `recognition-sources/generated/routing.yml`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
