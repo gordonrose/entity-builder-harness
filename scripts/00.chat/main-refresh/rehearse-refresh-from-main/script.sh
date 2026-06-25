@@ -78,7 +78,12 @@ case "$CURRENT_BRANCH" in
 esac
 
 CURRENT_HEAD="$(git rev-parse HEAD)"
-SAFE_BRANCH="$(printf '%s' "$CURRENT_BRANCH" | tr -c 'A-Za-z0-9._-' '-')"
+RAW_SAFE_BRANCH="$(printf '%s' "$CURRENT_BRANCH" | tr -c 'A-Za-z0-9._-' '-')"
+SAFE_BRANCH_PREFIX="$(printf '%s' "$RAW_SAFE_BRANCH" | cut -c1-48 | sed -E 's/[-.]+$//')"
+if [ -z "${SAFE_BRANCH_PREFIX// }" ]; then
+  SAFE_BRANCH_PREFIX="chat"
+fi
+SAFE_BRANCH="${SAFE_BRANCH_PREFIX}-$(git rev-parse --short=12 HEAD)"
 STAMP="$(date -u +%Y%m%d%H%M%S)"
 PREFLIGHT_BRANCH="agentic/preflight/${SAFE_BRANCH}/${STAMP}"
 PREFLIGHT_ROOT="${TMPDIR:-/tmp}/agentic-main-refresh-preflight"

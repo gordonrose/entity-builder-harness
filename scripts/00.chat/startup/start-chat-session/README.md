@@ -46,9 +46,11 @@ and metrics. The harness uses that file as the first source of truth when a chat
 resumes.
 
 The first prompt is the handoff packet. It tells the next agent the exact branch,
-worktree, layer, mode, workflow, and dirty-state handling rule. That prevents a
-new agent from guessing where it should work or which workflow governs the
-conversation.
+worktree, layer, mode, workflow, and dirty-state handling rule. It also makes
+the startup boundary explicit: branch, worktree, and session-log bootstrap has
+already happened, while task edits remain read-only until the user grants write
+permission. That prevents a new agent from guessing where it should work or
+which workflow governs the conversation.
 
 ## Inputs
 
@@ -136,10 +138,10 @@ to present or pass the session packet in their own way.
 8. Print or copy the first prompt for terminal use.
 
    The prompt is the bridge from startup automation into the next agent turn. It
-   names the task, session log, worktree, layer, mode, workflow, and the
-   dirty-worktree stop response. Terminal startup can copy or print it. IDE and
-   app integrations should treat those fields as structured startup data rather
-   than depending on clipboard behavior.
+  names the task, session log, worktree, layer, mode, workflow, startup
+  bootstrap boundary, and the dirty-worktree stop response. Terminal startup
+  can copy or print it. IDE and app integrations should treat those fields as
+  structured startup data rather than depending on clipboard behavior.
 
 9. Clean empty chat branches.
 
@@ -156,7 +158,7 @@ to present or pass the session packet in their own way.
 
 - It does not push anything.
 - It does not merge the chat branch.
-- It does not grant write permission to the agent.
+- It does not grant task write permission to the agent.
 - It does not decide that dirty root work is safe to ignore.
 - It does not replace the workflow listed in the session metadata.
 
