@@ -1,3 +1,21 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: aws.readme
+  version: 1
+  status: active
+  layer: 03.deploy
+  domain: infra.ci-cd
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Document AWS Layer.
+  portability:
+    class: source-only
+    targets: []
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+-->
 # AWS Layer
 
 The AWS layer governs cloud infrastructure, environments, runtime operations,
