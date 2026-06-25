@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T22:36:51Z
-latest_commit_sha: b0ee2f6
-chat_duration: 41040s (00:11:24:00)
-estimated_chat_tokens: 3090535 estimated from chat transcript bytes (12362138 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 92.72 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T23:15:34Z
+latest_commit_sha: f84184a
+chat_duration: 43363s (00:12:02:43)
+estimated_chat_tokens: 3295858 estimated from chat transcript bytes (13183431 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 98.88 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -483,6 +483,17 @@ Decision: Add curated recognition sources
 
 Rationale: Added curated alias, action, and risk recognition sources so reviewed human-language terms can influence selector prompt recognition without replacing generated repo facts. Updated selector evaluations to prove the spaced RAG rulebook alias and curated action/risk terms are recognized.
 
+
+### 2026-06-25T23:15:34Z - Commit recorded
+
+Commit: `f84184a`
+
+Message: Add curated recognition sources
+
+Summary: Added governed curated alias, action, and risk recognition sources; wired alias matching into the selector fixture; added selector evaluation coverage for spaced RAG rulebook language and curated action/risk terms.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -647,6 +658,13 @@ Rationale: Added curated alias, action, and risk recognition sources so reviewed
   Summary: Added retrieval selector evaluation fixtures and an evaluator command covering exact RAG/rulebook routing, prompt/session conflict, vague low-confidence prompts, and corpus boundary protection. Wired the evaluator into the RAG/rulebook commit gate.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `f84184a`
+  Time UTC: 2026-06-25T23:15:34Z
+  Message: Add curated recognition sources
+  Summary: Added governed curated alias, action, and risk recognition sources; wired alias matching into the selector fixture; added selector evaluation coverage for spaced RAG rulebook language and curated action/risk terms.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -660,11 +678,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T22:36:51Z
-Latest commit SHA: b0ee2f6
-Chat duration: 41040s (00:11:24:00)
-Estimated chat tokens: 3090535 estimated from chat transcript bytes (12362138 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 92.72 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T23:15:34Z
+Latest commit SHA: f84184a
+Chat duration: 43363s (00:12:02:43)
+Estimated chat tokens: 3295858 estimated from chat transcript bytes (13183431 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 98.88 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
