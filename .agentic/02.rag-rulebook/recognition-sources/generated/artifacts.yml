@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 373
-  term_count: 751
+  indexed_artifacts: 380
+  term_count: 765
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3126,6 +3126,54 @@ terms:
   canonical_id: rag-rulebook.readme
   evidence_path: .agentic/02.rag-rulebook/README.md
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/product-term-session-boundary.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/product-term-session-boundary.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/product-term-session-boundary.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.prompt-session-conflict
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.prompt-session-conflict
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.prompt-session-conflict
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.vague-prompt-low-confidence
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.vague-prompt-low-confidence
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/vague-prompt-low-confidence.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/vague-prompt-low-confidence.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.vague-prompt-low-confidence
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/vague-prompt-low-confidence.yml
+  confidence_weight: 1
 - term: rag-rulebook.guide.context-packet
   category: artifact-id
   match_type: exact
@@ -3563,6 +3611,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.commit-gates.smoke-test
   evidence_path: scripts/02.rag-rulebook/commit-gates/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.evaluate-retrieval-selector-fixtures.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.evaluate-retrieval-selector-fixtures.readme
+  evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.evaluate-retrieval-selector-fixtures.readme
+  evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+  evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+  evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.evaluate-retrieval-selector-fixtures.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.evaluate-retrieval-selector-fixtures.smoke-test
+  evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.evaluate-retrieval-selector-fixtures.smoke-test
+  evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.generate-context-packet-fixture.readme
   category: artifact-id

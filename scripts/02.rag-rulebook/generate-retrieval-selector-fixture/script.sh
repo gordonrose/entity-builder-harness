@@ -147,6 +147,7 @@ Options:
   --session-mode <mode>       Session mode. Default: implementation.
   --session-workflow <path>   Session workflow path.
   --focused-path <path>       Focused path signal. Repeatable.
+  --no-focused-paths          Use no focused path signals.
   --max-chunks <n>            Maximum selected chunks. Default: 6. Range: 3-12.
 
 Emits a validated rag-rulebook/context-packet/v1 JSON fixture to stdout. The
@@ -163,6 +164,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--session-mode", default=DEFAULT_SESSION_MODE)
     parser.add_argument("--session-workflow", default=DEFAULT_SESSION_WORKFLOW)
     parser.add_argument("--focused-path", action="append", dest="focused_paths")
+    parser.add_argument("--no-focused-paths", action="store_true")
     parser.add_argument("--max-chunks", type=int, default=6)
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
@@ -181,7 +183,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     if not args.request_text.strip():
         print("ERROR: --request-text must not be empty.", file=sys.stderr)
         sys.exit(2)
-    if not args.focused_paths:
+    if args.no_focused_paths and args.focused_paths:
+        print("ERROR: --no-focused-paths cannot be combined with --focused-path.", file=sys.stderr)
+        sys.exit(2)
+    if args.no_focused_paths:
+        args.focused_paths = []
+    elif not args.focused_paths:
         args.focused_paths = list(DEFAULT_FOCUSED_PATHS)
     return args
 
@@ -688,6 +695,20 @@ def build_packet(
                 "blocking": False,
             }
         )
+    prompt_or_path_matches = [
+        match
+        for match in recognition_matches
+        if match.get("matched_input") in {"prompt", "focused-paths"}
+    ]
+    if not prompt_or_path_matches and prompt_terms:
+        gaps.append(
+            {
+                "id": "gap.selector-fixture.low-confidence-prompt",
+                "type": "ambiguous-intent",
+                "description": "The prompt produced no governed prompt or focused-path recognition matches, so routing relies on session metadata only.",
+                "blocking": False,
+            }
+        )
     if args.session_layer == "02.rag-rulebook" and session_corpus not in selected_corpus_ids:
         gaps.append(
             {
@@ -728,6 +749,9 @@ def build_packet(
     retrieval_confidence = 0.9 if max_score else 0.55
     if prompt_layer_conflicts:
         retrieval_confidence = min(retrieval_confidence, 0.82)
+    if not prompt_or_path_matches and prompt_terms:
+        recognition_confidence = min(recognition_confidence, 0.69)
+        retrieval_confidence = min(retrieval_confidence, 0.69)
 
     return {
         "schema": PACKET_SCHEMA,

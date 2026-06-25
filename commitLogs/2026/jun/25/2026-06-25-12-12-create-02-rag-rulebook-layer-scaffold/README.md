@@ -160,6 +160,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Govern evaluation fixtures
   Rationale: Added a harness-wide evaluation fixture standard and a RAG/rulebook retrieval selector evaluation standard so expected outcomes, banned outcomes, validators, ownership, update triggers, gaps, confidence, citations, and token-budget behavior are governed before adding retrieval selector eval cases.
 
+
+- Decision: Add retrieval selector evaluation suite
+  Rationale: Added machine-readable retrieval selector evaluation fixtures for exact RAG/rulebook routing, prompt/session conflict, vague low-confidence prompts, and corpus boundary protection. Added an evaluator command that runs selector packets against expected and banned outcomes, and wired the evaluator into the RAG/rulebook commit gate.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -449,6 +453,13 @@ Message: Add retrieval selector fixture governance
 Summary: Added the first retrieval selector fixture command, wired it into the RAG/rulebook gate, and added harness/RAG standards for governing evaluation fixtures before adding selector eval cases.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-06-25T22:35:51Z - Decision
+
+Decision: Add retrieval selector evaluation suite
+
+Rationale: Added machine-readable retrieval selector evaluation fixtures for exact RAG/rulebook routing, prompt/session conflict, vague low-confidence prompts, and corpus boundary protection. Added an evaluator command that runs selector packets against expected and banned outcomes, and wired the evaluator into the RAG/rulebook commit gate.
 
 ## Commits
 

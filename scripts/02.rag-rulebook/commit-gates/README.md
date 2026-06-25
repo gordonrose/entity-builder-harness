@@ -42,6 +42,8 @@ required.
 - Require and run the retrieval selector fixture smoke test so policy,
   recognition sources, generated chunks, and context-packet validation remain
   wired together.
+- Require and run the retrieval selector evaluation fixture smoke test so
+  expected and banned packet behaviors remain pinned.
 
 ## Maintenance Rule
 

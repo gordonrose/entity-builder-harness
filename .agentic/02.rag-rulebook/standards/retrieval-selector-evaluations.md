@@ -25,6 +25,8 @@ used_by:
   path: .agentic/02.rag-rulebook/plans/repo-plan.md
 - id: rag-rulebook.policy.retrieval-selector.v1
   path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+- id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+  path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 -->
 # Retrieval Selector Evaluations
 

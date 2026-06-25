@@ -45,6 +45,8 @@ validation, and standalone service adapters.
   `rag-rulebook/context-packet/v1` selector fixture from the active policy
   pack, recognition-source matches, session-like metadata, focused paths, and
   generated or saved chunks.
+- `evaluate-retrieval-selector-fixtures/script.sh` runs machine-readable
+  retrieval selector evaluation fixtures against generated selector packets.
 - `generate-recognition-sources/script.sh` emits or checks generated
   `rag-rulebook/recognition-source/v1` YAML lookup sources derived from the
   artifact metadata index and governed routing, layer, corpus, mode, and

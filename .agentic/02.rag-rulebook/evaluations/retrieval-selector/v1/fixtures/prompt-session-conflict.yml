@@ -1,0 +1,66 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.prompt-session-conflict
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove prompt layer conflict is surfaced as a gap while complete session metadata wins routing.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.prompt-session-conflict
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove prompt terms cannot override complete session metadata.
+input:
+  request_text: Deploy this RAG rulebook workflow now.
+  session:
+    layer: 02.rag-rulebook
+    mode: implementation
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+  focused_paths:
+    - .agentic/02.rag-rulebook/workflows/default.md
+  max_chunks: 6
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    mode: implementation
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.02.rag-rulebook
+  recognition:
+    required_source_ids:
+      - recognition.generated.routing
+  gaps:
+    required:
+      - gap.selector-fixture.prompt-session-layer-conflict
+    allowed:
+      - gap.selector-fixture.prototype-corpus-bridge
+    no_unexpected: true
+  confidence:
+    max_retrieval: 0.82
+banned:
+  matched_corpora:
+    - corpus.04.deploy
+  selected_corpora:
+    - corpus.04.deploy
+source_refs:
+  - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+update_triggers:
+  - Prompt/session precedence changes.
+  - Deploy layer routing terms change.

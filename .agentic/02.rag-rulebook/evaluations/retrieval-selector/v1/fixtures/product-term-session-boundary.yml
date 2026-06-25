@@ -1,0 +1,72 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove broad product wording does not pull product corpora into a RAG/rulebook session without supporting ownership evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.product-term-session-boundary
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove corpus ownership boundaries beat broad prompt words.
+input:
+  request_text: For this RAG rulebook task, update the product wording in the selector evaluation notes.
+  session:
+    layer: 02.rag-rulebook
+    mode: implementation
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+  focused_paths:
+    - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  max_chunks: 6
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.02.rag-rulebook
+  recognition:
+    required_source_ids:
+      - recognition.generated.routing
+  gaps:
+    required:
+      - gap.selector-fixture.prompt-session-layer-conflict
+    allowed:
+      - gap.selector-fixture.prototype-corpus-bridge
+    no_unexpected: true
+  required_checks:
+    min_count: 1
+  selected_content_kinds:
+    required:
+      - artifact-summary
+      - rule
+banned:
+  matched_corpora:
+    - corpus.03.product
+    - corpus.03.product.platform
+  selected_corpora:
+    - corpus.03.product
+    - corpus.03.product.platform
+    - corpus.04.deploy
+source_refs:
+  - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+update_triggers:
+  - Corpus ownership policy changes.
+  - Product corpus aliases become curated and intentionally cross session boundaries.

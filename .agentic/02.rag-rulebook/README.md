@@ -122,6 +122,8 @@ final homes.
   contracts used by the seed v1 policy pack.
   The prompt dimension now names recognition sources and extraction rules for
   turning raw user language into structured retrieval signals.
+- `evaluations/retrieval-selector/v1/fixtures/` - active selector evaluation
+  fixtures with expected and banned context-packet outcomes.
 
 ## Guides
 
@@ -161,6 +163,9 @@ final homes.
   emits the first deterministic selector fixture by combining the active policy
   pack, recognition-source matches, session-like metadata, focused paths, and
   generated or saved chunks before validating the packet.
+- `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh` -
+  runs retrieval selector evaluation fixtures against generated selector
+  packets.
 - `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` -
   validates a `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack without
   modifying files.

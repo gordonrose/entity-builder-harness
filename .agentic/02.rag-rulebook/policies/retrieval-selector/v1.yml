@@ -148,6 +148,7 @@ validation:
   smoke_fixtures:
     - scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh
     - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+    - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
   validator_scripts:
     - scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
     - scripts/02.rag-rulebook/validate-recognition-sources/script.sh

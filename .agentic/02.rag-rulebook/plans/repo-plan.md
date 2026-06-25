@@ -196,6 +196,17 @@ The location is not the final domain corpus model.
    - Status: present in `.agentic/01.harness/standards/evaluation-fixtures.md`
      and `.agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md`.
 
+7k. Add retrieval selector evaluation fixtures.
+   - Add machine-readable fixtures for exact RAG/rulebook routing,
+     prompt/session conflict, vague low-confidence prompts, and corpus boundary
+     protection.
+   - Add a read-only evaluator command that generates selector packets and
+     checks expected and banned packet behavior.
+   - Run the evaluator from the RAG/rulebook commit gate.
+   - Status: present in
+     `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/`
+     and `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -217,6 +228,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add retrieval selector evaluation fixtures with expected outcomes, including at
-least one low-confidence or ambiguous request that must produce a gap instead
-of confident routing.
+Add curated recognition sources for aliases, action verbs, risk words, stop
+conditions, and check names, starting with the observed `RAG rulebook` /
+`rag-rulebook` alias gap.

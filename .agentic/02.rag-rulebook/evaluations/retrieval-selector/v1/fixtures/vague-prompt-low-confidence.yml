@@ -1,0 +1,66 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.vague-prompt-low-confidence
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove vague prompts produce an ambiguity gap instead of pretending prompt evidence is sufficient.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.vague-prompt-low-confidence
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove broad prompt language becomes a visible gap when no governed prompt or path terms match.
+input:
+  request_text: Improve the thing.
+  session:
+    layer: 02.rag-rulebook
+    mode: implementation
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+  no_focused_paths: true
+  max_chunks: 3
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.02.rag-rulebook
+  recognition:
+    required_matched_inputs:
+      - session-metadata
+    banned_matched_inputs:
+      - prompt
+      - focused-paths
+  gaps:
+    required:
+      - gap.selector-fixture.low-confidence-prompt
+      - gap.selector-fixture.prototype-corpus-bridge
+    no_unexpected: true
+  confidence:
+    max_overall: 0.69
+    max_routing: 0.69
+banned:
+  selected_corpora:
+    - corpus.04.deploy
+    - corpus.03.product.platform
+source_refs:
+  - .agentic/01.harness/standards/evaluation-fixtures.md
+  - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+update_triggers:
+  - Prompt confidence thresholds change.
+  - Recognition sources add a term that intentionally matches this prompt.
