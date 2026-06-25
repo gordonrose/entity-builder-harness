@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T12:47:47Z
-latest_commit_sha: 88ac5ed
-chat_duration: 5696s (00:01:34:56)
-estimated_chat_tokens: 726847 estimated from chat transcript bytes (2907388 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 21.81 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T12:57:05Z
+latest_commit_sha: c07901c
+chat_duration: 6254s (00:01:44:14)
+estimated_chat_tokens: 806021 estimated from chat transcript bytes (3224083 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 24.18 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -117,6 +117,17 @@ Summary: Added the reusable context-packet v1 schema, linked it from the RAG/Rul
 
 ADR impact: No new ADR; elaborates ADR 0022 with the first RAG/Rulebook schema artifact.
 
+
+### 2026-06-25T12:57:05Z - Commit recorded
+
+Commit: `c07901c`
+
+Message: Teach RAG context packet schema
+
+Summary: Added structured field-guide entries to the context-packet schema and a companion human guide explaining packet purpose, field families, good and bad packet shapes, and LLM usage rules.
+
+ADR impact: No new ADR; elaborates ADR 0022 and the context-packet schema slice.
+
 ## Commits
 
 
@@ -148,6 +159,13 @@ ADR impact: No new ADR; elaborates ADR 0022 with the first RAG/Rulebook schema a
   Summary: Added the reusable context-packet v1 schema, linked it from the RAG/Rulebook README and portable service contract, and advanced the repo plan to the rulebook index schema slice.
   ADR impact: No new ADR; elaborates ADR 0022 with the first RAG/Rulebook schema artifact.
 
+
+- Commit: `c07901c`
+  Time UTC: 2026-06-25T12:57:05Z
+  Message: Teach RAG context packet schema
+  Summary: Added structured field-guide entries to the context-packet schema and a companion human guide explaining packet purpose, field families, good and bad packet shapes, and LLM usage rules.
+  ADR impact: No new ADR; elaborates ADR 0022 and the context-packet schema slice.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -161,11 +179,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T12:47:47Z
-Latest commit SHA: 88ac5ed
-Chat duration: 5696s (00:01:34:56)
-Estimated chat tokens: 726847 estimated from chat transcript bytes (2907388 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 21.81 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T12:57:05Z
+Latest commit SHA: c07901c
+Chat duration: 6254s (00:01:44:14)
+Estimated chat tokens: 806021 estimated from chat transcript bytes (3224083 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 24.18 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
