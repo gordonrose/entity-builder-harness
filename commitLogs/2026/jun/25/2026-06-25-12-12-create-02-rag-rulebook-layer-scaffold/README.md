@@ -136,6 +136,10 @@ create 02 rag rulebook layer scaffold
   review. Chat may later consume compiled recognition sources opportunistically,
   but must keep its deterministic fallback when `02.rag-rulebook` is absent.
 
+
+- Decision: Add conditional RAG/rulebook commit gate
+  Rationale: When .agentic/02.rag-rulebook exists, the chat before-commit readiness gate now requires scripts/02.rag-rulebook/commit-gates/script.sh. The RAG/rulebook layer owns the validators inside that gate, including the future recognition-source validator once recognition sources exist.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -328,6 +332,13 @@ Message: Define RAG recognition source architecture
 Summary: Added the recognition-source system standard and recognition-source schema, updated the prompt retrieval dimension to use governed generated and curated lookup sources, added prompt extraction rules and structured classification outputs, and strengthened the policy-pack validator/smoke test so the prompt dimension must define recognition-source coverage.
 
 ADR impact: No new ADR; this extends the RAG/Rulebook retrieval selector architecture under ADR 0022 and the repo plan before selector runtime implementation.
+
+
+### 2026-06-25T20:28:44Z - Decision
+
+Decision: Add conditional RAG/rulebook commit gate
+
+Rationale: When .agentic/02.rag-rulebook exists, the chat before-commit readiness gate now requires scripts/02.rag-rulebook/commit-gates/script.sh. The RAG/rulebook layer owns the validators inside that gate, including the future recognition-source validator once recognition sources exist.
 
 ## Commits
 

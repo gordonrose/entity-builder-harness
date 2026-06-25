@@ -71,6 +71,18 @@ New scripts and harness/process Markdown documents must declare metadata
 headers before entering the repo. Existing files are backfilled in focused
 batches.
 
+## Layer Commit Gates
+
+When `.agentic/02.rag-rulebook` exists, the commit readiness gate runs:
+
+```bash
+bash scripts/02.rag-rulebook/commit-gates/script.sh
+```
+
+The chat harness must call the layer-level gate only. The RAG/rulebook layer
+owns which retrieval, recognition-source, index, chunk, and context-packet
+validators are required at a commit boundary.
+
 ## Commit Log Deletions
 
 Run:

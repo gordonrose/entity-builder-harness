@@ -32,6 +32,14 @@ bash scripts/01.harness/check-deterministic-process-drift.sh --staged
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 bash scripts/01.harness/check-governed-script-command-drift.sh
 
+if [ -d ".agentic/02.rag-rulebook" ]; then
+  if [ ! -x "scripts/02.rag-rulebook/commit-gates/script.sh" ]; then
+    echo "ERROR: .agentic/02.rag-rulebook exists, but its commit gate is missing or not executable: scripts/02.rag-rulebook/commit-gates/script.sh" >&2
+    exit 1
+  fi
+  bash scripts/02.rag-rulebook/commit-gates/script.sh
+fi
+
 BRANCH="$(git branch --show-current)"
 
 if ! SESSION_ID="$(chat_session_id_from_branch "$BRANCH")"; then
