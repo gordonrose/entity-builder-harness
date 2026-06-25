@@ -29,3 +29,7 @@ Startup is where the harness prevents the first turn from being ambiguous. A
 chat should begin with a known branch, known worktree, known workflow, and
 known session log.
 
+Agents following chat-start should use `resolve-current-chat-session` as the
+startup entrypoint. It reads existing chat metadata when available and
+auto-starts a missing session from the opening prompt when the repo is still on
+root `main` or otherwise lacks a matching chat log.

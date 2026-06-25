@@ -211,8 +211,9 @@ Blocked: dirty worktree. Confirm proceed? Layer: ${LAYER}. Mode: ${MODE}. Workfl
 
 Before that response, do not read workflows or run git status/dirty checks.
 
-Default mode: read-only until I grant write permission in this chat.
-For writes or commit-boundary work, use the chat worktree above and follow the current workflow gates.
+Governed startup bootstrap has already created this chat branch, worktree, and session log.
+Default mode after startup bootstrap: read-only until I grant write permission in this chat.
+For task writes or commit-boundary work, use the chat worktree above and follow the current workflow gates.
 Do not commit without my explicit approval."
 
 print_first_prompt() {

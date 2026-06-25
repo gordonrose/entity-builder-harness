@@ -76,6 +76,7 @@ always scripts/01.harness/plan-artifact-path-migration.sh
 always scripts/01.harness/check-artifact-path-migration.sh
 approved scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh
 approved scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
+approved scripts/00.chat/startup/resolve-current-chat-session/script.sh
 approved scripts/00.chat/startup/auto-start-missing-session/script.sh
 approved scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
 approved scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
@@ -121,6 +122,7 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
   scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
   scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
+  scripts/00.chat/startup/resolve-current-chat-session/script.sh|\
   scripts/00.chat/startup/auto-start-missing-session/script.sh|\
   scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
   scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
@@ -170,6 +172,7 @@ case "$SCRIPT_PATH" in
     ;;
   scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
   scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
+  scripts/00.chat/startup/resolve-current-chat-session/script.sh|\
   scripts/00.chat/startup/auto-start-missing-session/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\

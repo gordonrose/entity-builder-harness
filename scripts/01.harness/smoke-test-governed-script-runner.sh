@@ -41,6 +41,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/session-log/record-chat-commit" \
   "$REPO/scripts/00.chat/session-log/checkpoint-chat-session-log" \
   "$REPO/scripts/00.chat/startup/auto-start-missing-session" \
+  "$REPO/scripts/00.chat/startup/resolve-current-chat-session" \
   "$REPO/scripts/00.chat/upstream/ensure-llm-workbench-repo" \
   "$REPO/scripts/00.chat/worktree/check-write-location" \
   "$REPO/scripts/01.harness" \
@@ -67,6 +68,7 @@ make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "retired-workben
 make_fixture "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh" "canonical-workbench"
 make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "retired-auto-start"
 make_fixture "scripts/00.chat/startup/auto-start-missing-session/script.sh" "canonical-auto-start"
+make_fixture "scripts/00.chat/startup/resolve-current-chat-session/script.sh" "canonical-resolve-session"
 make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "retired-rename"
 make_fixture "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh" "canonical-approved-action"
 make_fixture "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh" "canonical-prepare"
@@ -120,6 +122,15 @@ if [ "$OUT" != "canonical-auto-start:new chat" ]; then
   fail "canonical auto-start helper did not run with --approved-action: $OUT"
 fi
 
+if bash scripts/01.harness/run-governed-script.sh scripts/00.chat/startup/resolve-current-chat-session/script.sh "new chat" >"$TMP_ROOT/resolve-missing.out" 2>&1; then
+  fail "startup resolver ran without --approved-action"
+fi
+
+OUT="$(bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/resolve-current-chat-session/script.sh "new chat")"
+if [ "$OUT" != "canonical-resolve-session:new chat" ]; then
+  fail "startup resolver did not run with --approved-action: $OUT"
+fi
+
 if bash scripts/01.harness/run-governed-script.sh scripts/shared/chat/rename-current-chat-log-folder.sh test >"$TMP_ROOT/approved-missing.out" 2>&1; then
   fail "approval-sensitive script ran without --approved-action"
 fi
@@ -163,6 +174,14 @@ case "$LIST" in
     ;;
   *)
     fail "--list output did not include expected canonical workbench entry"
+    ;;
+esac
+
+case "$LIST" in
+  *"approved scripts/00.chat/startup/resolve-current-chat-session/script.sh"*)
+    ;;
+  *)
+    fail "--list output did not include expected canonical startup resolver entry"
     ;;
 esac
 

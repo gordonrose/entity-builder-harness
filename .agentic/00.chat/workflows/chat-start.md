@@ -32,8 +32,13 @@ workflow, and chat-owned worktree with minimal token use.
 First run:
 
 ```bash
-bash scripts/00.chat/session-log/read-current-chat-log/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/resolve-current-chat-session/script.sh "<opening user message>"
 ```
+
+This startup bootstrap is governed by the opening prompt. It may create or
+verify the chat branch, chat-owned worktree, and session log before task write
+permission is granted. Task edits remain read-only until the user grants write
+permission for the chat.
 
 If it returns valid `layer`, `mode`, and `workflow` values, use them.
 
@@ -81,10 +86,12 @@ read-only mode and record the gap before any commit-boundary operation.
 
 ## Missing Session
 
-<!-- deterministic-check: allow reason="read-current-chat-log.sh detects missing session; auto-start helper owns deterministic command behavior" -->
-If no matching chat log exists for the current branch, treat the opening user
-message as a request for a new chat session unless it starts with
-`ignore chat start`.
+<!-- deterministic-check: allow reason="resolve-current-chat-session.sh owns missing-session detection and auto-start execution" -->
+If no matching chat log exists for the current branch, or if
+`read-current-chat-log` reports `ERROR: current branch is not a chat branch:
+main`, treat the opening user message as a request for a new chat session
+unless it starts with `ignore chat start`. This is the Missing Session path, not
+a read-only orientation stop condition.
 
 If the opening message is exactly `new`, ask exactly:
 
@@ -97,7 +104,7 @@ Do not create a session until the user provides a task summary.
 Otherwise run:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/auto-start-missing-session/script.sh "<opening user message>"
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/resolve-current-chat-session/script.sh "<opening user message>"
 ```
 
 After the command succeeds, use the generated session log, layer, mode,

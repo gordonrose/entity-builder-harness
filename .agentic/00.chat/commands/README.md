@@ -66,10 +66,10 @@ npm run chat:list
 
 When a chat starts in this repo and no matching chat session exists for the
 current branch, the chat-start workflow treats the opening user message as the
-new chat summary and runs:
+new chat summary and runs the resolver:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/auto-start-missing-session/script.sh "<opening user message>"
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/resolve-current-chat-session/script.sh "<opening user message>"
 ```
 
 If the opening message is exactly `new`, the agent asks what the chat should be

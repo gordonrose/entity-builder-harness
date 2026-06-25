@@ -151,4 +151,12 @@ if ! grep -q 'Paste this into Codex / Claude / Mistral:' "$TMP_ROOT/chat-worktre
   fail "clipboard failure did not print the first prompt"
 fi
 
+if ! grep -q 'Governed startup bootstrap has already created this chat branch, worktree, and session log.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not explain startup bootstrap boundary"
+fi
+
+if ! grep -q 'Default mode after startup bootstrap: read-only until I grant write permission in this chat.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not preserve task write permission boundary"
+fi
+
 echo "chat worktree session smoke test passed."

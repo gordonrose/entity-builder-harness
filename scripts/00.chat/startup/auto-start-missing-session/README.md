@@ -42,6 +42,10 @@ session log metadata yet. Rather than guessing silently, this script applies a
 small set of routing rules and then delegates to the normal `chat-command new`
 path.
 
+Agents should normally reach this through `resolve-current-chat-session`, which
+first checks whether current session metadata already exists and only delegates
+here for the missing-session path.
+
 That means auto-start does not create a separate startup model. It only turns a
 valid opening prompt into the same branch, worktree, session log, and first
 prompt that `start-chat-session` would create.
