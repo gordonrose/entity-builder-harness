@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.checklists.source-reference
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: checklist
 purpose: Review source references for architecture rulebook artifacts.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/review-rule-artifact.workflow.md
+- id: harness.workflows.review-rule-artifact
+  path: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
 -->
 
 # Source Reference Checklist

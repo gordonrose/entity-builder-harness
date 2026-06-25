@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.workflows.create-concern-ruleset
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: workflow
 purpose: Govern creation of one cross-cutting concern architecture ruleset.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/prompts/create-concern-ruleset.prompt.md
+- id: harness.prompts.create-concern-ruleset
+  path: .agentic/01.harness/prompts/create-concern-ruleset.prompt.md
 -->
 
 # Create Concern Ruleset Workflow

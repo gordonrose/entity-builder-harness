@@ -1,13 +1,28 @@
 <!-- agentic-artifact:
-owner: harness
-kind: workflow
-purpose: Govern how to choose and create the smallest safe artifact set for a new repeatable capability.
+schema: agentic-artifact/v2
+id: harness.workflows.build-capability-workflow
+version: 1
+status: active
+layer: 01.harness
 domain: governance
-portability: llm-workbench-required
+disciplines:
+- agentic
+kind: workflow
+purpose: Govern how to choose and create the smallest safe artifact set for a new
+  repeatable capability.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/shared/workflows/capability-resolution-workflow.md
-  - .agentic/01.harness/standards/agentic-artifact-standards.md
-  - docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+- id: shared.workflows.capability-resolution-workflow
+  path: .agentic/shared/workflows/capability-resolution-workflow.md
+- id: harness.standards.agentic-artifact-standards
+  path: .agentic/01.harness/standards/agentic-artifact-standards.md
+- id: harness.adr.0020-use-scripts-for-layer-command-surfaces
+  path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
 -->
 
 # Build Capability Workflow

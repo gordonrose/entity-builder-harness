@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.checklists.yaml-validation
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: checklist
 purpose: Provide YAML validation options for architecture rulebook artifacts.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/continue-rulebook.workflow.md
+- id: harness.workflows.continue-rulebook
+  path: .agentic/01.harness/workflows/continue-rulebook.workflow.md
 -->
 
 # YAML Validation Checklist
