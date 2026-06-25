@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
+  version: 1
+  status: active
+  layer: 01.harness
+  domain: architecture
+  disciplines:
+  - architecture
+  kind: guide
+  purpose: Document Kanbien Platform Layer Architecture.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
+  used_by:
+  - id: harness.workflows.change-harness
+    path: .agentic/01.harness/workflows/change-harness.md
+-->
 # Kanbien Platform Layer Architecture
 
 > Source PDF: `kanbien_platform_layer_architecture.pdf`
