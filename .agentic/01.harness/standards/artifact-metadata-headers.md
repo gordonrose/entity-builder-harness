@@ -1,12 +1,26 @@
 <!-- agentic-artifact:
-owner: harness
-kind: standard
-purpose: Define metadata headers for scripts, harness process documents, and harness YAML artifacts.
+schema: agentic-artifact/v2
+id: harness.standards.artifact-metadata-headers
+version: 1
+status: active
+layer: 01.harness
 domain: metadata
-portability: llm-workbench-required
+disciplines:
+- agentic
+kind: standard
+purpose: Define metadata headers for scripts, harness process documents, and harness
+  YAML artifacts.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/standards/agentic-artifact-standards.md
-  - .agentic/00.chat/checklists/before-commit.md
+- id: harness.standards.agentic-artifact-standards
+  path: .agentic/01.harness/standards/agentic-artifact-standards.md
+- id: chat.checklists.before-commit
+  path: .agentic/00.chat/checklists/before-commit.md
 -->
 
 # Artifact Metadata Headers

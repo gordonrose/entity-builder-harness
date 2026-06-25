@@ -1,12 +1,25 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.standards.governed-script-permissions
+version: 1
+status: active
+layer: 01.harness
+domain: governance
+disciplines:
+- agentic
 kind: standard
 purpose: Define persistent tool permission policy for governed repository scripts.
-domain: governance
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - scripts/01.harness/run-governed-script.sh
-  - scripts/01.harness/smoke-test-governed-script-runner.sh
+- id: harness.script.run-governed-script
+  path: scripts/01.harness/run-governed-script.sh
+- id: harness.script.smoke-test-governed-script-runner
+  path: scripts/01.harness/smoke-test-governed-script-runner.sh
 -->
 
 # Governed Script Permissions

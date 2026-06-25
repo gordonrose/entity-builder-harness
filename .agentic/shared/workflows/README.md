@@ -1,12 +1,25 @@
 <!-- agentic-artifact:
-owner: shared
+schema: agentic-artifact/v2
+id: shared.workflows.readme
+version: 1
+status: active
+layer: 05.shared
+domain: process
+disciplines:
+- agentic
 kind: readme
 purpose: Index the active shared process workflows.
-domain: process
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - AGENTS.md
-  - .agentic/00.chat/migration-plan.md
+- id: repo.agents
+  path: AGENTS.md
+- id: chat.migration-plan
+  path: .agentic/00.chat/migration-plan.md
 -->
 
 # Shared Workflows

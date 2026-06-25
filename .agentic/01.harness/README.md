@@ -1,11 +1,23 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.readme
+version: 1
+status: active
+layer: 01.harness
+domain: governance
+disciplines:
+- agentic
 kind: readme
 purpose: Index harness workflows, standards, data, and architecture docs.
-domain: governance
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - AGENTS.md
+- id: repo.agents
+  path: AGENTS.md
 -->
 
 # Harness Workflow Index

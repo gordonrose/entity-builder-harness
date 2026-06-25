@@ -1,12 +1,25 @@
 <!-- agentic-artifact:
-owner: shared
+schema: agentic-artifact/v2
+id: shared.workflows.change-shared-process
+version: 1
+status: active
+layer: 05.shared
+domain: process
+disciplines:
+- agentic
 kind: workflow
 purpose: Govern changes to cross-layer shared process.
-domain: process
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/change-harness.md
-  - AGENTS.md
+- id: harness.workflows.change-harness
+  path: .agentic/01.harness/workflows/change-harness.md
+- id: repo.agents
+  path: AGENTS.md
 -->
 
 # Change Shared Process Workflow
