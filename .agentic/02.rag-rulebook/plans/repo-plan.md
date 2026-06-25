@@ -108,6 +108,18 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh`.
 
+7b. Define the retrieval selector policy system.
+   - Make retrieval behavior policy-driven, not hard-coded.
+   - Cover prompt, session metadata, layer/mode/workflow, focused paths,
+     corpus ownership, graph expansion, required checks, stop conditions,
+     token budget, confidence thresholds, validation handoff, and future
+     semantic recall.
+   - Add a policy-pack schema and seed v1 policy pack.
+   - Status: present in
+     `standards/retrieval-selector-policy-system.md`,
+     `schemas/retrieval-policy-pack.schema.yml`, and
+     `policies/retrieval-selector/v1.yml`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -129,6 +141,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Define the first real retrieval selector contract: inputs, deterministic
-filters, graph expansion, ranking, trimming, gap reporting, and validation
-handoff rules for keeping context augmentation small and accurate.
+Add a read-only retrieval policy-pack validator before implementing selector
+runtime behavior.

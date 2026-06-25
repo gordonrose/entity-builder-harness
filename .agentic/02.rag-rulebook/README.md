@@ -60,6 +60,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer standards: `.agentic/02.rag-rulebook/standards/`
 - Layer guides: `.agentic/02.rag-rulebook/guides/`
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
+- Layer policies: `.agentic/02.rag-rulebook/policies/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer command surface: `scripts/02.rag-rulebook/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
@@ -79,6 +80,9 @@ final homes.
   boundary for corpus, index, chunk, intent, retrieval, and context-packet work.
 - `standards/domain-corpus-package.md` - defines the modular corpus package
   shape for numbered corpora and subcorpora.
+- `standards/retrieval-selector-policy-system.md` - defines the evolvable,
+  multi-dimensional policy system for selecting small, accurate, validated
+  context packets.
 
 ## Schemas
 
@@ -88,6 +92,15 @@ final homes.
   contract for current prototype paths, proposed corpus paths, artifacts,
   rules, rule packs, chunk candidates, graph edges, references, diagnostics,
   and provenance.
+- `schemas/retrieval-policy-pack.schema.yml` - defines the v1 policy-pack
+  contract used by retrieval selectors.
+
+## Policies
+
+- `policies/retrieval-selector/v1.yml` - seed v1 policy pack for prompt,
+  session metadata, layer/mode/workflow, paths, corpus ownership, graph
+  expansion, checks, stops, token budgets, confidence, validation handoff, and
+  future semantic recall.
 
 ## Guides
 

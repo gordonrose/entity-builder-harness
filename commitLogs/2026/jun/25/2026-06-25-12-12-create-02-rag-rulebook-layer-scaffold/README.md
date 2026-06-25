@@ -110,6 +110,12 @@ create 02 rag rulebook layer scaffold
   `rag-rulebook/context-packet/v1` packet from generated or saved chunks,
   validates it before output, and proves the current index-to-chunks-to-packet
   handoff without claiming to be semantic retrieval.
+- Add the retrieval selector policy system as the evolvable instruction layer
+  between generated chunks and validated context packets. The system defines a
+  policy-pack standard, schema, and seed v1 policy covering prompt,
+  chat/session metadata, layer/mode/workflow, focused paths, corpus ownership,
+  rule graph expansion, required checks, stop conditions, token budget,
+  confidence thresholds, validation handoff, and future semantic recall.
 
 ## Activity Log
 

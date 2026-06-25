@@ -21,6 +21,8 @@ used_by:
   path: .agentic/02.rag-rulebook/README.md
 - id: rag-rulebook.plan.repo
   path: .agentic/02.rag-rulebook/plans/repo-plan.md
+- id: rag-rulebook.standard.retrieval-selector-policy-system
+  path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
 -->
 # Portable Rulebook/RAG Service Contract
 
@@ -55,6 +57,7 @@ The portable RAG/rulebook service owns:
 - context-packet assembly
 - context-packet validation
 - retrieval and reranking policy
+- retrieval selector policy packs
 - citation and source-reference requirements
 
 ## Does Not Own
@@ -121,6 +124,10 @@ Prefer this order:
 7. reranking and token-budget trimming
 
 Semantic recall is a supplement, not the authority.
+
+Retrieval selector behavior should be governed by versioned policy packs as
+defined in
+`.agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md`.
 
 ## Stop Conditions
 
