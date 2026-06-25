@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T21:15:41Z
-latest_commit_sha: ce34f141705a93a68a7d91eb12350bb5714ee62c
-chat_duration: 36170s (00:10:02:50)
-estimated_chat_tokens: 2785235 estimated from chat transcript bytes (11140939 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 83.56 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T22:30:37Z
+latest_commit_sha: caf75cc
+chat_duration: 40666s (00:11:17:46)
+estimated_chat_tokens: 3028106 estimated from chat transcript bytes (12112422 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 90.84 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -439,6 +439,17 @@ Decision: Govern evaluation fixtures
 
 Rationale: Added a harness-wide evaluation fixture standard and a RAG/rulebook retrieval selector evaluation standard so expected outcomes, banned outcomes, validators, ownership, update triggers, gaps, confidence, citations, and token-budget behavior are governed before adding retrieval selector eval cases.
 
+
+### 2026-06-25T22:30:37Z - Commit recorded
+
+Commit: `caf75cc`
+
+Message: Add retrieval selector fixture governance
+
+Summary: Added the first retrieval selector fixture command, wired it into the RAG/rulebook gate, and added harness/RAG standards for governing evaluation fixtures before adding selector eval cases.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -589,6 +600,13 @@ Rationale: Added a harness-wide evaluation fixture standard and a RAG/rulebook r
   Summary: Generated and governed a routing recognition source so RAG/rulebook prompt routing can recognize layer, corpus, mode, and workflow terms from governed sources.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `caf75cc`
+  Time UTC: 2026-06-25T22:30:37Z
+  Message: Add retrieval selector fixture governance
+  Summary: Added the first retrieval selector fixture command, wired it into the RAG/rulebook gate, and added harness/RAG standards for governing evaluation fixtures before adding selector eval cases.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -602,11 +620,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T21:15:41Z
-Latest commit SHA: ce34f141705a93a68a7d91eb12350bb5714ee62c
-Chat duration: 36170s (00:10:02:50)
-Estimated chat tokens: 2785235 estimated from chat transcript bytes (11140939 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 83.56 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T22:30:37Z
+Latest commit SHA: caf75cc
+Chat duration: 40666s (00:11:17:46)
+Estimated chat tokens: 3028106 estimated from chat transcript bytes (12112422 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 90.84 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
