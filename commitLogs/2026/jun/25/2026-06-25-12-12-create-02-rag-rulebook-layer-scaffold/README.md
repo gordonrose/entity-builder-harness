@@ -63,6 +63,9 @@ create 02 rag rulebook layer scaffold
   handoff contract. Context packets carry selected evidence, checks,
   forbidden actions, stop conditions, citations, confidence, gaps, budgets, and
   provenance; they do not perform the consuming workflow's final action.
+- Teach context packets in two layers: structured `field_guide` entries inside
+  the schema for machine-readable field explanations, plus a companion guide
+  for human mental models, good and bad packet shapes, and LLM usage rules.
 
 ## Activity Log
 

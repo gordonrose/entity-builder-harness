@@ -58,6 +58,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 
 - Layer workflows: `.agentic/02.rag-rulebook/workflows/`
 - Layer standards: `.agentic/02.rag-rulebook/standards/`
+- Layer guides: `.agentic/02.rag-rulebook/guides/`
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer command surface: `scripts/02.rag-rulebook/`
@@ -83,6 +84,11 @@ final homes.
 
 - `schemas/context-packet.schema.yml` - defines the v1 context-packet contract
   returned by the portable RAG/rulebook service.
+
+## Guides
+
+- `guides/context-packet.md` - teaches the context-packet mental model, field
+  families, good and bad packet shapes, and how an LLM should use the packet.
 
 ## Plans
 
