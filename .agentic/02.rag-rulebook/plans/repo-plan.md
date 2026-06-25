@@ -58,6 +58,7 @@ The location is not the final domain corpus model.
 3. Design a context-packet schema.
    - Include intent, routing metadata, matched corpora, selected chunks,
      required checks, stop conditions, citations, confidence, and gaps.
+   - Status: present in `schemas/context-packet.schema.yml`.
 
 4. Design a rulebook index schema.
    - Include corpus IDs, artifact IDs, rule IDs, chunk IDs, path globs,
@@ -98,4 +99,4 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Create the context-packet schema as a RAG/Rulebook layer artifact.
+Create the rulebook index schema as a RAG/Rulebook layer artifact.

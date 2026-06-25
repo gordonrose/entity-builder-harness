@@ -58,6 +58,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 
 - Layer workflows: `.agentic/02.rag-rulebook/workflows/`
 - Layer standards: `.agentic/02.rag-rulebook/standards/`
+- Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer command surface: `scripts/02.rag-rulebook/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
@@ -77,6 +78,11 @@ final homes.
   boundary for corpus, index, chunk, intent, retrieval, and context-packet work.
 - `standards/domain-corpus-package.md` - defines the modular corpus package
   shape for numbered corpora and subcorpora.
+
+## Schemas
+
+- `schemas/context-packet.schema.yml` - defines the v1 context-packet contract
+  returned by the portable RAG/rulebook service.
 
 ## Plans
 

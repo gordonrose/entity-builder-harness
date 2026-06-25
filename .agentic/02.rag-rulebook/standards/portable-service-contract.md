@@ -102,6 +102,9 @@ The primary output is a context packet with:
 - source references and citations
 - confidence and gaps
 
+The v1 field contract for this packet is defined in
+`.agentic/02.rag-rulebook/schemas/context-packet.schema.yml`.
+
 The service may also emit indexes, graph files, chunk manifests, diagnostics,
 and validation reports.
 

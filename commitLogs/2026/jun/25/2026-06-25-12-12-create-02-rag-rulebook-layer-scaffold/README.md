@@ -59,6 +59,10 @@ create 02 rag rulebook layer scaffold
   patterns for seed consumers, not required runtime artifacts for every target.
 - Defer the final standalone RAG/rulebook service target name until the repo or
   service extraction boundary is explicit.
+- Add a reusable `rag-rulebook/context-packet/v1` schema as the retrieval
+  handoff contract. Context packets carry selected evidence, checks,
+  forbidden actions, stop conditions, citations, confidence, gaps, budgets, and
+  provenance; they do not perform the consuming workflow's final action.
 
 ## Activity Log
 
