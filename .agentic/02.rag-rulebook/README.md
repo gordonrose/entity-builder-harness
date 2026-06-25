@@ -110,6 +110,8 @@ final homes.
 - `scripts/02.rag-rulebook/generate-rulebook-index/script.sh` - emits a
   read-only `rag-rulebook/rulebook-index/v1` JSON index from the current
   prototype architecture rulebook and migration map.
+- `scripts/02.rag-rulebook/validate-rulebook-index/script.sh` - validates a
+  `rag-rulebook/rulebook-index/v1` JSON index without modifying files.
 
 ## Output Locations
 

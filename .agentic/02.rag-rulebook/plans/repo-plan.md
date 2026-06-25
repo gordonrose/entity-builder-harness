@@ -81,6 +81,14 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`.
 
+5a. Add a read-only rulebook index validator.
+   - Validate shape, duplicate IDs, references, graph edges, path mappings,
+     diagnostics, and source path existence.
+   - Fail when the generated index is internally inconsistent or hides
+     blocking unresolved references.
+   - Status: present in
+     `scripts/02.rag-rulebook/validate-rulebook-index/script.sh`.
+
 6. Add a chunk generator.
    - Chunk by YAML structure, not arbitrary character windows.
    - Preserve parent artifact IDs, rule IDs, paths, source refs, and severity.
@@ -110,5 +118,4 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add the chunk generator or a dedicated rulebook-index validator on top of the
-generated index contract.
+Add the chunk generator on top of the validated index contract.

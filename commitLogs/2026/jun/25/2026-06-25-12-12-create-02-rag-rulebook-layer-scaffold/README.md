@@ -87,6 +87,12 @@ create 02 rag rulebook layer scaffold
   related/required ruleset edges, extracts rule and rule-pack chunk
   candidates, reports unresolved references, and does not move files, write
   generated artifacts, use embeddings, or call the network.
+- Add a read-only `scripts/02.rag-rulebook/validate-rulebook-index/script.sh`
+  command. The validator checks generated or saved
+  `rag-rulebook/rulebook-index/v1` JSON for required fields, duplicate IDs,
+  graph-edge resolution, artifact/rule/rule-pack/chunk/source references,
+  path mappings, diagnostics counts, unresolved-reference consistency,
+  provenance inputs, and current source path existence before any corpus move.
 
 ## Activity Log
 
