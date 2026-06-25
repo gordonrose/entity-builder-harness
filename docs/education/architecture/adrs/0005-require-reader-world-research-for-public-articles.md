@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.architecture.adr.0005-require-reader-world-research-for-public-articles
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: adr
+  purpose: Document 0005 Require Reader-World Research For Public Articles.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # 0005 Require Reader-World Research For Public Articles
 
 Status: accepted

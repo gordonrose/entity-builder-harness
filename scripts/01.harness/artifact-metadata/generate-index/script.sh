@@ -141,6 +141,8 @@ def is_markdown_artifact(path: str) -> bool:
     return path.endswith(".md") and (
         path.startswith(".agentic/")
         or path.startswith("docs/00.chat/")
+        or path.startswith("docs/aws/")
+        or path.startswith("docs/education/")
         or path.startswith("docs/harness/")
         or path.startswith("scripts/")
     )

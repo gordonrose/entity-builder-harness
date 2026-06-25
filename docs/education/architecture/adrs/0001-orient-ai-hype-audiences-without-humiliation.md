@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.architecture.adr.0001-orient-ai-hype-audiences-without-humiliation
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: adr
+  purpose: Document 0001 Orient AI Hype Audiences Without Humiliation.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # 0001 Orient AI Hype Audiences Without Humiliation
 
 Status: accepted

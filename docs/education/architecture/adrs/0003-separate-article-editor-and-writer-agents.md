@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.architecture.adr.0003-separate-article-editor-and-writer-agents
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: adr
+  purpose: Document 0003 Separate Article Editor And Writer Agents.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # 0003 Separate Article Editor And Writer Agents
 
 Status: accepted

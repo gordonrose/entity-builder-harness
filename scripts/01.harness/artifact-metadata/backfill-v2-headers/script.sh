@@ -33,7 +33,7 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh --batch <1-14>
+  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh --batch <1-15>
   scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh --record-only <sha> <message> <summary> [adr-impact]
   scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh --status
 EOF
@@ -329,6 +329,8 @@ def selected_for_batch(path: Path) -> bool:
         return s.startswith((".agentic/education/feedback/", ".agentic/education/templates/"))
     if batch == 14:
         return s.startswith("scripts/01.harness/") and "/artifact-metadata/" not in s
+    if batch == 15:
+        return s == "scripts/00.chat/README.md" or s.startswith(("docs/aws/", "docs/education/"))
     raise SystemExit(f"Unknown batch: {batch}")
 
 
@@ -374,9 +376,9 @@ def layer_for(path: Path, metadata: dict[str, Any]) -> str:
         return "01.harness"
     if s.startswith(".agentic/product/"):
         return "02.product"
-    if s.startswith(".agentic/aws/"):
+    if s.startswith((".agentic/aws/", "docs/aws/")):
         return "03.deploy"
-    if s.startswith(".agentic/education/"):
+    if s.startswith((".agentic/education/", "docs/education/")):
         return "04.education"
     return "05.shared"
 
@@ -392,9 +394,9 @@ def domain_for(path: Path, metadata: dict[str, Any]) -> str:
         return "architecture"
     if s.startswith(".agentic/product/"):
         return "requirements"
-    if s.startswith(".agentic/aws/"):
+    if s.startswith((".agentic/aws/", "docs/aws/")):
         return "infra.ci-cd"
-    if s.startswith(".agentic/education/"):
+    if s.startswith((".agentic/education/", "docs/education/")):
         return "education"
     if s.startswith((".agentic/00.chat/", "docs/00.chat/", "scripts/00.chat/")):
         return "chat"
@@ -423,7 +425,7 @@ def kind_for(path: Path, metadata: dict[str, Any]) -> str:
         return "workflow"
     if "checklist" in s:
         return "checklist"
-    if s.startswith("docs/harness/architecture/adrs/"):
+    if "/adrs/" in s:
         return "adr"
     if "standard" in s:
         return "standard"
@@ -466,9 +468,11 @@ def portability_for(path: Path, metadata: dict[str, Any]) -> dict[str, Any]:
     s = path.as_posix()
     if s.startswith(".agentic/aws/"):
         return {"class": "source-only", "targets": []}
+    if s.startswith((".agentic/aws/", "docs/aws/")):
+        return {"class": "source-only", "targets": []}
     if s.startswith(".agentic/product/"):
         return {"class": "required", "targets": ["entity-builder"]}
-    if s.startswith(".agentic/education/"):
+    if s.startswith((".agentic/education/", "docs/education/")):
         return {"class": "required", "targets": ["llm-workbench"]}
     return {"class": "required", "targets": ALL_TARGETS}
 
@@ -541,6 +545,10 @@ def used_by_for(path: Path, metadata: dict[str, Any]) -> list[dict[str, str]]:
         ref = ".agentic/01.harness/workflows/change-harness.md"
     elif s.startswith((".agentic/00.chat/", "docs/00.chat/")):
         ref = "AGENTS.md"
+    elif s.startswith("docs/aws/"):
+        ref = ".agentic/aws/README.md"
+    elif s.startswith("docs/education/"):
+        ref = ".agentic/education/README.md"
     elif s.startswith("scripts/00.chat/"):
         ref = ".agentic/00.chat/README.md"
     elif s.startswith("scripts/01.harness/"):
@@ -707,6 +715,7 @@ messages = {
     12: "Backfill education profile metadata headers",
     13: "Backfill education template metadata headers",
     14: "Backfill harness script metadata headers",
+    15: "Backfill docs spillover metadata headers",
 }
 print(messages[int(sys.argv[1])])
 PY
@@ -729,6 +738,7 @@ summaries = {
     12: "Backfilled artifact metadata v2 headers for education profile, prompt, and reference artifacts.",
     13: "Backfilled artifact metadata v2 headers for education template and feedback artifacts.",
     14: "Backfilled artifact metadata v2 headers for remaining harness scripts.",
+    15: "Backfilled artifact metadata v2 headers for remaining AWS, education, and chat script README artifacts.",
 }
 print(summaries[int(sys.argv[1])])
 PY
