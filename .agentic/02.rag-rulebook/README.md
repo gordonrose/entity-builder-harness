@@ -84,11 +84,18 @@ final homes.
 
 - `schemas/context-packet.schema.yml` - defines the v1 context-packet contract
   returned by the portable RAG/rulebook service.
+- `schemas/rulebook-index.schema.yml` - defines the v1 rulebook index
+  contract for current prototype paths, proposed corpus paths, artifacts,
+  rules, rule packs, chunk candidates, graph edges, references, diagnostics,
+  and provenance.
 
 ## Guides
 
 - `guides/context-packet.md` - teaches the context-packet mental model, field
   families, good and bad packet shapes, and how an LLM should use the packet.
+- `guides/rulebook-index.md` - teaches the rulebook index mental model, field
+  families, migration safety role, graph relationships, and future validator
+  expectations.
 
 ## Plans
 

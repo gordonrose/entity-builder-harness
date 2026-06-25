@@ -75,6 +75,12 @@ create 02 rag rulebook layer scaffold
   layer rulesets, concern rulesets, and rule packs, maps all 26 YAML
   rules/rule-pack artifacts to proposed numbered corpus packages, and marks
   mixed concerns for split review rather than moving files prematurely.
+- Add the reusable `rag-rulebook/rulebook-index/v1` schema and companion guide.
+  The index schema represents current prototype paths and proposed corpus
+  package paths, catalogs corpora, artifacts, rules, rule packs, chunk
+  candidates, graph edges, source references, path mappings, unresolved
+  references, diagnostics, and provenance, and advances the next slice to a
+  read-only current-state index generator.
 
 ## Activity Log
 

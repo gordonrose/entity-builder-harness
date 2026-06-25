@@ -71,6 +71,7 @@ The location is not the final domain corpus model.
    - Include corpus IDs, artifact IDs, rule IDs, chunk IDs, path globs,
      source refs, required rulesets, related rulesets, and graph edges.
    - Support both current prototype paths and proposed corpus package paths.
+   - Status: present in `schemas/rulebook-index.schema.yml`.
 
 5. Add a read-only index generator.
    - Parse the current prototype YAML rulebook.
@@ -107,4 +108,4 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Create the rulebook index schema as a RAG/Rulebook layer artifact.
+Add a read-only index generator for the current prototype YAML rulebook.
