@@ -11,12 +11,12 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T01:01:07Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-00-17-019efc4a-bfed-77d3-bb0c-2a6f7d66608b.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-25T01:06:46Z
+latest_commit_sha: 541b07f
+chat_duration: 339s (00:00:05:39)
+estimated_chat_tokens: 152239 estimated from chat transcript bytes (608956 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-00-17-019efc4a-bfed-77d3-bb0c-2a6f7d66608b.jsonl)
+estimated_chat_cost: USD 4.57 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -61,9 +61,26 @@ Validation:
 - `python3 -c` YAML parse check for changed YAML artifacts
 - `git diff --check`
 
+
+### 2026-06-25T01:06:46Z - Commit recorded
+
+Commit: `541b07f`
+
+Message: Add SRE artifact metadata discipline
+
+Summary: Added the SRE artifact metadata discipline, updated audited SRE-facing headers, and fixed metadata-discipline task classification.
+
+ADR impact: no ADR needed: scoped metadata taxonomy extension
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `541b07f`
+  Time UTC: 2026-06-25T01:06:46Z
+  Message: Add SRE artifact metadata discipline
+  Summary: Added the SRE artifact metadata discipline, updated audited SRE-facing headers, and fixed metadata-discipline task classification.
+  ADR impact: no ADR needed: scoped metadata taxonomy extension
 
 ## Main Refresh Conflicts
 
@@ -78,12 +95,12 @@ Reason: Metadata taxonomy extension and scoped header backfill follow the existi
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T01:01:07Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-25T01:06:46Z
+Latest commit SHA: 541b07f
+Chat duration: 339s (00:00:05:39)
+Estimated chat tokens: 152239 estimated from chat transcript bytes (608956 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-00-17-019efc4a-bfed-77d3-bb0c-2a6f7d66608b.jsonl)
+Estimated chat cost: USD 4.57 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
