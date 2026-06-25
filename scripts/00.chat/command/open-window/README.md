@@ -1,14 +1,22 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the public chat open-window command entrypoint.
-domain: command
-portability: llm-workbench-required
-used_by:
-  - package.json scripts.chat:open-window
-  - scripts/00.chat/command/open-window/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.command.open-window.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: command
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the public chat open-window command entrypoint.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.command.open-window
+    path: scripts/00.chat/command/open-window/script.sh
 -->
-
 # Open Window Command
 
 `script.sh` is the canonical entrypoint for opening the current chat-owned

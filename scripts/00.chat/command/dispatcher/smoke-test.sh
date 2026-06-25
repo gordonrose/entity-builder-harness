@@ -1,16 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test the chat command dispatcher and chat subcommands.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.command.dispatcher.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: validation
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test the chat command dispatcher and chat subcommands.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/commands/README.md
-#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#     - scripts/00.chat/command/dispatcher/README.md
-#   effects: writes-files, branches, worktrees
+#   - id: chat.commands.readme
+#     path: .agentic/00.chat/commands/README.md
+#   - id: chat.workflows.bootstrap-chat-workbench-repo
+#     path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#   - id: chat.script.command.dispatcher.readme
+#     path: scripts/00.chat/command/dispatcher/README.md
+#   effects:
+#   - branches
+#   - worktrees
+#   - writes-files
 
 fail() {
   echo "FAIL: $*" >&2

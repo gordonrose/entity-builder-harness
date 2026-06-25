@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain local Codex transcript discovery for a chat session.
-domain: transcript
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/transcript/discover-codex-session-log/script.sh
-  - scripts/00.chat/transcript/register-codex-session-log/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.transcript.discover-codex-session-log.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: transcript
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain local Codex transcript discovery for a chat session.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.transcript.discover-codex-session-log
+    path: scripts/00.chat/transcript/discover-codex-session-log/script.sh
+  - id: chat.script.transcript.register-codex-session-log
+    path: scripts/00.chat/transcript/register-codex-session-log/script.sh
 -->
-
 # Discover Codex Session Log
 
 `script.sh` searches the local Codex sessions directory for the JSONL

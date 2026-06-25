@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Report chat branches, log head state, and worktree status.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.reporting.report-chat-workspaces
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: reporting
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Report chat branches, log head state, and worktree status.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-cleanup.md
-#     - .agentic/00.chat/workflows/chat-promote-to-main.md
-#     - package.json scripts.chat:report-workspaces
-#   effects: read-only
+#   - id: chat.workflows.chat-cleanup
+#     path: .agentic/00.chat/workflows/chat-cleanup.md
+#   - id: chat.workflows.chat-promote-to-main
+#     path: .agentic/00.chat/workflows/chat-promote-to-main.md
+#   effects:
+#   - read-only
 
 BASE_BRANCH="${1:-main}"
 

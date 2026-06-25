@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the dry-run planner for bootstrapping the public llm-workbench repo.
-domain: upstream
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  schema: agentic-artifact/v2
+  id: chat.script.upstream.bootstrap-llm-workbench-repo.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: upstream
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the dry-run planner for bootstrapping the public llm-workbench repo.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.upstream.bootstrap-llm-workbench-repo
+    path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 -->
-
 # Bootstrap llm-workbench Repo
 
 This capability plans how the portable chat workbench would be materialized

@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain how the chat closeout prompt is built and handed to terminal users.
-domain: closeout
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/closeout/build-closeout-prompt/script.sh
-  - scripts/00.chat/command/close/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.closeout.build-closeout-prompt.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: closeout
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain how the chat closeout prompt is built and handed to terminal users.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.closeout.build-closeout-prompt
+    path: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+  - id: chat.script.command.close
+    path: scripts/00.chat/command/close/script.sh
 -->
-
 # Build Closeout Prompt
 
 `script.sh` builds the governed prompt used when a human runs the public close

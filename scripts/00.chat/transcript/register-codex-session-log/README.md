@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain recording the local Codex transcript path in the current chat log.
-domain: transcript
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-start.md
-  - scripts/00.chat/transcript/register-codex-session-log/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.transcript.register-codex-session-log.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: transcript
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain recording the local Codex transcript path in the current chat log.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-start
+    path: .agentic/00.chat/workflows/chat-start.md
+  - id: chat.script.transcript.register-codex-session-log
+    path: scripts/00.chat/transcript/register-codex-session-log/script.sh
 -->
-
 # Register Codex Session Log
 
 `script.sh` discovers the current chat's local Codex JSONL transcript and

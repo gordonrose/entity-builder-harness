@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Validate task classifier fixtures against current classification output.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.classification.classify-task.check-fixtures
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: classification
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Validate task classifier fixtures against current classification output.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/shared/workflows/capability-resolution-workflow.md
-#     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/00.chat/classification/classify-task/fixtures.tsv
-#   effects: read-only
+#   - id: shared.workflows.capability-resolution-workflow
+#     path: .agentic/shared/workflows/capability-resolution-workflow.md
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   - id: chat.script.classification.classify-task.fixtures-tsv
+#     path: scripts/00.chat/classification/classify-task/fixtures.tsv
+#   effects:
+#   - read-only
 
 FIXTURES="${1:-scripts/00.chat/classification/classify-task/fixtures.tsv}"
 FAILURES=0

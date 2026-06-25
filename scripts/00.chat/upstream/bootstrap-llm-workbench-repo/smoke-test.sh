@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test the llm-workbench bootstrap dry-run planner.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.upstream.bootstrap-llm-workbench-repo.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: validation
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test the llm-workbench bootstrap dry-run planner.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/README.md
-#     - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
-#   effects: writes-files
+#   - id: chat.script.upstream.bootstrap-llm-workbench-repo.readme
+#     path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/README.md
+#   - id: chat.script.bootstrap.audit-chat-bootstrap-file-set
+#     path: scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+#   effects:
+#   - writes-files
 
 fail() {
   echo "FAIL: $*" >&2

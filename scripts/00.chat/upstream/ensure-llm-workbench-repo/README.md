@@ -1,13 +1,21 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the upstream llm-workbench repository availability helper.
-domain: upstream
-portability: source-only
-used_by:
-  - scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.upstream.ensure-llm-workbench-repo.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: upstream
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the upstream llm-workbench repository availability helper.
+  portability:
+    class: source-only
+    targets: []
+  used_by:
+  - id: chat.script.upstream.ensure-llm-workbench-repo
+    path: scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
 -->
-
 # Ensure llm-workbench Repo
 
 This capability verifies that the canonical local upstream workbench repository
