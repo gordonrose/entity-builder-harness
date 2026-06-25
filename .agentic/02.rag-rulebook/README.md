@@ -100,6 +100,9 @@ final homes.
   dimension contract for policy-pack dimensions.
 - `schemas/recognition-source.schema.yml` - defines the v1 lookup-source
   contract for generated and curated prompt recognition vocabularies.
+- `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -
+  validates recognition-source YAML files for shape, provenance, duplicates,
+  refresh policy, and curated-source review rules.
 
 ## Policies
 

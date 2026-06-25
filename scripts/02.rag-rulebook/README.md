@@ -44,6 +44,9 @@ validation, and standalone service adapters.
 - `validate-retrieval-policy-pack/script.sh` validates a
   `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack before selector
   runtime code can rely on it.
+- `validate-recognition-sources/script.sh` validates
+  `rag-rulebook/recognition-source/v1` YAML lookup sources before generated or
+  curated prompt-recognition vocabulary can be committed.
 - `commit-gates/script.sh` runs the RAG/rulebook validators that must pass
   before a chat task commit when `.agentic/02.rag-rulebook` exists.
 

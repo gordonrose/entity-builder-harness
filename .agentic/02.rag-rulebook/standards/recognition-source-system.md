@@ -116,7 +116,7 @@ Exact governed identifiers should beat broad natural language.
 Each recognition source should state:
 
 - source ID
-- source kind
+- source kinds
 - generation mode
 - owner layer
 - term categories

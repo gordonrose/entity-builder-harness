@@ -140,6 +140,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add conditional RAG/rulebook commit gate
   Rationale: When .agentic/02.rag-rulebook exists, the chat before-commit readiness gate now requires scripts/02.rag-rulebook/commit-gates/script.sh. The RAG/rulebook layer owns the validators inside that gate, including the future recognition-source validator once recognition sources exist.
 
+
+- Decision: Add recognition-source validation before generated sources
+  Rationale: The RAG/rulebook layer now has a read-only validate-recognition-sources command. It validates recognition-source YAML for schema shape, plural source_kinds, generated-source provenance, curated-source review triggers, duplicate lookup terms, refresh policy, and term match metadata before generated or curated sources become commit-critical.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -350,6 +354,13 @@ Message: Add conditional RAG rulebook commit gate
 Summary: Added a RAG/rulebook commit-gates capability and wired the chat before-commit readiness gate to call it whenever .agentic/02.rag-rulebook exists. The layer gate validates the retrieval policy pack now and requires a recognition-source validator once recognition sources are present.
 
 ADR impact: No new ADR; this implements commit-boundary enforcement for the RAG/Rulebook layer under ADR 0022.
+
+
+### 2026-06-25T20:41:29Z - Decision
+
+Decision: Add recognition-source validation before generated sources
+
+Rationale: The RAG/rulebook layer now has a read-only validate-recognition-sources command. It validates recognition-source YAML for schema shape, plural source_kinds, generated-source provenance, curated-source review triggers, duplicate lookup terms, refresh policy, and term match metadata before generated or curated sources become commit-critical.
 
 ## Commits
 

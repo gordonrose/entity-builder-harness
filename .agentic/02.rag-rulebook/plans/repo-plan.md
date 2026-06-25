@@ -147,6 +147,15 @@ The location is not the final domain corpus model.
    - Status: present in `standards/recognition-source-system.md`,
      `schemas/recognition-source.schema.yml`, and the prompt dimension policy.
 
+7f. Add recognition-source validation.
+   - Validate recognition-source YAML before generated or curated lookup
+     sources become commit-critical.
+   - Reject stale generated terms without evidence paths, duplicate lookup
+     terms, missing source artifacts, missing generation commands, and curated
+     terms without review triggers.
+   - Status: present in
+     `scripts/02.rag-rulebook/validate-recognition-sources/`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and

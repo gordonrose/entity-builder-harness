@@ -136,6 +136,7 @@ thresholds:
 validation:
   required_checks:
     - "Validate policy packs with `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` before selector runtime use."
+    - "Validate recognition sources with `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` before prompt recognition uses generated or curated vocabulary."
     - "Validate selected packets with `scripts/02.rag-rulebook/validate-context-packet/script.sh`."
     - Prove at least one low-confidence request produces a gap before selector runtime is considered usable.
     - Prove required checks survive trimming.
@@ -144,6 +145,7 @@ validation:
     - scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh
   validator_scripts:
     - scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
+    - scripts/02.rag-rulebook/validate-recognition-sources/script.sh
     - scripts/02.rag-rulebook/validate-context-packet/script.sh
 
 evolution:

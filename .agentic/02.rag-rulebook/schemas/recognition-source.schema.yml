@@ -41,7 +41,7 @@ required_fields:
   - source_id
   - version
   - status
-  - source_kind
+  - source_kinds
   - generation_mode
   - owner_layer
   - purpose
@@ -73,23 +73,26 @@ fields:
       - superseded
       - retired
 
-  source_kind:
-    type: enum
-    allowed_values:
-      - artifact-id
-      - file-path
-      - schema-name
-      - corpus-id
-      - layer-name
-      - workflow-name
-      - rule-id
-      - rule-pack-id
-      - action-verb
-      - risk-word
-      - domain-noun
-      - alias
-      - stop-condition
-      - check-name
+  source_kinds:
+    type: array
+    items:
+      type: enum
+      allowed_values:
+        - artifact-id
+        - file-path
+        - schema-name
+        - corpus-id
+        - layer-name
+        - workflow-name
+        - rule-id
+        - rule-pack-id
+        - action-verb
+        - risk-word
+        - domain-noun
+        - alias
+        - stop-condition
+        - check-name
+    note: A source may cover multiple tightly related lookup kinds when they share the same owner, generation mode, and refresh policy.
 
   generation_mode:
     type: enum
@@ -185,11 +188,12 @@ fields:
           type: string
 
 field_guide:
-  - path: source_kind
-    what_it_is: The kind of lookup vocabulary this source provides.
+  - path: source_kinds
+    what_it_is: The lookup vocabulary kinds this source provides.
     what_it_does: Lets prompt recognition treat artifact IDs, paths, workflows, actions, risks, and aliases differently.
     rules:
       - Exact governed identifiers should rank above curated broad language.
+      - Multiple kinds are allowed only when they share one owner, generation mode, and refresh policy.
 
   - path: generation_mode
     what_it_is: Whether the source is generated from repo artifacts or curated by humans.
