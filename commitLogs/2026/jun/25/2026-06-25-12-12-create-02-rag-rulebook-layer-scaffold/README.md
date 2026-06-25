@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T15:11:46Z
-latest_commit_sha: cd880d067e0e4309e0a823e16eddca0a0d9cc60f
-chat_duration: 14335s (00:03:58:55)
-estimated_chat_tokens: 1570082 estimated from chat transcript bytes (6280328 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 47.10 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T18:35:50Z
+latest_commit_sha: 25d191bde93e3b968650fb22ccb88ec500618e02
+chat_duration: 26579s (00:07:22:59)
+estimated_chat_tokens: 1707841 estimated from chat transcript bytes (6831364 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 51.24 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -266,6 +266,17 @@ Summary: Added the read-only context-packet fixture generator command, smoke tes
 
 ADR impact: No new ADR; this implements the fixture-builder slice planned under ADR 0022 and the RAG/Rulebook repo plan.
 
+
+### 2026-06-25T18:35:50Z - Commit recorded
+
+Commit: `25d191bde93e3b968650fb22ccb88ec500618e02`
+
+Message: Add RAG retrieval selector policy system
+
+Summary: Added the retrieval selector policy system standard, retrieval-policy-pack schema, seed v1 selector policy pack, layer README links, portable service contract linkage, and repo-plan status. The policy system makes context selection evolvable across prompt, session metadata, layer/mode/workflow, focused paths, corpus ownership, rule graph expansion, required checks, stop conditions, token budget, confidence thresholds, validation handoff, and future semantic recall before runtime selector code is added.
+
+ADR impact: No new ADR; this elaborates ADR 0022 and updates the RAG/Rulebook repo plan before selector implementation.
+
 ## Commits
 
 
@@ -360,6 +371,13 @@ ADR impact: No new ADR; this implements the fixture-builder slice planned under 
   Summary: Added the read-only context-packet fixture generator command, smoke test, command docs, schema linkage, and repo-plan status. The generator assembles a small deterministic rag-rulebook/context-packet/v1 packet from generated or saved chunk sets, validates it before output, and proves the index-to-chunks-to-packet handoff without claiming to be semantic retrieval.
   ADR impact: No new ADR; this implements the fixture-builder slice planned under ADR 0022 and the RAG/Rulebook repo plan.
 
+
+- Commit: `25d191bde93e3b968650fb22ccb88ec500618e02`
+  Time UTC: 2026-06-25T18:35:50Z
+  Message: Add RAG retrieval selector policy system
+  Summary: Added the retrieval selector policy system standard, retrieval-policy-pack schema, seed v1 selector policy pack, layer README links, portable service contract linkage, and repo-plan status. The policy system makes context selection evolvable across prompt, session metadata, layer/mode/workflow, focused paths, corpus ownership, rule graph expansion, required checks, stop conditions, token budget, confidence thresholds, validation handoff, and future semantic recall before runtime selector code is added.
+  ADR impact: No new ADR; this elaborates ADR 0022 and updates the RAG/Rulebook repo plan before selector implementation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -373,11 +391,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T15:11:46Z
-Latest commit SHA: cd880d067e0e4309e0a823e16eddca0a0d9cc60f
-Chat duration: 14335s (00:03:58:55)
-Estimated chat tokens: 1570082 estimated from chat transcript bytes (6280328 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 47.10 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T18:35:50Z
+Latest commit SHA: 25d191bde93e3b968650fb22ccb88ec500618e02
+Chat duration: 26579s (00:07:22:59)
+Estimated chat tokens: 1707841 estimated from chat transcript bytes (6831364 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 51.24 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
