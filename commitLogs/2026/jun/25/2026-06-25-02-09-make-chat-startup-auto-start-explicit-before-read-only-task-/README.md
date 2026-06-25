@@ -11,12 +11,12 @@ workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-06-25T01:09:13Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-25T08:38:27Z
+latest_commit_sha: cbf89eb
+chat_duration: 26954s (00:07:29:14)
+estimated_chat_tokens: 159927 estimated from chat transcript bytes (639707 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl)
+estimated_chat_cost: USD 4.80 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -75,9 +75,26 @@ ADR needed: no
 
 Reason: This narrows existing chat-start behavior and adds an executable resolver; no new architecture decision beyond the current chat lifecycle model.
 
+
+### 2026-06-25T08:38:27Z - Commit recorded
+
+Commit: `cbf89eb`
+
+Message: Make chat startup auto-start explicit
+
+Summary: Added a startup resolver, clarified chat-start bootstrap versus task read-only mode, and updated tests/docs for governed auto-start from root main.
+
+ADR impact: No ADR needed; this implements the existing chat-start lifecycle model.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `cbf89eb`
+  Time UTC: 2026-06-25T08:38:27Z
+  Message: Make chat startup auto-start explicit
+  Summary: Added a startup resolver, clarified chat-start bootstrap versus task read-only mode, and updated tests/docs for governed auto-start from root main.
+  ADR impact: No ADR needed; this implements the existing chat-start lifecycle model.
 
 ## Main Refresh Conflicts
 
@@ -92,12 +109,12 @@ Reason: This narrows existing chat-start behavior and adds an executable resolve
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T01:09:13Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-25T08:38:27Z
+Latest commit SHA: cbf89eb
+Chat duration: 26954s (00:07:29:14)
+Estimated chat tokens: 159927 estimated from chat transcript bytes (639707 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl)
+Estimated chat cost: USD 4.80 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
