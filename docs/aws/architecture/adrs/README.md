@@ -7,6 +7,7 @@
   domain: infra.ci-cd
   disciplines:
   - agentic
+  - sre
   kind: adr
   purpose: Document AWS Architecture Decision Records.
   portability:

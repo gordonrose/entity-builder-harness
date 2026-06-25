@@ -7,6 +7,7 @@
 #   domain: architecture
 #   disciplines:
 #   - architecture
+#   - sre
 #   kind: rule
 #   purpose: Define the Config Runtime Settings architecture rule artifact.
 #   portability:

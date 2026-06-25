@@ -47,6 +47,7 @@ disciplines:
   - backend
   - frontend
   - requirements
+  - sre
 
 statuses:
   - draft
