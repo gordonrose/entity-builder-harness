@@ -37,8 +37,9 @@ another layer's workflow, split the work into separate governed phases.
 ## Rules
 
 - Keep the RAG/rulebook machinery separate from domain corpus content.
-- Treat harness, product/apps, design-system, deploy, and education corpora as
-  modular inputs, not one merged instruction corpus.
+- Treat numbered corpora such as `corpus.01.harness`,
+  `corpus.02.rag-rulebook`, `corpus.03.product`, `corpus.04.deploy`, and
+  `corpus.05.education` as modular inputs, not one merged instruction corpus.
 - Prefer structured schemas, indexes, and deterministic graph expansion before
   semantic retrieval.
 - Do not build a RAG server, MCP server, or executable runtime unless the user

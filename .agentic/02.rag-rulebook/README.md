@@ -37,16 +37,22 @@ can serve multiple domain corpora.
 
 This layer owns the reusable rulebook/RAG system, not every domain corpus.
 
-Domain corpora should stay modular:
+Domain corpus IDs should align with the numbered layer system:
 
-- harness corpus for agentic harness work
-- product/apps corpus for product and platform work
-- design-system corpus for UI and component work
-- deploy corpus for infrastructure, release, and runtime operations
-- education corpus for teaching and publishing work
+- `corpus.00.chat` for chat lifecycle and git governance
+- `corpus.01.harness` for agentic harness work
+- `corpus.02.rag-rulebook` for the RAG/rulebook service itself
+- `corpus.03.product` for product, platform, apps, and design-system work
+- `corpus.04.deploy` for infrastructure, release, and runtime operations
+- `corpus.05.education` for teaching and publishing work
+- `corpus.06.shared` for cross-layer process primitives
 
 The RAG/rulebook service may index those corpora, but it should not merge them
 into one undifferentiated instruction set.
+
+Subcorpora may be introduced when a layer needs more precision, such as
+`corpus.03.product.apps`, `corpus.03.product.design-system`, or
+`corpus.03.product.platform`.
 
 ## Source Of Truth
 
@@ -70,7 +76,7 @@ final homes.
 - `standards/portable-service-contract.md` - defines the reusable service
   boundary for corpus, index, chunk, intent, retrieval, and context-packet work.
 - `standards/domain-corpus-package.md` - defines the modular corpus package
-  shape for harness, product/apps, design-system, deploy, and education corpora.
+  shape for numbered corpora and subcorpora.
 
 ## Plans
 

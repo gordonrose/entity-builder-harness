@@ -11,11 +11,8 @@ disciplines:
 kind: plan
 purpose: Record the ordered repo plan for turning the prototype rulebook into modular RAG-ready corpora.
 portability:
-  class: required
-  targets:
-  - llm-workbench
-  - entity-builder
-  - design-system-builder
+  class: internal
+  targets: []
 used_by:
 - id: rag-rulebook.readme
   path: .agentic/02.rag-rulebook/README.md
@@ -29,6 +26,9 @@ used_by:
 Create a portable RAG/rulebook service model that can support multiple modular
 domain corpora without folding product, design-system, deployment, education,
 and harness instructions into one harness-owned corpus.
+
+Corpus IDs should align with the numbered layer system, including
+`corpus.02.rag-rulebook` as the self-corpus for the service's own governance.
 
 ## Current State
 
@@ -53,6 +53,7 @@ The location is not the final domain corpus model.
 
 2. Define the domain corpus package shape.
    - Status: present in `standards/domain-corpus-package.md`.
+   - Corpus IDs now align with numbered layers.
 
 3. Design a context-packet schema.
    - Include intent, routing metadata, matched corpora, selected chunks,
@@ -77,8 +78,10 @@ The location is not the final domain corpus model.
    - Report gaps when retrieval is ambiguous or insufficient.
 
 8. Plan the prototype corpus migration.
-   - Separate harness-owned rules from product/apps, design-system, deploy,
-     and education corpora.
+   - Separate harness-owned rules from `corpus.03.product`,
+     `corpus.03.product.design-system`, `corpus.04.deploy`, and
+     `corpus.05.education`.
+   - Include `corpus.02.rag-rulebook` as a self-corpus for service governance.
    - Use artifact path migration before moving committed files.
 
 9. Only after the above, design a standalone service or repo extraction.

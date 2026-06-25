@@ -50,6 +50,15 @@ create 02 rag rulebook layer scaffold
 - Record the ordered repo plan for context-packet schema, rulebook index schema,
   read-only index generation, chunk generation, validation, and later corpus
   migration.
+- Align domain corpus IDs with numbered layers, using names such as
+  `corpus.01.harness`, `corpus.02.rag-rulebook`, and `corpus.03.product`.
+- Include `corpus.02.rag-rulebook` as the self-corpus for the RAG/rulebook
+  service's own governance, indexing, chunking, retrieval, validation, and
+  packaging rules.
+- Treat portable RAG/rulebook service and corpus package standards as reusable
+  patterns for seed consumers, not required runtime artifacts for every target.
+- Defer the final standalone RAG/rulebook service target name until the repo or
+  service extraction boundary is explicit.
 
 ## Activity Log
 

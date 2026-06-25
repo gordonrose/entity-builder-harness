@@ -11,7 +11,7 @@ disciplines:
 kind: standard
 purpose: Define the package shape for modular domain rulebook corpora.
 portability:
-  class: required
+  class: reusable
   targets:
   - llm-workbench
   - entity-builder
@@ -35,13 +35,23 @@ A corpus package is a modular input to the portable RAG/rulebook service.
 
 Each corpus package should have one clear owner and one clear domain.
 
-Expected domain corpora include:
+Top-level corpus IDs should align with the numbered layer system:
 
-- harness
-- product-apps
-- design-system
-- deploy
-- education
+- `corpus.00.chat`
+- `corpus.01.harness`
+- `corpus.02.rag-rulebook`
+- `corpus.03.product`
+- `corpus.04.deploy`
+- `corpus.05.education`
+- `corpus.06.shared`
+
+The `corpus.02.rag-rulebook` corpus is the self-corpus for the RAG/rulebook
+service. It should explain how the service is governed, indexed, chunked,
+retrieved, validated, and packaged.
+
+Subcorpora may be introduced for more precise ownership, such as
+`corpus.03.product.apps`, `corpus.03.product.design-system`, or
+`corpus.03.product.platform`.
 
 The service may retrieve across multiple corpora, but each corpus should remain
 separately named, indexed, cited, and governed.
@@ -51,7 +61,7 @@ separately named, indexed, cited, and governed.
 Use this package shape unless a domain ADR approves another:
 
 ```txt
-rulebook.<domain>/
+corpus.<numbered-layer>/
   README.md
   manifest.yml
   sources/
@@ -72,7 +82,7 @@ The folder name is illustrative. The portable service should rely on
 
 Each corpus manifest should identify:
 
-- corpus ID
+- corpus ID, such as `corpus.02.rag-rulebook`
 - domain
 - owner layer
 - source roots
@@ -131,5 +141,7 @@ Before moving files, create a migration plan that names:
 ## First Corpus Candidate
 
 The current `docs/harness/architecture/` tree is the prototype corpus. It
-should remain in place until a migration separates harness, product/apps,
-design-system, deploy, and education ownership.
+should remain in place until a migration separates it into numbered corpora
+such as `corpus.01.harness`, `corpus.03.product`,
+`corpus.03.product.design-system`, `corpus.04.deploy`, and
+`corpus.05.education`.

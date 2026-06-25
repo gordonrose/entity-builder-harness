@@ -11,7 +11,7 @@ disciplines:
 kind: standard
 purpose: Define the portable service boundary for reusable RAG and rulebook machinery.
 portability:
-  class: required
+  class: reusable
   targets:
   - llm-workbench
   - entity-builder
@@ -29,9 +29,17 @@ used_by:
 Define the reusable service boundary for turning domain source material into
 small, accurate, governed context packets.
 
-The service should be portable across harness, product/apps, design-system,
-deployment, and education corpora. It should not be coupled to one repo's
-current folder layout.
+The service should be portable across numbered corpora and subcorpora. It
+should not be coupled to one repo's current folder layout.
+
+In artifact metadata, the targets identify known seed consumers of this
+portable pattern. They are not the final service name and they are not a closed
+consumer list. The standalone service/repo target should be named later when
+the extraction boundary is explicit.
+
+The service should support numbered corpus IDs such as `corpus.01.harness`,
+`corpus.02.rag-rulebook`, `corpus.03.product`, `corpus.04.deploy`,
+`corpus.05.education`, and `corpus.06.shared`, plus approved subcorpora.
 
 ## Owns
 
@@ -121,6 +129,8 @@ Return a gap instead of improvising when:
 - required rulesets or source references are missing
 - selected chunks exceed the context budget and cannot be safely trimmed
 - a domain corpus claims ownership of another domain's rules
+- a corpus package claims ownership of another numbered corpus without an
+  explicit relationship
 
 The consuming workflow decides whether to ask a clarifying question, update
 governance, or stop.
