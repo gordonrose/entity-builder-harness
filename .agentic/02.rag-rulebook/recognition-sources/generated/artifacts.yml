@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 368
-  term_count: 741
+  indexed_artifacts: 373
+  term_count: 751
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2070,6 +2070,18 @@ terms:
   canonical_id: harness.standards.artifact-path-migrations
   evidence_path: .agentic/01.harness/standards/artifact-path-migrations.md
   confidence_weight: 1
+- term: harness.standards.evaluation-fixtures
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standards.evaluation-fixtures
+  evidence_path: .agentic/01.harness/standards/evaluation-fixtures.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/evaluation-fixtures.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standards.evaluation-fixtures
+  evidence_path: .agentic/01.harness/standards/evaluation-fixtures.md
+  confidence_weight: 1
 - term: harness.standards.governed-script-permissions
   category: artifact-id
   match_type: exact
@@ -3456,6 +3468,18 @@ terms:
   canonical_id: rag-rulebook.standard.recognition-source-system
   evidence_path: .agentic/02.rag-rulebook/standards/recognition-source-system.md
   confidence_weight: 1
+- term: rag-rulebook.standard.retrieval-selector-evaluations
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.standard.retrieval-selector-evaluations
+  evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.standard.retrieval-selector-evaluations
+  evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  confidence_weight: 1
 - term: rag-rulebook.standard.retrieval-selector-policy-system
   category: artifact-id
   match_type: exact
@@ -3611,6 +3635,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.generate-recognition-sources.smoke-test
   evidence_path: scripts/02.rag-rulebook/generate-recognition-sources/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-retrieval-selector-fixture.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-retrieval-selector-fixture.readme
+  evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-retrieval-selector-fixture.readme
+  evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-retrieval-selector-fixture
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-retrieval-selector-fixture
+  evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-retrieval-selector-fixture
+  evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-retrieval-selector-fixture.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-retrieval-selector-fixture.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-retrieval-selector-fixture.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.generate-rulebook-chunks.readme
   category: artifact-id

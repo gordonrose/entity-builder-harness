@@ -177,6 +177,25 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-recognition-sources/` and
      `recognition-sources/generated/routing.yml`.
 
+7i. Add a read-only retrieval selector fixture.
+   - Consume the validated policy pack, generated chunks, recognition-source
+     matches, request text, session-like metadata, and focused paths.
+   - Emit a validated `rag-rulebook/context-packet/v1` packet.
+   - Keep this as deterministic fixture behavior, not a production retrieval
+     runtime or semantic recall engine.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`.
+
+7j. Define evaluation fixture governance.
+   - Add a harness-wide standard for evaluation fixtures, expected outcomes,
+     banned outcomes, validators, ownership, update triggers, and pass/fail
+     governance.
+   - Add a RAG/rulebook-specific standard for retrieval selector evaluations,
+     including routing, corpora, recognition matches, selected chunks,
+     citations, checks, gaps, stops, confidence, and token-budget assertions.
+   - Status: present in `.agentic/01.harness/standards/evaluation-fixtures.md`
+     and `.agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -198,6 +217,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add the first read-only retrieval selector fixture that consumes the validated
-compiled policy pack, generated chunks, recognition-source signals, request
-text, and session-like metadata before emitting a validated context packet.
+Add retrieval selector evaluation fixtures with expected outcomes, including at
+least one low-confidence or ambiguous request that must produce a gap instead
+of confident routing.

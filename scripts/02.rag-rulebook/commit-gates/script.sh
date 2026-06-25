@@ -64,4 +64,8 @@ if [ -d "$LAYER_DIR/recognition-sources/generated" ]; then
   echo "RAG/rulebook generated recognition sources are current."
 fi
 
+require_executable "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh >/dev/null
+echo "RAG/rulebook retrieval selector fixture is valid."
+
 echo "RAG/rulebook commit gates passed."

@@ -85,6 +85,8 @@ final homes.
   context packets.
 - `standards/recognition-source-system.md` - defines governed lookup sources
   used to recognize prompt intent before retrieval selection.
+- `standards/retrieval-selector-evaluations.md` - defines evaluation fixture
+  rules for retrieval selector and context-packet behavior.
 
 ## Schemas
 
@@ -155,6 +157,10 @@ final homes.
 - `scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh` - emits
   a small validated `rag-rulebook/context-packet/v1` fixture from generated or
   saved chunks without modifying files.
+- `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh` -
+  emits the first deterministic selector fixture by combining the active policy
+  pack, recognition-source matches, session-like metadata, focused paths, and
+  generated or saved chunks before validating the packet.
 - `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` -
   validates a `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack without
   modifying files.

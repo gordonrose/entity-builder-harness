@@ -39,6 +39,9 @@ required.
   validator.
 - If generated recognition sources exist, require and run the generator
   freshness check.
+- Require and run the retrieval selector fixture smoke test so policy,
+  recognition sources, generated chunks, and context-packet validation remain
+  wired together.
 
 ## Maintenance Rule
 
@@ -50,4 +53,5 @@ commit script.
 
 This command is read-only. It checks generated recognition sources for
 freshness, but does not rewrite them. It does not rebuild chunks, stage files,
-or create commits.
+or create commits, except transient fixture chunks in a temporary directory
+during smoke validation.

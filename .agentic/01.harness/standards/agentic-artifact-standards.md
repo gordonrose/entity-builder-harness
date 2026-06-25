@@ -203,6 +203,8 @@ support dry-run mode first.
   instruction-following, or agent/tool behavior.
 - Include fixtures or examples with expected outcomes.
 - Keep subjective evaluation criteria explicit and reviewable.
+- Follow `.agentic/01.harness/standards/evaluation-fixtures.md` for fixture
+  fields, ownership, update rules, and pass/fail governance.
 
 ### Template
 

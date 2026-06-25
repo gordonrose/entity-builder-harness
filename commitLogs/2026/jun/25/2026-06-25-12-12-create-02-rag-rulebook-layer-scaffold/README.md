@@ -152,6 +152,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Generate governed routing recognition source
   Rationale: Extended generate-recognition-sources to generate and freshness-check recognition.generated.routing from governed layer taxonomy, routing policy, retrieval policy corpus/mode definitions, and workflow files. The RAG/rulebook commit gate now checks both generated recognition sources.
 
+
+- Decision: Add retrieval selector fixture
+  Rationale: Added a read-only retrieval selector fixture that validates the active policy pack and recognition sources, matches request/session/focused-path signals against generated lookup sources, constrains candidate chunks by session and prototype bridge corpora, emits a validated context packet, and is now covered by the RAG/rulebook commit gate.
+
+
+- Decision: Govern evaluation fixtures
+  Rationale: Added a harness-wide evaluation fixture standard and a RAG/rulebook retrieval selector evaluation standard so expected outcomes, banned outcomes, validators, ownership, update triggers, gaps, confidence, citations, and token-budget behavior are governed before adding retrieval selector eval cases.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -416,6 +424,20 @@ Message: Generate routing recognition source
 Summary: Generated and governed a routing recognition source so RAG/rulebook prompt routing can recognize layer, corpus, mode, and workflow terms from governed sources.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-06-25T21:32:54Z - Decision
+
+Decision: Add retrieval selector fixture
+
+Rationale: Added a read-only retrieval selector fixture that validates the active policy pack and recognition sources, matches request/session/focused-path signals against generated lookup sources, constrains candidate chunks by session and prototype bridge corpora, emits a validated context packet, and is now covered by the RAG/rulebook commit gate.
+
+
+### 2026-06-25T22:17:00Z - Decision
+
+Decision: Govern evaluation fixtures
+
+Rationale: Added a harness-wide evaluation fixture standard and a RAG/rulebook retrieval selector evaluation standard so expected outcomes, banned outcomes, validators, ownership, update triggers, gaps, confidence, citations, and token-budget behavior are governed before adding retrieval selector eval cases.
 
 ## Commits
 

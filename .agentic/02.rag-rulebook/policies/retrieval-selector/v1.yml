@@ -25,6 +25,10 @@
 #       path: .agentic/02.rag-rulebook/plans/repo-plan.md
 #     - id: rag-rulebook.script.validate-retrieval-policy-pack
 #       path: scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+#     - id: rag-rulebook.standard.retrieval-selector-evaluations
+#       path: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
 
 schema: rag-rulebook/retrieval-policy-pack/v1
 policy_pack_id: retrieval-selector.v1
@@ -143,6 +147,7 @@ validation:
     - Prove selected chunk citations resolve after graph expansion.
   smoke_fixtures:
     - scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh
+    - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
   validator_scripts:
     - scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
     - scripts/02.rag-rulebook/validate-recognition-sources/script.sh

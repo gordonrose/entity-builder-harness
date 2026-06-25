@@ -27,6 +27,8 @@
 #       path: scripts/02.rag-rulebook/validate-context-packet/script.sh
 #     - id: rag-rulebook.script.generate-context-packet-fixture
 #       path: scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
 
 schema: rag-rulebook-context-packet-schema/v1
 packet_schema: rag-rulebook/context-packet/v1
