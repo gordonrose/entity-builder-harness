@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0006 Use Session Metadata For Routing After Chat Start architecture
+  decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0006 Use Session Metadata For Routing After Chat Start
 
 Status: accepted

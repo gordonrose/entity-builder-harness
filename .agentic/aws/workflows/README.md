@@ -1,3 +1,21 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: aws.workflows.readme
+  version: 1
+  status: active
+  layer: 03.deploy
+  domain: infra.ci-cd
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Document AWS Workflows.
+  portability:
+    class: source-only
+    targets: []
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+-->
 # AWS Workflows
 
 ## Workflows

@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Smoke test artifact path migration planning and validation helpers.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.smoke-test-artifact-path-migration
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: migration
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test artifact path migration planning and validation helpers.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/01.harness/workflows/migrate-artifact-paths.md
-#     - scripts/01.harness/plan-artifact-path-migration.sh
-#     - scripts/01.harness/check-artifact-path-migration.sh
-#   effects: read-only
+#   - id: harness.workflows.migrate-artifact-paths
+#     path: .agentic/01.harness/workflows/migrate-artifact-paths.md
+#   - id: harness.script.plan-artifact-path-migration
+#     path: scripts/01.harness/plan-artifact-path-migration.sh
+#   - id: harness.script.check-artifact-path-migration
+#     path: scripts/01.harness/check-artifact-path-migration.sh
+#   effects:
+#   - read-only
 
 fail() {
   echo "FAIL: $*" >&2

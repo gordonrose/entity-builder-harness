@@ -1,13 +1,22 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain the local main update status report for chat branches.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/main-refresh/show-main-update-status/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.main-refresh.show-main-update-status.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain the local main update status report for chat branches.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.main-refresh.show-main-update-status
+    path: scripts/00.chat/main-refresh/show-main-update-status/script.sh
 -->
-
 # Show Main Update Status
 
 This read-only capability answers: has local `main` moved relative to the chat

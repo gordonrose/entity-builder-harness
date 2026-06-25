@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Verify whether a completed chat branch is ready to merge into local main.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.local-merge.verify-chat-ready-to-merge-local-main
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: local-merge
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Verify whether a completed chat branch is ready to merge into local main.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-promote-to-main.md
-#     - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
-#   effects: read-only
+#   - id: chat.workflows.chat-promote-to-main
+#     path: .agentic/00.chat/workflows/chat-promote-to-main.md
+#   - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
+#     path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

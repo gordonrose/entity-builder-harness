@@ -1,12 +1,26 @@
 <!-- agentic-artifact:
-owner: harness
-kind: workflow
-purpose: Govern reusable planning and validation for moving, renaming, retiring, or removing repository artifact paths.
+schema: agentic-artifact/v2
+id: harness.workflows.migrate-artifact-paths
+version: 1
+status: active
+layer: 01.harness
 domain: migration
-portability: llm-workbench-required
+disciplines:
+- agentic
+kind: workflow
+purpose: Govern reusable planning and validation for moving, renaming, retiring, or
+  removing repository artifact paths.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/change-harness.md
-  - .agentic/01.harness/standards/artifact-path-migrations.md
+- id: harness.workflows.change-harness
+  path: .agentic/01.harness/workflows/change-harness.md
+- id: harness.standards.artifact-path-migrations
+  path: .agentic/01.harness/standards/artifact-path-migrations.md
 -->
 
 # Migrate Artifact Paths

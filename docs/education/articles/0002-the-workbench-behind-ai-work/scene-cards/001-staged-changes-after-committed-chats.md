@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.articles.0002-the-workbench-behind-ai-work.scene-cards.001-staged-changes-after-committed-chats
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: 'Document Scene Card: Staged Changes After Committed Chats.'
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # Scene Card: Staged Changes After Committed Chats
 
 ## Source

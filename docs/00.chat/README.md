@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: readme
-purpose: Index chat workbench documentation that supports the portable chat harness and public bootstrap.
-domain: documentation
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-  - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
+  schema: agentic-artifact/v2
+  id: chat.docs.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: documentation
+  disciplines:
+  - agentic
+  kind: readme
+  purpose: Index chat workbench documentation that supports the portable chat harness
+    and public bootstrap.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  - id: chat.script.upstream.bootstrap-llm-workbench-repo
+    path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
 -->
-
 # Chat Workbench Docs
 
 This folder contains documentation owned by the chat layer.

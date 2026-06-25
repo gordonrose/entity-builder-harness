@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test deterministic main-refresh conflict classification.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.main-refresh.classify-conflict.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: main-refresh
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test deterministic main-refresh conflict classification.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/main-refresh/classify-conflict/script.sh
-#   effects: temporary-files
+#   - id: chat.script.main-refresh.classify-conflict
+#     path: scripts/00.chat/main-refresh/classify-conflict/script.sh
+#   effects:
+#   - writes-files
 
 fail() {
   echo "FAIL: $*" >&2

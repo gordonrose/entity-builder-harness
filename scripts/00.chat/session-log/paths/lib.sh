@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Provide canonical chat session id and commit log path helper functions.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.paths.lib
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Provide canonical chat session id and commit log path helper functions.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/read-current-chat-log/script.sh
-#     - scripts/00.chat/session-log/update-chat-log/script.sh
-#   effects: read-only
-
+#   - id: chat.script.session-log.read-current-chat-log
+#     path: scripts/00.chat/session-log/read-current-chat-log/script.sh
+#   - id: chat.script.session-log.update-chat-log
+#     path: scripts/00.chat/session-log/update-chat-log/script.sh
+#   effects:
+#   - read-only
 chat_session_id_from_branch() {
   local branch="$1"
 

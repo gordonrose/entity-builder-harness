@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain task summary classification into layer, mode, and workflow.
-domain: classification
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/classification/classify-task/script.sh
-  - scripts/00.chat/startup/start-chat-session/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.classification.classify-task.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: classification
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain task summary classification into layer, mode, and workflow.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.classification.classify-task
+    path: scripts/00.chat/classification/classify-task/script.sh
+  - id: chat.script.startup.start-chat-session
+    path: scripts/00.chat/startup/start-chat-session/script.sh
 -->
-
 # Classify Task
 
 `script.sh` reads the opening task summary and prints the session routing

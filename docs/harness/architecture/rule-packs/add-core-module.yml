@@ -1,13 +1,22 @@
 # agentic-artifact:
-#   owner: harness
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rule-packs.add-core-module
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture
+#   disciplines:
+#   - architecture
 #   kind: rule-pack
 #   purpose: Govern safe additions and changes to shared packages/core modules.
-#   domain: architecture
-#   portability: source-only
+#   portability:
+#     class: source-only
+#     targets: []
 #   used_by:
-#     - docs/harness/architecture/rules/layers/packages-core.yml
-#     - docs/harness/architecture/rules/concerns/dependency-direction.yml
-
+#   - id: harness.architecture.rules.layers.packages-core
+#     path: docs/harness/architecture/rules/layers/packages-core.yml
+#   - id: harness.architecture.rules.concerns.dependency-direction
+#     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
 id: pack.add-core-module
 title: Add or modify a packages/core module
 version: 1

@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Commit only the current chat session log as bookkeeping.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.checkpoint-chat-session-log
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Commit only the current chat session log as bookkeeping.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/checkpoint-chat-session-log/README.md
-#   effects: stages-files, commits
+#   - id: chat.script.session-log.checkpoint-chat-session-log.readme
+#     path: scripts/00.chat/session-log/checkpoint-chat-session-log/README.md
+#   effects:
+#   - stages-files
+#   - commits
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

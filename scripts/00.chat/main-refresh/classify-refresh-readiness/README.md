@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain dirty-state classification before refreshing a chat branch from main.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
-  - scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh
+  schema: agentic-artifact/v2
+  id: chat.script.main-refresh.classify-refresh-readiness.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain dirty-state classification before refreshing a chat branch from main.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.main-refresh.classify-refresh-readiness
+    path: scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
+  - id: chat.script.main-refresh.classify-refresh-readiness.smoke-test
+    path: scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh
 -->
-
 # Classify Refresh Readiness
 
 This read-only capability answers: can this chat worktree refresh from `main`

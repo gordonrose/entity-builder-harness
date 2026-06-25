@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.articles.0001-the-next-ai-advantage-is-evidence
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Document The Next AI Advantage Is Evidence.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # The Next AI Advantage Is Evidence
 
 Imagine a team using AI to clean up a one-page recommendation: launch the

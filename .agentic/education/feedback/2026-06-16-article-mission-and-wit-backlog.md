@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.feedback.2026-06-16-article-mission-and-wit-backlog
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Document 2026-06-16 Article Mission And Wit Backlog.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # 2026-06-16 Article Mission And Wit Backlog
 
 ## Output Reviewed

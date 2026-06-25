@@ -1,15 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test refresh-readiness classification before main refresh.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.main-refresh.classify-refresh-readiness.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: main-refresh
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test refresh-readiness classification before main refresh.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
-#     - scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
-#   effects: writes-files, branches, commits
+#   - id: chat.workflows.chat-refresh-from-main
+#     path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+#   - id: chat.script.main-refresh.classify-refresh-readiness
+#     path: scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
+#   effects:
+#   - branches
+#   - commits
+#   - writes-files
 
 fail() {
   echo "FAIL: $*" >&2

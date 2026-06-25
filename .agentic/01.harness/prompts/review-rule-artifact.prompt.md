@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.prompts.review-rule-artifact
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: prompt
 purpose: Reusable prompt for reviewing one architecture rulebook artifact.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/operator-guide.md
+- id: harness.operator-guide
+  path: .agentic/01.harness/operator-guide.md
 -->
 
 # Review Rule Artifact Prompt

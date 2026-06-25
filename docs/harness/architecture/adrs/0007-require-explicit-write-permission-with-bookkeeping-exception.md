@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0007 Require Explicit Write Permission With Bookkeeping Exception
+  architecture decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0007 Require Explicit Write Permission With Bookkeeping Exception
 
 Status: accepted

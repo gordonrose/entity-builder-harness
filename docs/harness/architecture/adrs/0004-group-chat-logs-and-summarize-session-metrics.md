@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0004 Group Chat Logs And Summarize Session Metrics architecture
+  decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0004 Group Chat Logs And Summarize Session Metrics
 
 Status: superseded by ADR 0013

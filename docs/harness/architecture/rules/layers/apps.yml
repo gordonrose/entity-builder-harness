@@ -1,3 +1,23 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.layers.apps
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture
+#   disciplines:
+#   - architecture
+#   kind: rule
+#   purpose: Define the Apps architecture rule artifact.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.workflows.change-harness
+#     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.apps
 title: apps layer rules
 version: 1

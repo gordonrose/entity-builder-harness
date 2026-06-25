@@ -1,13 +1,26 @@
 #!/usr/bin/env node
-// agentic-script:
-//   owner: 00.chat
-//   purpose: Estimate chat cost metadata from an estimated token count.
+// agentic-artifact:
+//   schema: agentic-artifact/v2
+//   id: chat.script.metrics.estimate-chat-cost
+//   version: 1
+//   status: active
+//   layer: 00.chat
 //   domain: metrics
-//   portability: llm-workbench-required
+//   disciplines:
+//     - agentic
+//   kind: script
+//   purpose: Estimate chat cost metadata from an estimated token count.
+//   portability:
+//     class: required
+//     targets:
+//       - llm-workbench
+//   effects:
+//     - read-only
 //   used_by:
-//     - scripts/00.chat/session-log/record-chat-commit/script.sh
-//     - scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
-//   effects: read-only
+//     - id: chat.script.session-log.record-chat-commit
+//       path: scripts/00.chat/session-log/record-chat-commit/script.sh
+//     - id: chat.script.session-log.record-chat-commit.smoke-test
+//       path: scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
 
 const fs = require('fs');
 const path = require('path');

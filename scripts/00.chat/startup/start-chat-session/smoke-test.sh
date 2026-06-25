@@ -1,17 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test chat startup creates a separate chat-owned worktree.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.startup.start-chat-session.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: startup
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test chat startup creates a separate chat-owned worktree.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-start.md
-#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#     - scripts/00.chat/startup/start-chat-session/README.md
-#   effects: writes-files, branches, worktrees, commits
-
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   - id: chat.workflows.bootstrap-chat-workbench-repo
+#     path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#   - id: chat.script.startup.start-chat-session.readme
+#     path: scripts/00.chat/startup/start-chat-session/README.md
+#   effects:
+#   - writes-files
+#   - branches
+#   - worktrees
+#   - commits
 fail() {
   echo "FAIL: $*" >&2
   exit 1

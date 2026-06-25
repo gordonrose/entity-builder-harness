@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: script-domain-readme
-purpose: Explain transcript discovery and registration scripts.
-domain: transcript
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-start.md
-  - scripts/00.chat/transcript/register-codex-session-log/README.md
+  schema: agentic-artifact/v2
+  id: chat.script.transcript.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: transcript
+  disciplines:
+  - agentic
+  kind: script-domain-readme
+  purpose: Explain transcript discovery and registration scripts.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-start
+    path: .agentic/00.chat/workflows/chat-start.md
+  - id: chat.script.transcript.register-codex-session-log.readme
+    path: scripts/00.chat/transcript/register-codex-session-log/README.md
 -->
-
 # Transcript Scripts
 
 Transcript scripts connect chat session logs to local Codex JSONL transcripts.

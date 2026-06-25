@@ -1,13 +1,22 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain the check that decides whether a chat branch includes local main.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.main-refresh.check-chat-is-current-with-main.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain the check that decides whether a chat branch includes local main.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.main-refresh.check-chat-is-current-with-main
+    path: scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
 -->
-
 # Check Chat Is Current With Main
 
 This read-only capability answers: does this chat branch already include the

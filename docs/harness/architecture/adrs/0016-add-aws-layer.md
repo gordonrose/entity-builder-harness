@@ -1,3 +1,23 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0016-add-aws-layer
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0016 Add AWS Layer architecture decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0016 Add AWS Layer
 
 Status: accepted

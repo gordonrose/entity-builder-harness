@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain validation for package.json chat command scripts.
-domain: command
-portability: llm-workbench-validation
-used_by:
-  - scripts/00.chat/command/package-scripts/smoke-test.sh
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  schema: agentic-artifact/v2
+  id: chat.script.command.package-scripts.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: command
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain validation for package.json chat command scripts.
+  portability:
+    class: reusable
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.command.package-scripts.smoke-test
+    path: scripts/00.chat/command/package-scripts/smoke-test.sh
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 -->
-
 # Package Scripts
 
 This capability validates the public `package.json` `chat:*` command surface in

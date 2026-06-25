@@ -1,13 +1,23 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain the read-only report that finds changed-path overlap between chat branches.
-domain: local-merge
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.local-merge.report-chat-branch-overlaps.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: local-merge
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain the read-only report that finds changed-path overlap between chat
+    branches.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.local-merge.report-chat-branch-overlaps
+    path: scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
 -->
-
 # Report Chat Branch Overlaps
 
 This capability answers: which chat branches or active worktree changes touch

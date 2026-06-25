@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test package.json chat command scripts against a throwaway repo.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.command.package-scripts.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: validation
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test package.json chat command scripts against a throwaway repo.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#     - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
-#   effects: writes-files
+#   - id: chat.workflows.bootstrap-chat-workbench-repo
+#     path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#   - id: chat.script.bootstrap.audit-chat-bootstrap-file-set
+#     path: scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+#   effects:
+#   - writes-files
 
 fail() {
   echo "FAIL: $*" >&2

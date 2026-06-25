@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: layer-readme
-purpose: Explain the chat lifecycle governance layer and its canonical surfaces.
-domain: governance
-portability: llm-workbench-required
-used_by:
-  - AGENTS.md
-  - .agentic/00.chat/migration-plan.md
+  schema: agentic-artifact/v2
+  id: chat.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: governance
+  disciplines:
+  - agentic
+  kind: layer-readme
+  purpose: Explain the chat lifecycle governance layer and its canonical surfaces.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+  - id: chat.migration-plan
+    path: .agentic/00.chat/migration-plan.md
 -->
-
 # 00.chat Layer
 
 ## Purpose

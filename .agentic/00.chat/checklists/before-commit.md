@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: checklist
-purpose: Define the required checks before committing approved chat task work.
-domain: git
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-commit.md
-  - .agentic/01.harness/workflows/change-harness.md
+  schema: agentic-artifact/v2
+  id: chat.checklists.before-commit
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: git
+  disciplines:
+  - agentic
+  kind: checklist
+  purpose: Define the required checks before committing approved chat task work.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-commit
+    path: .agentic/00.chat/workflows/chat-commit.md
+  - id: harness.workflows.change-harness
+    path: .agentic/01.harness/workflows/change-harness.md
 -->
-
 # Chat Before-Commit Checklist
 
 Use this before committing approved chat task work.
@@ -54,7 +64,7 @@ script or gate, or keeping the prose with an allow marker and reason.
 Run:
 
 ```bash
-bash scripts/01.harness/check-artifact-metadata-headers.sh --staged-added
+bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 ```
 
 New scripts and harness/process Markdown documents must declare metadata

@@ -1,14 +1,22 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the public chat close command entrypoint.
-domain: command
-portability: llm-workbench-required
-used_by:
-  - package.json scripts.chat:close
-  - scripts/00.chat/command/close/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.command.close.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: command
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the public chat close command entrypoint.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.command.close
+    path: scripts/00.chat/command/close/script.sh
 -->
-
 # Close Command
 
 `script.sh` is the canonical entrypoint for the public `chat:close` command. It

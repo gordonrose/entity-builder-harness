@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Generate on-demand aggregate summaries from chat session logs.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.reporting.generate-commit-log-summary
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: reporting
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Generate on-demand aggregate summaries from chat session logs.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/skills/session-summary.md
-#     - .agentic/00.chat/workflows/chat-reporting.md
-#     - package.json scripts.chat:commit-log-summary
-#   effects: read-only, writes-files
+#   - id: chat.skills.session-summary
+#     path: .agentic/00.chat/skills/session-summary.md
+#   - id: chat.workflows.chat-reporting
+#     path: .agentic/00.chat/workflows/chat-reporting.md
+#   effects:
+#   - read-only
+#   - writes-files
 
 usage() {
   cat <<'EOF'

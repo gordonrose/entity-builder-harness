@@ -1,17 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test commit log deletion protection for recorded work.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.check-commitlog-deletions.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test commit log deletion protection for recorded work.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
-#     - scripts/00.chat/session-log/check-commitlog-deletions/README.md
-#     - scripts/00.chat/session-log/check-commitlog-deletions/script.sh
-#   effects: writes-files, commits
-
+#   - id: harness.architecture.adr.0010-protect-commit-logs-with-recorded-work
+#     path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
+#   - id: chat.script.session-log.check-commitlog-deletions.readme
+#     path: scripts/00.chat/session-log/check-commitlog-deletions/README.md
+#   - id: chat.script.session-log.check-commitlog-deletions
+#     path: scripts/00.chat/session-log/check-commitlog-deletions/script.sh
+#   effects:
+#   - writes-files
+#   - commits
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/commitlog-deletions-smoke.XXXXXX")"
 

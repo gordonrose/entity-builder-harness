@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Verify commit-boundary workflow, checklist, and referenced gate files exist.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.check-commit-prerequisites
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Verify commit-boundary workflow, checklist, and referenced gate files exist.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/check-commit-prerequisites/README.md
-#     - scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
-#   effects: read-only
+#   - id: chat.script.session-log.check-commit-prerequisites.readme
+#     path: scripts/00.chat/session-log/check-commit-prerequisites/README.md
+#   - id: chat.script.session-log.check-commit-prerequisites.smoke-test
+#     path: scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
+#   effects:
+#   - read-only
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

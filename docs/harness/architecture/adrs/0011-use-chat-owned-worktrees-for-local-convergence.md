@@ -1,12 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
-kind: adr
-purpose: Record the chat-owned worktree model for local convergence and normal task work.
+schema: agentic-artifact/v2
+id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+version: 1
+status: active
+layer: 01.harness
 domain: architecture
-portability: llm-workbench-required
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the chat-owned worktree model for local convergence and normal task
+  work.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - .agentic/00.chat/workflows/chat-start.md
-  - .agentic/00.chat/checklists/before-commit.md
+- id: artifact.chat-start
+  path: .agentic/00.chat/workflows/chat-start.md
+- id: artifact.before-commit
+  path: .agentic/00.chat/checklists/before-commit.md
 -->
 
 # 0011 Use Chat-Owned Worktrees For Local Convergence

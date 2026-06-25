@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test current chat metadata reads and recorded-session reuse guard.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.read-current-chat-log.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test current chat metadata reads and recorded-session reuse guard.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/read-current-chat-log/README.md
-#     - scripts/00.chat/session-log/read-current-chat-log/script.sh
-#   effects: writes-files, branches, commits
-
+#   - id: chat.script.session-log.read-current-chat-log.readme
+#     path: scripts/00.chat/session-log/read-current-chat-log/README.md
+#   - id: chat.script.session-log.read-current-chat-log
+#     path: scripts/00.chat/session-log/read-current-chat-log/script.sh
+#   effects:
+#   - writes-files
+#   - branches
+#   - commits
 fail() {
   echo "FAIL: $*" >&2
   exit 1

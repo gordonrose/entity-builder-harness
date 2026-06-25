@@ -1,13 +1,28 @@
 <!-- agentic-artifact:
-owner: harness
-kind: standard
-purpose: Define which harness artifact type should own new rules, procedures, capabilities, and checks.
+schema: agentic-artifact/v2
+id: harness.standards.agentic-artifact-standards
+version: 1
+status: active
+layer: 01.harness
 domain: governance
-portability: llm-workbench-required
+disciplines:
+- agentic
+kind: standard
+purpose: Define which harness artifact type should own new rules, procedures, capabilities,
+  and checks.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/change-harness.md
-  - .agentic/01.harness/workflows/build-capability-workflow.md
-  - .agentic/01.harness/README.md
+- id: harness.workflows.change-harness
+  path: .agentic/01.harness/workflows/change-harness.md
+- id: harness.workflows.build-capability-workflow
+  path: .agentic/01.harness/workflows/build-capability-workflow.md
+- id: harness.readme
+  path: .agentic/01.harness/README.md
 -->
 
 # Agentic Artifact Standards

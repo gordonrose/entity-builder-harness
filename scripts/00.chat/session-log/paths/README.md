@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain helper functions for chat session log paths and metadata.
-domain: session-log
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/session-log/paths/lib.sh
-  - scripts/00.chat/session-log/read-current-chat-log/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.session-log.paths.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: session-log
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain helper functions for chat session log paths and metadata.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.session-log.paths.lib
+    path: scripts/00.chat/session-log/paths/lib.sh
+  - id: chat.script.session-log.read-current-chat-log
+    path: scripts/00.chat/session-log/read-current-chat-log/script.sh
 -->
-
 # Session Log Paths
 
 `lib.sh` provides shell helper functions for converting chat branch names and

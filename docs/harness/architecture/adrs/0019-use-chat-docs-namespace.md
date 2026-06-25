@@ -1,12 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.adr.0019-use-chat-docs-namespace
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
 kind: adr
-purpose: Record the decision to place chat-owned workbench docs under docs/00.chat while keeping ADRs centralized.
-domain: documentation
-portability: llm-workbench-required
+purpose: Record the decision to place chat-owned workbench docs under docs/00.chat
+  while keeping ADRs centralized.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - docs/00.chat/README.md
-  - docs/00.chat/public-chat-workbench-adrs.md
+- id: chat.doc.readme
+  path: docs/00.chat/README.md
+- id: chat.doc.public-chat-workbench-adrs
+  path: docs/00.chat/public-chat-workbench-adrs.md
 -->
 
 # 0019 Use Chat Docs Namespace

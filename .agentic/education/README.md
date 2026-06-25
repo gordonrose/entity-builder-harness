@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.readme
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Document Education Layer.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+-->
 # Education Layer
 
 The education layer governs educational resources derived from repo work.

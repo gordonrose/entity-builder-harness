@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Classify an opening task into layer, mode, and workflow metadata.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.classification.classify-task
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: classification
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Classify an opening task into layer, mode, and workflow metadata.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/00.chat/classification/classify-task/check-fixtures.sh
-#     - scripts/00.chat/startup/start-chat-session/script.sh
-#   effects: read-only
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   - id: chat.script.classification.classify-task.check-fixtures
+#     path: scripts/00.chat/classification/classify-task/check-fixtures.sh
+#   - id: chat.script.startup.start-chat-session
+#     path: scripts/00.chat/startup/start-chat-session/script.sh
+#   effects:
+#   - read-only
 
 TASK="${*:-}"
 

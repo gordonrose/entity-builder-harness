@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Run only explicitly governed repository scripts with approval-sensitive routing.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.run-governed-script
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: governance
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Run only explicitly governed repository scripts with approval-sensitive routing.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/01.harness/standards/governed-script-permissions.md
-#     - .agentic/00.chat/workflows/chat-start.md
-#   effects: read-only
+#   - id: harness.standards.governed-script-permissions
+#     path: .agentic/01.harness/standards/governed-script-permissions.md
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'
@@ -54,6 +67,9 @@ always scripts/00.chat/main-refresh/show-main-update-status/script.sh
 always scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 always scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
 always scripts/01.harness/check-deterministic-process-drift.sh
+always scripts/01.harness/artifact-metadata/check-headers/script.sh
+always scripts/01.harness/artifact-metadata/generate-index/script.sh
+approved scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh
 always scripts/01.harness/check-artifact-metadata-headers.sh
 always scripts/01.harness/check-governed-script-command-drift.sh
 always scripts/01.harness/plan-artifact-path-migration.sh
@@ -112,6 +128,9 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/01.harness/check-deterministic-process-drift.sh|\
+  scripts/01.harness/artifact-metadata/check-headers/script.sh|\
+  scripts/01.harness/artifact-metadata/generate-index/script.sh|\
+  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh|\
   scripts/01.harness/check-artifact-metadata-headers.sh|\
   scripts/01.harness/check-governed-script-command-drift.sh|\
   scripts/01.harness/plan-artifact-path-migration.sh|\
@@ -141,6 +160,8 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
   scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
   scripts/01.harness/check-deterministic-process-drift.sh|\
+  scripts/01.harness/artifact-metadata/check-headers/script.sh|\
+  scripts/01.harness/artifact-metadata/generate-index/script.sh|\
   scripts/01.harness/check-artifact-metadata-headers.sh|\
   scripts/01.harness/check-governed-script-command-drift.sh|\
   scripts/01.harness/plan-artifact-path-migration.sh|\
@@ -153,7 +174,8 @@ case "$SCRIPT_PATH" in
   scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
   scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
   scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
-  scripts/00.chat/session-log/record-chat-commit/script.sh)
+  scripts/00.chat/session-log/record-chat-commit/script.sh|\
+  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh)
     RUN_CLASS="approved"
     ;;
   *)

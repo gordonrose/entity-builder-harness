@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Check whether a chat branch is current with the local base branch.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.main-refresh.check-chat-is-current-with-main
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: main-refresh
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Check whether a chat branch is current with the local base branch.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
-#     - scripts/01.harness/run-governed-script.sh
-#   effects: read-only
+#   - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
+#     path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+#   - id: harness.script.run-governed-script
+#     path: scripts/01.harness/run-governed-script.sh
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

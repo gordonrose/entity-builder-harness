@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.workflows.continue-rulebook
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: workflow
 purpose: Govern default continuation of architecture rulebook work.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/prompts/next-rulebook-task.prompt.md
+- id: harness.prompts.next-rulebook-task
+  path: .agentic/01.harness/prompts/next-rulebook-task.prompt.md
 -->
 
 # Continue Rulebook Workflow

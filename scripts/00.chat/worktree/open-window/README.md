@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain opening a VS Code window for a chat-owned worktree.
-domain: worktree
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/worktree/open-window/script.sh
-  - scripts/00.chat/command/open-window/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.worktree.open-window.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: worktree
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain opening a VS Code window for a chat-owned worktree.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.worktree.open-window
+    path: scripts/00.chat/worktree/open-window/script.sh
+  - id: chat.script.command.open-window
+    path: scripts/00.chat/command/open-window/script.sh
 -->
-
 # Open Window Worktree Capability
 
 `script.sh` opens a new VS Code window for a chat-owned worktree.

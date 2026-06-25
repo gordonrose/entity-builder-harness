@@ -1,12 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.adr.0020-use-scripts-for-layer-command-surfaces
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
 kind: adr
-purpose: Record the decision to use numbered scripts namespaces as the durable executable command surface for agentic layers.
-domain: scripts
-portability: source-only
+purpose: Record the decision to use numbered scripts namespaces as the durable executable
+  command surface for agentic layers.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - docs/00.chat/script-layout.md
-  - .agentic/01.harness/workflows/build-capability-workflow.md
+- id: chat.doc.script-layout
+  path: docs/00.chat/script-layout.md
+- id: harness.workflows.build-capability-workflow
+  path: .agentic/01.harness/workflows/build-capability-workflow.md
 -->
 
 # 0020 Use Scripts For Layer Command Surfaces

@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain on-demand aggregate summaries from chat session logs.
-domain: reporting
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/skills/session-summary.md
-  - scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.reporting.generate-commit-log-summary.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: reporting
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain on-demand aggregate summaries from chat session logs.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.skills.session-summary
+    path: .agentic/00.chat/skills/session-summary.md
+  - id: chat.script.reporting.generate-commit-log-summary
+    path: scripts/00.chat/reporting/generate-commit-log-summary/script.sh
 -->
-
 # Generate Commit Log Summary
 
 `script.sh` builds an aggregate summary from individual chat session logs.

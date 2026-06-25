@@ -1,3 +1,25 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: shared.standards.upstream-repo-bootstrap
+version: 1
+status: active
+layer: 05.shared
+domain: bootstrap
+disciplines:
+- agentic
+kind: standard
+purpose: Define the Upstream Repo Bootstrap Standard standard.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
+used_by:
+- id: repo.agents
+  path: AGENTS.md
+-->
+
 # Upstream Repo Bootstrap Standard
 
 ## Purpose

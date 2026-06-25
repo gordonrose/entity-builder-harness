@@ -1,15 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Plan or apply the file and package merge for bootstrapping llm-workbench.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.upstream.bootstrap-llm-workbench-repo
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: upstream
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Plan or apply the file and package merge for bootstrapping llm-workbench.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/README.md
-#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#   effects: read-only, writes-files
+#   - id: chat.script.upstream.bootstrap-llm-workbench-repo.readme
+#     path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/README.md
+#   - id: chat.workflows.bootstrap-chat-workbench-repo
+#     path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#   effects:
+#   - read-only
+#   - writes-files
 
 usage() {
   cat <<'EOF'

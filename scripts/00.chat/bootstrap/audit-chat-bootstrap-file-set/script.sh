@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Audit the portable chat bootstrap script and support-file set.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.bootstrap.audit-chat-bootstrap-file-set
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: bootstrap
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Audit the portable chat bootstrap script and support-file set.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-#     - .agentic/shared/standards/upstream-repo-bootstrap.md
-#     - scripts/01.harness/run-governed-script.sh
-#   effects: read-only
+#   - id: chat.workflows.bootstrap-chat-workbench-repo
+#     path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+#   - id: shared.standard.upstream-repo-bootstrap
+#     path: .agentic/shared/standards/upstream-repo-bootstrap.md
+#   - id: harness.script.run-governed-script
+#     path: scripts/01.harness/run-governed-script.sh
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'
@@ -80,6 +94,7 @@ add_tree_if_exists ".agentic/shared/workflows"
 add_if_exists "package.json"
 add_if_exists "scripts/01.harness/run-governed-script.sh"
 add_if_exists "scripts/01.harness/check-deterministic-process-drift.sh"
+add_tree_if_exists "scripts/01.harness/artifact-metadata"
 add_if_exists "scripts/01.harness/check-artifact-metadata-headers.sh"
 add_if_exists "scripts/01.harness/check-governed-script-command-drift.sh"
 add_if_exists "scripts/01.harness/plan-artifact-path-migration.sh"

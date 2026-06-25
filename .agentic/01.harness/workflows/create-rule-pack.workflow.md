@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.workflows.create-rule-pack
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: workflow
 purpose: Govern creation of one task-shaped architecture rule pack.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/prompts/create-rule-pack.prompt.md
+- id: harness.prompts.create-rule-pack
+  path: .agentic/01.harness/prompts/create-rule-pack.prompt.md
 -->
 
 # Create Rule Pack Workflow

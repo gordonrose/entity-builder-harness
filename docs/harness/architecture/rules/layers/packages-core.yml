@@ -1,12 +1,20 @@
 # agentic-artifact:
-#   owner: harness
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.layers.packages-core
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture
+#   disciplines:
+#   - architecture
 #   kind: ruleset
 #   purpose: Define packages/core architecture placement rules for agents.
-#   domain: architecture
-#   portability: source-only
+#   portability:
+#     class: source-only
+#     targets: []
 #   used_by:
-#     - docs/harness/architecture/rule-packs/add-core-module.yml
-
+#   - id: harness.architecture.rule-packs.add-core-module
+#     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
 version: 1

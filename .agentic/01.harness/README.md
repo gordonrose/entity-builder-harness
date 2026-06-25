@@ -1,11 +1,23 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.readme
+version: 1
+status: active
+layer: 01.harness
+domain: governance
+disciplines:
+- agentic
 kind: readme
 purpose: Index harness workflows, standards, data, and architecture docs.
-domain: governance
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - AGENTS.md
+- id: repo.agents
+  path: AGENTS.md
 -->
 
 # Harness Workflow Index
@@ -30,9 +42,15 @@ Canonical rule packs remain `docs/harness/architecture/rule-packs`.
 Future Codex sessions continuing rulebook work should start by reading
 `manifest.yml` and `operator-guide.md`.
 
+## Capabilities
+
+- `artifact-metadata/` - owns the versioned artifact metadata model, taxonomy,
+  v2 schema contract, and future artifact index generator guidance.
+
 ## Standards
 
 - `standards/agentic-artifact-standards.md` - decides which artifact type should own new harness capabilities, including workflows, skills, standards, gates, hooks, evals, templates, examples, memory, agents, adapters, and scripts.
+- `standards/artifact-metadata-headers.md` - defines the compatibility v1 metadata header format and points to the versioned artifact metadata capability.
 - `standards/artifact-path-migrations.md` - defines compatibility rules for moving, renaming, retiring, or removing repository artifact paths.
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.
@@ -49,6 +67,8 @@ Future Codex sessions continuing rulebook work should start by reading
 
 ## Scripts
 
+- `scripts/01.harness/artifact-metadata/check-headers/script.sh` - capability-scoped entrypoint for artifact metadata header checks.
+- `scripts/01.harness/artifact-metadata/generate-index/script.sh` - emits a JSON artifact index from v1 and v2 metadata headers.
 - `scripts/01.harness/check-rule-test-taxonomy.sh` - validates declared architecture rulebook layer test taxonomy scope, CI vocabulary references, substitute limits, and negative-evidence guardrails.
 
 ## Data

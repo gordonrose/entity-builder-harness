@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
+  version: 1
+  status: active
+  layer: 01.harness
+  domain: architecture
+  disciplines:
+  - architecture
+  kind: guide
+  purpose: Document Kanbien Front-End Architecture and Design System Guide.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
+  used_by:
+  - id: harness.workflows.change-harness
+    path: .agentic/01.harness/workflows/change-harness.md
+-->
 # Kanbien Front-End Architecture and Design System Guide
 
 > Source PDF: `kanbien_frontend_design_system_guide.pdf`

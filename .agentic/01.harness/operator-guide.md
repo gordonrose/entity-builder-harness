@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.operator-guide
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: guide
 purpose: Guide Codex sessions that continue architecture rulebook creation.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/manifest.yml
+- id: harness.manifest
+  path: .agentic/01.harness/manifest.yml
 -->
 
 # Architecture Rulebook Operator Guide

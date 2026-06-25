@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the terminal chat command shortcut surface.
-domain: command
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/command/dispatcher/README.md
-  - scripts/00.chat/command/dispatcher/script.sh
+  schema: agentic-artifact/v2
+  id: chat.commands.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: command
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the terminal chat command shortcut surface.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.command.dispatcher.readme
+    path: scripts/00.chat/command/dispatcher/README.md
+  - id: chat.script.command.dispatcher
+    path: scripts/00.chat/command/dispatcher/script.sh
 -->
-
 # Chat Commands
 
 ## Purpose

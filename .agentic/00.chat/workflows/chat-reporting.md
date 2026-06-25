@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: chat.workflows.chat-reporting
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: chat
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Document Chat Reporting Workflow.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+-->
 # Chat Reporting Workflow
 
 ## Use When

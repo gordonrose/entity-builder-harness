@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: script-domain-readme
-purpose: Explain session-log scripts for durable chat evidence.
-domain: session-log
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/checklists/before-commit.md
-  - scripts/00.chat/session-log/record-chat-commit/README.md
+  schema: agentic-artifact/v2
+  id: chat.script.session-log.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: session-log
+  disciplines:
+  - agentic
+  kind: script-domain-readme
+  purpose: Explain session-log scripts for durable chat evidence.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.checklists.before-commit
+    path: .agentic/00.chat/checklists/before-commit.md
+  - id: chat.script.session-log.record-chat-commit.readme
+    path: scripts/00.chat/session-log/record-chat-commit/README.md
 -->
-
 # Session Log Scripts
 
 Session-log scripts read and update the durable evidence for a chat. The

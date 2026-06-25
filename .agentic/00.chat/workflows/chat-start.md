@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: workflow
-purpose: Govern chat startup routing, session metadata discovery, and first-chat setup steps.
-domain: startup
-portability: llm-workbench-required
-used_by:
-  - AGENTS.md
-  - scripts/00.chat/startup/start-chat-session/script.sh
+  schema: agentic-artifact/v2
+  id: chat.workflows.chat-start
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: startup
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Govern chat startup routing, session metadata discovery, and first-chat setup
+    steps.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+  - id: chat.script.startup.start-chat-session
+    path: scripts/00.chat/startup/start-chat-session/script.sh
 -->
-
 # Chat Start Workflow
 
 ## Purpose

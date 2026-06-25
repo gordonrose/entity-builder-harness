@@ -1,3 +1,25 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.templates.rule-pack
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: template
+#   purpose: Provide the Example task rule pack template.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.readme
+#     path: .agentic/01.harness/README.md
+
 id: pack.example-task
 title: Example task rule pack
 version: 1

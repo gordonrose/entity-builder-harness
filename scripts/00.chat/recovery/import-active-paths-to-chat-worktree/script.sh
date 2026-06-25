@@ -1,14 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Import explicit paths from an active worktree into a session's chat-owned worktree.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.recovery.import-active-paths-to-chat-worktree
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: recovery
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Import explicit paths from an active worktree into a session's chat-owned
+#     worktree.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
-#   effects: writes-files, stages-files
+#   - id: chat.script.recovery.import-active-paths-to-chat-worktree.readme
+#     path: scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
+#   effects:
+#   - stages-files
+#   - writes-files
 
 usage() {
   cat <<'EOF'

@@ -1,16 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Create chat branch, session log, prompt, and chat-owned worktree.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.startup.start-chat-session
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: startup
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Create chat branch, session log, prompt, and chat-owned worktree.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/startup/start-new-chat/script.sh
-#     - .agentic/00.chat/workflows/chat-start.md
-#   effects: branches, worktrees, writes-files, stages-files
-
+#   - id: chat.script.startup.start-new-chat
+#     path: scripts/00.chat/startup/start-new-chat/script.sh
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   effects:
+#   - branches
+#   - worktrees
+#   - writes-files
+#   - stages-files
 AGENTIC_ENV_FILE=".agentic/env.local"
 
 # shellcheck source=../../session-log/paths/lib.sh

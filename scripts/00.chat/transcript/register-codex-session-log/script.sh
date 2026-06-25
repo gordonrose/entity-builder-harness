@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Record the discovered Codex transcript path in the current chat log.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.transcript.register-codex-session-log
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: transcript
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Record the discovered Codex transcript path in the current chat log.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/00.chat/session-log/record-chat-commit/script.sh
-#   effects: writes-files
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   - id: chat.script.session-log.record-chat-commit
+#     path: scripts/00.chat/session-log/record-chat-commit/script.sh
+#   effects:
+#   - writes-files
 
 # shellcheck source=../../session-log/paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

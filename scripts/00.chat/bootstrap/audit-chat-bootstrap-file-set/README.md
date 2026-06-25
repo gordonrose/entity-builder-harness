@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the portable chat bootstrap file-set audit.
-domain: bootstrap
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-  - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.bootstrap.audit-chat-bootstrap-file-set.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: bootstrap
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the portable chat bootstrap file-set audit.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  - id: chat.script.bootstrap.audit-chat-bootstrap-file-set
+    path: scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
 -->
-
 # Audit Chat Bootstrap File Set
 
 `script.sh` reports the script and support-file set needed to bootstrap the

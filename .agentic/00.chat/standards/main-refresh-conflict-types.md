@@ -1,16 +1,29 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: standard
-purpose: Define governed conflict classification and resolution during chat refresh from main.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-refresh-from-main.md
-  - scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
-  - scripts/00.chat/main-refresh/classify-conflict/script.sh
-  - scripts/00.chat/main-refresh/verify-conflict-audit/script.sh
+  schema: agentic-artifact/v2
+  id: chat.standards.main-refresh-conflict-types
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: standard
+  purpose: Define governed conflict classification and resolution during chat refresh
+    from main.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-refresh-from-main
+    path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+  - id: chat.script.main-refresh.apply-rehearsed-refresh
+    path: scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
+  - id: chat.script.main-refresh.classify-conflict
+    path: scripts/00.chat/main-refresh/classify-conflict/script.sh
+  - id: chat.script.main-refresh.verify-conflict-audit
+    path: scripts/00.chat/main-refresh/verify-conflict-audit/script.sh
 -->
-
 # Main Refresh Conflict Types
 
 ## Purpose

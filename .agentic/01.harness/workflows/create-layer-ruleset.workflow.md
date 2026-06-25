@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.workflows.create-layer-ruleset
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: workflow
 purpose: Govern creation of one layer architecture ruleset.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/prompts/create-layer-ruleset.prompt.md
+- id: harness.prompts.create-layer-ruleset
+  path: .agentic/01.harness/prompts/create-layer-ruleset.prompt.md
 -->
 
 # Create Layer Ruleset Workflow

@@ -1,13 +1,28 @@
 <!-- agentic-artifact:
-owner: harness
-kind: standard
-purpose: Define the missing-governance stop-condition policy that prevents improvised recovery.
+schema: agentic-artifact/v2
+id: harness.standards.missing-governance-stop-condition
+version: 1
+status: active
+layer: 01.harness
 domain: governance
-portability: llm-workbench-required
+disciplines:
+- agentic
+kind: standard
+purpose: Define the missing-governance stop-condition policy that prevents improvised
+  recovery.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - AGENTS.md
-  - .agentic/01.harness/workflows/change-harness.md
-  - .agentic/shared/workflows/capability-resolution-workflow.md
+- id: repo.agents
+  path: AGENTS.md
+- id: harness.workflows.change-harness
+  path: .agentic/01.harness/workflows/change-harness.md
+- id: shared.workflows.capability-resolution-workflow
+  path: .agentic/shared/workflows/capability-resolution-workflow.md
 -->
 
 # Missing Governance Stop Condition

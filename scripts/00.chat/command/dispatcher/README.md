@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the chat command dispatcher capability and its script layout.
-domain: command
-portability: llm-workbench-required
-used_by:
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-  - scripts/00.chat/command/dispatcher/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.command.dispatcher.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: command
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the chat command dispatcher capability and its script layout.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  - id: chat.script.command.dispatcher
+    path: scripts/00.chat/command/dispatcher/script.sh
 -->
-
 # Chat Command Dispatcher
 
 This capability owns the chat command dispatcher.

@@ -1,3 +1,25 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: shared.workflows.capability-resolution-workflow
+version: 1
+status: active
+layer: 05.shared
+domain: governance
+disciplines:
+- agentic
+kind: workflow
+purpose: Govern the Capability Resolution Workflow workflow.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
+used_by:
+- id: repo.agents
+  path: AGENTS.md
+-->
+
 # Capability Resolution Workflow
 
 ## Purpose

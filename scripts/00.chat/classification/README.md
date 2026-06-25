@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: script-domain-readme
-purpose: Explain task classification scripts for chat startup routing.
-domain: classification
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-start.md
-  - scripts/00.chat/classification/classify-task/README.md
+  schema: agentic-artifact/v2
+  id: chat.script.classification.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: classification
+  disciplines:
+  - agentic
+  kind: script-domain-readme
+  purpose: Explain task classification scripts for chat startup routing.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-start
+    path: .agentic/00.chat/workflows/chat-start.md
+  - id: chat.script.classification.classify-task.readme
+    path: scripts/00.chat/classification/classify-task/README.md
 -->
-
 # Classification Scripts
 
 Classification scripts turn a human task summary into chat session routing

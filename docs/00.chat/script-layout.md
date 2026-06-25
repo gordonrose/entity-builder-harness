@@ -1,15 +1,26 @@
 <!-- agentic-artifact:
-owner: harness
-kind: doc
-purpose: Explain the current script layout after the chat harness script migration.
-domain: scripts
-portability: llm-workbench-required
-used_by:
-  - .agentic/01.harness/README.md
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-  - docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+  schema: agentic-artifact/v2
+  id: chat.script-layout
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: scripts
+  disciplines:
+  - agentic
+  kind: doc
+  purpose: Explain the current script layout after the chat harness script migration.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: harness.readme
+    path: .agentic/01.harness/README.md
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  - id: harness.architecture.adr.0020-use-scripts-for-layer-command-surfaces
+    path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
 -->
-
 # Script Layout
 
 This document describes the current script layout. For the migration history,

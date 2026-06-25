@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.architecture.adr.0004-require-source-packets-for-public-articles
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: adr
+  purpose: Document 0004 Require Source Packets For Public Articles.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # 0004 Require Source Packets For Public Articles
 
 Status: accepted

@@ -1,14 +1,23 @@
 # agentic-artifact:
-#   owner: harness
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.layers.scripts-command-surface
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture-rulebook
+#   disciplines:
+#   - agentic
 #   kind: layer-ruleset
 #   purpose: Define architecture rules for numbered script command surfaces.
-#   domain: architecture-rulebook
-#   portability: llm-workbench-required
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - docs/harness/architecture/rules/concerns/ci-quality.yml
-#     - .agentic/01.harness/manifest.yml
-#
-
+#   - id: harness.architecture.rules.concerns.ci-quality
+#     path: docs/harness/architecture/rules/concerns/ci-quality.yml
+#   - id: harness.manifest
+#     path: .agentic/01.harness/manifest.yml
 id: layer.scripts-command-surface
 title: scripts command-surface layer rules
 version: 1

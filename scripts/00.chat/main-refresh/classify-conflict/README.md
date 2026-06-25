@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain deterministic main-refresh conflict classification.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/main-refresh/classify-conflict/script.sh
-  - .agentic/00.chat/standards/main-refresh-conflict-types.md
+  schema: agentic-artifact/v2
+  id: chat.script.main-refresh.classify-conflict.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain deterministic main-refresh conflict classification.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.main-refresh.classify-conflict
+    path: scripts/00.chat/main-refresh/classify-conflict/script.sh
+  - id: chat.standards.main-refresh-conflict-types
+    path: .agentic/00.chat/standards/main-refresh-conflict-types.md
 -->
-
 # Classify Main Refresh Conflict
 
 `script.sh` classifies one conflicted path using the governed conflict types in

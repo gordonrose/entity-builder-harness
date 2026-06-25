@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: script-domain-readme
-purpose: Explain closeout scripts that prepare governed end-of-chat prompts.
-domain: closeout
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/commands/README.md
-  - scripts/00.chat/closeout/build-closeout-prompt/README.md
+  schema: agentic-artifact/v2
+  id: chat.script.closeout.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: closeout
+  disciplines:
+  - agentic
+  kind: script-domain-readme
+  purpose: Explain closeout scripts that prepare governed end-of-chat prompts.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.commands.readme
+    path: .agentic/00.chat/commands/README.md
+  - id: chat.script.closeout.build-closeout-prompt.readme
+    path: scripts/00.chat/closeout/build-closeout-prompt/README.md
 -->
-
 # Closeout Scripts
 
 Closeout scripts prepare the handoff from active work to a final agent turn.

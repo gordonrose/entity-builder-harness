@@ -1,11 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.checklists.rule-artifact-quality
+version: 1
+status: active
+layer: 01.harness
+domain: architecture-rulebook
+disciplines:
+- agentic
+- architecture
 kind: checklist
 purpose: Review quality of one architecture rulebook artifact.
-domain: architecture-rulebook
-portability: llm-workbench-required
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/review-rule-artifact.workflow.md
+- id: harness.workflows.review-rule-artifact
+  path: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
 -->
 
 # Rule Artifact Quality Checklist

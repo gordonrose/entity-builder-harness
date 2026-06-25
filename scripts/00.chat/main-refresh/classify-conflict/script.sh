@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Classify one main-refresh conflict path using governed conflict types.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.main-refresh.classify-conflict
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: main-refresh
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Classify one main-refresh conflict path using governed conflict types.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
-#     - .agentic/00.chat/standards/main-refresh-conflict-types.md
-#   effects: read-only
+#   - id: chat.workflows.chat-refresh-from-main
+#     path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+#   - id: chat.standards.main-refresh-conflict-types
+#     path: .agentic/00.chat/standards/main-refresh-conflict-types.md
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

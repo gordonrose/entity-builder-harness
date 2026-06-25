@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Find the Codex JSONL transcript for a chat session.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.transcript.discover-codex-session-log
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: transcript
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Find the Codex JSONL transcript for a chat session.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/transcript/register-codex-session-log/script.sh
-#     - scripts/00.chat/session-log/record-chat-commit/script.sh
-#   effects: read-only
+#   - id: chat.script.transcript.register-codex-session-log
+#     path: scripts/00.chat/transcript/register-codex-session-log/script.sh
+#   - id: chat.script.session-log.record-chat-commit
+#     path: scripts/00.chat/session-log/record-chat-commit/script.sh
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

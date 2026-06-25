@@ -1,15 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Verify architecture rulebook layer test taxonomy structure and vocabulary references.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.check-rule-test-taxonomy
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: architecture-rulebook
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Verify architecture rulebook layer test taxonomy structure and vocabulary
+#     references.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - docs/harness/architecture/rules/concerns/ci-quality.yml
-#     - .agentic/01.harness/README.md
-#   effects: read-only
+#   - id: harness.architecture.rules.concerns.ci-quality
+#     path: docs/harness/architecture/rules/concerns/ci-quality.yml
+#   - id: harness.readme
+#     path: .agentic/01.harness/README.md
+#   effects:
+#   - read-only
 
 python3 - "$@" <<'PY'
 from __future__ import annotations

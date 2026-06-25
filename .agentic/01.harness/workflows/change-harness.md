@@ -1,13 +1,28 @@
 <!-- agentic-artifact:
-owner: harness
-kind: workflow
-purpose: Govern changes to harness routing, workflows, standards, agents, adapters, and instruction rules.
+schema: agentic-artifact/v2
+id: harness.workflows.change-harness
+version: 1
+status: active
+layer: 01.harness
 domain: governance
-portability: llm-workbench-required
+disciplines:
+- agentic
+kind: workflow
+purpose: Govern changes to harness routing, workflows, standards, agents, adapters,
+  and instruction rules.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - AGENTS.md
-  - .agentic/routing-policy.yaml
-  - scripts/00.chat/classification/classify-task/script.sh
+- id: repo.agents
+  path: AGENTS.md
+- id: artifact.agentic.routing-policy
+  path: .agentic/routing-policy.yaml
+- id: chat.script.classification.classify-task
+  path: scripts/00.chat/classification/classify-task/script.sh
 -->
 
 name: change-harness

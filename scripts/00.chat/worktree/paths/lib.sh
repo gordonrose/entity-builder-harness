@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Provide canonical chat worktree path and metadata helper functions.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.worktree.paths.lib
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: worktree
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Provide canonical chat worktree path and metadata helper functions.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/reporting/report-chat-workspaces/script.sh
-#     - scripts/00.chat/startup/start-chat-session/script.sh
-#     - scripts/00.chat/worktree/ensure-chat-worktree/script.sh
-#   effects: read-only
-
+#   - id: chat.script.reporting.report-chat-workspaces
+#     path: scripts/00.chat/reporting/report-chat-workspaces/script.sh
+#   - id: chat.script.startup.start-chat-session
+#     path: scripts/00.chat/startup/start-chat-session/script.sh
+#   - id: chat.script.worktree.ensure-chat-worktree
+#     path: scripts/00.chat/worktree/ensure-chat-worktree/script.sh
+#   effects:
+#   - read-only
 chat_worktree_repo_root() {
   local repo_root
 

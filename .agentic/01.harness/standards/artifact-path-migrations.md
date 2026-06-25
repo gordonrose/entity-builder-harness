@@ -1,13 +1,29 @@
 <!-- agentic-artifact:
-owner: harness
-kind: standard
-purpose: Define safety rules for moving, renaming, retiring, or removing repository artifact paths.
+schema: agentic-artifact/v2
+id: harness.standards.artifact-path-migrations
+version: 1
+status: active
+layer: 01.harness
 domain: migration
-portability: llm-workbench-required
+disciplines:
+- agentic
+- architecture
+kind: standard
+purpose: Define safety rules for moving, renaming, retiring, or removing repository
+  artifact paths.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
 used_by:
-  - .agentic/01.harness/workflows/migrate-artifact-paths.md
-  - scripts/01.harness/plan-artifact-path-migration.sh
-  - scripts/01.harness/check-artifact-path-migration.sh
+- id: harness.workflows.migrate-artifact-paths
+  path: .agentic/01.harness/workflows/migrate-artifact-paths.md
+- id: harness.script.plan-artifact-path-migration
+  path: scripts/01.harness/plan-artifact-path-migration.sh
+- id: harness.script.check-artifact-path-migration
+  path: scripts/01.harness/check-artifact-path-migration.sh
 -->
 
 # Artifact Path Migrations

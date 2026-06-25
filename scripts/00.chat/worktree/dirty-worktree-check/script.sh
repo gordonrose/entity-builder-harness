@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Check worktree cleanliness with optional current-session bookkeeping tolerance.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.worktree.dirty-worktree-check
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: worktree
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Check worktree cleanliness with optional current-session bookkeeping tolerance.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/worktree/dirty-worktree-check/README.md
-#   effects: read-only
-
+#   - id: chat.script.worktree.dirty-worktree-check.readme
+#     path: scripts/00.chat/worktree/dirty-worktree-check/README.md
+#   effects:
+#   - read-only
 usage() {
   cat <<'EOF'
 Usage:

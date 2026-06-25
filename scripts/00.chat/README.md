@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: script-domain-readme
-purpose: Explain the canonical script layout for the chat lifecycle layer.
-domain: governance
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/README.md
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: governance
+  disciplines:
+  - agentic
+  kind: script-domain-readme
+  purpose: Explain the canonical script layout for the chat lifecycle layer.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.readme
+    path: .agentic/00.chat/README.md
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # 00.chat Scripts
 
 This tree contains the canonical executable surface for the chat lifecycle
