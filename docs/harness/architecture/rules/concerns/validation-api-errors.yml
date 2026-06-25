@@ -1,3 +1,23 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.concerns.validation-api-errors
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture
+#   disciplines:
+#   - architecture
+#   kind: rule
+#   purpose: Define the Validation Api Errors architecture rule artifact.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.workflows.change-harness
+#     path: .agentic/01.harness/workflows/change-harness.md
 id: concern.validation-api-errors
 title: Validation and API error rules
 version: 1
