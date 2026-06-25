@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.templates.reader-world-research-packet
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: template
+  purpose: Document Reader-World Research Packet.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # Reader-World Research Packet
 
 Use this before drafting any public short article for a non-technical or

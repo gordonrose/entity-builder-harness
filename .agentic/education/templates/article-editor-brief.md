@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.templates.article-editor-brief
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: template
+  purpose: Document Article Editor Brief.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # Article Editor Brief
 
 ## Metadata
