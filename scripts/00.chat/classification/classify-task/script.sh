@@ -37,7 +37,7 @@ classify_mode() {
     *plan*|*proposal*|*architecture*|*approach*|*how\ should*|*how\ would*|*how\ do*)
       echo "planning"
       ;;
-    *implement*|*add*|*update*|*change*|*edit*|*create*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*|*document*|*open*chat*|*open*llm-workbench*|*bootstrap*|*seed*)
+    *implement*|*add*|*update*|*change*|*edit*|*create*|*build*|*delete*|*remove*|*move*|*rename*|*format*|*fix*|*turn*|*draft*|*generate*|*improve*|*cleanup*|*clean\ up*|*promote*|*document*|*open*chat*|*open*llm-workbench*|*bootstrap*|*seed*)
       echo "implementation"
       ;;
     *run*|*execute*|*use*|*apply*|*start*)
@@ -131,6 +131,11 @@ case "$TASK" in
     echo "Layer: chat"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
+    ;;
+  *rag*|*retrieval\ augmented\ generation*|*rulebook*|*rule\ book*|*rule-pack*|*rule\ pack*|*ruleset*|*rule\ set*|*context\ packet*|*context\ packets*|*intent*|*corpus*|*chunk*|*chunks*|*embedding*|*embeddings*|*vector\ search*)
+    echo "Layer: rag-rulebook"
+    echo "Mode: ${MODE}"
+    echo "Workflow: .agentic/02.rag-rulebook/workflows/default.md"
     ;;
   *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*|*metadata\ header*|*metadata\ headers*|*artifact\ metadata*|*agentic-artifact*|*discipline*|*disciplines*)
     echo "Layer: harness"

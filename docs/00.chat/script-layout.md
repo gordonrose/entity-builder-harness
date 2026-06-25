@@ -40,11 +40,12 @@ Shared harness governance scripts live under:
 scripts/01.harness/
 ```
 
-Future product and deployment command surfaces should live under:
+Future RAG/rulebook, product, and deployment command surfaces should live under:
 
 ```txt
-scripts/02.product/<domain>/<capability>/
-scripts/03.deployment/<domain>/<capability>/
+scripts/02.rag-rulebook/<domain>/<capability>/
+scripts/03.product/<domain>/<capability>/
+scripts/04.deploy/<domain>/<capability>/
 ```
 
 That split is intentional:
@@ -55,10 +56,13 @@ That split is intentional:
 - `scripts/01.harness/` owns cross-layer harness checks such as metadata,
   deterministic process drift, governed command drift, and the governed script
   runner.
-- `scripts/02.product/` is reserved for future product-owned automation such as
+- `scripts/02.rag-rulebook/` is reserved for future standalone RAG/rulebook
+  automation such as corpus extraction, rulebook index generation, chunk
+  generation, graph expansion, and context-packet validation.
+- `scripts/03.product/` is reserved for future product-owned automation such as
   entity-builder commands, code generation, migration helpers, product
   validation, and developer CLI capabilities.
-- `scripts/03.deployment/` is reserved for future deployment-owned automation
+- `scripts/04.deploy/` is reserved for future deployment-owned automation
   such as environment checks, release helpers, deployment validation, and
   operational command wrappers.
 

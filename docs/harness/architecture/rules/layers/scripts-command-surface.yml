@@ -130,7 +130,7 @@ rules:
     must:
       - "Use scripts/<numbered-layer>/<domain>/<capability>/ for entity generators, migration generators, codegen, repo validation scripts, lint rules, release tooling, dependency graph checks, architecture conformance checks, and local developer CLI commands."
       - "Map chat lifecycle automation to scripts/00.chat/** and harness governance automation to scripts/01.harness/**."
-      - "Reserve future product-owned automation for scripts/02.product/** and deployment or release automation for scripts/03.deployment/** unless an ADR chooses a different numbered layer."
+      - "Reserve future RAG/rulebook automation for scripts/02.rag-rulebook/**, product automation for scripts/03.product/**, and deployment or release automation for scripts/04.deploy/** unless an ADR chooses a different numbered layer."
       - "Keep script capabilities focused on changing or validating the repo, not serving production runtime behavior."
       - "Keep stable CLI command surfaces buildable or runnable when they are reused or published internally."
     must_not:

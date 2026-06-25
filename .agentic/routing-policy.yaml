@@ -3,7 +3,7 @@
 #   id: shared.routing-policy
 #   version: 1
 #   status: active
-#   layer: 05.shared
+#   layer: 06.shared
 #   domain: governance
 #   disciplines:
 #   - agentic
@@ -24,6 +24,7 @@ classification_order:
   - chat
   - shared
   - harness
+  - rag-rulebook
   - education
   - aws
   - product
@@ -66,6 +67,15 @@ layers:
       - task changes governed script permissions or agent shell allowlists
       - task improves token usage or instruction loading
     workflow_index: .agentic/01.harness/workflows/README.md
+
+  rag-rulebook:
+    use_when:
+      - task changes reusable RAG or rulebook machinery
+      - task creates YAML rulebooks, rule packs, rulesets, chunks, indexes, graph relationships, intent models, or context packets from source material
+      - task builds, plans, or changes a standalone RAG/rulebook service
+      - task separates harness, product, design-system, deploy, or education corpora
+      - task changes corpus ingestion, chunking, retrieval, reranking, or context augmentation rules
+    workflow_index: .agentic/02.rag-rulebook/workflows/README.md
 
   education:
     use_when:

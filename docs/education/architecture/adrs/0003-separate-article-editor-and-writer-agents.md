@@ -3,7 +3,7 @@
   id: education.architecture.adr.0003-separate-article-editor-and-writer-agents
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

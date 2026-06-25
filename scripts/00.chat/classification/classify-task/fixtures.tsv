@@ -13,6 +13,9 @@ implement governed script permissions for codex claude and mistral	harness	imple
 update the harness so governed checkpoint and upstream reusable lesson clone operations do not trigger repeated codex approval prompts	harness	implementation	.agentic/01.harness/workflows/change-harness.md
 let's update our harness so it has best practice guidelines for adding new artefacts	harness	implementation	.agentic/01.harness/workflows/change-harness.md
 add SRE discipline to metadata headers and audit repo files for updates	harness	implementation	.agentic/01.harness/workflows/change-harness.md
+build a standalone rag rulebook server	rag-rulebook	implementation	.agentic/02.rag-rulebook/workflows/default.md
+create yamls from source markdowns for the rulebook	rag-rulebook	implementation	.agentic/02.rag-rulebook/workflows/default.md
+explain context packets and chunks	rag-rulebook	discovery	.agentic/02.rag-rulebook/workflows/default.md
 i would like to update my harness so that it never merges to origin main without first fetching the files it will update and checking potential conflicts	shared	implementation	.agentic/shared/workflows/change-shared-process.md
 is master my local equivalent of main? if so i'm assuming that is not currently up to date?	shared	discovery	.agentic/shared/workflows/change-shared-process.md
 rename master to main and add a workflow for when main is updated	shared	implementation	.agentic/shared/workflows/change-shared-process.md

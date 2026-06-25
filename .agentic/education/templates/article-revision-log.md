@@ -3,7 +3,7 @@
   id: education.templates.article-revision-log
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

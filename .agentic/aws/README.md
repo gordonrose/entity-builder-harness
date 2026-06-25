@@ -3,7 +3,7 @@
   id: aws.readme
   version: 1
   status: active
-  layer: 03.deploy
+  layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
   - agentic

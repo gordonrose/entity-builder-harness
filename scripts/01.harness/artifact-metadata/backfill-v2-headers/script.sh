@@ -374,13 +374,15 @@ def layer_for(path: Path, metadata: dict[str, Any]) -> str:
         return "00.chat"
     if s.startswith((".agentic/01.harness/", "docs/harness/", "scripts/01.harness/")):
         return "01.harness"
+    if s.startswith((".agentic/02.rag-rulebook/", "scripts/02.rag-rulebook/")):
+        return "02.rag-rulebook"
     if s.startswith(".agentic/product/"):
-        return "02.product"
+        return "03.product"
     if s.startswith((".agentic/aws/", "docs/aws/")):
-        return "03.deploy"
+        return "04.deploy"
     if s.startswith((".agentic/education/", "docs/education/")):
-        return "04.education"
-    return "05.shared"
+        return "05.education"
+    return "06.shared"
 
 
 def domain_for(path: Path, metadata: dict[str, Any]) -> str:

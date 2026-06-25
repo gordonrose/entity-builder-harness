@@ -32,6 +32,10 @@ This folder includes operating guidance for Codex while building the architectur
 rules and rule packs. It is not the runtime harness, and it does not replace
 `docs/harness/architecture`.
 
+RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
+The architecture rulebook artifacts referenced here remain a prototype corpus
+until a governed migration assigns final domain corpus homes.
+
 Canonical architecture source remains
 `docs/harness/architecture/guides/markdown`.
 

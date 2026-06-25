@@ -3,7 +3,7 @@
   id: education.articles.0002-the-workbench-behind-ai-work.scene-cards.002-coding-agent-work-actor
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

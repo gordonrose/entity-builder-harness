@@ -3,7 +3,7 @@
   id: education.workflows.improve-education-system
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

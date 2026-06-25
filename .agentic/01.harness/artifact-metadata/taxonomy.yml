@@ -28,16 +28,19 @@ layers:
   - id: 01.harness
     title: Harness
     purpose: Agentic harness governance, routing, workflows, standards, gates, and metadata.
-  - id: 02.product
+  - id: 02.rag-rulebook
+    title: RAG/Rulebook
+    purpose: Reusable RAG and rulebook machinery, corpus generation, indexes, graph retrieval, intent, and context packets.
+  - id: 03.product
     title: Product
     purpose: Product code, application logic, platform code, packages, and requirements.
-  - id: 03.deploy
+  - id: 04.deploy
     title: Deploy
     purpose: Deployment, infrastructure, runtime operations, and CI/CD surfaces.
-  - id: 04.education
+  - id: 05.education
     title: Education
     purpose: Educational resources, prompts, references, templates, and feedback loops.
-  - id: 05.shared
+  - id: 06.shared
     title: Shared
     purpose: Cross-layer process primitives and reusable standards.
 
@@ -76,6 +79,10 @@ seed_domains:
   - git
   - chat
   - metadata
+  - rulebook
+  - retrieval
+  - corpus
+  - context-packets
   - packages.design-system
   - packages.frontend-kit
   - packages.core

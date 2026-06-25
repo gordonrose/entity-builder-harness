@@ -3,7 +3,7 @@
   id: education.feedback.2026-06-16-audience-and-title-calibration
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

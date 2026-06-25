@@ -58,8 +58,9 @@ The target shape is:
 scripts/
   00.chat/
   01.harness/
-  02.product/
-  03.deployment/
+  02.rag-rulebook/
+  03.product/
+  04.deploy/
 ```
 
 Each layer-owned command capability should live under:
@@ -84,8 +85,8 @@ The harness has one command-surface convention: numbered layer namespaces under
 `scripts/`.
 
 The current `scripts/00.chat/` and `scripts/01.harness/` paths remain canonical.
-Product and deployment command surfaces should be added as future governed
-capability work, not as compatibility aliases.
+RAG/rulebook, product, and deployment command surfaces should be added as future
+governed capability work, not as compatibility aliases.
 
 The existing `tools` architecture ruleset remains temporarily divergent until a
 follow-up rulebook remediation decides whether to rename it, convert it to a
