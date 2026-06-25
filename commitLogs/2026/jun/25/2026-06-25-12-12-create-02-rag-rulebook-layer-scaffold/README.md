@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T11:35:51Z
-latest_commit_sha: b61e584
-chat_duration: 1380s (00:00:23:00)
-estimated_chat_tokens: 545810 estimated from chat transcript bytes (2183239 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 16.37 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T11:54:05Z
+latest_commit_sha: 222e06d
+chat_duration: 2474s (00:00:41:14)
+estimated_chat_tokens: 646774 estimated from chat transcript bytes (2587096 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 19.40 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -88,6 +88,17 @@ Summary: Added design-only RAG/Rulebook standards for the portable service contr
 
 ADR impact: No new ADR; this elaborates ADR 0022 within the new RAG/Rulebook layer.
 
+
+### 2026-06-25T11:54:05Z - Commit recorded
+
+Commit: `222e06d`
+
+Message: Align RAG corpus vocabulary
+
+Summary: Aligned RAG/Rulebook corpus IDs with layer numbering, added the self-corpus, marked service/corpus standards reusable, and deferred the standalone service target name.
+
+ADR impact: No new ADR; elaborates ADR 0022 layer boundaries and the RAG/Rulebook repo plan.
+
 ## Commits
 
 
@@ -105,6 +116,13 @@ ADR impact: No new ADR; this elaborates ADR 0022 within the new RAG/Rulebook lay
   Summary: Added design-only RAG/Rulebook standards for the portable service contract, domain corpus package shape, and ordered repo plan.
   ADR impact: No new ADR; this elaborates ADR 0022 within the new RAG/Rulebook layer.
 
+
+- Commit: `222e06d`
+  Time UTC: 2026-06-25T11:54:05Z
+  Message: Align RAG corpus vocabulary
+  Summary: Aligned RAG/Rulebook corpus IDs with layer numbering, added the self-corpus, marked service/corpus standards reusable, and deferred the standalone service target name.
+  ADR impact: No new ADR; elaborates ADR 0022 layer boundaries and the RAG/Rulebook repo plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -118,11 +136,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T11:35:51Z
-Latest commit SHA: b61e584
-Chat duration: 1380s (00:00:23:00)
-Estimated chat tokens: 545810 estimated from chat transcript bytes (2183239 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 16.37 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T11:54:05Z
+Latest commit SHA: 222e06d
+Chat duration: 2474s (00:00:41:14)
+Estimated chat tokens: 646774 estimated from chat transcript bytes (2587096 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 19.40 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
