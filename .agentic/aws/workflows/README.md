@@ -7,6 +7,7 @@
   domain: infra.ci-cd
   disciplines:
   - agentic
+  - sre
   kind: workflow
   purpose: Document AWS Workflows.
   portability:
