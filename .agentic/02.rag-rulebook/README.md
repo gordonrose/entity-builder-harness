@@ -83,6 +83,8 @@ final homes.
 - `standards/retrieval-selector-policy-system.md` - defines the evolvable,
   multi-dimensional policy system for selecting small, accurate, validated
   context packets.
+- `standards/recognition-source-system.md` - defines governed lookup sources
+  used to recognize prompt intent before retrieval selection.
 
 ## Schemas
 
@@ -96,6 +98,8 @@ final homes.
   contract used by retrieval selectors.
 - `schemas/retrieval-policy-dimension.schema.yml` - defines the v1 imported
   dimension contract for policy-pack dimensions.
+- `schemas/recognition-source.schema.yml` - defines the v1 lookup-source
+  contract for generated and curated prompt recognition vocabularies.
 
 ## Policies
 
@@ -105,6 +109,8 @@ final homes.
   future semantic recall.
 - `policies/retrieval-selector/v1/dimensions/` - imported per-dimension policy
   contracts used by the seed v1 policy pack.
+  The prompt dimension now names recognition sources and extraction rules for
+  turning raw user language into structured retrieval signals.
 
 ## Guides
 

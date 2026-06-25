@@ -1,0 +1,220 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.recognition-source
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 schema for governed selector recognition sources.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.recognition-source-system
+#       path: .agentic/02.rag-rulebook/standards/recognition-source-system.md
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+
+schema: rag-rulebook-recognition-source-schema/v1
+recognition_source_schema: rag-rulebook/recognition-source/v1
+
+purpose: Define a governed lookup source used to recognize prompt terms before retrieval selection.
+
+principles:
+  - Keep prompt recognition grounded in governed lookup sources.
+  - Separate generated sources from curated vocabulary.
+  - Make runtime lookup fast by using prebuilt sources or compiled indexes.
+  - Preserve evidence for why a prompt term matched.
+  - Report ambiguity instead of over-classifying broad language.
+
+required_fields:
+  - schema
+  - source_id
+  - version
+  - status
+  - source_kind
+  - generation_mode
+  - owner_layer
+  - purpose
+  - match_priority
+  - used_by_dimensions
+  - terms
+  - validation_rules
+  - refresh_policy
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/recognition-source/v1
+
+  source_id:
+    type: string
+    format: lower-dot-id
+
+  version:
+    type: integer
+    minimum: 1
+
+  status:
+    type: enum
+    allowed_values:
+      - draft
+      - active
+      - superseded
+      - retired
+
+  source_kind:
+    type: enum
+    allowed_values:
+      - artifact-id
+      - file-path
+      - schema-name
+      - corpus-id
+      - layer-name
+      - workflow-name
+      - rule-id
+      - rule-pack-id
+      - action-verb
+      - risk-word
+      - domain-noun
+      - alias
+      - stop-condition
+      - check-name
+
+  generation_mode:
+    type: enum
+    allowed_values:
+      - generated
+      - curated
+
+  owner_layer:
+    type: string
+    examples:
+      - 00.chat
+      - 01.harness
+      - 02.rag-rulebook
+      - 03.product
+      - 04.deploy
+      - 05.education
+      - 06.shared
+
+  purpose:
+    type: string
+
+  match_priority:
+    type: integer
+    minimum: 1
+    note: Lower numbers match earlier.
+
+  used_by_dimensions:
+    type: array
+    items:
+      type: string
+
+  source_artifacts:
+    type: array
+    items:
+      type: string
+    note: Required for generated sources.
+
+  generation_command:
+    type: string
+    note: Required when a generated source is produced by a script.
+
+  terms:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - term
+        - category
+        - match_type
+      fields:
+        term:
+          type: string
+        category:
+          type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        match_type:
+          type: enum
+          allowed_values:
+            - exact
+            - normalized
+            - alias
+            - phrase
+        canonical_id:
+          type: string
+        evidence_path:
+          type: string
+        confidence_weight:
+          type: number
+          minimum: 0
+          maximum: 1
+
+  validation_rules:
+    type: array
+    items:
+      type: string
+
+  refresh_policy:
+    type: object
+    required_fields:
+      - trigger
+      - owner
+    fields:
+      trigger:
+        type: string
+      owner:
+        type: string
+      review_required_when:
+        type: array
+        items:
+          type: string
+
+field_guide:
+  - path: source_kind
+    what_it_is: The kind of lookup vocabulary this source provides.
+    what_it_does: Lets prompt recognition treat artifact IDs, paths, workflows, actions, risks, and aliases differently.
+    rules:
+      - Exact governed identifiers should rank above curated broad language.
+
+  - path: generation_mode
+    what_it_is: Whether the source is generated from repo artifacts or curated by humans.
+    what_it_does: Separates low-drift inventories from vocabulary that needs review.
+    rules:
+      - Generated sources should name source artifacts or a generation command.
+      - Curated sources should include validation examples or review rules.
+
+  - path: match_priority
+    what_it_is: Ordering hint for recognition-time matching.
+    what_it_does: Allows exact paths and artifact IDs to match before broader aliases.
+    rules:
+      - Lower numbers match earlier.
+      - Broad curated aliases should not outrank exact governed IDs.
+
+  - path: terms
+    what_it_is: The lookup entries used during prompt recognition.
+    what_it_does: Converts prompt text into structured signals such as artifact, path, action, risk, or domain matches.
+    rules:
+      - Terms should preserve canonical IDs or evidence paths when available.
+      - Ambiguous aliases should be reviewed before activation.
+
+  - path: refresh_policy
+    what_it_is: Rules for keeping the source current.
+    what_it_does: Prevents lookup sources from becoming stale or silently drifting.
+    rules:
+      - Generated sources should refresh when their source artifacts change.
+      - Curated sources should require review when adding broad aliases or cross-domain terms.

@@ -363,6 +363,38 @@ def validate_dimension_contract(
         for field in ["name", "given", "expect"]:
             if not isinstance(example.get(field), str) or not example.get(field):
                 errors.append(f"{owner}.validation_examples[{index}].{field} must be a non-empty string")
+    if manifest_id == "prompt":
+        recognition_sources = list_of_dicts(dimension.get("recognition_sources"))
+        if not recognition_sources:
+            errors.append("dimension prompt must include non-empty recognition_sources")
+        generation_modes = {
+            source.get("generation_mode")
+            for source in recognition_sources
+            if isinstance(source.get("generation_mode"), str)
+        }
+        if "generated" not in generation_modes:
+            errors.append("dimension prompt recognition_sources must include a generated source")
+        if "curated" not in generation_modes:
+            errors.append("dimension prompt recognition_sources must include a curated source")
+        for index, source in enumerate(recognition_sources, start=1):
+            require_fields(
+                f"{owner}.recognition_sources[{index}]",
+                source,
+                ["source_id", "source_kinds", "generation_mode", "expected_origin", "purpose"],
+                errors,
+            )
+            if not list_of_strings(source.get("source_kinds")):
+                errors.append(f"{owner}.recognition_sources[{index}].source_kinds must be a non-empty string array")
+        for field in ["extraction_rules", "classification_outputs"]:
+            if not list_of_strings(dimension.get(field)):
+                errors.append(f"dimension prompt must include non-empty {field}")
+        term_categories = dimension.get("term_categories")
+        if not isinstance(term_categories, dict) or not term_categories:
+            errors.append("dimension prompt must include non-empty term_categories")
+        else:
+            for category in ["artifact_terms", "routing_terms", "action_terms", "risk_terms", "broad_terms"]:
+                if category not in term_categories:
+                    errors.append(f"dimension prompt term_categories missing: {category}")
     if manifest_id == "semantic-recall":
         combined = "\n".join(list_of_strings(dimension.get("expected_actions")) + list_of_strings(dimension.get("banned_actions"))).lower()
         if "disabled" not in combined or "do not enable" not in combined:

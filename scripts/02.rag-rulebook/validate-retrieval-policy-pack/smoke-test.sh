@@ -33,6 +33,8 @@ BROKEN_MISSING_DIMENSION="$TMP_DIR/broken-missing-dimension.yml"
 BROKEN_MISSING_DIMENSION_FILE="$TMP_DIR/broken-missing-dimension-file.yml"
 BROKEN_WEAK_DIMENSION="$TMP_DIR/broken-weak-dimension.yml"
 BROKEN_WEAK_DIMENSION_FILE="$TMP_DIR/prompt-weak.yml"
+BROKEN_PROMPT_RECOGNITION="$TMP_DIR/broken-prompt-recognition.yml"
+BROKEN_PROMPT_RECOGNITION_FILE="$TMP_DIR/prompt-no-recognition.yml"
 BROKEN_SEMANTIC_RECALL="$TMP_DIR/broken-semantic-recall.yml"
 
 bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
@@ -122,6 +124,32 @@ PY
 if bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
   --policy "$BROKEN_WEAK_DIMENSION" >/dev/null 2>&1; then
   echo "ERROR: retrieval policy-pack validator accepted a dimension without banned actions" >&2
+  exit 1
+fi
+
+python3 - "$BROKEN_PROMPT_RECOGNITION" "$BROKEN_PROMPT_RECOGNITION_FILE" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import yaml
+
+policy_out = Path(sys.argv[1])
+dimension_out = Path(sys.argv[2])
+policy_path = Path(".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml")
+dimension_path = Path(".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml")
+policy = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
+dimension = yaml.safe_load(dimension_path.read_text(encoding="utf-8"))
+dimension.pop("recognition_sources", None)
+policy["dimensions"][0]["path"] = str(dimension_out)
+policy_out.write_text(yaml.safe_dump(policy, sort_keys=False), encoding="utf-8")
+dimension_out.write_text(yaml.safe_dump(dimension, sort_keys=False), encoding="utf-8")
+PY
+
+if bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
+  --policy "$BROKEN_PROMPT_RECOGNITION" >/dev/null 2>&1; then
+  echo "ERROR: retrieval policy-pack validator accepted a prompt dimension without recognition sources" >&2
   exit 1
 fi
 

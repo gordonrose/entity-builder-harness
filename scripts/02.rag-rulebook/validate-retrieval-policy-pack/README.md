@@ -35,6 +35,8 @@ It checks:
 - imported dimension file existence and schema compatibility
 - dimension required inputs, expected actions, banned actions, output
   obligations, gaps/stops, ranking effects, and validation examples
+- prompt-dimension recognition sources, extraction rules, term categories, and
+  classification outputs
 - precedence rank ordering and required precedence concepts
 - threshold ranges and v1 semantic-recall safety
 - referenced workflows, validators, and smoke fixtures

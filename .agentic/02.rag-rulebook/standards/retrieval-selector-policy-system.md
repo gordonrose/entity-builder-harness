@@ -72,6 +72,12 @@ The active policy pack is a manifest. Each dimension should live in its own
 imported file so the dimension can be reviewed, taught, validated, and evolved
 without turning the pack into one large prose document.
 
+Prompt interpretation should be grounded in governed recognition sources. The
+selector should not invent nouns, actions, risk words, aliases, or targets from
+raw language alone. It should match prompt text against generated and curated
+lookup sources, then compare those matches with session, path, corpus, and graph
+signals.
+
 ## Required Dimensions
 
 Every active selector policy pack must address these dimensions.
@@ -107,6 +113,10 @@ Every imported dimension file must define:
 The banned-actions section is not optional. It is how the policy prevents the
 selector from turning vague natural language, semantic similarity, or token
 trimming into hidden governance bypasses.
+
+The prompt dimension must also define recognition sources, extraction rules,
+term categories, and classification outputs. That keeps prompt parsing
+inspectable and fast enough to run before retrieval selection.
 
 ## Precedence
 

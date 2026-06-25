@@ -128,6 +128,13 @@ create 02 rag rulebook layer scaffold
   banned actions, output obligations, gaps/stops, ranking effects, validation
   examples, and allowed change paths so future selector runtime code does not
   invent behavior that belongs in policy.
+- Define recognition sources as governed lookup vocabularies owned by
+  `02.rag-rulebook`, separate from retrieval chunks. Generated recognition
+  sources should come from committed artifacts such as artifact IDs, paths,
+  schemas, corpora, layers, workflows, rules, and rule packs; curated sources
+  such as action verbs, risk words, aliases, and domain nouns require tighter
+  review. Chat may later consume compiled recognition sources opportunistically,
+  but must keep its deterministic fallback when `02.rag-rulebook` is absent.
 
 ## Activity Log
 

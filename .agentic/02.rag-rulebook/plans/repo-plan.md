@@ -136,6 +136,17 @@ The location is not the final domain corpus model.
    - Status: present in `schemas/retrieval-policy-dimension.schema.yml` and
      `policies/retrieval-selector/v1/dimensions/`.
 
+7e. Define recognition-source architecture.
+   - Separate recognition lookup sources from retrieval chunks.
+   - Govern generated sources such as artifact IDs, paths, schemas, corpora,
+     layers, workflows, rules, and rule packs.
+   - Govern curated sources such as action verbs, risk words, domain nouns,
+     aliases, stop-condition words, and check names.
+   - Keep prompt-time lookup fast by using prebuilt or compiled sources rather
+     than rebuilding inventories on every prompt.
+   - Status: present in `standards/recognition-source-system.md`,
+     `schemas/recognition-source.schema.yml`, and the prompt dimension policy.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -158,5 +169,5 @@ The location is not the final domain corpus model.
 ## Next Small Slice
 
 Add the first read-only retrieval selector fixture that consumes the validated
-compiled policy pack, generated chunks, request text, and session-like metadata
-before emitting a validated context packet.
+compiled policy pack, generated chunks, recognition-source signals, request
+text, and session-like metadata before emitting a validated context packet.

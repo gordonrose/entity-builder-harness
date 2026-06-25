@@ -143,6 +143,50 @@ fields:
     items:
       type: string
 
+  recognition_sources:
+    type: array
+    note: Prompt dimension only. Lists governed lookup sources used to recognize prompt terms.
+    item:
+      type: object
+      required_fields:
+        - source_id
+        - source_kinds
+        - generation_mode
+        - expected_origin
+        - purpose
+      fields:
+        source_id:
+          type: string
+        source_kinds:
+          type: array
+          items:
+            type: string
+        generation_mode:
+          type: enum
+          allowed_values:
+            - generated
+            - curated
+        expected_origin:
+          type: string
+        purpose:
+          type: string
+
+  extraction_rules:
+    type: array
+    note: Prompt dimension only. Explains how raw language becomes structured prompt signals.
+    items:
+      type: string
+
+  term_categories:
+    type: object
+    note: Prompt dimension only. Names the prompt term families produced by recognition.
+
+  classification_outputs:
+    type: array
+    note: Prompt dimension only. Lists structured outputs the prompt recognizer must emit.
+    items:
+      type: string
+
 field_guide:
   - path: dimension_id
     what_it_is: Stable ID for one retrieval selection dimension.
@@ -196,3 +240,23 @@ field_guide:
     rules:
       - Each example must include `name`, `given`, and `expect`.
       - Examples should include at least one happy path or one banned/gap behavior.
+
+  - path: recognition_sources
+    what_it_is: Prompt-dimension lookup sources used to recognize nouns, paths, schemas, actions, risks, and aliases.
+    what_it_does: Grounds prompt interpretation in governed inventories instead of free-form guessing.
+    rules:
+      - Prompt recognition should match exact generated identifiers before curated broad terms.
+      - Generated and curated sources must remain distinguishable.
+
+  - path: extraction_rules
+    what_it_is: Prompt-dimension rules for turning raw language into structured signals.
+    what_it_does: Explains how terms are recognized, ordered, normalized, and kept from overriding metadata.
+    rules:
+      - Must prefer exact governed identifiers over broad prompt terms.
+      - Must record which recognition source produced each match.
+
+  - path: classification_outputs
+    what_it_is: Structured outputs emitted by prompt recognition.
+    what_it_does: Gives downstream selector logic concrete fields to rank, compare, and validate.
+    rules:
+      - Must include confidence and conflict outputs.

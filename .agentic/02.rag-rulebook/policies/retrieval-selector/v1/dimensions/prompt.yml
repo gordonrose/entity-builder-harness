@@ -21,6 +21,10 @@
 #       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 #     - id: rag-rulebook.schema.retrieval-policy-dimension
 #       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+#     - id: rag-rulebook.standard.recognition-source-system
+#       path: .agentic/02.rag-rulebook/standards/recognition-source-system.md
+#     - id: rag-rulebook.schema.recognition-source
+#       path: .agentic/02.rag-rulebook/schemas/recognition-source.schema.yml
 
 schema: rag-rulebook/retrieval-policy-dimension/v1
 dimension_id: prompt
@@ -31,11 +35,11 @@ purpose: Turn raw user language into retrieval hints without letting natural lan
 required_inputs:
   - Raw user prompt text.
   - Normalized prompt tokens.
-  - Known artifact IDs, corpus IDs, path terms, layer names, workflow names, and rule IDs.
+  - Governed recognition sources for artifact IDs, file paths, schemas, corpus IDs, layer names, workflow names, rule IDs, action verbs, risk words, and aliases.
   - Session metadata used to compare prompt inference with governed state.
 expected_actions:
-  - Extract task nouns, verbs, target artifacts, risk words, and explicit asks.
-  - Normalize obvious plurals, aliases, and known synonyms before keyword scoring.
+  - Extract task nouns, verbs, target artifacts, risk words, and explicit asks by matching prompt text against governed recognition sources.
+  - Normalize obvious plurals, aliases, and known synonyms only when a recognition source defines the mapping.
   - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
   - Preserve the raw prompt in the context-packet request provenance.
 banned_actions:
@@ -48,6 +52,9 @@ output_obligations:
   - normalized_prompt_terms
   - matched_artifact_terms
   - matched_path_terms
+  - matched_action_terms
+  - matched_risk_terms
+  - recognition_source_matches
   - prompt_conflicts
   - prompt_confidence
 gap_or_stop_conditions:
@@ -57,13 +64,73 @@ ranking_effects:
   - Exact ID and path terms raise ranking.
   - Risk words raise required-check and stop-condition ranking.
   - Prompt-only matches rank below session, path, corpus, and graph evidence.
+recognition_sources:
+  - source_id: recognition.generated.artifacts
+    source_kinds:
+      - artifact-id
+      - file-path
+      - schema-name
+      - rule-id
+      - rule-pack-id
+    generation_mode: generated
+    expected_origin: Artifact metadata, rulebook index, and committed repo paths.
+    purpose: Recognize exact repo things the user names.
+  - source_id: recognition.generated.routing
+    source_kinds:
+      - corpus-id
+      - layer-name
+      - workflow-name
+    generation_mode: generated
+    expected_origin: Routing policy, layer metadata, workflow paths, and corpus manifests.
+    purpose: Recognize governed routing and corpus terms.
+  - source_id: recognition.curated.actions
+    source_kinds:
+      - action-verb
+    generation_mode: curated
+    expected_origin: Human-reviewed action vocabulary with examples.
+    purpose: Recognize requested operations such as create, split, move, validate, retire, or deploy.
+  - source_id: recognition.curated.risks
+    source_kinds:
+      - risk-word
+      - stop-condition
+      - check-name
+    generation_mode: curated
+    expected_origin: Human-reviewed governance, validation, and safety vocabulary.
+    purpose: Recognize words that should raise checks, stops, confidence scrutiny, or validation requirements.
+extraction_rules:
+  - Preserve the raw prompt before normalization.
+  - Match exact file paths and quoted identifiers before splitting text into smaller tokens.
+  - Match artifact IDs, schema names, corpus IDs, workflow paths, rule IDs, and rule-pack IDs before matching broad nouns.
+  - Match action verbs only when the verb appears in an active action recognition source.
+  - Match risk words only when the word appears in an active risk or stop-condition recognition source.
+  - Treat unmatched nouns as low-confidence prompt terms unless another dimension supports them.
+  - Record which recognition source produced each match.
+term_categories:
+  artifact_terms: Exact artifact IDs, rule IDs, rule-pack IDs, schema names, and repo file paths.
+  routing_terms: Corpus IDs, layer names, mode names, and workflow paths.
+  action_terms: Curated verbs that describe the operation the user is asking for.
+  risk_terms: Curated words that imply validation, blockers, safety, destructive action, ambiguity, or governance checks.
+  broad_terms: Unmatched nouns or phrases that may help ranking but cannot govern routing alone.
+classification_outputs:
+  - raw_prompt
+  - normalized_prompt_tokens
+  - matched_terms_by_source
+  - matched_terms_by_category
+  - inferred_actions
+  - inferred_targets
+  - inferred_risks
+  - prompt_conflicts_with_session
+  - prompt_confidence
 validation_examples:
   - name: prompt boosts exact artifact match
     given: User asks to update `retrieval-policy-pack.schema.yml`.
-    expect: The schema artifact receives a ranking boost without changing the session layer.
+    expect: The schema name matches a generated artifact recognition source and receives a ranking boost without changing the session layer.
   - name: prompt cannot override ready metadata
     given: Session metadata says `02.rag-rulebook` and the prompt uses the word product.
     expect: The selector keeps `02.rag-rulebook` routing and reports no product-corpus expansion unless another signal supports it.
+  - name: unmatched broad noun stays low confidence
+    given: User asks to improve the thing without naming an artifact, path, action source term, or workflow.
+    expect: The prompt dimension emits broad terms and a low-confidence signal instead of inventing a target artifact.
 can_change_by:
   - Add synonyms.
   - Add risk words.
