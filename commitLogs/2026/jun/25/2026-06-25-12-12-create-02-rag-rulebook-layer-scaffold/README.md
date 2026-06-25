@@ -11,12 +11,12 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-06-25T11:30:22Z
+latest_commit_sha: 59d18ed
+chat_duration: 1051s (00:00:17:31)
+estimated_chat_tokens: 505259 estimated from chat transcript bytes (2021033 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 15.16 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -52,9 +52,26 @@ create 02 rag rulebook layer scaffold
 
 Initial intent: create 02 rag rulebook layer scaffold
 
+
+### 2026-06-25T11:30:22Z - Commit recorded
+
+Commit: `59d18ed`
+
+Message: Add RAG rulebook layer scaffold
+
+Summary: Added first-class 02.rag-rulebook layer scaffold, routing/classifier coverage, metadata layer renumbering, script-surface docs, and ADR 0022.
+
+ADR impact: ADR 0022 records the new RAG/Rulebook layer and renumbered metadata layers.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `59d18ed`
+  Time UTC: 2026-06-25T11:30:22Z
+  Message: Add RAG rulebook layer scaffold
+  Summary: Added first-class 02.rag-rulebook layer scaffold, routing/classifier coverage, metadata layer renumbering, script-surface docs, and ADR 0022.
+  ADR impact: ADR 0022 records the new RAG/Rulebook layer and renumbered metadata layers.
 
 ## Main Refresh Conflicts
 
@@ -69,12 +86,12 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-06-25T11:30:22Z
+Latest commit SHA: 59d18ed
+Chat duration: 1051s (00:00:17:31)
+Estimated chat tokens: 505259 estimated from chat transcript bytes (2021033 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 15.16 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
