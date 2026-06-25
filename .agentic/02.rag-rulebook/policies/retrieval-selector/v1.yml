@@ -23,6 +23,8 @@
 #       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml
 #     - id: rag-rulebook.plan.repo
 #       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.script.validate-retrieval-policy-pack
+#       path: scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
 
 schema: rag-rulebook/retrieval-policy-pack/v1
 policy_pack_id: retrieval-selector.v1
@@ -299,6 +301,7 @@ thresholds:
 
 validation:
   required_checks:
+    - "Validate policy packs with `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` before selector runtime use."
     - "Validate selected packets with `scripts/02.rag-rulebook/validate-context-packet/script.sh`."
     - Prove at least one low-confidence request produces a gap before selector runtime is considered usable.
     - Prove required checks survive trimming.
@@ -306,6 +309,7 @@ validation:
   smoke_fixtures:
     - scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh
   validator_scripts:
+    - scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
     - scripts/02.rag-rulebook/validate-context-packet/script.sh
 
 evolution:

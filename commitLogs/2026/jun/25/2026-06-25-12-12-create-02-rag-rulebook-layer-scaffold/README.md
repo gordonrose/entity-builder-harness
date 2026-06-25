@@ -116,6 +116,12 @@ create 02 rag rulebook layer scaffold
   chat/session metadata, layer/mode/workflow, focused paths, corpus ownership,
   rule graph expansion, required checks, stop conditions, token budget,
   confidence thresholds, validation handoff, and future semantic recall.
+- Add a read-only
+  `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` command.
+  The validator checks retrieval-policy-pack YAML for required fields,
+  dimensions, precedence ordering, threshold ranges, referenced workflows,
+  validators, smoke fixtures, evolution rules, and v1 semantic-recall safety
+  before selector runtime code can rely on a policy pack.
 
 ## Activity Log
 

@@ -134,6 +134,9 @@ final homes.
 - `scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh` - emits
   a small validated `rag-rulebook/context-packet/v1` fixture from generated or
   saved chunks without modifying files.
+- `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` -
+  validates a `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack without
+  modifying files.
 
 ## Output Locations
 

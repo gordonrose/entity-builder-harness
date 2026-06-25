@@ -120,6 +120,12 @@ The location is not the final domain corpus model.
      `schemas/retrieval-policy-pack.schema.yml`, and
      `policies/retrieval-selector/v1.yml`.
 
+7c. Add a read-only retrieval policy-pack validator.
+   - Validate policy-pack shape, dimensions, precedence, thresholds,
+     referenced validators, smoke fixtures, and v1 semantic-recall safety.
+   - Status: present in
+     `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -141,5 +147,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add a read-only retrieval policy-pack validator before implementing selector
-runtime behavior.
+Add the first read-only retrieval selector fixture that consumes the validated
+policy pack, generated chunks, request text, and session-like metadata before
+emitting a validated context packet.

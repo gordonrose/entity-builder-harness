@@ -23,6 +23,8 @@
 #       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 #     - id: rag-rulebook.plan.repo
 #       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.script.validate-retrieval-policy-pack
+#       path: scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
 
 schema: rag-rulebook-retrieval-policy-pack-schema/v1
 policy_pack_schema: rag-rulebook/retrieval-policy-pack/v1
