@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.agents.article-reporter
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Document Article Reporter Agent.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # Article Reporter Agent
 
 ## Responsibility

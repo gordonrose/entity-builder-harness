@@ -1,3 +1,22 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: education.workflows.calibrate-education-outputs
+  version: 1
+  status: active
+  layer: 04.education
+  domain: education
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Document Calibrate Education Outputs.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: education.readme
+    path: .agentic/education/README.md
+-->
 # Calibrate Education Outputs
 
 ## Use When
