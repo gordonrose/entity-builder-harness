@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Create or verify the chat-owned worktree for a session branch.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.worktree.ensure-chat-worktree
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: worktree
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Create or verify the chat-owned worktree for a session branch.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-start.md
-#     - scripts/00.chat/startup/start-chat-session/script.sh
-#   effects: worktrees
-
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   - id: chat.script.startup.start-chat-session
+#     path: scripts/00.chat/startup/start-chat-session/script.sh
+#   effects:
+#   - worktrees
 usage() {
   cat <<'EOF'
 Usage:

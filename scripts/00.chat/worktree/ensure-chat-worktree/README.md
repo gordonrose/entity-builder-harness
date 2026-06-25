@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain creating or verifying the chat-owned worktree for a session.
-domain: worktree
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/startup/start-chat-session/script.sh
-  - scripts/00.chat/worktree/ensure-chat-worktree/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.worktree.ensure-chat-worktree.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: worktree
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain creating or verifying the chat-owned worktree for a session.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.startup.start-chat-session
+    path: scripts/00.chat/startup/start-chat-session/script.sh
+  - id: chat.script.worktree.ensure-chat-worktree
+    path: scripts/00.chat/worktree/ensure-chat-worktree/script.sh
 -->
-
 # Ensure Chat Worktree
 
 `script.sh` creates or verifies the canonical worktree for the chat branch named

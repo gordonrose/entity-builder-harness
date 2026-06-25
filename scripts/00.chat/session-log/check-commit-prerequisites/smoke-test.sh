@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test commit prerequisite validation and missing-file failures.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.check-commit-prerequisites.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test commit prerequisite validation and missing-file failures.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/check-commit-prerequisites/README.md
-#     - scripts/00.chat/session-log/check-commit-prerequisites/script.sh
-#   effects: writes-files, branches, commits
-
+#   - id: chat.script.session-log.check-commit-prerequisites.readme
+#     path: scripts/00.chat/session-log/check-commit-prerequisites/README.md
+#   - id: chat.script.session-log.check-commit-prerequisites
+#     path: scripts/00.chat/session-log/check-commit-prerequisites/script.sh
+#   effects:
+#   - writes-files
+#   - branches
+#   - commits
 fail() {
   echo "FAIL: $*" >&2
   exit 1

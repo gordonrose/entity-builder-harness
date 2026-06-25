@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain how the chat session startup engine creates branches, logs, prompts, and worktrees.
-domain: startup
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/startup/start-chat-session/script.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.startup.start-chat-session.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: startup
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain how the chat session startup engine creates branches, logs, prompts,
+    and worktrees.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.startup.start-chat-session
+    path: scripts/00.chat/startup/start-chat-session/script.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Start Chat Session
 
 `script.sh` is the chat startup engine. It turns a short task summary into the

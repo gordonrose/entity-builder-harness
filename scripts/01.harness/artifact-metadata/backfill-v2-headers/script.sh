@@ -554,10 +554,20 @@ def used_by_for(path: Path, metadata: dict[str, Any]) -> list[dict[str, str]]:
 
 def effects_for(path: Path, metadata: dict[str, Any]) -> list[str]:
     raw = metadata.get("effects") or metadata.get("effect")
-    if isinstance(raw, list) and raw:
-        return [str(item) for item in raw if item]
-    if isinstance(raw, str) and raw:
-        return [raw]
+    values: list[str] = []
+    if isinstance(raw, list):
+        values = [str(item) for item in raw if item]
+    elif isinstance(raw, str) and raw:
+        values = [raw]
+    aliases = {"opens-gui": "read-only", "write-files": "writes-files"}
+    normalized: list[str] = []
+    for value in values:
+        for token in value.split(","):
+            token = token.strip()
+            if token:
+                normalized.append(aliases.get(token, token))
+    if normalized:
+        return sorted(dict.fromkeys(normalized))
     if path.suffix == ".sh":
         return ["read-only"]
     return []
@@ -589,7 +599,7 @@ def render_comment_header(payload: dict[str, Any]) -> str:
     yaml_text = yaml.safe_dump(payload, sort_keys=False, allow_unicode=False).rstrip()
     lines = ["# agentic-artifact:"]
     lines.extend(f"#   {line}" if line else "#" for line in yaml_text.splitlines())
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines) + "\n\n"
 
 
 def render_html_header(payload: dict[str, Any]) -> str:

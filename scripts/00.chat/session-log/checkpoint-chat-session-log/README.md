@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain when and how chat session-log bookkeeping is checkpointed as its own commit.
-domain: session-log
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.session-log.checkpoint-chat-session-log.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: session-log
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain when and how chat session-log bookkeeping is checkpointed as its
+    own commit.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.session-log.checkpoint-chat-session-log
+    path: scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Checkpoint Chat Session Log
 
 `script.sh` commits only the current chat session log as a narrow bookkeeping

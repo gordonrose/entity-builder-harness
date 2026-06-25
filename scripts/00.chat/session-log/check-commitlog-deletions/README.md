@@ -1,15 +1,26 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain how the harness protects commit logs that record committed work.
-domain: session-log
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/session-log/check-commitlog-deletions/script.sh
-  - scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.session-log.check-commitlog-deletions.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: session-log
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain how the harness protects commit logs that record committed work.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.session-log.check-commitlog-deletions
+    path: scripts/00.chat/session-log/check-commitlog-deletions/script.sh
+  - id: chat.script.session-log.check-commitlog-deletions.smoke-test
+    path: scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Check Commit Log Deletions
 
 `script.sh` blocks staged deletion of chat commit logs that contain durable work

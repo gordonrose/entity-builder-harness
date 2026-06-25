@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Internal helper for appending structured entries to the current chat log.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.update-chat-log
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: internal
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Internal helper for appending structured entries to the current chat log.
+#   portability:
+#     class: internal
+#     targets: []
 #   used_by:
-#     - .agentic/00.chat/checklists/before-commit.md
-#     - commitLogs/2026/jun/19/2026-06-19-17-34-add-deterministic-audit-for-chat-harness-bootstrap-script-fi/README.md
-#   effects: writes-files
+#   - id: chat.checklists.before-commit
+#     path: .agentic/00.chat/checklists/before-commit.md
+#   effects:
+#   - writes-files
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

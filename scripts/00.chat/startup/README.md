@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: script-domain-readme
-purpose: Explain scripts that create or resume governed chat sessions.
-domain: startup
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-start.md
-  - scripts/00.chat/startup/start-chat-session/README.md
+  schema: agentic-artifact/v2
+  id: chat.script.startup.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: startup
+  disciplines:
+  - agentic
+  kind: script-domain-readme
+  purpose: Explain scripts that create or resume governed chat sessions.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-start
+    path: .agentic/00.chat/workflows/chat-start.md
+  - id: chat.script.startup.start-chat-session.readme
+    path: scripts/00.chat/startup/start-chat-session/README.md
 -->
-
 # Startup Scripts
 
 Startup scripts create the governed working context for a chat. They handle

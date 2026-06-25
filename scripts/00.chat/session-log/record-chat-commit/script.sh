@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Record a task commit and chat metrics in the current session log.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.record-chat-commit
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Record a task commit and chat metrics in the current session log.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/record-chat-commit/README.md
-#     - scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
-#   effects: writes-files
+#   - id: chat.script.session-log.record-chat-commit.readme
+#     path: scripts/00.chat/session-log/record-chat-commit/README.md
+#   - id: chat.script.session-log.record-chat-commit.smoke-test
+#     path: scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
+#   effects:
+#   - writes-files
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

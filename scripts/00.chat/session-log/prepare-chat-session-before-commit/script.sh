@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Run commit-boundary gates and session-log readiness checks before task commits.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.prepare-chat-session-before-commit
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Run commit-boundary gates and session-log readiness checks before task commits.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md
-#   effects: read-only
+#   - id: chat.script.session-log.prepare-chat-session-before-commit.readme
+#     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md
+#   effects:
+#   - read-only
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

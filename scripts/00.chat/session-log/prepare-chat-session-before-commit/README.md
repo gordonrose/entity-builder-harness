@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the chat commit-boundary readiness check before task commits.
-domain: session-log
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.session-log.prepare-chat-session-before-commit.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: session-log
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the chat commit-boundary readiness check before task commits.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.session-log.prepare-chat-session-before-commit
+    path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Prepare Chat Session Before Commit
 
 `script.sh` is the readiness gate for task commits in a governed chat.

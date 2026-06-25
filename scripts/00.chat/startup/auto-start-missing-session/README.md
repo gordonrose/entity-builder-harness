@@ -1,15 +1,27 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain how opening-prompt auto-start decides whether to create a governed chat session.
-domain: startup
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/startup/auto-start-missing-session/script.sh
-  - scripts/00.chat/command/dispatcher/smoke-test.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.startup.auto-start-missing-session.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: startup
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain how opening-prompt auto-start decides whether to create a governed
+    chat session.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.startup.auto-start-missing-session
+    path: scripts/00.chat/startup/auto-start-missing-session/script.sh
+  - id: chat.script.command.dispatcher.smoke-test
+    path: scripts/00.chat/command/dispatcher/smoke-test.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Auto-Start Missing Session
 
 `script.sh` is the bridge between an opening user message and the normal chat

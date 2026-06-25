@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain how chat work is kept inside chat-owned worktrees rather than the root integration worktree.
-domain: worktree
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/worktree/check-write-location/script.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.worktree.check-write-location.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: worktree
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain how chat work is kept inside chat-owned worktrees rather than the
+    root integration worktree.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.worktree.check-write-location
+    path: scripts/00.chat/worktree/check-write-location/script.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Check Write Location
 
 `script.sh` verifies that task work is happening in the chat-owned worktree for

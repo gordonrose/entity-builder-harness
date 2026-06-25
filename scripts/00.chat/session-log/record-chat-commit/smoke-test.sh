@@ -1,17 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test chat commit recording metrics and transcript discovery.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.record-chat-commit.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test chat commit recording metrics and transcript discovery.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/checklists/before-commit.md
-#     - scripts/00.chat/session-log/record-chat-commit/README.md
-#     - scripts/00.chat/session-log/record-chat-commit/script.sh
-#   effects: writes-files, branches, commits
-
+#   - id: chat.checklists.before-commit
+#     path: .agentic/00.chat/checklists/before-commit.md
+#   - id: chat.script.session-log.record-chat-commit.readme
+#     path: scripts/00.chat/session-log/record-chat-commit/README.md
+#   - id: chat.script.session-log.record-chat-commit
+#     path: scripts/00.chat/session-log/record-chat-commit/script.sh
+#   effects:
+#   - writes-files
+#   - branches
+#   - commits
 fail() {
   echo "FAIL: $*" >&2
   exit 1

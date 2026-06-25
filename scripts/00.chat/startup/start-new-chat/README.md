@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain the new-chat startup wrapper.
-domain: startup
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/commands/README.md
-  - scripts/00.chat/startup/start-new-chat/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.startup.start-new-chat.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: startup
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain the new-chat startup wrapper.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.commands.readme
+    path: .agentic/00.chat/commands/README.md
+  - id: chat.script.startup.start-new-chat
+    path: scripts/00.chat/startup/start-new-chat/script.sh
 -->
-
 # Start New Chat
 
 `script.sh` is the canonical startup wrapper used by the public `new` command.

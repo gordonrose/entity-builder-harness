@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain clean, dirty, and session-bookkeeping-only worktree checks.
-domain: worktree
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/worktree/dirty-worktree-check/script.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.worktree.dirty-worktree-check.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: worktree
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain clean, dirty, and session-bookkeeping-only worktree checks.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.worktree.dirty-worktree-check
+    path: scripts/00.chat/worktree/dirty-worktree-check/script.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Dirty Worktree Check
 
 `script.sh` reports whether the current worktree is clean enough for the next

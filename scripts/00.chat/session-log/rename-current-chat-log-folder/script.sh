@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Rename the current chat session log folder while preserving metadata.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.rename-current-chat-log-folder
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Rename the current chat session log folder while preserving metadata.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-start.md
-#     - .agentic/01.harness/standards/governed-script-permissions.md
-#     - scripts/01.harness/run-governed-script.sh
-#   effects: writes-files
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   - id: harness.standards.governed-script-permissions
+#     path: .agentic/01.harness/standards/governed-script-permissions.md
+#   - id: harness.script.run-governed-script
+#     path: scripts/01.harness/run-governed-script.sh
+#   effects:
+#   - writes-files
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

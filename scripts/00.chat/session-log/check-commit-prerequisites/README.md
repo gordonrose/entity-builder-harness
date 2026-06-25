@@ -1,15 +1,27 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain how commit prerequisite checks verify workflow and gate references before chat commits.
-domain: session-log
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/session-log/check-commit-prerequisites/script.sh
-  - scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.script.session-log.check-commit-prerequisites.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: session-log
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain how commit prerequisite checks verify workflow and gate references
+    before chat commits.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.session-log.check-commit-prerequisites
+    path: scripts/00.chat/session-log/check-commit-prerequisites/script.sh
+  - id: chat.script.session-log.check-commit-prerequisites.smoke-test
+    path: scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # Check Commit Prerequisites
 
 `script.sh` verifies that the current chat session points at real governance

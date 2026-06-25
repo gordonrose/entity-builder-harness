@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Enforce task writes from chat-owned worktrees instead of the root integration worktree.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.worktree.check-write-location
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: worktree
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Enforce task writes from chat-owned worktrees instead of the root integration
+#     worktree.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/worktree/check-write-location/README.md
-#   effects: read-only
-
+#   - id: chat.script.worktree.check-write-location.readme
+#     path: scripts/00.chat/worktree/check-write-location/README.md
+#   effects:
+#   - read-only
 usage() {
   cat <<'EOF'
 Usage:

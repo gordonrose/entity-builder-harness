@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Open a VS Code window for a chat-owned worktree.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.worktree.open-window
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: worktree
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Open a VS Code window for a chat-owned worktree.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/startup/start-chat-session/script.sh
-#     - scripts/00.chat/command/open-window/script.sh
-#   effects: opens-gui
-
+#   - id: chat.script.startup.start-chat-session
+#     path: scripts/00.chat/startup/start-chat-session/script.sh
+#   - id: chat.script.command.open-window
+#     path: scripts/00.chat/command/open-window/script.sh
+#   effects:
+#   - read-only
 usage() {
   cat <<'EOF'
 Usage: open-window [worktree-path|session-log]

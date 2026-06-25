@@ -1,17 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Block staged deletion of commit logs that record committed work.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.session-log.check-commitlog-deletions
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: session-log
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Block staged deletion of commit logs that record committed work.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/check-commitlog-deletions/README.md
-#     - scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
-#     - docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
-#   effects: read-only
-
+#   - id: chat.script.session-log.check-commitlog-deletions.readme
+#     path: scripts/00.chat/session-log/check-commitlog-deletions/README.md
+#   - id: chat.script.session-log.check-commitlog-deletions.smoke-test
+#     path: scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
+#   - id: harness.architecture.adr.0010-protect-commit-logs-with-recorded-work
+#     path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
+#   effects:
+#   - read-only
 usage() {
   cat <<'EOF'
 Usage:
