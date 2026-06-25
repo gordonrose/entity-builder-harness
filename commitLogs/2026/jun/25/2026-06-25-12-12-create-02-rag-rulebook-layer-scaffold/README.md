@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T20:54:06Z
-latest_commit_sha: f4d6b9d
-chat_duration: 34875s (00:09:41:15)
-estimated_chat_tokens: 2630354 estimated from chat transcript bytes (10521414 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 78.91 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T21:15:41Z
+latest_commit_sha: ce34f141705a93a68a7d91eb12350bb5714ee62c
+chat_duration: 36170s (00:10:02:50)
+estimated_chat_tokens: 2785235 estimated from chat transcript bytes (11140939 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 83.56 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -406,6 +406,17 @@ Decision: Generate governed routing recognition source
 
 Rationale: Extended generate-recognition-sources to generate and freshness-check recognition.generated.routing from governed layer taxonomy, routing policy, retrieval policy corpus/mode definitions, and workflow files. The RAG/rulebook commit gate now checks both generated recognition sources.
 
+
+### 2026-06-25T21:15:41Z - Commit recorded
+
+Commit: `ce34f141705a93a68a7d91eb12350bb5714ee62c`
+
+Message: Generate routing recognition source
+
+Summary: Generated and governed a routing recognition source so RAG/rulebook prompt routing can recognize layer, corpus, mode, and workflow terms from governed sources.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -549,6 +560,13 @@ Rationale: Extended generate-recognition-sources to generate and freshness-check
   Summary: Added the first generated recognition source from the artifact metadata index, plus a deterministic generator, smoke test, docs, repo-plan updates, and commit-gate freshness checking for generated recognition sources.
   ADR impact: No new ADR; this implements the first metadata-backed recognition-source slice under ADR 0022.
 
+
+- Commit: `ce34f141705a93a68a7d91eb12350bb5714ee62c`
+  Time UTC: 2026-06-25T21:15:41Z
+  Message: Generate routing recognition source
+  Summary: Generated and governed a routing recognition source so RAG/rulebook prompt routing can recognize layer, corpus, mode, and workflow terms from governed sources.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -562,11 +580,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T20:54:06Z
-Latest commit SHA: f4d6b9d
-Chat duration: 34875s (00:09:41:15)
-Estimated chat tokens: 2630354 estimated from chat transcript bytes (10521414 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 78.91 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T21:15:41Z
+Latest commit SHA: ce34f141705a93a68a7d91eb12350bb5714ee62c
+Chat duration: 36170s (00:10:02:50)
+Estimated chat tokens: 2785235 estimated from chat transcript bytes (11140939 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 83.56 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
