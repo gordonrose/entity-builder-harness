@@ -45,6 +45,11 @@ create 02 rag rulebook layer scaffold
   `03.product`, `04.deploy`, `05.education`, and `06.shared`.
 - Keep existing prototype rulebook artifacts in place until a separate governed
   corpus migration assigns final domain corpus homes.
+- Add design-only RAG/Rulebook standards for the portable service contract and
+  modular domain corpus package shape before building runtime code.
+- Record the ordered repo plan for context-packet schema, rulebook index schema,
+  read-only index generation, chunk generation, validation, and later corpus
+  migration.
 
 ## Activity Log
 

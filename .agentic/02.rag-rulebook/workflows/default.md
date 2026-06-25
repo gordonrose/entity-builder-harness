@@ -57,5 +57,6 @@ another layer's workflow, split the work into separate governed phases.
    context-packet model, service boundary, or migration note.
 4. Keep the change to one small artifact or scaffold unless explicitly asked
    to perform a migration.
-5. Validate YAML or metadata headers when edited.
-6. Summarize boundaries, assumptions, and any deferred migration.
+5. Check `plans/repo-plan.md` when choosing the next small slice.
+6. Validate YAML or metadata headers when edited.
+7. Summarize boundaries, assumptions, and any deferred migration.

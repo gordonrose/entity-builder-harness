@@ -51,6 +51,8 @@ into one undifferentiated instruction set.
 ## Source Of Truth
 
 - Layer workflows: `.agentic/02.rag-rulebook/workflows/`
+- Layer standards: `.agentic/02.rag-rulebook/standards/`
+- Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer command surface: `scripts/02.rag-rulebook/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
 
@@ -62,6 +64,18 @@ final homes.
 
 - `workflows/default.md` - plan or change RAG/rulebook schemas, corpora,
   indexes, graph retrieval, context packets, or standalone service boundaries.
+
+## Standards
+
+- `standards/portable-service-contract.md` - defines the reusable service
+  boundary for corpus, index, chunk, intent, retrieval, and context-packet work.
+- `standards/domain-corpus-package.md` - defines the modular corpus package
+  shape for harness, product/apps, design-system, deploy, and education corpora.
+
+## Plans
+
+- `plans/repo-plan.md` - records the ordered plan for turning the prototype
+  rulebook into modular RAG-ready corpora and service inputs.
 
 ## Output Locations
 
