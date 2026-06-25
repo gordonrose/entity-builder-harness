@@ -128,6 +128,8 @@ clarifying question:
 
 ```txt
 I cannot classify this safely yet. What layer and mode should this use?
+Available layers: mixed, chat, shared, harness, education, aws, product.
+Available modes: implementation, execution, planning, discovery.
 ```
 
 After the user answers, propose the classifier taxonomy change that would have
