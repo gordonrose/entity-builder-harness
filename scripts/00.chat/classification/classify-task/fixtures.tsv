@@ -6,6 +6,7 @@ update AGENTS.md routing rules	harness	implementation	.agentic/01.harness/workfl
 fix the failing tests	product	implementation	.agentic/product/workflows/default.md
 what is the auth flow?	product	discovery	.agentic/product/workflows/default.md
 use the existing chat start process	chat	execution	.agentic/00.chat/workflows/chat-start.md
+update the unknown-classification prompt so it lists available layer and mode options	chat	implementation	.agentic/00.chat/workflows/chat-start.md
 explain capability resolution	harness	discovery	.agentic/01.harness/workflows/change-harness.md
 how do i allow bash for governed scripts in my codex and claude and mistral chats?	harness	planning	.agentic/01.harness/workflows/change-harness.md
 implement governed script permissions for codex claude and mistral	harness	implementation	.agentic/01.harness/workflows/change-harness.md
