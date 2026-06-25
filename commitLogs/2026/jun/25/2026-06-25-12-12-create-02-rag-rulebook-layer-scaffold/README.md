@@ -99,6 +99,11 @@ create 02 rag rulebook layer scaffold
   `chunk_candidates[]` into artifact summary, rule, rule-pack step, and
   required-check chunks with source citations, without arbitrary character
   windows, durable writes, embeddings, network calls, or corpus moves.
+- Add a read-only `scripts/02.rag-rulebook/validate-context-packet/script.sh`
+  command. The validator checks `rag-rulebook/context-packet/v1` JSON against
+  generated `rag-rulebook/chunk-set/v1` chunks, proving selected chunks,
+  citations, checks, forbidden actions, stop conditions, budgets, confidence,
+  gaps, routing, and provenance resolve before a packet is used as LLM context.
 
 ## Activity Log
 

@@ -115,6 +115,9 @@ final homes.
 - `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh` - emits
   read-only `rag-rulebook/chunk-set/v1` JSON chunks from a validated rulebook
   index.
+- `scripts/02.rag-rulebook/validate-context-packet/script.sh` - validates a
+  `rag-rulebook/context-packet/v1` JSON packet against generated
+  `rag-rulebook/chunk-set/v1` chunks without modifying files.
 
 ## Output Locations
 

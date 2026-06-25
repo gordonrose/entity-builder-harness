@@ -98,6 +98,8 @@ The location is not the final domain corpus model.
 7. Add context-packet validation.
    - Validate packet shape and references.
    - Report gaps when retrieval is ambiguous or insufficient.
+   - Status: present in
+     `scripts/02.rag-rulebook/validate-context-packet/script.sh`.
 
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
@@ -120,5 +122,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add context-packet validation on top of generated chunks, citations, checks,
-and stop-condition references.
+Add a first context-packet builder fixture that assembles a small deterministic
+packet from generated chunks, validates it, and proves the end-to-end handoff
+from rulebook index to chunk set to context packet.
