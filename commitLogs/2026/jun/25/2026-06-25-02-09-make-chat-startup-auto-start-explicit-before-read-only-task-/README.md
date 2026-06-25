@@ -11,11 +11,11 @@ workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-06-25T01:09:13Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl
-latest_commit_at_utc: 2026-06-25T08:38:27Z
-latest_commit_sha: cbf89eb
-chat_duration: 26954s (00:07:29:14)
-estimated_chat_tokens: 159927 estimated from chat transcript bytes (639707 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl)
-estimated_chat_cost: USD 4.80 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T08:40:30Z
+latest_commit_sha: e8ccc84
+chat_duration: 27077s (00:07:31:17)
+estimated_chat_tokens: 189137 estimated from chat transcript bytes (756548 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl)
+estimated_chat_cost: USD 5.67 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -97,6 +97,17 @@ Raised: Preflight refresh branch creation failed for this long chat branch
 
 Resolution: Updated rehearse-refresh-from-main to shorten the generated preflight namespace and added smoke coverage for long trailing-hyphen chat branch names.
 
+
+### 2026-06-25T08:40:30Z - Commit recorded
+
+Commit: `e8ccc84`
+
+Message: Shorten main refresh preflight branch names
+
+Summary: Bounded the generated preflight namespace so long chat branch names can use the governed refresh path, and added smoke coverage for the failing shape.
+
+ADR impact: No ADR needed; this is a deterministic script robustness fix.
+
 ## Commits
 
 
@@ -106,6 +117,13 @@ Resolution: Updated rehearse-refresh-from-main to shorten the generated prefligh
   Message: Make chat startup auto-start explicit
   Summary: Added a startup resolver, clarified chat-start bootstrap versus task read-only mode, and updated tests/docs for governed auto-start from root main.
   ADR impact: No ADR needed; this implements the existing chat-start lifecycle model.
+
+
+- Commit: `e8ccc84`
+  Time UTC: 2026-06-25T08:40:30Z
+  Message: Shorten main refresh preflight branch names
+  Summary: Bounded the generated preflight namespace so long chat branch names can use the governed refresh path, and added smoke coverage for the failing shape.
+  ADR impact: No ADR needed; this is a deterministic script robustness fix.
 
 ## Main Refresh Conflicts
 
@@ -120,11 +138,11 @@ Reason: This narrows existing chat-start behavior and adds an executable resolve
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T01:09:13Z
-Latest commit at UTC: 2026-06-25T08:38:27Z
-Latest commit SHA: cbf89eb
-Chat duration: 26954s (00:07:29:14)
-Estimated chat tokens: 159927 estimated from chat transcript bytes (639707 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl)
-Estimated chat cost: USD 4.80 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T08:40:30Z
+Latest commit SHA: e8ccc84
+Chat duration: 27077s (00:07:31:17)
+Estimated chat tokens: 189137 estimated from chat transcript bytes (756548 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-06-36-019efc50-8579-77e0-b2c9-1c1973283c62.jsonl)
+Estimated chat cost: USD 5.67 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
