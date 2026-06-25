@@ -1,15 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test local-main merge readiness verifier classifications.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.local-merge.verify-chat-ready-to-merge-local-main.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: local-merge
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test local-main merge readiness verifier classifications.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-promote-to-main.md
-#     - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
-#   effects: writes-files, branches, worktrees, commits
+#   - id: chat.workflows.chat-promote-to-main
+#     path: .agentic/00.chat/workflows/chat-promote-to-main.md
+#   - id: chat.script.local-merge.verify-chat-ready-to-merge-local-main
+#     path: scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+#   effects:
+#   - branches
+#   - commits
+#   - worktrees
+#   - writes-files
 
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/local-convergence-verifier-smoke.XXXXXX")"

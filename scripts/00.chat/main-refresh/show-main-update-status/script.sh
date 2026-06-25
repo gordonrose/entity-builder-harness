@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Show whether local chat branches are ahead of or behind the base branch.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.main-refresh.show-main-update-status
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: main-refresh
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Show whether local chat branches are ahead of or behind the base branch.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-refresh-from-main.md
-#     - scripts/01.harness/run-governed-script.sh
-#   effects: read-only
+#   - id: chat.workflows.chat-refresh-from-main
+#     path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+#   - id: harness.script.run-governed-script
+#     path: scripts/01.harness/run-governed-script.sh
+#   effects:
+#   - read-only
 
 BASE_BRANCH="${1:-main}"
 

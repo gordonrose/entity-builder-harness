@@ -1,17 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Delete empty chat branches and matching empty session logs after dry-run inspection.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.git.cleanup-empty-chat-branches
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: git
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Delete empty chat branches and matching empty session logs after dry-run
+#     inspection.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-cleanup.md
-#     - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-#     - package.json scripts.chat:cleanup-empty-branches
-#     - scripts/00.chat/startup/start-chat-session/script.sh
-#   effects: branches, writes-files, destructive
+#   - id: chat.workflows.chat-cleanup
+#     path: .agentic/00.chat/workflows/chat-cleanup.md
+#   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+#     path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+#   - id: chat.script.startup.start-chat-session
+#     path: scripts/00.chat/startup/start-chat-session/script.sh
+#   effects:
+#   - branches
+#   - destructive
+#   - writes-files
 
 # shellcheck source=../../session-log/paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

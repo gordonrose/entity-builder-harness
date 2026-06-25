@@ -1,15 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test empty chat branch and session log cleanup safety.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.git.cleanup-empty-chat-branches.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: git
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test empty chat branch and session log cleanup safety.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/workflows/chat-cleanup.md
-#     - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-#   effects: writes-files, branches, commits, destructive
+#   - id: chat.workflows.chat-cleanup
+#     path: .agentic/00.chat/workflows/chat-cleanup.md
+#   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+#     path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+#   effects:
+#   - branches
+#   - commits
+#   - destructive
+#   - writes-files
 
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/cleanup-empty-chat-branches-smoke.XXXXXX")"

@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test main-refresh conflict audit verification.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.main-refresh.verify-conflict-audit.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: main-refresh
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test main-refresh conflict audit verification.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/main-refresh/verify-conflict-audit/script.sh
-#   effects: temporary-files
+#   - id: chat.script.main-refresh.verify-conflict-audit
+#     path: scripts/00.chat/main-refresh/verify-conflict-audit/script.sh
+#   effects:
+#   - writes-files
 
 fail() {
   echo "FAIL: $*" >&2

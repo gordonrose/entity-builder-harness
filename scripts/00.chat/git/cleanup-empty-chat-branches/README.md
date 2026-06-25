@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: capability-readme
-purpose: Explain empty chat branch and session-log cleanup.
-domain: git
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/chat-cleanup.md
-  - scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.git.cleanup-empty-chat-branches.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: git
+  disciplines:
+  - agentic
+  kind: capability-readme
+  purpose: Explain empty chat branch and session-log cleanup.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.chat-cleanup
+    path: .agentic/00.chat/workflows/chat-cleanup.md
+  - id: chat.script.git.cleanup-empty-chat-branches
+    path: scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
 -->
-
 # Cleanup Empty Chat Branches
 
 `script.sh` finds `chat/*` branches with no commits beyond the base branch and

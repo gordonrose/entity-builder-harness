@@ -1,13 +1,23 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain the read-only report that lists active chat branches before local merge decisions.
-domain: local-merge
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/local-merge/list-active-chat-branches/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.local-merge.list-active-chat-branches.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: local-merge
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain the read-only report that lists active chat branches before local
+    merge decisions.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.local-merge.list-active-chat-branches
+    path: scripts/00.chat/local-merge/list-active-chat-branches/script.sh
 -->
-
 # List Active Chat Branches
 
 This capability answers: which chat branches are active, and how do they relate

@@ -1,14 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: 00.chat
-#   purpose: Smoke test recovery import from an active worktree into a chat-owned worktree.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.recovery.import-active-paths-to-chat-worktree.smoke-test
+#   version: 1
+#   status: active
+#   layer: 00.chat
 #   domain: recovery
-#   portability: llm-workbench-validation
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Smoke test recovery import from an active worktree into a chat-owned worktree.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
-#   effects: writes-files, branches, worktrees, commits
+#   - id: chat.script.recovery.import-active-paths-to-chat-worktree
+#     path: scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
+#   effects:
+#   - branches
+#   - commits
+#   - worktrees
+#   - writes-files
 
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/import-active-paths-smoke.XXXXXX")"

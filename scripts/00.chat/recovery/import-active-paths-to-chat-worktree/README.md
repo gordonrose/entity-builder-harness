@@ -1,13 +1,23 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain governed recovery import from an active worktree into a chat-owned worktree.
-domain: recovery
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
+  schema: agentic-artifact/v2
+  id: chat.script.recovery.import-active-paths-to-chat-worktree.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: recovery
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain governed recovery import from an active worktree into a chat-owned
+    worktree.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.recovery.import-active-paths-to-chat-worktree
+    path: scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
 -->
-
 # Import Active Paths To Chat Worktree
 
 This capability is for recovery, not normal chat work.

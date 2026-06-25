@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: guide
-purpose: Explain how the harness rehearses refreshing a chat branch from main before applying it.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
-  - scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh
+  schema: agentic-artifact/v2
+  id: chat.script.main-refresh.rehearse-refresh-from-main.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Explain how the harness rehearses refreshing a chat branch from main before
+    applying it.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.main-refresh.rehearse-refresh-from-main
+    path: scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
+  - id: chat.script.main-refresh.rehearse-refresh-from-main.smoke-test
+    path: scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh
 -->
-
 # Rehearse Refresh From Main
 
 This capability answers: would refreshing this chat branch from `main` work

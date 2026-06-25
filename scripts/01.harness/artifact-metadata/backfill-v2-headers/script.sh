@@ -559,7 +559,7 @@ def effects_for(path: Path, metadata: dict[str, Any]) -> list[str]:
         values = [str(item) for item in raw if item]
     elif isinstance(raw, str) and raw:
         values = [raw]
-    aliases = {"opens-gui": "read-only", "write-files": "writes-files"}
+    aliases = {"opens-gui": "read-only", "temporary-files": "writes-files", "write-files": "writes-files"}
     normalized: list[str] = []
     for value in values:
         for token in value.split(","):
