@@ -43,13 +43,14 @@ from pathlib import Path
 
 report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert report["ok"], report
-assert report["counts"]["fixtures"] >= 4
+assert report["counts"]["fixtures"] >= 5
 assert report["counts"]["failed"] == 0
 fixture_ids = {item["fixture_id"] for item in report["fixtures"]}
 assert "retrieval-selector.v1.exact-rag-rulebook-workflow" in fixture_ids
 assert "retrieval-selector.v1.prompt-session-conflict" in fixture_ids
 assert "retrieval-selector.v1.vague-prompt-low-confidence" in fixture_ids
 assert "retrieval-selector.v1.product-term-session-boundary" in fixture_ids
+assert "retrieval-selector.v1.curated-prompt-vocabulary" in fixture_ids
 PY
 
 echo "Retrieval selector evaluation fixtures smoke test passed."

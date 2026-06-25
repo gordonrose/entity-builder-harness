@@ -164,6 +164,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add retrieval selector evaluation suite
   Rationale: Added machine-readable retrieval selector evaluation fixtures for exact RAG/rulebook routing, prompt/session conflict, vague low-confidence prompts, and corpus boundary protection. Added an evaluator command that runs selector packets against expected and banned outcomes, and wired the evaluator into the RAG/rulebook commit gate.
 
+
+- Decision: Add curated recognition sources
+  Rationale: Added curated alias, action, and risk recognition sources so reviewed human-language terms can influence selector prompt recognition without replacing generated repo facts. Updated selector evaluations to prove the spaced RAG rulebook alias and curated action/risk terms are recognized.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -471,6 +475,13 @@ Message: Add retrieval selector evaluation fixtures
 Summary: Added retrieval selector evaluation fixtures and an evaluator command covering exact RAG/rulebook routing, prompt/session conflict, vague low-confidence prompts, and corpus boundary protection. Wired the evaluator into the RAG/rulebook commit gate.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-06-25T22:59:43Z - Decision
+
+Decision: Add curated recognition sources
+
+Rationale: Added curated alias, action, and risk recognition sources so reviewed human-language terms can influence selector prompt recognition without replacing generated repo facts. Updated selector evaluations to prove the spaced RAG rulebook alias and curated action/risk terms are recognized.
 
 ## Commits
 

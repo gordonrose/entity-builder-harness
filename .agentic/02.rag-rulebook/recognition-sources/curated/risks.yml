@@ -1,0 +1,114 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.recognition-source.curated.risks
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: recognition-source
+#   purpose: Curated lookup source for reviewed risk, stop-condition, and check terms.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-recognition-sources
+#       path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+
+schema: rag-rulebook/recognition-source/v1
+source_id: recognition.curated.risks
+version: 1
+status: active
+source_kinds:
+  - risk-word
+  - stop-condition
+  - check-name
+generation_mode: curated
+owner_layer: 02.rag-rulebook
+purpose: Recognize reviewed risk and check vocabulary so selectors can raise validation scrutiny.
+match_priority: 45
+used_by_dimensions:
+  - prompt
+  - required-checks
+  - stop-conditions
+  - confidence-thresholds
+  - validation-handoff
+terms:
+  - term: drift
+    category: risk-word
+    match_type: exact
+    canonical_id: risk.drift
+    confidence_weight: 0.9
+  - term: stale
+    category: risk-word
+    match_type: exact
+    canonical_id: risk.stale
+    confidence_weight: 0.85
+  - term: ambiguous
+    category: risk-word
+    match_type: exact
+    canonical_id: risk.ambiguous
+    confidence_weight: 0.85
+  - term: conflict
+    category: risk-word
+    match_type: exact
+    canonical_id: risk.conflict
+    confidence_weight: 0.8
+  - term: confidence
+    category: risk-word
+    match_type: exact
+    canonical_id: risk.confidence
+    confidence_weight: 0.75
+  - term: risk
+    category: risk-word
+    match_type: exact
+    canonical_id: risk.generic
+    confidence_weight: 0.65
+  - term: missing governance
+    category: stop-condition
+    match_type: phrase
+    canonical_id: stop.missing-governance
+    confidence_weight: 0.95
+  - term: stop condition
+    category: stop-condition
+    match_type: phrase
+    canonical_id: stop.condition
+    aliases:
+      - stop-condition
+    confidence_weight: 0.85
+  - term: commit gate
+    category: check-name
+    match_type: phrase
+    canonical_id: check.commit-gate
+    aliases:
+      - commit-gates
+    confidence_weight: 0.9
+  - term: validation
+    category: check-name
+    match_type: exact
+    canonical_id: check.validation
+    aliases:
+      - validating
+    confidence_weight: 0.85
+validation_rules:
+  - Risk terms can raise check and stop scrutiny, but cannot approve work or change routing alone.
+  - Generic risk words require another supporting signal before blocking.
+  - Stop-condition terms require fixture coverage before they become blocking runtime behavior.
+  - Check-name terms should map to existing or planned governed checks.
+refresh_policy:
+  trigger: Review when selector fixtures or incident notes reveal a recurring unrecognized risk, stop, or check term.
+  owner: 02.rag-rulebook
+  review_required_when:
+    - Adding a term that can become a blocking stop condition.
+    - Adding broad safety words with high confidence.
+    - Mapping a term to a check that does not yet exist.
+    - Increasing confidence weight.

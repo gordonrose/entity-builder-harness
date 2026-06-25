@@ -153,5 +153,14 @@ finds:
 - schemas
 - risks and stop words
 
-The first generated source should probably come from artifact metadata and file
-paths. Curated action/risk vocabulary should come later, with examples.
+The first curated sources are:
+
+- `recognition.curated.aliases` for reviewed human-language aliases such as
+  `RAG rulebook`
+- `recognition.curated.actions` for reviewed operation words such as update,
+  move, generate, and validate
+- `recognition.curated.risks` for reviewed risk, stop-condition, and check
+  terms such as drift, missing governance, and commit gate
+
+Each curated source needs evaluation fixture coverage before broad terms are
+allowed to affect selector behavior.

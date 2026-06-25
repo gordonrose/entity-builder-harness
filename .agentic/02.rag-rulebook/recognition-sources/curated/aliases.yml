@@ -1,0 +1,68 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.recognition-source.curated.aliases
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: recognition-source
+#   purpose: Curated lookup source for reviewed human-language aliases that map to governed routing terms.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-recognition-sources
+#       path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+
+schema: rag-rulebook/recognition-source/v1
+source_id: recognition.curated.aliases
+version: 1
+status: active
+source_kinds:
+  - alias
+  - layer-name
+generation_mode: curated
+owner_layer: 02.rag-rulebook
+purpose: Recognize reviewed human-language aliases for governed routing and corpus terms.
+match_priority: 30
+used_by_dimensions:
+  - prompt
+  - layer-mode-workflow
+  - corpus-ownership
+terms:
+  - term: RAG rulebook
+    category: layer-name
+    match_type: alias
+    canonical_id: 02.rag-rulebook
+    aliases:
+      - RAG rule book
+      - rulebook layer
+    confidence_weight: 0.95
+  - term: rulebook service
+    category: layer-name
+    match_type: alias
+    canonical_id: 02.rag-rulebook
+    confidence_weight: 0.75
+validation_rules:
+  - Curated aliases must not override complete session metadata.
+  - Curated aliases must have evaluation fixture coverage before broad use.
+  - Broad aliases must keep confidence_weight below exact generated identifiers.
+  - Aliases that could name product, deploy, app, or design work require explicit review before activation.
+refresh_policy:
+  trigger: Review when humans use recurring terms that generated sources do not recognize.
+  owner: 02.rag-rulebook
+  review_required_when:
+    - Adding an alias that maps to a different layer or corpus.
+    - Increasing confidence weight.
+    - Adding broad product, deploy, app, or design aliases.
+    - Adding an alias because of one ambiguous prompt instead of a repeated pattern.

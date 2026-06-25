@@ -207,6 +207,17 @@ The location is not the final domain corpus model.
      `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/`
      and `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/`.
 
+7l. Add curated recognition sources.
+   - Add reviewed sources for aliases, action verbs, risk words, stop
+     conditions, and check names.
+   - Prove the observed `RAG rulebook` / `rag-rulebook` alias gap with a
+     retrieval selector evaluation fixture.
+   - Keep curated vocabulary lower authority than generated artifact and
+     routing sources.
+   - Status: present in
+     `.agentic/02.rag-rulebook/recognition-sources/curated/` and covered by
+     `retrieval-selector.v1.curated-prompt-vocabulary`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -228,6 +239,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add curated recognition sources for aliases, action verbs, risk words, stop
-conditions, and check names, starting with the observed `RAG rulebook` /
-`rag-rulebook` alias gap.
+Add richer selector evaluation assertions for required recognition terms and
+categories, then connect high-confidence risk/check matches to explicit
+required-check and stop-condition behavior.

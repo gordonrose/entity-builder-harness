@@ -1,6 +1,6 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
-#   id: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
 #   version: 1
 #   status: active
 #   layer: 02.rag-rulebook
@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: evaluation-fixture
-#   purpose: Prove an explicit RAG/rulebook workflow request routes to the RAG/rulebook layer and avoids deploy context.
+#   purpose: Prove curated alias, action, and risk recognition sources are consumed by the selector.
 #   portability:
 #     class: reusable
 #     targets:
@@ -21,18 +21,18 @@
 #       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 
 schema: rag-rulebook/retrieval-selector-evaluation/v1
-fixture_id: retrieval-selector.v1.exact-rag-rulebook-workflow
+fixture_id: retrieval-selector.v1.curated-prompt-vocabulary
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove an explicit RAG/rulebook workflow request routes through governed RAG/rulebook signals.
+purpose: Prove reviewed natural-language vocabulary is recognized without expanding into unrelated corpora.
 input:
-  request_text: Update the RAG rulebook workflow for context packets.
+  request_text: Evaluate drift risk before updating the RAG rulebook selector.
   session:
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
   focused_paths:
-    - .agentic/02.rag-rulebook/workflows/default.md
+    - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
   max_chunks: 6
 expected:
   routing:
@@ -45,8 +45,9 @@ expected:
       - corpus.02.rag-rulebook
   recognition:
     required_source_ids:
+      - recognition.curated.actions
       - recognition.curated.aliases
-      - recognition.generated.routing
+      - recognition.curated.risks
     required_matched_inputs:
       - prompt
       - session-metadata
@@ -67,8 +68,11 @@ banned:
     - corpus.03.product.platform
 source_refs:
   - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
-  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+  - .agentic/02.rag-rulebook/recognition-sources/curated/aliases.yml
+  - .agentic/02.rag-rulebook/recognition-sources/curated/actions.yml
+  - .agentic/02.rag-rulebook/recognition-sources/curated/risks.yml
 update_triggers:
-  - RAG/rulebook workflow path changes.
-  - Selector routing policy changes.
-  - Prototype corpus migration creates physical corpus.02.rag-rulebook chunks.
+  - Curated alias vocabulary changes.
+  - Curated action vocabulary changes.
+  - Curated risk vocabulary changes.
+  - Selector prompt recognition behavior changes.

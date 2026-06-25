@@ -335,30 +335,32 @@ def match_recognition_terms(
             raw_term = str(term.get("term") or "").strip()
             if not raw_term:
                 continue
-            matched_inputs: list[str] = []
-            if simple_exact_match(raw_term, request_text):
-                matched_inputs.append("prompt")
-            if simple_exact_match(raw_term, session_text):
-                matched_inputs.append("session-metadata")
-            if focused_path_match(raw_term, focused_paths):
-                matched_inputs.append("focused-paths")
-            for matched_input in matched_inputs:
-                key = (source_id, raw_term.lower(), str(term.get("category")), matched_input)
-                if key in seen:
-                    continue
-                seen.add(key)
-                matches.append(
-                    {
-                        "source_id": source_id,
-                        "term": raw_term,
-                        "category": term.get("category"),
-                        "canonical_id": term.get("canonical_id") or raw_term,
-                        "match_type": term.get("match_type", "exact"),
-                        "matched_input": matched_input,
-                        "evidence_path": term.get("evidence_path") or source.get("_path"),
-                        "confidence_weight": term.get("confidence_weight", 1),
-                    }
-                )
+            lookup_terms = [raw_term] + list_of_strings(term.get("aliases"))
+            for lookup_term in lookup_terms:
+                matched_inputs: list[str] = []
+                if simple_exact_match(lookup_term, request_text):
+                    matched_inputs.append("prompt")
+                if simple_exact_match(lookup_term, session_text):
+                    matched_inputs.append("session-metadata")
+                if focused_path_match(lookup_term, focused_paths):
+                    matched_inputs.append("focused-paths")
+                for matched_input in matched_inputs:
+                    key = (source_id, lookup_term.lower(), str(term.get("category")), matched_input)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    matches.append(
+                        {
+                            "source_id": source_id,
+                            "term": lookup_term,
+                            "category": term.get("category"),
+                            "canonical_id": term.get("canonical_id") or raw_term,
+                            "match_type": term.get("match_type", "exact") if lookup_term == raw_term else "alias",
+                            "matched_input": matched_input,
+                            "evidence_path": term.get("evidence_path") or source.get("_path"),
+                            "confidence_weight": term.get("confidence_weight", 1),
+                        }
+                    )
     return matches
 
 
@@ -423,9 +425,9 @@ def score_chunk(
     recognition_matches: list[dict[str, Any]],
     focused_paths: list[str],
     session_corpus: str,
-) -> int:
+) -> float:
     haystack = chunk_haystack(chunk)
-    score = 0
+    score = 0.0
     for term in prompt_terms:
         score += haystack.count(term)
 
@@ -445,7 +447,11 @@ def score_chunk(
         canonical = str(match.get("canonical_id") or "")
         term = str(match.get("term") or "")
         matched_input = str(match.get("matched_input") or "")
-        weight = 2 if matched_input == "prompt" else 1
+        input_weight = 2 if matched_input == "prompt" else 1
+        confidence_weight = match.get("confidence_weight")
+        if not isinstance(confidence_weight, (int, float)):
+            confidence_weight = 1
+        weight = input_weight * float(confidence_weight)
         if category == "corpus-id" and canonical == chunk_corpus:
             score += 10 * weight
         elif category == "artifact-id" and canonical == artifact_id:
@@ -456,6 +462,10 @@ def score_chunk(
             score += 16 * weight
         elif category in {"layer-name", "mode-name", "workflow-name"} and term.lower() in haystack:
             score += 3 * weight
+        elif category == "action-verb" and term.lower() in haystack:
+            score += 2 * weight
+        elif category in {"risk-word", "stop-condition", "check-name"} and term.lower() in haystack:
+            score += 4 * weight
 
     kind = chunk.get("content_kind")
     term_set = set(prompt_terms)
@@ -474,7 +484,7 @@ def ranked_chunks(
     recognition_matches: list[dict[str, Any]],
     focused_paths: list[str],
     session_corpus: str,
-) -> list[tuple[int, int, str, dict[str, Any]]]:
+) -> list[tuple[float, int, str, dict[str, Any]]]:
     ranked = []
     for chunk in chunks:
         chunk_id = chunk.get("chunk_id")
@@ -491,10 +501,10 @@ def ranked_chunks(
     return sorted(ranked, key=lambda item: (-item[0], item[1], item[2]))
 
 
-def select_chunks(ranked: list[tuple[int, int, str, dict[str, Any]]], max_chunks: int) -> list[tuple[int, dict[str, Any]]]:
-    selected: dict[str, tuple[int, dict[str, Any]]] = {}
+def select_chunks(ranked: list[tuple[float, int, str, dict[str, Any]]], max_chunks: int) -> list[tuple[float, dict[str, Any]]]:
+    selected: dict[str, tuple[float, dict[str, Any]]] = {}
 
-    def add(item: tuple[int, int, str, dict[str, Any]] | None) -> None:
+    def add(item: tuple[float, int, str, dict[str, Any]] | None) -> None:
         if item is None:
             return
         score, _rank, chunk_id, chunk = item
@@ -574,9 +584,9 @@ def prototype_bridge_corpora(session_layer: str) -> list[str]:
 
 
 def candidate_ranked_chunks(
-    ranked: list[tuple[int, int, str, dict[str, Any]]],
+    ranked: list[tuple[float, int, str, dict[str, Any]]],
     allowed_corpus_ids: list[str],
-) -> tuple[list[tuple[int, int, str, dict[str, Any]]], bool]:
+) -> tuple[list[tuple[float, int, str, dict[str, Any]]], bool]:
     allowed = set(allowed_corpus_ids)
     filtered = [item for item in ranked if item[3].get("corpus_id") in allowed]
     if len(filtered) >= 3:

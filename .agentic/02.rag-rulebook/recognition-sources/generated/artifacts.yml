@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 380
-  term_count: 765
+  indexed_artifacts: 381
+  term_count: 767
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3125,6 +3125,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.readme
   evidence_path: .agentic/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/curated-prompt-vocabulary.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/curated-prompt-vocabulary.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/curated-prompt-vocabulary.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
   category: artifact-id

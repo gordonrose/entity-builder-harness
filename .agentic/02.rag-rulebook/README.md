@@ -106,6 +106,12 @@ final homes.
   exact artifact IDs, paths, schemas, rule IDs, and rule-pack IDs.
 - `recognition-sources/generated/routing.yml` - generated lookup source for
   governed layer, mode, corpus, and workflow routing terms.
+- `recognition-sources/curated/aliases.yml` - reviewed human-language aliases
+  that map to governed routing terms without replacing session metadata.
+- `recognition-sources/curated/actions.yml` - reviewed action vocabulary used
+  to understand requested operations.
+- `recognition-sources/curated/risks.yml` - reviewed risk, stop-condition,
+  and check vocabulary used to raise validation scrutiny.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

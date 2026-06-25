@@ -84,6 +84,13 @@ recognition_sources:
     generation_mode: generated
     expected_origin: Routing policy, layer metadata, workflow paths, and corpus manifests.
     purpose: Recognize governed routing and corpus terms.
+  - source_id: recognition.curated.aliases
+    source_kinds:
+      - alias
+      - layer-name
+    generation_mode: curated
+    expected_origin: Human-reviewed aliases that map common language to governed routing terms.
+    purpose: Recognize reviewed phrasing such as RAG rulebook without treating broad language as a new source of truth.
   - source_id: recognition.curated.actions
     source_kinds:
       - action-verb
@@ -132,6 +139,9 @@ validation_examples:
   - name: unmatched broad noun stays low confidence
     given: User asks to improve the thing without naming an artifact, path, action source term, or workflow.
     expect: The prompt dimension emits broad terms and a low-confidence signal instead of inventing a target artifact.
+  - name: reviewed alias maps to governed route
+    given: User asks about the RAG rulebook with a space instead of the generated `rag-rulebook` slug.
+    expect: The curated alias source maps the phrase to `02.rag-rulebook` while session metadata still controls routing.
 can_change_by:
   - Add synonyms.
   - Add risk words.
