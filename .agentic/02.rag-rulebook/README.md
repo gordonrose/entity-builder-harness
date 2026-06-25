@@ -94,6 +94,9 @@ final homes.
 
 - `plans/repo-plan.md` - records the ordered plan for turning the prototype
   rulebook into modular RAG-ready corpora and service inputs.
+- `plans/prototype-corpus-migration-map.yml` - inventories the current
+  prototype corpus and maps YAML rules, rule packs, source guides, and ADRs to
+  proposed numbered corpus packages before any file moves.
 
 ## Output Locations
 

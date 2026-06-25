@@ -1,0 +1,345 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.plan.prototype-corpus-migration-map
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: corpus
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: plan
+#   purpose: Inventory the prototype architecture corpus and map it to future numbered corpus packages before any file moves.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.standard.domain-corpus-package
+#       path: .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+
+schema: rag-rulebook-prototype-corpus-migration-map/v1
+status: active
+source_root: docs/harness/architecture
+
+policy:
+  - This map is read-only planning. It does not authorize moving files.
+  - Existing prototype corpus files remain under `docs/harness/architecture/` until a governed artifact path migration is approved.
+  - Target paths are proposed package locations, not current repository paths.
+  - Mixed concerns should be split only after the rulebook index can prove current references, related rulesets, and rule-pack dependencies.
+  - Any future migration must update metadata headers, relative references, rule-pack required rulesets, README links, and generated indexes together.
+
+target_corpora:
+  - corpus_id: corpus.01.harness
+    purpose: Agentic harness governance, chat/git process, command surfaces, and harness ADRs.
+  - corpus_id: corpus.02.rag-rulebook
+    purpose: RAG/rulebook service governance, schema, index, chunking, retrieval, and corpus packaging rules.
+  - corpus_id: corpus.03.product
+    purpose: Product, apps, packages, entity-builder, and product architecture source material.
+  - corpus_id: corpus.03.product.apps
+    purpose: App composition, entity flows, product routes, and app-owned behavior.
+  - corpus_id: corpus.03.product.core
+    purpose: Stable product-neutral core contracts and shared primitives.
+  - corpus_id: corpus.03.product.design-system
+    purpose: Design-system, token, primitive, pattern, component, and UI theming rules.
+  - corpus_id: corpus.03.product.frontend-kit
+    purpose: Reusable frontend-kit, form, table, and entity-page UI shell rules.
+  - corpus_id: corpus.03.product.platform
+    purpose: Runtime platform, app mounting, adapters, jobs, config, observability, and platform contracts.
+  - corpus_id: corpus.04.deploy
+    purpose: Infrastructure, release, CI/CD, runtime environment, and deployment operations rules.
+  - corpus_id: corpus.06.shared
+    purpose: Cross-corpus rules that deliberately govern multiple numbered corpora.
+
+inventory_summary:
+  source_guides_markdown: 7
+  source_guides_original_pdf: 7
+  harness_adrs: 22
+  layer_rulesets: 7
+  concern_rulesets: 15
+  rule_packs: 4
+
+source_material:
+  guides:
+    - current_path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+      proposed_corpus_id: corpus.03.product
+      proposed_target_path: corpus.03.product/sources/guides/kanbien-architecture-full-discussion.md
+      migration_status: target-candidate
+    - current_path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+      proposed_corpus_id: corpus.03.product.core
+      proposed_target_path: corpus.03.product.core/sources/guides/kanbien-core-architecture-guide.md
+      migration_status: target-candidate
+    - current_path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
+      proposed_corpus_id: corpus.03.product.design-system
+      proposed_target_path: corpus.03.product.design-system/sources/guides/kanbien-frontend-design-system-guide.md
+      migration_status: target-candidate
+    - current_path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+      proposed_corpus_id: corpus.03.product
+      proposed_target_path: corpus.03.product/sources/guides/kanbien-modular-monorepo-entity-builder.md
+      migration_status: target-candidate
+    - current_path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/sources/guides/kanbien-platform-layer-architecture.md
+      migration_status: target-candidate
+    - current_path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
+      proposed_corpus_id: corpus.03.product
+      proposed_target_path: corpus.03.product/sources/guides/kanbien-typescript-architecture-guide.md
+      migration_status: target-candidate
+    - current_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/sources/guides/kanbien-platform-adapter-consumption-model-guide.md
+      migration_status: target-candidate
+  originals:
+    current_glob: docs/harness/architecture/guides/originals/*.pdf
+    proposed_target_pattern: "<matching-corpus>/sources/originals/<current-filename>"
+    migration_status: preserve-with-source-guide
+    notes:
+      - Preserve original PDFs as source evidence when moving generated Markdown guide derivatives.
+      - Do not make PDFs primary retrieval chunks until the Markdown derivative and source reference policy are explicit.
+  adrs:
+    current_glob: docs/harness/architecture/adrs/*.md
+    proposed_corpus_id: corpus.01.harness
+    proposed_target_pattern: corpus.01.harness/sources/adrs/<current-filename>
+    migration_status: target-candidate
+    notes:
+      - Current ADRs are harness architecture decisions even when they introduce other layers.
+      - ADR 0022 should be related from `corpus.02.rag-rulebook` because it creates the RAG/Rulebook layer.
+
+yaml_artifacts:
+  layer_rulesets:
+    - current_path: docs/harness/architecture/rules/layers/apps.yml
+      metadata_id: harness.architecture.rules.layers.apps
+      rulebook_id: layer.apps
+      title: apps layer rules
+      proposed_corpus_id: corpus.03.product.apps
+      proposed_target_path: corpus.03.product.apps/rules/layers/apps.yml
+      migration_status: target-candidate
+      reason: Applies to `apps/**` product composition and app-owned behavior.
+    - current_path: docs/harness/architecture/rules/layers/design-system.yml
+      metadata_id: harness.architecture.rules.layers.design-system
+      rulebook_id: layer.design-system
+      title: design-system layer rules
+      proposed_corpus_id: corpus.03.product.design-system
+      proposed_target_path: corpus.03.product.design-system/rules/layers/design-system.yml
+      migration_status: target-candidate
+      reason: Applies to `packages/design-system/**`.
+    - current_path: docs/harness/architecture/rules/layers/frontend-kit.yml
+      metadata_id: harness.architecture.rules.layers.frontend-kit
+      rulebook_id: layer.frontend-kit
+      title: frontend-kit layer rules
+      proposed_corpus_id: corpus.03.product.frontend-kit
+      proposed_target_path: corpus.03.product.frontend-kit/rules/layers/frontend-kit.yml
+      migration_status: target-candidate
+      reason: Applies to frontend-kit, forms, tables, and reusable entity-page UI shell packages.
+    - current_path: docs/harness/architecture/rules/layers/infra.yml
+      metadata_id: harness.architecture.rules.layers.infra
+      rulebook_id: layer.infra
+      title: infra layer rules
+      proposed_corpus_id: corpus.04.deploy
+      proposed_target_path: corpus.04.deploy/rules/layers/infra.yml
+      migration_status: target-candidate
+      reason: Applies to `infra/**` infrastructure and deployment definition work.
+    - current_path: docs/harness/architecture/rules/layers/packages-core.yml
+      metadata_id: harness.architecture.rules.layers.packages-core
+      rulebook_id: layer.packages-core
+      title: packages/core rules
+      proposed_corpus_id: corpus.03.product.core
+      proposed_target_path: corpus.03.product.core/rules/layers/packages-core.yml
+      migration_status: target-candidate
+      reason: Applies to `packages/core/**` product-neutral contracts and primitives.
+    - current_path: docs/harness/architecture/rules/layers/platform.yml
+      metadata_id: harness.architecture.rules.layers.platform
+      rulebook_id: layer.platform
+      title: platform layer rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/layers/platform.yml
+      migration_status: target-candidate
+      reason: Applies to `platform/**` runtime composition and platform/app contracts.
+    - current_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
+      metadata_id: harness.architecture.rules.layers.scripts-command-surface
+      rulebook_id: layer.scripts-command-surface
+      title: scripts command-surface layer rules
+      proposed_corpus_id: corpus.01.harness
+      proposed_target_path: corpus.01.harness/rules/layers/scripts-command-surface.yml
+      migration_status: target-candidate
+      reason: Governs numbered script command surfaces as harness-owned automation structure.
+
+  concern_rulesets:
+    - current_path: docs/harness/architecture/rules/concerns/ci-quality.yml
+      metadata_id: harness.architecture.rules.concerns.ci-quality
+      rulebook_id: concern.ci-quality
+      title: CI quality rules
+      proposed_corpus_id: corpus.06.shared
+      proposed_target_path: corpus.06.shared/rules/concerns/ci-quality.yml
+      migration_status: split-review-required
+      reason: Applies across product, deploy, and harness script surfaces; may remain shared or split after index evidence.
+    - current_path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+      metadata_id: harness.architecture.rules.concerns.config-runtime-settings
+      rulebook_id: concern.config-runtime-settings
+      title: Configuration and runtime settings rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/config-runtime-settings.yml
+      migration_status: split-review-required
+      reason: Primarily product runtime/platform config, with deployment environment edges.
+    - current_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+      metadata_id: harness.architecture.rules.concerns.dependency-direction
+      rulebook_id: concern.dependency-direction
+      title: Dependency direction rules
+      proposed_corpus_id: corpus.06.shared
+      proposed_target_path: corpus.06.shared/rules/concerns/dependency-direction.yml
+      migration_status: split-review-required
+      reason: Deliberately governs dependency boundaries across product, harness, scripts, and deploy surfaces.
+    - current_path: docs/harness/architecture/rules/concerns/design-label-theming.yml
+      metadata_id: harness.architecture.rules.concerns.design-label-theming
+      rulebook_id: concern.design-label-theming
+      title: Design-label theming rules
+      proposed_corpus_id: corpus.03.product.design-system
+      proposed_target_path: corpus.03.product.design-system/rules/concerns/design-label-theming.yml
+      migration_status: target-candidate
+      reason: Primarily design-system theming, with app consumption edges.
+    - current_path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      metadata_id: harness.architecture.rules.concerns.events-messaging-async
+      rulebook_id: concern.events-messaging-async
+      title: Events, messaging, and async rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/events-messaging-async.yml
+      migration_status: split-review-required
+      reason: Product/platform async behavior with deployment infrastructure edges.
+    - current_path: docs/harness/architecture/rules/concerns/generated-code.yml
+      metadata_id: harness.architecture.rules.concerns.generated-code
+      rulebook_id: concern.generated-code
+      title: Generated code rules
+      proposed_corpus_id: corpus.06.shared
+      proposed_target_path: corpus.06.shared/rules/concerns/generated-code.yml
+      migration_status: split-review-required
+      reason: Applies across product generated outputs and harness/script generator surfaces.
+    - current_path: docs/harness/architecture/rules/concerns/i18n-localization.yml
+      metadata_id: harness.architecture.rules.concerns.i18n-localization
+      rulebook_id: concern.i18n-localization
+      title: Internationalization and localization rules
+      proposed_corpus_id: corpus.03.product
+      proposed_target_path: corpus.03.product/rules/concerns/i18n-localization.yml
+      migration_status: target-candidate
+      reason: Product-facing localization across apps, core, design-system, and platform surfaces.
+    - current_path: docs/harness/architecture/rules/concerns/identity-access-security.yml
+      metadata_id: harness.architecture.rules.concerns.identity-access-security
+      rulebook_id: concern.identity-access-security
+      title: Identity, access, and security rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/identity-access-security.yml
+      migration_status: split-review-required
+      reason: Product/platform identity and authorization with deployment/security infrastructure edges.
+    - current_path: docs/harness/architecture/rules/concerns/notifications.yml
+      metadata_id: harness.architecture.rules.concerns.notifications
+      rulebook_id: concern.notifications
+      title: Notification rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/notifications.yml
+      migration_status: split-review-required
+      reason: Product notification contracts with provider and infrastructure edges.
+    - current_path: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+      metadata_id: harness.architecture.rules.concerns.persistence-files-storage
+      rulebook_id: concern.persistence-files-storage
+      title: Persistence, files, and storage rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/persistence-files-storage.yml
+      migration_status: split-review-required
+      reason: Product data/file contracts with infra storage and database edges.
+    - current_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+      metadata_id: harness.architecture.rules.concerns.platform-adapter-consumption
+      rulebook_id: concern.platform-adapter-consumption
+      title: Platform adapter consumption rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/platform-adapter-consumption.yml
+      migration_status: target-candidate
+      reason: Governs platform adapter boundaries and app consumption.
+    - current_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+      metadata_id: harness.architecture.rules.concerns.reporting-analytics-audit
+      rulebook_id: concern.reporting-analytics-audit
+      title: Reporting, analytics, audit, and observability rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/reporting-analytics-audit.yml
+      migration_status: split-review-required
+      reason: Product/platform reporting and observability with deploy/runtime operations edges.
+    - current_path: docs/harness/architecture/rules/concerns/tenancy.yml
+      metadata_id: harness.architecture.rules.concerns.tenancy
+      rulebook_id: concern.tenancy
+      title: Tenancy rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/tenancy.yml
+      migration_status: split-review-required
+      reason: Product tenant context and isolation with persistence/platform/infrastructure edges.
+    - current_path: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+      metadata_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
+      rulebook_id: concern.typescript-monorepo-tooling
+      title: TypeScript monorepo tooling rules
+      proposed_corpus_id: corpus.06.shared
+      proposed_target_path: corpus.06.shared/rules/concerns/typescript-monorepo-tooling.yml
+      migration_status: split-review-required
+      reason: Tooling rules apply across product, harness, scripts, infra, and root workspace files.
+    - current_path: docs/harness/architecture/rules/concerns/validation-api-errors.yml
+      metadata_id: harness.architecture.rules.concerns.validation-api-errors
+      rulebook_id: concern.validation-api-errors
+      title: Validation and API error rules
+      proposed_corpus_id: corpus.03.product.core
+      proposed_target_path: corpus.03.product.core/rules/concerns/validation-api-errors.yml
+      migration_status: split-review-required
+      reason: Core validation/error contracts with app, platform, and frontend consumption edges.
+
+  rule_packs:
+    - current_path: docs/harness/architecture/rule-packs/add-core-module.yml
+      metadata_id: harness.architecture.rule-packs.add-core-module
+      rulebook_id: pack.add-core-module
+      title: Add or modify a packages/core module
+      proposed_corpus_id: corpus.03.product.core
+      proposed_target_path: corpus.03.product.core/rule-packs/add-core-module.yml
+      migration_status: target-candidate
+      reason: Task pack is scoped to packages/core module admission and dependency direction.
+    - current_path: docs/harness/architecture/rule-packs/add-design-system-component.yml
+      metadata_id: harness.architecture.rule-packs.add-design-system-component
+      rulebook_id: pack.add-design-system-component
+      title: Add or modify a design-system component
+      proposed_corpus_id: corpus.03.product.design-system
+      proposed_target_path: corpus.03.product.design-system/rule-packs/add-design-system-component.yml
+      migration_status: target-candidate
+      reason: Task pack is scoped to design-system components, tokens, primitives, patterns, and tests.
+    - current_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+      metadata_id: harness.architecture.rule-packs.add-platform-adapter
+      rulebook_id: pack.add-platform-adapter
+      title: Add or modify a platform adapter
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rule-packs/add-platform-adapter.yml
+      migration_status: target-candidate
+      reason: Task pack is scoped to platform adapter packages and platform profiles.
+    - current_path: docs/harness/architecture/rule-packs/create-entity.yml
+      metadata_id: harness.architecture.rule-packs.create-entity
+      rulebook_id: pack.create-entity
+      title: Create an entity through the entity-builder flow
+      proposed_corpus_id: corpus.03.product.apps
+      proposed_target_path: corpus.03.product.apps/rule-packs/create-entity.yml
+      migration_status: target-candidate
+      reason: Task pack is scoped to app-owned entity definitions and generated product contract chains.
+
+reference_update_requirements:
+  - Update `related_rulesets` paths in every moved ruleset.
+  - Update `required_rulesets` paths in every moved rule pack.
+  - Update metadata `used_by` path hints when artifacts move.
+  - Preserve stable metadata IDs unless the concept splits into multiple artifacts.
+  - Create new IDs for split artifacts; mark old aggregate artifacts deprecated only after replacement coverage is validated.
+  - Update README, manifest, plan, and generated index references in the same migration.
+
+validation_before_move:
+  - Parse all current YAML artifacts.
+  - Generate a current-state rulebook index.
+  - Check duplicate metadata IDs and rulebook IDs.
+  - Check that every related ruleset and required ruleset resolves before and after migration.
+  - Check that every proposed corpus ID has a manifest.
+  - Run artifact metadata header checks on moved files.
+  - Run artifact path migration checks for source and target paths.
+
+next_decision_points:
+  - Decide whether `corpus.06.shared` should own cross-corpus architecture concerns or whether those concerns should split per corpus.
+  - Decide whether product subcorpora should become physical top-level corpus packages or manifest-declared subcorpora under `corpus.03.product`.
+  - Decide how ADR 0022 should be related to both `corpus.01.harness` and `corpus.02.rag-rulebook`.
+  - Design the rulebook index schema so it can represent both current prototype paths and proposed corpus package paths.

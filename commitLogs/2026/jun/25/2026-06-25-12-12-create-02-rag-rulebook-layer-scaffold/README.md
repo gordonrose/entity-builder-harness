@@ -70,6 +70,11 @@ create 02 rag rulebook layer scaffold
   new or materially changed schemas should include structured field
   explanations, validation rules where deterministic, a companion guide unless
   explicitly unnecessary, and metadata/index links between schema and guide.
+- Add a read-only prototype corpus migration map before physical corpus
+  reorganization. The map inventories current architecture source guides, ADRs,
+  layer rulesets, concern rulesets, and rule packs, maps all 26 YAML
+  rules/rule-pack artifacts to proposed numbered corpus packages, and marks
+  mixed concerns for split review rather than moving files prematurely.
 
 ## Activity Log
 

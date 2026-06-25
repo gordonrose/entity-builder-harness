@@ -60,9 +60,17 @@ The location is not the final domain corpus model.
      required checks, stop conditions, citations, confidence, and gaps.
    - Status: present in `schemas/context-packet.schema.yml`.
 
+3a. Inventory the prototype corpus and migration targets.
+   - Map current `docs/harness/architecture/` source guides, ADRs, YAML layer
+     rulesets, concern rulesets, and rule packs to proposed numbered corpus
+     packages.
+   - Do not move files in this step.
+   - Status: present in `plans/prototype-corpus-migration-map.yml`.
+
 4. Design a rulebook index schema.
    - Include corpus IDs, artifact IDs, rule IDs, chunk IDs, path globs,
      source refs, required rulesets, related rulesets, and graph edges.
+   - Support both current prototype paths and proposed corpus package paths.
 
 5. Add a read-only index generator.
    - Parse the current prototype YAML rulebook.
