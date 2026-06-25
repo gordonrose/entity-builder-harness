@@ -37,6 +37,8 @@ required.
 - Validate the current retrieval selector policy pack.
 - If recognition sources exist, require and run the recognition-source
   validator.
+- If generated recognition sources exist, require and run the generator
+  freshness check.
 
 ## Maintenance Rule
 
@@ -46,5 +48,6 @@ commit script.
 
 ## Effects
 
-This command is read-only. It does not generate recognition sources, rebuild
-chunks, update indexes, stage files, or create commits.
+This command is read-only. It checks generated recognition sources for
+freshness, but does not rewrite them. It does not rebuild chunks, stage files,
+or create commits.

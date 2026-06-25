@@ -41,6 +41,9 @@ validation, and standalone service adapters.
   `rag-rulebook/chunk-set/v1` JSON chunk set.
 - `generate-context-packet-fixture/script.sh` emits a small validated
   `rag-rulebook/context-packet/v1` fixture from generated or saved chunks.
+- `generate-recognition-sources/script.sh` emits or checks generated
+  `rag-rulebook/recognition-source/v1` YAML lookup sources derived from the
+  artifact metadata index.
 - `validate-retrieval-policy-pack/script.sh` validates a
   `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack before selector
   runtime code can rely on it.

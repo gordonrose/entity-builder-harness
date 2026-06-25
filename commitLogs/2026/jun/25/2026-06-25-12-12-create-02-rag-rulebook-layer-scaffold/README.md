@@ -144,6 +144,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add recognition-source validation before generated sources
   Rationale: The RAG/rulebook layer now has a read-only validate-recognition-sources command. It validates recognition-source YAML for schema shape, plural source_kinds, generated-source provenance, curated-source review triggers, duplicate lookup terms, refresh policy, and term match metadata before generated or curated sources become commit-critical.
 
+
+- Decision: Generate metadata-backed artifact recognition source
+  Rationale: Added recognition.generated.artifacts as the first generated recognition source. It is produced from the existing artifact metadata index, writes exact artifact IDs, file paths, schema names, rule IDs, and rule-pack IDs, and is checked for freshness by the RAG/rulebook commit gate.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -372,6 +376,13 @@ Message: Add recognition source validator
 Summary: Added the read-only validate-recognition-sources command, smoke coverage, recognition-source schema alignment to source_kinds, retrieval policy validation linkage, and RAG/rulebook docs and repo-plan updates.
 
 ADR impact: No new ADR; this implements recognition-source validation under ADR 0022 before generated source files are introduced.
+
+
+### 2026-06-25T20:46:54Z - Decision
+
+Decision: Generate metadata-backed artifact recognition source
+
+Rationale: Added recognition.generated.artifacts as the first generated recognition source. It is produced from the existing artifact metadata index, writes exact artifact IDs, file paths, schema names, rule IDs, and rule-pack IDs, and is checked for freshness by the RAG/rulebook commit gate.
 
 ## Commits
 

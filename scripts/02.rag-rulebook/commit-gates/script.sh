@@ -58,4 +58,10 @@ if [ -d "$LAYER_DIR/recognition-sources" ]; then
   echo "RAG/rulebook recognition sources are valid."
 fi
 
+if [ -d "$LAYER_DIR/recognition-sources/generated" ]; then
+  require_executable "scripts/02.rag-rulebook/generate-recognition-sources/script.sh"
+  bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+  echo "RAG/rulebook generated recognition sources are current."
+fi
+
 echo "RAG/rulebook commit gates passed."
