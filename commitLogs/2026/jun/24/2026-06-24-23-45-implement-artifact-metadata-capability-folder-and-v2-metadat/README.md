@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-24T22:45:55Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl
-latest_commit_at_utc: 2026-06-25T00:42:59Z
-latest_commit_sha: 93cff59
-chat_duration: 7024s (00:01:57:04)
-estimated_chat_tokens: 913490 estimated from chat transcript bytes (3653958 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
-estimated_chat_cost: USD 27.40 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T00:43:10Z
+latest_commit_sha: 7cc1445
+chat_duration: 7035s (00:01:57:15)
+estimated_chat_tokens: 916081 estimated from chat transcript bytes (3664321 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
+estimated_chat_cost: USD 27.48 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -232,6 +232,17 @@ Summary: Backfilled artifact metadata v2 headers for chat command, reporting, bo
 
 ADR impact: No ADR impact.
 
+
+### 2026-06-25T00:43:10Z - Commit recorded
+
+Commit: `7cc1445`
+
+Message: Backfill deploy product metadata headers
+
+Summary: Backfilled artifact metadata v2 headers for deploy and product layer artifacts.
+
+ADR impact: No ADR impact.
+
 ## Commits
 
 
@@ -340,6 +351,13 @@ ADR impact: No ADR impact.
   Summary: Backfilled artifact metadata v2 headers for chat command, reporting, bootstrap, transcript, and support scripts.
   ADR impact: No ADR impact.
 
+
+- Commit: `7cc1445`
+  Time UTC: 2026-06-25T00:43:10Z
+  Message: Backfill deploy product metadata headers
+  Summary: Backfilled artifact metadata v2 headers for deploy and product layer artifacts.
+  ADR impact: No ADR impact.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -353,11 +371,11 @@ Reason: This establishes a durable harness metadata and indexing architecture de
 ## Session Metrics
 
 Raised at UTC: 2026-06-24T22:45:55Z
-Latest commit at UTC: 2026-06-25T00:42:59Z
-Latest commit SHA: 93cff59
-Chat duration: 7024s (00:01:57:04)
-Estimated chat tokens: 913490 estimated from chat transcript bytes (3653958 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
-Estimated chat cost: USD 27.40 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T00:43:10Z
+Latest commit SHA: 7cc1445
+Chat duration: 7035s (00:01:57:15)
+Estimated chat tokens: 916081 estimated from chat transcript bytes (3664321 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/23/rollout-2026-06-23T20-28-54-019ef5f4-fd27-7201-8e3f-909aebd6c321.jsonl)
+Estimated chat cost: USD 27.48 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
