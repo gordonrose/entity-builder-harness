@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T20:43:22Z
-latest_commit_sha: a3c4da4
-chat_duration: 34231s (00:09:30:31)
-estimated_chat_tokens: 2545268 estimated from chat transcript bytes (10181069 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 76.36 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T20:54:06Z
+latest_commit_sha: f4d6b9d
+chat_duration: 34875s (00:09:41:15)
+estimated_chat_tokens: 2630354 estimated from chat transcript bytes (10521414 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 78.91 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -384,6 +384,17 @@ Decision: Generate metadata-backed artifact recognition source
 
 Rationale: Added recognition.generated.artifacts as the first generated recognition source. It is produced from the existing artifact metadata index, writes exact artifact IDs, file paths, schema names, rule IDs, and rule-pack IDs, and is checked for freshness by the RAG/rulebook commit gate.
 
+
+### 2026-06-25T20:54:06Z - Commit recorded
+
+Commit: `f4d6b9d`
+
+Message: Generate artifact recognition source
+
+Summary: Added the first generated recognition source from the artifact metadata index, plus a deterministic generator, smoke test, docs, repo-plan updates, and commit-gate freshness checking for generated recognition sources.
+
+ADR impact: No new ADR; this implements the first metadata-backed recognition-source slice under ADR 0022.
+
 ## Commits
 
 
@@ -520,6 +531,13 @@ Rationale: Added recognition.generated.artifacts as the first generated recognit
   Summary: Added the read-only validate-recognition-sources command, smoke coverage, recognition-source schema alignment to source_kinds, retrieval policy validation linkage, and RAG/rulebook docs and repo-plan updates.
   ADR impact: No new ADR; this implements recognition-source validation under ADR 0022 before generated source files are introduced.
 
+
+- Commit: `f4d6b9d`
+  Time UTC: 2026-06-25T20:54:06Z
+  Message: Generate artifact recognition source
+  Summary: Added the first generated recognition source from the artifact metadata index, plus a deterministic generator, smoke test, docs, repo-plan updates, and commit-gate freshness checking for generated recognition sources.
+  ADR impact: No new ADR; this implements the first metadata-backed recognition-source slice under ADR 0022.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -533,11 +551,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T20:43:22Z
-Latest commit SHA: a3c4da4
-Chat duration: 34231s (00:09:30:31)
-Estimated chat tokens: 2545268 estimated from chat transcript bytes (10181069 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 76.36 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T20:54:06Z
+Latest commit SHA: f4d6b9d
+Chat duration: 34875s (00:09:41:15)
+Estimated chat tokens: 2630354 estimated from chat transcript bytes (10521414 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 78.91 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
