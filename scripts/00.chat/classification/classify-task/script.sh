@@ -131,7 +131,7 @@ case "$TASK" in
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/00.chat/workflows/chat-start.md"
     ;;
-  *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*)
+  *AGENTS.md*|*CLAUDE.md*|*.agentic*|*agentic\ structure*|*routing*|*workflow*|*workflows*|*mode*|*modes*|*layer*|*layers*|*metadata\ header*|*metadata\ headers*|*artifact\ metadata*|*agentic-artifact*|*discipline*|*disciplines*)
     echo "Layer: harness"
     echo "Mode: ${MODE}"
     echo "Workflow: .agentic/01.harness/workflows/change-harness.md"

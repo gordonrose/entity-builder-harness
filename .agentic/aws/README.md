@@ -7,6 +7,7 @@
   domain: infra.ci-cd
   disciplines:
   - agentic
+  - sre
   kind: guide
   purpose: Document AWS Layer.
   portability:
