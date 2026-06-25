@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: workflow
-purpose: Govern explicit local merge from completed chat branches into main.
-domain: local-merge
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/README.md
-  - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+  schema: agentic-artifact/v2
+  id: chat.workflows.chat-promote-to-main
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: local-merge
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Govern explicit local merge from completed chat branches into main.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.readme
+    path: .agentic/00.chat/workflows/README.md
+  - id: chat.script.local-merge.verify-chat-ready-to-merge-local-main
+    path: scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
 -->
-
 # Chat Promote To Main Workflow
 
 ## Use When

@@ -176,6 +176,7 @@ ALL_TARGETS = ["llm-workbench", "entity-builder", "design-system-builder"]
 SPECIAL_IDS = {
     "AGENTS.md": "repo.agents",
     ".agentic/00.chat/README.md": "chat.readme",
+    "docs/00.chat/README.md": "chat.docs.readme",
     ".agentic/01.harness/README.md": "harness.readme",
     ".agentic/01.harness/artifact-metadata/README.md": "harness.capability.artifact-metadata",
     ".agentic/01.harness/artifact-metadata/index-schema.md": "harness.artifact-metadata.index-schema",

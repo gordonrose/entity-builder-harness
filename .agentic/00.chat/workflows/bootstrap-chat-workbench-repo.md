@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: workflow
-purpose: Govern bootstrapping the portable chat workbench into an upstream repo.
-domain: bootstrap
-portability: llm-workbench-required
-used_by:
-  - .agentic/shared/standards/upstream-repo-bootstrap.md
-  - scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
+  schema: agentic-artifact/v2
+  id: chat.workflows.bootstrap-chat-workbench-repo
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: bootstrap
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Govern bootstrapping the portable chat workbench into an upstream repo.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: shared.standard.upstream-repo-bootstrap
+    path: .agentic/shared/standards/upstream-repo-bootstrap.md
+  - id: chat.script.bootstrap.audit-chat-bootstrap-file-set
+    path: scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
 -->
-
 # Bootstrap Chat Workbench Repo Workflow
 
 ## Use When

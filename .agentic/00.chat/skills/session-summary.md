@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: chat.skills.session-summary
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: chat
+  disciplines:
+  - agentic
+  kind: guide
+  purpose: Document Session Summary Skill.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+-->
 # Session Summary Skill
 
 ## Use When

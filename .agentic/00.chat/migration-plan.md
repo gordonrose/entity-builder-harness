@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: migration-plan
-purpose: Track migration from legacy chat lifecycle paths to canonical 00.chat paths.
-domain: migration
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/migration/audit-chat-layer-migration/script.sh
-  - docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  schema: agentic-artifact/v2
+  id: chat.migration-plan
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: migration
+  disciplines:
+  - agentic
+  kind: migration-plan
+  purpose: Track migration from legacy chat lifecycle paths to canonical 00.chat paths.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.migration.audit-chat-layer-migration
+    path: scripts/00.chat/migration/audit-chat-layer-migration/script.sh
+  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
+    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
-
 # 00.chat Migration Plan
 
 ## Purpose

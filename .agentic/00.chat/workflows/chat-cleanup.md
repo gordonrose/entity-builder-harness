@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: workflow
-purpose: Govern cleanup of chat branches, worktrees, temporary refresh artifacts, and empty session logs.
-domain: cleanup
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/README.md
-  - scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
+  schema: agentic-artifact/v2
+  id: chat.workflows.chat-cleanup
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: cleanup
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Govern cleanup of chat branches, worktrees, temporary refresh artifacts,
+    and empty session logs.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.readme
+    path: .agentic/00.chat/README.md
+  - id: chat.script.git.cleanup-empty-chat-branches
+    path: scripts/00.chat/git/cleanup-empty-chat-branches/script.sh
 -->
-
 # Chat Cleanup Workflow
 
 ## Use When

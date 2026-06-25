@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: harness
-kind: doc
-purpose: Define the current readiness boundary for bootstrapping a public chat workbench repo.
-domain: bootstrap
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-  - .agentic/shared/standards/upstream-repo-bootstrap.md
+  schema: agentic-artifact/v2
+  id: chat.chat-workbench-public-repo-readiness
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: bootstrap
+  disciplines:
+  - agentic
+  kind: doc
+  purpose: Define the current readiness boundary for bootstrapping a public chat workbench
+    repo.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  - id: shared.standard.upstream-repo-bootstrap
+    path: .agentic/shared/standards/upstream-repo-bootstrap.md
 -->
-
 # Chat Workbench Public Repo Readiness
 
 This document defines the current boundary for creating a standalone public

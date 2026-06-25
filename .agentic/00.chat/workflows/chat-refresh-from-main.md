@@ -1,14 +1,25 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: workflow
-purpose: Govern refreshing a chat branch from local main without losing work or bypassing recovery paths.
-domain: main-refresh
-portability: llm-workbench-required
-used_by:
-  - .agentic/shared/workflows/change-shared-process.md
-  - docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+  schema: agentic-artifact/v2
+  id: chat.workflows.chat-refresh-from-main
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: main-refresh
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Govern refreshing a chat branch from local main without losing work or bypassing
+    recovery paths.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: shared.workflows.change-shared-process
+    path: .agentic/shared/workflows/change-shared-process.md
+  - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
+    path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
 -->
-
 # Chat Refresh From Main Workflow
 
 ## Use When

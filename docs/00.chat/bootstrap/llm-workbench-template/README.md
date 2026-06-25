@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: 00.chat
-kind: doc
-purpose: Explain the public llm-workbench starter template files.
-domain: bootstrap
-portability: llm-workbench-required
-used_by:
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-  - docs/00.chat/chat-workbench-public-repo-readiness.md
+  schema: agentic-artifact/v2
+  id: chat.bootstrap.llm-workbench-template.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: bootstrap
+  disciplines:
+  - agentic
+  kind: doc
+  purpose: Explain the public llm-workbench starter template files.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  - id: chat.chat-workbench-public-repo-readiness
+    path: docs/00.chat/chat-workbench-public-repo-readiness.md
 -->
-
 # llm-workbench Template
 
 This folder contains source templates for the first public `llm-workbench`

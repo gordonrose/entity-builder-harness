@@ -1,14 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
-kind: doc
-purpose: Define which harness ADRs are copied into the public chat workbench repo.
-domain: bootstrap
-portability: llm-workbench-required
-used_by:
-  - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+  schema: agentic-artifact/v2
+  id: chat.public-chat-workbench-adrs
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: bootstrap
+  disciplines:
+  - agentic
+  kind: doc
+  purpose: Define which harness ADRs are copied into the public chat workbench repo.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+  used_by:
+  - id: chat.script.upstream.bootstrap-llm-workbench-repo
+    path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
+  - id: chat.workflows.bootstrap-chat-workbench-repo
+    path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 -->
-
 # Public Chat Workbench ADRs
 
 This file is the export manifest for ADRs copied into the public

@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: chat.workflows.readme
+  version: 1
+  status: active
+  layer: 00.chat
+  domain: chat
+  disciplines:
+  - agentic
+  kind: workflow
+  purpose: Document 00.chat Workflows.
+  portability:
+    class: required
+    targets:
+    - llm-workbench
+    - entity-builder
+    - design-system-builder
+  used_by:
+  - id: repo.agents
+    path: AGENTS.md
+-->
 # 00.chat Workflows
 
 This index tracks chat lifecycle workflows as they migrate out of shared
