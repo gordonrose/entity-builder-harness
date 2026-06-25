@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T11:30:22Z
-latest_commit_sha: 59d18ed
-chat_duration: 1051s (00:00:17:31)
-estimated_chat_tokens: 505259 estimated from chat transcript bytes (2021033 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 15.16 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-25T11:35:51Z
+latest_commit_sha: b61e584
+chat_duration: 1380s (00:00:23:00)
+estimated_chat_tokens: 545810 estimated from chat transcript bytes (2183239 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 16.37 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -68,6 +68,17 @@ Summary: Added first-class 02.rag-rulebook layer scaffold, routing/classifier co
 
 ADR impact: ADR 0022 records the new RAG/Rulebook layer and renumbered metadata layers.
 
+
+### 2026-06-25T11:35:51Z - Commit recorded
+
+Commit: `b61e584`
+
+Message: Plan RAG rulebook service shape
+
+Summary: Added design-only RAG/Rulebook standards for the portable service contract, domain corpus package shape, and ordered repo plan.
+
+ADR impact: No new ADR; this elaborates ADR 0022 within the new RAG/Rulebook layer.
+
 ## Commits
 
 
@@ -77,6 +88,13 @@ ADR impact: ADR 0022 records the new RAG/Rulebook layer and renumbered metadata 
   Message: Add RAG rulebook layer scaffold
   Summary: Added first-class 02.rag-rulebook layer scaffold, routing/classifier coverage, metadata layer renumbering, script-surface docs, and ADR 0022.
   ADR impact: ADR 0022 records the new RAG/Rulebook layer and renumbered metadata layers.
+
+
+- Commit: `b61e584`
+  Time UTC: 2026-06-25T11:35:51Z
+  Message: Plan RAG rulebook service shape
+  Summary: Added design-only RAG/Rulebook standards for the portable service contract, domain corpus package shape, and ordered repo plan.
+  ADR impact: No new ADR; this elaborates ADR 0022 within the new RAG/Rulebook layer.
 
 ## Main Refresh Conflicts
 
@@ -91,11 +109,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T11:30:22Z
-Latest commit SHA: 59d18ed
-Chat duration: 1051s (00:00:17:31)
-Estimated chat tokens: 505259 estimated from chat transcript bytes (2021033 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 15.16 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-25T11:35:51Z
+Latest commit SHA: b61e584
+Chat duration: 1380s (00:00:23:00)
+Estimated chat tokens: 545810 estimated from chat transcript bytes (2183239 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 16.37 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
