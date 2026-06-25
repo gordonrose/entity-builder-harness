@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Run only explicitly governed repository scripts with approval-sensitive routing.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.run-governed-script
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: governance
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Run only explicitly governed repository scripts with approval-sensitive routing.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/01.harness/standards/governed-script-permissions.md
-#     - .agentic/00.chat/workflows/chat-start.md
-#   effects: read-only
+#   - id: harness.standards.governed-script-permissions
+#     path: .agentic/01.harness/standards/governed-script-permissions.md
+#   - id: chat.workflows.chat-start
+#     path: .agentic/00.chat/workflows/chat-start.md
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

@@ -1,15 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Validate that a path migration does not leave unapproved active old-path references.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.check-artifact-path-migration
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: migration
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Validate that a path migration does not leave unapproved active old-path
+#     references.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/01.harness/workflows/migrate-artifact-paths.md
-#     - .agentic/01.harness/standards/artifact-path-migrations.md
-#   effects: read-only
+#   - id: harness.workflows.migrate-artifact-paths
+#     path: .agentic/01.harness/workflows/migrate-artifact-paths.md
+#   - id: harness.standards.artifact-path-migrations
+#     path: .agentic/01.harness/standards/artifact-path-migrations.md
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

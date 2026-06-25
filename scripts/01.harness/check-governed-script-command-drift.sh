@@ -1,15 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Flag approval-sensitive governed script references that bypass the governed runner.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.check-governed-script-command-drift
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: governance
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Flag approval-sensitive governed script references that bypass the governed
+#     runner.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
-#     - .agentic/01.harness/standards/governed-script-permissions.md
-#   effects: read-only
+#   - id: chat.script.session-log.prepare-chat-session-before-commit
+#     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+#   - id: harness.standards.governed-script-permissions
+#     path: .agentic/01.harness/standards/governed-script-permissions.md
+#   effects:
+#   - read-only
 
 usage() {
   cat <<'EOF'

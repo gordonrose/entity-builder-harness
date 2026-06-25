@@ -1,15 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# agentic-script:
-#   owner: harness
-#   purpose: Flag process prose that should likely be represented as deterministic scripts or gates.
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.check-deterministic-process-drift
+#   version: 1
+#   status: active
+#   layer: 01.harness
 #   domain: governance
-#   portability: llm-workbench-required
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Flag process prose that should likely be represented as deterministic scripts
+#     or gates.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
 #   used_by:
-#     - .agentic/00.chat/checklists/before-commit.md
-#     - .agentic/shared/workflows/change-shared-process.md
-#   effects: read-only
+#   - id: chat.checklists.before-commit
+#     path: .agentic/00.chat/checklists/before-commit.md
+#   - id: shared.workflows.change-shared-process
+#     path: .agentic/shared/workflows/change-shared-process.md
+#   effects:
+#   - read-only
 
 MODE=""
 COMMIT_SHA=""
