@@ -81,10 +81,10 @@ ROOT = repo_root()
 def usage() -> str:
     return """Usage:
   validate-rulebook-index/script.sh --generate-current [--json]
-  validate-rulebook-index/script.sh --index <path-or-> [--json]
+  validate-rulebook-index/script.sh --index <path> [--json]
 
-Validates a rag-rulebook/rulebook-index/v1 JSON document. Use --index - to
-read JSON from stdin. The command is read-only.
+Validates a rag-rulebook/rulebook-index/v1 JSON document. The command is
+read-only.
 """
 
 
@@ -102,6 +102,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     if sum(1 for mode in modes if mode) != 1:
         print("ERROR: choose exactly one input mode.", file=sys.stderr)
         print(usage(), end="", file=sys.stderr)
+        sys.exit(2)
+    if args.index == "-":
+        print("ERROR: --index - is not supported by this shell wrapper; use a saved JSON file.", file=sys.stderr)
         sys.exit(2)
     return args
 
@@ -137,8 +140,6 @@ def load_index(args: argparse.Namespace) -> dict[str, Any]:
             stdout=subprocess.PIPE,
         )
         raw = result.stdout
-    elif args.index == "-":
-        raw = sys.stdin.read()
     else:
         raw = Path(args.index).read_text(encoding="utf-8")
     data = json.loads(raw)

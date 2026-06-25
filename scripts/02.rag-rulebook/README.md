@@ -34,6 +34,8 @@ validation, and standalone service adapters.
   `rag-rulebook/rulebook-index/v1` JSON index for duplicate IDs, broken
   references, count drift, graph-edge resolution, path existence, and
   diagnostics consistency.
+- `generate-rulebook-chunks/script.sh` emits read-only
+  `rag-rulebook/chunk-set/v1` JSON chunks from a validated rulebook index.
 
 Do not add new implementation scripts here until a governed task defines the
 capability boundary, inputs, effects, and validation.

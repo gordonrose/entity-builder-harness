@@ -92,6 +92,8 @@ The location is not the final domain corpus model.
 6. Add a chunk generator.
    - Chunk by YAML structure, not arbitrary character windows.
    - Preserve parent artifact IDs, rule IDs, paths, source refs, and severity.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh`.
 
 7. Add context-packet validation.
    - Validate packet shape and references.
@@ -118,4 +120,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add the chunk generator on top of the validated index contract.
+Add context-packet validation on top of generated chunks, citations, checks,
+and stop-condition references.

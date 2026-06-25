@@ -112,6 +112,9 @@ final homes.
   prototype architecture rulebook and migration map.
 - `scripts/02.rag-rulebook/validate-rulebook-index/script.sh` - validates a
   `rag-rulebook/rulebook-index/v1` JSON index without modifying files.
+- `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh` - emits
+  read-only `rag-rulebook/chunk-set/v1` JSON chunks from a validated rulebook
+  index.
 
 ## Output Locations
 

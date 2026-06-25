@@ -93,6 +93,12 @@ create 02 rag rulebook layer scaffold
   graph-edge resolution, artifact/rule/rule-pack/chunk/source references,
   path mappings, diagnostics counts, unresolved-reference consistency,
   provenance inputs, and current source path existence before any corpus move.
+- Add a read-only `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh`
+  command. The generator validates its source index first, then emits
+  `rag-rulebook/chunk-set/v1` JSON by rendering structured
+  `chunk_candidates[]` into artifact summary, rule, rule-pack step, and
+  required-check chunks with source citations, without arbitrary character
+  windows, durable writes, embeddings, network calls, or corpus moves.
 
 ## Activity Log
 
