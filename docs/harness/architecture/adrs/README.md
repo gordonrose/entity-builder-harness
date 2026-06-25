@@ -1,12 +1,23 @@
 <!-- agentic-artifact:
-owner: harness
-kind: readme
-purpose: Define harness ADR naming, status, creation, and public export guidance.
+schema: agentic-artifact/v2
+id: harness.adr.readme
+version: 1
+status: active
+layer: 01.harness
 domain: architecture
-portability: llm-workbench-required
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Define harness ADR naming, status, creation, and public export guidance.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - docs/00.chat/public-chat-workbench-adrs.md
-  - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
+- id: chat.doc.public-chat-workbench-adrs
+  path: docs/00.chat/public-chat-workbench-adrs.md
+- id: chat.script.upstream.bootstrap-llm-workbench-repo
+  path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
 -->
 
 # Harness Architecture Decision Records

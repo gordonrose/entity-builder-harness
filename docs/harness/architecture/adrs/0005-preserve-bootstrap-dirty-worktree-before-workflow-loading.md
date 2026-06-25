@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading
+  architecture decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading
 
 Status: accepted

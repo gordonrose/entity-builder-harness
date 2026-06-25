@@ -1,12 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
 kind: adr
-purpose: Record the decision to use versioned artifact metadata and stable IDs for agent navigation and future repo indexes.
-domain: metadata
-portability: source-only
+purpose: Record the decision to use versioned artifact metadata and stable IDs for
+  agent navigation and future repo indexes.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - .agentic/01.harness/artifact-metadata/standard.md
-  - .agentic/01.harness/artifact-metadata/README.md
+- id: harness.artifact-metadata.standard
+  path: .agentic/01.harness/artifact-metadata/standard.md
+- id: harness.artifact-metadata.readme
+  path: .agentic/01.harness/artifact-metadata/README.md
 -->
 
 # 0021 Use Versioned Artifact Metadata For Agent Navigation

@@ -1,12 +1,24 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
 kind: adr
-purpose: Plan the migration from flat shared script folders to owner/domain/capability script layout.
-domain: scripts
-portability: llm-workbench-required
+purpose: Plan the migration from flat shared script folders to owner/domain/capability
+  script layout.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - .agentic/01.harness/standards/artifact-metadata-headers.md
-  - .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
+- id: harness.standards.artifact-metadata-headers
+  path: .agentic/01.harness/standards/artifact-metadata-headers.md
+- id: artifact.bootstrap-chat-workbench-repo
+  path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
 -->
 
 # 0017 Organize Scripts By Owner, Domain, And Capability

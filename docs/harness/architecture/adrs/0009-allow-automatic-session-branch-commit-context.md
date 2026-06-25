@@ -1,11 +1,22 @@
 <!-- agentic-artifact:
-owner: harness
-kind: adr
-purpose: Record the older isolated worktree commit-boundary model and its recovery-only successor behavior.
+schema: agentic-artifact/v2
+id: harness.adr.0009-allow-automatic-session-branch-commit-context
+version: 1
+status: active
+layer: 01.harness
 domain: architecture
-portability: llm-workbench-required
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the older isolated worktree commit-boundary model and its recovery-only
+  successor behavior.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
+- id: chat.script.recovery.import-active-paths-to-chat-worktree.readme
+  path: scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md
 -->
 
 # 0009 Use Isolated Worktrees for Session Commit Boundaries

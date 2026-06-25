@@ -1,13 +1,26 @@
 <!-- agentic-artifact:
-owner: harness
+schema: agentic-artifact/v2
+id: harness.adr.0018-govern-artifact-path-migrations
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
 kind: adr
-purpose: Record the decision to govern artifact path moves with reusable planning and validation.
-domain: migration
-portability: llm-workbench-required
+purpose: Record the decision to govern artifact path moves with reusable planning
+  and validation.
+portability:
+  class: source-only
+  targets: []
 used_by:
-  - .agentic/01.harness/workflows/migrate-artifact-paths.md
-  - .agentic/01.harness/standards/artifact-path-migrations.md
-  - docs/00.chat/public-chat-workbench-adrs.md
+- id: harness.workflows.migrate-artifact-paths
+  path: .agentic/01.harness/workflows/migrate-artifact-paths.md
+- id: harness.standards.artifact-path-migrations
+  path: .agentic/01.harness/standards/artifact-path-migrations.md
+- id: chat.doc.public-chat-workbench-adrs
+  path: docs/00.chat/public-chat-workbench-adrs.md
 -->
 
 # 0018 Govern Artifact Path Migrations

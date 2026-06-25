@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0012-treat-missing-governance-as-stop-condition
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0012 Treat Missing Governance As A Stop Condition architecture
+  decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0012 Treat Missing Governance As A Stop Condition
 
 Status: accepted

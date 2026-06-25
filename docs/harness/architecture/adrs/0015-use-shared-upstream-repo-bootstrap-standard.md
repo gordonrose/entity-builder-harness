@@ -1,3 +1,24 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0015 Use Shared Upstream Repo Bootstrap Standard architecture
+  decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0015 Use Shared Upstream Repo Bootstrap Standard
 
 Status: accepted

@@ -1,3 +1,23 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0002-clean-up-duplicate-chat-branches
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0002 Clean Up Duplicate Chat Branches architecture decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0002 Clean Up Duplicate Chat Branches
 
 Status: accepted

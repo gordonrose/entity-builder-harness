@@ -1,3 +1,23 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.adr.0010-protect-commit-logs-with-recorded-work
+version: 1
+status: active
+layer: 01.harness
+domain: architecture
+disciplines:
+- agentic
+- architecture
+kind: adr
+purpose: Record the 0010 Protect Commit Logs With Recorded Work architecture decision.
+portability:
+  class: source-only
+  targets: []
+used_by:
+- id: harness.readme
+  path: .agentic/01.harness/README.md
+-->
+
 # 0010 Protect Commit Logs With Recorded Work
 
 Status: accepted
