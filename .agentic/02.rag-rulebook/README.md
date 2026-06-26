@@ -123,6 +123,9 @@ final homes.
   and check vocabulary used to raise validation scrutiny.
 - `recognition-candidates/` - durable review inbox for candidate terms that may
   later update curated sources.
+- `scripts/02.rag-rulebook/validate-recognition-candidates/script.sh` -
+  validates recognition-candidate YAML files for sentence context, proposed
+  canonical meaning, review state, duplicate IDs, and accepted-candidate proof.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -
@@ -186,6 +189,9 @@ final homes.
 - `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` -
   validates a `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack without
   modifying files.
+- `scripts/02.rag-rulebook/validate-recognition-candidates/script.sh` -
+  validates `rag-rulebook/recognition-candidate/v1` YAML review records
+  without modifying files.
 
 ## Output Locations
 

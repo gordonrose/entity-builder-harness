@@ -244,6 +244,19 @@ The location is not the final domain corpus model.
      `workflows/review-recognition-candidates.md`, and
      `recognition-candidates/README.md`.
 
+7o. Add recognition candidate validation.
+   - Add a read-only validator for `rag-rulebook/recognition-candidate/v1`
+     records.
+   - Validate required sentence context, proposed canonical meaning,
+     confidence weight, workflow paths, duplicate IDs, and status/review
+     decision alignment.
+   - Require proof paths for accepted candidates so review records cannot claim
+     acceptance without a curated-source update and evaluation fixture.
+   - Run the validator from the RAG/rulebook commit gate when the candidate
+     inbox exists.
+   - Status: present in
+     `scripts/02.rag-rulebook/validate-recognition-candidates/`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -265,6 +278,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add a validator or review helper for `rag-rulebook/recognition-candidate/v1`
-records, then add curated domain-noun recognition for service architecture
-terms such as MCP server, RAG server, context server, and rulebook service.
+Add curated domain-noun recognition for service architecture terms such as MCP
+server, RAG server, context server, and rulebook service, then cover the
+accepted terms with selector evaluation fixtures.

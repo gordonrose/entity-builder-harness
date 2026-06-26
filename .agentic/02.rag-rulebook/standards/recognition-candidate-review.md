@@ -23,6 +23,8 @@ used_by:
   path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
 - id: rag-rulebook.readme
   path: .agentic/02.rag-rulebook/README.md
+- id: rag-rulebook.script.validate-recognition-candidates
+  path: scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
 -->
 # Recognition Candidate Review
 

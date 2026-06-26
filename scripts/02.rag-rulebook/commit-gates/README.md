@@ -37,6 +37,8 @@ required.
 - Validate the current retrieval selector policy pack.
 - If recognition sources exist, require and run the recognition-source
   validator.
+- If recognition candidates exist, require and run the recognition-candidate
+  validator.
 - If generated recognition sources exist, require and run the generator
   freshness check.
 - Require and run the retrieval selector fixture smoke test so policy,
@@ -54,6 +56,7 @@ commit script.
 ## Effects
 
 This command is read-only. It checks generated recognition sources for
-freshness, but does not rewrite them. It does not rebuild chunks, stage files,
-or create commits, except transient fixture chunks in a temporary directory
-during smoke validation.
+freshness and recognition candidates for review-record validity, but does not
+rewrite them. It does not rebuild chunks, stage files, or create commits,
+except transient fixture chunks in a temporary directory during smoke
+validation.

@@ -176,6 +176,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add recognition candidate review workflow
   Rationale: Added a recognition-candidate schema, candidate review standard, review workflow, durable candidate inbox layout, and an MCP server candidate preserving the sentence where the term appeared. Candidate observations now have a governed path to review before curated sources are changed.
 
+
+- Decision: Add recognition candidate validator
+  Rationale: Added a read-only recognition-candidate validator and smoke test, then wired candidate validation into the RAG/rulebook commit gate so pending candidate records stay governed before curated-source review.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -526,6 +530,13 @@ Message: Add intent recognition and candidate review workflow
 Summary: Added curated intent-form recognition, exact selector recognition-match assertions, an MCP-server planning fixture, and a governed recognition-candidate review schema/workflow with an MCP server candidate inbox record.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-06-26T10:40:31Z - Decision
+
+Decision: Add recognition candidate validator
+
+Rationale: Added a read-only recognition-candidate validator and smoke test, then wired candidate validation into the RAG/rulebook commit gate so pending candidate records stay governed before curated-source review.
 
 ## Commits
 
