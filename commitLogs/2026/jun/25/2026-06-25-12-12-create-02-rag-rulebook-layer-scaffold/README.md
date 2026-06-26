@@ -252,6 +252,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add source-to-rule derivation drift governance
   Rationale: Added the source-to-rule derivation standard, workflow, report schema, derivation reports directory, and first pending MCP deploy derivation report so future source-material changes must record semantic claims, conflicts, drift, downstream generated-artifact effects, and review state before rules, chunks, or evaluations are treated as current.
 
+
+- Decision: Add source derivation report validator
+  Rationale: Added a read-only validator and smoke test for rag-rulebook/source-to-rule-derivation-report/v1 reports, wired it into the RAG/rulebook commit gate, regenerated recognition sources for the new command artifacts, and updated the MCP deploy derivation report so validator coverage is no longer pending.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -762,6 +766,13 @@ Rationale: Converted the RAG/rulebook MCP deploy source material into structured
 Decision: Add source-to-rule derivation drift governance
 
 Rationale: Added the source-to-rule derivation standard, workflow, report schema, derivation reports directory, and first pending MCP deploy derivation report so future source-material changes must record semantic claims, conflicts, drift, downstream generated-artifact effects, and review state before rules, chunks, or evaluations are treated as current.
+
+
+### 2026-06-26T15:47:03Z - Decision
+
+Decision: Add source derivation report validator
+
+Rationale: Added a read-only validator and smoke test for rag-rulebook/source-to-rule-derivation-report/v1 reports, wired it into the RAG/rulebook commit gate, regenerated recognition sources for the new command artifacts, and updated the MCP deploy derivation report so validator coverage is no longer pending.
 
 ## Commits
 

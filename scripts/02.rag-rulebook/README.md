@@ -67,6 +67,10 @@ validation, and standalone service adapters.
 - `validate-recognition-candidates/script.sh` validates
   `rag-rulebook/recognition-candidate/v1` YAML review records before prompt
   vocabulary candidates can be committed or reviewed.
+- `validate-derivation-reports/script.sh` validates
+  `rag-rulebook/source-to-rule-derivation-report/v1` YAML reports before
+  source-derived rules, chunks, or selector expectations are treated as
+  current.
 - `report-recognition-candidates/script.sh` validates recognition candidates
   and reports review state, coverage state, and allowed next actions without
   mutating curated sources.

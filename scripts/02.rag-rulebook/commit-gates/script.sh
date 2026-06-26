@@ -64,6 +64,12 @@ if [ -d "$LAYER_DIR/recognition-candidates" ]; then
   echo "RAG/rulebook recognition candidates are valid."
 fi
 
+if [ -d "$LAYER_DIR/derivation-reports" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-derivation-reports/script.sh"
+  bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+  echo "RAG/rulebook source derivation reports are valid."
+fi
+
 if [ -d "$LAYER_DIR/recognition-sources/generated" ]; then
   require_executable "scripts/02.rag-rulebook/generate-recognition-sources/script.sh"
   bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check

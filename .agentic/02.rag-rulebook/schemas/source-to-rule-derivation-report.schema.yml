@@ -23,6 +23,8 @@
 #       path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
 #     - id: rag-rulebook.derivation-reports.readme
 #       path: .agentic/02.rag-rulebook/derivation-reports/README.md
+#     - id: rag-rulebook.script.validate-derivation-reports
+#       path: scripts/02.rag-rulebook/validate-derivation-reports/script.sh
 
 schema: rag-rulebook-source-to-rule-derivation-report-schema/v1
 report_schema: rag-rulebook/source-to-rule-derivation-report/v1

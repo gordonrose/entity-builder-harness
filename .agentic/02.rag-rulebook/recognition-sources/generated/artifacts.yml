@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 410
-  term_count: 827
+  indexed_artifacts: 413
+  term_count: 833
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4199,6 +4199,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.validate-context-packet.smoke-test
   evidence_path: scripts/02.rag-rulebook/validate-context-packet/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-derivation-reports.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-derivation-reports.readme
+  evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-derivation-reports/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-derivation-reports.readme
+  evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-derivation-reports
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-derivation-reports
+  evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-derivation-reports/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-derivation-reports
+  evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-derivation-reports.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-derivation-reports.smoke-test
+  evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-derivation-reports/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-derivation-reports.smoke-test
+  evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.validate-recognition-candidates.readme
   category: artifact-id

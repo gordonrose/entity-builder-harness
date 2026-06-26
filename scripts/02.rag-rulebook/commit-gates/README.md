@@ -39,6 +39,8 @@ required.
   validator.
 - If recognition candidates exist, require and run the recognition-candidate
   validator.
+- If source-to-rule derivation reports exist, require and run the
+  derivation-report validator.
 - If generated recognition sources exist, require and run the generator
   freshness check.
 - Require and run the retrieval selector fixture smoke test so policy,
@@ -57,6 +59,7 @@ commit script.
 
 This command is read-only. It checks generated recognition sources for
 freshness and recognition candidates for review-record validity, but does not
-rewrite them. It does not rebuild chunks, stage files, or create commits,
+rewrite them. It validates derivation reports without updating rules, chunks,
+or evaluations. It does not rebuild chunks, stage files, or create commits,
 except transient fixture chunks in a temporary directory during smoke
 validation.

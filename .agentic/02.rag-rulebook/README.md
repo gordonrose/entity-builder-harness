@@ -236,6 +236,9 @@ final homes.
 - `scripts/02.rag-rulebook/validate-recognition-candidates/script.sh` -
   validates `rag-rulebook/recognition-candidate/v1` YAML review records
   without modifying files.
+- `scripts/02.rag-rulebook/validate-derivation-reports/script.sh` - validates
+  `rag-rulebook/source-to-rule-derivation-report/v1` YAML reports without
+  modifying files.
 
 ## Output Locations
 

@@ -446,6 +446,16 @@ The location is not the final domain corpus model.
      `schemas/source-to-rule-derivation-report.schema.yml`, and
      `derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml`.
 
+8d. Add source-to-rule derivation report validation.
+   - Add a read-only validator for
+     `rag-rulebook/source-to-rule-derivation-report/v1` records.
+   - Wire derivation-report validation into the RAG/rulebook commit gate when
+     `.agentic/02.rag-rulebook/derivation-reports` exists.
+   - Add smoke coverage for valid reports and broken report cases.
+   - Status: present in
+     `scripts/02.rag-rulebook/validate-derivation-reports/` and
+     `scripts/02.rag-rulebook/commit-gates/script.sh`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and

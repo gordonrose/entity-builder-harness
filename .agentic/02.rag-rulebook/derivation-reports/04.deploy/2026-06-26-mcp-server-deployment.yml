@@ -120,6 +120,7 @@ validation:
     - bash scripts/01.harness/check-deterministic-process-drift.sh --paths docs/04.deploy .agentic/02.rag-rulebook
     - bash scripts/01.harness/check-governed-script-command-drift.sh
     - git diff --check
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
   checks_run:
     - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths docs/04.deploy .agentic/02.rag-rulebook
       result: passed
@@ -131,8 +132,9 @@ validation:
       result: passed
     - command: git diff --check
       result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      result: passed
   checks_pending:
-    - Add a validator for source-to-rule derivation reports.
     - Add corpus.04.deploy support to rulebook index generation.
     - Add selector evaluation proof for deploy MCP retrieval.
 
