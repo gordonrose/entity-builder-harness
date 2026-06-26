@@ -292,7 +292,7 @@ The next structured YAML rules should cover:
 
 ## Known Gaps
 
-- No deploy-layer YAML rules exist yet for MCP server deployment.
+- First deploy-layer YAML rules now exist for MCP server deployment.
 - The rulebook index does not yet scan `docs/04.deploy/rules/`.
 - Selector evaluations do not yet prove `corpus.04.deploy` retrieval.
 - GitHub deployment workflow requirements are source material only.

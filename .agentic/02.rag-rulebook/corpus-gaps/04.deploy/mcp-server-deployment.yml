@@ -66,7 +66,9 @@ required_coverage:
       Human-readable deployment source material explains the intended local,
       GitHub, MCP server, and AWS deployment flow.
   structured_rulebook:
-    status: missing
+    status: present
+    evidence_paths:
+      - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
     expectation: >
       Deploy-layer YAML rules define allowed actions, banned actions, required
       checks, stop conditions, rollback expectations, and ownership boundaries.
@@ -86,7 +88,6 @@ required_coverage:
       Local context queries may use this gap record to explain missing deploy
       coverage before hosted RAG exists.
 needed_outputs:
-  - docs/04.deploy/rules/concerns/mcp-server-deployment.yml
   - docs/04.deploy/rules/concerns/github-to-aws-deployment.yml
   - docs/04.deploy/rules/concerns/aws-runtime-boundaries.yml
   - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-mcp-server-gap.yml

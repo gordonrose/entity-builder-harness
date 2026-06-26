@@ -41,6 +41,8 @@ Deploy knowledge is organized by deploy track:
 - `source-material/02.rag-rulebook/` for RAG/rulebook and MCP server deployment
 - `source-material/03.product/` for product and application deployment
 
+Structured deploy rules live under matching tracks in `rules/`.
+
 These are not separate owning layers. `04.deploy` owns deployment governance;
 the track name identifies the system being deployed.
 

@@ -419,6 +419,19 @@ The location is not the final domain corpus model.
      and
      `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
 
+8b. Add first deploy corpus structured rulebook coverage.
+   - Convert the `02.rag-rulebook` deploy source material into structured
+     `corpus.04.deploy` YAML rules.
+   - Keep deploy governance owned by `04.deploy` while naming
+     `02.rag-rulebook` as the deployment track.
+   - Capture local-first RAG, published corpus packages, remote context
+     packets, read-only MCP-first exposure, governed MCP tools, GitHub release
+     control, AWS runtime boundaries, observability, rollback, and readiness
+     gaps.
+   - Status: present in
+     `docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml` and
+     `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -444,6 +457,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Convert the first deploy source material into structured
-`corpus.04.deploy` YAML rules while keeping indexing, chunking, and selector
-evaluation proof as separate follow-up slices.
+Teach the rulebook index and chunk generators to scan
+`docs/04.deploy/rules/` as `corpus.04.deploy` without mixing deploy chunks into
+`corpus.02.rag-rulebook`.

@@ -244,6 +244,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Organize deploy corpus by target tracks
   Rationale: Kept 04.deploy as the deployment governance owner, split deploy source material into shared, 00.chat, 02.rag-rulebook, and 03.product tracks, and moved MCP server deployment source material under the 02.rag-rulebook deploy track.
 
+
+- Decision: Add first deploy structured rules
+  Rationale: Converted the RAG/rulebook MCP deploy source material into structured corpus.04.deploy YAML rules, marked the deploy corpus gap structured_rulebook stage present, and left index, chunk, and selector evaluation proof as the next gap.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -740,6 +744,13 @@ Rationale: Created docs/04.deploy source material for production-grade MCP serve
 Decision: Organize deploy corpus by target tracks
 
 Rationale: Kept 04.deploy as the deployment governance owner, split deploy source material into shared, 00.chat, 02.rag-rulebook, and 03.product tracks, and moved MCP server deployment source material under the 02.rag-rulebook deploy track.
+
+
+### 2026-06-26T14:22:37Z - Decision
+
+Decision: Add first deploy structured rules
+
+Rationale: Converted the RAG/rulebook MCP deploy source material into structured corpus.04.deploy YAML rules, marked the deploy corpus gap structured_rulebook stage present, and left index, chunk, and selector evaluation proof as the next gap.
 
 ## Commits
 
