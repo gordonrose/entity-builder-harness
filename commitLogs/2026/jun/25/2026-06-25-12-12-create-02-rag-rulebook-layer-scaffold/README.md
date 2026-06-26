@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-26T10:29:38Z
-latest_commit_sha: 61365d0
-chat_duration: 83807s (00:23:16:47)
-estimated_chat_tokens: 3534597 estimated from chat transcript bytes (14138387 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 106.04 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-26T18:03:28Z
+latest_commit_sha: 5f512df
+chat_duration: 111037s (01:06:50:37)
+estimated_chat_tokens: 6550806 estimated from chat transcript bytes (26203222 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 196.52 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -837,6 +837,17 @@ Decision: Tighten deploy readiness after review feedback
 
 Rationale: Added explicit corpus ownership to the MCP architecture rules, added MCP transport/auth model coverage, added deploy cost/capacity/quota readiness coverage, clarified MCP candidate planning versus deploy-execution scope, and kept selector/index/chunk checks current.
 
+
+### 2026-06-26T18:03:28Z - Commit recorded
+
+Commit: `5f512df`
+
+Message: Harden deploy intent authorization proof
+
+Summary: Hardened deploy intent resolution and action authorization so deploy-execution prompts block on explicit evidence-backed gaps while planning, explanation, and no-action deploy prompts remain non-executable.
+
+ADR impact: No new ADR; strengthens RAG/rulebook deploy selector safety proof.
+
 ## Commits
 
 
@@ -1030,6 +1041,13 @@ Rationale: Added explicit corpus ownership to the MCP architecture rules, added 
   Summary: Moved MCP server source material into docs/02.rag-rulebook/source-material and updated candidate evidence plus RAG/rulebook references so .agentic remains governance-owned.
   ADR impact: No new ADR; clarifies the ADR 0022 boundary between governance and corpus/source content.
 
+
+- Commit: `5f512df`
+  Time UTC: 2026-06-26T18:03:28Z
+  Message: Harden deploy intent authorization proof
+  Summary: Hardened deploy intent resolution and action authorization so deploy-execution prompts block on explicit evidence-backed gaps while planning, explanation, and no-action deploy prompts remain non-executable.
+  ADR impact: No new ADR; strengthens RAG/rulebook deploy selector safety proof.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1043,11 +1061,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-26T10:29:38Z
-Latest commit SHA: 61365d0
-Chat duration: 83807s (00:23:16:47)
-Estimated chat tokens: 3534597 estimated from chat transcript bytes (14138387 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 106.04 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-26T18:03:28Z
+Latest commit SHA: 5f512df
+Chat duration: 111037s (01:06:50:37)
+Estimated chat tokens: 6550806 estimated from chat transcript bytes (26203222 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 196.52 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
