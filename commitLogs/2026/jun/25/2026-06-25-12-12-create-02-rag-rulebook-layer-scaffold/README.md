@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-26T18:03:28Z
-latest_commit_sha: 5f512df
-chat_duration: 111037s (01:06:50:37)
-estimated_chat_tokens: 6550806 estimated from chat transcript bytes (26203222 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 196.52 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-26T22:56:24Z
+latest_commit_sha: 5652c23
+chat_duration: 128613s (01:11:43:33)
+estimated_chat_tokens: 7025186 estimated from chat transcript bytes (28100741 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 210.76 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -856,6 +856,17 @@ Summary: Hardened deploy intent resolution and action authorization so deploy-ex
 
 ADR impact: No new ADR; strengthens RAG/rulebook deploy selector safety proof.
 
+
+### 2026-06-26T22:56:24Z - Commit recorded
+
+Commit: `5652c23`
+
+Message: Harden RAG deploy readiness gates
+
+Summary: Added governed GitHub-to-AWS deployment workflow coverage, deploy-readiness verification, YAML syntax validation, deploy selector authorization hardening, local runtime/query commit-gate smoke coverage, and stricter MCP/source-policy/OIDC readiness checks.
+
+ADR impact: No new ADR; strengthens ADR 0022 RAG/rulebook and deploy governance proof.
+
 ## Commits
 
 
@@ -1056,6 +1067,13 @@ ADR impact: No new ADR; strengthens RAG/rulebook deploy selector safety proof.
   Summary: Hardened deploy intent resolution and action authorization so deploy-execution prompts block on explicit evidence-backed gaps while planning, explanation, and no-action deploy prompts remain non-executable.
   ADR impact: No new ADR; strengthens RAG/rulebook deploy selector safety proof.
 
+
+- Commit: `5652c23`
+  Time UTC: 2026-06-26T22:56:24Z
+  Message: Harden RAG deploy readiness gates
+  Summary: Added governed GitHub-to-AWS deployment workflow coverage, deploy-readiness verification, YAML syntax validation, deploy selector authorization hardening, local runtime/query commit-gate smoke coverage, and stricter MCP/source-policy/OIDC readiness checks.
+  ADR impact: No new ADR; strengthens ADR 0022 RAG/rulebook and deploy governance proof.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1069,11 +1087,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-26T18:03:28Z
-Latest commit SHA: 5f512df
-Chat duration: 111037s (01:06:50:37)
-Estimated chat tokens: 6550806 estimated from chat transcript bytes (26203222 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 196.52 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-26T22:56:24Z
+Latest commit SHA: 5652c23
+Chat duration: 128613s (01:11:43:33)
+Estimated chat tokens: 7025186 estimated from chat transcript bytes (28100741 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 210.76 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
