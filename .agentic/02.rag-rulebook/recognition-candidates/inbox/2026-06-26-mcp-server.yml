@@ -48,6 +48,19 @@ coverage:
     - corpus.04.deploy
   needed_topic: MCP server deployment architecture for harness services.
   suggested_resolution: Add governed corpus source material for MCP server deployment before accepting this candidate into curated domain-noun recognition.
+  stages:
+    source_material:
+      status: missing
+      evidence_paths: []
+    structured_rulebook:
+      status: missing
+      evidence_paths: []
+    indexed_chunks:
+      status: missing
+      evidence_paths: []
+    selector_evaluation:
+      status: missing
+      evidence_paths: []
 reason:
   - Important unmatched service architecture term in a planning prompt.
   - May affect context selection for RAG/rulebook, harness, and MCP server planning.

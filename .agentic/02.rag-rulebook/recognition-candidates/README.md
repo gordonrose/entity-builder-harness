@@ -44,9 +44,11 @@ Candidate records must follow
 term appeared.
 
 If a candidate names a real term but the corpus does not yet explain that
-topic, keep it pending or deferred with `coverage.status: missing`. Missing
-coverage can produce selector gaps, but it is not enough to accept the term into
-active curated vocabulary.
+topic, keep it pending or deferred with staged coverage. `coverage.status:
+missing` means no required stage is present yet. `coverage.status: partial`
+means some evidence exists, but RAG retrieval is not fully ready. Missing or
+partial coverage can produce selector gaps, but it is not enough to accept the
+term into active curated vocabulary.
 
 Validate committed candidate records with:
 

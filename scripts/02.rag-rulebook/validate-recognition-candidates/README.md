@@ -55,11 +55,15 @@ Add `--json` for machine-readable output.
 - suggested source ID, category, canonical ID, and confidence weight
 - optional coverage requirements for candidates whose term needs source
   material before safe retrieval
+- staged coverage status for source material, structured rulebook content,
+  indexed chunks, and selector evaluation proof
 - status and review decision agree
 - accepted, merged, rejected, and deferred candidates include required review
   details
-- accepted coverage-required candidates prove corpus coverage with evidence
-  paths
+- `covered` candidates require every required coverage stage to be present
+- `partial` candidates require at least one present and one missing coverage
+  stage
+- present coverage stages require evidence paths
 - duplicate candidate IDs are rejected
 - referenced workflow paths exist when supplied
 

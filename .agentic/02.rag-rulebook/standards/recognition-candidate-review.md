@@ -79,10 +79,28 @@ candidate should preserve:
 - the likely target corpus or corpora
 - the missing topic
 - a `missing-corpus` gap ID
-- the source material needed before acceptance
+- staged coverage status for source material, structured rulebook content,
+  indexed chunks, and selector evaluation proof
 
 Selector fixtures may use coverage-gap candidates to report gaps, but they must
 not use them as evidence that the corpus already contains the answer.
+
+Coverage has three useful states:
+
+- `missing` means no required stage has evidence yet.
+- `partial` means some required stages have evidence, but retrieval is not
+  fully ready.
+- `covered` means every required stage has evidence and the term can be
+  accepted if the review outcome also supports it.
+
+The required coverage stages are:
+
+- `source_material` - human-readable source material exists.
+- `structured_rulebook` - the source has been converted into governed rulebook
+  structure.
+- `indexed_chunks` - the governed material can be retrieved as chunks.
+- `selector_evaluation` - a fixture proves expected and banned retrieval
+  behavior.
 
 ## Durable Candidate Locations
 
@@ -106,7 +124,7 @@ A candidate may become a curated recognition-source term only when it has:
 - suggested category
 - suggested canonical ID
 - confidence weight
-- corpus coverage evidence when coverage is required
+- full staged corpus coverage when coverage is required
 - review decision
 - curated-source update
 - evaluation fixture coverage
@@ -122,7 +140,8 @@ Do not:
 - allow candidates to override complete session metadata
 - store full chat transcripts as candidate context by default
 - add a curated term without a canonical ID
-- accept a coverage-required term before the corpus has source material for it
+- accept a coverage-required term before every required coverage stage has
+  evidence
 - add a curated term without evaluation coverage
 - treat planning or explanation language as implementation, commit, deploy, or
   destructive-action permission

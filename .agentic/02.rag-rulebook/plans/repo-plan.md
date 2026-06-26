@@ -270,6 +270,19 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`, and
      `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`.
 
+7q. Add staged recognition-candidate coverage.
+   - Treat `coverage.status` as a summary, not the proof itself.
+   - Add coverage stages for source material, structured rulebook content,
+     indexed chunks, and selector evaluation proof.
+   - Require `missing` when no required stage is present, `partial` when some
+     stages are present and some are missing, and `covered` only when all
+     required stages have evidence.
+   - Keep missing or partial coverage visible as selector gaps until retrieval
+     is fully ready.
+   - Status: present in `schemas/recognition-candidate.schema.yml`,
+     `scripts/02.rag-rulebook/validate-recognition-candidates/`, and
+     `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and

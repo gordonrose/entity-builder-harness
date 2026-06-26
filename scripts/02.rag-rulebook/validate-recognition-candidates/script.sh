@@ -84,7 +84,14 @@ ALLOWED_CATEGORIES = {
     "check-name",
 }
 ALLOWED_REVIEW_DECISIONS = {"pending", "accept", "reject", "merge", "defer"}
-ALLOWED_COVERAGE_STATUS = {"missing", "covered", "not-required"}
+ALLOWED_COVERAGE_STATUS = {"missing", "partial", "covered", "not-required"}
+ALLOWED_COVERAGE_STAGE_STATUS = {"missing", "present", "not-required"}
+REQUIRED_COVERAGE_STAGES = [
+    "source_material",
+    "structured_rulebook",
+    "indexed_chunks",
+    "selector_evaluation",
+]
 STATUS_TO_DECISION = {
     "needs-review": "pending",
     "accepted": "accept",
@@ -222,6 +229,76 @@ def lower_contains(haystack: str, needle: str) -> bool:
     return needle.casefold() in haystack.casefold()
 
 
+def validate_coverage_stages(
+    owner: str,
+    coverage: dict[str, Any],
+    coverage_status: str | None,
+    coverage_required: bool,
+    errors: list[str],
+) -> dict[str, int]:
+    stages = coverage.get("stages")
+    if stages is None:
+        if coverage_required:
+            errors.append(f"{owner}.coverage.stages must be present when coverage.required is true")
+        return {"present": 0, "missing": 0, "not-required": 0}
+    if not isinstance(stages, dict):
+        errors.append(f"{owner}.coverage.stages must be an object when present")
+        return {"present": 0, "missing": 0, "not-required": 0}
+
+    if coverage_required:
+        for stage_name in REQUIRED_COVERAGE_STAGES:
+            if stage_name not in stages:
+                errors.append(f"{owner}.coverage.stages missing required stage: {stage_name}")
+
+    unsupported_stages = sorted(set(stages) - set(REQUIRED_COVERAGE_STAGES))
+    for stage_name in unsupported_stages:
+        errors.append(f"{owner}.coverage.stages has unsupported stage: {stage_name}")
+
+    counts = {"present": 0, "missing": 0, "not-required": 0}
+    for stage_name in REQUIRED_COVERAGE_STAGES:
+        stage = stages.get(stage_name)
+        if stage is None:
+            continue
+        stage_owner = f"{owner}.coverage.stages.{stage_name}"
+        if not isinstance(stage, dict):
+            errors.append(f"{stage_owner} must be an object")
+            continue
+        stage_status = stage.get("status")
+        if stage_status not in ALLOWED_COVERAGE_STAGE_STATUS:
+            errors.append(
+                f"{stage_owner}.status must be one of: {', '.join(sorted(ALLOWED_COVERAGE_STAGE_STATUS))}"
+            )
+            continue
+        counts[stage_status] += 1
+        evidence_paths = validate_string_array(
+            f"{stage_owner}.evidence_paths",
+            stage.get("evidence_paths"),
+            errors,
+            required=stage_status == "present",
+        )
+        for evidence_path in evidence_paths:
+            if not path_exists(evidence_path):
+                errors.append(f"{stage_owner}.evidence_paths path does not exist: {evidence_path}")
+
+    required_stage_count = counts["present"] + counts["missing"]
+    if coverage_status == "missing" and counts["present"] > 0:
+        errors.append(f"{owner}.coverage.status missing requires no required stages to be present")
+    if coverage_status == "partial":
+        if counts["present"] == 0:
+            errors.append(f"{owner}.coverage.status partial requires at least one present stage")
+        if counts["missing"] == 0:
+            errors.append(f"{owner}.coverage.status partial requires at least one missing required stage")
+    if coverage_status == "covered":
+        if required_stage_count == 0:
+            errors.append(f"{owner}.coverage.status covered requires at least one required stage")
+        if counts["missing"] > 0:
+            errors.append(f"{owner}.coverage.status covered requires every required stage to be present")
+    if coverage_status == "not-required" and coverage_required:
+        errors.append(f"{owner}.coverage.status not-required cannot be used when coverage.required is true")
+
+    return counts
+
+
 def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warnings: list[str]) -> dict[str, Any]:
     owner = rel(path)
     for field in REQUIRED_TOP_LEVEL:
@@ -312,7 +389,7 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
             f"{owner}.coverage.needed_corpus_ids",
             coverage.get("needed_corpus_ids"),
             errors,
-            required=coverage_status == "missing",
+            required=coverage_status in {"missing", "partial"},
         )
         for corpus_id in needed_corpus_ids:
             if not CORPUS_ID.match(corpus_id):
@@ -321,19 +398,19 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
             f"{owner}.coverage.evidence_paths",
             coverage.get("evidence_paths"),
             errors,
-            required=coverage_status == "covered",
         )
         for evidence_path in evidence_paths:
             if not path_exists(evidence_path):
                 errors.append(f"{owner}.coverage.evidence_paths path does not exist: {evidence_path}")
         gap_id = coverage.get("gap_id")
-        if coverage_status == "missing":
+        if coverage_status in {"missing", "partial"}:
             if not isinstance(gap_id, str) or not gap_id.startswith("gap."):
-                errors.append(f"{owner}.coverage.gap_id must be a stable gap.* ID when coverage is missing")
+                errors.append(f"{owner}.coverage.gap_id must be a stable gap.* ID when coverage is missing or partial")
             require_string(f"{owner}.coverage", coverage, "needed_topic", errors)
             require_string(f"{owner}.coverage", coverage, "suggested_resolution", errors)
         elif gap_id is not None and (not isinstance(gap_id, str) or not gap_id.startswith("gap.")):
             errors.append(f"{owner}.coverage.gap_id must be a stable gap.* ID when present")
+        validate_coverage_stages(owner, coverage, coverage_status, coverage_required, errors)
 
     reason = data.get("reason")
     reason_items = as_string_list(reason)

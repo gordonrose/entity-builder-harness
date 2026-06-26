@@ -184,6 +184,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Report candidate corpus gaps
   Rationale: Extended recognition candidates with corpus coverage metadata and taught the selector fixture to emit a missing-corpus gap when a prompt mentions a meaningful term, such as MCP server, that the current corpus does not yet cover.
 
+
+- Decision: Add staged candidate coverage
+  Rationale: Evolved recognition-candidate coverage from a blunt missing-or-covered flag into staged proof for source material, structured rulebook content, indexed chunks, and selector evaluation. Missing or partial coverage continues to produce selector gaps until retrieval is fully ready.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -558,6 +562,22 @@ Summary: Extended recognition candidates with corpus coverage metadata and made 
 
 ADR impact: No new ADR; extends ADR 0022 RAG/rulebook governance and the existing recognition-candidate workflow.
 
+
+### 2026-06-26T11:18:49Z - Decision
+
+Decision: Add staged candidate coverage
+
+Rationale: Evolved recognition-candidate coverage from a blunt missing-or-covered flag into staged proof for source material, structured rulebook content, indexed chunks, and selector evaluation. Missing or partial coverage continues to produce selector gaps until retrieval is fully ready.
+
+
+### 2026-06-26T11:21:23Z - Commit summary
+
+Commit: Add staged candidate coverage
+
+Summary: Evolved recognition-candidate coverage into staged proof for source material, structured rulebook content, indexed chunks, and selector evaluation while keeping missing or partial coverage visible as selector gaps.
+
+ADR impact: No new ADR; refines the existing RAG/rulebook candidate coverage workflow.
+
 ## Commits
 
 
@@ -740,6 +760,11 @@ ADR impact: No new ADR; extends ADR 0022 RAG/rulebook governance and the existin
 - Commit: Report candidate corpus gaps
   Summary: Extended recognition candidates with corpus coverage metadata and made the selector fixture emit a missing-corpus gap for MCP server until governed corpus source material exists.
   ADR impact: No new ADR; extends ADR 0022 RAG/rulebook governance and the existing recognition-candidate workflow.
+
+
+- Commit: Add staged candidate coverage
+  Summary: Evolved recognition-candidate coverage into staged proof for source material, structured rulebook content, indexed chunks, and selector evaluation while keeping missing or partial coverage visible as selector gaps.
+  ADR impact: No new ADR; refines the existing RAG/rulebook candidate coverage workflow.
 
 ## Main Refresh Conflicts
 

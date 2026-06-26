@@ -335,6 +335,27 @@ def simple_exact_match(term: str, text: str) -> bool:
     return bool(re.search(rf"(?<![a-z0-9]){re.escape(term_lower)}(?![a-z0-9])", text_lower))
 
 
+def coverage_stage_summary(coverage: dict[str, Any]) -> str:
+    stages = coverage.get("stages")
+    if not isinstance(stages, dict):
+        return ""
+    present = []
+    missing = []
+    for stage_name, stage in stages.items():
+        if not isinstance(stage, dict):
+            continue
+        if stage.get("status") == "present":
+            present.append(stage_name)
+        elif stage.get("status") == "missing":
+            missing.append(stage_name)
+    parts = []
+    if present:
+        parts.append(f"present stages: {', '.join(sorted(present))}")
+    if missing:
+        parts.append(f"missing stages: {', '.join(sorted(missing))}")
+    return "; ".join(parts)
+
+
 def candidate_coverage_gaps(candidates: list[dict[str, Any]], request_text: str) -> list[dict[str, Any]]:
     gaps: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -347,7 +368,8 @@ def candidate_coverage_gaps(candidates: list[dict[str, Any]], request_text: str)
         if not term or not simple_exact_match(term, request_text):
             continue
         coverage = candidate.get("coverage") if isinstance(candidate.get("coverage"), dict) else {}
-        if coverage.get("required") is not True or coverage.get("status") != "missing":
+        coverage_status = coverage.get("status")
+        if coverage.get("required") is not True or coverage_status not in {"missing", "partial"}:
             continue
         gap_id = str(coverage.get("gap_id") or f"gap.selector-fixture.missing-corpus.{safe_id(term)}")
         if gap_id in seen:
@@ -357,10 +379,13 @@ def candidate_coverage_gaps(candidates: list[dict[str, Any]], request_text: str)
         needed_topic = str(coverage.get("needed_topic") or term).strip().rstrip(".")
         description = (
             f"Prompt mentions {term}, but candidate {candidate.get('candidate_id')} says "
-            f"the corpus does not yet cover {needed_topic}."
+            f"coverage is {coverage_status} for {needed_topic}."
         )
         if needed_corpus_ids:
             description += f" Needed corpora: {', '.join(needed_corpus_ids)}."
+        stage_summary = coverage_stage_summary(coverage)
+        if stage_summary:
+            description += f" Stage status: {stage_summary}."
         gaps.append(
             {
                 "id": gap_id,

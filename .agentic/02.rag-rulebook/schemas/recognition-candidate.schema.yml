@@ -144,8 +144,10 @@ fields:
         type: enum
         allowed_values:
           - missing
+          - partial
           - covered
           - not-required
+        description: Summary status derived from required coverage stages.
       gap_id:
         type: string
         description: Stable context-packet gap ID to emit while coverage is missing.
@@ -157,6 +159,42 @@ fields:
         type: string
       suggested_resolution:
         type: string
+      evidence_paths:
+        type: array
+        items:
+          type: string
+        description: Optional summary evidence; stage-level evidence is preferred.
+      stages:
+        type: object
+        description: Per-stage proof that the candidate is usable by RAG retrieval, not just mentioned in prose.
+        required_fields:
+          - source_material
+          - structured_rulebook
+          - indexed_chunks
+          - selector_evaluation
+        fields:
+          source_material:
+            type: coverage-stage
+            description: Human-readable source material exists for the term.
+          structured_rulebook:
+            type: coverage-stage
+            description: Source material has been converted into governed rulebook structure.
+          indexed_chunks:
+            type: coverage-stage
+            description: Rulebook material has been indexed and chunked for retrieval.
+          selector_evaluation:
+            type: coverage-stage
+            description: A selector evaluation proves the expected retrieval behavior.
+
+  coverage-stage:
+    type: object
+    fields:
+      status:
+        type: enum
+        allowed_values:
+          - missing
+          - present
+          - not-required
       evidence_paths:
         type: array
         items:
@@ -225,6 +263,18 @@ field_guide:
     what_it_is: Whether the candidate has enough corpus knowledge behind it.
     what_it_does: Prevents prompt recognition from sounding authoritative when the repo has no source material for the term.
     rules:
-      - Use `missing` when the term is meaningful but the corpus does not yet explain it.
-      - Missing coverage should create a visible `missing-corpus` gap in selector fixtures.
-      - Accepted candidates that require coverage need evidence paths and an evaluation fixture.
+      - Use `missing` only when no required coverage stage is present.
+      - Use `partial` when some required coverage stages are present and some are still missing.
+      - Use `covered` only when all required coverage stages are present.
+      - Missing or partial coverage should create a visible `missing-corpus` gap in selector fixtures.
+      - Accepted candidates that require coverage need full staged coverage and an evaluation fixture.
+
+  - path: coverage.stages
+    what_it_is: The proof ladder for turning a recognized term into retrievable knowledge.
+    what_it_does: Separates source prose, governed rulebook structure, generated chunks, and evaluation proof.
+    rules:
+      - `source_material` proves human-readable source exists.
+      - `structured_rulebook` proves the source has been converted into governed rulebook form.
+      - `indexed_chunks` proves the governed source can be retrieved as chunks.
+      - `selector_evaluation` proves selector behavior with expected and banned outcomes.
+      - A `present` stage must list evidence paths.

@@ -149,8 +149,8 @@ Examples:
   conflict gap or explicit conflict note while preserving session routing.
 - Missing corpus package should produce a missing-corpus or prototype-bridge
   gap instead of pretending final corpus migration is complete.
-- Missing candidate coverage should produce a missing-corpus gap instead of
-  treating an observed term as covered corpus knowledge.
+- Missing or partial candidate coverage should produce a missing-corpus gap
+  instead of treating an observed term as covered corpus knowledge.
 
 ## Banned Evaluation Behavior
 
