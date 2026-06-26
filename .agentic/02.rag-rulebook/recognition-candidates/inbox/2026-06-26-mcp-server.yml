@@ -41,17 +41,18 @@ suggested:
   target_source_path: .agentic/02.rag-rulebook/recognition-sources/curated/domain-nouns.yml
 coverage:
   required: true
-  status: missing
+  status: partial
   gap_id: gap.selector-fixture.missing-corpus.mcp-server
   needed_corpus_ids:
     - corpus.01.harness
     - corpus.04.deploy
   needed_topic: MCP server deployment architecture for harness services.
-  suggested_resolution: Add governed corpus source material for MCP server deployment before accepting this candidate into curated domain-noun recognition.
+  suggested_resolution: Convert MCP server source material into structured rulebook YAML, generated chunks, and selector evaluation proof before accepting this candidate into curated domain-noun recognition.
   stages:
     source_material:
-      status: missing
-      evidence_paths: []
+      status: present
+      evidence_paths:
+        - docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
     structured_rulebook:
       status: missing
       evidence_paths: []

@@ -62,6 +62,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer policies: `.agentic/02.rag-rulebook/policies/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
+- Layer source material: `docs/02.rag-rulebook/source-material/`
 - Layer command surface: `scripts/02.rag-rulebook/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
 
@@ -123,6 +124,9 @@ final homes.
   and check vocabulary used to raise validation scrutiny.
 - `recognition-candidates/` - durable review inbox for candidate terms that may
   later update curated sources.
+- `docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md`
+  - first source coverage for the MCP server recognition candidate, before
+  structured rulebook conversion.
 - `scripts/02.rag-rulebook/validate-recognition-candidates/script.sh` -
   validates recognition-candidate YAML files for sentence context, proposed
   canonical meaning, review state, duplicate IDs, and accepted-candidate proof.
@@ -154,6 +158,12 @@ final homes.
   expectations.
 - `guides/retrieval-policy-dimension.md` - teaches how to read and author
   imported retrieval policy dimensions.
+
+## Source Material
+
+- `docs/02.rag-rulebook/source-material/` - early source coverage for concepts
+  that are not yet structured rulebook YAML, indexed chunks, or selector
+  evaluation fixtures.
 
 ## Plans
 

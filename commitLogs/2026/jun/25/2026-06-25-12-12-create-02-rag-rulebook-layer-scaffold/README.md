@@ -188,6 +188,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Add staged candidate coverage
   Rationale: Evolved recognition-candidate coverage from a blunt missing-or-covered flag into staged proof for source material, structured rulebook content, indexed chunks, and selector evaluation. Missing or partial coverage continues to produce selector gaps until retrieval is fully ready.
 
+
+- Decision: Add MCP server source material
+  Rationale: Added first MCP server deployment architecture source material and updated the MCP recognition candidate to partial coverage by marking only the source_material stage present. Structured rulebook content, indexed chunks, and selector evaluation remain missing.
+
+
+- Decision: Move RAG source material to docs
+  Rationale: Moved MCP server source material from .agentic/02.rag-rulebook/source-material to docs/02.rag-rulebook/source-material so .agentic remains governance-owned and docs holds corpus/source content before structured rulebook conversion.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -578,6 +586,29 @@ Summary: Evolved recognition-candidate coverage into staged proof for source mat
 
 ADR impact: No new ADR; refines the existing RAG/rulebook candidate coverage workflow.
 
+
+### 2026-06-26T11:39:23Z - Decision
+
+Decision: Add MCP server source material
+
+Rationale: Added first MCP server deployment architecture source material and updated the MCP recognition candidate to partial coverage by marking only the source_material stage present. Structured rulebook content, indexed chunks, and selector evaluation remain missing.
+
+
+### 2026-06-26T11:53:04Z - Decision
+
+Decision: Move RAG source material to docs
+
+Rationale: Moved MCP server source material from .agentic/02.rag-rulebook/source-material to docs/02.rag-rulebook/source-material so .agentic remains governance-owned and docs holds corpus/source content before structured rulebook conversion.
+
+
+### 2026-06-26T11:58:46Z - Commit summary
+
+Commit: Move RAG source material to docs
+
+Summary: Moved MCP server source material into docs/02.rag-rulebook/source-material and updated candidate evidence plus RAG/rulebook references so .agentic remains governance-owned.
+
+ADR impact: No new ADR; clarifies the ADR 0022 boundary between governance and corpus/source content.
+
 ## Commits
 
 
@@ -765,6 +796,11 @@ ADR impact: No new ADR; refines the existing RAG/rulebook candidate coverage wor
 - Commit: Add staged candidate coverage
   Summary: Evolved recognition-candidate coverage into staged proof for source material, structured rulebook content, indexed chunks, and selector evaluation while keeping missing or partial coverage visible as selector gaps.
   ADR impact: No new ADR; refines the existing RAG/rulebook candidate coverage workflow.
+
+
+- Commit: Move RAG source material to docs
+  Summary: Moved MCP server source material into docs/02.rag-rulebook/source-material and updated candidate evidence plus RAG/rulebook references so .agentic remains governance-owned.
+  ADR impact: No new ADR; clarifies the ADR 0022 boundary between governance and corpus/source content.
 
 ## Main Refresh Conflicts
 
