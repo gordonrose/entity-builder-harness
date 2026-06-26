@@ -61,6 +61,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer guides: `.agentic/02.rag-rulebook/guides/`
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer policies: `.agentic/02.rag-rulebook/policies/`
+- Layer corpus gaps: `.agentic/02.rag-rulebook/corpus-gaps/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer source material: `docs/02.rag-rulebook/source-material/`
 - Layer structured rulebook content: `docs/02.rag-rulebook/rules/`
@@ -125,6 +126,9 @@ final homes.
   and check vocabulary used to raise validation scrutiny.
 - `recognition-candidates/` - durable review inbox for candidate terms that may
   later update curated sources.
+- `corpus-gaps/` - durable records for known missing corpus coverage, including
+  gaps that local context queries should surface before a domain corpus is
+  ready.
 - `docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md`
   - first source coverage for the MCP server recognition candidate, before
   structured rulebook conversion.

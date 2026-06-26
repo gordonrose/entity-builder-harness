@@ -1,0 +1,112 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: corpus-gap
+#   purpose: Track missing deploy-layer corpus coverage for MCP server deployment before curated deploy guidance is safe.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#     path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+#   - id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
+#     path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+#   - id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+#     path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+schema: rag-rulebook/corpus-gap/v1
+gap_id: gap.corpus.04.deploy.mcp-server-deployment
+status: open
+target_corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+owner_path: .agentic/aws/
+summary: >
+  MCP server deployment is covered enough for RAG/rulebook planning, but not
+  deeply enough in the deploy corpus to provide reliable GitHub-to-AWS deploy
+  guidance.
+observed_prompt: How do I update my harness so we can deploy it behind an MCP server?
+match_terms:
+  - MCP server
+  - Model Context Protocol
+related_candidate:
+  candidate_id: recognition-candidate.2026-06-26.domain-noun.mcp-server
+  path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+target_question: >
+  What deploy-layer source material, rules, chunks, evaluations, checks, and
+  stop conditions are required before the harness can safely guide MCP server
+  deployment through GitHub and AWS?
+scope:
+  included:
+    - Local RAG context usage before hosted RAG deployment.
+    - GitHub-driven deployment path for harness or rulebook services.
+    - AWS environment, profile, region, account, and resource boundaries.
+    - MCP server runtime boundaries for resources, prompts, and tools.
+    - Secrets, IAM, network exposure, health checks, rollback, and audit trails.
+    - Stop conditions for missing AWS governance or unsafe deploy requests.
+  excluded:
+    - Mutating AWS resources while the gap is being documented.
+    - Storing secrets, credentials, tokens, or private keys in corpus files.
+    - Treating RAG/rulebook planning chunks as deploy-runbook proof.
+    - Building or deploying the production RAG server in this gap record.
+required_coverage:
+  source_material:
+    status: missing
+    expectation: >
+      Human-readable deployment source material explains the intended local,
+      GitHub, MCP server, and AWS deployment flow.
+  structured_rulebook:
+    status: missing
+    expectation: >
+      Deploy-layer YAML rules define allowed actions, banned actions, required
+      checks, stop conditions, rollback expectations, and ownership boundaries.
+  indexed_chunks:
+    status: missing
+    expectation: >
+      The deploy-layer rulebook content is indexed and chunked as
+      corpus.04.deploy without being mixed into corpus.02.rag-rulebook.
+  selector_evaluation:
+    status: missing
+    expectation: >
+      Retrieval selector fixtures prove planning prompts surface this gap, and
+      deploy-execution prompts do not proceed without deploy corpus coverage.
+  local_runtime_query:
+    status: present
+    expectation: >
+      Local context queries may use this gap record to explain missing deploy
+      coverage before hosted RAG exists.
+needed_outputs:
+  - docs/04.deploy/source-material/mcp-server-deployment.md
+  - docs/04.deploy/rules/concerns/mcp-server-deployment.yml
+  - docs/04.deploy/rules/concerns/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/concerns/aws-runtime-boundaries.yml
+  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-mcp-server-gap.yml
+  - scripts/02.rag-rulebook/generate-rulebook-index coverage for corpus.04.deploy
+local_query_behavior:
+  should_emit_gap: true
+  blocking: false
+  blocking_by_intent:
+    intent.planning.guidance: false
+    intent.planning.decision-support: false
+    intent.explanation.tutor: false
+    intent.discovery.explanation: false
+    intent.implementation.request: true
+    intent.deploy.execution: true
+suggested_resolution: >
+  Build the deploy corpus in small governed slices: start with source material,
+  convert it into structured deploy rules, index and chunk corpus.04.deploy,
+  then add selector evaluations before using the context for implementation or
+  deployment execution.
+review:
+  required: true
+  owner: 04.deploy
+  cadence: Review when MCP deployment source material, deploy rules, chunk
+    generation, or selector evaluations are added.

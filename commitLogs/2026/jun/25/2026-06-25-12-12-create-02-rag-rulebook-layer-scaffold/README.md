@@ -232,6 +232,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add local RAG context query command
   Rationale: Added a read-only local context query command that consumes the built local runtime cache and emits a validated context packet for request text, session metadata, focused paths, and token limits.
 
+
+- Decision: Add deploy-layer corpus gap tracking
+  Rationale: Recorded the MCP server deployment gap as corpus.04.deploy coverage debt, wired local context packets to emit it, and verified planning prompts remain ready while deploy-execution prompts block on missing deploy corpus depth.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -707,6 +711,13 @@ Rationale: Added a local-first build command that checks recognition sources and
 Decision: Add local RAG context query command
 
 Rationale: Added a read-only local context query command that consumes the built local runtime cache and emits a validated context packet for request text, session metadata, focused paths, and token limits.
+
+
+### 2026-06-26T13:41:05Z - Decision
+
+Decision: Add deploy-layer corpus gap tracking
+
+Rationale: Recorded the MCP server deployment gap as corpus.04.deploy coverage debt, wired local context packets to emit it, and verified planning prompts remain ready while deploy-execution prompts block on missing deploy corpus depth.
 
 ## Commits
 

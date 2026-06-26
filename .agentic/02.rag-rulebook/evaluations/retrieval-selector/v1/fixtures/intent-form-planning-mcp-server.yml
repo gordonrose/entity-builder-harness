@@ -97,8 +97,11 @@ expected:
         canonical_id: 04.deploy
         matched_input: prompt
   gaps:
+    required:
+      - gap.corpus.04.deploy.mcp-server-deployment
     allowed:
       - gap.selector-fixture.prompt-session-layer-conflict
+      - gap.corpus.04.deploy.mcp-server-deployment
     no_unexpected: true
   required_checks:
     min_count: 1
@@ -123,6 +126,7 @@ source_refs:
   - .agentic/02.rag-rulebook/recognition-sources/curated/actions.yml
   - .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
   - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+  - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
   - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
 update_triggers:
   - Intent-form recognition source changes.
@@ -130,3 +134,4 @@ update_triggers:
   - Routing recognition source changes.
   - Selector prompt/session conflict handling changes.
   - Recognition candidate coverage status changes.
+  - Deploy-layer corpus gap status changes.

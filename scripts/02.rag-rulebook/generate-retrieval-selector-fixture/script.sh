@@ -58,6 +58,7 @@ GENERATOR_VERSION = "retrieval-selector-fixture-v1"
 POLICY_PACK_PATH = ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml"
 RECOGNITION_ROOT = ".agentic/02.rag-rulebook/recognition-sources"
 CANDIDATE_ROOT = ".agentic/02.rag-rulebook/recognition-candidates"
+CORPUS_GAP_ROOT = ".agentic/02.rag-rulebook/corpus-gaps"
 CHUNK_GENERATOR_SCRIPT = "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"
 PACKET_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-context-packet/script.sh"
 POLICY_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh"
@@ -289,6 +290,20 @@ def load_recognition_candidates() -> list[dict[str, Any]]:
     return candidates
 
 
+def load_corpus_gaps() -> list[dict[str, Any]]:
+    root = repo_path(CORPUS_GAP_ROOT)
+    if not root.exists():
+        return []
+    gaps: list[dict[str, Any]] = []
+    for path in sorted(root.rglob("*.yml")) + sorted(root.rglob("*.yaml")):
+        data = load_yaml(path)
+        if data.get("schema") != "rag-rulebook/corpus-gap/v1":
+            continue
+        data["_path"] = str(path.relative_to(ROOT))
+        gaps.append(data)
+    return gaps
+
+
 def list_of_strings(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -299,6 +314,10 @@ def list_of_dicts(value: Any) -> list[dict[str, Any]]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, dict)]
+
+
+def dict_value(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
 
 
 def safe_id(value: Any) -> str:
@@ -397,6 +416,86 @@ def candidate_coverage_gaps(candidates: list[dict[str, Any]], request_text: str)
             }
         )
     return gaps
+
+
+def corpus_gap_matches_request(
+    gap: dict[str, Any],
+    candidates_by_id: dict[str, dict[str, Any]],
+    request_text: str,
+) -> bool:
+    for term in list_of_strings(gap.get("match_terms")):
+        if simple_exact_match(term, request_text):
+            return True
+
+    related_candidate = dict_value(gap.get("related_candidate"))
+    candidate_id = related_candidate.get("candidate_id")
+    candidate = candidates_by_id.get(str(candidate_id)) if candidate_id else None
+    observed = dict_value(candidate.get("observed")) if candidate else {}
+    candidate_term = str(observed.get("term") or "").strip()
+    if candidate_term and simple_exact_match(candidate_term, request_text):
+        return True
+
+    observed_prompt = str(gap.get("observed_prompt") or "").strip()
+    return bool(observed_prompt and observed_prompt.lower() == request_text.strip().lower())
+
+
+def corpus_gap_blocking(gap: dict[str, Any], recognition_matches: list[dict[str, Any]]) -> bool:
+    behavior = dict_value(gap.get("local_query_behavior"))
+    blocking_by_intent = dict_value(behavior.get("blocking_by_intent"))
+    intent_ids = {
+        str(match.get("canonical_id"))
+        for match in recognition_matches
+        if match.get("category") == "intent-form" and isinstance(match.get("canonical_id"), str)
+    }
+    for intent_id in sorted(intent_ids):
+        if isinstance(blocking_by_intent.get(intent_id), bool):
+            return bool(blocking_by_intent[intent_id])
+    return bool(behavior.get("blocking") is True)
+
+
+def corpus_gap_records_gaps(
+    corpus_gaps: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+    recognition_matches: list[dict[str, Any]],
+    request_text: str,
+) -> list[dict[str, Any]]:
+    emitted: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    candidates_by_id = {
+        str(candidate.get("candidate_id")): candidate
+        for candidate in candidates
+        if isinstance(candidate.get("candidate_id"), str)
+    }
+    for gap in corpus_gaps:
+        gap_id = str(gap.get("gap_id") or "").strip()
+        if not gap_id or gap_id in seen:
+            continue
+        if gap.get("status") not in {"open", "planned", "in-progress"}:
+            continue
+        behavior = dict_value(gap.get("local_query_behavior"))
+        if behavior.get("should_emit_gap") is False:
+            continue
+        if not corpus_gap_matches_request(gap, candidates_by_id, request_text):
+            continue
+        seen.add(gap_id)
+        target_corpus_id = str(gap.get("target_corpus_id") or "").strip()
+        summary = str(gap.get("summary") or "A required corpus coverage gap is still open.").strip()
+        description = summary
+        if target_corpus_id:
+            description += f" Target corpus: {target_corpus_id}."
+        emitted.append(
+            {
+                "id": gap_id,
+                "type": "missing-corpus",
+                "description": description,
+                "blocking": corpus_gap_blocking(gap, recognition_matches),
+                "suggested_resolution": str(
+                    gap.get("suggested_resolution")
+                    or "Add governed source material, structured rules, chunks, and selector evaluation proof before treating this coverage as available."
+                ),
+            }
+        )
+    return emitted
 
 
 def matched_candidate_evidence_paths(candidates: list[dict[str, Any]], request_text: str) -> list[str]:
@@ -721,6 +820,7 @@ def build_packet(
     candidate_report: dict[str, Any],
     recognition_matches: list[dict[str, Any]],
     recognition_candidates: list[dict[str, Any]],
+    corpus_gaps: list[dict[str, Any]],
     chunk_set: dict[str, Any],
 ) -> dict[str, Any]:
     chunks = list_of_dicts(chunk_set.get("chunks"))
@@ -856,6 +956,7 @@ def build_packet(
             }
         )
     gaps.extend(candidate_coverage_gaps(recognition_candidates, args.request_text))
+    gaps.extend(corpus_gap_records_gaps(corpus_gaps, recognition_candidates, recognition_matches, args.request_text))
 
     selected_context_tokens = sum(
         chunk.get("token_estimate")
@@ -891,6 +992,7 @@ def build_packet(
     if not prompt_or_path_matches and prompt_terms:
         recognition_confidence = min(recognition_confidence, 0.69)
         retrieval_confidence = min(retrieval_confidence, 0.69)
+    routing_status = "blocked" if any(gap.get("blocking") is True for gap in gaps) else "ready"
 
     return {
         "schema": PACKET_SCHEMA,
@@ -917,7 +1019,7 @@ def build_packet(
             "layer": args.session_layer,
             "mode": args.session_mode,
             "workflow": args.session_workflow,
-            "status": "ready",
+            "status": routing_status,
             "task_type": "generate_retrieval_selector_fixture",
             "target_paths": args.focused_paths,
             "classification_source": "session-metadata-plus-recognition-sources",
@@ -1014,9 +1116,11 @@ def build_packet(
             },
             "recognition_candidates": {
                 "validator_counts": candidate_report.get("counts"),
-                "matched_coverage_gaps": len(
-                    [gap for gap in gaps if str(gap.get("id") or "").startswith("gap.selector-fixture.missing-corpus.")]
-                ),
+                "matched_coverage_gaps": len([gap for gap in gaps if gap.get("type") == "missing-corpus"]),
+            },
+            "corpus_gaps": {
+                "loaded": len(corpus_gaps),
+                "matched": len([gap for gap in gaps if str(gap.get("id") or "").startswith("gap.corpus.")]),
             },
             "corpus_index_versions": [
                 {
@@ -1085,6 +1189,7 @@ def main(argv: list[str]) -> int:
         policy = load_yaml(POLICY_PACK_PATH)
         sources = load_recognition_sources()
         candidates = load_recognition_candidates()
+        corpus_gaps = load_corpus_gaps()
         chunk_set, chunk_set_raw = load_chunk_set(args)
         session_text = "\n".join([args.session_layer, args.session_mode, args.session_workflow])
         recognition_matches = match_recognition_terms(
@@ -1101,6 +1206,7 @@ def main(argv: list[str]) -> int:
             candidate_report,
             recognition_matches,
             candidates,
+            corpus_gaps,
             chunk_set,
         )
         validate_packet(packet, chunk_set_raw)

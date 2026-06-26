@@ -399,7 +399,10 @@ The location is not the final domain corpus model.
      guidance is safe.
    - Use the local RAG runtime and local context-query command while building
      this deploy corpus.
-   - Status: planned.
+   - Status: present in
+     `corpus-gaps/04.deploy/mcp-server-deployment.yml`,
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
+     and `retrieval-selector.v1.intent-form-planning-mcp-server`.
 
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
@@ -426,5 +429,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add deploy-layer corpus gap tracking for MCP server deployment so local context
-queries can explain exactly what deploy coverage is still missing.
+Start the deploy corpus with source material for MCP server deployment through
+GitHub and AWS, while keeping mutating deploy actions out of scope until
+structured rules, chunks, and selector evaluations exist.

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 403
-  term_count: 812
+  indexed_artifacts: 405
+  term_count: 816
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3125,6 +3125,30 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.readme
   evidence_path: .agentic/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  confidence_weight: 1
+- term: rag-rulebook.corpus-gaps.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gaps.readme
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/README.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/corpus-gaps/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gaps.readme
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/README.md
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
   category: artifact-id
