@@ -83,7 +83,13 @@ ALLOWED_GAP_TYPES = {
 }
 ALLOWED_TRIM_POLICIES = {"deterministic-first", "cite-required-context-only", "fail-when-over-budget"}
 ALLOWED_ACTION_SIDE_EFFECT_CLASSES = {"none", "write", "git", "deploy", "destructive"}
-ALLOWED_ACTION_AUTHORIZATION_STATUSES = {"allowed", "blocked", "not-executable-intent", "not-requested"}
+ALLOWED_ACTION_AUTHORIZATION_STATUSES = {
+    "allowed",
+    "blocked",
+    "not-executable-intent",
+    "not-requested",
+    "requires-deploy-workflow-approval",
+}
 
 
 def repo_root() -> Path:
@@ -446,6 +452,11 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
             errors.append(f"action_authorization.status is invalid: {action_authorization.get('status')}")
         if not isinstance(action_authorization.get("execution_allowed"), bool):
             errors.append("action_authorization.execution_allowed must be boolean")
+        if (
+            action_authorization.get("side_effect_class") == "deploy"
+            and action_authorization.get("execution_allowed") is True
+        ):
+            errors.append("action_authorization.execution_allowed cannot be true for deploy selector packets")
         if action_authorization.get("execution_allowed") is True and routing.get("status") == "blocked":
             errors.append("action_authorization.execution_allowed cannot be true when routing.status is blocked")
         if action_authorization.get("execution_allowed") is True and blocking_gaps:

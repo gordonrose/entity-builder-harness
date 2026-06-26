@@ -71,8 +71,10 @@ expected:
       - artifact.concern.mcp.server.deployment.architecture
     required_chunk_ids:
       - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.protects.remote.main.before.deploy
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.verifies.readiness.manifest.before.execution
       - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.controls.cost.capacity.and.quotas
       - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.uses.github.as.release.control.plane
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.has.concrete.workflow.and.readiness.manifest
       - chunk.rule.artifact.concern.rag.rulebook.aws.runtime.boundaries.aws.runtime.boundaries.names.target.before.mutation
       - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.transport.auth.model.is.explicit
   recognition:
@@ -127,8 +129,10 @@ expected:
       - gap.deploy.missing-cost-capacity-quota-boundary
     required_evidence_chunk_ids:
       - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.protects.remote.main.before.deploy
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.verifies.readiness.manifest.before.execution
       - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.controls.cost.capacity.and.quotas
       - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.uses.github.as.release.control.plane
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.has.concrete.workflow.and.readiness.manifest
       - chunk.rule.artifact.concern.rag.rulebook.aws.runtime.boundaries.aws.runtime.boundaries.names.target.before.mutation
       - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.transport.auth.model.is.explicit
     required_citation_ids:
@@ -173,4 +177,4 @@ update_triggers:
   - Deploy-layer corpus gap blocking behavior changes.
   - MCP server deployment rules or related rulesets change.
   - Selector graph expansion, token trimming, or required chunk behavior changes.
-  - AWS deploy workflow coverage is added or the gap closes.
+  - AWS deploy workflow coverage, deploy-readiness verifier behavior, or the gap closes.

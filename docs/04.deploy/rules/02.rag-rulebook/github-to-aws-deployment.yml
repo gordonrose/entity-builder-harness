@@ -58,6 +58,7 @@ rules:
       mutation is allowed.
     must:
       - "Name the GitHub workflow, trigger, deployable ref, target environment, and approval model before deployment execution."
+      - "Declare the source policy for the deployable ref: remote-main for refs/heads/main, or approved-release-tag for governed version tags."
       - "Use GitHub deployment environments for staging or production targets."
       - "Require environment protection rules for sensitive environments before deployment jobs can access environment secrets."
       - "Record workflow run id, commit SHA, artifact version, corpus package version, target AWS environment, and deploy result."
@@ -67,11 +68,37 @@ rules:
       - "Do not treat a green build as deployment approval."
     required_checks:
       - "Verify the workflow trigger and deployable ref."
+      - "Verify source policy and deployable ref are consistent."
       - "Verify the target GitHub environment exists and has the required protection rules."
       - "Verify deployment history can link the workflow run to the AWS target."
     agent_guidance: >
       GitHub is the release-control surface. If the environment protections or
       deployable ref are unclear, return a blocking deployment gap.
+
+  - id: github-to-aws-deployment.has-concrete-workflow-and-readiness-manifest
+    title: GitHub-to-AWS deployment has concrete workflow coverage
+    severity: error
+    summary: >
+      RAG/rulebook deployment through GitHub and AWS must be represented by a
+      governed workflow and a deploy-readiness manifest before execution can be
+      considered.
+    must:
+      - "Use .agentic/aws/workflows/deploy-rag-rulebook-service.md as the governing workflow for RAG/rulebook GitHub-to-AWS deployment."
+      - "Validate a deploy-readiness manifest with scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh before deploy execution."
+      - "Name the target GitHub workflow path, workflow name, trigger, source policy, ref, environment, OIDC role, OIDC audience, OIDC subject/repository/ref/environment conditions, artifact provenance requirements, AWS target, MCP exposure model, cost controls, and rollback path in the manifest."
+      - "Treat a blocked readiness report as planning evidence, not deploy approval."
+    must_not:
+      - "Do not infer deploy readiness from the existence of prose rules alone."
+      - "Do not run a GitHub-to-AWS deploy without a manifest that passes the deploy-readiness verifier."
+      - "Do not let a workflow path or environment name stand in for proof that the environment protections, OIDC trust, artifact provenance, and AWS target are configured."
+    required_checks:
+      - "Run scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh against the candidate manifest."
+      - "Verify the readiness report status is ready before deploy execution."
+      - "Verify blocked readiness reports are surfaced as blocking deployment gaps."
+    agent_guidance: >
+      This is the bridge from GitHub-to-AWS deployment prose to executable
+      coverage. If the workflow or manifest check is missing, deployment stays
+      blocked.
 
   - id: github-to-aws-deployment.prefers-oidc-over-long-lived-secrets
     title: GitHub-to-AWS authentication prefers OIDC
@@ -82,7 +109,8 @@ rules:
       the target cloud account supports it.
     must:
       - "Define the AWS role or identity provider trust that the GitHub workflow is allowed to assume."
-      - "Constrain trust by repository, workflow, ref, environment, or other available claims."
+      - "Constrain trust by named repository, ref, environment, subject, workflow, or other available claims."
+      - "Record the OIDC audience and exact repository/ref/environment condition values used for the target deployment."
       - "Use least-privilege permissions for build, publish, deploy, verify, and rollback jobs."
       - "Document secret names or role names without recording secret values."
     must_not:
@@ -91,7 +119,7 @@ rules:
       - "Do not expose secret values in logs, source material, rules, fixtures, context packets, or derivation reports."
     required_checks:
       - "Verify the workflow uses OIDC or records why OIDC is not yet available."
-      - "Verify the trust policy or role assumption is scoped to the expected repository and environment."
+      - "Verify the trust policy or role assumption is scoped to the expected repository, ref, environment, and audience."
       - "Verify no AWS secret values are committed."
     agent_guidance: >
       Authentication is part of deployment correctness. Prefer short-lived,
@@ -152,6 +180,15 @@ source_refs:
       - "Deployment Phases"
       - "Security Requirements"
       - "Stop Conditions"
+  - doc: ".agentic/aws/workflows/deploy-rag-rulebook-service.md"
+    sections:
+      - "Required Gate"
+      - "GitHub Release Path"
+      - "Deployment Phases"
+      - "Stop Conditions"
+  - doc: "scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh"
+    sections:
+      - "deploy-readiness manifest validation"
   - doc: "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments"
     sections:
       - "Managing environments for deployment"
@@ -169,3 +206,4 @@ success_criteria:
   - "It requires protected environments or explicit blocking gaps before sensitive deployment."
   - "It prefers OIDC and bans committed cloud secrets."
   - "It names build, publish, deploy, verify, and rollback boundaries."
+  - "It requires concrete workflow coverage and a passing deploy-readiness manifest before execution."

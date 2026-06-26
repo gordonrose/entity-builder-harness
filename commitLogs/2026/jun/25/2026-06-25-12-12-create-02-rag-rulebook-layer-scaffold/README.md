@@ -284,6 +284,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Harden deploy intent authorization proof
   Rationale: Resolved final packet intent from governed intent precedence, added explicit action authorization with execution_allowed false for blocked deploy execution, added negative deploy-language fixtures for planning, explanation, deployment-plan, and no-action prompts, cited blocking-gap evidence directly, and split MCP retrieval coverage from execution readiness.
 
+
+- Decision: Add GitHub-to-AWS deploy readiness proof
+  Rationale: Added a governed AWS workflow for RAG/rulebook service deployment and a read-only deploy-owned readiness verifier that validates a target manifest for GitHub release control, OIDC, immutable artifacts, AWS runtime target, MCP exposure, operations, and local checks before deploy execution.
+
+
+- Decision: Harden deploy readiness after SRE feedback
+  Rationale: Fixed YAML schema parsing, added a governed YAML syntax gate to the RAG/rulebook commit boundary, prevented retrieval selector packets from authorizing deploy execution, made side-effect/session conflicts blocking outside valid deploy sessions, constrained deploy runtime families, and kept the plan focused on evidence-backed live readiness proof or the actual GitHub Actions skeleton next.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -1070,4 +1078,11 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
 
 ## Notes
 
-- None recorded yet.
+- 2026-06-26T21:48:50Z: Hardened the deploy-readiness manifest verifier
+  against the latest review feedback: source policy must match the GitHub ref,
+  OIDC proof now names audience/subject/repository/ref/environment conditions,
+  remote MCP transport is enumerated, and blocked-report exit overrides require
+  explicit planning or explanation caller intent.
+- 2026-06-26T22:29:39Z: Added local runtime build and local context query smoke
+  tests to the RAG/rulebook commit gate, and made the deploy-readiness verifier
+  enforce the governed MCP specification version value.

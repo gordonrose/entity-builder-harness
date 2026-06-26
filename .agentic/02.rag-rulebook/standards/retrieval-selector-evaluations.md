@@ -90,6 +90,16 @@ For deploy, git, write, or destructive prompts, fixtures should assert
 `action_authorization.execution_allowed` directly. Do not rely on consumers
 inferring authorization from `routing.status` alone.
 
+Retrieval selector packets must not authorize deployment execution. They may
+recognize deploy intent, retrieve deploy evidence, and emit blockers, but
+deployment permission belongs to a deploy workflow with explicit approval and a
+passing readiness verifier.
+
+When a prompt requests a side-effecting action for a layer that conflicts with
+complete session metadata, the fixture should expect a blocking session-conflict
+gap. Do not let deploy, git, write, or destructive wording proceed as a merely
+soft prompt/session ambiguity.
+
 ## Required Fixture Cases
 
 An active retrieval selector evaluation suite should include:

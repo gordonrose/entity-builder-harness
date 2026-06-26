@@ -1176,14 +1176,25 @@ def build_packet(
         for layer in prompt_layer_matches
         if layer != args.session_layer and re.fullmatch(r"[0-9]{2}\.[a-z0-9-]+", layer)
     )
+    resolved_intent_id = resolve_intent_id(recognition_matches)
+    side_effect_session_conflict = False
+    if prompt_layer_conflicts:
+        if resolved_intent_id == "intent.deploy.execution":
+            side_effect_session_conflict = args.session_layer != "04.deploy"
+        elif resolved_intent_id in {"intent.git.commit", "intent.implementation.request"}:
+            side_effect_session_conflict = True
     gaps = []
     if prompt_layer_conflicts:
         gaps.append(
             {
                 "id": "gap.selector-fixture.prompt-session-layer-conflict",
                 "type": "ambiguous-intent",
-                "description": "Prompt layer terms differ from complete session metadata; session metadata wins in this fixture.",
-                "blocking": False,
+                "description": (
+                    "Prompt layer terms differ from complete session metadata; session metadata wins in this fixture."
+                    if not side_effect_session_conflict
+                    else "Prompt requests a side-effecting action outside the current session layer; stop before acting."
+                ),
+                "blocking": side_effect_session_conflict,
             }
         )
     if not recognition_matches:
@@ -1262,14 +1273,13 @@ def build_packet(
         for gap in gaps
         if gap.get("blocking") is True and isinstance(gap.get("id"), str)
     ]
-    resolved_intent_id = resolve_intent_id(recognition_matches)
     requested_action = "context-retrieval"
     side_effect_class = "none"
     authorization_status = "not-requested"
     if resolved_intent_id == "intent.deploy.execution":
         requested_action = "deploy"
         side_effect_class = "deploy"
-        authorization_status = "blocked" if blocking_gap_ids else "allowed"
+        authorization_status = "blocked" if blocking_gap_ids else "requires-deploy-workflow-approval"
     elif resolved_intent_id == "intent.git.commit":
         requested_action = "commit"
         side_effect_class = "git"
@@ -1284,7 +1294,11 @@ def build_packet(
     action_authorization = {
         "requested_action": requested_action,
         "side_effect_class": side_effect_class,
-        "execution_allowed": authorization_status == "allowed" and not blocking_gap_ids,
+        "execution_allowed": (
+            authorization_status == "allowed"
+            and not blocking_gap_ids
+            and side_effect_class != "deploy"
+        ),
         "status": authorization_status,
         "resolved_intent_id": resolved_intent_id,
         "blocking_gap_ids": blocking_gap_ids,

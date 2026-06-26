@@ -526,7 +526,9 @@ The location is not the final domain corpus model.
    - Prove `How do I deploy ...`, `Can you explain how to deploy ...`,
      `Prepare a deployment plan ...`, and `Do not deploy ...` retrieve deploy
      context without becoming deploy execution.
-   - Keep deploy execution blocked until AWS workflow coverage exists.
+   - Keep deploy execution blocked until an actual GitHub Actions workflow,
+     protected target environment, selected AWS runtime, and target-specific
+     deploy-readiness manifest pass executable checks.
    - Status: present in
      `schemas/context-packet.schema.yml`,
      `recognition-sources/curated/intent-forms.yml`,
@@ -537,6 +539,36 @@ The location is not the final domain corpus model.
      `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml`,
      `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml`,
      `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml`,
+     and `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
+
+8j. Add concrete GitHub-to-AWS workflow coverage and executable deploy checks.
+   - Add a deploy-owned AWS workflow for RAG/rulebook service deployment that
+     names required inputs, GitHub release control, OIDC preference, immutable
+     artifacts, AWS target boundaries, MCP exposure, rollback, disablement, and
+     stop conditions.
+   - Add a read-only deploy-readiness verifier that accepts a target manifest,
+     validates GitHub, artifact, AWS, MCP, operations, and local-check proof,
+     and fails closed unless the report status is ready.
+   - Verify GitHub source policy/ref consistency, named OIDC audience and trust
+     conditions, governed MCP transport values, and runtime-specific AWS target
+     proof.
+   - Enforce the governed MCP specification version value in the readiness
+     verifier.
+   - Keep `--allow-blocked` limited to callers that explicitly declare
+     planning or explanation intent, and emit `exit_overridden_for_planning`
+     so deploy jobs can reject non-ready reports.
+   - Run local runtime build and local context query smoke tests from the
+     RAG/rulebook commit gate so the local bridge to hosted RAG cannot drift
+     while selector-only tests still pass.
+   - Keep deploy execution blocked until the actual GitHub Actions workflow,
+     protected environment configuration, selected AWS runtime target, and
+     passing target manifest exist.
+   - Status: present in
+     `.agentic/aws/workflows/deploy-rag-rulebook-service.md`,
+     `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh`,
+     `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh`,
+     `docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml`,
+     `docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml`,
      and `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
 
 9. Plan the prototype corpus migration.
@@ -564,6 +596,7 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add deploy-execution selector proof so prompts that ask to deploy the MCP/RAG
-service block with specific missing GitHub/AWS workflow and runtime execution
-items instead of relying on planning-only guidance.
+Add evidence-backed deploy-readiness proof fields and live read-only
+verification mode, or add the actual GitHub Actions workflow skeleton while
+keeping deploy execution blocked until a protected environment, selected AWS
+runtime target, and passing readiness manifest exist.

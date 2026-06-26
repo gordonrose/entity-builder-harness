@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 102
-  workflow_files: 29
+  term_count: 104
+  workflow_files: 30
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -421,6 +421,12 @@ terms:
   canonical_id: .agentic/aws/workflows/README.md
   evidence_path: .agentic/routing-policy.yaml
   confidence_weight: 1
+- term: .agentic/aws/workflows/deploy-rag-rulebook-service.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: aws.workflow.deploy-rag-rulebook-service
+  evidence_path: .agentic/aws/workflows/deploy-rag-rulebook-service.md
+  confidence_weight: 1
 - term: .agentic/aws/workflows/execute-approved-aws-change.md
   category: workflow-name
   match_type: exact
@@ -612,6 +618,12 @@ terms:
   match_type: exact
   canonical_id: 02.rag-rulebook.workflow.default
   evidence_path: .agentic/02.rag-rulebook/workflows/default.md
+  confidence_weight: 1
+- term: deploy-rag-rulebook-service.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: aws.workflow.deploy-rag-rulebook-service
+  evidence_path: .agentic/aws/workflows/deploy-rag-rulebook-service.md
   confidence_weight: 1
 - term: derive-rules-from-source.md
   category: workflow-name

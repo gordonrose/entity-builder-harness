@@ -38,7 +38,15 @@ expected:
   routing:
     layer: 02.rag-rulebook
     mode: implementation
-    status: ready
+    status: blocked
+  intent:
+    id: intent.deploy.execution
+  action_authorization:
+    requested_action: deploy
+    side_effect_class: deploy
+    execution_allowed: false
+    status: blocked
+    resolved_intent_id: intent.deploy.execution
   matched_corpora:
     required:
       - corpus.02.rag-rulebook
@@ -47,6 +55,8 @@ expected:
       - recognition.generated.routing
   gaps:
     required:
+      - gap.selector-fixture.prompt-session-layer-conflict
+    blocking_required:
       - gap.selector-fixture.prompt-session-layer-conflict
     allowed:
       - gap.selector-fixture.prototype-corpus-bridge

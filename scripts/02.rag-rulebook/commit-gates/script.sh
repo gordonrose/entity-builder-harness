@@ -52,6 +52,10 @@ require_executable "scripts/02.rag-rulebook/validate-retrieval-policy-pack/scrip
 bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh --current --json >/dev/null
 echo "RAG/rulebook retrieval policy pack is valid."
 
+require_executable "scripts/02.rag-rulebook/validate-yaml-syntax/script.sh"
+bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+echo "RAG/rulebook governed YAML syntax is valid."
+
 if [ -d "$LAYER_DIR/recognition-sources" ]; then
   require_executable "scripts/02.rag-rulebook/validate-recognition-sources/script.sh"
   bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
@@ -83,5 +87,13 @@ echo "RAG/rulebook retrieval selector fixture is valid."
 require_executable "scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh"
 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh >/dev/null
 echo "RAG/rulebook retrieval selector evaluations passed."
+
+require_executable "scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh"
+bash scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh >/dev/null
+echo "RAG/rulebook local runtime build smoke passed."
+
+require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
+bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null
+echo "RAG/rulebook local context query smoke passed."
 
 echo "RAG/rulebook commit gates passed."

@@ -62,6 +62,8 @@ validation, and standalone service adapters.
 - `validate-retrieval-policy-pack/script.sh` validates a
   `rag-rulebook/retrieval-policy-pack/v1` YAML policy pack before selector
   runtime code can rely on it.
+- `validate-yaml-syntax/script.sh` parses governed RAG/rulebook and deploy
+  YAML files before narrower validators run.
 - `validate-recognition-sources/script.sh` validates
   `rag-rulebook/recognition-source/v1` YAML lookup sources before generated or
   curated prompt-recognition vocabulary can be committed.

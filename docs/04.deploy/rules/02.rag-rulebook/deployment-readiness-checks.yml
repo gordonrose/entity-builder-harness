@@ -59,6 +59,7 @@ rules:
       mutation is allowed.
     must:
       - "Name the remote repository, branch, commit SHA, workflow trigger, target environment, and intended deploy artifact."
+      - "Set a governed source policy: remote-main requires github.ref refs/heads/main; approved-release-tag requires a governed version tag ref."
       - "Require remote main protection or an approved equivalent that includes review and required status checks for deployable changes."
       - "Verify required RAG/rulebook gates, deploy gates, and GitHub checks passed for the exact commit being deployed."
       - "Record whether deployment was triggered by push, tag, release, workflow dispatch, or another governed trigger."
@@ -68,6 +69,7 @@ rules:
       - "Do not let a planning prompt become an implicit deployment trigger."
     required_checks:
       - "Verify exact remote main commit SHA."
+      - "Verify the source policy matches the GitHub ref."
       - "Verify protected branch or approved release ref controls."
       - "Verify required status checks passed for the deployment commit."
       - "Verify deployment trigger and target environment are recorded."
@@ -82,7 +84,7 @@ rules:
       AWS readiness checks must name the runtime family before applying
       runtime-specific rollback, health, networking, or scaling assumptions.
     must:
-      - "Name the runtime family before mutation, such as ECS/Fargate, Lambda, App Runner, EKS, EC2, or another governed AWS target."
+      - "Name the runtime family before mutation, using a governed value such as app-runner, ecs-fargate, lambda, or eks."
       - "Apply runtime-specific health, rollback, scaling, and network checks only after the target runtime is selected."
       - "Record when a rule is generic AWS readiness versus ECS-specific, Lambda-specific, App Runner-specific, or another target-specific concern."
       - "Keep undecided runtime choices in planning mode until a governed target decision exists."
@@ -92,6 +94,7 @@ rules:
       - "Do not mutate AWS while runtime family is still an open design choice."
     required_checks:
       - "Verify runtime family is named."
+      - "Verify runtime family is one of the governed values."
       - "Verify target-specific checks match the selected runtime."
       - "Verify undecided runtime choices block deploy execution."
     agent_guidance: >
@@ -199,7 +202,8 @@ rules:
       MCP server deployment must define access control, capability exposure,
       data boundaries, and threat-model coverage before remote exposure.
     must:
-      - "Pin or update the MCP specification version used by the deployment rules."
+      - "Use a governed MCP specification version value; the current allowed value is 2025-11-25."
+      - "Use a governed remote MCP transport value; the first remote exposure currently allows streamable-http only."
       - "Classify each exposed MCP resource, prompt, and future tool as read-only, write-capable, deploy-capable, or destructive."
       - "Define authentication, authorization, consent, audit, rate limits, and client trust boundaries for remote exposure."
       - "Cover prompt injection, tool poisoning, data exfiltration, confused deputy, and overbroad corpus access risks."
@@ -209,7 +213,9 @@ rules:
       - "Do not let user prompt wording bypass workflow, approval, or target-environment gates."
       - "Do not serve private repo, user, cloud, or corpus content to unauthorized clients."
     required_checks:
-      - "Verify MCP spec version and capability list."
+      - "Verify MCP spec version is one of the governed allowed values."
+      - "Verify MCP capability list."
+      - "Verify MCP transport is one of the governed remote transport values."
       - "Verify auth, authorization, consent, and audit expectations."
       - "Verify exposed resources and prompts are read-only for the first deployment surface."
       - "Verify threat-model risks have an owner or blocking gap."
@@ -293,6 +299,35 @@ rules:
       This rule is the bridge from rulebook to deployment automation. It is
       acceptable early on to write the rule; production requires proof.
 
+  - id: deployment-readiness-checks.verifies-readiness-manifest-before-execution
+    title: Deploy execution requires a passing readiness manifest
+    severity: error
+    summary: >
+      RAG/rulebook deploy execution must run a read-only readiness verifier
+      against a concrete manifest and block unless the report is ready.
+    must:
+      - "Use schema deploy/rag-rulebook-readiness-manifest/v1 for the candidate deployment manifest."
+      - "Run scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh --manifest <path> --json before deploy execution."
+      - "Require the report schema deploy/rag-rulebook-readiness-report/v1 and status ready before deployment mutates GitHub or AWS state."
+      - "Treat every blocking gap in the report as a deploy-execution stop condition."
+      - "Keep --allow-blocked usage limited to planning or explanation workflows that pass --caller-intent planning or --caller-intent explanation and need to display the blocked report without approving execution."
+    must_not:
+      - "Do not use --allow-blocked in an execution workflow."
+      - "Do not treat a report with ok false or exit_overridden_for_planning true as deployment approval."
+      - "Do not ignore readiness-report blocking gaps because a human source document exists."
+      - "Do not run AWS mutation while the manifest is missing exact GitHub, artifact, AWS, MCP, operations, or check proof."
+    required_checks:
+      - "Verify the manifest schema."
+      - "Verify GitHub repository, source policy, ref, SHA, environment, protection rules, OIDC role, OIDC audience, OIDC repository/ref/environment conditions, artifact provenance, and deployment history fields."
+      - "Verify immutable service and corpus artifacts."
+      - "Verify AWS runtime target, health check, rollback target, governed MCP spec/auth/transport, budget, quota, throttling, and operational ownership."
+      - "Verify runtime-specific target proof for app-runner, ecs-fargate, lambda, or eks."
+      - "Verify required local checks, generated sources, branch protection, environment protection, AWS target, rollback, and health proof are true."
+    agent_guidance: >
+      A passing readiness manifest is the executable handoff from planning to
+      deployment execution. A blocked manifest report is useful context, not
+      permission to deploy.
+
 source_refs:
   - doc: "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
     sections:
@@ -339,6 +374,14 @@ source_refs:
     sections:
       - "Server Features"
       - "Security and Trust & Safety"
+  - doc: ".agentic/aws/workflows/deploy-rag-rulebook-service.md"
+    sections:
+      - "Required Gate"
+      - "Deployment Phases"
+      - "Stop Conditions"
+  - doc: "scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh"
+    sections:
+      - "deploy-readiness manifest validation"
 
 success_criteria:
   - "The file exists at docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml."
@@ -346,3 +389,4 @@ success_criteria:
   - "It separates generic readiness from runtime-specific AWS checks."
   - "It names immutable artifacts, IaC ownership, supply-chain evidence, secrets, MCP access control, cost and capacity controls, and operational runbooks."
   - "It keeps prose-only readiness checks visible until they become executable or auditable checks."
+  - "It requires a passing deploy-readiness manifest before deploy execution."

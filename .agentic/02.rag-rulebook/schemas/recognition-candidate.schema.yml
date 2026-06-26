@@ -311,8 +311,8 @@ field_guide:
     what_it_is: The proof ladder for turning a recognized term into retrievable knowledge.
     what_it_does: Separates source prose, governed rulebook structure, generated chunks, and evaluation proof.
     rules:
-      - `source_material` proves human-readable source exists.
-      - `structured_rulebook` proves the source has been converted into governed rulebook form.
-      - `indexed_chunks` proves the governed source can be retrieved as chunks.
-      - `selector_evaluation` proves selector behavior with expected and banned outcomes.
+      - "`source_material` proves human-readable source exists."
+      - "`structured_rulebook` proves the source has been converted into governed rulebook form."
+      - "`indexed_chunks` proves the governed source can be retrieved as chunks."
+      - "`selector_evaluation` proves selector behavior with expected and banned outcomes."
       - A `present` stage must list evidence paths.

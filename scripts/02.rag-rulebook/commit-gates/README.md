@@ -35,6 +35,7 @@ required.
 ## Current Checks
 
 - Validate the current retrieval selector policy pack.
+- Validate governed YAML syntax under RAG/rulebook and deploy roots.
 - If recognition sources exist, require and run the recognition-source
   validator.
 - If recognition candidates exist, require and run the recognition-candidate
@@ -48,6 +49,10 @@ required.
   wired together.
 - Require and run the retrieval selector evaluation fixture smoke test so
   expected and banned packet behaviors remain pinned.
+- Require and run the local runtime build smoke test so index, chunks,
+  manifest, and validation-report generation remain wired together.
+- Require and run the local context query smoke test so the runtime cache can
+  still produce a validated context packet.
 
 ## Maintenance Rule
 
@@ -59,7 +64,7 @@ commit script.
 
 This command is read-only. It checks generated recognition sources for
 freshness and recognition candidates for review-record validity, but does not
-rewrite them. It validates derivation reports without updating rules, chunks,
-or evaluations. It does not rebuild chunks, stage files, or create commits,
-except transient fixture chunks in a temporary directory during smoke
-validation.
+rewrite them. It parses YAML syntax and validates derivation reports without
+updating rules, chunks, or evaluations. It does not stage files or create
+commits, except transient fixture chunks and local runtime outputs in temporary
+directories during smoke validation.

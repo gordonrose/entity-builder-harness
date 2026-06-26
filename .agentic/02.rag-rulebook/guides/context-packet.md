@@ -69,6 +69,10 @@ or destructive work. It should say what action was requested, whether execution
 is allowed, and which blocking gaps prevent execution. A consumer should not
 infer deployment permission from relevant deploy chunks alone.
 
+For deployment, a RAG selector packet may recognize intent and retrieve
+evidence, but it must not approve execution. Deploy permission belongs to the
+deploy workflow after explicit approval and a passing readiness verifier.
+
 Then read `matched_corpora`, `matched_rule_packs`, and `matched_rulesets`.
 
 These fields explain why the service selected a corpus or rule source. They are
@@ -186,6 +190,9 @@ If `routing.status` is `blocked`, stop and explain the gap.
 
 If `action_authorization.execution_allowed` is `false`, do not perform the
 named side-effecting action even when the selected chunks look relevant.
+
+If `action_authorization.side_effect_class` is `deploy`, treat the packet as
+context only. Enter the deploy workflow before any execution decision.
 
 Use `selected_chunks` as the context payload. Use `citations` when explaining
 why a rule applies. Use `required_checks` before claiming work is complete. Use

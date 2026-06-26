@@ -25,3 +25,5 @@
 - `plan-aws-change.md` - prepare a proposed AWS change before execution.
 - `execute-approved-aws-change.md` - run an explicitly approved AWS change and
   record the result.
+- `deploy-rag-rulebook-service.md` - govern GitHub-to-AWS deployment of the
+  RAG/rulebook MCP service after readiness proof and explicit approval.

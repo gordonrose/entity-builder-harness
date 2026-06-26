@@ -53,3 +53,8 @@ The intended execution path is:
 
 Planning may explain gaps. Deployment execution must block until the relevant
 readiness rules have executable or auditable proof.
+
+The current executable proof surface is
+`scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh`, which
+validates a target deploy-readiness manifest before any GitHub-to-AWS
+deployment execution can proceed.

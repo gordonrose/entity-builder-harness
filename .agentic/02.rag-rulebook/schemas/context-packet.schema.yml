@@ -178,6 +178,7 @@ fields:
           - blocked
           - not-executable-intent
           - not-requested
+          - requires-deploy-workflow-approval
       resolved_intent_id:
         type: string
       blocking_gap_ids:
@@ -677,12 +678,14 @@ field_guide:
       - "Use this field when the prompt appears to request write, git, deploy, or destructive action."
       - "When execution is blocked, list the blocking gap IDs."
       - "Do not set `execution_allowed: true` while routing is blocked or blocking gaps exist."
+      - "RAG selector packets must not authorize deploy execution; deployment approval belongs to the deploy workflow, explicit user approval, and readiness verifier."
 
   - path: action_authorization.execution_allowed
     what_it_is: "Whether the requested side-effecting action may proceed."
     what_it_does: "Gives downstream workflows a direct safety signal."
     rules:
       - "Must be false when the prompt is planning, explanation, or no-action."
+      - "Must be false for deploy execution in RAG selector packets."
       - "Must be false when any blocking gap is present."
 
   - path: gaps.required_evidence_chunk_ids

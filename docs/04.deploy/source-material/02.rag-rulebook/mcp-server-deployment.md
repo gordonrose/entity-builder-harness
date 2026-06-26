@@ -161,7 +161,8 @@ The MCP server exposes RAG/rulebook resources and planning prompts.
 
 Required proof:
 
-- MCP protocol version is explicit
+- MCP protocol version is explicit and uses a governed allowed value, currently
+  `2025-11-25`
 - resource, prompt, and tool contracts are separated
 - read-only endpoints cannot mutate repo, GitHub, or AWS state
 - authentication and authorization expectations are documented
@@ -188,10 +189,14 @@ Production-grade GitHub deployment requires:
 
 - protected deployment environments
 - required reviewers for sensitive environments
-- branch or tag restrictions for deployable refs
+- a declared source policy: `remote-main` for `refs/heads/main`, or
+  `approved-release-tag` for governed version tag refs
+- branch or tag restrictions that match the declared source policy
 - environment-scoped variables and secrets
 - preferably OIDC-based cloud authentication rather than long-lived cloud
   credentials stored as GitHub secrets
+- named OIDC audience, subject, repository, ref, and environment conditions
+  for the role assumption path
 - workflow run logs and deployment history retained for audit
 - explicit separation between build, publish corpus, deploy service, verify,
   and rollback jobs
@@ -231,6 +236,9 @@ Deployment guidance is unsafe unless the security boundary is explicit.
 Required security claims:
 
 - MCP tools can execute arbitrary operations and must be treated as high-risk.
+- The first remote MCP exposure should use a governed HTTP transport such as
+  `streamable-http`; local `stdio` transport is not a remote deployment
+  transport.
 - Hosts or users must consent before data access or tool invocation.
 - Resource data must not be transmitted beyond its intended boundary.
 - Tool descriptions and annotations are not enough to prove safety.
