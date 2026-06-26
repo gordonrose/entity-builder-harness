@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 390
-  term_count: 786
+  indexed_artifacts: 394
+  term_count: 794
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3653,6 +3653,54 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.workflows.review-recognition-candidates
   evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+  confidence_weight: 1
+- term: rag-rulebook.rules.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.rules.readme
+  evidence_path: docs/02.rag-rulebook/rules/README.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/rules/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.rules.readme
+  evidence_path: docs/02.rag-rulebook/rules/README.md
+  confidence_weight: 1
+- term: rag-rulebook.rules.concerns.mcp-server-deployment-architecture
+  category: rule-id
+  match_type: exact
+  canonical_id: rag-rulebook.rules.concerns.mcp-server-deployment-architecture
+  evidence_path: docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.rules.concerns.mcp-server-deployment-architecture
+  evidence_path: docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material.readme
+  evidence_path: docs/02.rag-rulebook/source-material/README.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/source-material/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material.readme
+  evidence_path: docs/02.rag-rulebook/source-material/README.md
+  confidence_weight: 1
+- term: rag-rulebook.source-material.mcp-server-deployment-architecture
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material.mcp-server-deployment-architecture
+  evidence_path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material.mcp-server-deployment-architecture
+  evidence_path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
   confidence_weight: 1
 - term: rag-rulebook.scripts.readme
   category: artifact-id

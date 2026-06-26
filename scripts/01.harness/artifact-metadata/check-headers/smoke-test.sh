@@ -33,6 +33,8 @@ bash "$checker" --paths \
   scripts/01.harness/artifact-metadata/check-headers/script.sh \
   scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh \
   scripts/01.harness/check-artifact-metadata-headers.sh \
+  docs/02.rag-rulebook/rules/README.md \
+  docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml \
   docs/harness/architecture/rules/layers/packages-core.yml
 
 tmp_dir="$repo_root/.agentic/01.harness/artifact-metadata/.tmp-check-headers-smoke-$$"

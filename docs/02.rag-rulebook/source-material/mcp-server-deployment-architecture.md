@@ -99,10 +99,12 @@ MCP server work must preserve existing harness boundaries:
 This document provides the `source_material` stage for the MCP server
 recognition candidate.
 
+The structured rulebook stage is now present at
+`docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml`.
+
 The candidate remains only partially covered because the following stages are
 still missing:
 
-- structured rulebook YAML
 - generated indexed chunks
 - selector evaluation proof that MCP server prompts retrieve the right content
   and keep unsafe execution paths blocked

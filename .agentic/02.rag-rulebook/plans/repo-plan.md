@@ -294,6 +294,16 @@ The location is not the final domain corpus model.
      `docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md`
      and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
 
+7s. Add MCP server structured rulebook coverage.
+   - Convert MCP server source material into governed YAML rulebook content.
+   - Move the MCP server candidate to staged partial coverage by marking
+     `source_material` and `structured_rulebook` as present.
+   - Keep indexed chunks and selector evaluation stages missing so the
+     selector continues to report the remaining coverage gap.
+   - Status: present in
+     `docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml`
+     and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -315,5 +325,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Convert the MCP server source material into structured rulebook YAML while
-keeping indexed chunks and selector evaluation marked as missing.
+Make `docs/02.rag-rulebook/rules/` indexable and chunked, or add selector
+evaluation proof once indexed chunks exist.

@@ -196,6 +196,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Move RAG source material to docs
   Rationale: Moved MCP server source material from .agentic/02.rag-rulebook/source-material to docs/02.rag-rulebook/source-material so .agentic remains governance-owned and docs holds corpus/source content before structured rulebook conversion.
 
+
+- Decision: Add MCP server structured rulebook YAML
+  Rationale: Converted MCP server source material into structured RAG/rulebook YAML, added docs/02.rag-rulebook to artifact metadata governance, refreshed generated recognition sources, and left indexed chunks plus selector evaluation proof as the remaining candidate coverage gaps.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -608,6 +612,13 @@ Commit: Move RAG source material to docs
 Summary: Moved MCP server source material into docs/02.rag-rulebook/source-material and updated candidate evidence plus RAG/rulebook references so .agentic remains governance-owned.
 
 ADR impact: No new ADR; clarifies the ADR 0022 boundary between governance and corpus/source content.
+
+
+### 2026-06-26T12:06:44Z - Decision
+
+Decision: Add MCP server structured rulebook YAML
+
+Rationale: Converted MCP server source material into structured RAG/rulebook YAML, added docs/02.rag-rulebook to artifact metadata governance, refreshed generated recognition sources, and left indexed chunks plus selector evaluation proof as the remaining candidate coverage gaps.
 
 ## Commits
 
