@@ -481,6 +481,20 @@ The location is not the final domain corpus model.
      `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`,
      and `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
 
+8g. Split deploy corpus depth into GitHub and AWS concerns.
+   - Add a GitHub-to-AWS release-control ruleset for protected environments,
+     OIDC preference, staged workflow boundaries, artifact provenance, and
+     readiness blocking.
+   - Add an AWS runtime boundary ruleset for target identity, network exposure,
+     secrets, observability, health checks, and rollback proof.
+   - Keep these rules non-executable until deploy-execution selector fixtures,
+     deployment-readiness checks, and AWS workflow coverage exist.
+   - Status: present in
+     `docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml`,
+     `docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml`,
+     `corpus-gaps/04.deploy/mcp-server-deployment.yml`, and
+     `derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -506,6 +520,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Split the first deploy corpus coverage into deeper production-grade concern
-rules for GitHub-to-AWS deployment and AWS runtime boundaries, keeping those
-rules non-executable until local RAG and deploy checks prove the path.
+Add deploy-execution selector proof and deployment-readiness checks so prompts
+that ask to deploy the MCP/RAG service block with specific missing GitHub/AWS
+readiness items instead of relying on planning-only guidance.

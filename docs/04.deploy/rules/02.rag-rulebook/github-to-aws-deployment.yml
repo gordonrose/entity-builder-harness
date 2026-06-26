@@ -1,0 +1,170 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.github-to-aws-deployment
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: rule
+#   purpose: Define GitHub-to-AWS release-control rules for deploying RAG/rulebook services and MCP exposure.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: deploy.rules.02-rag-rulebook.mcp-server-deployment
+#     path: docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+#   - id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#     path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+id: concern.rag-rulebook-github-to-aws-deployment
+title: RAG/rulebook GitHub-to-AWS deployment rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+description: >
+  Rules for using GitHub as the release-control plane when deploying
+  RAG/rulebook services or MCP server surfaces to AWS.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - .agentic/aws/workflows/plan-aws-change.md
+  - .agentic/aws/workflows/execute-approved-aws-change.md
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".github/workflows/**"
+    - ".agentic/aws/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+
+rules:
+  - id: github-to-aws-deployment.uses-github-as-release-control-plane
+    title: GitHub controls release authorization
+    severity: error
+    summary: >
+      GitHub deployment must provide visible release authorization, environment
+      protection, artifact provenance, and deployment history before AWS
+      mutation is allowed.
+    must:
+      - "Name the GitHub workflow, trigger, deployable ref, target environment, and approval model before deployment execution."
+      - "Use GitHub deployment environments for staging or production targets."
+      - "Require environment protection rules for sensitive environments before deployment jobs can access environment secrets."
+      - "Record workflow run id, commit SHA, artifact version, corpus package version, target AWS environment, and deploy result."
+    must_not:
+      - "Do not deploy from ambiguous refs, unprotected branches, or implicit environments."
+      - "Do not let a workflow create a production environment implicitly without configured protection rules."
+      - "Do not treat a green build as deployment approval."
+    required_checks:
+      - "Verify the workflow trigger and deployable ref."
+      - "Verify the target GitHub environment exists and has the required protection rules."
+      - "Verify deployment history can link the workflow run to the AWS target."
+    agent_guidance: >
+      GitHub is the release-control surface. If the environment protections or
+      deployable ref are unclear, return a blocking deployment gap.
+
+  - id: github-to-aws-deployment.prefers-oidc-over-long-lived-secrets
+    title: GitHub-to-AWS authentication prefers OIDC
+    severity: error
+    summary: >
+      GitHub workflows should use short-lived OIDC-backed cloud credentials
+      rather than long-lived AWS credentials stored in GitHub secrets whenever
+      the target cloud account supports it.
+    must:
+      - "Define the AWS role or identity provider trust that the GitHub workflow is allowed to assume."
+      - "Constrain trust by repository, workflow, ref, environment, or other available claims."
+      - "Use least-privilege permissions for build, publish, deploy, verify, and rollback jobs."
+      - "Document secret names or role names without recording secret values."
+    must_not:
+      - "Do not store long-lived AWS access keys in the repo."
+      - "Do not rely on broad cloud credentials when short-lived workflow identity can be used."
+      - "Do not expose secret values in logs, source material, rules, fixtures, context packets, or derivation reports."
+    required_checks:
+      - "Verify the workflow uses OIDC or records why OIDC is not yet available."
+      - "Verify the trust policy or role assumption is scoped to the expected repository and environment."
+      - "Verify no AWS secret values are committed."
+    agent_guidance: >
+      Authentication is part of deployment correctness. Prefer short-lived,
+      auditable credentials and block when credential scope is unknown.
+
+  - id: github-to-aws-deployment.separates-build-publish-deploy-verify-rollback
+    title: Deployment workflow stages stay separate
+    severity: error
+    summary: >
+      GitHub workflows should separate build, corpus publish, service deploy,
+      verification, and rollback so failures are diagnosable and recovery is
+      governed.
+    must:
+      - "Make build, corpus package publication, deploy, post-deploy verification, and rollback distinct jobs or clearly distinct job phases."
+      - "Pass artifact digests, image tags, corpus package versions, and deployment identifiers explicitly between stages."
+      - "Fail closed when a required stage output is missing."
+      - "Define which stages are allowed to run on pull request, main, tag, staging, and production triggers."
+    must_not:
+      - "Do not combine build, deploy, verify, and rollback into one opaque shell step."
+      - "Do not deploy an image or corpus package that cannot be traced to a commit and generated artifact set."
+      - "Do not continue deployment after verification output is missing or ambiguous."
+    required_checks:
+      - "Verify stage boundaries and required outputs."
+      - "Verify artifact provenance is carried into deployment."
+      - "Verify rollback can identify the previous safe target."
+    agent_guidance: >
+      Stage separation makes deployment understandable. If a stage cannot name
+      its input and output contract, it is not production-ready.
+
+  - id: github-to-aws-deployment.blocks-on-missing-approval-or-readiness
+    title: Missing release readiness blocks deployment
+    severity: error
+    summary: >
+      Deployment execution must block when GitHub approvals, generated corpus
+      freshness, AWS target identity, health checks, or rollback evidence are
+      missing.
+    must:
+      - "Check generated recognition sources, rulebook index, chunks, selector evaluations, and local runtime before publishing deployable corpus packages."
+      - "Check GitHub environment approvals before AWS deploy jobs access protected secrets or OIDC roles."
+      - "Check AWS target account, region, environment, service, image, corpus package, health checks, and rollback target before mutation."
+      - "Return the smallest next governed action when readiness is incomplete."
+    must_not:
+      - "Do not downgrade a missing production readiness item to a warning for deploy execution."
+      - "Do not allow a planning prompt to become a deployment trigger."
+      - "Do not mutate AWS when the GitHub deployment authorization path is incomplete."
+    required_checks:
+      - "Run RAG/rulebook commit gates before publishing corpus packages."
+      - "Run deploy-readiness checks before AWS mutation."
+      - "Verify explicit user approval for write, deploy, or destructive actions."
+    agent_guidance: >
+      Planning can continue with gaps. Deployment execution blocks until the
+      release-control plane and target runtime prove readiness.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
+    sections:
+      - "GitHub Deployment Boundary"
+      - "Deployment Phases"
+      - "Security Requirements"
+      - "Stop Conditions"
+  - doc: "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments"
+    sections:
+      - "Managing environments for deployment"
+      - "Creating an environment"
+      - "How environments relate to deployments"
+  - doc: "https://docs.github.com/en/actions/concepts/security/openid-connect"
+    sections:
+      - "Overview of OpenID Connect"
+      - "Benefits of using OIDC"
+      - "How OIDC integrates with GitHub Actions"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml."
+  - "It keeps GitHub release control separate from AWS runtime configuration."
+  - "It requires protected environments or explicit blocking gaps before sensitive deployment."
+  - "It prefers OIDC and bans committed cloud secrets."
+  - "It names build, publish, deploy, verify, and rollback boundaries."

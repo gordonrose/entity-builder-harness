@@ -264,6 +264,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add deploy MCP selector evaluation proof
   Rationale: Updated the retrieval selector so matching corpus-gap records can admit target corpora into candidate selection, updated the MCP planning fixture to require corpus.04.deploy chunk selection, and marked the deploy MCP selector evaluation stage present while keeping deeper deploy corpus gaps open.
 
+
+- Decision: Add deploy GitHub and AWS boundary depth
+  Rationale: Added separate deploy-track rulesets for GitHub-to-AWS release control and AWS runtime boundaries, linked them from the parent MCP deployment ruleset, updated the deploy corpus gap and derivation report, and added index/chunk smoke assertions so both rulesets remain retrievable as corpus.04.deploy.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -795,6 +799,13 @@ Rationale: Updated the rulebook index generator to scan numbered corpus rule roo
 Decision: Add deploy MCP selector evaluation proof
 
 Rationale: Updated the retrieval selector so matching corpus-gap records can admit target corpora into candidate selection, updated the MCP planning fixture to require corpus.04.deploy chunk selection, and marked the deploy MCP selector evaluation stage present while keeping deeper deploy corpus gaps open.
+
+
+### 2026-06-26T16:15:16Z - Decision
+
+Decision: Add deploy GitHub and AWS boundary depth
+
+Rationale: Added separate deploy-track rulesets for GitHub-to-AWS release control and AWS runtime boundaries, linked them from the parent MCP deployment ruleset, updated the deploy corpus gap and derivation report, and added index/chunk smoke assertions so both rulesets remain retrievable as corpus.04.deploy.
 
 ## Commits
 

@@ -41,8 +41,12 @@ target:
   deploy_track: 02.rag-rulebook
   expected_rule_paths:
     - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
   affected_rule_paths:
     - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
     - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
   affected_rulesets: []
   affected_evaluations:
@@ -63,6 +67,12 @@ semantic_review:
       evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
     - claim_id: deployment-boundaries
       summary: GitHub and AWS deployment boundaries require explicit auth, audit, health checks, rollback, and stop conditions.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: github-release-control
+      summary: GitHub must provide protected release control, environment authorization, artifact provenance, and deployment history before AWS mutation.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: aws-runtime-boundaries
+      summary: AWS runtime deployment must name account or profile, region, service target, network exposure, secrets boundary, health checks, and rollback proof before mutation.
       evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
   conflicts:
     status: none-found
@@ -85,6 +95,8 @@ semantic_review:
 proposed_updates:
   rules:
     - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates:
@@ -95,6 +107,7 @@ proposed_updates:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
   notes:
     - The structured deploy rulebook exists, generated index/chunk proof is present, and the MCP planning selector fixture now selects corpus.04.deploy chunks.
+    - GitHub-to-AWS release control and AWS runtime boundary concerns now exist as separate deploy-track rulesets.
     - No curated recognition-source change is proposed in this slice.
 
 downstream_effects:

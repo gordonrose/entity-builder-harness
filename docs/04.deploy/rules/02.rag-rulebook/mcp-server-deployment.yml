@@ -36,6 +36,8 @@ description: >
   expectations.
 
 related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
   - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
   - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
   - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
@@ -317,4 +319,4 @@ success_criteria:
   - "It keeps deploy governance owned by 04.deploy while naming 02.rag-rulebook as the deploy track."
   - "It converts source-material deployment claims into named rules, required checks, stop conditions, and rollback expectations."
   - "It blocks deploy execution when corpus, workflow, environment, auth, audit, health, or rollback coverage is missing."
-  - "It leaves index, chunk, and selector evaluation proof as separate follow-up work."
+  - "It links to deeper GitHub-to-AWS and AWS runtime boundary concerns."

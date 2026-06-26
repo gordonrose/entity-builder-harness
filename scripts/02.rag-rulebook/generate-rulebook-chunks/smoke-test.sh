@@ -79,6 +79,18 @@ assert any(
     and "Deployment readiness gaps block execution" in chunk["content"]
     for chunk in chunk_set["chunks"]
 )
+assert any(
+    chunk["source_path"] == "docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml"
+    and chunk["corpus_id"] == "corpus.04.deploy"
+    and "GitHub controls release authorization" in chunk["content"]
+    for chunk in chunk_set["chunks"]
+)
+assert any(
+    chunk["source_path"] == "docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml"
+    and chunk["corpus_id"] == "corpus.04.deploy"
+    and "AWS target identity is explicit before mutation" in chunk["content"]
+    for chunk in chunk_set["chunks"]
+)
 
 print("Rulebook chunk generator smoke test passed.")
 print(json.dumps(chunk_set["diagnostics"]["counts"], sort_keys=True))

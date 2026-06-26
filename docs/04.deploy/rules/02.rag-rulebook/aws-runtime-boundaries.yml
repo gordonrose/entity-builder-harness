@@ -1,0 +1,191 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.aws-runtime-boundaries
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.runtime
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: rule
+#   purpose: Define AWS runtime boundary rules for deploying RAG/rulebook services and MCP exposure.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: deploy.rules.02-rag-rulebook.mcp-server-deployment
+#     path: docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+#   - id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#     path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+id: concern.rag-rulebook-aws-runtime-boundaries
+title: RAG/rulebook AWS runtime boundary rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+description: >
+  Rules for defining AWS account, region, service, network, secrets,
+  observability, health, and rollback boundaries before RAG/rulebook services
+  or MCP server surfaces are deployed.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - .agentic/aws/workflows/plan-aws-change.md
+  - .agentic/aws/workflows/execute-approved-aws-change.md
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".agentic/aws/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+    - ".github/workflows/**"
+
+rules:
+  - id: aws-runtime-boundaries.names-target-before-mutation
+    title: AWS target identity is explicit before mutation
+    severity: error
+    summary: >
+      AWS deployment must name account or profile, region, environment, runtime
+      service, ownership, and intended mutation before any cloud state changes.
+    must:
+      - "Name AWS account or profile, region, environment, service family, service name, and owning layer before mutation."
+      - "Name whether the target is local, staging, production, or another governed environment."
+      - "Name the deployable artifact, image, corpus package, or runtime revision being deployed."
+      - "Record the exact command surface or GitHub workflow that would perform the mutation."
+    must_not:
+      - "Do not mutate AWS when account, profile, region, environment, service target, or owner is ambiguous."
+      - "Do not infer production from naming alone."
+      - "Do not let MCP prompt recognition choose an AWS target."
+    required_checks:
+      - "Verify AWS account/profile and region."
+      - "Verify target environment and service ownership."
+      - "Verify deployable artifact identity."
+    agent_guidance: >
+      AWS ambiguity is a stop condition. Ask for the missing boundary or add a
+      governed deploy record before execution.
+
+  - id: aws-runtime-boundaries.controls-network-and-public-exposure
+    title: Network exposure is reviewed before public access
+    severity: error
+    summary: >
+      RAG/rulebook and MCP runtimes must define network exposure, ingress,
+      egress, TLS, auth boundary, and client access before remote or public use.
+    must:
+      - "Classify the runtime as local-only, private network, authenticated public, or public read-only."
+      - "Name ingress path, TLS termination, allowed clients, auth expectations, and rate-limit expectations."
+      - "Review whether MCP resources, prompts, or tools can expose repo, user, cloud, or corpus data."
+      - "Document outbound network needs for corpus package fetch, logging, metrics, and cloud APIs."
+    must_not:
+      - "Do not expose an MCP server publicly before auth, audit, and data-boundary rules are defined."
+      - "Do not expose deploy-capable tools on the first remote surface."
+      - "Do not treat local-only assumptions as valid for staging or production."
+    required_checks:
+      - "Verify ingress and egress expectations."
+      - "Verify authentication and authorization expectations."
+      - "Verify no deploy-capable tools are exposed on the read-only surface."
+    agent_guidance: >
+      The first remote MCP surface should be read-only. Public exposure raises
+      the risk class and needs explicit network and authorization proof.
+
+  - id: aws-runtime-boundaries.protects-secrets-and-runtime-configuration
+    title: Secrets and runtime configuration stay outside corpus files
+    severity: error
+    summary: >
+      Deployment records may name secret references and configuration keys, but
+      secret values must never enter source material, rules, chunks, logs,
+      context packets, or fixtures.
+    must:
+      - "Document secret names, parameter names, or environment variable names without values."
+      - "Use environment-scoped configuration for staging and production."
+      - "Redact credentials, tokens, private keys, session values, and unrelated user data from logs."
+      - "Treat accidental secret exposure as a blocking incident until rotated and removed."
+    must_not:
+      - "Do not commit AWS credentials, GitHub tokens, MCP auth secrets, private keys, or connection strings with secrets."
+      - "Do not include secret values in derivation reports, generated chunks, context packets, or evaluation fixtures."
+      - "Do not rely on obscurity in chunk selection to protect secret values."
+    required_checks:
+      - "Scan changed deploy corpus files for secret-like values."
+      - "Verify only secret names or parameter names are documented."
+      - "Verify runtime configuration is environment-scoped."
+    agent_guidance: >
+      Corpus files are retrieval material. Anything written here may later be
+      surfaced to an agent, so secret values are never acceptable.
+
+  - id: aws-runtime-boundaries.requires-health-observability-and-audit
+    title: Runtime health and audit signals are required
+    severity: error
+    summary: >
+      Remote RAG/rulebook and MCP runtimes are not production-ready until
+      request handling, corpus versions, health, deployment state, and rollback
+      evidence are observable.
+    must:
+      - "Record request id, repo id, commit SHA, corpus versions, selected chunks, citations, emitted gaps, and confidence."
+      - "Record MCP caller or client identity when available without logging secrets or unrelated content."
+      - "Record GitHub run id, AWS account/profile, region, service, deployment id, task or revision id, and health status."
+      - "Define application health, container health, service health, and load balancer health where applicable."
+    must_not:
+      - "Do not claim production readiness without enough evidence to reconstruct deployment and retrieval decisions."
+      - "Do not log full transcripts, secret values, or unrelated repo content by default."
+      - "Do not let audit logging replace approval, validation, or rollback gates."
+    required_checks:
+      - "Verify audit fields before remote or production use."
+      - "Verify health signals are named before deployment."
+      - "Verify log redaction expectations."
+    agent_guidance: >
+      Observability is a deployment feature, not decoration. If the runtime
+      cannot explain what happened, it is not ready.
+
+  - id: aws-runtime-boundaries.defines-rollback-and-failure-detection
+    title: Rollback and failure detection are defined before deployment
+    severity: error
+    summary: >
+      The AWS runtime must define failure detection, rollback target, rollback
+      authority, and post-rollback health proof before deployment mutation.
+    must:
+      - "Name failure detection signals before deployment, such as service deployment state, task launch state, load balancer health, container health, application health, or alarm state."
+      - "Name the rollback target before mutation."
+      - "Name whether rollback is automatic, manual, or gated by approval."
+      - "Record rollback action, rollback result, and post-rollback health evidence."
+      - "Use deployment mechanisms with explicit rollback behavior where the target platform supports them."
+    must_not:
+      - "Do not deploy when rollback target, rollback authority, or health checks are missing."
+      - "Do not rely on memory of a previous deployment as the rollback plan."
+      - "Do not call rollback complete until health checks and deployment state are verified."
+    required_checks:
+      - "Verify rollback target and authority."
+      - "Verify failure detection signals."
+      - "Verify post-rollback health evidence."
+    agent_guidance: >
+      Rollback is designed before mutation. If the platform cannot detect
+      failure or identify a safe previous state, deployment execution blocks.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
+    sections:
+      - "AWS Deployment Boundary"
+      - "Security Requirements"
+      - "Observability Requirements"
+      - "Stop Conditions"
+  - doc: "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-circuit-breaker.html"
+    sections:
+      - "How the Amazon ECS deployment circuit breaker detects failures"
+      - "Failure threshold"
+  - doc: "https://modelcontextprotocol.io/specification/2025-06-18"
+    sections:
+      - "Server Features"
+      - "Security and Trust & Safety"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml."
+  - "It blocks AWS mutation when account, region, environment, service, or owner is ambiguous."
+  - "It separates network exposure, secrets, observability, health, and rollback concerns."
+  - "It records ECS-style failure detection and rollback as required proof when that runtime is used."
+  - "It keeps MCP public exposure and tool execution gated by explicit runtime boundaries."
