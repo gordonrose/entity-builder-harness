@@ -266,7 +266,7 @@ The location is not the final domain corpus model.
    - Prove `MCP server` remains a planning prompt signal while also surfacing
      the missing MCP-server corpus coverage.
    - Status: present in
-     `recognition-candidates/inbox/2026-06-26-mcp-server.yml`,
+     `recognition-candidates/deferred/2026-06-26-mcp-server.yml`,
      `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`, and
      `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`.
 
@@ -281,7 +281,7 @@ The location is not the final domain corpus model.
      is fully ready.
    - Status: present in `schemas/recognition-candidate.schema.yml`,
      `scripts/02.rag-rulebook/validate-recognition-candidates/`, and
-     `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+     `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
 7r. Add first MCP server source material.
    - Add source material for MCP server deployment architecture before
@@ -292,7 +292,7 @@ The location is not the final domain corpus model.
      stages missing so the selector continues to report the coverage gap.
    - Status: present in
      `docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md`
-     and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+     and `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
 7s. Add MCP server structured rulebook coverage.
    - Convert MCP server source material into governed YAML rulebook content.
@@ -302,7 +302,7 @@ The location is not the final domain corpus model.
      selector continues to report the remaining coverage gap.
    - Status: present in
      `docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml`
-     and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+     and `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
 7t. Index and chunk current RAG/rulebook rules.
    - Extend the read-only rulebook index generator to scan current
@@ -314,7 +314,7 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`,
      `scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`, and
-     `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+     `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
 7u. Add MCP server selector evaluation proof.
    - Extend the retrieval selector fixture generator so matched recognition
@@ -327,7 +327,7 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
      `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`,
-     and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+     and `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
 7v. Govern recognition-candidate lifecycle review.
    - Make pending, accepted, rejected, deferred, merged, and corpus-gap
@@ -336,8 +336,8 @@ The location is not the final domain corpus model.
      records.
    - Require terminal review records to include reviewer identity, reviewed
      timestamp, and reviewer notes.
-   - Keep the MCP server candidate pending after coverage proof until a
-     separate review accepts, rejects, defers, or expands deploy-layer corpus
+   - Keep the MCP server candidate review-governed after coverage proof until
+     a separate review accepts, rejects, defers, or expands deploy-layer corpus
      coverage.
    - Status: present in `standards/recognition-candidate-review.md`,
      `workflows/review-recognition-candidates.md`,
@@ -352,6 +352,16 @@ The location is not the final domain corpus model.
      review action.
    - Status: present in
      `scripts/02.rag-rulebook/report-recognition-candidates/`.
+
+7x. Defer the MCP server recognition candidate.
+   - Move the MCP server candidate to `deferred/` instead of accepting it into
+     curated domain-noun vocabulary.
+   - Preserve covered RAG/rulebook planning evidence while recording that
+     deploy-layer corpus depth is still needed before curated deploy guidance.
+   - Keep deferred candidates usable as review signals without making them
+     active curated vocabulary.
+   - Status: present in
+     `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
@@ -374,6 +384,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Use the candidate review report to decide whether the MCP server candidate
-should stay pending, be deferred for deploy-layer depth, or be accepted into a
-curated domain-noun source.
+Add deploy-layer corpus gap tracking for MCP server deployment so the deferred
+candidate has a clear path toward future acceptance or permanent deferral.

@@ -122,7 +122,7 @@ source_refs:
   - .agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/actions.yml
   - .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
-  - .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
 update_triggers:
   - Intent-form recognition source changes.

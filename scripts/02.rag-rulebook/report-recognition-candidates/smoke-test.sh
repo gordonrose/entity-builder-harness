@@ -53,12 +53,13 @@ for candidate in report["candidates"]:
         mcp = candidate
         break
 assert mcp is not None, report
-assert mcp["status"] == "needs-review"
-assert mcp["lifecycle_directory"] == "inbox"
+assert mcp["status"] == "deferred"
+assert mcp["lifecycle_directory"] == "deferred"
 assert mcp["coverage_status"] == "covered"
 action_ids = {action["action_id"] for action in mcp["allowed_next_actions"]}
+assert "keep-deferred" in action_ids
+assert "add-evidence" in action_ids
 assert "accept" in action_ids
-assert "defer" in action_ids
 assert "reject" in action_ids
 assert "merge" in action_ids
 assert "add-corpus-coverage" not in action_ids

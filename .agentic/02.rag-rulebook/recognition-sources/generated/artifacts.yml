@@ -3430,13 +3430,13 @@ terms:
   category: artifact-id
   match_type: exact
   canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
-  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   confidence_weight: 1
-- term: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+- term: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   category: file-path
   match_type: exact
   canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
-  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   confidence_weight: 1
 - term: rag-rulebook.schema.context-packet
   category: artifact-id

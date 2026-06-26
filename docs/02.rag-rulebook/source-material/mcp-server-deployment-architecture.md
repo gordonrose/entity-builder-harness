@@ -18,7 +18,7 @@ portability:
   - design-system-builder
 used_by:
 - id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
-  path: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
 - id: rag-rulebook.plan.repo
   path: .agentic/02.rag-rulebook/plans/repo-plan.md
 -->

@@ -24,7 +24,7 @@
 
 schema: rag-rulebook/recognition-candidate/v1
 candidate_id: recognition-candidate.2026-06-26.domain-noun.mcp-server
-status: needs-review
+status: deferred
 observed:
   term: MCP server
   sentence: How do I update my harness so we can deploy it behind an MCP server?
@@ -46,7 +46,7 @@ coverage:
   needed_corpus_ids:
     - corpus.02.rag-rulebook
   needed_topic: MCP server deployment architecture for harness services.
-  suggested_resolution: Review for curated domain-noun acceptance now that staged retrieval coverage is present; decide separately whether deploy-layer deep coverage is needed.
+  suggested_resolution: Keep as a deferred review signal until deploy-layer corpus coverage exists; current coverage is sufficient for RAG/rulebook planning but not for curated deploy guidance.
   stages:
     source_material:
       status: present
@@ -70,5 +70,7 @@ reason:
   - May affect context selection for RAG/rulebook, harness, and MCP server planning.
 review:
   required: true
-  decision: pending
-  reviewer_notes: ""
+  decision: defer
+  reviewer: Gordon Rose
+  reviewed_at_utc: "2026-06-26T12:46:37Z"
+  reviewer_notes: Deferred from curated domain-noun acceptance. The term has covered RAG/rulebook planning evidence, but needs deeper deploy-layer corpus coverage before it should become active curated vocabulary for deployment guidance.

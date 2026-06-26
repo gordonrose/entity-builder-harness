@@ -216,6 +216,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add recognition-candidate review report helper
   Rationale: Added a read-only helper that validates recognition candidates and reports lifecycle status, coverage state, review needs, and allowed next actions without mutating curated sources.
 
+
+- Decision: Defer MCP server recognition candidate
+  Rationale: Moved the MCP server recognition candidate to deferred because RAG/rulebook planning coverage is present, but deploy-layer corpus depth is still needed before curated domain-noun acceptance.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -663,6 +667,13 @@ Rationale: Made pending, accepted, rejected, deferred, merged, and corpus-gap re
 Decision: Add recognition-candidate review report helper
 
 Rationale: Added a read-only helper that validates recognition candidates and reports lifecycle status, coverage state, review needs, and allowed next actions without mutating curated sources.
+
+
+### 2026-06-26T12:49:41Z - Decision
+
+Decision: Defer MCP server recognition candidate
+
+Rationale: Moved the MCP server recognition candidate to deferred because RAG/rulebook planning coverage is present, but deploy-layer corpus depth is still needed before curated domain-noun acceptance.
 
 ## Commits
 
