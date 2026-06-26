@@ -224,6 +224,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Plan local RAG before deploy corpus
   Rationale: Updated the RAG/rulebook repo plan so local deterministic runtime and local context-query commands come before deploy-layer corpus expansion and hosted GitHub/AWS deployment work.
 
+
+- Decision: Add local RAG runtime build command
+  Rationale: Added a local-first build command that checks recognition sources and candidates, generates the rulebook index and chunks, and writes an ignored runtime cache with manifest and validation report.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -685,6 +689,13 @@ Rationale: Moved the MCP server recognition candidate to deferred because RAG/ru
 Decision: Plan local RAG before deploy corpus
 
 Rationale: Updated the RAG/rulebook repo plan so local deterministic runtime and local context-query commands come before deploy-layer corpus expansion and hosted GitHub/AWS deployment work.
+
+
+### 2026-06-26T13:07:37Z - Decision
+
+Decision: Add local RAG runtime build command
+
+Rationale: Added a local-first build command that checks recognition sources and candidates, generates the rulebook index and chunks, and writes an ignored runtime cache with manifest and validation report.
 
 ## Commits
 

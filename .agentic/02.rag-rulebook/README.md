@@ -137,6 +137,9 @@ final homes.
 - `scripts/02.rag-rulebook/report-recognition-candidates/script.sh` - reports
   recognition-candidate review state, coverage state, and allowed next actions
   without mutating curated sources.
+- `scripts/02.rag-rulebook/build-local-runtime/script.sh` - builds an ignored
+  local runtime cache with generated index, chunks, manifest, and validation
+  report.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

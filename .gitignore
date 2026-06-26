@@ -2,3 +2,4 @@ node_modules/
 .env
 .agentic/env.local
 .DS_Store
+.cache/

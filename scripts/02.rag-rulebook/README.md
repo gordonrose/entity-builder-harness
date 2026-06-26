@@ -37,6 +37,9 @@ validation, and standalone service adapters.
   diagnostics consistency.
 - `generate-rulebook-chunks/script.sh` emits read-only
   `rag-rulebook/chunk-set/v1` JSON chunks from a validated rulebook index.
+- `build-local-runtime/script.sh` writes a local deterministic runtime cache
+  containing the generated rulebook index, chunk set, manifest, and validation
+  report.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.

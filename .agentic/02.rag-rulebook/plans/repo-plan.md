@@ -376,7 +376,8 @@ The location is not the final domain corpus model.
      `.cache/02.rag-rulebook/`.
    - Keep the command deterministic and offline; do not add embeddings,
      network calls, or hosted service dependencies in this step.
-   - Status: planned.
+   - Status: present in
+     `scripts/02.rag-rulebook/build-local-runtime/`.
 
 7z. Add a local context-query command.
    - Query the local runtime with request text, session metadata, focused
@@ -424,5 +425,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add the local RAG/runtime build command so the repo can produce a validated
-offline runtime cache before deploy-corpus expansion or hosted service work.
+Add the local context-query command so agents can ask the local runtime for a
+validated context packet before deploy-corpus expansion or hosted service work.
