@@ -236,6 +236,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Add deploy-layer corpus gap tracking
   Rationale: Recorded the MCP server deployment gap as corpus.04.deploy coverage debt, wired local context packets to emit it, and verified planning prompts remain ready while deploy-execution prompts block on missing deploy corpus depth.
 
+
+- Decision: Add first deploy corpus source material
+  Rationale: Created docs/04.deploy source material for production-grade MCP server deployment through GitHub and AWS, marked the deploy corpus gap source_material stage present, and left structured deploy rules, indexing, chunks, and selector evaluation proof as explicit next gaps.
+
+
+- Decision: Organize deploy corpus by target tracks
+  Rationale: Kept 04.deploy as the deployment governance owner, split deploy source material into shared, 00.chat, 02.rag-rulebook, and 03.product tracks, and moved MCP server deployment source material under the 02.rag-rulebook deploy track.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -718,6 +726,20 @@ Rationale: Added a read-only local context query command that consumes the built
 Decision: Add deploy-layer corpus gap tracking
 
 Rationale: Recorded the MCP server deployment gap as corpus.04.deploy coverage debt, wired local context packets to emit it, and verified planning prompts remain ready while deploy-execution prompts block on missing deploy corpus depth.
+
+
+### 2026-06-26T14:05:59Z - Decision
+
+Decision: Add first deploy corpus source material
+
+Rationale: Created docs/04.deploy source material for production-grade MCP server deployment through GitHub and AWS, marked the deploy corpus gap source_material stage present, and left structured deploy rules, indexing, chunks, and selector evaluation proof as explicit next gaps.
+
+
+### 2026-06-26T14:12:16Z - Decision
+
+Decision: Organize deploy corpus by target tracks
+
+Rationale: Kept 04.deploy as the deployment governance owner, split deploy source material into shared, 00.chat, 02.rag-rulebook, and 03.product tracks, and moved MCP server deployment source material under the 02.rag-rulebook deploy track.
 
 ## Commits
 

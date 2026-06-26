@@ -404,6 +404,21 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
      and `retrieval-selector.v1.intent-form-planning-mcp-server`.
 
+8a. Add first deploy corpus source material.
+   - Start `corpus.04.deploy` with production-grade source material for MCP
+     server deployment through GitHub and AWS.
+   - Organize deploy source material by deploy track, not separate owning
+     layers: shared, `00.chat`, `02.rag-rulebook`, and `03.product`.
+   - Keep the source material non-executable: no AWS mutation, no GitHub
+     workflow implementation, and no production MCP endpoint.
+   - Define scope, non-goals, deployment phases, GitHub and AWS boundaries,
+     security expectations, observability, rollback, stop conditions, and
+     known gaps before structured rule conversion.
+   - Status: present in
+     `docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md`
+     and
+     `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -429,6 +444,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Start the deploy corpus with source material for MCP server deployment through
-GitHub and AWS, while keeping mutating deploy actions out of scope until
-structured rules, chunks, and selector evaluations exist.
+Convert the first deploy source material into structured
+`corpus.04.deploy` YAML rules while keeping indexing, chunking, and selector
+evaluation proof as separate follow-up slices.

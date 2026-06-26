@@ -59,7 +59,9 @@ scope:
     - Building or deploying the production RAG server in this gap record.
 required_coverage:
   source_material:
-    status: missing
+    status: present
+    evidence_paths:
+      - docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
     expectation: >
       Human-readable deployment source material explains the intended local,
       GitHub, MCP server, and AWS deployment flow.
@@ -84,7 +86,6 @@ required_coverage:
       Local context queries may use this gap record to explain missing deploy
       coverage before hosted RAG exists.
 needed_outputs:
-  - docs/04.deploy/source-material/mcp-server-deployment.md
   - docs/04.deploy/rules/concerns/mcp-server-deployment.yml
   - docs/04.deploy/rules/concerns/github-to-aws-deployment.yml
   - docs/04.deploy/rules/concerns/aws-runtime-boundaries.yml
@@ -102,9 +103,9 @@ local_query_behavior:
     intent.deploy.execution: true
 suggested_resolution: >
   Build the deploy corpus in small governed slices: start with source material,
-  convert it into structured deploy rules, index and chunk corpus.04.deploy,
-  then add selector evaluations before using the context for implementation or
-  deployment execution.
+  split shared and track-specific deploy concerns, convert them into structured
+  deploy rules, index and chunk corpus.04.deploy, then add selector evaluations
+  before using the context for implementation or deployment execution.
 review:
   required: true
   owner: 04.deploy

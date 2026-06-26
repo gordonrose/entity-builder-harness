@@ -57,6 +57,8 @@ safety reason. Prefer deterministic scripts for repeatable AWS checks.
 
 ## Output Locations
 
+- `docs/04.deploy/` stores RAG-readable deploy corpus source material and
+  future structured deploy rules.
 - `docs/aws/architecture/adrs/` stores durable AWS-layer decisions.
 - `docs/aws/runbooks/` stores repeatable operational procedures when they are
   too detailed for a workflow.
