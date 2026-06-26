@@ -209,8 +209,9 @@ final homes.
 
 - `scripts/02.rag-rulebook/generate-rulebook-index/script.sh` - emits a
   read-only `rag-rulebook/rulebook-index/v1` JSON index from the current
-  prototype architecture rulebook, current `docs/02.rag-rulebook/rules/`
-  content, and migration map.
+  prototype architecture rulebook, numbered corpus rule roots such as
+  `docs/02.rag-rulebook/rules/` and `docs/04.deploy/rules/`, and migration
+  map.
 - `scripts/02.rag-rulebook/validate-rulebook-index/script.sh` - validates a
   `rag-rulebook/rulebook-index/v1` JSON index without modifying files.
 - `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh` - emits

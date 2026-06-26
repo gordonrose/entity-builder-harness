@@ -456,6 +456,18 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/validate-derivation-reports/` and
      `scripts/02.rag-rulebook/commit-gates/script.sh`.
 
+8e. Add deploy corpus index and chunk coverage.
+   - Teach the rulebook index generator to scan numbered corpus rule roots,
+     including `docs/04.deploy/rules/` as `corpus.04.deploy`.
+   - Keep `docs/02.rag-rulebook/rules/` mapped to `corpus.02.rag-rulebook`
+     so deploy chunks do not get mixed into the RAG/rulebook service corpus.
+   - Add smoke assertions that prove deploy MCP rules are indexed and chunked
+     with `corpus_id: corpus.04.deploy`.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`,
+     `scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`, and
+     `scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -481,6 +493,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Teach the rulebook index and chunk generators to scan
-`docs/04.deploy/rules/` as `corpus.04.deploy` without mixing deploy chunks into
-`corpus.02.rag-rulebook`.
+Add selector evaluation proof for deploy MCP retrieval so prompts about MCP
+deployment select `corpus.04.deploy` chunks when appropriate and keep deploy
+execution blocked until the remaining deploy corpus gaps are closed.

@@ -76,9 +76,6 @@ semantic_review:
   drift:
     status: expected
     items:
-      - artifact: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
-        issue: Index generation does not yet scan docs/04.deploy/rules as corpus.04.deploy.
-        required_resolution: Add corpus-root support before deploy rules can become retrievable chunks.
       - artifact: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
         issue: Existing MCP planning evaluation still treats deploy coverage as a gap.
         required_resolution: Add or update selector evaluation after corpus.04.deploy chunks exist.
@@ -100,17 +97,15 @@ proposed_updates:
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-mcp-server-gap.yml
   notes:
-    - The structured deploy rulebook exists, but generated index/chunk proof is still pending.
+    - The structured deploy rulebook exists and generated index/chunk proof is now present.
     - No curated recognition-source change is proposed in this slice.
 
 downstream_effects:
-  index_required: true
-  chunks_required: true
+  index_required: false
+  chunks_required: false
   selector_evaluation_required: true
   publish_required: false
   stale_artifacts:
-    - generated rulebook index
-    - generated rulebook chunks
     - deploy MCP selector evaluation proof
 
 validation:
@@ -121,6 +116,9 @@ validation:
     - bash scripts/01.harness/check-governed-script-command-drift.sh
     - git diff --check
     - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current
   checks_run:
     - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths docs/04.deploy .agentic/02.rag-rulebook
       result: passed
@@ -134,8 +132,13 @@ validation:
       result: passed
     - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
       result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current
+      result: passed
   checks_pending:
-    - Add corpus.04.deploy support to rulebook index generation.
     - Add selector evaluation proof for deploy MCP retrieval.
 
 review:

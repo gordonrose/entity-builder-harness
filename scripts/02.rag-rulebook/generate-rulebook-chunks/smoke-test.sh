@@ -73,6 +73,12 @@ assert any(
     and chunk["corpus_id"] == "corpus.02.rag-rulebook"
     for chunk in chunk_set["chunks"]
 )
+assert any(
+    chunk["source_path"] == "docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml"
+    and chunk["corpus_id"] == "corpus.04.deploy"
+    and "Deployment readiness gaps block execution" in chunk["content"]
+    for chunk in chunk_set["chunks"]
+)
 
 print("Rulebook chunk generator smoke test passed.")
 print(json.dumps(chunk_set["diagnostics"]["counts"], sort_keys=True))

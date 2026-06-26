@@ -74,7 +74,11 @@ required_coverage:
       Deploy-layer YAML rules define allowed actions, banned actions, required
       checks, stop conditions, rollback expectations, and ownership boundaries.
   indexed_chunks:
-    status: missing
+    status: present
+    evidence_paths:
+      - scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      - scripts/02.rag-rulebook/validate-rulebook-index/script.sh
     expectation: >
       The deploy-layer rulebook content is indexed and chunked as
       corpus.04.deploy without being mixed into corpus.02.rag-rulebook.
@@ -92,7 +96,6 @@ needed_outputs:
   - docs/04.deploy/rules/concerns/github-to-aws-deployment.yml
   - docs/04.deploy/rules/concerns/aws-runtime-boundaries.yml
   - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-mcp-server-gap.yml
-  - scripts/02.rag-rulebook/generate-rulebook-index coverage for corpus.04.deploy
 local_query_behavior:
   should_emit_gap: true
   blocking: false

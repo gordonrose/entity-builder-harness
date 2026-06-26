@@ -24,12 +24,14 @@ used_by:
 -->
 # Generate Rulebook Index
 
-`script.sh` emits a read-only JSON index for the current prototype rulebook.
+`script.sh` emits a read-only JSON index for the current prototype rulebook
+and numbered corpus rule roots.
 
 It reads:
 
 - `docs/harness/architecture/`
 - `docs/02.rag-rulebook/rules/`
+- `docs/04.deploy/rules/`
 - `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml`
 
 It emits:
@@ -56,6 +58,14 @@ Use:
 
 ```bash
 bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh --pretty
+```
+
+Add or override a corpus rule root:
+
+```bash
+bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh \
+  --corpus-rules-root corpus.04.deploy=docs/04.deploy/rules \
+  --pretty
 ```
 
 Run the smoke test:

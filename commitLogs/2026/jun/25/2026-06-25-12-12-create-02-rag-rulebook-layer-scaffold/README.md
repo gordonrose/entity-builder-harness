@@ -256,6 +256,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add source derivation report validator
   Rationale: Added a read-only validator and smoke test for rag-rulebook/source-to-rule-derivation-report/v1 reports, wired it into the RAG/rulebook commit gate, regenerated recognition sources for the new command artifacts, and updated the MCP deploy derivation report so validator coverage is no longer pending.
 
+
+- Decision: Add deploy corpus index and chunk coverage
+  Rationale: Updated the rulebook index generator to scan numbered corpus rule roots, including docs/04.deploy/rules as corpus.04.deploy, added smoke assertions proving deploy MCP rules are indexed and chunked with the deploy corpus id, and marked the deploy MCP corpus gap indexed_chunks stage present while leaving selector evaluation proof pending.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -773,6 +777,13 @@ Rationale: Added the source-to-rule derivation standard, workflow, report schema
 Decision: Add source derivation report validator
 
 Rationale: Added a read-only validator and smoke test for rag-rulebook/source-to-rule-derivation-report/v1 reports, wired it into the RAG/rulebook commit gate, regenerated recognition sources for the new command artifacts, and updated the MCP deploy derivation report so validator coverage is no longer pending.
+
+
+### 2026-06-26T15:52:19Z - Decision
+
+Decision: Add deploy corpus index and chunk coverage
+
+Rationale: Updated the rulebook index generator to scan numbered corpus rule roots, including docs/04.deploy/rules as corpus.04.deploy, added smoke assertions proving deploy MCP rules are indexed and chunked with the deploy corpus id, and marked the deploy MCP corpus gap indexed_chunks stage present while leaving selector evaluation proof pending.
 
 ## Commits
 

@@ -12,7 +12,7 @@ set -euo pipefail
 #     - agentic
 #     - architecture
 #   kind: script
-#   purpose: Generate a read-only JSON rulebook index from the current prototype architecture rulebook.
+#   purpose: Generate a read-only JSON rulebook index from prototype and numbered corpus rule roots.
 #   portability:
 #     class: reusable
 #     targets:
@@ -53,10 +53,15 @@ except ImportError:  # pragma: no cover - environment gate
 
 DEFAULT_SOURCE_ROOT = "docs/harness/architecture"
 DEFAULT_RULEBOOK_RULES_ROOT = "docs/02.rag-rulebook/rules"
+DEFAULT_DEPLOY_RULES_ROOT = "docs/04.deploy/rules"
 DEFAULT_MIGRATION_MAP = ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml"
 INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
 GENERATOR_VERSION = "prototype-v1"
 CURRENT_RULEBOOK_CORPUS_ID = "corpus.02.rag-rulebook"
+DEFAULT_CORPUS_RULE_ROOTS = (
+    (CURRENT_RULEBOOK_CORPUS_ID, DEFAULT_RULEBOOK_RULES_ROOT),
+    ("corpus.04.deploy", DEFAULT_DEPLOY_RULES_ROOT),
+)
 
 
 def repo_root() -> Path:
@@ -80,7 +85,7 @@ def run_git(args: list[str]) -> str:
 def usage() -> str:
     return """Usage:
   generate-rulebook-index/script.sh [--pretty]
-  generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--rulebook-rules-root <path>] [--pretty]
+  generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--rulebook-rules-root <path>] [--corpus-rules-root <corpus-id=path>] [--pretty]
 
 Emits a rag-rulebook/rulebook-index/v1 JSON document to stdout.
 The command is read-only: it parses current prototype corpus files and prints
@@ -92,6 +97,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--source-root", default=DEFAULT_SOURCE_ROOT)
     parser.add_argument("--rulebook-rules-root", default=DEFAULT_RULEBOOK_RULES_ROOT)
+    parser.add_argument("--corpus-rules-root", action="append", default=[])
     parser.add_argument("--migration-map", default=DEFAULT_MIGRATION_MAP)
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
@@ -237,7 +243,49 @@ def make_source_ref_id(prefix: str, value: str) -> str:
     return f"source.{safe_id(prefix)}.{safe_id(value)}"
 
 
-def collect_current_rulebook_entries(rulebook_rules_root: str) -> list[tuple[str, dict[str, Any]]]:
+def root_id_for_corpus_rules(corpus_id: str) -> str:
+    if corpus_id == CURRENT_RULEBOOK_CORPUS_ID:
+        return "root.rulebook-rules"
+    return f"root.{safe_id(corpus_id)}.rules"
+
+
+def default_manifest_path_for_corpus(corpus_id: str, rules_root: str) -> str | None:
+    if corpus_id == CURRENT_RULEBOOK_CORPUS_ID:
+        return ".agentic/02.rag-rulebook/README.md"
+    root_readme = f"{rules_root.rstrip('/')}/README.md"
+    if repo_path(root_readme).is_file():
+        return root_readme
+    corpus_readme = str(Path(rules_root).parent / "README.md")
+    if repo_path(corpus_readme).is_file():
+        return normalize_path(corpus_readme)
+    return None
+
+
+def parse_corpus_rule_roots(args: argparse.Namespace) -> list[dict[str, str]]:
+    roots = {corpus_id: path for corpus_id, path in DEFAULT_CORPUS_RULE_ROOTS}
+    roots[CURRENT_RULEBOOK_CORPUS_ID] = args.rulebook_rules_root
+    for value in args.corpus_rules_root:
+        if "=" not in value:
+            print("ERROR: --corpus-rules-root must use <corpus-id=path>.", file=sys.stderr)
+            sys.exit(2)
+        corpus_id, path = value.split("=", 1)
+        corpus_id = corpus_id.strip()
+        path = path.strip()
+        if not corpus_id or not path:
+            print("ERROR: --corpus-rules-root requires non-empty corpus id and path.", file=sys.stderr)
+            sys.exit(2)
+        roots[corpus_id] = path
+    return [
+        {
+            "corpus_id": corpus_id,
+            "rules_root": normalize_path(path),
+            "root_id": root_id_for_corpus_rules(corpus_id),
+        }
+        for corpus_id, path in sorted(roots.items())
+    ]
+
+
+def collect_current_rulebook_entries(corpus_id: str, rulebook_rules_root: str) -> list[tuple[str, dict[str, Any]]]:
     root = repo_path(rulebook_rules_root)
     if not root.is_dir():
         return []
@@ -256,17 +304,17 @@ def collect_current_rulebook_entries(rulebook_rules_root: str) -> list[tuple[str
                     "metadata_id": metadata.get("id"),
                     "rulebook_id": yaml_data.get("id"),
                     "title": yaml_data.get("title") or Path(current_path).stem,
-                    "proposed_corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+                    "proposed_corpus_id": corpus_id,
                     "proposed_target_path": current_path,
                     "migration_status": "current",
-                    "reason": "Current structured RAG/rulebook corpus content.",
+                    "reason": f"Current structured rulebook corpus content for {corpus_id}.",
                 },
             )
         )
     return entries
 
 
-def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: str) -> dict[str, Any]:
+def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: list[dict[str, str]]) -> dict[str, Any]:
     git_commit = run_git(["rev-parse", "HEAD"])
     generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     migration_map = load_yaml(migration_map_path)
@@ -294,30 +342,44 @@ def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: 
         if isinstance(entry.get("corpus_id"), str)
     ]
 
-    rulebook_root_exists = repo_path(rulebook_rules_root).is_dir()
+    current_corpus_rule_roots = [
+        root
+        for root in corpus_rule_roots
+        if repo_path(root["rules_root"]).is_dir()
+    ]
+    current_rule_root_by_corpus = {
+        root["corpus_id"]: root
+        for root in current_corpus_rule_roots
+    }
     for package in corpus_packages:
-        if package["corpus_id"] != CURRENT_RULEBOOK_CORPUS_ID:
+        root = current_rule_root_by_corpus.get(package["corpus_id"])
+        if root is None:
             continue
-        package["status"] = "current" if rulebook_root_exists else package["status"]
+        package["status"] = "current"
         source_root_ids = list(package.get("source_root_ids") or [])
-        if rulebook_root_exists and "root.rulebook-rules" not in source_root_ids:
-            source_root_ids.append("root.rulebook-rules")
+        if root["root_id"] not in source_root_ids:
+            source_root_ids.append(root["root_id"])
         package["source_root_ids"] = source_root_ids
-        package["manifest_path"] = ".agentic/02.rag-rulebook/README.md"
-        package["proposed_root"] = rulebook_rules_root
+        manifest_path = default_manifest_path_for_corpus(package["corpus_id"], root["rules_root"])
+        if manifest_path:
+            package["manifest_path"] = manifest_path
+        package["proposed_root"] = root["rules_root"]
 
-    if rulebook_root_exists and not any(package["corpus_id"] == CURRENT_RULEBOOK_CORPUS_ID for package in corpus_packages):
-        corpus_packages.append(
-            {
-                "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
-                "owner_layer": owner_layer_for_corpus(CURRENT_RULEBOOK_CORPUS_ID),
-                "status": "current",
-                "purpose": "RAG/rulebook service governance, schema, index, chunking, retrieval, and corpus packaging rules.",
-                "manifest_path": ".agentic/02.rag-rulebook/README.md",
-                "proposed_root": rulebook_rules_root,
-                "source_root_ids": ["root.rulebook-rules"],
-            }
-        )
+    for root in current_corpus_rule_roots:
+        if any(package["corpus_id"] == root["corpus_id"] for package in corpus_packages):
+            continue
+        package = {
+            "corpus_id": root["corpus_id"],
+            "owner_layer": owner_layer_for_corpus(root["corpus_id"]),
+            "status": "current",
+            "purpose": f"Structured rulebook content for {root['corpus_id']}.",
+            "proposed_root": root["rules_root"],
+            "source_root_ids": [root["root_id"]],
+        }
+        manifest_path = default_manifest_path_for_corpus(root["corpus_id"], root["rules_root"])
+        if manifest_path:
+            package["manifest_path"] = manifest_path
+        corpus_packages.append(package)
 
     known_corpora = {entry["corpus_id"] for entry in corpus_packages}
     yaml_entries: list[tuple[str, dict[str, Any]]] = []
@@ -326,7 +388,8 @@ def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: 
         for group_name in ("layer_rulesets", "concern_rulesets", "rule_packs"):
             for entry in list_of_dicts(yaml_artifacts.get(group_name)):
                 yaml_entries.append((group_name, entry))
-    yaml_entries.extend(collect_current_rulebook_entries(rulebook_rules_root))
+    for root in current_corpus_rule_roots:
+        yaml_entries.extend(collect_current_rulebook_entries(root["corpus_id"], root["rules_root"]))
 
     path_to_artifact_ref: dict[str, str] = {}
     artifact_refs: set[str] = set()
@@ -735,12 +798,12 @@ def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: 
         json.dumps(
             {
                 "source_root": source_root,
-                "rulebook_rules_root": rulebook_rules_root,
                 "migration_map": migration_map_path,
                 "git_commit": git_commit,
                 "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
                 "rule_refs": [rule["rule_ref"] for rule in rules],
                 "pack_refs": [pack["pack_ref"] for pack in rule_packs],
+                "corpus_rule_roots": corpus_rule_roots,
                 "path_mappings": path_mappings,
                 "unresolved_references": unresolved_references,
             },
@@ -786,13 +849,14 @@ def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: 
             "migration_status": "proposed",
         },
     ]
-    if rulebook_root_exists:
+    for root in current_corpus_rule_roots:
         source_roots.append(
             {
-                "root_id": "root.rulebook-rules",
-                "path": rulebook_rules_root,
+                "root_id": root["root_id"],
+                "path": root["rules_root"],
                 "role": "corpus-package",
                 "migration_status": "current",
+                "corpus_id": root["corpus_id"],
             }
         )
 
@@ -822,10 +886,11 @@ def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    corpus_rule_roots = parse_corpus_rule_roots(args)
     index = build_index(
         normalize_path(args.source_root),
         normalize_path(args.migration_map),
-        normalize_path(args.rulebook_rules_root),
+        corpus_rule_roots,
     )
     json.dump(index, sys.stdout, indent=2 if args.pretty else None, sort_keys=True)
     sys.stdout.write("\n")

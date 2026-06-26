@@ -39,8 +39,8 @@ The script validates the input index before generating chunks. It does not
 modify files, write generated chunk files, call the network, use embeddings, or
 split files by arbitrary character windows.
 
-Generate chunks from the current prototype corpus and current
-`docs/02.rag-rulebook/rules/` corpus content:
+Generate chunks from the current prototype corpus and current numbered rule
+roots, including `docs/02.rag-rulebook/rules/` and `docs/04.deploy/rules/`:
 
 ```bash
 bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh --generate-current --pretty

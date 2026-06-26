@@ -54,14 +54,28 @@ assert data["diagnostics"]["counts"]["chunk_candidates"] > data["diagnostics"]["
 source_roots = {root["root_id"]: root for root in data["source_roots"]}
 assert source_roots["root.rulebook-rules"]["path"] == "docs/02.rag-rulebook/rules"
 assert source_roots["root.rulebook-rules"]["role"] == "corpus-package"
+assert source_roots["root.corpus.04.deploy.rules"]["path"] == "docs/04.deploy/rules"
+assert source_roots["root.corpus.04.deploy.rules"]["role"] == "corpus-package"
+assert source_roots["root.corpus.04.deploy.rules"]["corpus_id"] == "corpus.04.deploy"
+
+corpus_packages = {package["corpus_id"]: package for package in data["corpus_packages"]}
+assert corpus_packages["corpus.04.deploy"]["status"] == "current"
+assert corpus_packages["corpus.04.deploy"]["proposed_root"] == "docs/04.deploy/rules"
 
 artifacts_by_path = {artifact["current_path"]: artifact for artifact in data["artifacts"]}
 mcp_artifact = artifacts_by_path["docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml"]
 assert mcp_artifact["corpus_id"] == "corpus.02.rag-rulebook"
 assert mcp_artifact["migration_status"] == "current"
+deploy_artifact = artifacts_by_path["docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml"]
+assert deploy_artifact["corpus_id"] == "corpus.04.deploy"
+assert deploy_artifact["migration_status"] == "current"
 
 rule_ids = {rule["rule_id"] for rule in data["rules"]}
 assert "mcp-server-deployment-architecture.uses-validated-context-packets" in rule_ids
+assert "mcp-server-deployment.blocks-on-readiness-gaps" in rule_ids
+
+deploy_rules = [rule for rule in data["rules"] if rule["corpus_id"] == "corpus.04.deploy"]
+assert any(rule["rule_id"] == "mcp-server-deployment.exposes-read-only-mcp-first" for rule in deploy_rules)
 
 print("Rulebook index smoke test passed.")
 print(json.dumps(data["diagnostics"]["counts"], sort_keys=True))
