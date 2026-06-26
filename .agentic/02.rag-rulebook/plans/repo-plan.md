@@ -304,6 +304,31 @@ The location is not the final domain corpus model.
      `docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml`
      and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
 
+7t. Index and chunk current RAG/rulebook rules.
+   - Extend the read-only rulebook index generator to scan current
+     `docs/02.rag-rulebook/rules/` YAML as `corpus.02.rag-rulebook` content.
+   - Prove the MCP server rulebook YAML emits artifact-summary and rule chunks
+     through the existing chunk generator.
+   - Move the MCP server candidate to staged partial coverage by marking
+     `indexed_chunks` as present while keeping selector evaluation missing.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`,
+     `scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`, and
+     `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+
+7u. Add MCP server selector evaluation proof.
+   - Extend the retrieval selector fixture generator so matched recognition
+     candidates can make covered evidence-path chunks eligible for selection.
+   - Update the MCP server planning fixture to require covered MCP rulebook
+     chunks while preserving planning route semantics and banning deploy
+     execution.
+   - Move the MCP server candidate to `coverage.status: covered` while keeping
+     review acceptance separate.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`,
+     and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -325,5 +350,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Make `docs/02.rag-rulebook/rules/` indexable and chunked, or add selector
-evaluation proof once indexed chunks exist.
+Review whether the covered MCP server candidate should be accepted into curated
+domain-noun recognition or remain pending until deploy-layer corpus coverage is
+expanded.

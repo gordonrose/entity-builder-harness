@@ -102,12 +102,13 @@ recognition candidate.
 The structured rulebook stage is now present at
 `docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml`.
 
-The candidate remains only partially covered because the following stages are
-still missing:
+The indexed chunks stage is now present through the rulebook index and chunk
+generator smoke tests, which assert MCP server chunks are emitted from the
+structured YAML.
 
-- generated indexed chunks
-- selector evaluation proof that MCP server prompts retrieve the right content
-  and keep unsafe execution paths blocked
+The selector evaluation stage is now present through the MCP server planning
+fixture, which proves the example prompt retrieves covered MCP server rulebook
+chunks without treating the request as deploy execution.
 
 ## External References
 

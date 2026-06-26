@@ -49,7 +49,6 @@ expected:
   gaps:
     required:
       - gap.selector-fixture.low-confidence-prompt
-      - gap.selector-fixture.prototype-corpus-bridge
     no_unexpected: true
   confidence:
     max_overall: 0.69
@@ -64,3 +63,4 @@ source_refs:
 update_triggers:
   - Prompt confidence thresholds change.
   - Recognition sources add a term that intentionally matches this prompt.
+  - Current corpus.02.rag-rulebook chunk availability changes.

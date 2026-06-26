@@ -45,7 +45,7 @@ from pathlib import Path
 report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert report["ok"], report
 assert report["counts"]["corpus_packages"] >= 10
-assert report["counts"]["artifacts"] >= 26
+assert report["counts"]["artifacts"] >= 27
 assert report["counts"]["rules"] > 0
 assert report["counts"]["graph_edges"] > 0
 PY

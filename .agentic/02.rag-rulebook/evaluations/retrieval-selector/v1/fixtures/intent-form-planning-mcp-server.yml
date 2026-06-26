@@ -24,7 +24,7 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.intent-form-planning-mcp-server
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove request form recognition separates planning guidance from implementation or deploy execution.
+purpose: Prove request form recognition separates planning guidance from implementation or deploy execution while selecting covered MCP server rulebook chunks.
 input:
   request_text: How do I update my harness so we can deploy it behind an MCP server?
   session:
@@ -43,16 +43,20 @@ expected:
   matched_corpora:
     required:
       - corpus.01.harness
+      - corpus.02.rag-rulebook
   selected_corpora:
     required:
-      - corpus.01.harness
+      - corpus.02.rag-rulebook
   selected_content_kinds:
     required:
       - artifact-summary
       - rule
   selected_chunks:
     required_artifact_ids:
-      - artifact.layer.scripts.command.surface
+      - artifact.concern.mcp.server.deployment.architecture
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.exposes.governed.capabilities
+      - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.deploy.boundaries.are.explicit
   recognition:
     required_source_ids:
       - recognition.curated.actions
@@ -93,11 +97,8 @@ expected:
         canonical_id: 04.deploy
         matched_input: prompt
   gaps:
-    required:
-      - gap.selector-fixture.missing-corpus.mcp-server
     allowed:
       - gap.selector-fixture.prompt-session-layer-conflict
-      - gap.selector-fixture.missing-corpus.mcp-server
     no_unexpected: true
   required_checks:
     min_count: 1
@@ -122,6 +123,7 @@ source_refs:
   - .agentic/02.rag-rulebook/recognition-sources/curated/actions.yml
   - .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
   - .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
 update_triggers:
   - Intent-form recognition source changes.
   - Action recognition source changes.

@@ -200,6 +200,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Add MCP server structured rulebook YAML
   Rationale: Converted MCP server source material into structured RAG/rulebook YAML, added docs/02.rag-rulebook to artifact metadata governance, refreshed generated recognition sources, and left indexed chunks plus selector evaluation proof as the remaining candidate coverage gaps.
 
+
+- Decision: Index current RAG rulebook rules
+  Rationale: Extended the rulebook index generator to scan docs/02.rag-rulebook/rules as current corpus.02.rag-rulebook content, proved MCP server rule chunks are emitted, updated candidate coverage so indexed_chunks is present, and left selector_evaluation as the remaining missing stage.
+
+
+- Decision: Add MCP server selector evaluation proof
+  Rationale: Extended selector fixture generation so matched covered recognition candidates can contribute evidence-path chunks, updated the MCP planning fixture to require MCP rulebook chunks while preserving harness planning routing, and moved the MCP server candidate to coverage.status covered pending review.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -619,6 +627,20 @@ ADR impact: No new ADR; clarifies the ADR 0022 boundary between governance and c
 Decision: Add MCP server structured rulebook YAML
 
 Rationale: Converted MCP server source material into structured RAG/rulebook YAML, added docs/02.rag-rulebook to artifact metadata governance, refreshed generated recognition sources, and left indexed chunks plus selector evaluation proof as the remaining candidate coverage gaps.
+
+
+### 2026-06-26T12:18:56Z - Decision
+
+Decision: Index current RAG rulebook rules
+
+Rationale: Extended the rulebook index generator to scan docs/02.rag-rulebook/rules as current corpus.02.rag-rulebook content, proved MCP server rule chunks are emitted, updated candidate coverage so indexed_chunks is present, and left selector_evaluation as the remaining missing stage.
+
+
+### 2026-06-26T12:25:46Z - Decision
+
+Decision: Add MCP server selector evaluation proof
+
+Rationale: Extended selector fixture generation so matched covered recognition candidates can contribute evidence-path chunks, updated the MCP planning fixture to require MCP rulebook chunks while preserving harness planning routing, and moved the MCP server candidate to coverage.status covered pending review.
 
 ## Commits
 

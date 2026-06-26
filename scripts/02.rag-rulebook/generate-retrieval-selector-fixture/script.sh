@@ -399,6 +399,30 @@ def candidate_coverage_gaps(candidates: list[dict[str, Any]], request_text: str)
     return gaps
 
 
+def matched_candidate_evidence_paths(candidates: list[dict[str, Any]], request_text: str) -> list[str]:
+    paths: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        status = candidate.get("status")
+        if status not in {"needs-review", "deferred", "accepted"}:
+            continue
+        observed = candidate.get("observed") if isinstance(candidate.get("observed"), dict) else {}
+        term = str(observed.get("term") or "").strip()
+        if not term or not simple_exact_match(term, request_text):
+            continue
+        coverage = candidate.get("coverage") if isinstance(candidate.get("coverage"), dict) else {}
+        stages = coverage.get("stages") if isinstance(coverage.get("stages"), dict) else {}
+        for stage in stages.values():
+            if not isinstance(stage, dict) or stage.get("status") != "present":
+                continue
+            for evidence_path in list_of_strings(stage.get("evidence_paths")):
+                if evidence_path in seen or not repo_path(evidence_path).is_file():
+                    continue
+                seen.add(evidence_path)
+                paths.append(evidence_path)
+    return paths
+
+
 def focused_path_match(term: str, paths: list[str]) -> bool:
     term_lower = term.lower()
     if not term_lower:
@@ -675,9 +699,15 @@ def prototype_bridge_corpora(session_layer: str) -> list[str]:
 def candidate_ranked_chunks(
     ranked: list[tuple[float, int, str, dict[str, Any]]],
     allowed_corpus_ids: list[str],
+    allowed_source_paths: list[str],
 ) -> tuple[list[tuple[float, int, str, dict[str, Any]]], bool]:
     allowed = set(allowed_corpus_ids)
-    filtered = [item for item in ranked if item[3].get("corpus_id") in allowed]
+    source_paths = set(allowed_source_paths)
+    filtered = [
+        item
+        for item in ranked
+        if item[3].get("corpus_id") in allowed or item[3].get("source_path") in source_paths
+    ]
     if len(filtered) >= 3:
         return filtered, True
     return ranked, False
@@ -698,8 +728,14 @@ def build_packet(
     prompt_terms = tokenize(args.request_text)
     session_corpus = SESSION_LAYER_TO_CORPUS.get(args.session_layer, f"corpus.{args.session_layer}")
     allowed_corpus_ids = matched_corpus_ids(recognition_matches, session_corpus) + prototype_bridge_corpora(args.session_layer)
-    ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, args.focused_paths, session_corpus)
-    candidate_ranked, used_candidate_filter = candidate_ranked_chunks(ranked, allowed_corpus_ids)
+    candidate_evidence_paths = matched_candidate_evidence_paths(recognition_candidates, args.request_text)
+    ranking_paths = list(args.focused_paths) + candidate_evidence_paths
+    ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, ranking_paths, session_corpus)
+    candidate_ranked, used_candidate_filter = candidate_ranked_chunks(
+        ranked,
+        allowed_corpus_ids,
+        candidate_evidence_paths,
+    )
     selected_pairs = select_chunks(candidate_ranked, args.max_chunks)
     selected_source_chunks = [chunk for _score, chunk in selected_pairs]
     if len(selected_source_chunks) < 3:
@@ -1002,6 +1038,7 @@ def build_packet(
             ],
             "candidate_filter_used": used_candidate_filter,
             "candidate_corpus_ids": allowed_corpus_ids,
+            "matched_candidate_evidence_paths": candidate_evidence_paths,
             "generator": "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
             "chunk_set_id": chunk_set.get("chunk_set_id"),
         },

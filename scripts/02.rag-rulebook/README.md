@@ -29,7 +29,8 @@ validation, and standalone service adapters.
 
 - `generate-rulebook-index/script.sh` emits a read-only
   `rag-rulebook/rulebook-index/v1` JSON index for the current prototype
-  architecture rulebook and migration map.
+  architecture rulebook, current `docs/02.rag-rulebook/rules/` content, and
+  migration map.
 - `validate-rulebook-index/script.sh` validates a
   `rag-rulebook/rulebook-index/v1` JSON index for duplicate IDs, broken
   references, count drift, graph-edge resolution, path existence, and

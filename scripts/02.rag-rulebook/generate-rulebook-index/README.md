@@ -29,6 +29,7 @@ used_by:
 It reads:
 
 - `docs/harness/architecture/`
+- `docs/02.rag-rulebook/rules/`
 - `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml`
 
 It emits:

@@ -52,9 +52,11 @@ except ImportError:  # pragma: no cover - environment gate
 
 
 DEFAULT_SOURCE_ROOT = "docs/harness/architecture"
+DEFAULT_RULEBOOK_RULES_ROOT = "docs/02.rag-rulebook/rules"
 DEFAULT_MIGRATION_MAP = ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml"
 INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
 GENERATOR_VERSION = "prototype-v1"
+CURRENT_RULEBOOK_CORPUS_ID = "corpus.02.rag-rulebook"
 
 
 def repo_root() -> Path:
@@ -78,7 +80,7 @@ def run_git(args: list[str]) -> str:
 def usage() -> str:
     return """Usage:
   generate-rulebook-index/script.sh [--pretty]
-  generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--pretty]
+  generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--rulebook-rules-root <path>] [--pretty]
 
 Emits a rag-rulebook/rulebook-index/v1 JSON document to stdout.
 The command is read-only: it parses current prototype corpus files and prints
@@ -89,6 +91,7 @@ the index without moving files or writing generated artifacts.
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--source-root", default=DEFAULT_SOURCE_ROOT)
+    parser.add_argument("--rulebook-rules-root", default=DEFAULT_RULEBOOK_RULES_ROOT)
     parser.add_argument("--migration-map", default=DEFAULT_MIGRATION_MAP)
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
@@ -222,11 +225,48 @@ def artifact_type_for_group(group_name: str) -> str:
     return "source-guide"
 
 
+def group_name_for_current_rulebook_path(path: str) -> str:
+    if "/rule-packs/" in path:
+        return "rule_packs"
+    if "/layers/" in path:
+        return "layer_rulesets"
+    return "concern_rulesets"
+
+
 def make_source_ref_id(prefix: str, value: str) -> str:
     return f"source.{safe_id(prefix)}.{safe_id(value)}"
 
 
-def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
+def collect_current_rulebook_entries(rulebook_rules_root: str) -> list[tuple[str, dict[str, Any]]]:
+    root = repo_path(rulebook_rules_root)
+    if not root.is_dir():
+        return []
+
+    entries: list[tuple[str, dict[str, Any]]] = []
+    paths = sorted({*root.rglob("*.yml"), *root.rglob("*.yaml")})
+    for path in paths:
+        current_path = normalize_path(path)
+        yaml_data = load_yaml(current_path)
+        metadata = parse_metadata_header(current_path)
+        entries.append(
+            (
+                group_name_for_current_rulebook_path(current_path),
+                {
+                    "current_path": current_path,
+                    "metadata_id": metadata.get("id"),
+                    "rulebook_id": yaml_data.get("id"),
+                    "title": yaml_data.get("title") or Path(current_path).stem,
+                    "proposed_corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+                    "proposed_target_path": current_path,
+                    "migration_status": "current",
+                    "reason": "Current structured RAG/rulebook corpus content.",
+                },
+            )
+        )
+    return entries
+
+
+def build_index(source_root: str, migration_map_path: str, rulebook_rules_root: str) -> dict[str, Any]:
     git_commit = run_git(["rev-parse", "HEAD"])
     generated_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     migration_map = load_yaml(migration_map_path)
@@ -254,6 +294,31 @@ def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
         if isinstance(entry.get("corpus_id"), str)
     ]
 
+    rulebook_root_exists = repo_path(rulebook_rules_root).is_dir()
+    for package in corpus_packages:
+        if package["corpus_id"] != CURRENT_RULEBOOK_CORPUS_ID:
+            continue
+        package["status"] = "current" if rulebook_root_exists else package["status"]
+        source_root_ids = list(package.get("source_root_ids") or [])
+        if rulebook_root_exists and "root.rulebook-rules" not in source_root_ids:
+            source_root_ids.append("root.rulebook-rules")
+        package["source_root_ids"] = source_root_ids
+        package["manifest_path"] = ".agentic/02.rag-rulebook/README.md"
+        package["proposed_root"] = rulebook_rules_root
+
+    if rulebook_root_exists and not any(package["corpus_id"] == CURRENT_RULEBOOK_CORPUS_ID for package in corpus_packages):
+        corpus_packages.append(
+            {
+                "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+                "owner_layer": owner_layer_for_corpus(CURRENT_RULEBOOK_CORPUS_ID),
+                "status": "current",
+                "purpose": "RAG/rulebook service governance, schema, index, chunking, retrieval, and corpus packaging rules.",
+                "manifest_path": ".agentic/02.rag-rulebook/README.md",
+                "proposed_root": rulebook_rules_root,
+                "source_root_ids": ["root.rulebook-rules"],
+            }
+        )
+
     known_corpora = {entry["corpus_id"] for entry in corpus_packages}
     yaml_entries: list[tuple[str, dict[str, Any]]] = []
     yaml_artifacts = migration_map.get("yaml_artifacts") or {}
@@ -261,6 +326,7 @@ def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
         for group_name in ("layer_rulesets", "concern_rulesets", "rule_packs"):
             for entry in list_of_dicts(yaml_artifacts.get(group_name)):
                 yaml_entries.append((group_name, entry))
+    yaml_entries.extend(collect_current_rulebook_entries(rulebook_rules_root))
 
     path_to_artifact_ref: dict[str, str] = {}
     artifact_refs: set[str] = set()
@@ -669,6 +735,7 @@ def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
         json.dumps(
             {
                 "source_root": source_root,
+                "rulebook_rules_root": rulebook_rules_root,
                 "migration_map": migration_map_path,
                 "git_commit": git_commit,
                 "artifact_refs": [artifact["artifact_ref"] for artifact in artifacts],
@@ -705,24 +772,35 @@ def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
         "errors": errors,
     }
 
+    source_roots = [
+        {
+            "root_id": "root.prototype",
+            "path": source_root,
+            "role": "prototype-corpus",
+            "migration_status": "current",
+        },
+        {
+            "root_id": "root.migration-map",
+            "path": migration_map_path,
+            "role": "migration-map",
+            "migration_status": "proposed",
+        },
+    ]
+    if rulebook_root_exists:
+        source_roots.append(
+            {
+                "root_id": "root.rulebook-rules",
+                "path": rulebook_rules_root,
+                "role": "corpus-package",
+                "migration_status": "current",
+            }
+        )
+
     return {
         "schema": INDEX_SCHEMA,
         "index_id": f"index.rulebook.{git_commit[:12]}.{logical_fingerprint}",
         "generated_at": generated_at,
-        "source_roots": [
-            {
-                "root_id": "root.prototype",
-                "path": source_root,
-                "role": "prototype-corpus",
-                "migration_status": "current",
-            },
-            {
-                "root_id": "root.migration-map",
-                "path": migration_map_path,
-                "role": "migration-map",
-                "migration_status": "proposed",
-            },
-        ],
+        "source_roots": source_roots,
         "corpus_packages": corpus_packages,
         "artifacts": artifacts,
         "rules": rules,
@@ -744,7 +822,11 @@ def build_index(source_root: str, migration_map_path: str) -> dict[str, Any]:
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    index = build_index(normalize_path(args.source_root), normalize_path(args.migration_map))
+    index = build_index(
+        normalize_path(args.source_root),
+        normalize_path(args.migration_map),
+        normalize_path(args.rulebook_rules_root),
+    )
     json.dump(index, sys.stdout, indent=2 if args.pretty else None, sort_keys=True)
     sys.stdout.write("\n")
     return 0

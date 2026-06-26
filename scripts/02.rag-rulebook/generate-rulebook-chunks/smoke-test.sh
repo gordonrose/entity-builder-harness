@@ -63,6 +63,16 @@ for chunk in chunk_set["chunks"]:
 
 rule_chunks = [chunk for chunk in chunk_set["chunks"] if chunk["content_kind"] == "rule"]
 assert any("core.stable-cross-cutting-only" in chunk["content"] for chunk in rule_chunks)
+assert any(
+    chunk["source_path"] == "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml"
+    and "MCP servers expose governed capabilities" in chunk["content"]
+    for chunk in rule_chunks
+)
+assert any(
+    chunk["source_path"] == "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml"
+    and chunk["corpus_id"] == "corpus.02.rag-rulebook"
+    for chunk in chunk_set["chunks"]
+)
 
 print("Rulebook chunk generator smoke test passed.")
 print(json.dumps(chunk_set["diagnostics"]["counts"], sort_keys=True))
