@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 400
-  term_count: 806
+  indexed_artifacts: 403
+  term_count: 812
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4001,6 +4001,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.generate-rulebook-index.smoke-test
   evidence_path: scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.query-local-context.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-local-context.readme
+  evidence_path: scripts/02.rag-rulebook/query-local-context/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/query-local-context/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-local-context.readme
+  evidence_path: scripts/02.rag-rulebook/query-local-context/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.query-local-context
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-local-context
+  evidence_path: scripts/02.rag-rulebook/query-local-context/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/query-local-context/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-local-context
+  evidence_path: scripts/02.rag-rulebook/query-local-context/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.query-local-context.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-local-context.smoke-test
+  evidence_path: scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-local-context.smoke-test
+  evidence_path: scripts/02.rag-rulebook/query-local-context/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.report-recognition-candidates.readme
   category: artifact-id

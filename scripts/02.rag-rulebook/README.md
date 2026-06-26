@@ -40,6 +40,9 @@ validation, and standalone service adapters.
 - `build-local-runtime/script.sh` writes a local deterministic runtime cache
   containing the generated rulebook index, chunk set, manifest, and validation
   report.
+- `query-local-context/script.sh` reads a built local runtime cache and emits a
+  validated `rag-rulebook/context-packet/v1` packet for request text plus
+  session metadata.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.

@@ -387,7 +387,8 @@ The location is not the final domain corpus model.
      runtime exists.
    - Keep this as the local agent-facing interface while deploy corpus
      coverage matures.
-   - Status: planned.
+   - Status: present in
+     `scripts/02.rag-rulebook/query-local-context/`.
 
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
@@ -425,5 +426,5 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add the local context-query command so agents can ask the local runtime for a
-validated context packet before deploy-corpus expansion or hosted service work.
+Add deploy-layer corpus gap tracking for MCP server deployment so local context
+queries can explain exactly what deploy coverage is still missing.

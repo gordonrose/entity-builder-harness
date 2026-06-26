@@ -228,6 +228,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add local RAG runtime build command
   Rationale: Added a local-first build command that checks recognition sources and candidates, generates the rulebook index and chunks, and writes an ignored runtime cache with manifest and validation report.
 
+
+- Decision: Add local RAG context query command
+  Rationale: Added a read-only local context query command that consumes the built local runtime cache and emits a validated context packet for request text, session metadata, focused paths, and token limits.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -696,6 +700,13 @@ Rationale: Updated the RAG/rulebook repo plan so local deterministic runtime and
 Decision: Add local RAG runtime build command
 
 Rationale: Added a local-first build command that checks recognition sources and candidates, generates the rulebook index and chunks, and writes an ignored runtime cache with manifest and validation report.
+
+
+### 2026-06-26T13:18:43Z - Decision
+
+Decision: Add local RAG context query command
+
+Rationale: Added a read-only local context query command that consumes the built local runtime cache and emits a validated context packet for request text, session metadata, focused paths, and token limits.
 
 ## Commits
 
