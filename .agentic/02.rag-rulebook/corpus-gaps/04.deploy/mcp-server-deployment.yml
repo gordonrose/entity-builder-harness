@@ -83,10 +83,15 @@ required_coverage:
       The deploy-layer rulebook content is indexed and chunked as
       corpus.04.deploy without being mixed into corpus.02.rag-rulebook.
   selector_evaluation:
-    status: missing
+    status: present
+    evidence_paths:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
     expectation: >
-      Retrieval selector fixtures prove planning prompts surface this gap, and
-      deploy-execution prompts do not proceed without deploy corpus coverage.
+      Retrieval selector fixtures prove planning prompts select relevant
+      corpus.04.deploy chunks when the governed gap matches, surface the
+      remaining deploy gap, and keep deploy-execution prompts from proceeding
+      without deeper deploy corpus coverage.
   local_runtime_query:
     status: present
     expectation: >
@@ -95,7 +100,6 @@ required_coverage:
 needed_outputs:
   - docs/04.deploy/rules/concerns/github-to-aws-deployment.yml
   - docs/04.deploy/rules/concerns/aws-runtime-boundaries.yml
-  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-mcp-server-gap.yml
 local_query_behavior:
   should_emit_gap: true
   blocking: false
@@ -109,8 +113,9 @@ local_query_behavior:
 suggested_resolution: >
   Build the deploy corpus in small governed slices: start with source material,
   split shared and track-specific deploy concerns, convert them into structured
-  deploy rules, index and chunk corpus.04.deploy, then add selector evaluations
-  before using the context for implementation or deployment execution.
+  deploy rules, index and chunk corpus.04.deploy, then add deeper deploy
+  execution evaluations before using the context for implementation or
+  deployment execution.
 review:
   required: true
   owner: 04.deploy

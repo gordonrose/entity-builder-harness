@@ -260,6 +260,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add deploy corpus index and chunk coverage
   Rationale: Updated the rulebook index generator to scan numbered corpus rule roots, including docs/04.deploy/rules as corpus.04.deploy, added smoke assertions proving deploy MCP rules are indexed and chunked with the deploy corpus id, and marked the deploy MCP corpus gap indexed_chunks stage present while leaving selector evaluation proof pending.
 
+
+- Decision: Add deploy MCP selector evaluation proof
+  Rationale: Updated the retrieval selector so matching corpus-gap records can admit target corpora into candidate selection, updated the MCP planning fixture to require corpus.04.deploy chunk selection, and marked the deploy MCP selector evaluation stage present while keeping deeper deploy corpus gaps open.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -784,6 +788,13 @@ Rationale: Added a read-only validator and smoke test for rag-rulebook/source-to
 Decision: Add deploy corpus index and chunk coverage
 
 Rationale: Updated the rulebook index generator to scan numbered corpus rule roots, including docs/04.deploy/rules as corpus.04.deploy, added smoke assertions proving deploy MCP rules are indexed and chunked with the deploy corpus id, and marked the deploy MCP corpus gap indexed_chunks stage present while leaving selector evaluation proof pending.
+
+
+### 2026-06-26T16:06:38Z - Decision
+
+Decision: Add deploy MCP selector evaluation proof
+
+Rationale: Updated the retrieval selector so matching corpus-gap records can admit target corpora into candidate selection, updated the MCP planning fixture to require corpus.04.deploy chunk selection, and marked the deploy MCP selector evaluation stage present while keeping deeper deploy corpus gaps open.
 
 ## Commits
 

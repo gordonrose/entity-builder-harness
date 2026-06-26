@@ -24,7 +24,7 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.intent-form-planning-mcp-server
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove request form recognition separates planning guidance from implementation or deploy execution while selecting covered MCP server rulebook chunks.
+purpose: Prove request form recognition separates planning guidance from implementation or deploy execution while selecting MCP server rulebook chunks from both RAG/rulebook and deploy corpora.
 input:
   request_text: How do I update my harness so we can deploy it behind an MCP server?
   session:
@@ -44,9 +44,11 @@ expected:
     required:
       - corpus.01.harness
       - corpus.02.rag-rulebook
+      - corpus.04.deploy
   selected_corpora:
     required:
       - corpus.02.rag-rulebook
+      - corpus.04.deploy
   selected_content_kinds:
     required:
       - artifact-summary
@@ -54,9 +56,11 @@ expected:
   selected_chunks:
     required_artifact_ids:
       - artifact.concern.mcp.server.deployment.architecture
+      - artifact.concern.rag.rulebook.mcp.server.deployment
     required_chunk_ids:
       - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.exposes.governed.capabilities
       - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.deploy.boundaries.are.explicit
+      - chunk.rule.artifact.concern.rag.rulebook.mcp.server.deployment.mcp.server.deployment.exposes.read.only.mcp.first
   recognition:
     required_source_ids:
       - recognition.curated.actions
@@ -111,7 +115,6 @@ banned:
   matched_corpora:
     - corpus.03.product.platform
   selected_corpora:
-    - corpus.04.deploy
     - corpus.03.product.platform
   recognition_matches:
     - source_id: recognition.curated.intent-forms
@@ -128,6 +131,7 @@ source_refs:
   - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
   - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
 update_triggers:
   - Intent-form recognition source changes.
   - Action recognition source changes.
@@ -135,3 +139,4 @@ update_triggers:
   - Selector prompt/session conflict handling changes.
   - Recognition candidate coverage status changes.
   - Deploy-layer corpus gap status changes.
+  - Deploy corpus index or chunk generation changes.

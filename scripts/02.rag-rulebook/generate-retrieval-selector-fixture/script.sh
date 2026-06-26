@@ -789,6 +789,35 @@ def matched_corpus_ids(matches: list[dict[str, Any]], session_corpus: str) -> li
     return result
 
 
+def matched_corpus_gap_target_ids(
+    corpus_gaps: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+    request_text: str,
+) -> list[str]:
+    target_ids: list[str] = []
+    candidates_by_id = {
+        str(candidate.get("candidate_id")): candidate
+        for candidate in candidates
+        if isinstance(candidate.get("candidate_id"), str)
+    }
+    for gap in corpus_gaps:
+        if gap.get("status") not in {"open", "planned", "in-progress"}:
+            continue
+        if not corpus_gap_matches_request(gap, candidates_by_id, request_text):
+            continue
+        target_corpus_id = str(gap.get("target_corpus_id") or "").strip()
+        if target_corpus_id:
+            target_ids.append(target_corpus_id)
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for target_id in target_ids:
+        if target_id and target_id not in seen:
+            result.append(target_id)
+            seen.add(target_id)
+    return result
+
+
 def prototype_bridge_corpora(session_layer: str) -> list[str]:
     if session_layer == "02.rag-rulebook":
         return ["corpus.01.harness", "corpus.06.shared"]
@@ -827,7 +856,11 @@ def build_packet(
     citations = list_of_dicts(chunk_set.get("citations"))
     prompt_terms = tokenize(args.request_text)
     session_corpus = SESSION_LAYER_TO_CORPUS.get(args.session_layer, f"corpus.{args.session_layer}")
-    allowed_corpus_ids = matched_corpus_ids(recognition_matches, session_corpus) + prototype_bridge_corpora(args.session_layer)
+    allowed_corpus_ids = (
+        matched_corpus_ids(recognition_matches, session_corpus)
+        + matched_corpus_gap_target_ids(corpus_gaps, recognition_candidates, args.request_text)
+        + prototype_bridge_corpora(args.session_layer)
+    )
     candidate_evidence_paths = matched_candidate_evidence_paths(recognition_candidates, args.request_text)
     ranking_paths = list(args.focused_paths) + candidate_evidence_paths
     ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, ranking_paths, session_corpus)

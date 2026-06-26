@@ -468,6 +468,19 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`, and
      `scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`.
 
+8f. Add deploy MCP selector evaluation proof.
+   - Let matching governed corpus-gap records admit their target corpus into
+     selector candidate filtering without letting broad layer words admit
+     unrelated corpora.
+   - Update the MCP planning fixture so it requires both RAG/rulebook MCP
+     architecture chunks and the first deploy MCP chunk.
+   - Keep the deploy corpus gap open until deeper GitHub-to-AWS deployment
+     rules, AWS runtime boundaries, and deploy-execution evaluations exist.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`,
+     and `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -493,6 +506,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add selector evaluation proof for deploy MCP retrieval so prompts about MCP
-deployment select `corpus.04.deploy` chunks when appropriate and keep deploy
-execution blocked until the remaining deploy corpus gaps are closed.
+Split the first deploy corpus coverage into deeper production-grade concern
+rules for GitHub-to-AWS deployment and AWS runtime boundaries, keeping those
+rules non-executable until local RAG and deploy checks prove the path.
