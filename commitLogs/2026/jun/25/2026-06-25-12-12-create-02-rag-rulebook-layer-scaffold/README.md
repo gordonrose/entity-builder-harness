@@ -220,6 +220,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Defer MCP server recognition candidate
   Rationale: Moved the MCP server recognition candidate to deferred because RAG/rulebook planning coverage is present, but deploy-layer corpus depth is still needed before curated domain-noun acceptance.
 
+
+- Decision: Plan local RAG before deploy corpus
+  Rationale: Updated the RAG/rulebook repo plan so local deterministic runtime and local context-query commands come before deploy-layer corpus expansion and hosted GitHub/AWS deployment work.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -674,6 +678,13 @@ Rationale: Added a read-only helper that validates recognition candidates and re
 Decision: Defer MCP server recognition candidate
 
 Rationale: Moved the MCP server recognition candidate to deferred because RAG/rulebook planning coverage is present, but deploy-layer corpus depth is still needed before curated domain-noun acceptance.
+
+
+### 2026-06-26T13:00:38Z - Decision
+
+Decision: Plan local RAG before deploy corpus
+
+Rationale: Updated the RAG/rulebook repo plan so local deterministic runtime and local context-query commands come before deploy-layer corpus expansion and hosted GitHub/AWS deployment work.
 
 ## Commits
 

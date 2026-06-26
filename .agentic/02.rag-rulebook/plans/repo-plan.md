@@ -35,6 +35,10 @@ Corpus IDs should align with the numbered layer system, including
 The repo has a first-class `02.rag-rulebook` layer and a prototype architecture
 rulebook under `docs/harness/architecture/`.
 
+The deterministic foundation is now strong enough to bootstrap local RAG before
+deployment. Local RAG should come before deploy-corpus expansion so agents can
+use validated local context packets while the deploy corpus is being built.
+
 The prototype rulebook proves useful structure:
 
 - source guides
@@ -363,26 +367,62 @@ The location is not the final domain corpus model.
    - Status: present in
      `recognition-candidates/deferred/2026-06-26-mcp-server.yml`.
 
-8. Plan the prototype corpus migration.
+7y. Add a local RAG/runtime build command.
+   - Build a local deterministic runtime cache before any deployed RAG service
+     is attempted.
+   - Generate or check recognition sources, rulebook index, chunk set,
+     runtime manifest, and validation report.
+   - Write local runtime outputs to an ignored cache such as
+     `.cache/02.rag-rulebook/`.
+   - Keep the command deterministic and offline; do not add embeddings,
+     network calls, or hosted service dependencies in this step.
+   - Status: planned.
+
+7z. Add a local context-query command.
+   - Query the local runtime with request text, session metadata, focused
+     paths, and token budget.
+   - Return a validated `rag-rulebook/context-packet/v1` packet.
+   - Reuse retrieval-selector fixture behavior until production retrieval
+     runtime exists.
+   - Keep this as the local agent-facing interface while deploy corpus
+     coverage matures.
+   - Status: planned.
+
+8. Add deploy-layer corpus gap tracking.
+   - Track the deferred MCP server candidate's missing deploy-layer depth as a
+     governed `corpus.04.deploy` gap.
+   - Define the required source material, structured rules, chunks,
+     evaluation fixtures, GitHub deployment checks, AWS environment boundaries,
+     rollback expectations, and stop conditions needed before curated deploy
+     guidance is safe.
+   - Use the local RAG runtime and local context-query command while building
+     this deploy corpus.
+   - Status: planned.
+
+9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
      `corpus.05.education`.
    - Include `corpus.02.rag-rulebook` as a self-corpus for service governance.
    - Use artifact path migration before moving committed files.
 
-9. Only after the above, design a standalone service or repo extraction.
+10. Only after the above, design a standalone service or repo extraction.
    - The service should consume corpus packages and generated indexes.
    - The workbench should call the service; it should not own the service.
+   - Deployment to GitHub/AWS should wait until local runtime behavior and
+     deploy-corpus checks are proven.
 
 ## Non-Goals For The Current Stage
 
-- Do not build the RAG server.
+- Do not build the deployed RAG server.
 - Do not build an MCP server.
 - Do not move `docs/harness/architecture/` files.
 - Do not introduce embeddings before deterministic indexes and chunks exist.
 - Do not merge domain corpora into one instruction set.
+- Do not deploy RAG to AWS before local runtime behavior and deploy-corpus
+  checks are proven.
 
 ## Next Small Slice
 
-Add deploy-layer corpus gap tracking for MCP server deployment so the deferred
-candidate has a clear path toward future acceptance or permanent deferral.
+Add the local RAG/runtime build command so the repo can produce a validated
+offline runtime cache before deploy-corpus expansion or hosted service work.
