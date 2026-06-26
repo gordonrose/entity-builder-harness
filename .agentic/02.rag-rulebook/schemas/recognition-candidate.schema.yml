@@ -1,0 +1,191 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.recognition-candidate
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 schema for reviewable recognition candidate records.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.recognition-candidate-review
+#       path: .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+#     - id: rag-rulebook.workflow.review-recognition-candidates
+#       path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+#     - id: rag-rulebook.recognition-candidates.readme
+#       path: .agentic/02.rag-rulebook/recognition-candidates/README.md
+
+schema: rag-rulebook-recognition-candidate-schema/v1
+candidate_schema: rag-rulebook/recognition-candidate/v1
+
+purpose: Define a durable review record for important unmatched or ambiguous prompt terms before they become curated recognition-source terms.
+
+principles:
+  - Candidate records preserve local language context so reviewers can judge meaning.
+  - Candidate records do not become curated recognition terms automatically.
+  - Review decisions must be explicit, reversible, and supported by evaluation fixtures when accepted.
+  - Candidate records should store only the smallest useful prompt excerpt, not whole transcripts by default.
+
+required_fields:
+  - schema
+  - candidate_id
+  - status
+  - observed
+  - suggested
+  - reason
+  - review
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/recognition-candidate/v1
+
+  candidate_id:
+    type: string
+    format: lower-dot-id
+    description: Stable candidate identifier, usually based on date, source kind, and normalized term.
+
+  status:
+    type: enum
+    allowed_values:
+      - needs-review
+      - accepted
+      - rejected
+      - merged
+      - deferred
+
+  observed:
+    type: object
+    required_fields:
+      - term
+      - sentence
+      - source
+    fields:
+      term:
+        type: string
+        description: Exact term or phrase that should be reviewed.
+      sentence:
+        type: string
+        description: Smallest sentence or sentence-like prompt fragment that contains the term.
+      prompt_excerpt:
+        type: string
+        description: Optional larger excerpt when the sentence alone is not enough to understand meaning.
+      source:
+        type: enum
+        allowed_values:
+          - chat-prompt
+          - chat-response
+          - evaluation-fixture
+          - commit-log
+          - human-note
+          - generated-report
+      layer:
+        type: string
+      mode:
+        type: string
+      workflow:
+        type: string
+      chat_session_id:
+        type: string
+      observed_at_utc:
+        type: string
+        format: iso-8601-utc
+
+  suggested:
+    type: object
+    required_fields:
+      - source_id
+      - category
+      - canonical_id
+    fields:
+      source_id:
+        type: string
+        examples:
+          - recognition.curated.domain-nouns
+          - recognition.curated.intent-forms
+      category:
+        type: string
+        examples:
+          - domain-noun
+          - intent-form
+          - alias
+          - risk-word
+      canonical_id:
+        type: string
+      confidence_weight:
+        type: number
+        minimum: 0
+        maximum: 1
+      target_source_path:
+        type: string
+      fixture_path:
+        type: string
+
+  reason:
+    type: array
+    items:
+      type: string
+    description: Short reasons this candidate should be reviewed.
+
+  review:
+    type: object
+    required_fields:
+      - required
+      - decision
+    fields:
+      required:
+        type: boolean
+      decision:
+        type: enum
+        allowed_values:
+          - pending
+          - accept
+          - reject
+          - merge
+          - defer
+      reviewer:
+        type: string
+      reviewed_at_utc:
+        type: string
+        format: iso-8601-utc
+      reviewer_notes:
+        type: string
+      merged_into_candidate_id:
+        type: string
+      accepted_source_path:
+        type: string
+      accepted_fixture_path:
+        type: string
+
+field_guide:
+  - path: observed.sentence
+    what_it_is: The sentence or sentence-like fragment where the term appeared.
+    what_it_does: Gives reviewers enough context to decide whether the term has a stable meaning.
+    rules:
+      - Required for every candidate.
+      - Keep it short and local to the term.
+      - Do not store a full transcript unless the reviewer explicitly needs it.
+
+  - path: suggested.canonical_id
+    what_it_is: Proposed governed meaning for the term.
+    what_it_does: Prevents vague words from entering curated sources without a deterministic interpretation.
+    rules:
+      - Must be reviewed before acceptance.
+      - Must match the category and target curated source.
+
+  - path: review.decision
+    what_it_is: Human review outcome.
+    what_it_does: Keeps maintenance explicit instead of letting runtime observations mutate curated sources.
+    rules:
+      - Accepted candidates need a curated-source update and evaluation fixture.
+      - Rejected or merged candidates should keep a note so they do not recur as noise.

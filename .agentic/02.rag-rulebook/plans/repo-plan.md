@@ -218,6 +218,32 @@ The location is not the final domain corpus model.
      `.agentic/02.rag-rulebook/recognition-sources/curated/` and covered by
      `retrieval-selector.v1.curated-prompt-vocabulary`.
 
+7m. Add intent-form recognition and precise selector assertions.
+   - Add reviewed request-form vocabulary for planning, explanation,
+     implementation, git execution, and deploy execution prompts.
+   - Extend selector evaluations so fixtures can require or ban exact
+     recognition matches by source ID, term, category, canonical ID, match
+     type, and matched input.
+   - Prove `How do I update my harness so we can deploy it behind an MCP
+     server?` is recognized as planning guidance, not implementation or deploy
+     execution.
+   - Status: present in
+     `recognition-sources/curated/intent-forms.yml`,
+     `retrieval-selector.v1.intent-form-planning-mcp-server`, and
+     `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/`.
+
+7n. Add recognition candidate review workflow.
+   - Define candidate records for important unmatched or ambiguous prompt
+     terms, including the observed sentence for meaning.
+   - Define a review workflow so candidates can be accepted, rejected, merged,
+     or deferred before curated sources change.
+   - Keep runtime recognition cheap; do not automatically mutate curated
+     source YAML from every prompt.
+   - Status: present in `schemas/recognition-candidate.schema.yml`,
+     `standards/recognition-candidate-review.md`,
+     `workflows/review-recognition-candidates.md`, and
+     `recognition-candidates/README.md`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -239,6 +265,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add richer selector evaluation assertions for required recognition terms and
-categories, then connect high-confidence risk/check matches to explicit
-required-check and stop-condition behavior.
+Add a validator or review helper for `rag-rulebook/recognition-candidate/v1`
+records, then add curated domain-noun recognition for service architecture
+terms such as MCP server, RAG server, context server, and rulebook service.

@@ -125,6 +125,12 @@ def list_of_strings(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str)]
 
 
+def list_of_dicts(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, dict)]
+
+
 def dict_value(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
@@ -171,11 +177,7 @@ def run_selector_fixture(fixture: dict[str, Any], chunks_path: Path) -> dict[str
 
 
 def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
-    recognition_matches = [
-        item
-        for item in packet.get("request", {}).get("recognition_source_matches", [])
-        if isinstance(item, dict)
-    ]
+    recognition_matches = recognition_source_matches(packet)
     return {
         "matched_corpora": {
             item.get("corpus_id")
@@ -191,6 +193,16 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             item.get("content_kind")
             for item in packet.get("selected_chunks", [])
             if isinstance(item, dict) and isinstance(item.get("content_kind"), str)
+        },
+        "selected_artifact_ids": {
+            item.get("artifact_id")
+            for item in packet.get("selected_chunks", [])
+            if isinstance(item, dict) and isinstance(item.get("artifact_id"), str)
+        },
+        "selected_chunk_ids": {
+            item.get("chunk_id")
+            for item in packet.get("selected_chunks", [])
+            if isinstance(item, dict) and isinstance(item.get("chunk_id"), str)
         },
         "gap_ids": {
             item.get("id")
@@ -212,6 +224,16 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             for item in recognition_matches
             if isinstance(item.get("matched_input"), str)
         },
+        "recognition_categories": {
+            item.get("category")
+            for item in recognition_matches
+            if isinstance(item.get("category"), str)
+        },
+        "recognition_canonical_ids": {
+            item.get("canonical_id")
+            for item in recognition_matches
+            if isinstance(item.get("canonical_id"), str)
+        },
     }
 
 
@@ -225,6 +247,76 @@ def require_absent(owner: str, actual: set[str], banned: list[str], errors: list
     for item in banned:
         if item in actual:
             errors.append(f"{owner} contains banned value: {item}")
+
+
+RECOGNITION_MATCH_KEYS = {
+    "source_id",
+    "term",
+    "category",
+    "canonical_id",
+    "matched_input",
+    "match_type",
+}
+
+
+def recognition_source_matches(packet: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        item
+        for item in packet.get("request", {}).get("recognition_source_matches", [])
+        if isinstance(item, dict)
+    ]
+
+
+def match_spec_errors(owner: str, spec: dict[str, Any]) -> list[str]:
+    errors = []
+    unsupported = sorted(set(spec) - RECOGNITION_MATCH_KEYS)
+    for key in unsupported:
+        errors.append(f"{owner} has unsupported recognition match key: {key}")
+    for key, value in spec.items():
+        if key in RECOGNITION_MATCH_KEYS and not isinstance(value, str):
+            errors.append(f"{owner}.{key} must be a string")
+    return errors
+
+
+def recognition_match_satisfies(match: dict[str, Any], spec: dict[str, Any]) -> bool:
+    for key in RECOGNITION_MATCH_KEYS:
+        if key in spec and match.get(key) != spec[key]:
+            return False
+    return True
+
+
+def describe_match_spec(spec: dict[str, Any]) -> str:
+    return ", ".join(f"{key}={spec[key]!r}" for key in sorted(spec) if key in RECOGNITION_MATCH_KEYS)
+
+
+def require_recognition_matches(
+    owner: str,
+    actual: list[dict[str, Any]],
+    expected: list[dict[str, Any]],
+    errors: list[str],
+) -> None:
+    for index, spec in enumerate(expected, start=1):
+        spec_owner = f"{owner}[{index}]"
+        errors.extend(match_spec_errors(spec_owner, spec))
+        if any(key not in RECOGNITION_MATCH_KEYS for key in spec):
+            continue
+        if not any(recognition_match_satisfies(match, spec) for match in actual):
+            errors.append(f"{spec_owner} missing required recognition match: {describe_match_spec(spec)}")
+
+
+def require_no_recognition_matches(
+    owner: str,
+    actual: list[dict[str, Any]],
+    banned: list[dict[str, Any]],
+    errors: list[str],
+) -> None:
+    for index, spec in enumerate(banned, start=1):
+        spec_owner = f"{owner}[{index}]"
+        errors.extend(match_spec_errors(spec_owner, spec))
+        if any(key not in RECOGNITION_MATCH_KEYS for key in spec):
+            continue
+        if any(recognition_match_satisfies(match, spec) for match in actual):
+            errors.append(f"{spec_owner} contains banned recognition match: {describe_match_spec(spec)}")
 
 
 def compare_routing(packet: dict[str, Any], expected: dict[str, Any], errors: list[str]) -> None:
@@ -317,6 +409,7 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
     )
 
     recognition = dict_value(expected.get("recognition"))
+    recognition_matches = recognition_source_matches(packet)
     require_contains(
         "recognition_source_ids",
         sets["recognition_source_ids"],
@@ -333,6 +426,44 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
         "recognition_matched_inputs",
         sets["recognition_matched_inputs"],
         list_of_strings(recognition.get("banned_matched_inputs")),
+        errors,
+    )
+    require_contains(
+        "recognition_categories",
+        sets["recognition_categories"],
+        list_of_strings(recognition.get("required_categories")),
+        errors,
+    )
+    require_contains(
+        "recognition_canonical_ids",
+        sets["recognition_canonical_ids"],
+        list_of_strings(recognition.get("required_canonical_ids")),
+        errors,
+    )
+    require_recognition_matches(
+        "recognition.required_matches",
+        recognition_matches,
+        list_of_dicts(recognition.get("required_matches")),
+        errors,
+    )
+    require_no_recognition_matches(
+        "banned.recognition_matches",
+        recognition_matches,
+        list_of_dicts(banned.get("recognition_matches")),
+        errors,
+    )
+
+    selected_chunks = dict_value(expected.get("selected_chunks"))
+    require_contains(
+        "selected_artifact_ids",
+        sets["selected_artifact_ids"],
+        list_of_strings(selected_chunks.get("required_artifact_ids")),
+        errors,
+    )
+    require_contains(
+        "selected_chunk_ids",
+        sets["selected_chunk_ids"],
+        list_of_strings(selected_chunks.get("required_chunk_ids")),
         errors,
     )
 

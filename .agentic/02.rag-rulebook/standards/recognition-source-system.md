@@ -86,6 +86,7 @@ script:
 Curated sources are human-authored and need tighter review:
 
 - action verbs
+- request forms
 - risk words
 - domain nouns
 - aliases
@@ -96,6 +97,10 @@ Curated sources are human-authored and need tighter review:
 Generated sources are safer because they are derived from committed artifacts.
 Curated sources are powerful because they teach language, but they can drift or
 over-classify if not reviewed.
+
+Important unmatched or ambiguous terms should first become recognition
+candidates. Do not add them directly to curated sources unless the review
+workflow has enough context, including the sentence where the term appeared.
 
 ## Recognition Flow
 
@@ -159,8 +164,14 @@ The first curated sources are:
   `RAG rulebook`
 - `recognition.curated.actions` for reviewed operation words such as update,
   move, generate, and validate
+- `recognition.curated.intent-forms` for reviewed question and command forms
+  such as `How do I`, `Should we`, `Please implement`, and `Commit this`
 - `recognition.curated.risks` for reviewed risk, stop-condition, and check
   terms such as drift, missing governance, and commit gate
 
 Each curated source needs evaluation fixture coverage before broad terms are
 allowed to affect selector behavior.
+
+Use `standards/recognition-candidate-review.md` and
+`workflows/review-recognition-candidates.md` when deciding whether an observed
+term should become curated vocabulary.

@@ -34,10 +34,12 @@ applies_to_policy_pack: retrieval-selector.v1
 purpose: Turn raw user language into retrieval hints without letting natural language override governed metadata.
 required_inputs:
   - Raw user prompt text.
+  - Request form indicators such as question, explanation request, implementation request, commit request, or deploy request.
   - Normalized prompt tokens.
-  - Governed recognition sources for artifact IDs, file paths, schemas, corpus IDs, layer names, workflow names, rule IDs, action verbs, risk words, and aliases.
+  - Governed recognition sources for artifact IDs, file paths, schemas, corpus IDs, layer names, workflow names, rule IDs, action verbs, risk words, aliases, and intent forms.
   - Session metadata used to compare prompt inference with governed state.
 expected_actions:
+  - Identify the request form before interpreting individual verbs as execution intent.
   - Extract task nouns, verbs, target artifacts, risk words, and explicit asks by matching prompt text against governed recognition sources.
   - Normalize obvious plurals, aliases, and known synonyms only when a recognition source defines the mapping.
   - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
@@ -50,6 +52,7 @@ banned_actions:
 output_obligations:
   - prompt_terms
   - normalized_prompt_terms
+  - matched_intent_terms
   - matched_artifact_terms
   - matched_path_terms
   - matched_action_terms
@@ -91,6 +94,12 @@ recognition_sources:
     generation_mode: curated
     expected_origin: Human-reviewed aliases that map common language to governed routing terms.
     purpose: Recognize reviewed phrasing such as RAG rulebook without treating broad language as a new source of truth.
+  - source_id: recognition.curated.intent-forms
+    source_kinds:
+      - intent-form
+    generation_mode: curated
+    expected_origin: Human-reviewed question and command forms with examples.
+    purpose: Recognize the kind of help requested before treating action words as implementation or execution requests.
   - source_id: recognition.curated.actions
     source_kinds:
       - action-verb
@@ -108,6 +117,7 @@ recognition_sources:
 extraction_rules:
   - Preserve the raw prompt before normalization.
   - Match exact file paths and quoted identifiers before splitting text into smaller tokens.
+  - Match request forms before treating action verbs as implementation, commit, deploy, or destructive-action requests.
   - Match artifact IDs, schema names, corpus IDs, workflow paths, rule IDs, and rule-pack IDs before matching broad nouns.
   - Match action verbs only when the verb appears in an active action recognition source.
   - Match risk words only when the word appears in an active risk or stop-condition recognition source.
@@ -116,6 +126,7 @@ extraction_rules:
 term_categories:
   artifact_terms: Exact artifact IDs, rule IDs, rule-pack IDs, schema names, and repo file paths.
   routing_terms: Corpus IDs, layer names, mode names, and workflow paths.
+  intent_terms: Curated prompt shapes that indicate planning, explanation, implementation, git execution, or deploy execution.
   action_terms: Curated verbs that describe the operation the user is asking for.
   risk_terms: Curated words that imply validation, blockers, safety, destructive action, ambiguity, or governance checks.
   broad_terms: Unmatched nouns or phrases that may help ranking but cannot govern routing alone.
@@ -124,6 +135,7 @@ classification_outputs:
   - normalized_prompt_tokens
   - matched_terms_by_source
   - matched_terms_by_category
+  - inferred_request_form
   - inferred_actions
   - inferred_targets
   - inferred_risks
@@ -142,8 +154,12 @@ validation_examples:
   - name: reviewed alias maps to governed route
     given: User asks about the RAG rulebook with a space instead of the generated `rag-rulebook` slug.
     expect: The curated alias source maps the phrase to `02.rag-rulebook` while session metadata still controls routing.
+  - name: question form controls action interpretation
+    given: User asks `How do I update my harness so we can deploy it behind an MCP server?`.
+    expect: The prompt dimension recognizes `How do I` as planning guidance before treating `update` or `deploy` as execution requests.
 can_change_by:
   - Add synonyms.
+  - Add request forms.
   - Add risk words.
   - Add task vocabulary.
   - Add artifact aliases.

@@ -24,3 +24,5 @@ used_by:
 - `default.md` - govern changes to standalone RAG/rulebook service design,
   intent and context-packet schemas, rulebook corpus generation, indexing,
   chunking, graph retrieval, and domain corpus boundaries.
+- `review-recognition-candidates.md` - govern review of unmatched, ambiguous,
+  or corrected prompt terms before curated recognition sources are changed.

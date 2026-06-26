@@ -59,6 +59,8 @@ Each selector evaluation should assert the relevant subset of:
 - selected `routing.workflow`
 - matched corpus IDs
 - recognized terms by source ID
+- exact recognition matches for important prompt terms, including source ID,
+  term, category, canonical ID, match type, and matched input
 - selected chunk IDs, source paths, or content kinds
 - required citations
 - required checks
@@ -121,6 +123,10 @@ expected:
 banned:
   matched_corpora:
     - corpus.04.deploy
+  recognition_matches:
+    - source_id: recognition.curated.intent-forms
+      canonical_id: intent.deploy.execution
+      matched_input: prompt
 acceptance:
   validator: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 ```

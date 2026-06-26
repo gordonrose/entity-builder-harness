@@ -1,0 +1,48 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: recognition-candidate
+#   purpose: Review MCP server as a possible curated domain-noun recognition term.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.workflow.review-recognition-candidates
+#       path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+#     - id: rag-rulebook.schema.recognition-candidate
+#       path: .agentic/02.rag-rulebook/schemas/recognition-candidate.schema.yml
+
+schema: rag-rulebook/recognition-candidate/v1
+candidate_id: recognition-candidate.2026-06-26.domain-noun.mcp-server
+status: needs-review
+observed:
+  term: MCP server
+  sentence: How do I update my harness so we can deploy it behind an MCP server?
+  source: chat-prompt
+  layer: 01.harness
+  mode: planning
+  workflow: .agentic/01.harness/workflows/change-harness.md
+  chat_session_id: 2026-06-25-12-12-create-02-rag-rulebook-layer-scaffold
+suggested:
+  source_id: recognition.curated.domain-nouns
+  category: domain-noun
+  canonical_id: domain.service.mcp-server
+  confidence_weight: 0.8
+  target_source_path: .agentic/02.rag-rulebook/recognition-sources/curated/domain-nouns.yml
+reason:
+  - Important unmatched service architecture term in a planning prompt.
+  - May affect context selection for RAG/rulebook, harness, and MCP server planning.
+review:
+  required: true
+  decision: pending
+  reviewer_notes: ""

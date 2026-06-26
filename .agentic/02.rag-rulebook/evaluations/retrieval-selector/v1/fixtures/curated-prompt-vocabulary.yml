@@ -48,10 +48,39 @@ expected:
       - recognition.curated.actions
       - recognition.curated.aliases
       - recognition.curated.risks
+    required_categories:
+      - action-verb
+      - layer-name
+      - risk-word
+    required_canonical_ids:
+      - action.validate
+      - risk.drift
+      - risk.generic
     required_matched_inputs:
       - prompt
       - session-metadata
       - focused-paths
+    required_matches:
+      - source_id: recognition.curated.actions
+        term: evaluate
+        category: action-verb
+        canonical_id: action.validate
+        matched_input: prompt
+      - source_id: recognition.curated.aliases
+        term: RAG rulebook
+        category: layer-name
+        canonical_id: 02.rag-rulebook
+        matched_input: prompt
+      - source_id: recognition.curated.risks
+        term: drift
+        category: risk-word
+        canonical_id: risk.drift
+        matched_input: prompt
+      - source_id: recognition.curated.risks
+        term: risk
+        category: risk-word
+        canonical_id: risk.generic
+        matched_input: prompt
   gaps:
     allowed:
       - gap.selector-fixture.prototype-corpus-bridge
@@ -66,6 +95,9 @@ banned:
   selected_corpora:
     - corpus.04.deploy
     - corpus.03.product.platform
+  recognition_matches:
+    - canonical_id: intent.deploy.execution
+      matched_input: prompt
 source_refs:
   - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
   - .agentic/02.rag-rulebook/recognition-sources/curated/aliases.yml

@@ -73,6 +73,8 @@ final homes.
 
 - `workflows/default.md` - plan or change RAG/rulebook schemas, corpora,
   indexes, graph retrieval, context packets, or standalone service boundaries.
+- `workflows/review-recognition-candidates.md` - review unmatched or ambiguous
+  prompt terms before changing curated recognition sources.
 
 ## Standards
 
@@ -85,6 +87,8 @@ final homes.
   context packets.
 - `standards/recognition-source-system.md` - defines governed lookup sources
   used to recognize prompt intent before retrieval selection.
+- `standards/recognition-candidate-review.md` - defines how important
+  unmatched terms become reviewable candidates before curated-source changes.
 - `standards/retrieval-selector-evaluations.md` - defines evaluation fixture
   rules for retrieval selector and context-packet behavior.
 
@@ -102,6 +106,8 @@ final homes.
   dimension contract for policy-pack dimensions.
 - `schemas/recognition-source.schema.yml` - defines the v1 lookup-source
   contract for generated and curated prompt recognition vocabularies.
+- `schemas/recognition-candidate.schema.yml` - defines the v1 review record
+  for important unmatched or ambiguous prompt terms.
 - `recognition-sources/generated/artifacts.yml` - generated lookup source for
   exact artifact IDs, paths, schemas, rule IDs, and rule-pack IDs.
 - `recognition-sources/generated/routing.yml` - generated lookup source for
@@ -110,8 +116,13 @@ final homes.
   that map to governed routing terms without replacing session metadata.
 - `recognition-sources/curated/actions.yml` - reviewed action vocabulary used
   to understand requested operations.
+- `recognition-sources/curated/intent-forms.yml` - reviewed question and
+  command forms used to distinguish planning, explanation, implementation, git
+  execution, and deploy execution requests.
 - `recognition-sources/curated/risks.yml` - reviewed risk, stop-condition,
   and check vocabulary used to raise validation scrutiny.
+- `recognition-candidates/` - durable review inbox for candidate terms that may
+  later update curated sources.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

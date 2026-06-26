@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 381
-  term_count: 767
+  indexed_artifacts: 387
+  term_count: 780
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3150,6 +3150,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
   category: artifact-id
   match_type: exact
@@ -3402,6 +3414,30 @@ terms:
   canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.validation-handoff
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/validation-handoff.yml
   confidence_weight: 1
+- term: rag-rulebook.recognition-candidates.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.recognition-candidates.readme
+  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/README.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/recognition-candidates/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.recognition-candidates.readme
+  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/README.md
+  confidence_weight: 1
+- term: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+  evidence_path: .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
+  confidence_weight: 1
 - term: rag-rulebook.schema.context-packet
   category: artifact-id
   match_type: exact
@@ -3419,6 +3455,24 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.schema.context-packet
   evidence_path: .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+  confidence_weight: 1
+- term: rag-rulebook.schema.recognition-candidate
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.schema.recognition-candidate
+  evidence_path: .agentic/02.rag-rulebook/schemas/recognition-candidate.schema.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/schemas/recognition-candidate.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.schema.recognition-candidate
+  evidence_path: .agentic/02.rag-rulebook/schemas/recognition-candidate.schema.yml
+  confidence_weight: 1
+- term: recognition-candidate.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: rag-rulebook.schema.recognition-candidate
+  evidence_path: .agentic/02.rag-rulebook/schemas/recognition-candidate.schema.yml
   confidence_weight: 1
 - term: rag-rulebook.schema.recognition-source
   category: artifact-id
@@ -3516,6 +3570,18 @@ terms:
   canonical_id: rag-rulebook.standard.portable-service-contract
   evidence_path: .agentic/02.rag-rulebook/standards/portable-service-contract.md
   confidence_weight: 1
+- term: rag-rulebook.standard.recognition-candidate-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.standard.recognition-candidate-review
+  evidence_path: .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.standard.recognition-candidate-review
+  evidence_path: .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+  confidence_weight: 1
 - term: rag-rulebook.standard.recognition-source-system
   category: artifact-id
   match_type: exact
@@ -3575,6 +3641,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.workflows.default
   evidence_path: .agentic/02.rag-rulebook/workflows/default.md
+  confidence_weight: 1
+- term: rag-rulebook.workflows.review-recognition-candidates
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.workflows.review-recognition-candidates
+  evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.workflows.review-recognition-candidates
+  evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   confidence_weight: 1
 - term: rag-rulebook.scripts.readme
   category: artifact-id

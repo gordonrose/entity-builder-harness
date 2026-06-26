@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 98
-  workflow_files: 27
+  term_count: 100
+  workflow_files: 28
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -403,6 +403,12 @@ terms:
   canonical_id: .agentic/02.rag-rulebook/workflows/default.md
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
   confidence_weight: 1
+- term: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 02.rag-rulebook.workflow.review-recognition-candidates
+  evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+  confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -636,6 +642,12 @@ terms:
   match_type: exact
   canonical_id: aws.workflow.plan-aws-change
   evidence_path: .agentic/aws/workflows/plan-aws-change.md
+  confidence_weight: 1
+- term: review-recognition-candidates.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 02.rag-rulebook.workflow.review-recognition-candidates
+  evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   confidence_weight: 1
 - term: review-rule-artifact.workflow.md
   category: workflow-name

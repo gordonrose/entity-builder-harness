@@ -70,6 +70,7 @@ ALLOWED_SOURCE_KINDS = {
     "risk-word",
     "domain-noun",
     "alias",
+    "intent-form",
     "stop-condition",
     "check-name",
 }

@@ -168,6 +168,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Add curated recognition sources
   Rationale: Added curated alias, action, and risk recognition sources so reviewed human-language terms can influence selector prompt recognition without replacing generated repo facts. Updated selector evaluations to prove the spaced RAG rulebook alias and curated action/risk terms are recognized.
 
+
+- Decision: Add intent-form recognition and precise selector assertions
+  Rationale: Added curated request-form recognition so prompts such as How do I are treated as planning guidance before action verbs are interpreted. Extended selector evaluations with exact recognition-match assertions and added an MCP-server planning fixture to prove harness planning stays separate from implementation or deploy execution.
+
+
+- Decision: Add recognition candidate review workflow
+  Rationale: Added a recognition-candidate schema, candidate review standard, review workflow, durable candidate inbox layout, and an MCP server candidate preserving the sentence where the term appeared. Candidate observations now have a governed path to review before curated sources are changed.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -493,6 +501,20 @@ Message: Add curated recognition sources
 Summary: Added governed curated alias, action, and risk recognition sources; wired alias matching into the selector fixture; added selector evaluation coverage for spaced RAG rulebook language and curated action/risk terms.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-06-26T09:55:18Z - Decision
+
+Decision: Add intent-form recognition and precise selector assertions
+
+Rationale: Added curated request-form recognition so prompts such as How do I are treated as planning guidance before action verbs are interpreted. Extended selector evaluations with exact recognition-match assertions and added an MCP-server planning fixture to prove harness planning stays separate from implementation or deploy execution.
+
+
+### 2026-06-26T10:27:57Z - Decision
+
+Decision: Add recognition candidate review workflow
+
+Rationale: Added a recognition-candidate schema, candidate review standard, review workflow, durable candidate inbox layout, and an MCP server candidate preserving the sentence where the term appeared. Candidate observations now have a governed path to review before curated sources are changed.
 
 ## Commits
 

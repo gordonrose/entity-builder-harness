@@ -91,6 +91,7 @@ fields:
         - risk-word
         - domain-noun
         - alias
+        - intent-form
         - stop-condition
         - check-name
     note: A source may cover multiple tightly related lookup kinds when they share the same owner, generation mode, and refresh policy.
@@ -191,7 +192,7 @@ fields:
 field_guide:
   - path: source_kinds
     what_it_is: The lookup vocabulary kinds this source provides.
-    what_it_does: Lets prompt recognition treat artifact IDs, paths, workflows, actions, risks, and aliases differently.
+    what_it_does: Lets prompt recognition treat artifact IDs, paths, workflows, actions, risks, aliases, and request forms differently.
     rules:
       - Exact governed identifiers should rank above curated broad language.
       - Multiple kinds are allowed only when they share one owner, generation mode, and refresh policy.
@@ -212,7 +213,7 @@ field_guide:
 
   - path: terms
     what_it_is: The lookup entries used during prompt recognition.
-    what_it_does: Converts prompt text into structured signals such as artifact, path, action, risk, or domain matches.
+    what_it_does: Converts prompt text into structured signals such as artifact, path, action, risk, intent-form, or domain matches.
     rules:
       - Terms should preserve canonical IDs or evidence paths when available.
       - Ambiguous aliases should be reviewed before activation.
