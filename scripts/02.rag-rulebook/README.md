@@ -61,6 +61,9 @@ validation, and standalone service adapters.
 - `validate-recognition-candidates/script.sh` validates
   `rag-rulebook/recognition-candidate/v1` YAML review records before prompt
   vocabulary candidates can be committed or reviewed.
+- `report-recognition-candidates/script.sh` validates recognition candidates
+  and reports review state, coverage state, and allowed next actions without
+  mutating curated sources.
 - `commit-gates/script.sh` runs the RAG/rulebook validators that must pass
   before a chat task commit when `.agentic/02.rag-rulebook` exists.
 

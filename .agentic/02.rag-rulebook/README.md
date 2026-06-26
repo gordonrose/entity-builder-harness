@@ -134,6 +134,9 @@ final homes.
 - `scripts/02.rag-rulebook/validate-recognition-candidates/script.sh` -
   validates recognition-candidate YAML files for sentence context, proposed
   canonical meaning, review state, duplicate IDs, and accepted-candidate proof.
+- `scripts/02.rag-rulebook/report-recognition-candidates/script.sh` - reports
+  recognition-candidate review state, coverage state, and allowed next actions
+  without mutating curated sources.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

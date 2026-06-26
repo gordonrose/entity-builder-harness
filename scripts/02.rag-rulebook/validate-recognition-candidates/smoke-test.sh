@@ -35,6 +35,8 @@ BROKEN_NO_CONFIDENCE="$TMP_DIR/broken-no-confidence.yml"
 BROKEN_STATUS_DECISION="$TMP_DIR/broken-status-decision.yml"
 BROKEN_ACCEPTED_MISSING_COVERAGE="$TMP_DIR/broken-accepted-missing-coverage.yml"
 BROKEN_COVERED_MISSING_STAGE="$TMP_DIR/broken-covered-missing-stage.yml"
+BROKEN_DIRECTORY_STATUS_DIR="$TMP_DIR/accepted"
+BROKEN_DIRECTORY_STATUS="$BROKEN_DIRECTORY_STATUS_DIR/wrong-status.yml"
 
 bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
   --current \
@@ -138,12 +140,16 @@ covered_missing_stage["coverage"]["status"] = "covered"
 Path(sys.argv[6]).write_text(yaml.safe_dump(covered_missing_stage, sort_keys=False), encoding="utf-8")
 PY
 
+mkdir -p "$BROKEN_DIRECTORY_STATUS_DIR"
+cp "$VALID_CANDIDATE" "$BROKEN_DIRECTORY_STATUS"
+
 for broken in \
   "$BROKEN_NO_SENTENCE" \
   "$BROKEN_NO_CONFIDENCE" \
   "$BROKEN_STATUS_DECISION" \
   "$BROKEN_ACCEPTED_MISSING_COVERAGE" \
-  "$BROKEN_COVERED_MISSING_STAGE"; do
+  "$BROKEN_COVERED_MISSING_STAGE" \
+  "$BROKEN_DIRECTORY_STATUS"; do
   if bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
     --candidate "$broken" >/dev/null 2>&1; then
     echo "ERROR: recognition-candidate validator accepted broken candidate: $broken" >&2

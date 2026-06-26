@@ -36,7 +36,7 @@ covered by generated or curated recognition sources.
 Recognition happens at runtime. Curated-source maintenance happens only after
 review.
 
-## Two-Stage Loop
+## Candidate Lifecycle
 
 Runtime recognition may produce candidate observations:
 
@@ -49,7 +49,37 @@ Governed review decides whether to:
 - accept the candidate into a curated recognition source
 - reject it as too broad, wrong, or unnecessary
 - merge it into an existing candidate
-- defer it until more examples appear
+- defer it until more examples or corpus coverage appear
+- keep it pending while it records a corpus gap
+
+The lifecycle is intentionally slower than prompt recognition. Prompt-time
+recognition may notice a term, but only review may change curated vocabulary.
+
+## Outcome Rules
+
+Use `needs-review` when the candidate is still being understood. The file must
+live in `recognition-candidates/inbox/`.
+
+Use `accepted` only when the term has a stable meaning, full required coverage,
+a curated-source update, and selector evaluation proof. The file must live in
+`recognition-candidates/accepted/`.
+
+Use `deferred` when the term may be useful but needs more examples, narrower
+scope, or deeper corpus coverage before acceptance. The file must live in
+`recognition-candidates/deferred/`.
+
+Use `rejected` when the term is too broad, misleading, one-off, unsafe, or
+already handled by generated sources. The file must live in
+`recognition-candidates/rejected/`.
+
+Use `merged` when the candidate is a duplicate of another durable candidate.
+The file must identify `review.merged_into_candidate_id`. Merged files should
+live in `recognition-candidates/merged/` when that directory is introduced.
+
+Use corpus-gap metadata when the term is real but the corpus is not yet strong
+enough. A corpus gap is not the same thing as acceptance. It keeps the
+candidate pending or deferred until source material, structured rulebook
+content, indexed chunks, and selector evaluation proof exist.
 
 ## Candidate Context Rule
 
@@ -110,6 +140,7 @@ Durable candidate records live under:
 - `.agentic/02.rag-rulebook/recognition-candidates/accepted/`
 - `.agentic/02.rag-rulebook/recognition-candidates/rejected/`
 - `.agentic/02.rag-rulebook/recognition-candidates/deferred/`
+- `.agentic/02.rag-rulebook/recognition-candidates/merged/`
 
 Session-local observations may stay in context packets or chat logs until a
 human chooses to promote them into the durable inbox.
@@ -128,8 +159,32 @@ A candidate may become a curated recognition-source term only when it has:
 - review decision
 - curated-source update
 - evaluation fixture coverage
+- reviewer identity, reviewed timestamp, and reviewer notes
 
 Accepted candidates must not bypass existing commit gates.
+
+## Review Action Rules
+
+Good review actions:
+
+- run the read-only recognition-candidate review report before choosing a
+  terminal decision
+- preserve the exact observed sentence
+- compare the term with generated sources and existing curated sources
+- choose the narrowest stable canonical ID
+- keep confidence weights below generated metadata when the term is broad
+- defer or reject generic words that could over-route
+- record corpus gaps when a term is meaningful but not yet retrievable
+- add or update selector fixtures before acceptance
+
+Wrong or banned review actions:
+
+- promoting an inbox candidate by only changing `status`
+- accepting a candidate without moving it to the accepted lifecycle location
+- accepting a coverage-required term before `coverage.status: covered`
+- accepting a term because it appeared once in an ambiguous sentence
+- using a candidate to override complete chat/session metadata
+- treating a corpus gap as proof that the corpus already answers the request
 
 ## Banned Behavior
 

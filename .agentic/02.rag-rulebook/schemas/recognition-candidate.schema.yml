@@ -259,6 +259,22 @@ field_guide:
       - Accepted candidates need a curated-source update and evaluation fixture.
       - Rejected or merged candidates should keep a note so they do not recur as noise.
 
+  - path: status
+    what_it_is: The lifecycle state of the candidate record.
+    what_it_does: Tells reviewers whether the term is pending, accepted, rejected, merged, or deferred.
+    rules:
+      - The status must agree with the lifecycle directory.
+      - Runtime observations start as needs-review, not accepted.
+      - Terminal statuses require reviewer identity, reviewed timestamp, and notes.
+
+  - path: coverage
+    what_it_is: Optional staged proof that corpus material exists for the term.
+    what_it_does: Separates meaningful but uncovered terms from terms that are ready for retrieval.
+    rules:
+      - A corpus gap is not acceptance.
+      - Coverage-required accepted candidates must be covered.
+      - Stage evidence paths should point at source material, structured rulebook content, index or chunk proof, and selector evaluation proof.
+
   - path: coverage
     what_it_is: Whether the candidate has enough corpus knowledge behind it.
     what_it_does: Prevents prompt recognition from sounding authoritative when the repo has no source material for the term.

@@ -208,6 +208,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Add MCP server selector evaluation proof
   Rationale: Extended selector fixture generation so matched covered recognition candidates can contribute evidence-path chunks, updated the MCP planning fixture to require MCP rulebook chunks while preserving harness planning routing, and moved the MCP server candidate to coverage.status covered pending review.
 
+
+- Decision: Govern recognition-candidate lifecycle review
+  Rationale: Made pending, accepted, rejected, deferred, merged, and corpus-gap review outcomes explicit; added validator enforcement for lifecycle directory/status alignment and terminal review details.
+
+
+- Decision: Add recognition-candidate review report helper
+  Rationale: Added a read-only helper that validates recognition candidates and reports lifecycle status, coverage state, review needs, and allowed next actions without mutating curated sources.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -641,6 +649,20 @@ Rationale: Extended the rulebook index generator to scan docs/02.rag-rulebook/ru
 Decision: Add MCP server selector evaluation proof
 
 Rationale: Extended selector fixture generation so matched covered recognition candidates can contribute evidence-path chunks, updated the MCP planning fixture to require MCP rulebook chunks while preserving harness planning routing, and moved the MCP server candidate to coverage.status covered pending review.
+
+
+### 2026-06-26T12:39:27Z - Decision
+
+Decision: Govern recognition-candidate lifecycle review
+
+Rationale: Made pending, accepted, rejected, deferred, merged, and corpus-gap review outcomes explicit; added validator enforcement for lifecycle directory/status alignment and terminal review details.
+
+
+### 2026-06-26T12:44:40Z - Decision
+
+Decision: Add recognition-candidate review report helper
+
+Rationale: Added a read-only helper that validates recognition candidates and reports lifecycle status, coverage state, review needs, and allowed next actions without mutating curated sources.
 
 ## Commits
 

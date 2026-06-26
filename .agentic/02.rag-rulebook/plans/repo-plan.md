@@ -329,6 +329,30 @@ The location is not the final domain corpus model.
      `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`,
      and `recognition-candidates/inbox/2026-06-26-mcp-server.yml`.
 
+7v. Govern recognition-candidate lifecycle review.
+   - Make pending, accepted, rejected, deferred, merged, and corpus-gap
+     outcomes explicit.
+   - Require lifecycle directory and status alignment for durable candidate
+     records.
+   - Require terminal review records to include reviewer identity, reviewed
+     timestamp, and reviewer notes.
+   - Keep the MCP server candidate pending after coverage proof until a
+     separate review accepts, rejects, defers, or expands deploy-layer corpus
+     coverage.
+   - Status: present in `standards/recognition-candidate-review.md`,
+     `workflows/review-recognition-candidates.md`,
+     `recognition-candidates/README.md`, and
+     `scripts/02.rag-rulebook/validate-recognition-candidates/`.
+
+7w. Add recognition-candidate review report helper.
+   - Add a read-only helper that validates candidates, then summarizes pending
+     candidates, coverage status, review needs, and allowed next actions.
+   - Use the helper before changing candidate decisions or curated sources.
+   - Keep the helper non-mutating so candidate promotion remains a governed
+     review action.
+   - Status: present in
+     `scripts/02.rag-rulebook/report-recognition-candidates/`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -350,6 +374,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Review whether the covered MCP server candidate should be accepted into curated
-domain-noun recognition or remain pending until deploy-layer corpus coverage is
-expanded.
+Use the candidate review report to decide whether the MCP server candidate
+should stay pending, be deferred for deploy-layer depth, or be accepted into a
+curated domain-noun source.

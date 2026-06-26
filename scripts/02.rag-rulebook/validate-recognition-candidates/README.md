@@ -58,8 +58,11 @@ Add `--json` for machine-readable output.
 - staged coverage status for source material, structured rulebook content,
   indexed chunks, and selector evaluation proof
 - status and review decision agree
+- lifecycle directory and status agree for `inbox`, `accepted`, `rejected`,
+  `deferred`, and `merged` records
 - accepted, merged, rejected, and deferred candidates include required review
   details
+- terminal decisions include reviewer identity, reviewed timestamp, and notes
 - `covered` candidates require every required coverage stage to be present
 - `partial` candidates require at least one present and one missing coverage
   stage

@@ -38,10 +38,23 @@ Use:
 - `accepted/` for candidates that became curated-source terms
 - `rejected/` for candidates reviewed and rejected
 - `deferred/` for candidates waiting for more evidence
+- `merged/` for duplicate candidates that point at another durable candidate
 
 Candidate records must follow
 `schemas/recognition-candidate.schema.yml` and preserve the sentence where the
 term appeared.
+
+The lifecycle directory and `status` must agree:
+
+- `inbox/` uses `status: needs-review`
+- `accepted/` uses `status: accepted`
+- `rejected/` uses `status: rejected`
+- `deferred/` uses `status: deferred`
+- `merged/` uses `status: merged`
+
+Terminal decisions require reviewer notes, reviewer identity, and a reviewed
+timestamp. Acceptance also requires the accepted curated-source path and
+selector fixture path.
 
 If a candidate names a real term but the corpus does not yet explain that
 topic, keep it pending or deferred with staged coverage. `coverage.status:

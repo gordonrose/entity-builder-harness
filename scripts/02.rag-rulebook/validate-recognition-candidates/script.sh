@@ -99,6 +99,15 @@ STATUS_TO_DECISION = {
     "merged": "merge",
     "deferred": "defer",
 }
+STATUS_TO_DIRECTORY = {
+    "needs-review": "inbox",
+    "accepted": "accepted",
+    "rejected": "rejected",
+    "merged": "merged",
+    "deferred": "deferred",
+}
+DIRECTORY_TO_STATUS = {directory: status for status, directory in STATUS_TO_DIRECTORY.items()}
+TERMINAL_STATUSES = {"accepted", "rejected", "merged", "deferred"}
 REQUIRED_TOP_LEVEL = [
     "schema",
     "candidate_id",
@@ -164,6 +173,18 @@ def rel(path: Path) -> str:
 
 def path_exists(path: str) -> bool:
     return repo_path(path).exists()
+
+
+def lifecycle_directory(path: Path) -> str | None:
+    try:
+        relative_parts = path.resolve().relative_to(repo_path(DEFAULT_ROOT).resolve()).parts
+    except ValueError:
+        relative_parts = ()
+    if relative_parts and relative_parts[0] in DIRECTORY_TO_STATUS:
+        return relative_parts[0]
+
+    parent = path.parent.name
+    return parent if parent in DIRECTORY_TO_STATUS else None
 
 
 def list_files(args: argparse.Namespace, errors: list[str], warnings: list[str]) -> list[Path]:
@@ -315,6 +336,14 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
     status = data.get("status")
     if status not in ALLOWED_STATUS:
         errors.append(f"{owner}.status must be one of: {', '.join(sorted(ALLOWED_STATUS))}")
+    lifecycle_dir = lifecycle_directory(path)
+    if lifecycle_dir and status in ALLOWED_STATUS:
+        expected_status = DIRECTORY_TO_STATUS[lifecycle_dir]
+        if status != expected_status:
+            errors.append(
+                f"{owner}.status {status} does not match lifecycle directory {lifecycle_dir}; "
+                f"expected {expected_status}"
+            )
 
     observed = data.get("observed")
     if not isinstance(observed, dict):
@@ -433,8 +462,17 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
     reviewer_notes = review.get("reviewer_notes", "")
     if reviewer_notes is not None and not isinstance(reviewer_notes, str):
         errors.append(f"{owner}.review.reviewer_notes must be a string when present")
-    if status in {"rejected", "deferred"} and not str(reviewer_notes or "").strip():
-        errors.append(f"{owner}.review.reviewer_notes must explain rejected or deferred candidates")
+    reviewer = review.get("reviewer")
+    if reviewer is not None and (not isinstance(reviewer, str) or not reviewer.strip()):
+        errors.append(f"{owner}.review.reviewer must be a non-empty string when present")
+    reviewed_at = review.get("reviewed_at_utc")
+    if reviewed_at is not None and (not isinstance(reviewed_at, str) or not reviewed_at.endswith("Z")):
+        errors.append(f"{owner}.review.reviewed_at_utc must be an ISO-8601 UTC string ending in Z when present")
+    if status in TERMINAL_STATUSES:
+        require_string(f"{owner}.review", review, "reviewer", errors)
+        require_string(f"{owner}.review", review, "reviewed_at_utc", errors)
+        if not str(reviewer_notes or "").strip():
+            errors.append(f"{owner}.review.reviewer_notes must explain terminal review decisions")
     if status == "accepted":
         accepted_source_path = require_string(f"{owner}.review", review, "accepted_source_path", errors)
         accepted_fixture_path = require_string(f"{owner}.review", review, "accepted_fixture_path", errors)
@@ -451,6 +489,7 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
         "path": rel(path),
         "candidate_id": candidate_id,
         "status": status,
+        "lifecycle_directory": lifecycle_dir,
         "term": term,
         "suggested_source_id": source_id,
         "category": category,
