@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-25T23:15:34Z
-latest_commit_sha: f84184a
-chat_duration: 43363s (00:12:02:43)
-estimated_chat_tokens: 3295858 estimated from chat transcript bytes (13183431 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 98.88 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-26T10:29:38Z
+latest_commit_sha: 61365d0
+chat_duration: 83807s (00:23:16:47)
+estimated_chat_tokens: 3534597 estimated from chat transcript bytes (14138387 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 106.04 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -516,6 +516,17 @@ Decision: Add recognition candidate review workflow
 
 Rationale: Added a recognition-candidate schema, candidate review standard, review workflow, durable candidate inbox layout, and an MCP server candidate preserving the sentence where the term appeared. Candidate observations now have a governed path to review before curated sources are changed.
 
+
+### 2026-06-26T10:29:38Z - Commit recorded
+
+Commit: `61365d0`
+
+Message: Add intent recognition and candidate review workflow
+
+Summary: Added curated intent-form recognition, exact selector recognition-match assertions, an MCP-server planning fixture, and a governed recognition-candidate review schema/workflow with an MCP server candidate inbox record.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -687,6 +698,13 @@ Rationale: Added a recognition-candidate schema, candidate review standard, revi
   Summary: Added governed curated alias, action, and risk recognition sources; wired alias matching into the selector fixture; added selector evaluation coverage for spaced RAG rulebook language and curated action/risk terms.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `61365d0`
+  Time UTC: 2026-06-26T10:29:38Z
+  Message: Add intent recognition and candidate review workflow
+  Summary: Added curated intent-form recognition, exact selector recognition-match assertions, an MCP-server planning fixture, and a governed recognition-candidate review schema/workflow with an MCP server candidate inbox record.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -700,11 +718,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-25T23:15:34Z
-Latest commit SHA: f84184a
-Chat duration: 43363s (00:12:02:43)
-Estimated chat tokens: 3295858 estimated from chat transcript bytes (13183431 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 98.88 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-26T10:29:38Z
+Latest commit SHA: 61365d0
+Chat duration: 83807s (00:23:16:47)
+Estimated chat tokens: 3534597 estimated from chat transcript bytes (14138387 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 106.04 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
