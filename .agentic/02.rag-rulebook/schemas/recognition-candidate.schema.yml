@@ -36,6 +36,7 @@ principles:
   - Candidate records do not become curated recognition terms automatically.
   - Review decisions must be explicit, reversible, and supported by evaluation fixtures when accepted.
   - Candidate records should store only the smallest useful prompt excerpt, not whole transcripts by default.
+  - Candidates that name missing subject-matter knowledge should create corpus gaps instead of pretending curated vocabulary is enough.
 
 required_fields:
   - schema
@@ -133,6 +134,34 @@ fields:
       fixture_path:
         type: string
 
+  coverage:
+    type: object
+    description: Optional corpus-coverage requirement for candidates whose term needs source material before safe retrieval.
+    fields:
+      required:
+        type: boolean
+      status:
+        type: enum
+        allowed_values:
+          - missing
+          - covered
+          - not-required
+      gap_id:
+        type: string
+        description: Stable context-packet gap ID to emit while coverage is missing.
+      needed_corpus_ids:
+        type: array
+        items:
+          type: string
+      needed_topic:
+        type: string
+      suggested_resolution:
+        type: string
+      evidence_paths:
+        type: array
+        items:
+          type: string
+
   reason:
     type: array
     items:
@@ -191,3 +220,11 @@ field_guide:
     rules:
       - Accepted candidates need a curated-source update and evaluation fixture.
       - Rejected or merged candidates should keep a note so they do not recur as noise.
+
+  - path: coverage
+    what_it_is: Whether the candidate has enough corpus knowledge behind it.
+    what_it_does: Prevents prompt recognition from sounding authoritative when the repo has no source material for the term.
+    rules:
+      - Use `missing` when the term is meaningful but the corpus does not yet explain it.
+      - Missing coverage should create a visible `missing-corpus` gap in selector fixtures.
+      - Accepted candidates that require coverage need evidence paths and an evaluation fixture.

@@ -180,6 +180,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add recognition candidate validator
   Rationale: Added a read-only recognition-candidate validator and smoke test, then wired candidate validation into the RAG/rulebook commit gate so pending candidate records stay governed before curated-source review.
 
+
+- Decision: Report candidate corpus gaps
+  Rationale: Extended recognition candidates with corpus coverage metadata and taught the selector fixture to emit a missing-corpus gap when a prompt mentions a meaningful term, such as MCP server, that the current corpus does not yet cover.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -538,6 +542,22 @@ Decision: Add recognition candidate validator
 
 Rationale: Added a read-only recognition-candidate validator and smoke test, then wired candidate validation into the RAG/rulebook commit gate so pending candidate records stay governed before curated-source review.
 
+
+### 2026-06-26T10:51:14Z - Decision
+
+Decision: Report candidate corpus gaps
+
+Rationale: Extended recognition candidates with corpus coverage metadata and taught the selector fixture to emit a missing-corpus gap when a prompt mentions a meaningful term, such as MCP server, that the current corpus does not yet cover.
+
+
+### 2026-06-26T11:04:31Z - Commit summary
+
+Commit: Report candidate corpus gaps
+
+Summary: Extended recognition candidates with corpus coverage metadata and made the selector fixture emit a missing-corpus gap for MCP server until governed corpus source material exists.
+
+ADR impact: No new ADR; extends ADR 0022 RAG/rulebook governance and the existing recognition-candidate workflow.
+
 ## Commits
 
 
@@ -715,6 +735,11 @@ Rationale: Added a read-only recognition-candidate validator and smoke test, the
   Message: Add intent recognition and candidate review workflow
   Summary: Added curated intent-form recognition, exact selector recognition-match assertions, an MCP-server planning fixture, and a governed recognition-candidate review schema/workflow with an MCP server candidate inbox record.
   ADR impact: covered by session ADR disposition
+
+
+- Commit: Report candidate corpus gaps
+  Summary: Extended recognition candidates with corpus coverage metadata and made the selector fixture emit a missing-corpus gap for MCP server until governed corpus source material exists.
+  ADR impact: No new ADR; extends ADR 0022 RAG/rulebook governance and the existing recognition-candidate workflow.
 
 ## Main Refresh Conflicts
 

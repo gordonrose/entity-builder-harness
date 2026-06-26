@@ -93,8 +93,11 @@ expected:
         canonical_id: 04.deploy
         matched_input: prompt
   gaps:
+    required:
+      - gap.selector-fixture.missing-corpus.mcp-server
     allowed:
       - gap.selector-fixture.prompt-session-layer-conflict
+      - gap.selector-fixture.missing-corpus.mcp-server
     no_unexpected: true
   required_checks:
     min_count: 1
@@ -118,8 +121,10 @@ source_refs:
   - .agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/actions.yml
   - .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
+  - .agentic/02.rag-rulebook/recognition-candidates/inbox/2026-06-26-mcp-server.yml
 update_triggers:
   - Intent-form recognition source changes.
   - Action recognition source changes.
   - Routing recognition source changes.
   - Selector prompt/session conflict handling changes.
+  - Recognition candidate coverage status changes.

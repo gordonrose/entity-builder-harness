@@ -55,6 +55,7 @@ CANDIDATE_SCHEMA = "rag-rulebook/recognition-candidate/v1"
 DEFAULT_ROOT = ".agentic/02.rag-rulebook/recognition-candidates"
 LOWER_DOT_ID = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 OWNER_LAYER = re.compile(r"^[0-9]{2}\.[a-z0-9-]+$")
+CORPUS_ID = re.compile(r"^corpus\.[0-9]{2}\.[a-z0-9-]+(?:\.[a-z0-9-]+)*$")
 ALLOWED_STATUS = {"needs-review", "accepted", "rejected", "merged", "deferred"}
 ALLOWED_OBSERVED_SOURCES = {
     "chat-prompt",
@@ -83,6 +84,7 @@ ALLOWED_CATEGORIES = {
     "check-name",
 }
 ALLOWED_REVIEW_DECISIONS = {"pending", "accept", "reject", "merge", "defer"}
+ALLOWED_COVERAGE_STATUS = {"missing", "covered", "not-required"}
 STATUS_TO_DECISION = {
     "needs-review": "pending",
     "accepted": "accept",
@@ -199,6 +201,15 @@ def as_string_list(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str)]
 
 
+def validate_string_array(owner: str, value: Any, errors: list[str], *, required: bool = False) -> list[str]:
+    items = as_string_list(value)
+    if required and not items:
+        errors.append(f"{owner} must be a non-empty string array")
+    elif value is not None and (not isinstance(value, list) or len(items) != len(value)):
+        errors.append(f"{owner} must be a string array when present")
+    return items
+
+
 def require_string(owner: str, data: dict[str, Any], field: str, errors: list[str]) -> str:
     value = data.get(field)
     if not isinstance(value, str) or not value.strip():
@@ -284,6 +295,46 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
         elif not path_exists(fixture_path):
             errors.append(f"{owner}.suggested.fixture_path path does not exist: {fixture_path}")
 
+    coverage = data.get("coverage")
+    coverage_status = None
+    coverage_required = False
+    if coverage is not None:
+        if not isinstance(coverage, dict):
+            errors.append(f"{owner}.coverage must be an object when present")
+            coverage = {}
+        coverage_required = coverage.get("required") is True
+        if "required" in coverage and not isinstance(coverage.get("required"), bool):
+            errors.append(f"{owner}.coverage.required must be a boolean when present")
+        coverage_status = coverage.get("status")
+        if coverage_status not in ALLOWED_COVERAGE_STATUS:
+            errors.append(f"{owner}.coverage.status must be one of: {', '.join(sorted(ALLOWED_COVERAGE_STATUS))}")
+        needed_corpus_ids = validate_string_array(
+            f"{owner}.coverage.needed_corpus_ids",
+            coverage.get("needed_corpus_ids"),
+            errors,
+            required=coverage_status == "missing",
+        )
+        for corpus_id in needed_corpus_ids:
+            if not CORPUS_ID.match(corpus_id):
+                errors.append(f"{owner}.coverage.needed_corpus_ids contains invalid corpus ID: {corpus_id}")
+        evidence_paths = validate_string_array(
+            f"{owner}.coverage.evidence_paths",
+            coverage.get("evidence_paths"),
+            errors,
+            required=coverage_status == "covered",
+        )
+        for evidence_path in evidence_paths:
+            if not path_exists(evidence_path):
+                errors.append(f"{owner}.coverage.evidence_paths path does not exist: {evidence_path}")
+        gap_id = coverage.get("gap_id")
+        if coverage_status == "missing":
+            if not isinstance(gap_id, str) or not gap_id.startswith("gap."):
+                errors.append(f"{owner}.coverage.gap_id must be a stable gap.* ID when coverage is missing")
+            require_string(f"{owner}.coverage", coverage, "needed_topic", errors)
+            require_string(f"{owner}.coverage", coverage, "suggested_resolution", errors)
+        elif gap_id is not None and (not isinstance(gap_id, str) or not gap_id.startswith("gap.")):
+            errors.append(f"{owner}.coverage.gap_id must be a stable gap.* ID when present")
+
     reason = data.get("reason")
     reason_items = as_string_list(reason)
     if not isinstance(reason, list) or not reason_items or len(reason_items) != len(reason):
@@ -314,6 +365,8 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
             errors.append(f"{owner}.review.accepted_source_path path does not exist: {accepted_source_path}")
         if accepted_fixture_path and not path_exists(accepted_fixture_path):
             errors.append(f"{owner}.review.accepted_fixture_path path does not exist: {accepted_fixture_path}")
+        if coverage_required and coverage_status != "covered":
+            errors.append(f"{owner}.coverage.status must be covered before accepting a coverage-required candidate")
     if status == "merged":
         require_string(f"{owner}.review", review, "merged_into_candidate_id", errors)
 
@@ -324,6 +377,7 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
         "term": term,
         "suggested_source_id": source_id,
         "category": category,
+        "coverage_status": coverage_status,
     }
 
 

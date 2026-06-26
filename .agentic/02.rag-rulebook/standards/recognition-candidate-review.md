@@ -63,6 +63,27 @@ architecture meaning.
 
 Do not store whole transcripts by default. Store the smallest useful context.
 
+## Corpus Coverage Rule
+
+Some candidates identify real terms before the repo has enough source material
+to answer from corpus knowledge.
+
+When that happens, record the candidate as a coverage gap instead of accepting
+it into active curated vocabulary.
+
+For example, `MCP server` may be a useful service architecture term, but if the
+corpus does not yet explain MCP-server deployment behind the harness, the
+candidate should preserve:
+
+- the observed sentence
+- the likely target corpus or corpora
+- the missing topic
+- a `missing-corpus` gap ID
+- the source material needed before acceptance
+
+Selector fixtures may use coverage-gap candidates to report gaps, but they must
+not use them as evidence that the corpus already contains the answer.
+
 ## Durable Candidate Locations
 
 Durable candidate records live under:
@@ -85,6 +106,7 @@ A candidate may become a curated recognition-source term only when it has:
 - suggested category
 - suggested canonical ID
 - confidence weight
+- corpus coverage evidence when coverage is required
 - review decision
 - curated-source update
 - evaluation fixture coverage
@@ -100,6 +122,7 @@ Do not:
 - allow candidates to override complete session metadata
 - store full chat transcripts as candidate context by default
 - add a curated term without a canonical ID
+- accept a coverage-required term before the corpus has source material for it
 - add a curated term without evaluation coverage
 - treat planning or explanation language as implementation, commit, deploy, or
   destructive-action permission

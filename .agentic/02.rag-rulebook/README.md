@@ -181,8 +181,9 @@ final homes.
   saved chunks without modifying files.
 - `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh` -
   emits the first deterministic selector fixture by combining the active policy
-  pack, recognition-source matches, session-like metadata, focused paths, and
-  generated or saved chunks before validating the packet.
+  pack, recognition-source matches, recognition-candidate coverage gaps,
+  session-like metadata, focused paths, and generated or saved chunks before
+  validating the packet.
 - `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh` -
   runs retrieval selector evaluation fixtures against generated selector
   packets.

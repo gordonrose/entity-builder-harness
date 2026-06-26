@@ -43,6 +43,11 @@ Candidate records must follow
 `schemas/recognition-candidate.schema.yml` and preserve the sentence where the
 term appeared.
 
+If a candidate names a real term but the corpus does not yet explain that
+topic, keep it pending or deferred with `coverage.status: missing`. Missing
+coverage can produce selector gaps, but it is not enough to accept the term into
+active curated vocabulary.
+
 Validate committed candidate records with:
 
 ```bash

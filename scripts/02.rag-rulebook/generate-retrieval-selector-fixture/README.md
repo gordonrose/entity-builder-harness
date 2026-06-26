@@ -31,6 +31,7 @@ It consumes:
 
 - the active retrieval policy pack
 - validated recognition sources
+- validated recognition candidates, used only for coverage-gap reporting
 - request text
 - session-like layer, mode, and workflow metadata
 - focused path signals
@@ -39,6 +40,10 @@ It consumes:
 It is not the production RAG server and does not perform semantic recall. Its
 purpose is to prove that selector ingredients can be combined into a small,
 validated context packet before a full runtime exists.
+
+Missing-coverage candidates may produce `missing-corpus` gaps. They do not
+select corpora, add chunks, or act as evidence that the corpus already covers a
+term.
 
 Generate a fixture from the current prototype chunks:
 

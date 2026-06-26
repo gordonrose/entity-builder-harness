@@ -257,6 +257,19 @@ The location is not the final domain corpus model.
    - Status: present in
      `scripts/02.rag-rulebook/validate-recognition-candidates/`.
 
+7p. Add candidate-driven corpus gap reporting.
+   - Extend recognition candidates with optional corpus coverage metadata.
+   - Keep meaningful but uncovered terms pending or deferred until governed
+     corpus source material exists.
+   - Let selector fixtures emit `missing-corpus` gaps from coverage-missing
+     candidates without treating those candidates as active curated vocabulary.
+   - Prove `MCP server` remains a planning prompt signal while also surfacing
+     the missing MCP-server corpus coverage.
+   - Status: present in
+     `recognition-candidates/inbox/2026-06-26-mcp-server.yml`,
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`, and
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml`.
+
 8. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -278,6 +291,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add curated domain-noun recognition for service architecture terms such as MCP
-server, RAG server, context server, and rulebook service, then cover the
-accepted terms with selector evaluation fixtures.
+Add governed corpus source material for MCP-server deployment architecture, or
+create a dedicated corpus-work item for it, before accepting `MCP server` into
+active curated domain-noun recognition.

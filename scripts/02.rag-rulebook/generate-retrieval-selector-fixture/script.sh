@@ -57,10 +57,12 @@ CHUNK_SET_SCHEMA = "rag-rulebook/chunk-set/v1"
 GENERATOR_VERSION = "retrieval-selector-fixture-v1"
 POLICY_PACK_PATH = ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml"
 RECOGNITION_ROOT = ".agentic/02.rag-rulebook/recognition-sources"
+CANDIDATE_ROOT = ".agentic/02.rag-rulebook/recognition-candidates"
 CHUNK_GENERATOR_SCRIPT = "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"
 PACKET_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-context-packet/script.sh"
 POLICY_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh"
 RECOGNITION_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-recognition-sources/script.sh"
+CANDIDATE_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh"
 DEFAULT_REQUEST = "Build the first deterministic RAG rulebook retrieval selector fixture."
 DEFAULT_SESSION_LAYER = "02.rag-rulebook"
 DEFAULT_SESSION_MODE = "implementation"
@@ -227,6 +229,15 @@ def validate_recognition_sources() -> dict[str, Any]:
     return report
 
 
+def validate_recognition_candidates() -> dict[str, Any]:
+    if not repo_path(CANDIDATE_ROOT).exists():
+        return {"ok": True, "counts": {"candidates": 0}}
+    report = run_json(["bash", CANDIDATE_VALIDATOR_SCRIPT, "--current", "--json"])
+    if report.get("ok") is not True:
+        raise ValueError("recognition candidates are invalid")
+    return report
+
+
 def load_chunk_set(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
     if args.generate_current:
         result = subprocess.run(
@@ -262,6 +273,20 @@ def load_recognition_sources() -> list[dict[str, Any]]:
         sources.append(data)
     sources.sort(key=lambda source: (int(source.get("match_priority") or 9999), str(source.get("source_id"))))
     return sources
+
+
+def load_recognition_candidates() -> list[dict[str, Any]]:
+    root = repo_path(CANDIDATE_ROOT)
+    if not root.exists():
+        return []
+    candidates: list[dict[str, Any]] = []
+    for path in sorted(root.rglob("*.yml")) + sorted(root.rglob("*.yaml")):
+        data = load_yaml(path)
+        if data.get("schema") != "rag-rulebook/recognition-candidate/v1":
+            continue
+        data["_path"] = str(path.relative_to(ROOT))
+        candidates.append(data)
+    return candidates
 
 
 def list_of_strings(value: Any) -> list[str]:
@@ -308,6 +333,45 @@ def simple_exact_match(term: str, text: str) -> bool:
     if "/" in term_lower or "." in term_lower or "-" in term_lower:
         return term_lower in text_lower
     return bool(re.search(rf"(?<![a-z0-9]){re.escape(term_lower)}(?![a-z0-9])", text_lower))
+
+
+def candidate_coverage_gaps(candidates: list[dict[str, Any]], request_text: str) -> list[dict[str, Any]]:
+    gaps: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        status = candidate.get("status")
+        if status not in {"needs-review", "deferred"}:
+            continue
+        observed = candidate.get("observed") if isinstance(candidate.get("observed"), dict) else {}
+        term = str(observed.get("term") or "").strip()
+        if not term or not simple_exact_match(term, request_text):
+            continue
+        coverage = candidate.get("coverage") if isinstance(candidate.get("coverage"), dict) else {}
+        if coverage.get("required") is not True or coverage.get("status") != "missing":
+            continue
+        gap_id = str(coverage.get("gap_id") or f"gap.selector-fixture.missing-corpus.{safe_id(term)}")
+        if gap_id in seen:
+            continue
+        seen.add(gap_id)
+        needed_corpus_ids = list_of_strings(coverage.get("needed_corpus_ids"))
+        needed_topic = str(coverage.get("needed_topic") or term).strip().rstrip(".")
+        description = (
+            f"Prompt mentions {term}, but candidate {candidate.get('candidate_id')} says "
+            f"the corpus does not yet cover {needed_topic}."
+        )
+        if needed_corpus_ids:
+            description += f" Needed corpora: {', '.join(needed_corpus_ids)}."
+        gaps.append(
+            {
+                "id": gap_id,
+                "type": "missing-corpus",
+                "description": description,
+                "blocking": False,
+                "suggested_resolution": coverage.get("suggested_resolution")
+                or "Add governed corpus source material before treating this term as covered retrieval knowledge.",
+            }
+        )
+    return gaps
 
 
 def focused_path_match(term: str, paths: list[str]) -> bool:
@@ -599,7 +663,9 @@ def build_packet(
     policy: dict[str, Any],
     policy_report: dict[str, Any],
     recognition_report: dict[str, Any],
+    candidate_report: dict[str, Any],
     recognition_matches: list[dict[str, Any]],
+    recognition_candidates: list[dict[str, Any]],
     chunk_set: dict[str, Any],
 ) -> dict[str, Any]:
     chunks = list_of_dicts(chunk_set.get("chunks"))
@@ -728,6 +794,7 @@ def build_packet(
                 "blocking": False,
             }
         )
+    gaps.extend(candidate_coverage_gaps(recognition_candidates, args.request_text))
 
     selected_context_tokens = sum(
         chunk.get("token_estimate")
@@ -749,6 +816,7 @@ def build_packet(
                     [match.get("source_id"), match.get("term"), match.get("matched_input")]
                     for match in recognition_matches[:40]
                 ],
+                "gaps": [gap.get("id") for gap in gaps],
                 "source_index_id": source_index_id,
             },
             sort_keys=True,
@@ -883,6 +951,12 @@ def build_packet(
                 "validator_counts": recognition_report.get("counts"),
                 "matched_terms": len(recognition_matches),
             },
+            "recognition_candidates": {
+                "validator_counts": candidate_report.get("counts"),
+                "matched_coverage_gaps": len(
+                    [gap for gap in gaps if str(gap.get("id") or "").startswith("gap.selector-fixture.missing-corpus.")]
+                ),
+            },
             "corpus_index_versions": [
                 {
                     "corpus_id": corpus_id,
@@ -945,8 +1019,10 @@ def main(argv: list[str]) -> int:
     try:
         policy_report = validate_policy_pack()
         recognition_report = validate_recognition_sources()
+        candidate_report = validate_recognition_candidates()
         policy = load_yaml(POLICY_PACK_PATH)
         sources = load_recognition_sources()
+        candidates = load_recognition_candidates()
         chunk_set, chunk_set_raw = load_chunk_set(args)
         session_text = "\n".join([args.session_layer, args.session_mode, args.session_workflow])
         recognition_matches = match_recognition_terms(
@@ -955,7 +1031,16 @@ def main(argv: list[str]) -> int:
             session_text,
             args.focused_paths,
         )
-        packet = build_packet(args, policy, policy_report, recognition_report, recognition_matches, chunk_set)
+        packet = build_packet(
+            args,
+            policy,
+            policy_report,
+            recognition_report,
+            candidate_report,
+            recognition_matches,
+            candidates,
+            chunk_set,
+        )
         validate_packet(packet, chunk_set_raw)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

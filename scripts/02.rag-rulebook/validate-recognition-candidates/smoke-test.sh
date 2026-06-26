@@ -33,6 +33,7 @@ VALID_CANDIDATE="$TMP_DIR/valid-candidate.yml"
 BROKEN_NO_SENTENCE="$TMP_DIR/broken-no-sentence.yml"
 BROKEN_NO_CONFIDENCE="$TMP_DIR/broken-no-confidence.yml"
 BROKEN_STATUS_DECISION="$TMP_DIR/broken-status-decision.yml"
+BROKEN_ACCEPTED_MISSING_COVERAGE="$TMP_DIR/broken-accepted-missing-coverage.yml"
 
 bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
   --current \
@@ -68,6 +69,15 @@ suggested:
   canonical_id: domain.service.mcp-server
   confidence_weight: 0.8
   target_source_path: .agentic/02.rag-rulebook/recognition-sources/curated/domain-nouns.yml
+coverage:
+  required: true
+  status: missing
+  gap_id: gap.selector-fixture.missing-corpus.mcp-server
+  needed_corpus_ids:
+    - corpus.01.harness
+    - corpus.04.deploy
+  needed_topic: MCP server deployment architecture for harness services.
+  suggested_resolution: Add governed corpus source material before accepting this term into curated domain-noun recognition.
 reason:
   - Important unmatched service architecture term.
 review:
@@ -79,7 +89,7 @@ EOF
 bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
   --candidate "$VALID_CANDIDATE" >/dev/null
 
-python3 - "$VALID_CANDIDATE" "$BROKEN_NO_SENTENCE" "$BROKEN_NO_CONFIDENCE" "$BROKEN_STATUS_DECISION" <<'PY'
+python3 - "$VALID_CANDIDATE" "$BROKEN_NO_SENTENCE" "$BROKEN_NO_CONFIDENCE" "$BROKEN_STATUS_DECISION" "$BROKEN_ACCEPTED_MISSING_COVERAGE" <<'PY'
 from __future__ import annotations
 
 import sys
@@ -101,12 +111,20 @@ status_decision = yaml.safe_load(valid_path.read_text(encoding="utf-8"))
 status_decision["status"] = "accepted"
 status_decision["review"]["decision"] = "pending"
 Path(sys.argv[4]).write_text(yaml.safe_dump(status_decision, sort_keys=False), encoding="utf-8")
+
+accepted_missing_coverage = yaml.safe_load(valid_path.read_text(encoding="utf-8"))
+accepted_missing_coverage["status"] = "accepted"
+accepted_missing_coverage["review"]["decision"] = "accept"
+accepted_missing_coverage["review"]["accepted_source_path"] = ".agentic/02.rag-rulebook/recognition-candidates/README.md"
+accepted_missing_coverage["review"]["accepted_fixture_path"] = ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml"
+Path(sys.argv[5]).write_text(yaml.safe_dump(accepted_missing_coverage, sort_keys=False), encoding="utf-8")
 PY
 
 for broken in \
   "$BROKEN_NO_SENTENCE" \
   "$BROKEN_NO_CONFIDENCE" \
-  "$BROKEN_STATUS_DECISION"; do
+  "$BROKEN_STATUS_DECISION" \
+  "$BROKEN_ACCEPTED_MISSING_COVERAGE"; do
   if bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
     --candidate "$broken" >/dev/null 2>&1; then
     echo "ERROR: recognition-candidate validator accepted broken candidate: $broken" >&2

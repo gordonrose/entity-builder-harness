@@ -53,9 +53,13 @@ Add `--json` for machine-readable output.
 - required observed term and sentence
 - observed sentence includes the candidate term
 - suggested source ID, category, canonical ID, and confidence weight
+- optional coverage requirements for candidates whose term needs source
+  material before safe retrieval
 - status and review decision agree
 - accepted, merged, rejected, and deferred candidates include required review
   details
+- accepted coverage-required candidates prove corpus coverage with evidence
+  paths
 - duplicate candidate IDs are rejected
 - referenced workflow paths exist when supplied
 
