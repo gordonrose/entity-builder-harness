@@ -37,6 +37,7 @@ description: >
 related_rulesets:
   - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
   - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   - .agentic/aws/workflows/plan-aws-change.md
   - .agentic/aws/workflows/execute-approved-aws-change.md
 
@@ -178,7 +179,7 @@ source_refs:
     sections:
       - "How the Amazon ECS deployment circuit breaker detects failures"
       - "Failure threshold"
-  - doc: "https://modelcontextprotocol.io/specification/2025-06-18"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25"
     sections:
       - "Server Features"
       - "Security and Trust & Safety"

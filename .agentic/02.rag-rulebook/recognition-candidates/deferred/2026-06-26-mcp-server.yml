@@ -45,8 +45,9 @@ coverage:
   gap_id: gap.selector-fixture.missing-corpus.mcp-server
   needed_corpus_ids:
     - corpus.02.rag-rulebook
+    - corpus.04.deploy
   needed_topic: MCP server deployment architecture for harness services.
-  suggested_resolution: Keep as a deferred review signal until deploy-layer corpus coverage exists; current coverage is sufficient for RAG/rulebook planning but not for curated deploy guidance.
+  suggested_resolution: Keep as a deferred review signal. Current coverage is sufficient for RAG/rulebook planning and deploy-readiness guidance, but deployment execution still requires a deploy-execution fixture and AWS workflow coverage.
   stages:
     source_material:
       status: present
@@ -73,4 +74,4 @@ review:
   decision: defer
   reviewer: Gordon Rose
   reviewed_at_utc: "2026-06-26T12:46:37Z"
-  reviewer_notes: Deferred from curated domain-noun acceptance. The term has covered RAG/rulebook planning evidence, but needs deeper deploy-layer corpus coverage before it should become active curated vocabulary for deployment guidance.
+  reviewer_notes: Deferred from curated domain-noun acceptance. The term has covered RAG/rulebook planning and deploy-readiness evidence, but needs deploy-execution fixture proof and AWS workflow coverage before it should become active curated vocabulary for deployment execution.

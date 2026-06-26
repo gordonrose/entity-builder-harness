@@ -38,6 +38,7 @@ description: >
 related_rulesets:
   - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
   - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
   - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
   - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
@@ -302,7 +303,7 @@ source_refs:
       - "Observability Requirements"
       - "Stop Conditions"
       - "Source-To-Rule Conversion Targets"
-  - doc: "https://modelcontextprotocol.io/specification/2025-06-18"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25"
     sections:
       - "Security and Trust & Safety"
       - "Server Features"

@@ -25,6 +25,8 @@ id: concern.mcp-server-deployment-architecture
 title: MCP server deployment architecture rules
 version: 1
 status: active
+corpus_id: corpus.02.rag-rulebook
+owner_layer: 02.rag-rulebook
 
 description: >
   Rules for treating MCP server work as a governed service boundary that may
@@ -129,6 +131,26 @@ rules:
       A deployment plan should name the transport, auth model, data boundary,
       observability model, and rollback path before implementation starts.
 
+  - id: mcp-server-deployment-architecture.transport-auth-model-is-explicit
+    title: MCP transport determines authorization model
+    severity: error
+    summary: >
+      MCP deployment must name the transport and use the authorization model
+      that fits that transport instead of copying local stdio assumptions into
+      remote HTTP exposure.
+    must:
+      - "Name whether the server uses stdio, local HTTP, remote HTTP, or another governed transport."
+      - "For HTTP-based remote transports, define protected-resource metadata, authorization server discovery, token audience, client identity, allowed scopes, and authorization error behavior."
+      - "For stdio or local development, define environment credential boundaries, subprocess ownership, stderr logging boundaries, and local-only assumptions."
+      - "For Streamable HTTP, define origin validation, authentication expectations, protocol-version handling, and session-id handling."
+    must_not:
+      - "Do not copy local stdio trust assumptions into remote HTTP deployment."
+      - "Do not expose remote HTTP MCP without an explicit authorization model."
+      - "Do not accept bearer tokens, session ids, or environment credentials outside their intended transport and resource boundary."
+    agent_guidance: >
+      Transport is not just implementation detail. It changes the trust model,
+      credential handling, client identity proof, and operational controls.
+
   - id: mcp-server-deployment-architecture.audits-client-requests
     title: MCP requests are auditable
     severity: error
@@ -156,11 +178,23 @@ source_refs:
       - "Why This Matters Here"
       - "Initial Architecture Questions"
       - "Governance Expectations"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports"
+    sections:
+      - "stdio"
+      - "Streamable HTTP"
+      - "Security Warning"
+      - "Session Management"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization"
+    sections:
+      - "Protocol Requirements"
+      - "Authorization Server Discovery"
+      - "Access Token Usage"
 
 success_criteria:
   - "The file exists at docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml."
   - "It treats MCP servers as governed service boundaries, not direct shell or deploy bypasses."
   - "It separates MCP resources, prompts, and tools into distinct contracts."
   - "It requires validated context packets or explicit gaps for RAG-facing responses."
+  - "It requires the MCP transport and matching authorization model to be explicit before remote exposure."
   - "It keeps deployment, auth, audit, and environment boundaries explicit before production exposure."
-  - "It updates the MCP recognition candidate to mark only the structured_rulebook stage as present."
+  - "It keeps the MCP recognition candidate coverage evidence aligned with source material, structured rulebook, indexed chunks, and selector evaluation proof."

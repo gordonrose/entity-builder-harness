@@ -495,6 +495,21 @@ The location is not the final domain corpus model.
      `corpus-gaps/04.deploy/mcp-server-deployment.yml`, and
      `derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml`.
 
+8h. Add remote-main-to-AWS deployment readiness checks.
+   - Add a deploy readiness ruleset for exact remote main SHA, branch and
+     status-check proof, runtime-family selection, IaC ownership, immutable
+     artifact promotion, supply-chain evidence, governed secrets, MCP
+     threat-model and access-control proof, cost, capacity, quota controls,
+     operational runbooks, and prose-to-command-surface maturity.
+   - Keep readiness checks owned by `corpus.04.deploy` while preserving the
+     `02.rag-rulebook` deploy track.
+   - Keep deploy execution blocked until deploy-execution selector fixtures
+     and AWS workflow coverage exist.
+   - Status: present in
+     `docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml`,
+     `corpus-gaps/04.deploy/mcp-server-deployment.yml`, and
+     `derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
@@ -520,6 +535,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add deploy-execution selector proof and deployment-readiness checks so prompts
-that ask to deploy the MCP/RAG service block with specific missing GitHub/AWS
-readiness items instead of relying on planning-only guidance.
+Add deploy-execution selector proof so prompts that ask to deploy the MCP/RAG
+service block with specific missing GitHub/AWS workflow and runtime execution
+items instead of relying on planning-only guidance.

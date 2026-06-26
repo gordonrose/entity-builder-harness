@@ -71,6 +71,7 @@ required_coverage:
       - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
       - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
     expectation: >
       Deploy-layer YAML rules define allowed actions, banned actions, required
@@ -102,7 +103,6 @@ required_coverage:
 needed_outputs:
   - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
   - .agentic/aws/workflows/deploy-rag-rulebook-service.md
-  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
 local_query_behavior:
   should_emit_gap: true
   blocking: false
@@ -114,9 +114,8 @@ local_query_behavior:
     intent.implementation.request: true
     intent.deploy.execution: true
 suggested_resolution: >
-  Add deploy-execution selector evaluations, deployment-readiness checks, and
-  AWS workflow coverage before using this context for implementation or
-  deployment execution.
+  Add deploy-execution selector evaluations and AWS workflow coverage before
+  using this context for implementation or deployment execution.
 review:
   required: true
   owner: 04.deploy

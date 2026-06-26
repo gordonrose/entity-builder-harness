@@ -91,6 +91,24 @@ assert any(
     and "AWS target identity is explicit before mutation" in chunk["content"]
     for chunk in chunk_set["chunks"]
 )
+assert any(
+    chunk["source_path"] == "docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml"
+    and chunk["corpus_id"] == "corpus.04.deploy"
+    and "Remote main is deployable only after branch and gate proof" in chunk["content"]
+    for chunk in chunk_set["chunks"]
+)
+assert any(
+    chunk["source_path"] == "docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml"
+    and chunk["corpus_id"] == "corpus.04.deploy"
+    and "Cost, capacity, and quota controls are defined before remote exposure" in chunk["content"]
+    for chunk in chunk_set["chunks"]
+)
+assert any(
+    chunk["source_path"] == "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml"
+    and chunk["corpus_id"] == "corpus.02.rag-rulebook"
+    and "MCP transport determines authorization model" in chunk["content"]
+    for chunk in chunk_set["chunks"]
+)
 
 print("Rulebook chunk generator smoke test passed.")
 print(json.dumps(chunk_set["diagnostics"]["counts"], sort_keys=True))

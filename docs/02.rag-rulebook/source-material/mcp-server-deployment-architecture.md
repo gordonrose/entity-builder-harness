@@ -113,4 +113,4 @@ chunks without treating the request as deploy execution.
 ## External References
 
 - Official MCP introduction: https://modelcontextprotocol.io/docs/getting-started/intro
-- MCP specification, version 2025-06-18: https://modelcontextprotocol.io/specification/2025-06-18
+- MCP specification, version 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25

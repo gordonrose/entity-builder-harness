@@ -36,6 +36,7 @@ description: >
 related_rulesets:
   - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
   - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   - .agentic/aws/workflows/plan-aws-change.md
   - .agentic/aws/workflows/execute-approved-aws-change.md
 

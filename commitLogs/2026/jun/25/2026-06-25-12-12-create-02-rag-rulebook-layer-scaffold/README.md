@@ -268,6 +268,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Add deploy GitHub and AWS boundary depth
   Rationale: Added separate deploy-track rulesets for GitHub-to-AWS release control and AWS runtime boundaries, linked them from the parent MCP deployment ruleset, updated the deploy corpus gap and derivation report, and added index/chunk smoke assertions so both rulesets remain retrievable as corpus.04.deploy.
 
+
+- Decision: Add deploy readiness rule depth
+  Rationale: Added remote-main-to-AWS deploy readiness rules for exact remote SHA proof, branch/status-check controls, runtime selection, IaC ownership, immutable artifact promotion, supply-chain evidence, governed secrets, MCP threat/access control, operational runbooks, and prose-to-command-surface maturity.
+
+
+- Decision: Tighten deploy readiness after review feedback
+  Rationale: Added explicit corpus ownership to the MCP architecture rules, added MCP transport/auth model coverage, added deploy cost/capacity/quota readiness coverage, clarified MCP candidate planning versus deploy-execution scope, and kept selector/index/chunk checks current.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -806,6 +814,20 @@ Rationale: Updated the retrieval selector so matching corpus-gap records can adm
 Decision: Add deploy GitHub and AWS boundary depth
 
 Rationale: Added separate deploy-track rulesets for GitHub-to-AWS release control and AWS runtime boundaries, linked them from the parent MCP deployment ruleset, updated the deploy corpus gap and derivation report, and added index/chunk smoke assertions so both rulesets remain retrievable as corpus.04.deploy.
+
+
+### 2026-06-26T16:41:27Z - Decision
+
+Decision: Add deploy readiness rule depth
+
+Rationale: Added remote-main-to-AWS deploy readiness rules for exact remote SHA proof, branch/status-check controls, runtime selection, IaC ownership, immutable artifact promotion, supply-chain evidence, governed secrets, MCP threat/access control, operational runbooks, and prose-to-command-surface maturity.
+
+
+### 2026-06-26T16:59:13Z - Decision
+
+Decision: Tighten deploy readiness after review feedback
+
+Rationale: Added explicit corpus ownership to the MCP architecture rules, added MCP transport/auth model coverage, added deploy cost/capacity/quota readiness coverage, clarified MCP candidate planning versus deploy-execution scope, and kept selector/index/chunk checks current.
 
 ## Commits
 

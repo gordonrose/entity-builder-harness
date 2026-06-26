@@ -1,0 +1,348 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.deployment-readiness-checks
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: rule
+#   purpose: Define remote-main-to-AWS deployment readiness checks for RAG/rulebook services and MCP exposure.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: deploy.rules.02-rag-rulebook.mcp-server-deployment
+#     path: docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+#   - id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#     path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+id: concern.rag-rulebook-deployment-readiness-checks
+title: RAG/rulebook deployment readiness checks
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+description: >
+  Rules for deciding whether a committed RAG/rulebook service or MCP server
+  change is ready to move from remote main through GitHub release control into
+  an AWS runtime.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - .agentic/aws/workflows/plan-aws-change.md
+  - .agentic/aws/workflows/execute-approved-aws-change.md
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".github/workflows/**"
+    - ".agentic/aws/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+
+rules:
+  - id: deployment-readiness-checks.protects-remote-main-before-deploy
+    title: Remote main is deployable only after branch and gate proof
+    severity: error
+    summary: >
+      Deployment execution must prove the exact remote main revision, branch
+      protection, required status checks, and deployment trigger before any AWS
+      mutation is allowed.
+    must:
+      - "Name the remote repository, branch, commit SHA, workflow trigger, target environment, and intended deploy artifact."
+      - "Require remote main protection or an approved equivalent that includes review and required status checks for deployable changes."
+      - "Verify required RAG/rulebook gates, deploy gates, and GitHub checks passed for the exact commit being deployed."
+      - "Record whether deployment was triggered by push, tag, release, workflow dispatch, or another governed trigger."
+    must_not:
+      - "Do not deploy from an ambiguous local branch, dirty worktree, stale main, or unverified remote ref."
+      - "Do not treat local commit success as proof that remote main is deployable."
+      - "Do not let a planning prompt become an implicit deployment trigger."
+    required_checks:
+      - "Verify exact remote main commit SHA."
+      - "Verify protected branch or approved release ref controls."
+      - "Verify required status checks passed for the deployment commit."
+      - "Verify deployment trigger and target environment are recorded."
+    agent_guidance: >
+      Remote main is a release boundary. If the deployed SHA, branch controls,
+      or required checks are unknown, emit a blocking deploy-readiness gap.
+
+  - id: deployment-readiness-checks.selects-runtime-family-before-runtime-specific-rules
+    title: Runtime family is selected before platform-specific checks
+    severity: error
+    summary: >
+      AWS readiness checks must name the runtime family before applying
+      runtime-specific rollback, health, networking, or scaling assumptions.
+    must:
+      - "Name the runtime family before mutation, such as ECS/Fargate, Lambda, App Runner, EKS, EC2, or another governed AWS target."
+      - "Apply runtime-specific health, rollback, scaling, and network checks only after the target runtime is selected."
+      - "Record when a rule is generic AWS readiness versus ECS-specific, Lambda-specific, App Runner-specific, or another target-specific concern."
+      - "Keep undecided runtime choices in planning mode until a governed target decision exists."
+    must_not:
+      - "Do not assume ECS/Fargate rollback behavior unless ECS/Fargate is the selected runtime."
+      - "Do not apply load balancer, task, function, or pod health checks to a runtime that does not use them."
+      - "Do not mutate AWS while runtime family is still an open design choice."
+    required_checks:
+      - "Verify runtime family is named."
+      - "Verify target-specific checks match the selected runtime."
+      - "Verify undecided runtime choices block deploy execution."
+    agent_guidance: >
+      Runtime-agnostic planning is allowed. Runtime-specific deployment
+      execution needs a selected platform and matching checks.
+
+  - id: deployment-readiness-checks.requires-iac-owned-runtime
+    title: Runtime infrastructure is owned by IaC or a governed equivalent
+    severity: error
+    summary: >
+      Production deployment readiness requires cloud resources and deployment
+      configuration to be defined through infrastructure as code or an explicit
+      governed equivalent, with review and drift checks.
+    must:
+      - "Name the IaC root, stack, module, template, workflow, or governed equivalent that owns the AWS runtime."
+      - "Review planned infrastructure changes before apply or deployment execution."
+      - "Detect and report drift between expected infrastructure and observed AWS state."
+      - "Record which resources are created, updated, read-only, externally owned, or intentionally unmanaged."
+    must_not:
+      - "Do not rely on console-clicked production resources as the normal deployment path."
+      - "Do not mutate externally owned resources without named ownership and approval."
+      - "Do not hide IaC drift behind a successful application deploy."
+    required_checks:
+      - "Verify IaC or governed runtime ownership."
+      - "Verify plan or change preview evidence exists before apply."
+      - "Verify drift status is known before production deployment."
+    agent_guidance: >
+      Deployment should be repeatable. If the runtime cannot be recreated or
+      inspected from governed source, production readiness is incomplete.
+
+  - id: deployment-readiness-checks.promotes-immutable-artifacts
+    title: Deployment promotes immutable build and corpus artifacts
+    severity: error
+    summary: >
+      GitHub-to-AWS deployment should build once, publish immutable artifacts,
+      and promote those exact artifacts through environments.
+    must:
+      - "Record source commit SHA, image digest or artifact digest, corpus package hash, generated index version, and generated chunk version."
+      - "Promote immutable image digests, package hashes, or release artifacts instead of rebuilding differently per environment."
+      - "Link deployment records back to the GitHub run, source commit, corpus package, and generated rulebook outputs."
+      - "Fail closed when a deploy stage cannot identify the exact artifact being deployed."
+    must_not:
+      - "Do not deploy floating tags as the only artifact identity."
+      - "Do not rebuild the production artifact from a different source state than the tested artifact."
+      - "Do not publish remote RAG corpus packages without generated index and chunk provenance."
+    required_checks:
+      - "Verify immutable artifact identity."
+      - "Verify source commit and corpus package provenance."
+      - "Verify deployed artifact matches the verified artifact."
+    agent_guidance: >
+      The deployment should answer: exactly what was built, exactly what was
+      promoted, exactly what is running, and exactly which corpus it serves.
+
+  - id: deployment-readiness-checks.requires-supply-chain-evidence
+    title: Supply-chain evidence is required before production deploy
+    severity: error
+    summary: >
+      Production readiness requires evidence that build inputs, workflow
+      identity, dependencies, generated artifacts, and deploy outputs are
+      traceable and tamper-resistant enough for the target environment.
+    must:
+      - "Pin or govern external workflow actions and build tools used in deployment."
+      - "Record provenance for generated corpus packages, images, and deployable artifacts."
+      - "Produce or reference SBOM, vulnerability scan, or artifact attestation evidence when the deployment target requires it."
+      - "Restrict who can publish deployable artifacts and who can promote them to sensitive environments."
+    must_not:
+      - "Do not deploy artifacts whose build workflow, source ref, or package provenance is unknown."
+      - "Do not let unreviewed third-party actions or scripts mutate deployment state."
+      - "Do not treat generated RAG artifacts as trustworthy when their source and generator versions are missing."
+    required_checks:
+      - "Verify build and artifact provenance."
+      - "Verify dependency, image, or package scan expectations."
+      - "Verify publish and promote permissions."
+    agent_guidance: >
+      Supply-chain evidence keeps the deployment from being just a green job.
+      For RAG, generated corpus and chunk provenance are part of the artifact.
+
+  - id: deployment-readiness-checks.uses-governed-secret-store
+    title: Secrets come from governed stores and are rotated
+    severity: error
+    summary: >
+      RAG/rulebook and MCP deployments must keep secret values outside corpus
+      files and retrieve them from governed environment or cloud secret stores.
+    must:
+      - "Name the secret store, such as GitHub environment secrets, AWS Secrets Manager, AWS Systems Manager Parameter Store, or another approved store."
+      - "Record secret names, parameter names, environment variable names, and ownership without recording values."
+      - "Define rotation, revocation, and emergency replacement expectations for sensitive credentials."
+      - "Verify logs, chunks, fixtures, source material, and context packets redact secret values."
+    must_not:
+      - "Do not commit secret values, tokens, private keys, connection strings with credentials, or session credentials."
+      - "Do not expose secret values through RAG chunks, MCP resources, prompts, tools, or audit logs."
+      - "Do not deploy when the runtime depends on unmanaged local secrets."
+    required_checks:
+      - "Verify secret store and secret ownership."
+      - "Verify no secret values are present in changed repo files."
+      - "Verify rotation or revocation expectations are documented for production secrets."
+    agent_guidance: >
+      Retrieval material is not a secret store. It may name where secrets live,
+      but it must never carry the values.
+
+  - id: deployment-readiness-checks.requires-mcp-threat-model-and-access-control
+    title: MCP exposure has threat model and access control proof
+    severity: error
+    summary: >
+      MCP server deployment must define access control, capability exposure,
+      data boundaries, and threat-model coverage before remote exposure.
+    must:
+      - "Pin or update the MCP specification version used by the deployment rules."
+      - "Classify each exposed MCP resource, prompt, and future tool as read-only, write-capable, deploy-capable, or destructive."
+      - "Define authentication, authorization, consent, audit, rate limits, and client trust boundaries for remote exposure."
+      - "Cover prompt injection, tool poisoning, data exfiltration, confused deputy, and overbroad corpus access risks."
+      - "Keep first remote exposure read-only unless write-capable tool governance has been approved."
+    must_not:
+      - "Do not expose deploy-capable MCP tools through the first remote MCP surface."
+      - "Do not let user prompt wording bypass workflow, approval, or target-environment gates."
+      - "Do not serve private repo, user, cloud, or corpus content to unauthorized clients."
+    required_checks:
+      - "Verify MCP spec version and capability list."
+      - "Verify auth, authorization, consent, and audit expectations."
+      - "Verify exposed resources and prompts are read-only for the first deployment surface."
+      - "Verify threat-model risks have an owner or blocking gap."
+    agent_guidance: >
+      MCP is a capability boundary. The first safe deployment is a narrow,
+      auditable context provider, not a remote shell or deploy executor.
+
+  - id: deployment-readiness-checks.controls-cost-capacity-and-quotas
+    title: Cost, capacity, and quota controls are defined before remote exposure
+    severity: error
+    summary: >
+      Remote RAG/rulebook and MCP services must define expected traffic,
+      concurrency, quotas, budgets, scaling, and abuse/backpressure behavior
+      before production or public exposure.
+    must:
+      - "Classify expected traffic as local, private team, internal production, partner, public, batch, or another governed traffic class."
+      - "Define request rate, concurrency, packet-size, token-budget, and corpus-query limits before remote exposure."
+      - "Check relevant AWS service quotas for the selected runtime, networking, logging, storage, and package distribution path."
+      - "Define budget or cost alarms, forecasted-cost review, and cost-blast-radius controls for public or semi-public endpoints."
+      - "Define scaling policy, throttling, retry, circuit-breaker, and abuse/backpressure behavior."
+    must_not:
+      - "Do not expose a remote MCP or RAG endpoint without rate and concurrency limits."
+      - "Do not rely on default AWS quotas without checking they fit the target traffic class."
+      - "Do not allow unbounded context-packet size, token budget, log volume, or repeated corpus queries."
+      - "Do not treat a successful functional deployment as proof that capacity or cost risk is controlled."
+    required_checks:
+      - "Verify expected traffic class."
+      - "Verify rate, concurrency, token, and packet-size limits."
+      - "Verify service quota status for selected runtime and dependencies."
+      - "Verify budget or cost-alarm expectations."
+      - "Verify scaling, throttling, and abuse/backpressure behavior."
+    agent_guidance: >
+      A context endpoint can fail by being too useful, too public, or too
+      cheap to call repeatedly. Cost and capacity are deployment safety checks.
+
+  - id: deployment-readiness-checks.requires-operational-runbook
+    title: Operational runbook exists before production use
+    severity: error
+    summary: >
+      Production readiness requires operational ownership, health signals,
+      alerting, troubleshooting steps, rollback instructions, and support
+      boundaries.
+    must:
+      - "Name service owner, deploy owner, on-call or escalation path, support hours, and incident handoff path."
+      - "Define availability expectations, latency expectations, error-budget or SLO expectations, and degraded-mode behavior."
+      - "Define dashboards, logs, metrics, alerts, health endpoints, and example log queries."
+      - "Document rollback, disablement, corpus rollback, stale-corpus handling, and emergency credential rotation."
+    must_not:
+      - "Do not call a remote RAG or MCP service production-ready when nobody owns incident response."
+      - "Do not rely on ad hoc terminal memory as the runbook."
+      - "Do not expose production traffic before health and alerting signals exist."
+    required_checks:
+      - "Verify operational owner and escalation path."
+      - "Verify health, dashboard, alert, and log-query expectations."
+      - "Verify rollback and disablement procedure."
+    agent_guidance: >
+      Deployment readiness includes living with the service after it launches.
+      If nobody can diagnose or roll it back, it is not ready.
+
+  - id: deployment-readiness-checks.turns-prose-into-command-surfaces
+    title: Prose readiness must become executable checks
+    severity: warning
+    summary: >
+      Readiness rules may begin as structured prose, but production deployment
+      requires named command surfaces, workflow jobs, or validator checks for
+      the items that block execution.
+    must:
+      - "Track which readiness checks are prose-only, scripted, workflow-backed, or externally verified."
+      - "Promote high-risk prose checks into scripts, GitHub jobs, or governed AWS inspection workflows before production deploy."
+      - "Record command names, workflow job names, expected outputs, and failure behavior when checks become executable."
+      - "Keep prose-only blockers visible as gaps until an executable or externally auditable check exists."
+    must_not:
+      - "Do not treat a human-readable rule as sufficient production evidence when an executable check is required."
+      - "Do not hide a missing validator behind a passed planning fixture."
+      - "Do not mark deploy execution ready while critical readiness checks are still prose-only."
+    required_checks:
+      - "Classify readiness checks by proof type."
+      - "Verify critical blockers have executable or auditable proof before production deployment."
+      - "Verify prose-only blockers remain visible in corpus gaps."
+    agent_guidance: >
+      This rule is the bridge from rulebook to deployment automation. It is
+      acceptable early on to write the rule; production requires proof.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
+    sections:
+      - "Production-Grade Bar"
+      - "GitHub Deployment Boundary"
+      - "AWS Deployment Boundary"
+      - "Security Requirements"
+      - "Observability Requirements"
+      - "Stop Conditions"
+  - doc: "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches"
+    sections:
+      - "About branch protection rules"
+      - "Require status checks before merging"
+  - doc: "https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations"
+    sections:
+      - "Using artifact attestations to establish provenance for builds"
+      - "Generating SBOM attestations for builds"
+  - doc: "https://docs.github.com/en/actions/concepts/security/openid-connect"
+    sections:
+      - "Overview of OpenID Connect"
+      - "Benefits of using OIDC"
+  - doc: "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments"
+    sections:
+      - "Managing environments for deployment"
+      - "Creating an environment"
+  - doc: "https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/infrastructure-as-code.html"
+    sections:
+      - "Infrastructure as Code"
+  - doc: "https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html"
+    sections:
+      - "Rotate AWS Secrets Manager secrets"
+      - "Managed rotation"
+  - doc: "https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html"
+    sections:
+      - "Managing your costs with AWS Budgets"
+      - "Cost budgets"
+      - "Usage budgets"
+  - doc: "https://docs.aws.amazon.com/servicequotas/latest/userguide/intro.html"
+    sections:
+      - "What is Service Quotas?"
+      - "View your service quotas"
+      - "View current utilization of resources"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25"
+    sections:
+      - "Server Features"
+      - "Security and Trust & Safety"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml."
+  - "It defines remote-main-to-GitHub-to-AWS readiness as a deploy execution gate, not a planning suggestion."
+  - "It separates generic readiness from runtime-specific AWS checks."
+  - "It names immutable artifacts, IaC ownership, supply-chain evidence, secrets, MCP access control, cost and capacity controls, and operational runbooks."
+  - "It keeps prose-only readiness checks visible until they become executable or auditable checks."

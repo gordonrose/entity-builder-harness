@@ -293,16 +293,20 @@ The next structured YAML rules should cover:
 ## Known Gaps
 
 - First deploy-layer YAML rules now exist for MCP server deployment.
-- The rulebook index does not yet scan `docs/04.deploy/rules/`.
-- Selector evaluations do not yet prove `corpus.04.deploy` retrieval.
-- GitHub deployment workflow requirements are source material only.
-- AWS runtime target choice is not yet decided.
+- The rulebook index now scans `docs/04.deploy/rules/` and emits
+  `corpus.04.deploy` chunks.
+- Selector evaluations now prove planning prompts can select
+  `corpus.04.deploy` retrieval when a governed corpus gap matches.
+- GitHub deployment workflow requirements now have structured release-control
+  rules but do not yet have an executable workflow.
+- AWS runtime target choice is not yet decided, so runtime-specific deploy
+  execution remains blocked.
 - MCP server read-only endpoint contract is not yet specified.
 - No production deployment or rollback procedure is approved.
 
 ## External References
 
-- MCP specification, version 2025-06-18: https://modelcontextprotocol.io/specification/2025-06-18
+- MCP specification, version 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25
 - MCP architecture overview: https://modelcontextprotocol.io/docs/learn/architecture
 - GitHub Actions environments: https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments
 - GitHub Actions secrets: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets

@@ -43,10 +43,12 @@ target:
     - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
     - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
     - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   affected_rule_paths:
     - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
     - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
     - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
     - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
   affected_rulesets: []
   affected_evaluations:
@@ -74,6 +76,21 @@ semantic_review:
     - claim_id: aws-runtime-boundaries
       summary: AWS runtime deployment must name account or profile, region, service target, network exposure, secrets boundary, health checks, and rollback proof before mutation.
       evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: remote-main-readiness
+      summary: Remote main deployment requires exact commit, protected release controls, required checks, trigger, and target environment before AWS mutation.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: immutable-artifact-promotion
+      summary: Deployment should promote immutable build artifacts and versioned corpus packages instead of rebuilding untraceable outputs per environment.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: supply-chain-and-secret-proof
+      summary: Production deployment needs artifact provenance, governed secret stores, and redaction boundaries for corpus, chunks, fixtures, logs, and MCP responses.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: mcp-access-control-threat-model
+      summary: Remote MCP exposure requires spec version, capability classification, access control, audit, and threat-model coverage before public use.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: cost-capacity-quotas
+      summary: Remote MCP and RAG endpoints need expected traffic, rate limits, concurrency, token budgets, quotas, budgets, scaling, throttling, and backpressure controls before exposure.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
   conflicts:
     status: none-found
     search_scope:
@@ -97,6 +114,7 @@ proposed_updates:
     - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
     - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
     - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates:
@@ -108,6 +126,9 @@ proposed_updates:
   notes:
     - The structured deploy rulebook exists, generated index/chunk proof is present, and the MCP planning selector fixture now selects corpus.04.deploy chunks.
     - GitHub-to-AWS release control and AWS runtime boundary concerns now exist as separate deploy-track rulesets.
+    - Remote-main-to-AWS deployment readiness checks now cover branch protection, runtime selection, IaC ownership, immutable artifacts, supply-chain evidence, secrets, MCP threat modeling, operations, and executable proof status.
+    - Cost, capacity, and quota controls now exist as explicit deployment readiness coverage.
+    - MCP specification references were updated to version 2025-11-25.
     - No curated recognition-source change is proposed in this slice.
 
 downstream_effects:

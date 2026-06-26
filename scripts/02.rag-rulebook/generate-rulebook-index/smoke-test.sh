@@ -45,7 +45,7 @@ data = json.loads(index_path.read_text(encoding="utf-8"))
 assert data["schema"] == "rag-rulebook/rulebook-index/v1"
 assert data["diagnostics"]["ok"], data["diagnostics"]
 assert data["diagnostics"]["counts"]["corpus_packages"] >= 10
-assert data["diagnostics"]["counts"]["artifacts"] >= 27
+assert data["diagnostics"]["counts"]["artifacts"] >= 28
 assert data["diagnostics"]["counts"]["rule_packs"] == 4
 assert data["diagnostics"]["counts"]["rules"] > 0
 assert data["diagnostics"]["counts"]["graph_edges"] > 0
@@ -75,17 +75,25 @@ assert github_deploy_artifact["migration_status"] == "current"
 aws_runtime_artifact = artifacts_by_path["docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml"]
 assert aws_runtime_artifact["corpus_id"] == "corpus.04.deploy"
 assert aws_runtime_artifact["migration_status"] == "current"
+readiness_artifact = artifacts_by_path["docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml"]
+assert readiness_artifact["corpus_id"] == "corpus.04.deploy"
+assert readiness_artifact["migration_status"] == "current"
 
 rule_ids = {rule["rule_id"] for rule in data["rules"]}
 assert "mcp-server-deployment-architecture.uses-validated-context-packets" in rule_ids
+assert "mcp-server-deployment-architecture.transport-auth-model-is-explicit" in rule_ids
 assert "mcp-server-deployment.blocks-on-readiness-gaps" in rule_ids
 assert "github-to-aws-deployment.prefers-oidc-over-long-lived-secrets" in rule_ids
 assert "aws-runtime-boundaries.defines-rollback-and-failure-detection" in rule_ids
+assert "deployment-readiness-checks.protects-remote-main-before-deploy" in rule_ids
+assert "deployment-readiness-checks.controls-cost-capacity-and-quotas" in rule_ids
 
 deploy_rules = [rule for rule in data["rules"] if rule["corpus_id"] == "corpus.04.deploy"]
 assert any(rule["rule_id"] == "mcp-server-deployment.exposes-read-only-mcp-first" for rule in deploy_rules)
 assert any(rule["rule_id"] == "github-to-aws-deployment.uses-github-as-release-control-plane" for rule in deploy_rules)
 assert any(rule["rule_id"] == "aws-runtime-boundaries.names-target-before-mutation" for rule in deploy_rules)
+assert any(rule["rule_id"] == "deployment-readiness-checks.requires-mcp-threat-model-and-access-control" for rule in deploy_rules)
+assert any(rule["rule_id"] == "deployment-readiness-checks.controls-cost-capacity-and-quotas" for rule in deploy_rules)
 
 print("Rulebook index smoke test passed.")
 print(json.dumps(data["diagnostics"]["counts"], sort_keys=True))
