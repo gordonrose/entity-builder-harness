@@ -61,12 +61,16 @@ Each selector evaluation should assert the relevant subset of:
 - recognized terms by source ID
 - exact recognition matches for important prompt terms, including source ID,
   term, category, canonical ID, match type, and matched input
+- resolved top-level intent when multiple prompt forms match
+- action authorization for side-effecting intents such as deploy, git, write,
+  or destructive actions
 - selected chunk IDs, source paths, or content kinds
 - required citations
 - required checks
 - required forbidden actions
 - required stop conditions
 - required gaps for ambiguity or missing governance
+- required blocking gaps when the selected packet must stop execution
 - confidence thresholds or confidence bands
 - token-budget behavior
 - absence of banned corpora or unrelated chunks
@@ -74,6 +78,17 @@ Each selector evaluation should assert the relevant subset of:
 If a fixture expects no gap, say why the available evidence is sufficient.
 
 If a fixture expects a gap, say whether it is blocking or non-blocking.
+If a fixture protects a stop condition, assert the blocking gap explicitly
+instead of only checking that the gap text appears.
+
+Fixtures that combine planning or explanation forms with execution-looking
+words must prove intent precedence. Planning, explanation, and explicit
+no-action forms should beat broad execution phrases unless the fixture is
+specifically testing an imperative execution request.
+
+For deploy, git, write, or destructive prompts, fixtures should assert
+`action_authorization.execution_allowed` directly. Do not rely on consumers
+inferring authorization from `routing.status` alone.
 
 ## Required Fixture Cases
 

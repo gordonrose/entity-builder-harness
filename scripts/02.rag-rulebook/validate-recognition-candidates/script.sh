@@ -86,6 +86,7 @@ ALLOWED_CATEGORIES = {
 ALLOWED_REVIEW_DECISIONS = {"pending", "accept", "reject", "merge", "defer"}
 ALLOWED_COVERAGE_STATUS = {"missing", "partial", "covered", "not-required"}
 ALLOWED_COVERAGE_STAGE_STATUS = {"missing", "present", "not-required"}
+ALLOWED_EXECUTION_READINESS_STATUS = {"not-required", "ready", "blocked"}
 REQUIRED_COVERAGE_STAGES = [
     "source_material",
     "structured_rulebook",
@@ -440,6 +441,25 @@ def validate_candidate(path: Path, data: dict[str, Any], errors: list[str], warn
         elif gap_id is not None and (not isinstance(gap_id, str) or not gap_id.startswith("gap.")):
             errors.append(f"{owner}.coverage.gap_id must be a stable gap.* ID when present")
         validate_coverage_stages(owner, coverage, coverage_status, coverage_required, errors)
+
+    execution_readiness = data.get("execution_readiness")
+    if execution_readiness is not None:
+        if not isinstance(execution_readiness, dict):
+            errors.append(f"{owner}.execution_readiness must be an object when present")
+            execution_readiness = {}
+        readiness_status = execution_readiness.get("status")
+        if readiness_status not in ALLOWED_EXECUTION_READINESS_STATUS:
+            errors.append(
+                f"{owner}.execution_readiness.status must be one of: "
+                f"{', '.join(sorted(ALLOWED_EXECUTION_READINESS_STATUS))}"
+            )
+        readiness_gap_id = execution_readiness.get("gap_id")
+        if readiness_status == "blocked":
+            if not isinstance(readiness_gap_id, str) or not readiness_gap_id.startswith("gap."):
+                errors.append(f"{owner}.execution_readiness.gap_id must be a stable gap.* ID when execution is blocked")
+            require_string(f"{owner}.execution_readiness", execution_readiness, "reason", errors)
+        elif readiness_gap_id is not None and (not isinstance(readiness_gap_id, str) or not readiness_gap_id.startswith("gap.")):
+            errors.append(f"{owner}.execution_readiness.gap_id must be a stable gap.* ID when present")
 
     reason = data.get("reason")
     reason_items = as_string_list(reason)

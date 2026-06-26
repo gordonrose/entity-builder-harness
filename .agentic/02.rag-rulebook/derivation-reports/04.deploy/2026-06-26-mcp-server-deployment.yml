@@ -53,6 +53,11 @@ target:
   affected_rulesets: []
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
   affected_corpus_gaps:
     - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
 
@@ -116,20 +121,33 @@ proposed_updates:
     - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
     - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   rule_packs: []
-  recognition_sources: []
+  recognition_sources:
+    - .agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml
   recognition_candidates:
     - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   corpus_gaps:
     - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
   notes:
     - The structured deploy rulebook exists, generated index/chunk proof is present, and the MCP planning selector fixture now selects corpus.04.deploy chunks.
     - GitHub-to-AWS release control and AWS runtime boundary concerns now exist as separate deploy-track rulesets.
     - Remote-main-to-AWS deployment readiness checks now cover branch protection, runtime selection, IaC ownership, immutable artifacts, supply-chain evidence, secrets, MCP threat modeling, operations, and executable proof status.
     - Cost, capacity, and quota controls now exist as explicit deployment readiness coverage.
     - MCP specification references were updated to version 2025-11-25.
-    - No curated recognition-source change is proposed in this slice.
+    - Deploy-execution selector proof now blocks the prompt "Deploy the RAG rulebook MCP server to AWS from main." on specific deploy proof gaps.
+    - The curated intent-form source now recognizes "Deploy the" as deploy execution, with evaluation coverage.
+    - Planning, explanation, deployment-plan, and explicit no-action deploy prompts now have negative fixtures proving they do not resolve to deploy execution.
+    - Context packets now carry explicit action authorization and blocking gaps now carry selected evidence chunks and citations.
+    - Context-packet schema, guide, generator, and validator updates make final resolved intent and side-effect authorization explicit instead of requiring downstream consumers to infer deploy safety from routing status alone.
+    - Recognition-candidate schema and validator updates split MCP retrieval coverage from deploy execution readiness so covered retrieval does not imply executable deployment approval.
+    - Retrieval selector evaluator updates allow fixtures to assert resolved intent, action authorization, required blocking evidence chunks, and blocking evidence citations.
+    - AWS workflow coverage remains the next missing deploy corpus output.
 
 downstream_effects:
   index_required: false
@@ -145,7 +163,10 @@ validation:
     - bash scripts/01.harness/check-deterministic-process-drift.sh --paths docs/04.deploy .agentic/02.rag-rulebook
     - bash scripts/01.harness/check-governed-script-command-drift.sh
     - git diff --check
+    - bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh --current
     - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+    - bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
     - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
     - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
     - bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current
@@ -162,7 +183,13 @@ validation:
       result: passed
     - command: git diff --check
       result: passed
+    - command: bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh --current
+      result: passed
     - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
       result: passed
     - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
       result: passed

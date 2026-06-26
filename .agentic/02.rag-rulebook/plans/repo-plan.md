@@ -503,12 +503,41 @@ The location is not the final domain corpus model.
      operational runbooks, and prose-to-command-surface maturity.
    - Keep readiness checks owned by `corpus.04.deploy` while preserving the
      `02.rag-rulebook` deploy track.
-   - Keep deploy execution blocked until deploy-execution selector fixtures
-     and AWS workflow coverage exist.
+   - At this step, keep deploy execution blocked until deploy-execution
+     selector fixtures and AWS workflow coverage exist.
    - Status: present in
      `docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml`,
      `corpus-gaps/04.deploy/mcp-server-deployment.yml`, and
      `derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml`.
+
+8i. Add deploy-execution selector blocking proof.
+   - Recognize prompts shaped as `Deploy the ...` as deploy execution.
+   - Resolve conflicting intent forms by governed precedence so explicit
+     no-action, explanation, and planning prompts beat broad deploy wording.
+   - Emit `action_authorization` so side-effect permission is explicit and
+     downstream workflows do not infer execution permission from routing alone.
+   - Let blocking corpus gaps name exact evidence chunks that must survive
+     ranking and token trimming.
+   - Attach selected evidence chunks and citations directly to blocking gaps.
+   - Prove `Deploy the RAG rulebook MCP server to AWS from main.` routes to
+     `04.deploy`, selects deploy and MCP architecture evidence, and blocks on
+     missing AWS runtime target, GitHub workflow, executable deploy checks,
+     transport/auth proof, and cost/capacity/quota boundary.
+   - Prove `How do I deploy ...`, `Can you explain how to deploy ...`,
+     `Prepare a deployment plan ...`, and `Do not deploy ...` retrieve deploy
+     context without becoming deploy execution.
+   - Keep deploy execution blocked until AWS workflow coverage exists.
+   - Status: present in
+     `schemas/context-packet.schema.yml`,
+     `recognition-sources/curated/intent-forms.yml`,
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
+     `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh`,
+     `evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml`,
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml`,
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml`,
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml`,
+     `evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml`,
+     and `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
 
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,

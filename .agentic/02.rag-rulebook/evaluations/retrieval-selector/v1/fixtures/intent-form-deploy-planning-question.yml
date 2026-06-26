@@ -1,0 +1,106 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-planning-question
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove deploy wording inside a How do I question resolves to planning guidance, not deploy execution.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.intent-form-deploy-planning-question
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove a deployment question can retrieve deploy context without becoming an execution request.
+input:
+  request_text: How do I deploy the RAG rulebook MCP server to AWS from main?
+  session:
+    layer: 04.deploy
+    mode: planning
+    workflow: .agentic/aws/workflows/plan-aws-change.md
+  focused_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  max_chunks: 8
+expected:
+  routing:
+    layer: 04.deploy
+    mode: planning
+    workflow: .agentic/aws/workflows/plan-aws-change.md
+    status: ready
+  intent:
+    id: intent.planning.guidance
+  action_authorization:
+    requested_action: deployment-guidance
+    side_effect_class: none
+    execution_allowed: false
+    status: not-executable-intent
+    resolved_intent_id: intent.planning.guidance
+  matched_corpora:
+    required:
+      - corpus.04.deploy
+      - corpus.02.rag-rulebook
+  selected_corpora:
+    required:
+      - corpus.04.deploy
+      - corpus.02.rag-rulebook
+  selected_chunks:
+    required_artifact_ids:
+      - artifact.concern.rag.rulebook.mcp.server.deployment
+      - artifact.concern.mcp.server.deployment.architecture
+  recognition:
+    required_canonical_ids:
+      - intent.planning.guidance
+      - intent.deploy.execution
+      - 04.deploy
+      - 02.rag-rulebook
+    required_matches:
+      - source_id: recognition.curated.intent-forms
+        term: How do I
+        category: intent-form
+        canonical_id: intent.planning.guidance
+        matched_input: prompt
+      - source_id: recognition.curated.intent-forms
+        term: Deploy the
+        category: intent-form
+        canonical_id: intent.deploy.execution
+        matched_input: prompt
+  gaps:
+    required:
+      - gap.corpus.04.deploy.mcp-server-deployment
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
+      - gap.corpus.04.deploy.mcp-server-deployment
+    no_unexpected: true
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+banned:
+  blocking_gaps:
+    - gap.corpus.04.deploy.mcp-server-deployment
+    - gap.deploy.missing-aws-runtime-target
+    - gap.deploy.missing-github-workflow
+    - gap.deploy.missing-executable-deploy-checks
+    - gap.deploy.missing-transport-auth-proof
+    - gap.deploy.missing-cost-capacity-quota-boundary
+source_refs:
+  - .agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml
+  - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+update_triggers:
+  - Deploy intent-form recognition changes.
+  - Intent precedence changes.
+  - Deploy corpus gap blocking behavior changes.

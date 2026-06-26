@@ -276,6 +276,14 @@ create 02 rag rulebook layer scaffold
 - Decision: Tighten deploy readiness after review feedback
   Rationale: Added explicit corpus ownership to the MCP architecture rules, added MCP transport/auth model coverage, added deploy cost/capacity/quota readiness coverage, clarified MCP candidate planning versus deploy-execution scope, and kept selector/index/chunk checks current.
 
+
+- Decision: Add deploy-execution blocking selector proof
+  Rationale: Added a deploy-execution selector evaluation for deploying the RAG/rulebook MCP server to AWS from main, taught curated intent forms to recognize "Deploy the" as deploy execution, and made blocking corpus-gap details preserve exact evidence chunks for AWS target, GitHub workflow, executable deploy checks, MCP transport/auth, and cost/capacity/quota proof.
+
+
+- Decision: Harden deploy intent authorization proof
+  Rationale: Resolved final packet intent from governed intent precedence, added explicit action authorization with execution_allowed false for blocked deploy execution, added negative deploy-language fixtures for planning, explanation, deployment-plan, and no-action prompts, cited blocking-gap evidence directly, and split MCP retrieval coverage from execution readiness.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started

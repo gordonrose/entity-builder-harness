@@ -186,6 +186,21 @@ fields:
             type: coverage-stage
             description: A selector evaluation proves the expected retrieval behavior.
 
+  execution_readiness:
+    type: object
+    description: Optional side-effect readiness state for candidates that are covered for retrieval but not safe for execution.
+    fields:
+      status:
+        type: enum
+        allowed_values:
+          - not-required
+          - ready
+          - blocked
+      gap_id:
+        type: string
+      reason:
+        type: string
+
   coverage-stage:
     type: object
     fields:
@@ -258,6 +273,13 @@ field_guide:
     rules:
       - Accepted candidates need a curated-source update and evaluation fixture.
       - Rejected or merged candidates should keep a note so they do not recur as noise.
+
+  - path: execution_readiness.status
+    what_it_is: Whether a term is safe for side-effecting execution after retrieval coverage exists.
+    what_it_does: Separates "retrieval can find the right context" from "an agent may execute the action."
+    rules:
+      - Use `blocked` when corpus coverage is enough for planning but deploy, git, write, or destructive execution still has open gaps.
+      - Provide `gap_id` when blocked.
 
   - path: status
     what_it_is: The lifecycle state of the candidate record.

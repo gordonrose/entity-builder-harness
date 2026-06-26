@@ -62,6 +62,13 @@ Routing tells the consuming workbench which layer, mode, and workflow should
 own the task. If routing is `blocked` or `needs-clarification`, the consumer
 should not pretend the packet is ready.
 
+For side-effecting requests, read `action_authorization`.
+
+This field makes permission explicit for actions such as deploy, commit, write,
+or destructive work. It should say what action was requested, whether execution
+is allowed, and which blocking gaps prevent execution. A consumer should not
+infer deployment permission from relevant deploy chunks alone.
+
 Then read `matched_corpora`, `matched_rule_packs`, and `matched_rulesets`.
 
 These fields explain why the service selected a corpus or rule source. They are
@@ -99,6 +106,9 @@ retrieval.
 
 `intent` turns natural language into a deterministic workflow funnel.
 
+`action_authorization` states whether a requested side-effecting action is
+allowed, blocked, or not actually an executable intent.
+
 `routing` tells the consumer which layer, mode, and workflow should govern the
 task.
 
@@ -124,6 +134,9 @@ guidance because it prevents confident but unsafe action.
 `confidence` gives an honest read on the strength of routing and retrieval.
 
 `gaps` names missing or ambiguous knowledge.
+
+Blocking gaps should cite the exact selected chunks that justify the block.
+This makes a denial auditable instead of merely descriptive.
 
 `budgets` keeps context small.
 
@@ -156,6 +169,9 @@ A bad packet contains required checks or forbidden actions without citations.
 
 A bad packet lets a high retrieval score override a blocking stop condition.
 
+A bad packet retrieves deployment evidence but leaves the execution decision
+implicit.
+
 ## How An LLM Should Use It
 
 Use the packet as evidence and governance, not as a script to blindly execute.
@@ -168,6 +184,9 @@ missing deterministic input.
 
 If `routing.status` is `blocked`, stop and explain the gap.
 
+If `action_authorization.execution_allowed` is `false`, do not perform the
+named side-effecting action even when the selected chunks look relevant.
+
 Use `selected_chunks` as the context payload. Use `citations` when explaining
 why a rule applies. Use `required_checks` before claiming work is complete. Use
 `forbidden_actions` and `stop_conditions` as hard boundaries.
@@ -178,7 +197,9 @@ The current schema is a design contract. A future validator should check that:
 
 - required fields exist
 - citation IDs resolve
+- action authorization does not allow execution when routing is blocked
 - blocking gaps affect routing status
+- blocking gaps cite selected evidence chunks when available
 - selected token estimates fit the budget
 - corpus IDs follow the numbered corpus vocabulary
 - selected chunks are cited

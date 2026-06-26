@@ -142,6 +142,49 @@ fields:
         items:
           type: string
 
+  action_authorization:
+    type: object
+    description: Optional explicit authorization decision for side-effecting actions named by the request.
+    required_fields:
+      - requested_action
+      - side_effect_class
+      - execution_allowed
+      - status
+      - resolved_intent_id
+      - blocking_gap_ids
+    fields:
+      requested_action:
+        type: string
+        examples:
+          - deploy
+          - deployment-guidance
+          - edit
+          - commit
+          - context-retrieval
+      side_effect_class:
+        type: enum
+        allowed_values:
+          - none
+          - write
+          - git
+          - deploy
+          - destructive
+      execution_allowed:
+        type: boolean
+      status:
+        type: enum
+        allowed_values:
+          - allowed
+          - blocked
+          - not-executable-intent
+          - not-requested
+      resolved_intent_id:
+        type: string
+      blocking_gap_ids:
+        type: array
+        items:
+          type: string
+
   routing:
     type: object
     required_fields:
@@ -464,6 +507,14 @@ fields:
           type: string
         blocking:
           type: boolean
+        required_evidence_chunk_ids:
+          type: array
+          items:
+            type: string
+        citation_ids:
+          type: array
+          items:
+            type: string
         suggested_resolution:
           type: string
 
@@ -618,6 +669,34 @@ field_guide:
     what_it_does: "Separates deterministic evidence from inference."
     rules:
       - "Use `deterministic`, `inferred`, `user-supplied`, or `mixed`."
+
+  - path: action_authorization
+    what_it_is: "An optional explicit authorization decision for a requested side-effecting action."
+    what_it_does: "Makes safety decisions such as deployment denial visible without requiring consumers to infer them from routing alone."
+    rules:
+      - "Use this field when the prompt appears to request write, git, deploy, or destructive action."
+      - "When execution is blocked, list the blocking gap IDs."
+      - "Do not set `execution_allowed: true` while routing is blocked or blocking gaps exist."
+
+  - path: action_authorization.execution_allowed
+    what_it_is: "Whether the requested side-effecting action may proceed."
+    what_it_does: "Gives downstream workflows a direct safety signal."
+    rules:
+      - "Must be false when the prompt is planning, explanation, or no-action."
+      - "Must be false when any blocking gap is present."
+
+  - path: gaps.required_evidence_chunk_ids
+    what_it_is: "Selected chunk IDs that justify a gap."
+    what_it_does: "Keeps blocking decisions auditable and traceable to exact retrieved evidence."
+    rules:
+      - "Use for blocking gaps when a specific rule chunk explains the block."
+      - "Every listed chunk should be present in `selected_chunks`."
+
+  - path: gaps.citation_ids
+    what_it_is: "Packet citations that support the gap."
+    what_it_does: "Lets reviewers reconstruct why a gap was emitted without scanning all selected chunks."
+    rules:
+      - "Use citations from the selected evidence chunks."
 
   - path: intent.evidence_ref_ids
     what_it_is: "References that support the intent classification."

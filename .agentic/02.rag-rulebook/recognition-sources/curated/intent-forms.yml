@@ -54,6 +54,7 @@ terms:
     canonical_id: intent.planning.decision-support
     aliases:
       - Do we want to
+      - Prepare a deployment plan
     confidence_weight: 0.9
   - term: Can you explain
     category: intent-form
@@ -71,6 +72,13 @@ terms:
       - What are
       - Where is
     confidence_weight: 0.85
+  - term: Do not deploy
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.no-action.explanation
+    aliases:
+      - Don't deploy
+    confidence_weight: 1
   - term: Please implement
     category: intent-form
     match_type: phrase
@@ -93,6 +101,7 @@ terms:
     match_type: phrase
     canonical_id: intent.deploy.execution
     aliases:
+      - Deploy the
       - Deploy the app
       - Release this
     confidence_weight: 0.9

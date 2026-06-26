@@ -82,6 +82,8 @@ ALLOWED_GAP_TYPES = {
     "unsupported-action",
 }
 ALLOWED_TRIM_POLICIES = {"deterministic-first", "cite-required-context-only", "fail-when-over-budget"}
+ALLOWED_ACTION_SIDE_EFFECT_CLASSES = {"none", "write", "git", "deploy", "destructive"}
+ALLOWED_ACTION_AUTHORIZATION_STATUSES = {"allowed", "blocked", "not-executable-intent", "not-requested"}
 
 
 def repo_root() -> Path:
@@ -229,6 +231,10 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
 
     request = dict_field(packet, "request", errors)
     intent = dict_field(packet, "intent", errors)
+    action_authorization = packet.get("action_authorization")
+    if action_authorization is not None and not isinstance(action_authorization, dict):
+        errors.append("action_authorization must be an object when present")
+        action_authorization = None
     routing = dict_field(packet, "routing", errors)
     confidence = dict_field(packet, "confidence", errors)
     budgets = dict_field(packet, "budgets", errors)
@@ -418,9 +424,39 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
             errors.append(f"gap blocking must be boolean: {gap_id}")
         elif gap.get("blocking"):
             blocking_gaps.append(gap_id)
+        for chunk_id in list_of_strings(gap.get("required_evidence_chunk_ids")):
+            if chunk_id not in selected_chunk_ids:
+                errors.append(f"gap required evidence chunk is not selected: {gap_id} -> {chunk_id}")
+        for citation_id in list_of_strings(gap.get("citation_ids")):
+            if citation_id not in packet_citation_by_id:
+                errors.append(f"gap citation does not resolve: {gap_id} -> {citation_id}")
 
     if blocking_gaps and routing.get("status") == "ready":
         errors.append("routing.status cannot be ready when blocking gaps exist")
+    if isinstance(action_authorization, dict):
+        require_fields(
+            "action_authorization",
+            action_authorization,
+            ["requested_action", "side_effect_class", "execution_allowed", "status", "resolved_intent_id", "blocking_gap_ids"],
+            errors,
+        )
+        if action_authorization.get("side_effect_class") not in ALLOWED_ACTION_SIDE_EFFECT_CLASSES:
+            errors.append(f"action_authorization.side_effect_class is invalid: {action_authorization.get('side_effect_class')}")
+        if action_authorization.get("status") not in ALLOWED_ACTION_AUTHORIZATION_STATUSES:
+            errors.append(f"action_authorization.status is invalid: {action_authorization.get('status')}")
+        if not isinstance(action_authorization.get("execution_allowed"), bool):
+            errors.append("action_authorization.execution_allowed must be boolean")
+        if action_authorization.get("execution_allowed") is True and routing.get("status") == "blocked":
+            errors.append("action_authorization.execution_allowed cannot be true when routing.status is blocked")
+        if action_authorization.get("execution_allowed") is True and blocking_gaps:
+            errors.append("action_authorization.execution_allowed cannot be true when blocking gaps exist")
+        for gap_id in list_of_strings(action_authorization.get("blocking_gap_ids")):
+            if gap_id not in gap_ids:
+                errors.append(f"action_authorization blocking gap does not resolve: {gap_id}")
+            elif gap_id not in blocking_gaps:
+                errors.append(f"action_authorization blocking gap is not blocking: {gap_id}")
+        if action_authorization.get("status") == "blocked" and not list_of_strings(action_authorization.get("blocking_gap_ids")):
+            errors.append("action_authorization.status blocked requires blocking_gap_ids")
 
     max_context_tokens = budgets.get("max_context_tokens")
     selected_context_tokens = budgets.get("selected_context_tokens")

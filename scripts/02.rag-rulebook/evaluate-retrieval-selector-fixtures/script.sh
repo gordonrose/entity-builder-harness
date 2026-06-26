@@ -209,6 +209,18 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             for item in packet.get("gaps", [])
             if isinstance(item, dict) and isinstance(item.get("id"), str)
         },
+        "gap_evidence_chunk_ids": {
+            chunk_id
+            for item in packet.get("gaps", [])
+            if isinstance(item, dict)
+            for chunk_id in list_of_strings(item.get("required_evidence_chunk_ids"))
+        },
+        "gap_citation_ids": {
+            citation_id
+            for item in packet.get("gaps", [])
+            if isinstance(item, dict)
+            for citation_id in list_of_strings(item.get("citation_ids"))
+        },
         "blocking_gap_ids": {
             item.get("id")
             for item in packet.get("gaps", [])
@@ -326,6 +338,20 @@ def compare_routing(packet: dict[str, Any], expected: dict[str, Any], errors: li
             errors.append(f"routing.{field} expected {expected_value!r}, got {routing.get(field)!r}")
 
 
+def compare_object_fields(owner: str, actual: dict[str, Any], expected: dict[str, Any], errors: list[str]) -> None:
+    for field, expected_value in expected.items():
+        actual_value = actual.get(field)
+        if isinstance(expected_value, list):
+            if not isinstance(actual_value, list):
+                errors.append(f"{owner}.{field} expected a list, got {actual_value!r}")
+                continue
+            for item in expected_value:
+                if item not in actual_value:
+                    errors.append(f"{owner}.{field} missing required value: {item}")
+        elif actual_value != expected_value:
+            errors.append(f"{owner}.{field} expected {expected_value!r}, got {actual_value!r}")
+
+
 def compare_confidence(packet: dict[str, Any], expected: dict[str, Any], errors: list[str]) -> None:
     confidence = dict_value(packet.get("confidence"))
     for key, value in expected.items():
@@ -377,6 +403,13 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
     banned = dict_value(fixture.get("banned"))
 
     compare_routing(packet, dict_value(expected.get("routing")), errors)
+    compare_object_fields("intent", dict_value(packet.get("intent")), dict_value(expected.get("intent")), errors)
+    compare_object_fields(
+        "action_authorization",
+        dict_value(packet.get("action_authorization")),
+        dict_value(expected.get("action_authorization")),
+        errors,
+    )
     require_contains(
         "matched_corpora",
         sets["matched_corpora"],
@@ -469,12 +502,28 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
 
     gaps = dict_value(expected.get("gaps"))
     required_gaps = list_of_strings(gaps.get("required"))
+    required_blocking_gaps = list_of_strings(gaps.get("blocking_required"))
     allowed_gaps = set(required_gaps + list_of_strings(gaps.get("allowed")))
+    allowed_gaps.update(required_blocking_gaps)
     require_contains("gaps", sets["gap_ids"], required_gaps, errors)
+    require_contains("blocking_gaps", sets["blocking_gap_ids"], required_blocking_gaps, errors)
+    require_contains(
+        "gap_evidence_chunk_ids",
+        sets["gap_evidence_chunk_ids"],
+        list_of_strings(gaps.get("required_evidence_chunk_ids")),
+        errors,
+    )
+    require_contains(
+        "gap_citation_ids",
+        sets["gap_citation_ids"],
+        list_of_strings(gaps.get("required_citation_ids")),
+        errors,
+    )
     if gaps.get("no_unexpected") is True:
         unexpected = sorted(sets["gap_ids"] - allowed_gaps)
         for gap_id in unexpected:
             errors.append(f"gaps contains unexpected value: {gap_id}")
+    require_absent("blocking_gaps", sets["blocking_gap_ids"], list_of_strings(banned.get("blocking_gaps")), errors)
     require_absent("gaps", sets["gap_ids"], list_of_strings(banned.get("gaps")), errors)
 
     checks = dict_value(expected.get("required_checks"))

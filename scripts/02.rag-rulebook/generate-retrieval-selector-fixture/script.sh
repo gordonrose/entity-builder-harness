@@ -124,6 +124,27 @@ TOKEN_ALIASES = {
     "validation": "validate",
     "validator": "validate",
 }
+INTENT_PRECEDENCE = [
+    "intent.no-action.explanation",
+    "intent.explanation.tutor",
+    "intent.discovery.explanation",
+    "intent.planning.guidance",
+    "intent.planning.decision-support",
+    "intent.git.commit",
+    "intent.deploy.execution",
+    "intent.implementation.request",
+]
+INTENT_LABELS = {
+    "intent.context.retrieve": "Retrieve governed context",
+    "intent.no-action.explanation": "Explain without execution",
+    "intent.explanation.tutor": "Explain",
+    "intent.discovery.explanation": "Discover and explain",
+    "intent.planning.guidance": "Plan or guide",
+    "intent.planning.decision-support": "Support a planning decision",
+    "intent.git.commit": "Commit changes",
+    "intent.deploy.execution": "Deploy execution",
+    "intent.implementation.request": "Implementation request",
+}
 
 
 def repo_root() -> Path:
@@ -439,17 +460,32 @@ def corpus_gap_matches_request(
     return bool(observed_prompt and observed_prompt.lower() == request_text.strip().lower())
 
 
-def corpus_gap_blocking(gap: dict[str, Any], recognition_matches: list[dict[str, Any]]) -> bool:
-    behavior = dict_value(gap.get("local_query_behavior"))
-    blocking_by_intent = dict_value(behavior.get("blocking_by_intent"))
-    intent_ids = {
+def matched_intent_ids(recognition_matches: list[dict[str, Any]], *, prompt_only: bool = True) -> set[str]:
+    ids = {
         str(match.get("canonical_id"))
         for match in recognition_matches
         if match.get("category") == "intent-form" and isinstance(match.get("canonical_id"), str)
+        and (not prompt_only or match.get("matched_input") == "prompt")
     }
-    for intent_id in sorted(intent_ids):
-        if isinstance(blocking_by_intent.get(intent_id), bool):
-            return bool(blocking_by_intent[intent_id])
+    if prompt_only and not ids:
+        return matched_intent_ids(recognition_matches, prompt_only=False)
+    return ids
+
+
+def resolve_intent_id(recognition_matches: list[dict[str, Any]]) -> str:
+    intent_ids = matched_intent_ids(recognition_matches)
+    for intent_id in INTENT_PRECEDENCE:
+        if intent_id in intent_ids:
+            return intent_id
+    return "intent.context.retrieve"
+
+
+def corpus_gap_blocking(gap: dict[str, Any], recognition_matches: list[dict[str, Any]]) -> bool:
+    behavior = dict_value(gap.get("local_query_behavior"))
+    blocking_by_intent = dict_value(behavior.get("blocking_by_intent"))
+    resolved_intent_id = resolve_intent_id(recognition_matches)
+    if isinstance(blocking_by_intent.get(resolved_intent_id), bool):
+        return bool(blocking_by_intent[resolved_intent_id])
     return bool(behavior.get("blocking") is True)
 
 
@@ -477,25 +513,86 @@ def corpus_gap_records_gaps(
             continue
         if not corpus_gap_matches_request(gap, candidates_by_id, request_text):
             continue
+        blocking = corpus_gap_blocking(gap, recognition_matches)
+        detail_required_chunk_ids: list[str] = []
+        if blocking:
+            for detail in list_of_dicts(gap.get("execution_blocking_gaps")):
+                for chunk_id in list_of_strings(detail.get("required_chunk_ids")):
+                    if chunk_id not in detail_required_chunk_ids:
+                        detail_required_chunk_ids.append(chunk_id)
         seen.add(gap_id)
         target_corpus_id = str(gap.get("target_corpus_id") or "").strip()
         summary = str(gap.get("summary") or "A required corpus coverage gap is still open.").strip()
         description = summary
         if target_corpus_id:
             description += f" Target corpus: {target_corpus_id}."
-        emitted.append(
-            {
-                "id": gap_id,
-                "type": "missing-corpus",
-                "description": description,
-                "blocking": corpus_gap_blocking(gap, recognition_matches),
-                "suggested_resolution": str(
-                    gap.get("suggested_resolution")
-                    or "Add governed source material, structured rules, chunks, and selector evaluation proof before treating this coverage as available."
-                ),
-            }
-        )
+        main_record = {
+            "id": gap_id,
+            "type": "missing-corpus",
+            "description": description,
+            "blocking": blocking,
+            "suggested_resolution": str(
+                gap.get("suggested_resolution")
+                or "Add governed source material, structured rules, chunks, and selector evaluation proof before treating this coverage as available."
+            ),
+        }
+        if detail_required_chunk_ids:
+            main_record["required_evidence_chunk_ids"] = detail_required_chunk_ids
+        emitted.append(main_record)
+        if not blocking:
+            continue
+        for detail in list_of_dicts(gap.get("execution_blocking_gaps")):
+            detail_id = str(detail.get("id") or "").strip()
+            if not detail_id or detail_id in seen:
+                continue
+            seen.add(detail_id)
+            emitted.append(
+                {
+                    "id": detail_id,
+                    "type": str(detail.get("type") or "missing-validator"),
+                    "description": str(
+                        detail.get("description")
+                        or "Deploy execution is blocked because a required deploy-proof detail is missing."
+                    ),
+                    "blocking": True,
+                    "required_evidence_chunk_ids": list_of_strings(detail.get("required_chunk_ids")),
+                    "suggested_resolution": str(
+                        detail.get("suggested_resolution")
+                        or gap.get("suggested_resolution")
+                        or "Add governed deploy proof before treating this request as executable."
+                    ),
+                }
+            )
     return emitted
+
+
+def matched_corpus_gap_required_chunk_ids(
+    corpus_gaps: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+    recognition_matches: list[dict[str, Any]],
+    request_text: str,
+) -> list[str]:
+    chunk_ids: list[str] = []
+    seen: set[str] = set()
+    candidates_by_id = {
+        str(candidate.get("candidate_id")): candidate
+        for candidate in candidates
+        if isinstance(candidate.get("candidate_id"), str)
+    }
+    for gap in corpus_gaps:
+        if gap.get("status") not in {"open", "planned", "in-progress"}:
+            continue
+        if not corpus_gap_matches_request(gap, candidates_by_id, request_text):
+            continue
+        if not corpus_gap_blocking(gap, recognition_matches):
+            continue
+        for detail in list_of_dicts(gap.get("execution_blocking_gaps")):
+            for chunk_id in list_of_strings(detail.get("required_chunk_ids")):
+                if chunk_id in seen:
+                    continue
+                seen.add(chunk_id)
+                chunk_ids.append(chunk_id)
+    return chunk_ids
 
 
 def matched_candidate_evidence_paths(candidates: list[dict[str, Any]], request_text: str) -> list[str]:
@@ -713,40 +810,6 @@ def ranked_chunks(
     return sorted(ranked, key=lambda item: (-item[0], item[1], item[2]))
 
 
-def select_chunks(ranked: list[tuple[float, int, str, dict[str, Any]]], max_chunks: int) -> list[tuple[float, dict[str, Any]]]:
-    selected: dict[str, tuple[float, dict[str, Any]]] = {}
-
-    def add(item: tuple[float, int, str, dict[str, Any]] | None) -> None:
-        if item is None:
-            return
-        score, _rank, chunk_id, chunk = item
-        selected.setdefault(chunk_id, (score, chunk))
-
-    for kind in ["required-check", "rule", "artifact-summary"]:
-        preferred = next((item for item in ranked if item[3].get("content_kind") == kind and item[0] > 0), None)
-        fallback = next((item for item in ranked if item[3].get("content_kind") == kind), None)
-        add(preferred or fallback)
-
-    for item in ranked:
-        if len(selected) >= max_chunks:
-            break
-        if item[0] <= 0 and len(selected) >= 3:
-            continue
-        add(item)
-
-    if len(selected) < 3:
-        for item in ranked:
-            if len(selected) >= 3:
-                break
-            add(item)
-
-    ordered = sorted(
-        selected.values(),
-        key=lambda item: (-item[0], source_rank(item[1]), item[1].get("chunk_id", "")),
-    )
-    return ordered[:max_chunks]
-
-
 def citation_ids_for(chunks: list[dict[str, Any]]) -> list[str]:
     ids: list[str] = []
     seen: set[str] = set()
@@ -765,6 +828,33 @@ def required_check_description(chunk: dict[str, Any]) -> str:
         return content.split(marker, 1)[1].strip()
     first_line = content.strip().splitlines()[0] if content.strip() else str(chunk.get("chunk_id"))
     return first_line
+
+
+def enrich_gap_evidence(gaps: list[dict[str, Any]], selected_chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    selected_chunk_by_id = {
+        str(chunk.get("chunk_id")): chunk
+        for chunk in selected_chunks
+        if isinstance(chunk.get("chunk_id"), str)
+    }
+    enriched: list[dict[str, Any]] = []
+    for gap in gaps:
+        gap_copy = dict(gap)
+        evidence_chunk_ids = [
+            chunk_id
+            for chunk_id in list_of_strings(gap_copy.get("required_evidence_chunk_ids"))
+            if chunk_id in selected_chunk_by_id
+        ]
+        citation_ids: list[str] = []
+        for chunk_id in evidence_chunk_ids:
+            for citation_id in list_of_strings(selected_chunk_by_id[chunk_id].get("citation_ids")):
+                if citation_id not in citation_ids:
+                    citation_ids.append(citation_id)
+        if evidence_chunk_ids:
+            gap_copy["required_evidence_chunk_ids"] = evidence_chunk_ids
+        if citation_ids:
+            gap_copy["citation_ids"] = citation_ids
+        enriched.append(gap_copy)
+    return enriched
 
 
 def category_summary(matches: list[dict[str, Any]]) -> dict[str, int]:
@@ -841,6 +931,131 @@ def candidate_ranked_chunks(
     return ranked, False
 
 
+def is_rule_source_path(path: str) -> bool:
+    return path.startswith("docs/") and "/rules/" in path and path.endswith((".yml", ".yaml"))
+
+
+def related_rule_source_paths(
+    ranked: list[tuple[float, int, str, dict[str, Any]]],
+    limit: int = 8,
+) -> list[str]:
+    paths: list[str] = []
+    seen: set[str] = set()
+    available_source_paths = {
+        str(item[3].get("source_path"))
+        for item in ranked
+        if isinstance(item[3].get("source_path"), str)
+    }
+    for score, _rank, _chunk_id, chunk in ranked:
+        if len(paths) >= limit:
+            break
+        if score <= 0 or chunk.get("content_kind") != "artifact-summary":
+            continue
+        in_related = False
+        for line in str(chunk.get("content") or "").splitlines():
+            stripped = line.strip()
+            if stripped == "Related rulesets:":
+                in_related = True
+                continue
+            if not in_related:
+                continue
+            if not stripped:
+                continue
+            if not stripped.startswith("- "):
+                break
+            related_path = stripped[2:].strip()
+            if not is_rule_source_path(related_path):
+                continue
+            if related_path not in available_source_paths:
+                continue
+            if related_path in seen or not repo_path(related_path).is_file():
+                continue
+            seen.add(related_path)
+            paths.append(related_path)
+    return paths
+
+
+def rule_evidence_paths(paths: list[str]) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for path in paths:
+        if not is_rule_source_path(path):
+            continue
+        if path in seen:
+            continue
+        seen.add(path)
+        result.append(path)
+    return result
+
+
+def select_chunks(
+    ranked: list[tuple[float, int, str, dict[str, Any]]],
+    max_chunks: int,
+    required_chunk_ids: list[str] | None = None,
+    required_source_paths: list[str] | None = None,
+) -> list[tuple[float, dict[str, Any]]]:
+    selected: dict[str, tuple[float, dict[str, Any]]] = {}
+    required_ids = set(required_chunk_ids or [])
+
+    def add(item: tuple[float, int, str, dict[str, Any]] | None) -> None:
+        if item is None:
+            return
+        score, _rank, chunk_id, chunk = item
+        selected.setdefault(chunk_id, (score, chunk))
+
+    by_chunk_id = {chunk_id: item for item in ranked for chunk_id in [item[2]]}
+
+    for kind in ["required-check", "rule", "artifact-summary"]:
+        preferred = next((item for item in ranked if item[3].get("content_kind") == kind and item[0] > 0), None)
+        fallback = next((item for item in ranked if item[3].get("content_kind") == kind), None)
+        add(preferred or fallback)
+
+    for chunk_id in required_chunk_ids or []:
+        add(by_chunk_id.get(chunk_id))
+
+    for source_path in required_source_paths or []:
+        preferred = next(
+            (
+                item
+                for item in ranked
+                if item[3].get("source_path") == source_path and item[0] > 0
+            ),
+            None,
+        )
+        fallback = next((item for item in ranked if item[3].get("source_path") == source_path), None)
+        add(preferred or fallback)
+
+    for item in ranked:
+        if len(selected) >= max_chunks:
+            break
+        if item[0] <= 0 and len(selected) >= 3:
+            continue
+        add(item)
+
+    if len(selected) < 3:
+        for item in ranked:
+            if len(selected) >= 3:
+                break
+            add(item)
+
+    ordered = sorted(
+        selected.values(),
+        key=lambda item: (-item[0], source_rank(item[1]), item[1].get("chunk_id", "")),
+    )
+    if len(ordered) <= max_chunks:
+        return ordered
+
+    required = [item for item in ordered if item[1].get("chunk_id") in required_ids]
+    optional = [item for item in ordered if item[1].get("chunk_id") not in required_ids]
+    limited = required[:max_chunks]
+    if len(limited) < max_chunks:
+        limited.extend(optional[: max_chunks - len(limited)])
+    return sorted(
+        limited,
+        key=lambda item: (-item[0], source_rank(item[1]), item[1].get("chunk_id", "")),
+    )
+
+
 def build_packet(
     args: argparse.Namespace,
     policy: dict[str, Any],
@@ -869,7 +1084,22 @@ def build_packet(
         allowed_corpus_ids,
         candidate_evidence_paths,
     )
-    selected_pairs = select_chunks(candidate_ranked, args.max_chunks)
+    required_chunk_ids = matched_corpus_gap_required_chunk_ids(
+        corpus_gaps,
+        recognition_candidates,
+        recognition_matches,
+        args.request_text,
+    )
+    graph_expansion_source_paths = related_rule_source_paths(candidate_ranked)
+    required_source_paths = rule_evidence_paths(candidate_evidence_paths)
+    if required_chunk_ids:
+        required_source_paths += graph_expansion_source_paths
+    selected_pairs = select_chunks(
+        candidate_ranked,
+        args.max_chunks,
+        required_chunk_ids=required_chunk_ids,
+        required_source_paths=required_source_paths,
+    )
     selected_source_chunks = [chunk for _score, chunk in selected_pairs]
     if len(selected_source_chunks) < 3:
         raise ValueError("selector fixture requires at least three selected chunks")
@@ -990,6 +1220,7 @@ def build_packet(
         )
     gaps.extend(candidate_coverage_gaps(recognition_candidates, args.request_text))
     gaps.extend(corpus_gap_records_gaps(corpus_gaps, recognition_candidates, recognition_matches, args.request_text))
+    gaps = enrich_gap_evidence(gaps, selected_chunks)
 
     selected_context_tokens = sum(
         chunk.get("token_estimate")
@@ -1026,6 +1257,38 @@ def build_packet(
         recognition_confidence = min(recognition_confidence, 0.69)
         retrieval_confidence = min(retrieval_confidence, 0.69)
     routing_status = "blocked" if any(gap.get("blocking") is True for gap in gaps) else "ready"
+    blocking_gap_ids = [
+        str(gap.get("id"))
+        for gap in gaps
+        if gap.get("blocking") is True and isinstance(gap.get("id"), str)
+    ]
+    resolved_intent_id = resolve_intent_id(recognition_matches)
+    requested_action = "context-retrieval"
+    side_effect_class = "none"
+    authorization_status = "not-requested"
+    if resolved_intent_id == "intent.deploy.execution":
+        requested_action = "deploy"
+        side_effect_class = "deploy"
+        authorization_status = "blocked" if blocking_gap_ids else "allowed"
+    elif resolved_intent_id == "intent.git.commit":
+        requested_action = "commit"
+        side_effect_class = "git"
+        authorization_status = "blocked" if blocking_gap_ids else "not-executable-intent"
+    elif resolved_intent_id == "intent.implementation.request":
+        requested_action = "edit"
+        side_effect_class = "write"
+        authorization_status = "blocked" if blocking_gap_ids else "not-executable-intent"
+    elif any(intent_id == "intent.deploy.execution" for intent_id in matched_intent_ids(recognition_matches)):
+        requested_action = "deployment-guidance"
+        authorization_status = "not-executable-intent"
+    action_authorization = {
+        "requested_action": requested_action,
+        "side_effect_class": side_effect_class,
+        "execution_allowed": authorization_status == "allowed" and not blocking_gap_ids,
+        "status": authorization_status,
+        "resolved_intent_id": resolved_intent_id,
+        "blocking_gap_ids": blocking_gap_ids,
+    }
 
     return {
         "schema": PACKET_SCHEMA,
@@ -1039,8 +1302,8 @@ def build_packet(
             "recognition_source_matches": recognition_matches[:80],
         },
         "intent": {
-            "id": "intent.rag-rulebook.generate-retrieval-selector-fixture",
-            "label": "Generate retrieval selector fixture",
+            "id": resolved_intent_id,
+            "label": INTENT_LABELS.get(resolved_intent_id, resolved_intent_id),
             "mode": args.session_mode,
             "layer": args.session_layer,
             "workflow": args.session_workflow,
@@ -1048,6 +1311,7 @@ def build_packet(
             "source": "mixed",
             "evidence_ref_ids": selected_citation_ids,
         },
+        "action_authorization": action_authorization,
         "routing": {
             "layer": args.session_layer,
             "mode": args.session_mode,
@@ -1168,14 +1432,18 @@ def build_packet(
                 "validate recognition sources",
                 "load generated chunks",
                 "match prompt, session metadata, and focused paths against recognition sources",
+                "resolve intent forms with governed precedence before deciding blocking behavior",
                 "restrict candidate chunks by session, recognition, and prototype bridge corpora when enough candidates exist",
                 "score chunks with deterministic recognition, session, path, corpus, and token signals",
+                "preserve required evidence chunks for blocking gaps",
                 "require required-check, rule, and artifact-summary coverage where available",
                 "validate context packet against chunk set before output",
             ],
             "candidate_filter_used": used_candidate_filter,
             "candidate_corpus_ids": allowed_corpus_ids,
             "matched_candidate_evidence_paths": candidate_evidence_paths,
+            "graph_expansion_source_paths": graph_expansion_source_paths,
+            "required_gap_chunk_ids": required_chunk_ids,
             "generator": "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
             "chunk_set_id": chunk_set.get("chunk_set_id"),
         },

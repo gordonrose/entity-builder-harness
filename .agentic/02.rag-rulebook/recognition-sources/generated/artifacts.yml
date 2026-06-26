@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 413
-  term_count: 833
+  indexed_artifacts: 418
+  term_count: 843
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3186,6 +3186,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/curated-prompt-vocabulary.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.deploy-execution-mcp-server-blocked
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-execution-mcp-server-blocked
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-execution-mcp-server-blocked
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
   category: artifact-id
   match_type: exact
@@ -3197,6 +3209,54 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-explanation-question
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-explanation-question
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-explanation-question
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-negation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-negation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-negation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-plan-request
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-plan-request
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-plan-request
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-planning-question
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-planning-question
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-planning-question
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
   category: artifact-id
