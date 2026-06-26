@@ -248,6 +248,10 @@ create 02 rag rulebook layer scaffold
 - Decision: Add first deploy structured rules
   Rationale: Converted the RAG/rulebook MCP deploy source material into structured corpus.04.deploy YAML rules, marked the deploy corpus gap structured_rulebook stage present, and left index, chunk, and selector evaluation proof as the next gap.
 
+
+- Decision: Add source-to-rule derivation drift governance
+  Rationale: Added the source-to-rule derivation standard, workflow, report schema, derivation reports directory, and first pending MCP deploy derivation report so future source-material changes must record semantic claims, conflicts, drift, downstream generated-artifact effects, and review state before rules, chunks, or evaluations are treated as current.
+
 ## Activity Log
 
 ### 2026-06-25T11:12:51Z - Session started
@@ -751,6 +755,13 @@ Rationale: Kept 04.deploy as the deployment governance owner, split deploy sourc
 Decision: Add first deploy structured rules
 
 Rationale: Converted the RAG/rulebook MCP deploy source material into structured corpus.04.deploy YAML rules, marked the deploy corpus gap structured_rulebook stage present, and left index, chunk, and selector evaluation proof as the next gap.
+
+
+### 2026-06-26T15:33:08Z - Decision
+
+Decision: Add source-to-rule derivation drift governance
+
+Rationale: Added the source-to-rule derivation standard, workflow, report schema, derivation reports directory, and first pending MCP deploy derivation report so future source-material changes must record semantic claims, conflicts, drift, downstream generated-artifact effects, and review state before rules, chunks, or evaluations are treated as current.
 
 ## Commits
 

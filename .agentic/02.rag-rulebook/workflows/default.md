@@ -48,6 +48,9 @@ another layer's workflow, split the work into separate governed phases.
   migration workflow.
 - If corpus ownership is unclear, stop and ask whether to update the layer
   boundary before continuing.
+- If source material is created, changed, removed, or reorganized in a way that
+  affects rulebook knowledge, use `derive-rules-from-source.md` before treating
+  downstream rules, chunks, or selector evaluations as current.
 
 ## Default Flow
 
@@ -59,5 +62,7 @@ another layer's workflow, split the work into separate governed phases.
 4. Keep the change to one small artifact or scaffold unless explicitly asked
    to perform a migration.
 5. Check `plans/repo-plan.md` when choosing the next small slice.
-6. Validate YAML or metadata headers when edited.
-7. Summarize boundaries, assumptions, and any deferred migration.
+6. If source material drives the change, create or update a derivation report
+   that names claims, drift, conflicts, affected artifacts, and validation.
+7. Validate YAML or metadata headers when edited.
+8. Summarize boundaries, assumptions, and any deferred migration.

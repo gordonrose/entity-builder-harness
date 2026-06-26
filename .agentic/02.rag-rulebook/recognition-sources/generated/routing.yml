@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 100
-  workflow_files: 28
+  term_count: 102
+  workflow_files: 29
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -403,6 +403,12 @@ terms:
   canonical_id: .agentic/02.rag-rulebook/workflows/default.md
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
   confidence_weight: 1
+- term: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 02.rag-rulebook.workflow.derive-rules-from-source
+  evidence_path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  confidence_weight: 1
 - term: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   category: workflow-name
   match_type: exact
@@ -606,6 +612,12 @@ terms:
   match_type: exact
   canonical_id: 02.rag-rulebook.workflow.default
   evidence_path: .agentic/02.rag-rulebook/workflows/default.md
+  confidence_weight: 1
+- term: derive-rules-from-source.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 02.rag-rulebook.workflow.derive-rules-from-source
+  evidence_path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   confidence_weight: 1
 - term: execute-approved-aws-change.md
   category: workflow-name

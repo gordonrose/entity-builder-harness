@@ -1,0 +1,144 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation and drift review for the first MCP server deploy rulebook slice.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#       path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+#     - id: deploy.rules.02-rag-rulebook.mcp-server-deployment
+#       path: docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.04.deploy.2026-06-26.mcp-server-deployment
+status: needs-review
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+  summary: >
+    First deploy corpus source material for running the RAG/rulebook capability
+    behind an MCP server through local-first RAG, GitHub, and AWS.
+
+target:
+  corpus_id: corpus.04.deploy
+  owner_layer: 04.deploy
+  deploy_track: 02.rag-rulebook
+  expected_rule_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  affected_rule_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  affected_rulesets: []
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+  affected_corpus_gaps:
+    - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+
+semantic_review:
+  source_claims:
+    - claim_id: local-rag-before-hosted-rag
+      summary: Local RAG must work before hosted RAG or AWS deployment is treated as executable.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: versioned-corpus-packages
+      summary: Remote RAG should answer from published, versioned corpus packages rather than uncommitted local files.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: read-only-mcp-first
+      summary: MCP exposure begins with read-only resources, prompts, and context-packet tools before any mutation tools exist.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: deployment-boundaries
+      summary: GitHub and AWS deployment boundaries require explicit auth, audit, health checks, rollback, and stop conditions.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/02.rag-rulebook/rules/
+      - docs/04.deploy/source-material/
+      - docs/04.deploy/rules/
+      - .agentic/02.rag-rulebook/corpus-gaps/
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/
+    items: []
+  drift:
+    status: expected
+    items:
+      - artifact: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+        issue: Index generation does not yet scan docs/04.deploy/rules as corpus.04.deploy.
+        required_resolution: Add corpus-root support before deploy rules can become retrievable chunks.
+      - artifact: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+        issue: Existing MCP planning evaluation still treats deploy coverage as a gap.
+        required_resolution: Add or update selector evaluation after corpus.04.deploy chunks exist.
+  ownership:
+    status: ok
+    notes:
+      - Deploy rules live under docs/04.deploy/rules because deployment is owned by corpus.04.deploy.
+      - The deploy track is 02.rag-rulebook because this slice deploys the RAG/rulebook capability.
+
+proposed_updates:
+  rules:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates:
+    - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+  corpus_gaps:
+    - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-mcp-server-gap.yml
+  notes:
+    - The structured deploy rulebook exists, but generated index/chunk proof is still pending.
+    - No curated recognition-source change is proposed in this slice.
+
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+    - generated rulebook index
+    - generated rulebook chunks
+    - deploy MCP selector evaluation proof
+
+validation:
+  required_checks:
+    - bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+    - bash scripts/02.rag-rulebook/commit-gates/script.sh
+    - bash scripts/01.harness/check-deterministic-process-drift.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+    - bash scripts/01.harness/check-governed-script-command-drift.sh
+    - git diff --check
+  checks_run:
+    - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+      result: passed
+    - command: bash scripts/02.rag-rulebook/commit-gates/script.sh
+      result: passed
+    - command: bash scripts/01.harness/check-deterministic-process-drift.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+      result: passed
+    - command: bash scripts/01.harness/check-governed-script-command-drift.sh
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending:
+    - Add a validator for source-to-rule derivation reports.
+    - Add corpus.04.deploy support to rulebook index generation.
+    - Add selector evaluation proof for deploy MCP retrieval.
+
+review:
+  required: true
+  decision: pending
+  notes:
+    - First report created after the first deploy structured-rule slice to establish the governed shape.
+    - Keep pending until human review or a future validator confirms report shape and downstream proof.

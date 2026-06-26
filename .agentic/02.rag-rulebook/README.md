@@ -61,6 +61,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer guides: `.agentic/02.rag-rulebook/guides/`
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer policies: `.agentic/02.rag-rulebook/policies/`
+- Layer derivation reports: `.agentic/02.rag-rulebook/derivation-reports/`
 - Layer corpus gaps: `.agentic/02.rag-rulebook/corpus-gaps/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer source material: `docs/02.rag-rulebook/source-material/`
@@ -76,6 +77,8 @@ final homes.
 
 - `workflows/default.md` - plan or change RAG/rulebook schemas, corpora,
   indexes, graph retrieval, context packets, or standalone service boundaries.
+- `workflows/derive-rules-from-source.md` - convert approved source material
+  into structured rulebook proposals with drift and conflict review.
 - `workflows/review-recognition-candidates.md` - review unmatched or ambiguous
   prompt terms before changing curated recognition sources.
 
@@ -94,6 +97,8 @@ final homes.
   unmatched terms become reviewable candidates before curated-source changes.
 - `standards/retrieval-selector-evaluations.md` - defines evaluation fixture
   rules for retrieval selector and context-packet behavior.
+- `standards/source-to-rule-derivation.md` - defines how approved source
+  material becomes structured rules while preserving drift and conflict review.
 
 ## Schemas
 
@@ -111,6 +116,8 @@ final homes.
   contract for generated and curated prompt recognition vocabularies.
 - `schemas/recognition-candidate.schema.yml` - defines the v1 review record
   for important unmatched or ambiguous prompt terms.
+- `schemas/source-to-rule-derivation-report.schema.yml` - defines the v1
+  report contract for source-to-rule derivation and semantic drift review.
 - `recognition-sources/generated/artifacts.yml` - generated lookup source for
   exact artifact IDs, paths, schemas, rule IDs, and rule-pack IDs.
 - `recognition-sources/generated/routing.yml` - generated lookup source for
@@ -129,6 +136,9 @@ final homes.
 - `corpus-gaps/` - durable records for known missing corpus coverage, including
   gaps that local context queries should surface before a domain corpus is
   ready.
+- `derivation-reports/` - durable reports for source-material changes that
+  affect structured rulebook content, drift, conflict review, indexes, chunks,
+  or selector evaluations.
 - `docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md`
   - first source coverage for the MCP server recognition candidate, before
   structured rulebook conversion.

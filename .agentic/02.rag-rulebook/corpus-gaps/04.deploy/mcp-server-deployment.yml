@@ -69,6 +69,7 @@ required_coverage:
     status: present
     evidence_paths:
       - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
     expectation: >
       Deploy-layer YAML rules define allowed actions, banned actions, required
       checks, stop conditions, rollback expectations, and ownership boundaries.

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 405
-  term_count: 816
+  indexed_artifacts: 410
+  term_count: 827
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3150,6 +3150,30 @@ terms:
   canonical_id: rag-rulebook.corpus-gaps.readme
   evidence_path: .agentic/02.rag-rulebook/corpus-gaps/README.md
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+  confidence_weight: 1
+- term: rag-rulebook.derivation-reports.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-reports.readme
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/README.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-reports.readme
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/README.md
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
   category: artifact-id
   match_type: exact
@@ -3570,6 +3594,24 @@ terms:
   canonical_id: rag-rulebook.schema.rulebook-index
   evidence_path: .agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml
   confidence_weight: 1
+- term: rag-rulebook.schema.source-to-rule-derivation-report
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.schema.source-to-rule-derivation-report
+  evidence_path: .agentic/02.rag-rulebook/schemas/source-to-rule-derivation-report.schema.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/schemas/source-to-rule-derivation-report.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.schema.source-to-rule-derivation-report
+  evidence_path: .agentic/02.rag-rulebook/schemas/source-to-rule-derivation-report.schema.yml
+  confidence_weight: 1
+- term: source-to-rule-derivation-report.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: rag-rulebook.schema.source-to-rule-derivation-report
+  evidence_path: .agentic/02.rag-rulebook/schemas/source-to-rule-derivation-report.schema.yml
+  confidence_weight: 1
 - term: rag-rulebook.standard.domain-corpus-package
   category: artifact-id
   match_type: exact
@@ -3642,6 +3684,18 @@ terms:
   canonical_id: rag-rulebook.standard.retrieval-selector-policy-system
   evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
   confidence_weight: 1
+- term: rag-rulebook.standard.source-to-rule-derivation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.standard.source-to-rule-derivation
+  evidence_path: .agentic/02.rag-rulebook/standards/source-to-rule-derivation.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/standards/source-to-rule-derivation.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.standard.source-to-rule-derivation
+  evidence_path: .agentic/02.rag-rulebook/standards/source-to-rule-derivation.md
+  confidence_weight: 1
 - term: rag-rulebook.workflows.readme
   category: artifact-id
   match_type: exact
@@ -3665,6 +3719,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.workflows.default
   evidence_path: .agentic/02.rag-rulebook/workflows/default.md
+  confidence_weight: 1
+- term: rag-rulebook.workflow.derive-rules-from-source
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.workflow.derive-rules-from-source
+  evidence_path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.workflow.derive-rules-from-source
+  evidence_path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   confidence_weight: 1
 - term: rag-rulebook.workflows.review-recognition-candidates
   category: artifact-id

@@ -432,6 +432,20 @@ The location is not the final domain corpus model.
      `docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml` and
      `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
 
+8c. Add source-to-rule derivation and drift review governance.
+   - Define the required report shape for turning approved source material
+     into structured rules.
+   - Require semantic drift and conflict review before downstream rules,
+     rulesets, generated indexes, chunks, selector evaluations, or published
+     corpus packages are treated as current.
+   - Add a first pending derivation report for the MCP server deployment source
+     conversion.
+   - Status: present in
+     `standards/source-to-rule-derivation.md`,
+     `workflows/derive-rules-from-source.md`,
+     `schemas/source-to-rule-derivation-report.schema.yml`, and
+     `derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml`.
+
 9. Plan the prototype corpus migration.
    - Separate harness-owned rules from `corpus.03.product`,
      `corpus.03.product.design-system`, `corpus.04.deploy`, and
