@@ -1,0 +1,90 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-projections.v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: source-projection-manifest
+#   purpose: Map governed source material to derived structured rules, derivation reports, and downstream retrieval proof.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.check-source-projections
+#       path: scripts/02.rag-rulebook/check-source-projections/script.sh
+#     - id: rag-rulebook.schema.source-projection-manifest
+#       path: .agentic/02.rag-rulebook/schemas/source-projection-manifest.schema.yml
+
+schema: rag-rulebook/source-projection-manifest/v1
+manifest_id: rag-rulebook.source-projections.v1
+status: active
+projection_sets:
+  - id: projection.02.rag-rulebook.mcp-server-deployment-architecture
+    status: active
+    projection_mode: manual-reviewed
+    source_material:
+      - path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+        role: primary
+    target:
+      corpus_id: corpus.02.rag-rulebook
+      owner_layer: 02.rag-rulebook
+    expected_rule_paths:
+      - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml
+    corpus_gap_paths: []
+    expected_selector_evaluations:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
+    notes:
+      - RAG/rulebook MCP architecture source projects to one 02.rag-rulebook concern rule.
+      - Deploy execution remains blocked by deploy-owned rules and readiness checks.
+
+  - id: projection.04.deploy.02-rag-rulebook.mcp-server-deployment
+    status: active
+    projection_mode: manual-reviewed
+    source_material:
+      - path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+        role: primary
+    target:
+      corpus_id: corpus.04.deploy
+      owner_layer: 04.deploy
+      deploy_track: 02.rag-rulebook
+    expected_rule_paths:
+      - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+    corpus_gap_paths:
+      - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+    expected_selector_evaluations:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
+      - bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+    notes:
+      - Deploy source projects into separate deploy-track rules for service shape, GitHub release control, AWS runtime boundaries, and readiness checks.
+      - The corpus gap remains open for concrete GitHub Actions and AWS target implementation proof.
+

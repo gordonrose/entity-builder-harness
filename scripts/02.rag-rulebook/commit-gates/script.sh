@@ -74,6 +74,12 @@ if [ -d "$LAYER_DIR/derivation-reports" ]; then
   echo "RAG/rulebook source derivation reports are valid."
 fi
 
+if [ -d "$LAYER_DIR/source-projections" ]; then
+  require_executable "scripts/02.rag-rulebook/check-source-projections/script.sh"
+  bash scripts/02.rag-rulebook/check-source-projections/script.sh --current >/dev/null
+  echo "RAG/rulebook source projections are valid."
+fi
+
 require_executable "scripts/02.rag-rulebook/check-source-material-coverage/script.sh"
 bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current >/dev/null
 echo "RAG/rulebook source material coverage is valid."
@@ -99,6 +105,10 @@ echo "RAG/rulebook local runtime build smoke passed."
 require_executable "scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh >/dev/null
 echo "RAG/rulebook local runtime freshness smoke passed."
+
+require_executable "scripts/02.rag-rulebook/check-source-projections/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-source-projections/smoke-test.sh >/dev/null
+echo "RAG/rulebook source projection smoke passed."
 
 require_executable "scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh >/dev/null

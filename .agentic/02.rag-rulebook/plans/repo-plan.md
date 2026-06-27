@@ -499,8 +499,29 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/check-source-material-coverage/` recomputes
      source hashes and fails stale projections. The rulebook index and chunk
      generators carry `source_derivation` into generated artifacts and chunks.
-     A fully automated source-to-YAML generator and emergency/manual override
-     workflow remain planned.
+     Source-to-rule relationships are now registered in
+     `.agentic/02.rag-rulebook/source-projections/v1.yml` and checked by
+     `scripts/02.rag-rulebook/check-source-projections/`. A fully automated
+     source-to-YAML generator and emergency/manual override workflow remain
+     planned.
+
+7ae. Add source projection manifest checking.
+   - Register every active governed source-material file in an explicit
+     source projection manifest.
+   - For each projection, name the owning corpus, expected YAML rule outputs,
+     derivation reports, corpus gaps, selector evaluations, and required proof
+     commands.
+   - Fail the commit gate when a source file is not registered, a
+     source-derived YAML file is not registered, a declared output is missing,
+     a YAML projection has stale source hashes, or a derivation report does
+     not mention the projection source and target rules.
+   - Keep this as a read-only check first; write-mode regeneration remains a
+     later governed step.
+   - Status: present in
+     `.agentic/02.rag-rulebook/source-projections/v1.yml`,
+     `schemas/source-projection-manifest.schema.yml`,
+     `guides/source-projection-manifest.md`, and
+     `scripts/02.rag-rulebook/check-source-projections/`.
 
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a

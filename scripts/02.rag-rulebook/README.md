@@ -43,6 +43,10 @@ validation, and standalone service adapters.
   report, plus fingerprints for live selector inputs.
 - `check-runtime-freshness/script.sh` verifies that a built local runtime cache
   still matches current governed input and runtime-output fingerprints.
+- `check-source-projections/script.sh` verifies that governed source material
+  is declared in the active projection manifest, derived YAML projections
+  exist, carry current source hashes, have derivation reports, and retain
+  expected selector or corpus-gap proof paths.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.

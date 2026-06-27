@@ -50,6 +50,13 @@ derivation report, generator identity, generated timestamp, source material
 paths, and source SHA-256 hashes. Commit gates recompute the source hashes and
 fail when a YAML projection was derived from stale source material.
 
+Each active source-to-rule relationship must also be declared in the active
+source projection manifest. The manifest records the approved source files,
+expected YAML projections, derivation reports, corpus gaps, selector
+evaluations, and checks that prove the projection is current. Commit gates
+must fail when source files, YAML projections, or derivation reports are added,
+moved, removed, or orphaned without updating that registry.
+
 The derivation review must ask:
 
 - What source claims changed?
@@ -128,6 +135,8 @@ must name the replacement.
   and selector fixtures.
 - Preserve source paths and evidence paths.
 - Preserve source hashes in `source_derivation.source_material`.
+- Register active source-to-rule relationships in the source projection
+  manifest.
 - Prefer narrow rule updates over broad rewrites.
 <!-- deterministic-check: allow reason="missing-knowledge triage is human-governed until source derivation reports have validator support" -->
 - Create review candidates or corpus gaps when knowledge is missing.
@@ -145,6 +154,8 @@ Do not:
 - mark chunks or selector evaluations current when they were not regenerated
 - update source material without regenerating or revalidating derived YAML
   provenance
+- add or keep source-derived YAML that is not declared in the source projection
+  manifest
 - merge domain corpora to avoid ownership decisions
 - accept semantic drift as harmless without naming affected artifacts
 - publish or deploy a corpus package with unresolved blocking derivation gaps
