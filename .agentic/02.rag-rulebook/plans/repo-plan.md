@@ -524,7 +524,10 @@ The location is not the final domain corpus model.
      source or rule material cannot become an unexplained retrieval gap.
    - Status: present in `schemas/retirement-record.schema.yml`,
      `retirements/`, and
-     `scripts/02.rag-rulebook/validate-retirement-records/`.
+     `scripts/02.rag-rulebook/validate-retirement-records/`. Source
+     projection checks now require retired projection-set paths to have
+     accepted retirement records and reject active projection sets that still
+     name retired artifacts.
 
 7ae. Add source projection manifest checking.
    - Register every active governed source-material file in an explicit

@@ -59,6 +59,7 @@ RULE_ROOTS = [
     "docs/04.deploy/rules",
 ]
 DERIVATION_REPORT_ROOT = ".agentic/02.rag-rulebook/derivation-reports"
+RETIREMENT_RECORD_ROOT = ".agentic/02.rag-rulebook/retirements"
 ALLOWED_SET_STATUSES = {"active", "planned", "retired"}
 ALLOWED_PROJECTION_MODES = {"manual-reviewed", "generated", "planned"}
 
@@ -234,6 +235,49 @@ def report_paths_for(report: dict[str, Any]) -> tuple[set[str], set[str]]:
     return source_paths, rule_paths
 
 
+def load_accepted_retirements(errors: list[str]) -> dict[str, list[str]]:
+    retired_by_path: dict[str, list[str]] = {}
+    for path in list_files([RETIREMENT_RECORD_ROOT], {".yml", ".yaml"}):
+        record_path = rel(path)
+        data = load_yaml(record_path, errors)
+        if data is None:
+            continue
+        if data.get("schema") != "rag-rulebook/retirement-record/v1":
+            errors.append(f"{record_path}.schema must be rag-rulebook/retirement-record/v1")
+            continue
+        if data.get("status") != "accepted":
+            continue
+        retirement_id = data.get("retirement_id")
+        if not isinstance(retirement_id, str) or not retirement_id.strip():
+            errors.append(f"{record_path}.retirement_id must be a non-empty string")
+            retirement_id = record_path
+        retired_artifacts = data.get("retired_artifacts")
+        if not isinstance(retired_artifacts, list):
+            errors.append(f"{record_path}.retired_artifacts must be an array")
+            continue
+        for index, artifact in enumerate(retired_artifacts, start=1):
+            owner = f"{record_path}.retired_artifacts[{index}]"
+            if not isinstance(artifact, dict):
+                errors.append(f"{owner} must be an object")
+                continue
+            retired_path = artifact.get("path")
+            if not isinstance(retired_path, str) or not retired_path.strip():
+                errors.append(f"{owner}.path must be a non-empty string")
+                continue
+            retired_by_path.setdefault(retired_path, []).append(retirement_id)
+    return {path: sorted(set(record_ids)) for path, record_ids in retired_by_path.items()}
+
+
+def lifecycle_paths_for(item: dict[str, Any]) -> dict[str, list[str]]:
+    return {
+        "source_material": item["source_paths"],
+        "expected_rule_paths": item["rule_paths"],
+        "derivation_reports": item["report_paths"],
+        "corpus_gap_paths": item["corpus_gap_paths"],
+        "expected_selector_evaluations": item["expected_selector_evaluations"],
+    }
+
+
 def validate_projection_set(
     item: dict[str, Any],
     index: int,
@@ -312,6 +356,29 @@ def validate_projection_set(
         "corpus_gap_paths": sorted(set(list_strings(item.get("corpus_gap_paths")))),
         "expected_selector_evaluations": sorted(set(list_strings(item.get("expected_selector_evaluations")))),
     }
+
+
+def validate_retirement_alignment(
+    normalized_sets: list[dict[str, Any]],
+    accepted_retirements: dict[str, list[str]],
+    errors: list[str],
+) -> None:
+    for item in normalized_sets:
+        set_id = item["id"]
+        status = item["status"]
+        for field, paths in lifecycle_paths_for(item).items():
+            for path in paths:
+                is_retired = path in accepted_retirements
+                if status == "retired" and not is_retired:
+                    errors.append(
+                        f"{set_id} is retired but {field} lacks accepted retirement record: {path}"
+                    )
+                if status == "active" and is_retired:
+                    records = ", ".join(accepted_retirements[path])
+                    errors.append(
+                        f"{set_id} is active but {field} references retired artifact "
+                        f"{path} recorded by {records}"
+                    )
 
 
 def validate_rule_projection(
@@ -419,6 +486,8 @@ def main(argv: list[str]) -> int:
         validate_projection_set(item, index, errors)
         for index, item in enumerate(projection_sets_raw, start=1)
     ]
+    accepted_retirements = load_accepted_retirements(errors)
+    validate_retirement_alignment(normalized_sets, accepted_retirements, errors)
 
     ids = [item["id"] for item in normalized_sets]
     for set_id in sorted({item for item in ids if ids.count(item) > 1}):
@@ -458,6 +527,7 @@ def main(argv: list[str]) -> int:
         "counts": {
             "projection_sets": len(normalized_sets),
             "active_projection_sets": len(active_sets),
+            "accepted_retirement_paths": len(accepted_retirements),
             "current_source_material_files": len(current_sources),
             "declared_source_material_files": len(declared_sources),
             "derived_rules": len(derived_rules),
@@ -466,6 +536,7 @@ def main(argv: list[str]) -> int:
             "warnings": len(warnings),
         },
         "projection_sets": normalized_sets,
+        "accepted_retirements": accepted_retirements,
         "undeclared_source_material_files": undeclared_sources,
         "undeclared_derived_rules": undeclared_derived_rules,
         "errors": errors,
@@ -494,4 +565,3 @@ def main(argv: list[str]) -> int:
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
 PY
-

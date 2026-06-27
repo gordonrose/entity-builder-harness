@@ -31,6 +31,11 @@ in the manifest, derived YAML outputs exist, derived YAML outputs carry current
 source hashes, derivation reports exist and mention the source, and expected
 selector or corpus-gap proof paths exist.
 
+Retired projection sets must be backed by accepted retirement records for their
+retired source, rule, derivation report, corpus-gap, and selector-evaluation
+paths. Active projection sets must not name artifacts that have accepted
+retirement records.
+
 ## Usage
 
 ```sh
@@ -48,4 +53,3 @@ Smoke test:
 ```sh
 bash scripts/02.rag-rulebook/check-source-projections/smoke-test.sh
 ```
-
