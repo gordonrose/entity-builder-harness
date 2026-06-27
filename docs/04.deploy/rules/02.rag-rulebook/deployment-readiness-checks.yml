@@ -322,7 +322,7 @@ rules:
       - "Verify immutable service and corpus artifacts."
       - "Verify AWS runtime target, health check, rollback target, governed MCP spec/auth/transport, budget, quota, throttling, and operational ownership."
       - "Verify runtime-specific target proof for app-runner, ecs-fargate, lambda, or eks."
-      - "Verify required local checks, generated sources, branch protection, environment protection, AWS target, rollback, and health proof are true."
+      - "Verify required local checks, generated sources, local runtime build, local runtime freshness, branch protection, environment protection, AWS target, rollback, and health proof are true."
     agent_guidance: >
       A passing readiness manifest is the executable handoff from planning to
       deployment execution. A blocked manifest report is useful context, not

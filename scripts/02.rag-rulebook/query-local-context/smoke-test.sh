@@ -88,7 +88,7 @@ if bash scripts/02.rag-rulebook/query-local-context/script.sh \
   exit 1
 fi
 
-grep -q "local RAG/rulebook runtime is stale" "$TMP_DIR/stale-query.err" || {
+grep -q "RAG/rulebook runtime freshness: stale" "$TMP_DIR/stale-query.err" || {
   echo "ERROR: stale runtime failure did not explain stale runtime." >&2
   cat "$TMP_DIR/stale-query.err" >&2
   exit 1

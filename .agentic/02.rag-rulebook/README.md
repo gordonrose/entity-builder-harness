@@ -154,6 +154,9 @@ final homes.
 - `scripts/02.rag-rulebook/build-local-runtime/script.sh` - builds an ignored
   local runtime cache with generated index, chunks, manifest, and validation
   report, plus fingerprints for live selector inputs.
+- `scripts/02.rag-rulebook/check-runtime-freshness/script.sh` - verifies that
+  a built local runtime cache still matches current governed input and
+  runtime-output fingerprints.
 - `scripts/02.rag-rulebook/query-local-context/script.sh` - reads a local
   runtime cache and emits a validated context packet for request text plus
   session metadata, refusing stale runtime caches.

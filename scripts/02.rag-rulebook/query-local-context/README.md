@@ -27,11 +27,11 @@ used_by:
 `script.sh` reads a built local RAG/rulebook runtime cache and emits a
 validated `rag-rulebook/context-packet/v1` packet.
 
-Before it answers, the command checks the runtime manifest fingerprints against
-the current live repo inputs that selector generation still reads. If retrieval
+Before it answers, the command calls
+`scripts/02.rag-rulebook/check-runtime-freshness/script.sh`. If retrieval
 policy, recognition sources, recognition candidates, corpus gaps, or runtime
-outputs have changed since the runtime was built, the command refuses to query
-and asks the caller to rebuild the local runtime.
+outputs have changed since the runtime was built, the freshness checker refuses
+the query and asks the caller to rebuild the local runtime.
 
 Build the runtime first:
 

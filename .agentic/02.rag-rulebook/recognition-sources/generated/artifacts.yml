@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 426
-  term_count: 859
+  indexed_artifacts: 429
+  term_count: 865
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3899,6 +3899,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.build-local-runtime.smoke-test
   evidence_path: scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.check-runtime-freshness.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-runtime-freshness.readme
+  evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-runtime-freshness/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-runtime-freshness.readme
+  evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.check-runtime-freshness
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-runtime-freshness
+  evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-runtime-freshness
+  evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.check-runtime-freshness.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-runtime-freshness.smoke-test
+  evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-runtime-freshness.smoke-test
+  evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.commit-gates.readme
   category: artifact-id

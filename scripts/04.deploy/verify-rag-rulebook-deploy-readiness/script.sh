@@ -273,6 +273,7 @@ def validate(data: dict) -> None:
     require_true(data, "checks.rag_rulebook_commit_gate_passed")
     require_true(data, "checks.generated_sources_current")
     require_true(data, "checks.local_runtime_built")
+    require_true(data, "checks.local_runtime_freshness_verified")
     require_true(data, "checks.remote_main_sha_verified")
     require_true(data, "checks.branch_protection_verified")
     require_true(data, "checks.github_environment_protection_verified")

@@ -72,7 +72,8 @@ The manifest names the concrete deployment candidate:
   version is `2025-11-25`, and the first remote MCP exposure currently allows
   only `streamable-http`
 - operational owner, escalation path, budgets, quotas, throttling, and local
-  readiness gates
+  readiness gates, including proof that the local RAG/runtime freshness check
+  passed before packaging or deployment
 
 ## Exit Behavior
 

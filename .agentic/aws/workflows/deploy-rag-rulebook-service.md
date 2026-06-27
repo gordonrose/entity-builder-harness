@@ -44,6 +44,7 @@ chat.
   ref condition, environment condition, and `id-token` workflow permission
   proof
 - immutable service artifact identity and generated corpus package identity
+- local RAG/runtime build and freshness verification proof
 - AWS account, region, runtime family, service target, network boundary, secret
   store, health check, rollback target, and log/metric destinations
 - MCP specification version, transport, authentication model, authorization

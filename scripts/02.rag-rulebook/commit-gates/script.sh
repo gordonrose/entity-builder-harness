@@ -92,6 +92,10 @@ require_executable "scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh"
 bash scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh >/dev/null
 echo "RAG/rulebook local runtime build smoke passed."
 
+require_executable "scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh >/dev/null
+echo "RAG/rulebook local runtime freshness smoke passed."
+
 require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
 bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null
 echo "RAG/rulebook local context query smoke passed."

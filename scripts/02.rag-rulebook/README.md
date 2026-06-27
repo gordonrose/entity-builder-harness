@@ -41,6 +41,8 @@ validation, and standalone service adapters.
 - `build-local-runtime/script.sh` writes a local deterministic runtime cache
   containing the generated rulebook index, chunk set, manifest, and validation
   report, plus fingerprints for live selector inputs.
+- `check-runtime-freshness/script.sh` verifies that a built local runtime cache
+  still matches current governed input and runtime-output fingerprints.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet for request text plus
   session metadata, refusing stale runtime caches.

@@ -111,6 +111,7 @@ checks:
   rag_rulebook_commit_gate_passed: true
   generated_sources_current: true
   local_runtime_built: true
+  local_runtime_freshness_verified: true
   remote_main_sha_verified: true
   branch_protection_verified: true
   github_environment_protection_verified: true

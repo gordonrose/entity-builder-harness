@@ -51,6 +51,8 @@ required.
   expected and banned packet behaviors remain pinned.
 - Require and run the local runtime build smoke test so index, chunks,
   manifest, and validation-report generation remain wired together.
+- Require and run the local runtime freshness smoke test so fresh, missing,
+  stale, and corrupt runtime states fail or pass deterministically.
 - Require and run the local context query smoke test so the runtime cache can
   still produce a validated context packet.
 
