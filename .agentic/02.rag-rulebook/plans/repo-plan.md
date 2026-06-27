@@ -461,14 +461,18 @@ The location is not the final domain corpus model.
    - Treat removed or moved rules as high-risk until references, rule packs,
      graph edges, chunks, evaluations, recognition sources, and derivation
      reports have been checked for orphaned references.
-   - Add an executable coverage gate, likely under
+   - Add an executable coverage gate under
      `scripts/02.rag-rulebook/check-source-material-coverage/`, before relying
      on commit-time runtime freshness as proof that all relevant knowledge was
      captured.
-   - Status: planned; current commit gates prove the current index/chunk
-     pipeline can run, but they do not yet prove that every changed source
-     material file has been converted, gap-tracked, retired, or intentionally
-     excluded.
+   - Status: first executable gate present in
+     `scripts/02.rag-rulebook/check-source-material-coverage/` and wired into
+     `scripts/02.rag-rulebook/commit-gates/script.sh`. The gate proves
+     current non-README source material has a structured rule, derivation
+     report, or corpus gap outcome, and proves claimed structured rules reach
+     the generated index and chunk set. Moved/removed source retirement
+     records, per-file source hashes, and generated-YAML provenance remain
+     planned under 7ad.
 
 7ad. Treat source material as canonical and YAML rules as generated projections.
    - Make approved Markdown source material the canonical human-authored source

@@ -42,6 +42,9 @@ required.
   validator.
 - If source-to-rule derivation reports exist, require and run the
   derivation-report validator.
+- Require and run the source-material coverage checker so non-README source
+  Markdown under governed source roots has a structured rule, derivation
+  report, or corpus gap outcome.
 - If generated recognition sources exist, require and run the generator
   freshness check.
 - Require and run the retrieval selector fixture smoke test so policy,
@@ -53,6 +56,8 @@ required.
   manifest, and validation-report generation remain wired together.
 - Require and run the local runtime freshness smoke test so fresh, missing,
   stale, and corrupt runtime states fail or pass deterministically.
+- Require and run the source-material coverage smoke test so orphan source
+  material fails deterministically.
 - Require and run the local context query smoke test so the runtime cache can
   still produce a validated context packet.
 
@@ -66,7 +71,7 @@ commit script.
 
 This command is read-only. It checks generated recognition sources for
 freshness and recognition candidates for review-record validity, but does not
-rewrite them. It parses YAML syntax and validates derivation reports without
-updating rules, chunks, or evaluations. It does not stage files or create
-commits, except transient fixture chunks and local runtime outputs in temporary
-directories during smoke validation.
+rewrite them. It parses YAML syntax, validates derivation reports, and checks
+source-material coverage without updating rules, chunks, or evaluations. It
+does not stage files or create commits, except transient fixture chunks, local
+runtime outputs, and temporary smoke-test source files during smoke validation.

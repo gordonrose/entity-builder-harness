@@ -43,6 +43,9 @@ validation, and standalone service adapters.
   report, plus fingerprints for live selector inputs.
 - `check-runtime-freshness/script.sh` verifies that a built local runtime cache
   still matches current governed input and runtime-output fingerprints.
+- `check-source-material-coverage/script.sh` verifies that governed source
+  material has a structured rule, derivation report, or corpus gap outcome and
+  that claimed structured rules reached the generated index and chunk set.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet for request text plus
   session metadata, refusing stale runtime caches.
