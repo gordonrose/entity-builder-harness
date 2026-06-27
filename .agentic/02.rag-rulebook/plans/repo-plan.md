@@ -434,6 +434,34 @@ The location is not the final domain corpus model.
    - Status: planned after the first strict
      `scripts/02.rag-rulebook/check-runtime-freshness/` gate exists.
 
+7ac. Govern source-material coverage and rule discovery drift.
+   - Do not rely on runtime freshness alone to prove that source knowledge was
+     actually promoted into retrievable rules.
+   - Detect when source-material files are added, modified, moved, or removed
+     under governed corpus roots such as `docs/02.rag-rulebook/source-material/`.
+   - Require each source-material change to have one governed outcome:
+     structured rulebook YAML, an explicit corpus gap, a derivation report
+     explaining why no rule changed, or a retirement/removal record.
+   - Detect when structured rule YAML files are added, modified, moved, or
+     removed under indexed roots such as `docs/02.rag-rulebook/rules/` and
+     `docs/04.deploy/rules/`.
+   - Verify that indexed rule roots discover the changed YAML files and that
+     generated chunk candidates/chunks include the expected derived rule
+     material or intentionally exclude it with a recorded reason.
+   - Treat new corpus roots as unindexed until they are explicitly registered
+     in the index generator, corpus package policy, and commit gates.
+   - Treat removed or moved rules as high-risk until references, rule packs,
+     graph edges, chunks, evaluations, recognition sources, and derivation
+     reports have been checked for orphaned references.
+   - Add an executable coverage gate, likely under
+     `scripts/02.rag-rulebook/check-source-material-coverage/`, before relying
+     on commit-time runtime freshness as proof that all relevant knowledge was
+     captured.
+   - Status: planned; current commit gates prove the current index/chunk
+     pipeline can run, but they do not yet prove that every changed source
+     material file has been converted, gap-tracked, retired, or intentionally
+     excluded.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.
