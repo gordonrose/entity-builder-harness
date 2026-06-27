@@ -45,6 +45,9 @@ required.
 - If retirement records exist, require and run the retirement-record validator
   so removed, renamed, superseded, or retained-retired RAG artifacts remain
   auditable.
+- Require and run the corpus-root change detector so deleted or renamed
+  governed files have accepted retirement records and changed rule files still
+  reach the generated index and chunk set.
 - Require and run the source-material coverage checker so non-README source
   Markdown under governed source roots has a structured rule, derivation
   report, or corpus gap outcome.
@@ -64,6 +67,8 @@ required.
 - Require and run the retirement-record smoke test so missing prior hashes,
   unresolved references, bad replacement paths, and mismatched review state
   fail deterministically.
+- Require and run the corpus-root change smoke test so deleted governed paths
+  without retirement records and added orphan sources fail deterministically.
 - Require and run the local context query smoke test so the runtime cache can
   still produce a validated context packet.
 

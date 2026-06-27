@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 449
-  term_count: 907
+  indexed_artifacts: 452
+  term_count: 913
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4007,6 +4007,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.build-local-runtime.smoke-test
   evidence_path: scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.check-corpus-root-changes.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-corpus-root-changes.readme
+  evidence_path: scripts/02.rag-rulebook/check-corpus-root-changes/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-corpus-root-changes/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-corpus-root-changes.readme
+  evidence_path: scripts/02.rag-rulebook/check-corpus-root-changes/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.check-corpus-root-changes
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-corpus-root-changes
+  evidence_path: scripts/02.rag-rulebook/check-corpus-root-changes/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-corpus-root-changes/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-corpus-root-changes
+  evidence_path: scripts/02.rag-rulebook/check-corpus-root-changes/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.check-corpus-root-changes.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-corpus-root-changes.smoke-test
+  evidence_path: scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-corpus-root-changes.smoke-test
+  evidence_path: scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.check-runtime-freshness.readme
   category: artifact-id

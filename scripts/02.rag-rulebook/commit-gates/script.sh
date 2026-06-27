@@ -80,6 +80,10 @@ if [ -d "$LAYER_DIR/retirements" ]; then
   echo "RAG/rulebook retirement records are valid."
 fi
 
+require_executable "scripts/02.rag-rulebook/check-corpus-root-changes/script.sh"
+bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current >/dev/null
+echo "RAG/rulebook corpus root changes are valid."
+
 if [ -d "$LAYER_DIR/source-projections" ]; then
   require_executable "scripts/02.rag-rulebook/check-source-projections/script.sh"
   bash scripts/02.rag-rulebook/check-source-projections/script.sh --current >/dev/null
@@ -131,6 +135,10 @@ echo "RAG/rulebook source material coverage smoke passed."
 require_executable "scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh"
 bash scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh >/dev/null
 echo "RAG/rulebook retirement record smoke passed."
+
+require_executable "scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh >/dev/null
+echo "RAG/rulebook corpus root change smoke passed."
 
 require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
 bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null

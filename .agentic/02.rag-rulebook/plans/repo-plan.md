@@ -479,9 +479,10 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/commit-gates/script.sh`. The gate proves
      current non-README source material has a structured rule, derivation
      report, or corpus gap outcome, and proves claimed structured rules reach
-     the generated index and chunk set. Moved/removed source retirement
-     records, per-file source hashes, and generated-YAML provenance remain
-     planned under 7ad.
+     the generated index and chunk set. `check-corpus-root-changes` now detects
+     changed governed corpus-root paths and requires accepted retirement
+     records for deleted or renamed old paths. Per-file source hashes and
+     generated-YAML provenance continue under 7ad.
 
 7ad. Treat source material as canonical and YAML rules as generated projections.
    - Make approved Markdown source material the canonical human-authored source

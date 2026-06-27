@@ -231,6 +231,7 @@ FINGERPRINT_INPUTS = {
         "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh",
         "scripts/02.rag-rulebook/validate-derivation-reports/script.sh",
         "scripts/02.rag-rulebook/validate-retirement-records/script.sh",
+        "scripts/02.rag-rulebook/check-corpus-root-changes/script.sh",
         "scripts/02.rag-rulebook/check-source-projections/script.sh",
         "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
         "scripts/02.rag-rulebook/validate-context-packet/script.sh",

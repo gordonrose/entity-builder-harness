@@ -55,6 +55,9 @@ validation, and standalone service adapters.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.
+- `check-corpus-root-changes/script.sh` detects changed governed corpus-root
+  files, requires retirement records for deleted or renamed old paths, and
+  proves changed rule files still reach generated index and chunks.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet for request text plus
   session metadata, refusing stale runtime caches.
