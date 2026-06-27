@@ -98,6 +98,42 @@ assert report["severity"] == "blocked"
 assert any(item["name"] == "recognition_sources" for item in report["differences"]["inputs"])
 PY
 
+bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
+  --output-dir "$RUNTIME_DIR" \
+  --pretty >/dev/null
+
+STRUCTURED_RULE_PROBE="docs/04.deploy/rules/02.rag-rulebook/.runtime-freshness-smoke-test.yml"
+rm -f "$STRUCTURED_RULE_PROBE"
+trap 'rm -rf "$TMP_DIR"; rm -f "$STRUCTURED_RULE_PROBE"' EXIT
+cat > "$STRUCTURED_RULE_PROBE" <<'YAML'
+id: runtime-freshness-smoke-test
+title: Runtime freshness smoke test
+rules: []
+YAML
+
+if bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
+  --runtime-dir "$RUNTIME_DIR" \
+  --json > "$STALE_REPORT"; then
+  echo "ERROR: structured rule root change unexpectedly passed freshness check." >&2
+  exit 1
+fi
+
+python3 - "$STALE_REPORT" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert report["ok"] is False
+assert report["status"] == "stale"
+assert any(item["name"] == "structured_rules" for item in report["differences"]["inputs"])
+PY
+
+rm -f "$STRUCTURED_RULE_PROBE"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
 if bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
   --runtime-dir "$TMP_DIR/missing-runtime" \
   --json > "$MISSING_REPORT"; then

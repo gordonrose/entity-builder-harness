@@ -201,6 +201,23 @@ FINGERPRINT_INPUTS = {
     "recognition_sources": [".agentic/02.rag-rulebook/recognition-sources"],
     "recognition_candidates": [".agentic/02.rag-rulebook/recognition-candidates"],
     "corpus_gaps": [".agentic/02.rag-rulebook/corpus-gaps"],
+    "source_material": [
+        "docs/02.rag-rulebook/source-material",
+        "docs/04.deploy/source-material",
+    ],
+    "structured_rules": [
+        "docs/harness/architecture",
+        "docs/02.rag-rulebook/rules",
+        "docs/04.deploy/rules",
+    ],
+    "source_derivations": [".agentic/02.rag-rulebook/derivation-reports"],
+    "index_inputs": [
+        ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml",
+        ".agentic/02.rag-rulebook/schemas",
+        "scripts/02.rag-rulebook/generate-rulebook-index/script.sh",
+        "scripts/02.rag-rulebook/validate-rulebook-index/script.sh",
+    ],
+    "chunk_generation": ["scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"],
 }
 
 

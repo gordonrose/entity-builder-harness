@@ -64,10 +64,15 @@ assert manifest["constraints"]["local_only"] is True
 assert manifest["constraints"]["network_calls"] is False
 assert manifest["constraints"]["embeddings"] is False
 assert set(manifest["fingerprints"]["inputs"]) == {
-    "retrieval_policy",
-    "recognition_sources",
-    "recognition_candidates",
+    "chunk_generation",
     "corpus_gaps",
+    "index_inputs",
+    "retrieval_policy",
+    "recognition_candidates",
+    "recognition_sources",
+    "source_derivations",
+    "source_material",
+    "structured_rules",
 }
 for fingerprint in manifest["fingerprints"]["inputs"].values():
     assert fingerprint["algorithm"] == "sha256-relpath-content-v1"

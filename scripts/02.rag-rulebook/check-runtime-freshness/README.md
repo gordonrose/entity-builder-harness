@@ -46,6 +46,8 @@ bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
 - The manifest uses `rag-rulebook/local-runtime-manifest/v1`.
 - The runtime declares deterministic offline constraints.
 - Manifest input fingerprints still match the current repo.
+- Rulebook source roots, structured rule roots, derivation reports, index
+  inputs, and chunk-generation inputs still match the manifest.
 - Runtime output files still exist.
 - Runtime output file content still matches the manifest.
 - Runtime output schemas are supported.

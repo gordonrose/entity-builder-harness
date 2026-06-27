@@ -77,10 +77,15 @@ The manifest also records fingerprints for the live inputs that
 - recognition sources
 - recognition candidates
 - corpus gaps
+- source material roots
+- structured rule roots
+- source derivation reports
+- rulebook index inputs
+- chunk-generation inputs
 - generated runtime outputs
 
 Those fingerprints make the runtime cache fail closed when the live selector
-inputs no longer match the runtime that was built.
+or rulebook-generation inputs no longer match the runtime that was built.
 
 ## Effects
 
