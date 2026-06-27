@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-27T06:05:22Z
-latest_commit_sha: a699859
-chat_duration: 154351s (01:18:52:31)
-estimated_chat_tokens: 7354311 estimated from chat transcript bytes (29417242 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 220.63 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-27T06:34:22Z
+latest_commit_sha: b77061c
+chat_duration: 156091s (01:19:21:31)
+estimated_chat_tokens: 7530863 estimated from chat transcript bytes (30123450 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 225.93 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -900,6 +900,17 @@ Summary: Added a planned source-material coverage and rule-discovery drift gate 
 
 ADR impact: No new ADR; extends the 02.rag-rulebook repo plan.
 
+
+### 2026-06-27T06:34:22Z - Commit recorded
+
+Commit: `b77061c`
+
+Message: Add strict RAG runtime freshness gate
+
+Summary: Added a read-only check-runtime-freshness gate with fresh, missing, stale, and corrupt runtime reports; wired query-local-context, RAG commit gates, deploy-readiness proof, docs, and generated recognition sources to use it.
+
+ADR impact: No new ADR; implements repo-plan runtime freshness lifecycle and records future generated YAML provenance direction.
+
 ## Commits
 
 
@@ -1128,6 +1139,13 @@ ADR impact: No new ADR; extends the 02.rag-rulebook repo plan.
   Summary: Added a planned source-material coverage and rule-discovery drift gate so source material, structured rules, chunks, evaluations, recognition sources, and derivation reports stay connected when corpus files are added, updated, moved, or removed.
   ADR impact: No new ADR; extends the 02.rag-rulebook repo plan.
 
+
+- Commit: `b77061c`
+  Time UTC: 2026-06-27T06:34:22Z
+  Message: Add strict RAG runtime freshness gate
+  Summary: Added a read-only check-runtime-freshness gate with fresh, missing, stale, and corrupt runtime reports; wired query-local-context, RAG commit gates, deploy-readiness proof, docs, and generated recognition sources to use it.
+  ADR impact: No new ADR; implements repo-plan runtime freshness lifecycle and records future generated YAML provenance direction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1141,11 +1159,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-27T06:05:22Z
-Latest commit SHA: a699859
-Chat duration: 154351s (01:18:52:31)
-Estimated chat tokens: 7354311 estimated from chat transcript bytes (29417242 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 220.63 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-27T06:34:22Z
+Latest commit SHA: b77061c
+Chat duration: 156091s (01:19:21:31)
+Estimated chat tokens: 7530863 estimated from chat transcript bytes (30123450 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 225.93 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
