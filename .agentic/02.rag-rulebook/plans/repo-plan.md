@@ -414,6 +414,26 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/query-local-context/`; proactive
      detect-and-rebuild workflow automation remains planned.
 
+7ab. Add versioned runtime drift severity policy.
+   - Do not treat every runtime fingerprint deviation as the same class of
+     failure forever.
+   - Keep the first proactive freshness gate strict and fail-closed, but make
+     its report shape ready for severity classification.
+   - Define a versioned drift policy that can classify changes as fresh,
+     minor drift, rebuild recommended, rebuild required, or blocked.
+   - Let callers apply different tolerance levels by context: local planning
+     may allow known minor drift with a warning, commit gates may allow only
+     categorized non-blocking drift, and packaging or deployment must fail
+     closed on uncategorized or high-risk drift.
+   - Classify retrieval policy, chunk generation, deploy rules, MCP exposure,
+     authentication, authorization, and runtime output changes as high-risk
+     until a governed policy says otherwise.
+   - Record drift decisions in reviewable policy files so constant business
+     input can flow into the RAG system without making every source update a
+     deploy blocker.
+   - Status: planned after the first strict
+     `scripts/02.rag-rulebook/check-runtime-freshness/` gate exists.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.
