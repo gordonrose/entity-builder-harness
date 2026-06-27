@@ -211,6 +211,12 @@ FINGERPRINT_INPUTS = {
         "docs/04.deploy/rules",
     ],
     "source_derivations": [".agentic/02.rag-rulebook/derivation-reports"],
+    "source_projections": [
+        ".agentic/02.rag-rulebook/source-projections",
+        "scripts/02.rag-rulebook/check-source-projections/script.sh",
+        "scripts/02.rag-rulebook/generate-derived-rules/script.sh",
+        "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
+    ],
     "index_inputs": [
         ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml",
         ".agentic/02.rag-rulebook/schemas",
@@ -218,6 +224,20 @@ FINGERPRINT_INPUTS = {
         "scripts/02.rag-rulebook/validate-rulebook-index/script.sh",
     ],
     "chunk_generation": ["scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"],
+    "validation_machinery": [
+        "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh",
+        "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
+        "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh",
+        "scripts/02.rag-rulebook/validate-derivation-reports/script.sh",
+        "scripts/02.rag-rulebook/check-source-projections/script.sh",
+        "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
+        "scripts/02.rag-rulebook/validate-context-packet/script.sh",
+        "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
+        "scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh",
+        "scripts/02.rag-rulebook/query-local-context/script.sh",
+        "scripts/02.rag-rulebook/check-runtime-freshness/script.sh",
+        "scripts/02.rag-rulebook/build-local-runtime/script.sh",
+    ],
 }
 
 

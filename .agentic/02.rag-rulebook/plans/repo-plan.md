@@ -414,13 +414,22 @@ The location is not the final domain corpus model.
      as runtime inputs, not only selector-side inputs.
    - Add regression proof that changing a structured rule file makes an
      existing runtime report stale before source-material coverage work begins.
+   - Fingerprint source projection manifests and source projection/coverage
+     commands so projection governance cannot drift while runtime freshness
+     still reports fresh.
+   - Fingerprint validation machinery that changes the meaning of valid or
+     fresh, including retrieval-policy, recognition-source, candidate,
+     derivation-report, source-projection, source-material coverage,
+     context-packet, selector fixture, evaluator, local query, runtime build,
+     and runtime freshness scripts.
    - Status: strict freshness checking is present in
      `scripts/02.rag-rulebook/check-runtime-freshness/`,
      `scripts/02.rag-rulebook/build-local-runtime/`, and
      `scripts/02.rag-rulebook/query-local-context/`; the RAG/rulebook commit
      gate smoke-tests the freshness checker and deploy readiness requires
-     freshness proof. Source-root fingerprint expansion is the current fix;
-     automatic rebuild and later severity-aware drift tolerance remain planned.
+     freshness proof. Source projection and validation machinery fingerprint
+     expansion is present. Automatic rebuild and later severity-aware drift
+     tolerance remain planned.
 
 7ab. Add versioned runtime drift severity policy.
    - Do not treat every runtime fingerprint deviation as the same class of

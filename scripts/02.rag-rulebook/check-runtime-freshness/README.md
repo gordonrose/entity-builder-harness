@@ -48,6 +48,10 @@ bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
 - Manifest input fingerprints still match the current repo.
 - Rulebook source roots, structured rule roots, derivation reports, index
   inputs, and chunk-generation inputs still match the manifest.
+- Source projection manifests and source projection/coverage commands still
+  match the manifest.
+- Validation machinery that defines whether runtime inputs are trustworthy
+  still matches the manifest.
 - Runtime output files still exist.
 - Runtime output file content still matches the manifest.
 - Runtime output schemas are supported.

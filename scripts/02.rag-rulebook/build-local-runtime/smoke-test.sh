@@ -72,7 +72,9 @@ assert set(manifest["fingerprints"]["inputs"]) == {
     "recognition_sources",
     "source_derivations",
     "source_material",
+    "source_projections",
     "structured_rules",
+    "validation_machinery",
 }
 for fingerprint in manifest["fingerprints"]["inputs"].values():
     assert fingerprint["algorithm"] == "sha256-relpath-content-v1"

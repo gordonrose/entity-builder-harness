@@ -80,8 +80,12 @@ The manifest also records fingerprints for the live inputs that
 - source material roots
 - structured rule roots
 - source derivation reports
+- source projection manifests and projection/coverage commands
 - rulebook index inputs
 - chunk-generation inputs
+- validation machinery that defines whether policy, recognition, derivation,
+  projection, coverage, context packets, selector fixtures, and runtime
+  freshness are trustworthy
 - generated runtime outputs
 
 Those fingerprints make the runtime cache fail closed when the live selector

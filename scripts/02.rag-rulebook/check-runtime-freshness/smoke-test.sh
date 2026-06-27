@@ -26,7 +26,21 @@ set -euo pipefail
 #       path: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
 
 TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
+SOURCE_PROJECTION_PROBE=".agentic/02.rag-rulebook/source-projections/.runtime-freshness-smoke-test.yml"
+STRUCTURED_RULE_PROBE="docs/04.deploy/rules/02.rag-rulebook/.runtime-freshness-smoke-test.yml"
+VALIDATION_SCRIPT_PROBE="scripts/02.rag-rulebook/check-source-material-coverage/script.sh"
+VALIDATION_SCRIPT_BACKUP="$TMP_DIR/check-source-material-coverage-script.sh"
+
+restore_smoke_files() {
+  rm -f "$SOURCE_PROJECTION_PROBE" "$STRUCTURED_RULE_PROBE"
+  if [ -f "$VALIDATION_SCRIPT_BACKUP" ]; then
+    cp "$VALIDATION_SCRIPT_BACKUP" "$VALIDATION_SCRIPT_PROBE"
+  fi
+  rm -rf "$TMP_DIR"
+}
+
+cp "$VALIDATION_SCRIPT_PROBE" "$VALIDATION_SCRIPT_BACKUP"
+trap restore_smoke_files EXIT
 
 RUNTIME_DIR="$TMP_DIR/runtime"
 FRESH_REPORT="$TMP_DIR/fresh.json"
@@ -61,6 +75,8 @@ assert not report["differences"]["inputs"]
 assert not report["differences"]["runtime_outputs"]
 assert not report["differences"]["manifest"]
 assert {item["name"] for item in report["checks"]["inputs"]} == set(manifest["fingerprints"]["inputs"])
+assert "source_projections" in manifest["fingerprints"]["inputs"]
+assert "validation_machinery" in manifest["fingerprints"]["inputs"]
 assert {item["name"] for item in report["checks"]["runtime_outputs"]} >= {"rulebook_index", "rulebook_chunks"}
 PY
 
@@ -102,9 +118,7 @@ bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
   --output-dir "$RUNTIME_DIR" \
   --pretty >/dev/null
 
-STRUCTURED_RULE_PROBE="docs/04.deploy/rules/02.rag-rulebook/.runtime-freshness-smoke-test.yml"
 rm -f "$STRUCTURED_RULE_PROBE"
-trap 'rm -rf "$TMP_DIR"; rm -f "$STRUCTURED_RULE_PROBE"' EXIT
 cat > "$STRUCTURED_RULE_PROBE" <<'YAML'
 id: runtime-freshness-smoke-test
 title: Runtime freshness smoke test
@@ -132,7 +146,58 @@ assert any(item["name"] == "structured_rules" for item in report["differences"][
 PY
 
 rm -f "$STRUCTURED_RULE_PROBE"
-trap 'rm -rf "$TMP_DIR"' EXIT
+
+cat > "$SOURCE_PROJECTION_PROBE" <<'YAML'
+schema: runtime-freshness-smoke-test/v1
+purpose: Temporary source projection fingerprint probe.
+YAML
+
+if bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
+  --runtime-dir "$RUNTIME_DIR" \
+  --json > "$STALE_REPORT"; then
+  echo "ERROR: source projection change unexpectedly passed freshness check." >&2
+  exit 1
+fi
+
+python3 - "$STALE_REPORT" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert report["ok"] is False
+assert report["status"] == "stale"
+assert any(item["name"] == "source_projections" for item in report["differences"]["inputs"])
+PY
+
+rm -f "$SOURCE_PROJECTION_PROBE"
+
+printf '\n# runtime-freshness-smoke-test\n' >> "$VALIDATION_SCRIPT_PROBE"
+
+if bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
+  --runtime-dir "$RUNTIME_DIR" \
+  --json > "$STALE_REPORT"; then
+  echo "ERROR: validation machinery change unexpectedly passed freshness check." >&2
+  exit 1
+fi
+
+python3 - "$STALE_REPORT" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert report["ok"] is False
+assert report["status"] == "stale"
+assert any(item["name"] == "source_projections" for item in report["differences"]["inputs"])
+assert any(item["name"] == "validation_machinery" for item in report["differences"]["inputs"])
+PY
+
+cp "$VALIDATION_SCRIPT_BACKUP" "$VALIDATION_SCRIPT_PROBE"
 
 if bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
   --runtime-dir "$TMP_DIR/missing-runtime" \
