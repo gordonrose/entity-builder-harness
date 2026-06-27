@@ -374,6 +374,10 @@ The location is not the final domain corpus model.
      runtime manifest, and validation report.
    - Write local runtime outputs to an ignored cache such as
      `.cache/02.rag-rulebook/`.
+   - Fingerprint retrieval policy, recognition sources, recognition
+     candidates, corpus gaps, generated index, and generated chunk set so
+     query-time selector inputs cannot silently drift from build-time runtime
+     state.
    - Keep the command deterministic and offline; do not add embeddings,
      network calls, or hosted service dependencies in this step.
    - Status: present in
@@ -385,10 +389,30 @@ The location is not the final domain corpus model.
    - Return a validated `rag-rulebook/context-packet/v1` packet.
    - Reuse retrieval-selector fixture behavior until production retrieval
      runtime exists.
+   - Refuse to query when live selector inputs or runtime outputs no longer
+     match the local runtime manifest fingerprints.
    - Keep this as the local agent-facing interface while deploy corpus
      coverage matures.
    - Status: present in
      `scripts/02.rag-rulebook/query-local-context/`.
+
+7aa. Govern local runtime freshness lifecycle.
+   - Treat runtime fingerprints as a query-time safety fallback, not the
+     default update mechanism.
+   - Make the normal workflow detect changed RAG inputs before query,
+     packaging, or deployment. Inputs include retrieval policy, policy
+     dimensions, recognition sources, recognition candidates, corpus gaps,
+     rulebook index inputs, and chunk-generation inputs.
+   - When those inputs changed, rebuild the local runtime or require a rebuild
+     before continuing.
+   - Verify the rebuilt runtime manifest fingerprints before allowing
+     `query-local-context`, corpus packaging, or deploy-readiness work to
+     consume the runtime.
+   - Fail closed if a stale runtime reaches query time anyway.
+   - Status: fingerprint fallback is present in
+     `scripts/02.rag-rulebook/build-local-runtime/` and
+     `scripts/02.rag-rulebook/query-local-context/`; proactive
+     detect-and-rebuild workflow automation remains planned.
 
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a

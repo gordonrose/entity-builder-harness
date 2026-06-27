@@ -153,10 +153,10 @@ final homes.
   without mutating curated sources.
 - `scripts/02.rag-rulebook/build-local-runtime/script.sh` - builds an ignored
   local runtime cache with generated index, chunks, manifest, and validation
-  report.
+  report, plus fingerprints for live selector inputs.
 - `scripts/02.rag-rulebook/query-local-context/script.sh` - reads a local
   runtime cache and emits a validated context packet for request text plus
-  session metadata.
+  session metadata, refusing stale runtime caches.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

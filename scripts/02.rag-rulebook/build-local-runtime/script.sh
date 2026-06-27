@@ -150,6 +150,7 @@ python3 - \
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -193,6 +194,69 @@ def git_sha() -> str:
         stdout=subprocess.PIPE,
     )
     return result.stdout.strip()
+
+
+FINGERPRINT_INPUTS = {
+    "retrieval_policy": [".agentic/02.rag-rulebook/policies"],
+    "recognition_sources": [".agentic/02.rag-rulebook/recognition-sources"],
+    "recognition_candidates": [".agentic/02.rag-rulebook/recognition-candidates"],
+    "corpus_gaps": [".agentic/02.rag-rulebook/corpus-gaps"],
+}
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def iter_fingerprint_files(raw_roots: list[str]) -> tuple[list[Path], list[str]]:
+    files: list[Path] = []
+    missing_roots: list[str] = []
+    for raw_root in raw_roots:
+        root_path = Path(raw_root)
+        absolute = root_path if root_path.is_absolute() else root / root_path
+        if absolute.is_file():
+            files.append(absolute)
+        elif absolute.is_dir():
+            files.extend(path for path in absolute.rglob("*") if path.is_file())
+        else:
+            missing_roots.append(raw_root)
+    return sorted(set(files), key=lambda path: rel(path)), sorted(missing_roots)
+
+
+def fingerprint_roots(raw_roots: list[str]) -> dict:
+    files, missing_roots = iter_fingerprint_files(raw_roots)
+    digest = hashlib.sha256()
+    digest.update(b"rag-rulebook-fingerprint-v1\n")
+    for raw_root in sorted(raw_roots):
+        digest.update(f"root:{raw_root}\n".encode("utf-8"))
+    for missing_root in missing_roots:
+        digest.update(f"missing:{missing_root}\n".encode("utf-8"))
+    for path in files:
+        relative = rel(path)
+        digest.update(f"file:{relative}\n".encode("utf-8"))
+        digest.update(file_sha256(path).encode("ascii"))
+        digest.update(b"\n")
+    return {
+        "algorithm": "sha256-relpath-content-v1",
+        "roots": raw_roots,
+        "sha256": digest.hexdigest(),
+        "file_count": len(files),
+        "missing_roots": missing_roots,
+        "paths": [rel(path) for path in files],
+    }
+
+
+def fingerprint_file(path: Path) -> dict:
+    return {
+        "algorithm": "sha256-content-v1",
+        "path": rel(path),
+        "sha256": file_sha256(path),
+        "bytes": path.stat().st_size,
+    }
 
 
 index = load_json(index_file)
@@ -242,6 +306,16 @@ manifest = {
         ],
         "curated_glob": ".agentic/02.rag-rulebook/recognition-sources/curated/*.yml",
         "freshness": "current",
+    },
+    "fingerprints": {
+        "inputs": {
+            name: fingerprint_roots(paths)
+            for name, paths in FINGERPRINT_INPUTS.items()
+        },
+        "runtime_outputs": {
+            "rulebook_index": fingerprint_file(index_file),
+            "rulebook_chunks": fingerprint_file(chunks_file),
+        },
     },
     "counts": {
         "artifacts": index_counts.get("artifacts", 0),

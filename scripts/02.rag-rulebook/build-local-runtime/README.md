@@ -70,6 +70,18 @@ The command checks:
 
 Then it writes the generated index, chunk set, manifest, and validation report.
 
+The manifest also records fingerprints for the live inputs that
+`query-local-context` still depends on:
+
+- retrieval policy files
+- recognition sources
+- recognition candidates
+- corpus gaps
+- generated runtime outputs
+
+Those fingerprints make the runtime cache fail closed when the live selector
+inputs no longer match the runtime that was built.
+
 ## Effects
 
 This command writes only to the selected local runtime directory. It does not

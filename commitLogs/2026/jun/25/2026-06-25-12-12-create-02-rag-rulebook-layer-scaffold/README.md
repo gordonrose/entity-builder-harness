@@ -1104,3 +1104,6 @@ Estimated chat cost basis: profile=chat-latest-standard-conservative-output; mod
 - 2026-06-26T22:29:39Z: Added local runtime build and local context query smoke
   tests to the RAG/rulebook commit gate, and made the deploy-readiness verifier
   enforce the governed MCP specification version value.
+- 2026-06-27T05:19:45Z: Started local runtime hermeticity hardening by adding
+  build-time fingerprints for selector inputs and runtime outputs, plus
+  query-time stale-runtime refusal before context packet generation.

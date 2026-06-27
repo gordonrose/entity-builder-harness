@@ -40,10 +40,10 @@ validation, and standalone service adapters.
   `rag-rulebook/chunk-set/v1` JSON chunks from a validated rulebook index.
 - `build-local-runtime/script.sh` writes a local deterministic runtime cache
   containing the generated rulebook index, chunk set, manifest, and validation
-  report.
+  report, plus fingerprints for live selector inputs.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet for request text plus
-  session metadata.
+  session metadata, refusing stale runtime caches.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.

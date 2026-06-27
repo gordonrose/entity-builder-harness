@@ -63,6 +63,18 @@ assert validation["ok"] is True
 assert manifest["constraints"]["local_only"] is True
 assert manifest["constraints"]["network_calls"] is False
 assert manifest["constraints"]["embeddings"] is False
+assert set(manifest["fingerprints"]["inputs"]) == {
+    "retrieval_policy",
+    "recognition_sources",
+    "recognition_candidates",
+    "corpus_gaps",
+}
+for fingerprint in manifest["fingerprints"]["inputs"].values():
+    assert fingerprint["algorithm"] == "sha256-relpath-content-v1"
+    assert len(fingerprint["sha256"]) == 64
+    assert isinstance(fingerprint["file_count"], int)
+assert manifest["fingerprints"]["runtime_outputs"]["rulebook_index"]["sha256"]
+assert manifest["fingerprints"]["runtime_outputs"]["rulebook_chunks"]["sha256"]
 assert manifest["counts"]["chunk_candidates"] == manifest["counts"]["chunks"]
 assert manifest["counts"]["chunks"] > 0
 assert manifest["files"]["rulebook_index"].endswith("rulebook-index.json")
