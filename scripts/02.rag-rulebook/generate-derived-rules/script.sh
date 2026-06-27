@@ -12,7 +12,7 @@ set -euo pipefail
 #     - agentic
 #     - architecture
 #   kind: script
-#   purpose: Generate a read-only source-to-rule projection plan for derived YAML rule outputs.
+#   purpose: Generate a source-to-rule projection plan and optionally refresh YAML provenance blocks.
 #   portability:
 #     class: reusable
 #     targets:
@@ -20,7 +20,7 @@ set -euo pipefail
 #       - entity-builder
 #       - design-system-builder
 #   effects:
-#     - read-only
+#     - writes-files
 #   used_by:
 #     - id: rag-rulebook.plan.repo
 #       path: .agentic/02.rag-rulebook/plans/repo-plan.md
@@ -33,8 +33,10 @@ python3 - "$@" <<'PY'
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -73,11 +75,14 @@ ROOT = repo_root()
 def usage() -> str:
     return """Usage:
   generate-derived-rules/script.sh --current [--json] [--check]
+  generate-derived-rules/script.sh --current --apply-provenance [--json]
   generate-derived-rules/script.sh --current --manifest <path> [--json] [--check]
 
 Generates a read-only source-to-rule projection plan. The command does not
 rewrite YAML rule content. In --check mode it fails when declared source
-projections are mechanically stale or incomplete.
+projections are mechanically stale or incomplete. In --apply-provenance mode it
+rewrites only existing top-level source_derivation blocks for declared rule
+paths, then reruns source projection checks.
 """
 
 
@@ -87,6 +92,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--apply-provenance", action="store_true")
+    parser.add_argument("--generated-at-utc")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
     if args.help:
@@ -95,6 +102,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     if not args.current:
         print("ERROR: --current is required.", file=sys.stderr)
         print(usage(), end="", file=sys.stderr)
+        sys.exit(2)
+    if args.check and args.apply_provenance:
+        print("ERROR: --check and --apply-provenance cannot be combined.", file=sys.stderr)
         sys.exit(2)
     return args
 
@@ -195,6 +205,22 @@ def provenance_template(source_entries: list[dict[str, Any]], report_paths: list
     }
 
 
+def applied_generated_at(args: argparse.Namespace) -> str:
+    if isinstance(args.generated_at_utc, str) and args.generated_at_utc.strip():
+        return args.generated_at_utc.strip()
+    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def applied_provenance(
+    source_entries: list[dict[str, Any]],
+    report_paths: list[str],
+    generated_at_utc: str,
+) -> dict[str, Any]:
+    data = provenance_template(source_entries, report_paths)
+    data["generated_at_utc"] = generated_at_utc
+    return data
+
+
 def report_status(path: str) -> dict[str, Any]:
     if not repo_path(path).is_file():
         return {"path": path, "exists": False, "status": "missing", "review_decision": "missing"}
@@ -287,15 +313,58 @@ def rule_projection_status(
     }
 
 
-def projection_plan(item: dict[str, Any]) -> dict[str, Any]:
+def render_source_derivation_block(provenance: dict[str, Any]) -> list[str]:
+    rendered = yaml.safe_dump(
+        {"source_derivation": provenance},
+        sort_keys=False,
+        default_flow_style=False,
+        width=1000,
+    )
+    return rendered.splitlines()
+
+
+def replace_existing_source_derivation(rule_path: str, provenance: dict[str, Any]) -> bool:
+    path_obj = repo_path(rule_path)
+    lines = path_obj.read_text(encoding="utf-8").splitlines()
+    start = None
+    for index, line in enumerate(lines):
+        if line == "source_derivation:":
+            start = index
+            break
+    if start is None:
+        raise ValueError(f"{rule_path} has no existing top-level source_derivation block")
+
+    end = start + 1
+    top_level_pattern = re.compile(r"^[A-Za-z0-9_-]+:")
+    while end < len(lines):
+        line = lines[end]
+        if line.strip() and top_level_pattern.match(line):
+            break
+        end += 1
+
+    new_block = render_source_derivation_block(provenance)
+    if end < len(lines) and (not new_block or new_block[-1] != ""):
+        new_block.append("")
+    next_lines = lines[:start] + new_block + lines[end:]
+    next_text = "\n".join(next_lines) + "\n"
+    current_text = path_obj.read_text(encoding="utf-8")
+    if next_text == current_text:
+        return False
+    path_obj.write_text(next_text, encoding="utf-8")
+    return True
+
+
+def projection_plan(item: dict[str, Any], generated_at_utc: str | None = None) -> dict[str, Any]:
     projection_id = item.get("id") if isinstance(item.get("id"), str) else "unknown"
     report_paths = list_strings(item.get("derivation_reports"))
     source_entries = source_material_entries(list_dicts(item.get("source_material")))
     rule_paths = list_strings(item.get("expected_rule_paths"))
-    rule_statuses = [
-        rule_projection_status(rule_path, source_entries, report_paths)
-        for rule_path in rule_paths
-    ]
+    rule_statuses = []
+    for rule_path in rule_paths:
+        status = rule_projection_status(rule_path, source_entries, report_paths)
+        if generated_at_utc is not None:
+            status["apply_provenance"] = applied_provenance(source_entries, report_paths, generated_at_utc)
+        rule_statuses.append(status)
     derivation_reports = [report_status(path) for path in report_paths]
     actions = sorted({status["action"] for status in rule_statuses if status["action"] != "current"})
     if not actions:
@@ -313,17 +382,56 @@ def projection_plan(item: dict[str, Any]) -> dict[str, Any]:
         "corpus_gap_paths": list_strings(item.get("corpus_gap_paths")),
         "expected_selector_evaluations": list_strings(item.get("expected_selector_evaluations")),
         "required_checks": list_strings(item.get("required_checks")),
-        "provenance_template": provenance_template(source_entries, report_paths),
+        "provenance_template": (
+            applied_provenance(source_entries, report_paths, generated_at_utc)
+            if generated_at_utc is not None
+            else provenance_template(source_entries, report_paths)
+        ),
         "mechanically_current": mechanically_current,
         "semantic_review": semantic_review,
         "actions": actions,
     }
 
 
+def apply_provenance_updates(projection_sets: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+    writes: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for projection in projection_sets:
+        for rule in projection["expected_rule_paths"]:
+            action = rule.get("action")
+            rule_path = rule.get("path")
+            if action == "current":
+                continue
+            if action != "refresh-source-derivation":
+                errors.append(
+                    f"{rule_path} requires {action}; apply-provenance can only refresh existing source_derivation blocks"
+                )
+                continue
+            provenance = rule.get("apply_provenance")
+            if not isinstance(rule_path, str) or not isinstance(provenance, dict):
+                errors.append(f"{projection['id']} has invalid apply data for {rule_path}")
+                continue
+            try:
+                changed = replace_existing_source_derivation(rule_path, provenance)
+            except Exception as exc:
+                errors.append(str(exc))
+                continue
+            writes.append(
+                {
+                    "path": rule_path,
+                    "changed": changed,
+                    "projection_id": projection["id"],
+                    "action": "refreshed-source-derivation" if changed else "already-current",
+                }
+            )
+    return writes, errors
+
+
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     errors: list[str] = []
     manifest_path = args.manifest
+    generated_at_utc = applied_generated_at(args) if args.apply_provenance else None
 
     try:
         manifest = load_yaml(manifest_path)
@@ -335,14 +443,28 @@ def main(argv: list[str]) -> int:
         errors.append(f"{manifest_path}.schema must be {MANIFEST_SCHEMA}")
 
     projection_check = run_source_projection_check(manifest_path)
-    if not projection_check.get("ok"):
+    if not args.apply_provenance and not projection_check.get("ok"):
         errors.extend(str(error) for error in projection_check.get("errors") or [])
 
     projection_sets = [
-        projection_plan(item)
+        projection_plan(item, generated_at_utc)
         for item in list_dicts(manifest.get("projection_sets"))
         if item.get("status") == "active"
     ]
+
+    writes: list[dict[str, Any]] = []
+    post_apply_projection_check: dict[str, Any] | None = None
+    if args.apply_provenance:
+        writes, apply_errors = apply_provenance_updates(projection_sets)
+        errors.extend(apply_errors)
+        post_apply_projection_check = run_source_projection_check(manifest_path)
+        if not post_apply_projection_check.get("ok"):
+            errors.extend(str(error) for error in post_apply_projection_check.get("errors") or [])
+        projection_sets = [
+            projection_plan(item)
+            for item in list_dicts(manifest.get("projection_sets"))
+            if item.get("status") == "active"
+        ]
 
     stale_sets = [
         item["id"]
@@ -354,7 +476,7 @@ def main(argv: list[str]) -> int:
     report = {
         "schema": REPORT_SCHEMA,
         "ok": ok,
-        "mode": "check" if args.check else "plan",
+        "mode": "apply-provenance" if args.apply_provenance else ("check" if args.check else "plan"),
         "manifest_path": manifest_path,
         "manifest_id": manifest.get("manifest_id"),
         "generator": GENERATOR,
@@ -363,13 +485,23 @@ def main(argv: list[str]) -> int:
             "ok": bool(projection_check.get("ok")),
             "error_count": len(projection_check.get("errors") or []),
         },
+        "post_apply_source_projection_check": (
+            {
+                "ok": bool(post_apply_projection_check.get("ok")),
+                "error_count": len(post_apply_projection_check.get("errors") or []),
+            }
+            if post_apply_projection_check is not None
+            else None
+        ),
         "counts": {
             "projection_sets": len(projection_sets),
             "mechanically_current": sum(1 for item in projection_sets if item["mechanically_current"]),
             "stale_or_incomplete": len(stale_sets),
+            "writes": len(writes),
             "errors": len(errors),
         },
         "projection_sets": projection_sets,
+        "writes": writes,
         "stale_or_incomplete_projection_sets": stale_sets,
         "errors": errors,
     }
@@ -382,15 +514,21 @@ def main(argv: list[str]) -> int:
         for projection_id in stale_sets:
             print(f"ERROR: projection set is stale or incomplete: {projection_id}", file=sys.stderr)
     else:
-        print(
-            "Derived rule projection plan current: "
-            f"{len(projection_sets)} projection set(s), "
-            f"{sum(len(item['expected_rule_paths']) for item in projection_sets)} rule output(s)."
-        )
+        if args.apply_provenance:
+            changed_count = sum(1 for item in writes if item["changed"])
+            print(
+                "Derived rule provenance applied: "
+                f"{changed_count} file(s) changed, {len(writes) - changed_count} already current."
+            )
+        else:
+            print(
+                "Derived rule projection plan current: "
+                f"{len(projection_sets)} projection set(s), "
+                f"{sum(len(item['expected_rule_paths']) for item in projection_sets)} rule output(s)."
+            )
     return 0 if ok else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
 PY
-

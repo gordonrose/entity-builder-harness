@@ -537,6 +537,19 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-derived-rules/` and wired into
      `scripts/02.rag-rulebook/commit-gates/script.sh`.
 
+7ag. Add provenance-only apply mode for derived rules.
+   - Add an explicit write mode that updates only existing top-level
+     `source_derivation` blocks for declared rule paths.
+   - Do not create derived rule files, rewrite semantic rule content, or accept
+     source-to-rule meaning changes without derivation reports.
+   - Re-run source projection checks after applying provenance so a stale hash
+     can be repaired but missing or orphaned outputs still fail closed.
+   - Keep `--check` as the default commit-gate behavior; apply mode is an
+     explicit maintenance action.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-derived-rules/script.sh` and covered by
+     `scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh`.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.

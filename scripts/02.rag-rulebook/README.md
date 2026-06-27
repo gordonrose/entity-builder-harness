@@ -50,7 +50,8 @@ validation, and standalone service adapters.
 - `generate-derived-rules/script.sh` emits a read-only source-to-rule
   projection plan from the active manifest, including current source hashes,
   derivation report status, existing YAML provenance state, and the actions a
-  future apply step would need.
+  future apply step would need. With explicit `--apply-provenance`, it rewrites
+  only existing top-level `source_derivation` blocks for declared rule paths.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.

@@ -22,12 +22,11 @@ used_by:
 -->
 # Generate Derived Rules
 
-Generates a read-only source-to-rule projection plan from the active source
-projection manifest.
+Generates a source-to-rule projection plan from the active source projection
+manifest.
 
-This command does not semantically rewrite rule YAML yet. It verifies the
-current projection state and emits the deterministic data that a future
-agentic apply step will need:
+By default this command is read-only. It does not semantically rewrite rule
+YAML. It verifies the current projection state and emits deterministic data:
 
 - source material paths and current SHA-256 hashes
 - expected derived rule paths
@@ -36,6 +35,10 @@ agentic apply step will need:
 - provenance templates for future generated projections
 - actions such as `current`, `create-derived-rule`, or
   `refresh-source-derivation`
+
+The first write mode is intentionally narrow. `--apply-provenance` rewrites
+only existing top-level `source_derivation` blocks for declared rule paths.
+It does not create rule files and does not change rule content.
 
 ## Usage
 
@@ -51,9 +54,14 @@ Check that all declared projections are mechanically current:
 bash scripts/02.rag-rulebook/generate-derived-rules/script.sh --current --check
 ```
 
+Refresh only existing provenance blocks:
+
+```sh
+bash scripts/02.rag-rulebook/generate-derived-rules/script.sh --current --apply-provenance
+```
+
 Smoke test:
 
 ```sh
 bash scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh
 ```
-
