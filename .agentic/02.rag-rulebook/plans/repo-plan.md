@@ -514,6 +514,18 @@ The location is not the final domain corpus model.
      source-to-YAML generator and emergency/manual override workflow remain
      planned.
 
+7ae. Add retirement records for removed or superseded RAG artifacts.
+   - Govern source material, rules, rule packs, derivation reports, corpus
+     gaps, recognition sources, evaluations, generated indexes, chunks,
+     runtime caches, workflows, and scripts that stop being active.
+   - Require prior artifact hashes, replacement paths when knowledge moved,
+     active-reference checks, validation evidence, and review decisions.
+   - Run retirement validation at the RAG/rulebook commit boundary so deleted
+     source or rule material cannot become an unexplained retrieval gap.
+   - Status: present in `schemas/retirement-record.schema.yml`,
+     `retirements/`, and
+     `scripts/02.rag-rulebook/validate-retirement-records/`.
+
 7ae. Add source projection manifest checking.
    - Register every active governed source-material file in an explicit
      source projection manifest.

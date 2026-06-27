@@ -42,6 +42,9 @@ required.
   validator.
 - If source-to-rule derivation reports exist, require and run the
   derivation-report validator.
+- If retirement records exist, require and run the retirement-record validator
+  so removed, renamed, superseded, or retained-retired RAG artifacts remain
+  auditable.
 - Require and run the source-material coverage checker so non-README source
   Markdown under governed source roots has a structured rule, derivation
   report, or corpus gap outcome.
@@ -58,6 +61,9 @@ required.
   stale, and corrupt runtime states fail or pass deterministically.
 - Require and run the source-material coverage smoke test so orphan source
   material fails deterministically.
+- Require and run the retirement-record smoke test so missing prior hashes,
+  unresolved references, bad replacement paths, and mismatched review state
+  fail deterministically.
 - Require and run the local context query smoke test so the runtime cache can
   still produce a validated context packet.
 
@@ -73,5 +79,6 @@ This command is read-only. It checks generated recognition sources for
 freshness and recognition candidates for review-record validity, but does not
 rewrite them. It parses YAML syntax, validates derivation reports, and checks
 source-material coverage without updating rules, chunks, or evaluations. It
+validates retirement records without deleting files or rewriting references. It
 does not stage files or create commits, except transient fixture chunks, local
 runtime outputs, and temporary smoke-test source files during smoke validation.

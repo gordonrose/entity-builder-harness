@@ -62,6 +62,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer policies: `.agentic/02.rag-rulebook/policies/`
 - Layer derivation reports: `.agentic/02.rag-rulebook/derivation-reports/`
+- Layer retirement records: `.agentic/02.rag-rulebook/retirements/`
 - Layer corpus gaps: `.agentic/02.rag-rulebook/corpus-gaps/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
 - Layer source material: `docs/02.rag-rulebook/source-material/`
@@ -118,6 +119,8 @@ final homes.
   for important unmatched or ambiguous prompt terms.
 - `schemas/source-to-rule-derivation-report.schema.yml` - defines the v1
   report contract for source-to-rule derivation and semantic drift review.
+- `schemas/retirement-record.schema.yml` - defines the v1 record contract for
+  retired, renamed, superseded, or retained-retired RAG/rulebook artifacts.
 - `recognition-sources/generated/artifacts.yml` - generated lookup source for
   exact artifact IDs, paths, schemas, rule IDs, and rule-pack IDs.
 - `recognition-sources/generated/routing.yml` - generated lookup source for
@@ -139,6 +142,9 @@ final homes.
 - `derivation-reports/` - durable reports for source-material changes that
   affect structured rulebook content, drift, conflict review, indexes, chunks,
   or selector evaluations.
+- `retirements/` - durable records for retired source material, rules, rule
+  packs, derivation reports, corpus gaps, recognition sources, evaluations,
+  generated indexes, chunks, runtime caches, workflows, and scripts.
 - `docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md`
   - first source coverage for the MCP server recognition candidate, before
   structured rulebook conversion.
@@ -188,6 +194,8 @@ final homes.
   expectations.
 - `guides/retrieval-policy-dimension.md` - teaches how to read and author
   imported retrieval policy dimensions.
+- `guides/retirement-record.md` - teaches how retirement records keep removed
+  or superseded RAG artifacts auditable.
 
 ## Source Material
 
@@ -243,6 +251,9 @@ final homes.
 - `scripts/02.rag-rulebook/validate-derivation-reports/script.sh` - validates
   `rag-rulebook/source-to-rule-derivation-report/v1` YAML reports without
   modifying files.
+- `scripts/02.rag-rulebook/validate-retirement-records/script.sh` - validates
+  `rag-rulebook/retirement-record/v1` YAML records without deleting files or
+  rewriting references.
 
 ## Output Locations
 

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 443
-  term_count: 894
+  indexed_artifacts: 449
+  term_count: 907
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3330,6 +3330,18 @@ terms:
   canonical_id: rag-rulebook.guide.context-packet
   evidence_path: .agentic/02.rag-rulebook/guides/context-packet.md
   confidence_weight: 1
+- term: rag-rulebook.guide.retirement-record
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.guide.retirement-record
+  evidence_path: .agentic/02.rag-rulebook/guides/retirement-record.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/guides/retirement-record.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.guide.retirement-record
+  evidence_path: .agentic/02.rag-rulebook/guides/retirement-record.md
+  confidence_weight: 1
 - term: rag-rulebook.guide.retrieval-policy-dimension
   category: artifact-id
   match_type: exact
@@ -3570,6 +3582,18 @@ terms:
   canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
   evidence_path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   confidence_weight: 1
+- term: rag-rulebook.retirements.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirements.readme
+  evidence_path: .agentic/02.rag-rulebook/retirements/README.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirements.readme
+  evidence_path: .agentic/02.rag-rulebook/retirements/README.md
+  confidence_weight: 1
 - term: rag-rulebook.schema.context-packet
   category: artifact-id
   match_type: exact
@@ -3623,6 +3647,24 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.schema.recognition-source
   evidence_path: .agentic/02.rag-rulebook/schemas/recognition-source.schema.yml
+  confidence_weight: 1
+- term: rag-rulebook.schema.retirement-record
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.schema.retirement-record
+  evidence_path: .agentic/02.rag-rulebook/schemas/retirement-record.schema.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/schemas/retirement-record.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.schema.retirement-record
+  evidence_path: .agentic/02.rag-rulebook/schemas/retirement-record.schema.yml
+  confidence_weight: 1
+- term: retirement-record.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: rag-rulebook.schema.retirement-record
+  evidence_path: .agentic/02.rag-rulebook/schemas/retirement-record.schema.yml
   confidence_weight: 1
 - term: rag-rulebook.schema.retrieval-policy-dimension
   category: artifact-id
@@ -4577,6 +4619,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.validate-recognition-sources.smoke-test
   evidence_path: scripts/02.rag-rulebook/validate-recognition-sources/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-retirement-records.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-retirement-records.readme
+  evidence_path: scripts/02.rag-rulebook/validate-retirement-records/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-retirement-records/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-retirement-records.readme
+  evidence_path: scripts/02.rag-rulebook/validate-retirement-records/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-retirement-records
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-retirement-records
+  evidence_path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-retirement-records
+  evidence_path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-retirement-records.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-retirement-records.smoke-test
+  evidence_path: scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-retirement-records.smoke-test
+  evidence_path: scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.validate-retrieval-policy-pack.readme
   category: artifact-id

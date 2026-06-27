@@ -211,6 +211,7 @@ FINGERPRINT_INPUTS = {
         "docs/04.deploy/rules",
     ],
     "source_derivations": [".agentic/02.rag-rulebook/derivation-reports"],
+    "retirements": [".agentic/02.rag-rulebook/retirements"],
     "source_projections": [
         ".agentic/02.rag-rulebook/source-projections",
         "scripts/02.rag-rulebook/check-source-projections/script.sh",
@@ -229,6 +230,7 @@ FINGERPRINT_INPUTS = {
         "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
         "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh",
         "scripts/02.rag-rulebook/validate-derivation-reports/script.sh",
+        "scripts/02.rag-rulebook/validate-retirement-records/script.sh",
         "scripts/02.rag-rulebook/check-source-projections/script.sh",
         "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
         "scripts/02.rag-rulebook/validate-context-packet/script.sh",

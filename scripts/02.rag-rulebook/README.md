@@ -88,6 +88,9 @@ validation, and standalone service adapters.
   `rag-rulebook/source-to-rule-derivation-report/v1` YAML reports before
   source-derived rules, chunks, or selector expectations are treated as
   current.
+- `validate-retirement-records/script.sh` validates
+  `rag-rulebook/retirement-record/v1` YAML records before removed, renamed,
+  superseded, or retained-retired RAG artifacts are treated as governed.
 - `report-recognition-candidates/script.sh` validates recognition candidates
   and reports review state, coverage state, and allowed next actions without
   mutating curated sources.

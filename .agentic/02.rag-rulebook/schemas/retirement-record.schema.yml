@@ -1,0 +1,222 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.retirement-record
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 schema for governed source, rule, and generated-artifact retirement records.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.guide.retirement-record
+#       path: .agentic/02.rag-rulebook/guides/retirement-record.md
+#     - id: rag-rulebook.retirements.readme
+#       path: .agentic/02.rag-rulebook/retirements/README.md
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+
+schema: rag-rulebook-retirement-record-schema/v1
+record_schema: rag-rulebook/retirement-record/v1
+
+purpose: Define an auditable record for retiring source material, structured rules, derivation artifacts, recognition sources, evaluations, indexes, chunks, or corpus gaps without leaving orphaned retrieval behavior.
+
+principles:
+  - Removal is a governed lifecycle event, not just absence from the filesystem.
+  - Accepted retirements must preserve the prior artifact hash so deleted content remains traceable.
+  - Accepted retirements must prove active references were checked and cleared.
+  - Retirements may propose, accept, or supersede removal decisions, but lifecycle status and review decision must agree.
+  - Replacement artifacts must be explicit when a retirement is a rename or supersession.
+
+required_fields:
+  - schema
+  - retirement_id
+  - status
+  - owner_layer
+  - corpus_id
+  - retired_artifacts
+  - reason
+  - reference_checks
+  - validation
+  - review
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/retirement-record/v1
+    field_guide:
+      what: Identifies the retirement record contract.
+      does: Lets validators reject unrelated YAML before interpreting deletion or supersession decisions.
+      rules: Must equal `rag-rulebook/retirement-record/v1`.
+
+  retirement_id:
+    type: string
+    format: lower-dot-id
+    field_guide:
+      what: Stable identifier for the retirement decision.
+      does: Gives reports, commit gates, and future agents a durable reference to the removal.
+      rules: Use a lower-dot identifier and do not reuse it for a different artifact family.
+
+  status:
+    type: enum
+    allowed_values:
+      - proposed
+      - accepted
+      - superseded
+    field_guide:
+      what: Lifecycle state of the retirement record.
+      does: Separates a planned removal from an approved removal and from a record replaced by a newer decision.
+      rules: "`proposed` requires pending review; `accepted` requires accepted review; `superseded` requires a replacement record."
+
+  owner_layer:
+    type: string
+    format: numbered-layer-id
+    field_guide:
+      what: Layer that owns the retired artifact.
+      does: Prevents deploy, product, chat, and RAG/rulebook artifacts from being retired by the wrong corpus.
+      rules: Use the numbered layer form, such as `02.rag-rulebook` or `04.deploy`.
+
+  corpus_id:
+    type: string
+    format: corpus-id
+    field_guide:
+      what: Corpus that owns the retired knowledge.
+      does: Keeps retirement decisions aligned with corpus boundaries.
+      rules: Use `corpus.<layer>` style IDs, such as `corpus.04.deploy`.
+
+  superseded_by:
+    type: string
+    field_guide:
+      what: Retirement record that replaces this one.
+      does: Preserves history when a retirement decision is corrected or reissued.
+      rules: Required when `status` is `superseded`.
+
+  retired_at_utc:
+    type: string
+    format: iso-8601-utc
+    field_guide:
+      what: Time the retirement was accepted.
+      does: Gives audits a stable date for lifecycle state changes.
+      rules: Required for accepted records.
+
+  retired_artifacts:
+    type: array
+    items:
+      type: object
+      required_fields:
+        - path
+        - kind
+        - path_state
+        - previous_sha256
+    field_guide:
+      what: Artifacts being removed, renamed, superseded, or intentionally retained as retired.
+      does: Keeps each retired path and its prior content hash auditable.
+      rules: Accepted records require at least one retired artifact with a valid SHA-256 hash.
+
+retired_artifact_fields:
+  path:
+    type: string
+    field_guide:
+      what: Repository path of the retired artifact.
+      does: Gives validators and humans the exact artifact whose lifecycle changed.
+      rules: Use repo-relative paths. Accepted removed, renamed, and superseded artifacts should no longer exist at this path.
+
+  kind:
+    type: enum
+    allowed_values:
+      - source-material
+      - rule
+      - rule-pack
+      - derivation-report
+      - corpus-gap
+      - recognition-source
+      - recognition-candidate
+      - evaluation
+      - index
+      - chunk
+      - runtime-cache
+      - workflow
+      - script
+      - other
+    field_guide:
+      what: Artifact family for the retired path.
+      does: Lets future cleanup and reporting understand what kind of downstream effects to expect.
+      rules: Choose the narrowest matching kind.
+
+  path_state:
+    type: enum
+    allowed_values:
+      - removed
+      - renamed
+      - superseded
+      - retained-retired
+    field_guide:
+      what: What happened to the path after retirement.
+      does: Distinguishes deleted paths from paths intentionally retained in a retired state.
+      rules: "`retained-retired` requires the path to exist; other accepted states require the old path to be absent."
+
+  previous_sha256:
+    type: string
+    format: sha256
+    field_guide:
+      what: Hash of the artifact before retirement.
+      does: Preserves deleted content identity without keeping the content itself.
+      rules: Must be a 64-character lowercase SHA-256 hex string.
+
+  replacement_paths:
+    type: array
+    items:
+      type: string
+    field_guide:
+      what: Current artifacts that replace the retired artifact.
+      does: Lets retrieval and maintenance follow the knowledge to its new location.
+      rules: Required for accepted renamed and superseded artifacts; listed paths must exist.
+
+reason:
+  type: array
+  items:
+    type: string
+  field_guide:
+    what: Human explanation for the retirement.
+    does: Preserves why the artifact should no longer be active.
+    rules: Use short reviewable statements. Accepted records require at least one reason.
+
+reference_checks:
+  type: object
+  required_fields:
+    - checked_roots
+    - remaining_references
+  field_guide:
+    what: Evidence that active references were searched before retirement was accepted.
+    does: Prevents deleted paths from remaining hidden in rules, scripts, guides, or workflow files.
+    rules: Accepted records require checked roots and no remaining active references.
+
+validation:
+  type: object
+  required_fields:
+    - required_checks
+    - checks_run
+    - checks_pending
+  field_guide:
+    what: Commands and results used to prove the retirement.
+    does: Makes retirement proof repeatable at the commit boundary.
+    rules: Accepted records require checks run and no pending checks.
+
+review:
+  type: object
+  required_fields:
+    - required
+    - decision
+  field_guide:
+    what: Human review state for the retirement.
+    does: Keeps artifact removal from being silently automated.
+    rules: "Decision must match status: pending for proposed, accept for accepted, supersede for superseded."

@@ -74,6 +74,12 @@ if [ -d "$LAYER_DIR/derivation-reports" ]; then
   echo "RAG/rulebook source derivation reports are valid."
 fi
 
+if [ -d "$LAYER_DIR/retirements" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-retirement-records/script.sh"
+  bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+  echo "RAG/rulebook retirement records are valid."
+fi
+
 if [ -d "$LAYER_DIR/source-projections" ]; then
   require_executable "scripts/02.rag-rulebook/check-source-projections/script.sh"
   bash scripts/02.rag-rulebook/check-source-projections/script.sh --current >/dev/null
@@ -121,6 +127,10 @@ echo "RAG/rulebook derived rule projection smoke passed."
 require_executable "scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh >/dev/null
 echo "RAG/rulebook source material coverage smoke passed."
+
+require_executable "scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh"
+bash scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh >/dev/null
+echo "RAG/rulebook retirement record smoke passed."
 
 require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
 bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null

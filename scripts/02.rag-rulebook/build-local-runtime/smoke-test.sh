@@ -67,6 +67,7 @@ assert set(manifest["fingerprints"]["inputs"]) == {
     "chunk_generation",
     "corpus_gaps",
     "index_inputs",
+    "retirements",
     "retrieval_policy",
     "recognition_candidates",
     "recognition_sources",
