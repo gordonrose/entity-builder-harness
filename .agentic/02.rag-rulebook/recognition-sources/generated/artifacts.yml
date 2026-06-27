@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 440
-  term_count: 888
+  indexed_artifacts: 443
+  term_count: 894
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4181,6 +4181,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.generate-context-packet-fixture.smoke-test
   evidence_path: scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-derived-rules.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-derived-rules.readme
+  evidence_path: scripts/02.rag-rulebook/generate-derived-rules/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-derived-rules/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-derived-rules.readme
+  evidence_path: scripts/02.rag-rulebook/generate-derived-rules/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-derived-rules
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-derived-rules
+  evidence_path: scripts/02.rag-rulebook/generate-derived-rules/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-derived-rules/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-derived-rules
+  evidence_path: scripts/02.rag-rulebook/generate-derived-rules/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-derived-rules.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-derived-rules.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-derived-rules.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.generate-recognition-sources.readme
   category: artifact-id

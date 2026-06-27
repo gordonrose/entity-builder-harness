@@ -47,6 +47,10 @@ validation, and standalone service adapters.
   is declared in the active projection manifest, derived YAML projections
   exist, carry current source hashes, have derivation reports, and retain
   expected selector or corpus-gap proof paths.
+- `generate-derived-rules/script.sh` emits a read-only source-to-rule
+  projection plan from the active manifest, including current source hashes,
+  derivation report status, existing YAML provenance state, and the actions a
+  future apply step would need.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.

@@ -523,6 +523,20 @@ The location is not the final domain corpus model.
      `guides/source-projection-manifest.md`, and
      `scripts/02.rag-rulebook/check-source-projections/`.
 
+7af. Add derived rule projection planning.
+   - Add a read-only command that consumes the active source projection
+     manifest and emits a deterministic projection plan.
+   - The plan should include source paths, current source hashes, expected
+     derived YAML paths, derivation report status, current YAML provenance
+     state, provenance templates, and required actions.
+   - Start with check-only behavior that fails when any active projection is
+     mechanically stale or incomplete.
+   - Do not let this first command semantically rewrite rules; semantic
+     source-to-rule changes still require derivation reports and review.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-derived-rules/` and wired into
+     `scripts/02.rag-rulebook/commit-gates/script.sh`.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.
