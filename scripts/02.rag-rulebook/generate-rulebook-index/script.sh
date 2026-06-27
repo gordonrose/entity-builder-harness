@@ -616,6 +616,9 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         related_ruleset_refs = list_of_strings(yaml_data.get("related_rulesets"))
         required_ruleset_refs = list_of_strings(yaml_data.get("required_rulesets"))
         applies_to_paths = list_of_strings((yaml_data.get("applies_to") or {}).get("paths"))
+        source_derivation = yaml_data.get("source_derivation")
+        if not isinstance(source_derivation, dict):
+            source_derivation = None
         artifact = {
             "artifact_ref": artifact_ref,
             "metadata_id": entry.get("metadata_id") or metadata.get("id"),
@@ -634,6 +637,8 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             "source_ref_ids": [source_ref_id],
             "diagnostics": [],
         }
+        if source_derivation is not None:
+            artifact["source_derivation"] = source_derivation
         add_artifact(artifact)
         add_path_mapping(entry, artifact_ref)
 
@@ -674,19 +679,20 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                     "chunk_candidate_ids": [chunk_id],
                 }
             )
-            chunk_candidates.append(
-                {
-                    "chunk_id": chunk_id,
-                    "artifact_ref": artifact_ref,
-                    "rule_ref": rule_ref,
-                    "corpus_id": corpus_id,
-                    "content_kind": "rule",
-                    "section_path": f"rules[{index}]",
-                    "source_path": current_path,
-                    "token_estimate": max(40, len(str(rule.get("summary") or rule.get("title") or rule_id).split()) * 10),
-                    "source_ref_ids": [source_ref_id],
-                }
-            )
+            chunk_candidate = {
+                "chunk_id": chunk_id,
+                "artifact_ref": artifact_ref,
+                "rule_ref": rule_ref,
+                "corpus_id": corpus_id,
+                "content_kind": "rule",
+                "section_path": f"rules[{index}]",
+                "source_path": current_path,
+                "token_estimate": max(40, len(str(rule.get("summary") or rule.get("title") or rule_id).split()) * 10),
+                "source_ref_ids": [source_ref_id],
+            }
+            if source_derivation is not None:
+                chunk_candidate["source_derivation"] = source_derivation
+            chunk_candidates.append(chunk_candidate)
             add_edge(artifact_ref, rule_ref, "contains-rule", "Ruleset contains this rule.", [source_ref_id])
             add_edge(rule_ref, chunk_id, "contains-chunk", "Rule is a retrievable chunk candidate.", [source_ref_id])
 

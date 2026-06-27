@@ -44,6 +44,12 @@ Source material may be human-authored and approved as prose.
 Structured rulebook outputs must still pass a derivation review before they are
 treated as retrieval-ready knowledge.
 
+Structured rulebook outputs derived from governed source material must carry a
+top-level `source_derivation` block. The block records the derivation workflow,
+derivation report, generator identity, generated timestamp, source material
+paths, and source SHA-256 hashes. Commit gates recompute the source hashes and
+fail when a YAML projection was derived from stale source material.
+
 The derivation review must ask:
 
 - What source claims changed?
@@ -121,6 +127,7 @@ must name the replacement.
 - Name affected rules, rule packs, corpus gaps, recognition candidates, chunks,
   and selector fixtures.
 - Preserve source paths and evidence paths.
+- Preserve source hashes in `source_derivation.source_material`.
 - Prefer narrow rule updates over broad rewrites.
 <!-- deterministic-check: allow reason="missing-knowledge triage is human-governed until source derivation reports have validator support" -->
 - Create review candidates or corpus gaps when knowledge is missing.
@@ -136,6 +143,8 @@ Do not:
 - let an LLM rewrite rules without a derivation report
 - hide contradictions behind a polished summary
 - mark chunks or selector evaluations current when they were not regenerated
+- update source material without regenerating or revalidating derived YAML
+  provenance
 - merge domain corpora to avoid ownership decisions
 - accept semantic drift as harmless without naming affected artifacts
 - publish or deploy a corpus package with unresolved blocking derivation gaps
@@ -145,6 +154,7 @@ Do not:
 Future sub-agents may perform derivation work, but they must output a governed
 report before durable rulebook changes are accepted.
 
-Scripts should enforce shape, freshness, generated-artifact drift, and fixture
-results. LLM-assisted agents may help identify semantic claims, conflicts, and
-drift, but their conclusions must be written as structured report data.
+Scripts should enforce shape, source hash freshness, generated-artifact drift,
+and fixture results. LLM-assisted agents may help identify semantic claims,
+conflicts, and drift, but their conclusions must be written as structured
+report data.

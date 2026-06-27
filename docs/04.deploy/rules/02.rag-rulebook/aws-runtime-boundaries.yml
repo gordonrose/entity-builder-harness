@@ -29,6 +29,18 @@ corpus_id: corpus.04.deploy
 owner_layer: 04.deploy
 deploy_track: 02.rag-rulebook
 
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-27T07:15:43Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+  source_material:
+    - path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+      sha256: 3a157d90a185c1e1c92fee76ba507d0cd195f24b59ad2a8c532b0bf47b39de2f
+
 description: >
   Rules for defining AWS account, region, service, network, secrets,
   observability, health, and rollback boundaries before RAG/rulebook services

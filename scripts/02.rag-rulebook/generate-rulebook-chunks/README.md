@@ -35,6 +35,10 @@ sections such as:
 - rule-pack agent steps
 - rule-pack required checks
 
+When chunk candidates include `source_derivation`, the generated chunks retain
+that provenance. This lets runtime outputs identify the source material path and
+SHA-256 hash behind source-derived rules.
+
 The script validates the input index before generating chunks. It does not
 modify files, write generated chunk files, call the network, use embeddings, or
 split files by arbitrary character windows.

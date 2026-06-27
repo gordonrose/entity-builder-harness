@@ -35,6 +35,7 @@ python3 - "$@" <<'PY'
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -110,6 +111,14 @@ def repo_path(path: str | Path) -> Path:
     return path_obj if path_obj.is_absolute() else ROOT / path_obj
 
 
+def file_sha256(path: str) -> str:
+    digest = hashlib.sha256()
+    with repo_path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def rel(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -174,6 +183,77 @@ def collect_strings(value: Any) -> list[str]:
     return found
 
 
+def validate_source_derivation(
+    rule_path: str,
+    data: dict[str, Any],
+    source_paths: set[str],
+    errors: list[str],
+) -> None:
+    if not source_paths:
+        return
+
+    derivation = data.get("source_derivation")
+    if not isinstance(derivation, dict):
+        errors.append(f"{rule_path} references source material but lacks source_derivation")
+        return
+
+    if derivation.get("provenance_version") != "rag-rulebook/source-derivation-provenance/v1":
+        errors.append(f"{rule_path}.source_derivation.provenance_version is invalid or missing")
+    for field in ["mode", "generator", "generator_version", "generated_at_utc"]:
+        value = derivation.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{rule_path}.source_derivation.{field} must be a non-empty string")
+
+    workflow = derivation.get("derivation_workflow")
+    if not isinstance(workflow, str) or not workflow.strip():
+        errors.append(f"{rule_path}.source_derivation.derivation_workflow must be a non-empty string")
+    elif not repo_path(workflow).is_file():
+        errors.append(f"{rule_path}.source_derivation.derivation_workflow does not exist: {workflow}")
+
+    report = derivation.get("derivation_report")
+    if not isinstance(report, str) or not report.strip():
+        errors.append(f"{rule_path}.source_derivation.derivation_report must be a non-empty string")
+    elif not repo_path(report).is_file():
+        errors.append(f"{rule_path}.source_derivation.derivation_report does not exist: {report}")
+
+    source_material = derivation.get("source_material")
+    if not isinstance(source_material, list) or not source_material:
+        errors.append(f"{rule_path}.source_derivation.source_material must be a non-empty array")
+        return
+
+    provenance_by_path: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(source_material, start=1):
+        owner = f"{rule_path}.source_derivation.source_material[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{owner} must be an object")
+            continue
+        path = item.get("path")
+        sha256 = item.get("sha256")
+        if not isinstance(path, str) or not path.strip():
+            errors.append(f"{owner}.path must be a non-empty string")
+            continue
+        if not is_source_material_path(path):
+            errors.append(f"{owner}.path is not under a governed source-material root: {path}")
+            continue
+        if not repo_path(path).is_file():
+            errors.append(f"{owner}.path does not exist: {path}")
+            continue
+        if not isinstance(sha256, str) or len(sha256) != 64:
+            errors.append(f"{owner}.sha256 must be a 64-character SHA-256 hex string")
+            continue
+        current_sha256 = file_sha256(path)
+        if sha256 != current_sha256:
+            errors.append(
+                f"{rule_path}.source_derivation.source_material hash is stale for {path}: "
+                f"expected {sha256}, current {current_sha256}"
+            )
+        provenance_by_path[path] = item
+
+    for path in sorted(source_paths):
+        if path not in provenance_by_path:
+            errors.append(f"{rule_path}.source_derivation.source_material missing source path: {path}")
+
+
 def source_material_files() -> list[str]:
     return [
         rel(path)
@@ -189,11 +269,14 @@ def load_rule_source_refs(errors: list[str]) -> dict[str, list[str]]:
         if data is None:
             continue
         rule_path = rel(path)
+        source_paths: set[str] = set()
         for value in collect_strings(data):
             if is_source_material_path(value):
                 if not repo_path(value).exists():
                     errors.append(f"{rule_path} references missing source material: {value}")
+                source_paths.add(value)
                 by_source[value].append(rule_path)
+        validate_source_derivation(rule_path, data, source_paths, errors)
     return {key: sorted(set(values)) for key, values in by_source.items()}
 
 

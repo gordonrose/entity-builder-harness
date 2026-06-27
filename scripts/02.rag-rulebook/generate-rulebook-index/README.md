@@ -43,6 +43,7 @@ It emits:
 - chunk candidates
 - graph edges
 - source references
+- source derivation provenance when structured YAML records source hashes
 - path mappings
 - unresolved references
 - diagnostics
@@ -53,6 +54,9 @@ The output uses the `rag-rulebook/rulebook-index/v1` contract defined in
 
 The script does not move files, write generated indexes, call the network, use
 embeddings, or build a server.
+
+When structured YAML includes `source_derivation`, the generated index carries
+that object forward on indexed artifacts and rule chunk candidates.
 
 Use:
 

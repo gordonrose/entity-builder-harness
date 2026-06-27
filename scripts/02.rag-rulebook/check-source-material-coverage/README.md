@@ -41,6 +41,18 @@ path is present in the generated rulebook index and generated chunk set. That
 keeps source coverage tied to retrievable rulebook material instead of stopping
 at a file-path reference.
 
+When structured rule YAML references governed source material, the checker also
+requires a top-level `source_derivation` block with:
+
+- `provenance_version: rag-rulebook/source-derivation-provenance/v1`
+- derivation workflow and derivation report paths
+- generator identity and version
+- source material paths and SHA-256 hashes
+
+The checker recomputes source hashes from the current repo. If the source
+material changed after the YAML was derived, the gate fails and the source must
+be re-derived or explicitly gap-tracked.
+
 ## Usage
 
 ```bash
@@ -57,4 +69,4 @@ report.
 The checker also does not generate YAML rules, update corpus gaps, rewrite
 derivation reports, or package a runtime. It only proves that source material
 has a governed coverage path and that claimed rules reached the index/chunk
-pipeline.
+pipeline with current source provenance.

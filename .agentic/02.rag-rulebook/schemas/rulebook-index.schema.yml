@@ -211,6 +211,11 @@ fields:
           type: array
           items:
             type: string
+        source_derivation:
+          type: object
+          description: >
+            Optional source-to-rule provenance copied from structured YAML when
+            the artifact is a generated projection of governed source material.
         diagnostics:
           type: array
           items:
@@ -330,6 +335,11 @@ fields:
           type: array
           items:
             type: string
+        source_derivation:
+          type: object
+          description: >
+            Optional source-to-rule provenance carried forward so generated
+            chunks can identify the source material hash behind a rule.
 
   graph_edges:
     type: array

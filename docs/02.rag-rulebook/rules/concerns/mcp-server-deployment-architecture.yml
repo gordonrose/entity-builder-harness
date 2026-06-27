@@ -28,6 +28,18 @@ status: active
 corpus_id: corpus.02.rag-rulebook
 owner_layer: 02.rag-rulebook
 
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-27T07:15:43Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml
+  source_material:
+    - path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+      sha256: 9993d73be63b4f8cabe615d596c9279dec91e3d99ed82cd08d79cbaef250cb35
+
 description: >
   Rules for treating MCP server work as a governed service boundary that may
   expose harness capabilities, context, prompts, or workflows to MCP-capable

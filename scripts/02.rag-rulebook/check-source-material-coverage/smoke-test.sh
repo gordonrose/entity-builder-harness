@@ -27,7 +27,9 @@ set -euo pipefail
 
 TMP_DIR="$(mktemp -d)"
 ORPHAN_SOURCE="docs/04.deploy/source-material/02.rag-rulebook/.source-material-coverage-smoke-test.md"
-trap 'rm -rf "$TMP_DIR"; rm -f "$ORPHAN_SOURCE"' EXIT
+STALE_SOURCE="docs/04.deploy/source-material/02.rag-rulebook/.source-provenance-smoke-test.md"
+STALE_RULE="docs/04.deploy/rules/02.rag-rulebook/.source-provenance-smoke-test.yml"
+trap 'rm -rf "$TMP_DIR"; rm -f "$ORPHAN_SOURCE" "$STALE_SOURCE" "$STALE_RULE"' EXIT
 
 CURRENT_REPORT="$TMP_DIR/current.json"
 ORPHAN_REPORT="$TMP_DIR/orphan.json"
@@ -86,5 +88,68 @@ assert source["outcomes"]["corpus_gaps"] == []
 PY
 
 rm -f "$ORPHAN_SOURCE"
+
+cat > "$STALE_SOURCE" <<'MARKDOWN'
+# Source Provenance Smoke Test
+
+This temporary file has a structured rule, but that rule intentionally records
+the wrong source hash. The coverage checker must fail while both files exist.
+MARKDOWN
+
+cat > "$STALE_RULE" <<'YAML'
+id: concern.source-provenance-smoke-test
+title: Source provenance smoke test
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: smoke-test
+  generator_version: v1
+  generated_at_utc: "2026-06-27T00:00:00Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+  source_material:
+    - path: docs/04.deploy/source-material/02.rag-rulebook/.source-provenance-smoke-test.md
+      sha256: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+
+rules:
+  - id: source-provenance-smoke-test.example
+    title: Source provenance smoke test example
+    severity: error
+    summary: Temporary source provenance smoke test rule.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/.source-provenance-smoke-test.md"
+    sections:
+      - "Source Provenance Smoke Test"
+YAML
+
+if bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh \
+  --current \
+  --json > "$ORPHAN_REPORT"; then
+  echo "ERROR: stale source provenance unexpectedly passed coverage check." >&2
+  exit 1
+fi
+
+python3 - "$ORPHAN_REPORT" "$STALE_RULE" "$STALE_SOURCE" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+rule_path = sys.argv[2]
+source_path = sys.argv[3]
+
+assert report["ok"] is False
+assert any(rule_path in error and source_path in error and "hash is stale" in error for error in report["errors"])
+PY
+
+rm -f "$STALE_SOURCE" "$STALE_RULE"
 
 echo "RAG/rulebook source material coverage smoke test passed."

@@ -218,6 +218,15 @@ def artifact_summary_content(candidate: dict[str, Any], artifact: dict[str, Any]
     proposed_path = artifact.get("proposed_path")
     if proposed_path:
         lines.append(f"Proposed path: {proposed_path}")
+    source_derivation = artifact.get("source_derivation")
+    if isinstance(source_derivation, dict):
+        lines.append("Source derivation:")
+        lines.append(f"- provenance_version: {source_derivation.get('provenance_version')}")
+        lines.append(f"- generator: {source_derivation.get('generator')}")
+        lines.append(f"- generator_version: {source_derivation.get('generator_version')}")
+        lines.append(f"- derivation_report: {source_derivation.get('derivation_report')}")
+        for item in list_of_dicts(source_derivation.get("source_material")):
+            lines.append(f"- source_material: {item.get('path')}@{item.get('sha256')}")
     lines.extend(render_list("Applies to paths", list_of_strings(artifact.get("applies_to_paths"))))
     lines.extend(render_list("Required rulesets", list_of_strings(artifact.get("required_ruleset_refs"))))
     lines.extend(render_list("Related rulesets", list_of_strings(artifact.get("related_ruleset_refs"))))
@@ -380,6 +389,9 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             "citation_ids": source_ref_ids,
             "source_ref_ids": source_ref_ids,
         }
+        source_derivation = candidate.get("source_derivation") or artifact.get("source_derivation")
+        if isinstance(source_derivation, dict):
+            chunk["source_derivation"] = source_derivation
         chunks.append(chunk)
 
     diagnostics = {

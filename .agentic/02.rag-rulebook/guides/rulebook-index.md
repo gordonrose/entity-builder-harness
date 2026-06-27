@@ -96,12 +96,20 @@ what did not resolve, and whether the index is safe to use.
 `artifacts` records the durable source objects and their current or proposed
 paths.
 
+For structured rules derived from governed source material, `artifacts` should
+carry `source_derivation` so the generated index preserves the source path,
+source hash, derivation workflow, and derivation report.
+
 `rules` records individual rule entries inside ruleset artifacts.
 
 `rule_packs` records task packs and their required ruleset dependencies.
 
 `chunk_candidates` records deterministic chunk units for a later chunk
 generator.
+
+When a chunk candidate comes from a source-derived rule, it should carry the
+same `source_derivation` block so generated chunks can expose the provenance
+without reparsing the source YAML.
 
 `graph_edges` records relationships that retrieval can traverse.
 
@@ -132,6 +140,10 @@ path and the future corpus package path.
 
 A good index is honest. Unresolved references are reported.
 
+A good index preserves source derivation provenance. If YAML rules were derived
+from Markdown source material, the index should retain the source hash and
+derivation report path so stale projections can be detected downstream.
+
 ## What Bad Looks Like
 
 A bad index treats file paths as durable identity.
@@ -144,6 +156,9 @@ A bad index mixes product, harness, deploy, and shared concerns without naming
 corpus ownership.
 
 A bad index depends on embeddings before deterministic parsing works.
+
+A bad index drops source hashes when converting source-derived YAML into chunk
+candidates.
 
 ## Relationship To The Context Packet
 
