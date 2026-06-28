@@ -92,6 +92,14 @@ if [ -d "$LAYER_DIR/source-projections" ]; then
   require_executable "scripts/02.rag-rulebook/generate-derived-rules/script.sh"
   bash scripts/02.rag-rulebook/generate-derived-rules/script.sh --current --check >/dev/null
   echo "RAG/rulebook derived rule projection plan is current."
+
+  require_executable "scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh"
+  bash scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh --current --json >/dev/null
+  echo "RAG/rulebook source-to-rule work order is valid."
+
+  require_executable "scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh"
+  bash scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh --current --json >/dev/null
+  echo "RAG/rulebook source-to-rule draft packet is valid."
 fi
 
 require_executable "scripts/02.rag-rulebook/check-source-material-coverage/script.sh"
@@ -127,6 +135,14 @@ echo "RAG/rulebook source projection smoke passed."
 require_executable "scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh"
 bash scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh >/dev/null
 echo "RAG/rulebook derived rule projection smoke passed."
+
+require_executable "scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh >/dev/null
+echo "RAG/rulebook source-to-rule work-order smoke passed."
+
+require_executable "scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh >/dev/null
+echo "RAG/rulebook source-to-rule draft packet smoke passed."
 
 require_executable "scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh >/dev/null

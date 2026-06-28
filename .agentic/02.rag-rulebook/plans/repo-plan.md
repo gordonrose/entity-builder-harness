@@ -30,6 +30,19 @@ and harness instructions into one harness-owned corpus.
 Corpus IDs should align with the numbered layer system, including
 `corpus.02.rag-rulebook` as the self-corpus for the service's own governance.
 
+The long-term product direction is a provider-agnostic governed context service
+for coding agents. An engineer should be able to create an account, install a
+small local bootstrap/client, add minimal `AGENTS.md` or `CLAUDE.md`
+instructions, configure credentials outside the repo, and retrieve small,
+validated, repo-aware best-practice context packets from a remote service.
+
+In that model, local `.agentic` harness material becomes the development and
+fallback implementation. Over time, most heavy rulebook, retrieval, evaluation,
+and policy machinery can move behind a hosted API or MCP service. Local repos
+should retain only a small auditable bootstrap, service URL/config discovery,
+credential instructions, safe stop conditions, and last-known-good fallback
+behavior.
+
 ## Current State
 
 The repo has a first-class `02.rag-rulebook` layer and a prototype architecture
@@ -38,6 +51,12 @@ rulebook under `docs/harness/architecture/`.
 The deterministic foundation is now strong enough to bootstrap local RAG before
 deployment. Local RAG should come before deploy-corpus expansion so agents can
 use validated local context packets while the deploy corpus is being built.
+
+The local runtime path is executable: `build-local-runtime` writes a local
+deterministic cache, `check-runtime-freshness` verifies that cache against live
+inputs, and `query-local-context` returns validated context packets from the
+cache. This local runtime is the proof target before a hosted API or MCP surface
+is treated as shippable.
 
 The prototype rulebook proves useful structure:
 
@@ -575,6 +594,50 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/generate-derived-rules/script.sh` and covered by
      `scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh`.
 
+7ah. Add source-to-rule work-order generation.
+   - Add a read-only command that turns the active source projection manifest
+     into a semantic derivation work order.
+   - Include source material paths, SHA-256 hashes, source outlines, expected
+     derived YAML paths, derivation report state, corpus gaps, selector proof
+     paths, required checks, and ordered next actions.
+   - Keep this command as the handoff between deterministic scripts and
+     agent/human semantic derivation. It must not write YAML rules, derivation
+     reports, chunks, evaluations, or provenance.
+   - Run the work-order command and smoke test from the RAG/rulebook commit
+     gate so the source-to-rule update path stays executable.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-source-to-rule-work-order/`.
+
+7ai. Add source-to-rule draft packet generation.
+   - Add a read-only command that consumes the source-to-rule work order and
+     packages the bounded source material, current YAML projections,
+     derivation reports, corpus gaps, selector evaluations, draft objectives,
+     banned actions, work actions, and required checks needed for semantic
+     proposal work.
+   - Keep this command as an agent/sub-agent input packet, not an automatic
+     YAML writer. It must not write source material, rules, reports, chunks,
+     evaluations, provenance, packages, runtime outputs, or deploy artifacts.
+   - Run the draft-packet command and smoke test from the RAG/rulebook commit
+     gate so the proposal path remains executable.
+   - Treat this as the last corpus update-machine slice before returning to
+     MSP shipping work unless a blocker appears.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/`.
+
+7aj. Add RAG-versus-source A/B context evaluation.
+   - Add a reusable RAG/rulebook skill for planning, discovery, and
+     investigation prompts.
+   - Require two evidence paths before answering: a local RAG context packet
+     from `query-local-context` and targeted direct source verification.
+   - Compare where the paths agree, where they disagree, what each path
+     missed, how the RAG path should improve, and an approximate token-saving
+     estimate for using RAG instead of broad source reading.
+   - Keep source files authoritative while the RAG runtime matures, and turn
+     repeated RAG misses into corpus gaps, recognition candidates, chunking
+     improvements, or evaluation fixtures.
+   - Status: present in `.agentic/02.rag-rulebook/skills/ab-context-evaluation.md`
+     and wired into `.agentic/02.rag-rulebook/workflows/default.md`.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.
@@ -764,10 +827,42 @@ The location is not the final domain corpus model.
    - Use artifact path migration before moving committed files.
 
 10. Only after the above, design a standalone service or repo extraction.
-   - The service should consume corpus packages and generated indexes.
+   - The service should consume corpus packages, generated indexes, chunks,
+     retrieval policies, recognition sources, and evaluation results.
    - The workbench should call the service; it should not own the service.
-   - Deployment to GitHub/AWS should wait until local runtime behavior and
-     deploy-corpus checks are proven.
+   - The first hosted shape should expose a provider-agnostic HTTP API for
+     context packets before exposing MCP tools.
+   - A future MCP surface should wrap the same internal API capabilities rather
+     than duplicating retrieval logic.
+   - Local repos should use a tiny bootstrap and safe fallback rules rather
+     than carrying the full harness forever.
+   - Credentials must live outside `AGENTS.md`, `CLAUDE.md`, source material,
+     chunks, logs, and fixtures. Use environment variables, local config,
+     keychain/SSO, GitHub environment secrets, or short-lived cloud identity.
+   - Deployment to GitHub/AWS should wait until local runtime behavior,
+     deploy-corpus checks, API contract, authentication model, and runtime
+     target are proven.
+
+11. Shape the first MVP service.
+   - Target: provider-agnostic governed context for coding agents.
+   - User flow: engineer creates an account, installs a small local client,
+     adds bootstrap instructions to `AGENTS.md` or `CLAUDE.md`, points local
+     config at the hosted service, authenticates, and retrieves validated
+     context packets.
+   - Local client responsibilities: identify repo, commit, branch, task,
+     session layer/mode/workflow, focused paths, token budget, and fallback
+     policy; call the service; validate the returned packet; fail safely.
+   - Hosted service responsibilities: own corpora, rulebooks, chunks,
+     retrieval policy, evaluations, freshness, account/repo/project settings,
+     and versioned best-practice packs.
+   - First API surface: `/health`, `/version`, and `/context/query`.
+   - Later API surface: corpus inspection, gap inspection, package inspection,
+     rule/chunk search, context validation, evaluation reports, and deploy
+     readiness.
+   - MCP should be a later access surface over the same service capabilities,
+     starting read-only before any write-capable or deploy-capable tools.
+   - Status: planned after local runtime test, GitHub Actions skeleton, and
+     runtime target decision.
 
 ## Non-Goals For The Current Stage
 
@@ -781,7 +876,6 @@ The location is not the final domain corpus model.
 
 ## Next Small Slice
 
-Add evidence-backed deploy-readiness proof fields and live read-only
-verification mode, or add the actual GitHub Actions workflow skeleton while
-keeping deploy execution blocked until a protected environment, selected AWS
-runtime target, and passing readiness manifest exist.
+Return to MSP shipping work by adding the actual GitHub Actions workflow
+skeleton while keeping deploy execution blocked until a protected environment,
+selected AWS runtime target, and passing readiness manifest exist.

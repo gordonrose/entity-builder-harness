@@ -52,6 +52,14 @@ validation, and standalone service adapters.
   derivation report status, existing YAML provenance state, and the actions a
   future apply step would need. With explicit `--apply-provenance`, it rewrites
   only existing top-level `source_derivation` blocks for declared rule paths.
+- `generate-source-to-rule-work-order/script.sh` emits a read-only work order
+  for semantic source-to-rule derivation, including source outlines, hashes,
+  expected YAML projections, derivation report state, selector proof paths,
+  corpus gaps, required checks, and ordered next actions.
+- `generate-source-to-rule-draft-packet/script.sh` emits a read-only semantic
+  draft packet that includes bounded source, current YAML, derivation report,
+  corpus-gap, and selector-evaluation content for an agent or reviewer to
+  propose source-derived YAML changes without rediscovering context.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.

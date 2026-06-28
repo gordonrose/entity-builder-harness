@@ -28,3 +28,8 @@ used_by:
   into structured rules, with required drift and conflict review.
 - `review-recognition-candidates.md` - govern review of unmatched, ambiguous,
   or corrected prompt terms before curated recognition sources are changed.
+
+## Related Skills
+
+- `../skills/ab-context-evaluation.md` - use for RAG-versus-source A/B
+  comparison when answering planning, discovery, or investigation prompts.

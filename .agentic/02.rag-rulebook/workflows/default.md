@@ -37,6 +37,10 @@ another layer's workflow, split the work into separate governed phases.
 ## Rules
 
 - Keep the RAG/rulebook machinery separate from domain corpus content.
+- For planning, discovery, and investigation prompts that depend on repo
+  rulebook knowledge, use `skills/ab-context-evaluation.md`: query the local
+  RAG runtime, verify targeted source files directly, compare the two evidence
+  paths, and report RAG misses or improvements.
 - Treat numbered corpora such as `corpus.01.harness`,
   `corpus.02.rag-rulebook`, `corpus.03.product`, `corpus.04.deploy`, and
   `corpus.05.education` as modular inputs, not one merged instruction corpus.
@@ -62,7 +66,9 @@ another layer's workflow, split the work into separate governed phases.
 4. Keep the change to one small artifact or scaffold unless explicitly asked
    to perform a migration.
 5. Check `plans/repo-plan.md` when choosing the next small slice.
-6. If source material drives the change, create or update a derivation report
+6. For planning, discovery, or investigation tasks, run the A/B context
+   evaluation skill before treating the answer as complete.
+7. If source material drives the change, create or update a derivation report
    that names claims, drift, conflicts, affected artifacts, and validation.
-7. Validate YAML or metadata headers when edited.
-8. Summarize boundaries, assumptions, and any deferred migration.
+8. Validate YAML or metadata headers when edited.
+9. Summarize boundaries, assumptions, and any deferred migration.

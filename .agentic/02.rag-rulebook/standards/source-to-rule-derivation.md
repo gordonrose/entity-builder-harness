@@ -67,6 +67,20 @@ The derivation review must ask:
 - Which generated artifacts must be rebuilt?
 - Which retrieval evaluations prove the new behavior?
 
+Before semantic YAML changes are drafted, a source-to-rule work order should be
+generated from the active source projection manifest. The work order is not a
+derivation report and does not approve semantic changes. It is the deterministic
+handoff packet that names the current source hashes, source outline, expected
+rule paths, derivation report state, corpus gaps, selector proof paths, required
+checks, and narrow next actions.
+
+When an agent needs to propose actual semantic edits, generate a source-to-rule
+draft packet from the work order. The draft packet may include bounded source,
+current YAML, derivation report, corpus-gap, and selector-evaluation content so
+the agent does not re-discover context or omit required evidence. The draft
+packet is still read-only evidence; it is not permission to write files or
+approve derivation.
+
 ## Required Derivation Report
 
 Every non-trivial source-material change that creates, updates, removes, or
@@ -131,6 +145,10 @@ must name the replacement.
 ## Good Actions
 
 - Compare changed source material with existing rules before writing new rules.
+- Generate a source-to-rule work order before asking an agent to draft or
+  revise source-derived YAML.
+- Generate a source-to-rule draft packet when the agent needs source and
+  current-artifact content to propose semantic changes.
 - Name affected rules, rule packs, corpus gaps, recognition candidates, chunks,
   and selector fixtures.
 - Preserve source paths and evidence paths.

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 452
-  term_count: 913
+  indexed_artifacts: 460
+  term_count: 929
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3756,6 +3756,30 @@ terms:
   canonical_id: rag-rulebook.schema.source-to-rule-derivation-report
   evidence_path: .agentic/02.rag-rulebook/schemas/source-to-rule-derivation-report.schema.yml
   confidence_weight: 1
+- term: rag-rulebook.skills.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.skills.readme
+  evidence_path: .agentic/02.rag-rulebook/skills/README.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/skills/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.skills.readme
+  evidence_path: .agentic/02.rag-rulebook/skills/README.md
+  confidence_weight: 1
+- term: rag-rulebook.skills.ab-context-evaluation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.skills.ab-context-evaluation
+  evidence_path: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.skills.ab-context-evaluation
+  evidence_path: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  confidence_weight: 1
 - term: rag-rulebook.source-projections.readme
   category: artifact-id
   match_type: exact
@@ -4439,6 +4463,78 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.generate-rulebook-index.smoke-test
   evidence_path: scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-source-to-rule-draft-packet.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-draft-packet.readme
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-draft-packet.readme
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-source-to-rule-draft-packet
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-draft-packet
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-draft-packet
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-source-to-rule-draft-packet.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-draft-packet.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-draft-packet.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-source-to-rule-work-order.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-work-order.readme
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-source-to-rule-work-order/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-work-order.readme
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-source-to-rule-work-order
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-work-order
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-work-order
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.generate-source-to-rule-work-order.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-work-order.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.generate-source-to-rule-work-order.smoke-test
+  evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.query-local-context.readme
   category: artifact-id

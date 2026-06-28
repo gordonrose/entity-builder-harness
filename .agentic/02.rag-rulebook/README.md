@@ -57,6 +57,7 @@ Subcorpora may be introduced when a layer needs more precision, such as
 ## Source Of Truth
 
 - Layer workflows: `.agentic/02.rag-rulebook/workflows/`
+- Layer skills: `.agentic/02.rag-rulebook/skills/`
 - Layer standards: `.agentic/02.rag-rulebook/standards/`
 - Layer guides: `.agentic/02.rag-rulebook/guides/`
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
@@ -82,6 +83,12 @@ final homes.
   into structured rulebook proposals with drift and conflict review.
 - `workflows/review-recognition-candidates.md` - review unmatched or ambiguous
   prompt terms before changing curated recognition sources.
+
+## Skills
+
+- `skills/ab-context-evaluation.md` - compare a local RAG context packet with
+  direct source verification for planning, discovery, and investigation
+  requests.
 
 ## Standards
 
