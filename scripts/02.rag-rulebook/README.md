@@ -72,9 +72,10 @@ validation, and standalone service adapters.
   files, requires retirement records for deleted or renamed old paths, and
   proves changed rule files still reach generated index and chunks.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
-  validated `rag-rulebook/context-packet/v1` packet for request text plus
-  request context and session safety metadata, refusing stale runtime caches
-  and including selector trace diagnostics.
+  validated `rag-rulebook/context-packet/v1` packet, or a compact derived
+  `rag-rulebook/context-packet-compact/v1` view, for request text plus request
+  context and session safety metadata, refusing stale runtime caches and
+  including selector trace diagnostics.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.

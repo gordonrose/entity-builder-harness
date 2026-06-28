@@ -25,7 +25,8 @@ used_by:
 # Query Local Context
 
 `script.sh` reads a built local RAG/rulebook runtime cache and emits a
-validated `rag-rulebook/context-packet/v1` packet.
+validated `rag-rulebook/context-packet/v1` packet by default. It can also emit
+a compact agent-facing view with `--format compact`.
 
 Before it answers, the command calls
 `scripts/02.rag-rulebook/check-runtime-freshness/script.sh`. If retrieval
@@ -61,7 +62,22 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
 - `--focused-path <path>` may be repeated.
 - `--no-focused-paths` clears focused path signals.
 - `--max-chunks <n>` controls packet size.
+- `--format <full|compact>` chooses the output shape. `full` is the default
+  debug/provenance packet. `compact` keeps selected chunk content, concise
+  citations, confidence, gaps, required checks, forbidden actions, stop
+  conditions, budgets, and a selector-trace summary.
 - `--pretty` pretty-prints JSON.
+
+## Output Formats
+
+`--format full` returns the canonical `rag-rulebook/context-packet/v1` packet.
+Use it for validation, selector-trace debugging, provenance review, and
+evaluation failure analysis.
+
+`--format compact` returns `rag-rulebook/context-packet-compact/v1`. It is a
+derived view of the same validated packet, intended for normal agent context
+augmentation. It must not contain independent retrieval behavior. If the compact
+view is insufficient, rerun the same query with `--format full`.
 
 ## Effects
 

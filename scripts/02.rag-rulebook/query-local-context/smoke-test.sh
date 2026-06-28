@@ -30,6 +30,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 RUNTIME_DIR="$TMP_DIR/runtime"
 PACKET_FILE="$TMP_DIR/context-packet.json"
+COMPACT_PACKET_FILE="$TMP_DIR/context-packet.compact.json"
 
 bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
   --output-dir "$RUNTIME_DIR" \
@@ -43,6 +44,16 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --session-workflow .agentic/01.harness/workflows/change-harness.md \
   --focused-path .agentic/01.harness/workflows/change-harness.md \
   --pretty > "$PACKET_FILE"
+
+bash scripts/02.rag-rulebook/query-local-context/script.sh \
+  --runtime-dir "$RUNTIME_DIR" \
+  --request-text "How do I update my harness so we can deploy it behind an MCP server?" \
+  --session-layer 01.harness \
+  --session-mode planning \
+  --session-workflow .agentic/01.harness/workflows/change-harness.md \
+  --focused-path .agentic/01.harness/workflows/change-harness.md \
+  --format compact \
+  --pretty > "$COMPACT_PACKET_FILE"
 
 python3 - "$PACKET_FILE" <<'PY'
 from __future__ import annotations
@@ -63,6 +74,31 @@ assert packet["selector_trace"]["strategy_id"] == "retrieval-selector.v1.hybrid-
 assert packet["selector_trace"]["candidate_counts"]["selected"] == len(packet["selected_chunks"])
 assert packet["confidence"]["overall"] > 0
 assert packet["citations"]
+PY
+
+python3 - "$PACKET_FILE" "$COMPACT_PACKET_FILE" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+full_path = Path(sys.argv[1])
+compact_path = Path(sys.argv[2])
+full_packet = json.loads(full_path.read_text(encoding="utf-8"))
+compact_packet = json.loads(compact_path.read_text(encoding="utf-8"))
+assert compact_packet["schema"] == "rag-rulebook/context-packet-compact/v1"
+assert compact_packet["source_schema"] == full_packet["schema"]
+assert compact_packet["packet_id"] == full_packet["packet_id"]
+assert compact_packet["request"]["raw_text"] == full_packet["request"]["raw_text"]
+assert "recognition_source_matches" not in compact_packet["request"]
+assert len(compact_packet["selected_chunks"]) == len(full_packet["selected_chunks"])
+assert compact_packet["selected_chunks"][0]["content"]
+assert compact_packet["citations"]
+assert compact_packet["debug"]["full_packet_available_with"] == "--format full"
+assert compact_packet["debug"]["selector_strategy_id"] == full_packet["selector_trace"]["strategy_id"]
+assert compact_packet["packet_summary"]["selected_chunk_count"] == len(full_packet["selected_chunks"])
+assert compact_path.stat().st_size < full_path.stat().st_size
 PY
 
 python3 - "$RUNTIME_DIR/manifest.json" <<'PY'

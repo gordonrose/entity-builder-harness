@@ -41,6 +41,7 @@ SESSION_MODE="implementation"
 SESSION_WORKFLOW=""
 MAX_CHUNKS=""
 PRETTY=false
+FORMAT="full"
 NO_FOCUSED_PATHS=false
 FOCUSED_PATHS=()
 
@@ -57,6 +58,7 @@ Options:
   --focused-path <path>      Focused path signal. Repeatable
   --no-focused-paths         Use no focused path signals
   --max-chunks <n>           Maximum selected chunks. Range: 3-12
+  --format <full|compact>    Output format. Default: full
   --pretty                   Pretty-print JSON
 
 Reads a built local runtime cache and emits a validated
@@ -127,6 +129,22 @@ while [ "$#" -gt 0 ]; do
       MAX_CHUNKS="$2"
       shift 2
       ;;
+    --format)
+      if [ "$#" -lt 2 ]; then
+        echo "ERROR: --format requires full or compact." >&2
+        exit 2
+      fi
+      FORMAT="$2"
+      case "$FORMAT" in
+        full|compact)
+          ;;
+        *)
+          echo "ERROR: --format must be full or compact." >&2
+          exit 2
+          ;;
+      esac
+      shift 2
+      ;;
     --pretty)
       PRETTY=true
       shift
@@ -193,4 +211,104 @@ if [ "$PRETTY" = true ]; then
   COMMAND+=(--pretty)
 fi
 
-"${COMMAND[@]}"
+if [ "$FORMAT" = "full" ]; then
+  "${COMMAND[@]}"
+  exit 0
+fi
+
+TMP_PACKET="$(mktemp)"
+trap 'rm -f "$TMP_PACKET"' EXIT
+
+"${COMMAND[@]}" > "$TMP_PACKET"
+
+python3 - "$TMP_PACKET" "$PRETTY" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+packet_path = Path(sys.argv[1])
+pretty = sys.argv[2] == "true"
+packet = json.loads(packet_path.read_text(encoding="utf-8"))
+
+selected_chunks = packet.get("selected_chunks", [])
+citation_ids = set()
+for chunk in selected_chunks:
+    citation_ids.update(chunk.get("citation_ids", []))
+for gap in packet.get("gaps", []):
+    citation_ids.update(gap.get("citation_ids", []))
+
+citations = [
+    citation
+    for citation in packet.get("citations", [])
+    if citation.get("id") in citation_ids
+]
+
+selector_trace = packet.get("selector_trace") or {}
+stage_statuses = [
+    {
+        "rank": stage.get("rank"),
+        "stage_id": stage.get("stage_id"),
+        "status": stage.get("status"),
+    }
+    for stage in selector_trace.get("stages", [])
+]
+request = packet.get("request") or {}
+compact_request = {
+    "raw_text": request.get("raw_text"),
+    "normalized_summary": request.get("normalized_summary"),
+    "focused_paths": request.get("focused_paths", []),
+    "open_artifact_ids": request.get("open_artifact_ids", []),
+}
+
+compact = {
+    "schema": "rag-rulebook/context-packet-compact/v1",
+    "source_schema": packet.get("schema"),
+    "packet_id": packet.get("packet_id"),
+    "generated_at": packet.get("generated_at"),
+    "request": compact_request,
+    "intent": packet.get("intent"),
+    "routing": packet.get("routing"),
+    "confidence": packet.get("confidence"),
+    "selected_chunks": [
+        {
+            "rank": chunk.get("rank"),
+            "chunk_id": chunk.get("chunk_id"),
+            "corpus_id": chunk.get("corpus_id"),
+            "artifact_id": chunk.get("artifact_id"),
+            "source_path": chunk.get("source_path"),
+            "section_path": chunk.get("section_path"),
+            "retrieval_score": chunk.get("retrieval_score"),
+            "token_estimate": chunk.get("token_estimate"),
+            "selection_reason": chunk.get("selection_reason"),
+            "citation_ids": chunk.get("citation_ids", []),
+            "rule_ids": chunk.get("rule_ids", []),
+            "content": chunk.get("content"),
+        }
+        for chunk in selected_chunks
+    ],
+    "citations": citations,
+    "gaps": packet.get("gaps", []),
+    "required_checks": packet.get("required_checks", []),
+    "forbidden_actions": packet.get("forbidden_actions", []),
+    "stop_conditions": packet.get("stop_conditions", []),
+    "budgets": packet.get("budgets"),
+    "debug": {
+        "full_packet_available_with": "--format full",
+        "selector_trace_available_in_full_packet": bool(selector_trace),
+        "selector_strategy_id": selector_trace.get("strategy_id"),
+        "selector_stage_statuses": stage_statuses,
+    },
+    "packet_summary": {
+        "selected_chunk_count": len(selected_chunks),
+        "citation_count": len(citations),
+        "gap_count": len(packet.get("gaps", [])),
+        "required_check_count": len(packet.get("required_checks", [])),
+        "stop_condition_count": len(packet.get("stop_conditions", [])),
+    },
+}
+
+indent = 2 if pretty else None
+print(json.dumps(compact, indent=indent, sort_keys=pretty))
+PY

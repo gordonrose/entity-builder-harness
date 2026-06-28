@@ -42,6 +42,45 @@ principles:
   - Return gaps and stop conditions instead of filling governance holes with model judgment.
   - Keep final task execution outside the packet; the consuming workflow decides what to do next.
 
+compact_output_contract:
+  schema: rag-rulebook/context-packet-compact/v1
+  purpose: >
+    Provide an agent-facing view of a validated full context packet without the
+    full debug, recognition, and provenance payload.
+  source_of_truth: "Derived from `rag-rulebook/context-packet/v1`; it must not run independent retrieval behavior."
+  required_fields:
+    - schema
+    - source_schema
+    - packet_id
+    - generated_at
+    - request
+    - intent
+    - routing
+    - confidence
+    - selected_chunks
+    - citations
+    - gaps
+    - required_checks
+    - forbidden_actions
+    - stop_conditions
+    - budgets
+    - debug
+    - packet_summary
+  field_rules:
+    request:
+      - "Keep raw text, normalized summary, focused paths, and open artifact IDs."
+      - "Do not include full recognition-source matches in compact output."
+    selected_chunks:
+      - "Include selected chunk content because this is the primary agent context."
+      - "Keep rank, IDs, source path, section path, retrieval score, token estimate, selection reason, citations, and rule IDs."
+    citations:
+      - "Include only citations referenced by selected chunks or gaps."
+    debug:
+      - "Point callers to `--format full` for complete selector trace and provenance."
+      - "Include selector strategy ID and stage statuses for quick diagnosis."
+    packet_summary:
+      - "Include counts so callers can quickly inspect packet size and completeness."
+
 teaching_policy:
   - Use structured `field_guide` entries instead of YAML comments for field explanations.
   - Keep `description` and `rules` concise enough to render in generated reference docs.

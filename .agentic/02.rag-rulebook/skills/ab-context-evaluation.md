@@ -77,8 +77,14 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --session-workflow "<workflow>" \
   --focused-path "<path>" \
   --max-chunks 8 \
+  --format compact \
   --pretty
 ```
+
+Use `--format compact` for the agent-facing context packet and token estimate.
+If the compact packet misses expected evidence or needs deeper diagnosis, rerun
+the same query with `--format full` and inspect the complete selector trace and
+provenance.
 
 If the runtime is stale, record that as a RAG-path failure and either rebuild
 through the governed runtime workflow or answer from source verification with a
@@ -93,7 +99,7 @@ Capture:
 - confidence
 - required checks
 - selector trace strategy, stage statuses, candidate counts, required evidence,
-  and selected chunk IDs
+  and selected chunk IDs from the full packet when diagnosis is needed
 - packet size and selected-content size when token savings are part of the
   evaluation
 - any missing corpus or stale-runtime signals
