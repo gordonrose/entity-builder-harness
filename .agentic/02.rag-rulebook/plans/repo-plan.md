@@ -674,6 +674,23 @@ The location is not the final domain corpus model.
      and
      `evaluations/retrieval-selector/v1/fixtures/question-category-architecture-boundary.yml`.
 
+7am. Require compiled selector policy before production runtime use.
+   - Make governed YAML the source of selector behavior, with runtime code
+     executing compiled policy instead of duplicating precedence, intent
+     resolution, evidence bundle, corpus-routing, or confidence behavior in
+     hidden constants.
+   - Treat hard-coded selector behavior as allowed only in prototype fixture
+     scripts until a compiler exists.
+   - Define the future compiler input set as validated policy packs, imported
+     dimensions, generated and curated recognition sources, corpus ownership,
+     rule graph metadata, and selector feature flags.
+   - Require compiled policy provenance so packets and A/B evaluations can
+     explain which policy inputs shaped retrieval.
+   - Status: standard and policy obligation present in
+     `standards/retrieval-selector-policy-system.md` and
+     `policies/retrieval-selector/v1.yml`; compiler script is not implemented
+     yet.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.

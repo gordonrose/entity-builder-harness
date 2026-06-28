@@ -123,6 +123,36 @@ The prompt dimension must also define recognition sources, extraction rules,
 term categories, and classification outputs. That keeps prompt parsing
 inspectable and fast enough to run before retrieval selection.
 
+## Runtime Policy Compilation
+
+Runtime selector behavior must be compiled from governed inputs, not hidden in
+selector code.
+
+The compiled selector configuration should be derived from:
+
+- the active retrieval policy pack
+- imported policy dimensions
+- generated recognition sources
+- curated recognition sources
+- corpus manifests and ownership maps
+- rulebook index and graph metadata
+- enabled selector feature flags
+
+Hard-coded precedence tables, intent resolution maps, evidence bundle mappings,
+or corpus-routing exceptions are allowed only in prototype fixture scripts and
+must be treated as temporary. A production selector, local runtime, hosted
+service, or MCP-facing context API must load compiled policy output instead of
+duplicating policy behavior in code.
+
+Adding a question category, evidence bundle, request form, corpus mapping, or
+confidence rule should require changing governed YAML and regenerated compiled
+policy. It should not require editing selector runtime code unless the schema
+or engine capability changes.
+
+Compiled policy output must preserve enough provenance for validators and A/B
+evaluation to explain which policy pack, dimensions, recognition sources, and
+generated inputs produced a selection decision.
+
 ## Precedence
 
 When policies conflict, use this order:
