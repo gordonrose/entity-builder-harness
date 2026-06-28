@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: evaluation-fixture
-#   purpose: Prove prompt layer conflict is surfaced as a gap while complete session metadata wins routing.
+#   purpose: Prove prompt/session conflict blocks unsafe side effects while request context remains separate from session provenance.
 #   portability:
 #     class: reusable
 #     targets:
@@ -24,7 +24,7 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.prompt-session-conflict
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompt terms cannot override complete session metadata.
+purpose: Prove prompt terms cannot authorize side effects even when request context differs from complete session metadata.
 input:
   request_text: Deploy this RAG rulebook workflow now.
   session:
@@ -63,14 +63,10 @@ expected:
     no_unexpected: true
   confidence:
     max_retrieval: 0.82
-banned:
-  matched_corpora:
-    - corpus.04.deploy
-  selected_corpora:
-    - corpus.04.deploy
 source_refs:
   - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
 update_triggers:
   - Prompt/session precedence changes.
   - Deploy layer routing terms change.

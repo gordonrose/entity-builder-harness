@@ -133,12 +133,15 @@ final homes.
 - `recognition-sources/generated/routing.yml` - generated lookup source for
   governed layer, mode, corpus, and workflow routing terms.
 - `recognition-sources/curated/aliases.yml` - reviewed human-language aliases
-  that map to governed routing terms without replacing session metadata.
+  that map to governed routing terms through request-context policy.
 - `recognition-sources/curated/actions.yml` - reviewed action vocabulary used
   to understand requested operations.
 - `recognition-sources/curated/intent-forms.yml` - reviewed question and
   command forms used to distinguish planning, explanation, implementation, git
   execution, and deploy execution requests.
+- `recognition-sources/curated/question-categories.yml` - reviewed question
+  category and evidence-family terms used to require canonical evidence
+  bundles for recurring question shapes.
 - `recognition-sources/curated/risks.yml` - reviewed risk, stop-condition,
   and check vocabulary used to raise validation scrutiny.
 - `recognition-candidates/` - durable review inbox for candidate terms that may
@@ -175,7 +178,7 @@ final homes.
   indexing, or chunking proof depending on the change type.
 - `scripts/02.rag-rulebook/query-local-context/script.sh` - reads a local
   runtime cache and emits a validated context packet for request text plus
-  session metadata, refusing stale runtime caches.
+  request context and session safety metadata, refusing stale runtime caches.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -
@@ -185,13 +188,15 @@ final homes.
 ## Policies
 
 - `policies/retrieval-selector/v1.yml` - seed v1 policy-pack manifest for
-  prompt, session metadata, layer/mode/workflow, paths, corpus ownership, graph
-  expansion, checks, stops, token budgets, confidence, validation handoff, and
-  future semantic recall.
+  prompt, request context, evidence bundles, session metadata,
+  layer/mode/workflow, paths, corpus ownership, graph expansion, checks, stops,
+  token budgets, confidence, validation handoff, and future semantic recall.
 - `policies/retrieval-selector/v1/dimensions/` - imported per-dimension policy
   contracts used by the seed v1 policy pack.
   The prompt dimension now names recognition sources and extraction rules for
-  turning raw user language into structured retrieval signals.
+  turning raw user language into structured retrieval signals. The evidence
+  bundle dimension maps recognized question categories to required source
+  families before ranking.
 - `evaluations/retrieval-selector/v1/fixtures/` - active selector evaluation
   fixtures with expected and banned context-packet outcomes.
 

@@ -106,7 +106,7 @@ terms:
       - Release this
     confidence_weight: 0.9
 validation_rules:
-  - Intent forms indicate the kind of help requested, but cannot override complete session metadata by themselves.
+  - Intent forms indicate the kind of help requested, but cannot authorize side effects or bypass session safety by themselves.
   - Planning and explanation forms must not grant implementation, commit, deploy, or destructive-action permission.
   - Execution forms must remain subject to the current workflow gates and approval rules.
   - Broad aliases require evaluation coverage before activation.

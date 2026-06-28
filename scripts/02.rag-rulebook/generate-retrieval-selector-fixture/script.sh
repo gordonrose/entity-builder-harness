@@ -145,6 +145,17 @@ INTENT_LABELS = {
     "intent.deploy.execution": "Deploy execution",
     "intent.implementation.request": "Implementation request",
 }
+EVIDENCE_BUNDLES = {
+    "question.architecture-boundary.capability-placement": {
+        "always_source_paths": [
+            "docs/harness/architecture/rules/concerns/dependency-direction.yml",
+        ],
+        "family_source_paths": {
+            "evidence.layer.apps": "docs/harness/architecture/rules/layers/apps.yml",
+            "evidence.layer.platform": "docs/harness/architecture/rules/layers/platform.yml",
+        },
+    }
+}
 
 
 def repo_root() -> Path:
@@ -619,6 +630,110 @@ def matched_candidate_evidence_paths(candidates: list[dict[str, Any]], request_t
     return paths
 
 
+def matched_evidence_bundle_source_paths(recognition_matches: list[dict[str, Any]]) -> list[str]:
+    category_ids = {
+        str(match.get("canonical_id"))
+        for match in recognition_matches
+        if match.get("category") == "question-category" and isinstance(match.get("canonical_id"), str)
+    }
+    family_ids = {
+        str(match.get("canonical_id"))
+        for match in recognition_matches
+        if match.get("category") == "evidence-family" and isinstance(match.get("canonical_id"), str)
+    }
+    paths: list[str] = []
+    seen: set[str] = set()
+    for category_id in sorted(category_ids):
+        bundle = EVIDENCE_BUNDLES.get(category_id)
+        if not bundle:
+            continue
+        for source_path in list_of_strings(bundle.get("always_source_paths")):
+            if source_path in seen or not repo_path(source_path).is_file():
+                continue
+            seen.add(source_path)
+            paths.append(source_path)
+        family_source_paths = dict_value(bundle.get("family_source_paths"))
+        for family_id in sorted(family_ids):
+            source_path = family_source_paths.get(family_id)
+            if not isinstance(source_path, str) or source_path in seen:
+                continue
+            if not repo_path(source_path).is_file():
+                continue
+            seen.add(source_path)
+            paths.append(source_path)
+    return paths
+
+
+def evidence_bundle_gaps(
+    recognition_matches: list[dict[str, Any]],
+    selected_chunks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    category_ids = {
+        str(match.get("canonical_id"))
+        for match in recognition_matches
+        if match.get("category") == "question-category" and isinstance(match.get("canonical_id"), str)
+    }
+    family_ids = {
+        str(match.get("canonical_id"))
+        for match in recognition_matches
+        if match.get("category") == "evidence-family" and isinstance(match.get("canonical_id"), str)
+    }
+    selected_source_paths = {
+        str(chunk.get("source_path"))
+        for chunk in selected_chunks
+        if isinstance(chunk.get("source_path"), str)
+    }
+    gaps: list[dict[str, Any]] = []
+    for category_id in sorted(category_ids):
+        bundle = EVIDENCE_BUNDLES.get(category_id)
+        if not bundle:
+            gaps.append(
+                {
+                    "id": f"gap.selector-fixture.no-evidence-bundle.{safe_id(category_id)}",
+                    "type": "missing-evidence",
+                    "description": f"Question category {category_id} matched, but no evidence bundle is defined.",
+                    "blocking": False,
+                    "suggested_resolution": "Define an evidence bundle or downgrade the question-category recognition term.",
+                }
+            )
+            continue
+        expected_paths: list[str] = []
+        for source_path in list_of_strings(bundle.get("always_source_paths")):
+            expected_paths.append(source_path)
+        family_source_paths = dict_value(bundle.get("family_source_paths"))
+        for family_id in sorted(family_ids):
+            source_path = family_source_paths.get(family_id)
+            if isinstance(source_path, str):
+                expected_paths.append(source_path)
+        expected_paths = sorted(set(path for path in expected_paths if repo_path(path).is_file()))
+        if not expected_paths:
+            gaps.append(
+                {
+                    "id": f"gap.selector-fixture.no-evidence-family.{safe_id(category_id)}",
+                    "type": "missing-evidence",
+                    "description": f"Question category {category_id} matched, but no expected evidence families resolved.",
+                    "blocking": False,
+                    "suggested_resolution": "Add evidence-family terms or exact paths for this question category.",
+                }
+            )
+            continue
+        missing_paths = [path for path in expected_paths if path not in selected_source_paths]
+        if missing_paths:
+            gaps.append(
+                {
+                    "id": f"gap.selector-fixture.missing-evidence-bundle.{safe_id(category_id)}",
+                    "type": "missing-evidence",
+                    "description": (
+                        f"Question category {category_id} expected evidence that was not selected: "
+                        + ", ".join(missing_paths)
+                    ),
+                    "blocking": False,
+                    "suggested_resolution": "Add the expected evidence paths to required source selection or tune ranking/trimming.",
+                }
+            )
+    return gaps
+
+
 def focused_path_match(term: str, paths: list[str]) -> bool:
     term_lower = term.lower()
     if not term_lower:
@@ -771,6 +886,10 @@ def score_chunk(
             score += 16 * weight
         elif category in {"layer-name", "mode-name", "workflow-name"} and term.lower() in haystack:
             score += 3 * weight
+        elif category == "evidence-family" and term.lower() in haystack:
+            score += 8 * weight
+        elif category == "question-category" and term.lower() in haystack:
+            score += 1 * weight
         elif category == "action-verb" and term.lower() in haystack:
             score += 2 * weight
         elif category in {"risk-word", "stop-condition", "check-name"} and term.lower() in haystack:
@@ -1077,12 +1196,14 @@ def build_packet(
         + prototype_bridge_corpora(args.session_layer)
     )
     candidate_evidence_paths = matched_candidate_evidence_paths(recognition_candidates, args.request_text)
-    ranking_paths = list(args.focused_paths) + candidate_evidence_paths
+    evidence_bundle_source_paths = matched_evidence_bundle_source_paths(recognition_matches)
+    evidence_source_paths = candidate_evidence_paths + evidence_bundle_source_paths
+    ranking_paths = list(args.focused_paths) + evidence_source_paths
     ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, ranking_paths, session_corpus)
     candidate_ranked, used_candidate_filter = candidate_ranked_chunks(
         ranked,
         allowed_corpus_ids,
-        candidate_evidence_paths,
+        evidence_source_paths,
     )
     required_chunk_ids = matched_corpus_gap_required_chunk_ids(
         corpus_gaps,
@@ -1094,6 +1215,7 @@ def build_packet(
     required_source_paths = rule_evidence_paths(candidate_evidence_paths)
     if required_chunk_ids:
         required_source_paths += graph_expansion_source_paths
+    required_source_paths += rule_evidence_paths(evidence_bundle_source_paths)
     selected_pairs = select_chunks(
         candidate_ranked,
         args.max_chunks,
@@ -1111,8 +1233,8 @@ def build_packet(
         chunk["rank"] = rank
         chunk["retrieval_score"] = round(score / max_score, 4) if max_score else 0
         chunk["selection_reason"] = (
-            "Selected by deterministic retrieval-selector fixture using prompt terms, "
-            "session metadata, focused paths, and recognition-source matches."
+            "Selected by deterministic retrieval-selector fixture using request context, "
+            "focused paths, recognition-source matches, and session safety context."
         )
         selected_chunks.append(chunk)
 
@@ -1190,7 +1312,7 @@ def build_packet(
                 "id": "gap.selector-fixture.prompt-session-layer-conflict",
                 "type": "ambiguous-intent",
                 "description": (
-                    "Prompt layer terms differ from complete session metadata; session metadata wins in this fixture."
+                    "Prompt layer terms differ from complete session metadata; request context may retrieve evidence while session metadata remains provenance and safety context."
                     if not side_effect_session_conflict
                     else "Prompt requests a side-effecting action outside the current session layer; stop before acting."
                 ),
@@ -1231,6 +1353,7 @@ def build_packet(
         )
     gaps.extend(candidate_coverage_gaps(recognition_candidates, args.request_text))
     gaps.extend(corpus_gap_records_gaps(corpus_gaps, recognition_candidates, recognition_matches, args.request_text))
+    gaps.extend(evidence_bundle_gaps(recognition_matches, selected_chunks))
     gaps = enrich_gap_evidence(gaps, selected_chunks)
 
     selected_context_tokens = sum(
@@ -1264,6 +1387,8 @@ def build_packet(
     retrieval_confidence = 0.9 if max_score else 0.55
     if prompt_layer_conflicts:
         retrieval_confidence = min(retrieval_confidence, 0.82)
+    if any(gap.get("type") == "missing-evidence" for gap in gaps):
+        retrieval_confidence = min(retrieval_confidence, 0.69)
     if not prompt_or_path_matches and prompt_terms:
         recognition_confidence = min(recognition_confidence, 0.69)
         retrieval_confidence = min(retrieval_confidence, 0.69)
@@ -1310,7 +1435,7 @@ def build_packet(
         "generated_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "request": {
             "raw_text": args.request_text,
-            "normalized_summary": "Generate a deterministic retrieval selector fixture from governed policy, recognition sources, session metadata, and chunks.",
+            "normalized_summary": "Generate a deterministic retrieval selector fixture from governed policy, request context, recognition sources, session safety metadata, and chunks.",
             "focused_paths": args.focused_paths,
             "open_artifact_ids": selected_artifact_ids,
             "recognition_source_matches": recognition_matches[:80],
@@ -1333,7 +1458,7 @@ def build_packet(
             "status": routing_status,
             "task_type": "generate_retrieval_selector_fixture",
             "target_paths": args.focused_paths,
-            "classification_source": "session-metadata-plus-recognition-sources",
+            "classification_source": "request-context-plus-recognition-sources",
             "recognition_summary": category_summary(recognition_matches),
         },
         "matched_corpora": [
@@ -1403,7 +1528,8 @@ def build_packet(
             "retrieval": retrieval_confidence,
             "routing": recognition_confidence,
             "notes": [
-                "Session metadata is preferred over prompt inference.",
+                "Request context is preferred over session defaults for retrieval target selection.",
+                "Session metadata remains provenance and execution-safety context.",
                 "Recognition-source matches are deterministic lookup signals.",
                 "Semantic recall is not enabled for this fixture.",
             ],

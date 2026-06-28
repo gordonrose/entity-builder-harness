@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: evaluation-fixture
-#   purpose: Prove broad product wording does not pull product corpora into a RAG/rulebook session without supporting ownership evidence.
+#   purpose: Prove broad product wording does not become a request-context target without supporting ownership evidence.
 #   portability:
 #     class: reusable
 #     targets:
@@ -24,7 +24,7 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.product-term-session-boundary
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove corpus ownership boundaries beat broad prompt words.
+purpose: Prove request context requires exact terms, paths, or ownership evidence before crossing corpus boundaries.
 input:
   request_text: For this RAG rulebook task, update the product wording in the selector evaluation notes.
   session:
@@ -67,6 +67,7 @@ banned:
 source_refs:
   - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
 update_triggers:
   - Corpus ownership policy changes.
   - Product corpus aliases become curated and intentionally cross session boundaries.

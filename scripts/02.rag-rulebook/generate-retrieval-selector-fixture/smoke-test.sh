@@ -63,7 +63,7 @@ report = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
 assert packet["schema"] == "rag-rulebook/context-packet/v1"
 assert packet["routing"]["status"] == "ready"
 assert packet["routing"]["layer"] == "02.rag-rulebook"
-assert packet["routing"]["classification_source"] == "session-metadata-plus-recognition-sources"
+assert packet["routing"]["classification_source"] == "request-context-plus-recognition-sources"
 assert packet["intent"]["source"] == "mixed"
 assert packet["provenance"]["policy_pack"]["policy_pack_id"] == "retrieval-selector.v1"
 assert packet["provenance"]["recognition_sources"]["matched_terms"] > 0

@@ -638,6 +638,42 @@ The location is not the final domain corpus model.
    - Status: present in `.agentic/02.rag-rulebook/skills/ab-context-evaluation.md`
      and wired into `.agentic/02.rag-rulebook/workflows/default.md`.
 
+7ak. Demote session metadata behind request context for retrieval.
+   - Keep session metadata for chat/worktree provenance, fallback routing, and
+     execution safety.
+   - Build a fresh request context for each retrieval attempt from prompt
+     intent, focused paths, exact corpus/artifact/path terms, and side-effect
+     classification.
+   - Let explicit request context beat session defaults for retrieval target
+     selection while preserving session workflow gates for edits, commits,
+     deploys, destructive actions, and infrastructure mutation.
+   - Prove exact cross-session corpus retrieval with an evaluation fixture and
+     keep broad nouns from crossing corpus boundaries without supporting
+     evidence.
+   - Status: present in
+     `policies/retrieval-selector/v1/dimensions/request-context.yml`,
+     `policies/retrieval-selector/v1.yml`, and
+     `evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml`.
+
+7al. Add question-category evidence bundles.
+   - Add a reusable question-category recognition path so recurring question
+     shapes can require canonical evidence families without one-off prompt
+     patches.
+   - Use curated question-category and evidence-family terms to map questions
+     such as architecture-boundary placement into required source paths before
+     final ranking.
+   - Emit missing-evidence gaps and lower retrieval confidence when an expected
+     evidence family is absent, filtered, or trimmed.
+   - Prove the mechanism with a fixture where a RAG Query apps/platform question
+     retrieves apps, platform, and dependency-direction evidence even though the
+     session remains `02.rag-rulebook`.
+   - Status: present in
+     `recognition-sources/curated/question-categories.yml`,
+     `policies/retrieval-selector/v1/dimensions/evidence-bundles.yml`,
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
+     and
+     `evaluations/retrieval-selector/v1/fixtures/question-category-architecture-boundary.yml`.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.

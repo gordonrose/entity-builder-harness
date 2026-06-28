@@ -106,7 +106,8 @@ An active retrieval selector evaluation suite should include:
 
 - exact artifact or path match
 - layer/mode/workflow routing from session metadata
-- prompt and session conflict where session metadata wins
+- prompt and session conflict where request context may retrieve evidence but session safety still blocks side effects
+- question-category evidence bundle where expected canonical source families survive ranking
 - broad prompt with low confidence that produces a gap
 - corpus boundary case where unrelated corpora are not selected
 - required checks surviving ranking and trimming

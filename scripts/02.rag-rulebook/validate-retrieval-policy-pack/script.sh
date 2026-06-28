@@ -75,6 +75,8 @@ REQUIRED_TOP_LEVEL = [
 ALLOWED_STATUS = {"draft", "active", "superseded", "retired"}
 REQUIRED_DIMENSIONS = [
     "prompt",
+    "request-context",
+    "evidence-bundles",
     "session-metadata",
     "layer-mode-workflow",
     "focused-paths",
@@ -105,6 +107,8 @@ REQUIRED_DIMENSION_FIELDS = [
 ]
 PRECEDENCE_CONCEPTS = [
     "stop",
+    "request",
+    "evidence",
     "session",
     "path",
     "corpus",

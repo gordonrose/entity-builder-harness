@@ -133,6 +133,8 @@ fields:
           type: enum
           allowed_values:
             - prompt
+            - request-context
+            - evidence-bundles
             - session-metadata
             - layer-mode-workflow
             - focused-paths

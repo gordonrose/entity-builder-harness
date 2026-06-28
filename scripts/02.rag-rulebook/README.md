@@ -68,7 +68,7 @@ validation, and standalone service adapters.
   proves changed rule files still reach generated index and chunks.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet for request text plus
-  session metadata, refusing stale runtime caches.
+  request context and session safety metadata, refusing stale runtime caches.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.

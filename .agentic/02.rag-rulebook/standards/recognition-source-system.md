@@ -87,6 +87,8 @@ Curated sources are human-authored and need tighter review:
 
 - action verbs
 - request forms
+- question categories
+- evidence families
 - risk words
 - domain nouns
 - aliases
@@ -109,9 +111,15 @@ Use this order:
 1. Normalize prompt text into tokens and simple phrases.
 2. Match exact paths, artifact IDs, schema names, corpus IDs, workflow names,
    and rule IDs first.
-3. Match curated action, risk, domain, and alias terms second.
-4. Compare prompt-derived signals with session metadata.
-5. Report conflicts or low confidence as gaps instead of silently changing
+3. Match curated action, request-form, question-category, evidence-family,
+   risk, domain, and alias terms second.
+4. Feed prompt-derived signals into request context.
+5. Resolve evidence bundles for recognized question categories before final
+   chunk ranking.
+6. Compare request context with session metadata for provenance, fallback, and
+   execution safety.
+7. Report conflicts, missing expected evidence, or low confidence as gaps
+   instead of silently changing
    routing.
 
 Exact governed identifiers should beat broad natural language.
@@ -140,7 +148,7 @@ fixtures prove it is safe.
 
 Recognition sources must not:
 
-- override complete session metadata by themselves
+- authorize side effects or bypass session safety by themselves
 - classify a prompt from one vague word
 - use broad aliases to cross corpus boundaries without supporting evidence
 - hide prompt/session conflicts
@@ -166,6 +174,9 @@ The first curated sources are:
   move, generate, and validate
 - `recognition.curated.intent-forms` for reviewed question and command forms
   such as `How do I`, `Should we`, `Please implement`, and `Commit this`
+- `recognition.curated.question-categories` for reviewed recurring question
+  shapes and evidence families, such as architecture-boundary questions that
+  require apps, platform, and dependency-direction evidence
 - `recognition.curated.risks` for reviewed risk, stop-condition, and check
   terms such as drift, missing governance, and commit gate
 

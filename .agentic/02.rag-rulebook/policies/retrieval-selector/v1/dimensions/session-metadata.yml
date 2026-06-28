@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: policy-dimension
-#   purpose: Define how chat and session metadata constrain retrieval.
+#   purpose: Define how chat and session metadata preserve safety, provenance, and fallback routing.
 #   portability:
 #     class: reusable
 #     targets:
@@ -27,7 +27,7 @@ dimension_id: session-metadata
 version: 1
 status: active
 applies_to_policy_pack: retrieval-selector.v1
-purpose: Use chat/session metadata as a strong deterministic routing signal.
+purpose: Use chat/session metadata as provenance, execution-safety context, and fallback routing without letting it dominate explicit request-context retrieval.
 required_inputs:
   - Session ID.
   - Recorded layer, mode, and workflow.
@@ -35,15 +35,15 @@ required_inputs:
   - Session status.
   - Latest recorded commit metadata when present.
 expected_actions:
-  - Use recorded layer, mode, workflow, branch, and worktree when metadata is ready.
-  - Narrow initial corpus candidates from the session layer.
-  - Narrow required workflow and check candidates from the session workflow.
+  - Preserve recorded layer, mode, workflow, branch, and worktree when metadata is ready.
+  - Use session layer and workflow as fallback retrieval context when the prompt, focused paths, and artifact ownership do not name stronger targets.
+  - Narrow required workflow, safety, and check candidates from the session workflow.
   - Preserve session metadata in context-packet routing and provenance.
 banned_actions:
-  - Do not reclassify when session metadata is complete and current.
+  - Do not use session metadata as the primary retrieval target when explicit request context names stronger evidence.
   - Do not treat missing, unknown, or stale metadata as ready.
   - Do not silently continue when branch or worktree ownership is ambiguous.
-  - Do not use prompt terms to bypass a recorded workflow.
+  - Do not use prompt terms to bypass a recorded workflow for side-effecting actions.
 output_obligations:
   - session_id
   - layer
@@ -56,13 +56,17 @@ gap_or_stop_conditions:
   - Stop when session ownership or worktree state is ambiguous.
   - Add a metadata gap when layer, mode, or workflow is missing, stale, or unknown.
 ranking_effects:
-  - Complete ready session metadata outranks prompt inference.
-  - Session workflow matches raise required-check ranking.
+  - Complete ready session metadata raises provenance and fallback routing confidence.
+  - Session workflow matches raise required-check and execution-safety ranking.
+  - Explicit request context outranks session defaults for read-only retrieval target selection.
   - Unknown session metadata lowers routing confidence.
 validation_examples:
-  - name: ready session narrows corpus
+  - name: ready session provides fallback corpus
     given: Session metadata is ready for `02.rag-rulebook:implementation`.
-    expect: Initial candidate corpora include `corpus.02.rag-rulebook` before prompt-only candidates.
+    expect: Candidate corpora include `corpus.02.rag-rulebook` when no stronger request-context target is present.
+  - name: request context can retrieve cross-layer evidence
+    given: Session metadata is ready for `02.rag-rulebook:implementation`, but a planning prompt names platform/apps architecture evidence.
+    expect: Retrieval may include platform/apps evidence while session metadata remains in provenance and execution safety.
   - name: unknown session blocks readiness
     given: Session layer is `unknown`.
     expect: The selector reports a metadata gap and does not emit ready routing.

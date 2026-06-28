@@ -88,7 +88,7 @@ important.
 - Do not add a curated term without a sentence-level example.
 - Do not add a curated term without a canonical ID.
 - Do not add a curated term without evaluation fixture coverage.
-- Do not let broad terms override complete session metadata.
+- Do not let broad terms bypass session safety, authorize side effects, or cross corpus boundaries without request-context support.
 - Reject or defer terms that are too generic to route safely.
 
 ## Accepted Candidate Output

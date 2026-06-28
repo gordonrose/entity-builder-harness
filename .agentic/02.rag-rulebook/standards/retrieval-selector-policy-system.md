@@ -34,8 +34,9 @@ Define how the RAG/rulebook retrieval selector should evolve without burying
 selection behavior inside code.
 
 Selector code should execute governed policy packs. It should not be the only
-place where prompt interpretation, session metadata trust, corpus selection,
-graph expansion, trimming, confidence, or gap behavior is defined.
+place where prompt interpretation, request context, session metadata trust,
+corpus selection, graph expansion, trimming, confidence, or gap behavior is
+defined.
 
 The policy system exists so context augmentation can become smaller, more
 accurate, and more reliable over time while remaining inspectable.
@@ -46,6 +47,8 @@ The selector sits between generated chunks and the final context packet:
 
 ```txt
 prompt
++ request context
++ evidence bundles
 + chat/session metadata
 + layer/mode/workflow
 + focused paths
@@ -75,8 +78,8 @@ without turning the pack into one large prose document.
 Prompt interpretation should be grounded in governed recognition sources. The
 selector should not invent nouns, actions, risk words, aliases, or targets from
 raw language alone. It should match prompt text against generated and curated
-lookup sources, then compare those matches with session, path, corpus, and graph
-signals.
+lookup sources, then combine those matches into request context before comparing
+them with session, path, corpus, and graph signals.
 
 ## Required Dimensions
 
@@ -85,7 +88,9 @@ Every active selector policy pack must address these dimensions.
 | Dimension | Controls | Evolves By |
 | --- | --- | --- |
 | prompt | How raw user language becomes intent signals and task terms. | Adding task vocabulary, synonyms, disambiguation rules, or prompt red flags. |
-| chat/session metadata | How current session, branch, workflow, and recorded metadata influence routing. | Updating trust rules for session fields and continuation state. |
+| request context | How the current prompt, focused paths, recognized concepts, and side-effect class become the retrieval target for this request. | Adding request forms, side-effect classes, expected evidence bundles, or confidence penalties. |
+| evidence bundles | Which canonical evidence families are required for recognized question categories. | Adding question categories, evidence-family terms, canonical source paths, or missing-evidence confidence penalties. |
+| chat/session metadata | How current session, branch, workflow, and recorded metadata preserve provenance, fallback routing, and execution safety. | Updating trust rules for session fields and continuation state. |
 | layer/mode/workflow | Which layer and workflow boundaries constrain retrieval. | Adding new layers, modes, or workflow ownership rules. |
 | focused paths | How open files, changed files, and user-named paths narrow retrieval. | Adding path ownership maps and path-to-corpus rules. |
 | corpus ownership | Which numbered corpora and subcorpora may provide context. | Adding corpus manifests, subcorpus relationships, or cross-corpus permission rules. |
@@ -123,17 +128,19 @@ inspectable and fast enough to run before retrieval selection.
 When policies conflict, use this order:
 
 1. Stop conditions beat every retrieval score.
-2. Explicit session metadata beats inferred prompt meaning when metadata is
-   complete and current.
-3. Focused paths and artifact ownership beat broad semantic similarity.
-4. Corpus ownership boundaries beat cross-corpus convenience.
-5. Required checks and mandatory rulesets must survive trimming.
-6. Rule graph expansion should be bounded before ranking.
-7. Ranking should prefer deterministic matches before semantic/vector recall.
-8. Token-budget trimming may remove helpful context, but not required checks,
-   blocking stops, citations, or provenance.
-9. Low confidence must produce a gap; it must not be hidden behind fluent text.
-10. Validation failure means the packet is unusable.
+2. Explicit request context beats session defaults for retrieval target
+   selection.
+3. Evidence bundles define required evidence families for recognized question
+   categories.
+4. Session metadata governs provenance, fallback routing, and execution
+   safety.
+5. Focused paths and artifact ownership beat broad semantic similarity.
+6. Corpus ownership boundaries beat cross-corpus convenience.
+7. Required checks and mandatory rulesets must survive trimming.
+8. Rule graph expansion should be bounded before ranking.
+9. Ranking should prefer deterministic matches before semantic/vector recall.
+10. Low confidence must produce a gap; it must not be hidden behind fluent text.
+11. Validation failure means the packet is unusable.
 
 These precedence rules should be duplicated into policy packs so future
 selectors can validate that the active pack still honors them.

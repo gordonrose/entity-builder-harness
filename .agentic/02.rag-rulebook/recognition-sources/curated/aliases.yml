@@ -54,7 +54,8 @@ terms:
     canonical_id: 02.rag-rulebook
     confidence_weight: 0.75
 validation_rules:
-  - Curated aliases must not override complete session metadata.
+  - Curated aliases must not authorize side effects or bypass session safety.
+  - Curated aliases may contribute retrieval targets only through request-context policy.
   - Curated aliases must have evaluation fixture coverage before broad use.
   - Broad aliases must keep confidence_weight below exact generated identifiers.
   - Aliases that could name product, deploy, app, or design work require explicit review before activation.

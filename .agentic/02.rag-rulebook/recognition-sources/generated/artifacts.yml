@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 460
-  term_count: 929
+  indexed_artifacts: 464
+  term_count: 937
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3306,6 +3306,30 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.prompt-session-conflict
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-architecture-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-architecture-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-architecture-boundary.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-architecture-boundary.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-architecture-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-architecture-boundary.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.vague-prompt-low-confidence
   category: artifact-id
   match_type: exact
@@ -3438,6 +3462,18 @@ terms:
   canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.corpus-ownership
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/corpus-ownership.yml
   confidence_weight: 1
+- term: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
+  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
+  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  confidence_weight: 1
 - term: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
   category: artifact-id
   match_type: exact
@@ -3473,6 +3509,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+  confidence_weight: 1
+- term: rag-rulebook.policy.retrieval-selector.v1.dimension.request-context
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.request-context
+  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.request-context
+  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
   confidence_weight: 1
 - term: rag-rulebook.policy.retrieval-selector.v1.dimension.required-checks
   category: artifact-id

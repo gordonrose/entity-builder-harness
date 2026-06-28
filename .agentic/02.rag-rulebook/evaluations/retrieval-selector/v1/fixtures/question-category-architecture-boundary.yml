@@ -1,0 +1,109 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-architecture-boundary
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove architecture-boundary questions retrieve canonical evidence bundles rather than only session-layer chunks.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-architecture-boundary
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove category-level evidence bundles pull canonical apps/platform/dependency-direction evidence for capability-placement questions.
+input:
+  request_text: Should we make RAG Query one of our apps or part of platform?
+  session:
+    layer: 02.rag-rulebook
+    mode: implementation
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+  no_focused_paths: true
+  max_chunks: 8
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    mode: implementation
+    status: ready
+  action_authorization:
+    requested_action: context-retrieval
+    side_effect_class: none
+    execution_allowed: false
+    status: not-requested
+  matched_corpora:
+    required:
+      - corpus.02.rag-rulebook
+  selected_corpora:
+    required:
+      - corpus.03.product.apps
+      - corpus.03.product.platform
+  recognition:
+    required_source_ids:
+      - recognition.curated.intent-forms
+      - recognition.curated.question-categories
+    required_matches:
+      - source_id: recognition.curated.intent-forms
+        term: Should we
+        category: intent-form
+        canonical_id: intent.planning.decision-support
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: one of our apps
+        category: question-category
+        canonical_id: question.architecture-boundary.capability-placement
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: apps
+        category: evidence-family
+        canonical_id: evidence.layer.apps
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: platform
+        category: evidence-family
+        canonical_id: evidence.layer.platform
+        matched_input: prompt
+  gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
+      - gap.selector-fixture.prototype-corpus-bridge
+    no_unexpected: true
+  selected_chunks:
+    required_artifact_ids:
+      - artifact.layer.apps
+      - artifact.layer.platform
+      - artifact.concern.dependency.direction
+  confidence:
+    min_retrieval: 0.7
+banned:
+  selected_corpora:
+    - corpus.04.deploy
+  recognition_matches:
+    - source_id: recognition.curated.intent-forms
+      canonical_id: intent.implementation.request
+      matched_input: prompt
+    - source_id: recognition.curated.intent-forms
+      canonical_id: intent.deploy.execution
+      matched_input: prompt
+source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+  - docs/harness/architecture/rules/layers/apps.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+update_triggers:
+  - Question-category recognition changes.
+  - Evidence-bundle policy changes.
+  - Apps, platform, or dependency-direction artifact IDs or paths change.

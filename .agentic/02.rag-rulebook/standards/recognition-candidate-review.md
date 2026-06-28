@@ -183,7 +183,7 @@ Wrong or banned review actions:
 - accepting a candidate without moving it to the accepted lifecycle location
 - accepting a coverage-required term before `coverage.status: covered`
 - accepting a term because it appeared once in an ambiguous sentence
-- using a candidate to override complete chat/session metadata
+- using a candidate to bypass chat/session safety or authorize side effects
 - treating a corpus gap as proof that the corpus already answers the request
 
 ## Banned Behavior
@@ -192,7 +192,7 @@ Do not:
 
 - add every unknown term automatically
 - accept one vague term from one prompt without reviewing context
-- allow candidates to override complete session metadata
+- allow candidates to bypass session safety or authorize side effects
 - store full chat transcripts as candidate context by default
 - add a curated term without a canonical ID
 - accept a coverage-required term before every required coverage stage has

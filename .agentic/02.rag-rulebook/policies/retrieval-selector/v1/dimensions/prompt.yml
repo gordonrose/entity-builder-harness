@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: policy-dimension
-#   purpose: Define how raw prompt text contributes retrieval hints without overriding governed metadata.
+#   purpose: Define how raw prompt text contributes retrieval hints for a per-request context.
 #   portability:
 #     class: reusable
 #     targets:
@@ -31,22 +31,23 @@ dimension_id: prompt
 version: 1
 status: active
 applies_to_policy_pack: retrieval-selector.v1
-purpose: Turn raw user language into retrieval hints without letting natural language override governed metadata.
+purpose: Turn raw user language into structured prompt signals that feed the per-request context without granting execution permission.
 required_inputs:
   - Raw user prompt text.
   - Request form indicators such as question, explanation request, implementation request, commit request, or deploy request.
   - Normalized prompt tokens.
   - Governed recognition sources for artifact IDs, file paths, schemas, corpus IDs, layer names, workflow names, rule IDs, action verbs, risk words, aliases, and intent forms.
-  - Session metadata used to compare prompt inference with governed state.
+  - Session metadata used to compare prompt inference with execution-safety context.
 expected_actions:
   - Identify the request form before interpreting individual verbs as execution intent.
   - Extract task nouns, verbs, target artifacts, risk words, and explicit asks by matching prompt text against governed recognition sources.
   - Normalize obvious plurals, aliases, and known synonyms only when a recognition source defines the mapping.
   - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
+  - Pass recognized prompt signals to the request-context dimension before session defaults are applied for retrieval.
   - Preserve the raw prompt in the context-packet request provenance.
 banned_actions:
-  - Do not let prompt interpretation override complete session metadata.
-  - Do not infer a different layer from prompt words when the session layer is ready and current.
+  - Do not let prompt interpretation grant edit, commit, deploy, destructive, or infrastructure mutation permission.
+  - Do not infer a different execution workflow from prompt words when the session workflow is ready and current.
   - Do not expand into unrelated corpora from vague words such as app, design, deploy, or rule without supporting metadata.
   - Do not hide prompt/session conflict behind a confident summary.
 output_obligations:
@@ -66,7 +67,8 @@ gap_or_stop_conditions:
 ranking_effects:
   - Exact ID and path terms raise ranking.
   - Risk words raise required-check and stop-condition ranking.
-  - Prompt-only matches rank below session, path, corpus, and graph evidence.
+  - Prompt signals feed request-context ranking before session defaults are applied.
+  - Broad prompt-only matches rank below exact paths, corpus ownership, and graph evidence.
 recognition_sources:
   - source_id: recognition.generated.artifacts
     source_kinds:
@@ -100,6 +102,13 @@ recognition_sources:
     generation_mode: curated
     expected_origin: Human-reviewed question and command forms with examples.
     purpose: Recognize the kind of help requested before treating action words as implementation or execution requests.
+  - source_id: recognition.curated.question-categories
+    source_kinds:
+      - question-category
+      - domain-noun
+    generation_mode: curated
+    expected_origin: Human-reviewed question categories and evidence-family hints with evaluation coverage.
+    purpose: Recognize classes of questions that need expected evidence bundles instead of only top-scoring chunks.
   - source_id: recognition.curated.actions
     source_kinds:
       - action-verb
@@ -129,6 +138,8 @@ term_categories:
   intent_terms: Curated prompt shapes that indicate planning, explanation, implementation, git execution, or deploy execution.
   action_terms: Curated verbs that describe the operation the user is asking for.
   risk_terms: Curated words that imply validation, blockers, safety, destructive action, ambiguity, or governance checks.
+  question_category_terms: Curated prompt shapes that imply expected evidence families.
+  evidence_family_terms: Curated low-authority hints that name canonical evidence families inside a question category.
   broad_terms: Unmatched nouns or phrases that may help ranking but cannot govern routing alone.
 classification_outputs:
   - raw_prompt
@@ -139,15 +150,20 @@ classification_outputs:
   - inferred_actions
   - inferred_targets
   - inferred_risks
+  - inferred_question_categories
+  - inferred_evidence_families
   - prompt_conflicts_with_session
   - prompt_confidence
 validation_examples:
   - name: prompt boosts exact artifact match
     given: User asks to update `retrieval-policy-pack.schema.yml`.
     expect: The schema name matches a generated artifact recognition source and receives a ranking boost without changing the session layer.
-  - name: prompt cannot override ready metadata
+  - name: prompt cannot authorize side effects
     given: Session metadata says `02.rag-rulebook` and the prompt uses the word product.
-    expect: The selector keeps `02.rag-rulebook` routing and reports no product-corpus expansion unless another signal supports it.
+    expect: The selector does not authorize product-layer edits unless an execution workflow and explicit approval allow them.
+  - name: prompt can inform retrieval context
+    given: Session metadata says `02.rag-rulebook` and the prompt asks a planning question about platform and apps.
+    expect: Prompt signals are passed to request-context so platform/apps evidence can be selected without changing execution authorization.
   - name: unmatched broad noun stays low confidence
     given: User asks to improve the thing without naming an artifact, path, action source term, or workflow.
     expect: The prompt dimension emits broad terms and a low-confidence signal instead of inventing a target artifact.

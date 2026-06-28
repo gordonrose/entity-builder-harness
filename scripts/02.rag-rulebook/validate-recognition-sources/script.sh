@@ -71,6 +71,7 @@ ALLOWED_SOURCE_KINDS = {
     "domain-noun",
     "alias",
     "intent-form",
+    "question-category",
     "stop-condition",
     "check-name",
 }
