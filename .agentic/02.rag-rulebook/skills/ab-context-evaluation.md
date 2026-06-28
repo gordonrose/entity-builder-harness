@@ -116,6 +116,19 @@ Verify:
 - workflow, rule, schema, or guide files implied by the request
 - whether important repo facts exist outside the RAG packet
 
+When the request asks how a policy works, how it is implemented, or asks for an
+explanation of a governed concern, verify all five evidence shapes before
+answering:
+
+- concept definition: the canonical concern, standard, or policy rule
+- ownership: which layer owns contracts, runtime behavior, product meaning, and
+  infrastructure
+- implementation mechanics: runtime modules, workflow steps, scripts, checks,
+  or source paths that enact the policy
+- verification expectations: tests, gates, smoke checks, health checks, or
+  required evidence that prove the policy works
+- forbidden actions: explicit `must_not`, stop conditions, or safety boundaries
+
 Do not treat broad source reading as better by default. Its role is to catch
 misses, stale chunks, absent corpora, and overconfident retrieval.
 

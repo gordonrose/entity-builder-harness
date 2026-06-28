@@ -731,6 +731,31 @@ The location is not the final domain corpus model.
      debug packet.
    - Status: planned.
 
+7ap. Add policy-plus-implementation evidence bundles.
+   - Recognize questions that ask how a policy works, how it is implemented,
+     or how a governed concern should be explained.
+   - Require source verification and retrieval to cover concept definition,
+     layer ownership, implementation mechanics, verification expectations, and
+     forbidden actions before answering.
+   - Add evidence-family coverage for every runtime module listed in
+     `docs/harness/architecture/rules/layers/platform.yml`: contracts, config,
+     runtime, server, security, observability, health, workers, and testing.
+   - Prove the miss class with a logging-policy fixture that requires
+     reporting/analytics/audit concern evidence and platform implementation
+     evidence, while keeping packages/core logger-contract evidence available
+     only when the prompt names logger contracts or redaction contracts.
+   - Prove platform module coverage with a matrix fixture that requires every
+     runtime module family from `platform.yml` to be recognized and bundled:
+     contracts, config, runtime, server, security, observability, health,
+     workers, and testing.
+   - Status: present in
+     `skills/ab-context-evaluation.md`,
+     `recognition-sources/curated/question-categories.yml`,
+     `policies/retrieval-selector/v1/dimensions/evidence-bundles.yml`, and
+     `evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-implementation.yml`
+     plus
+     `evaluations/retrieval-selector/v1/fixtures/question-category-platform-runtime-modules-policy-implementation.yml`.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.

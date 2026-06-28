@@ -67,6 +67,25 @@ evidence_bundles:
     family_source_paths:
       evidence.layer.apps: docs/harness/architecture/rules/layers/apps.yml
       evidence.layer.platform: docs/harness/architecture/rules/layers/platform.yml
+  - question_category_id: question.policy-implementation.explain
+    always_source_paths: []
+    family_source_paths:
+      evidence.concern.ci-quality: docs/harness/architecture/rules/concerns/ci-quality.yml
+      evidence.concern.config-runtime-settings: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+      evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
+      evidence.concern.events-messaging-async: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      evidence.concern.identity-access-security: docs/harness/architecture/rules/concerns/identity-access-security.yml
+      evidence.concern.reporting-analytics-audit: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.platform.config: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.contracts: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.health: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.observability: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.runtime: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.security: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.server: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.testing: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.workers: docs/harness/architecture/rules/layers/platform.yml
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.
@@ -77,6 +96,9 @@ validation_examples:
   - name: no bundle for unknown category
     given: No question category matches the request.
     expect: The selector does not invent an evidence bundle and relies on normal request-context ranking.
+  - name: policy plus implementation retrieves concern and owner evidence
+    given: User asks how a policy works and how it is implemented.
+    expect: The selector includes the matched concern evidence and the owning platform or layer evidence rather than answering from the concern alone.
 can_change_by:
   - Add question categories.
   - Add evidence-family terms.

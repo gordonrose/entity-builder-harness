@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 470
-  term_count: 950
+  indexed_artifacts: 472
+  term_count: 954
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3329,6 +3329,30 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-capability-placement-cross-session
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-capability-placement-cross-session.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-implementation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-implementation.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-implementation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-implementation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-implementation.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-platform-runtime-modules-policy-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-platform-runtime-modules-policy-implementation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-platform-runtime-modules-policy-implementation.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-platform-runtime-modules-policy-implementation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-platform-runtime-modules-policy-implementation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-platform-runtime-modules-policy-implementation.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
   category: artifact-id
