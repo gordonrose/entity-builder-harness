@@ -29,14 +29,23 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 CHUNKS_FILE="$TMP_DIR/rulebook-chunks.json"
+INDEX_FILE="$TMP_DIR/rulebook-index.json"
+COMPILED_POLICY_FILE="$TMP_DIR/compiled-retrieval-policy.json"
 PACKET_FILE="$TMP_DIR/retrieval-selector-fixture.json"
 REPORT_FILE="$TMP_DIR/retrieval-selector-report.json"
 CURRENT_PACKET_FILE="$TMP_DIR/current-retrieval-selector-fixture.json"
 
-bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh --generate-current --pretty > "$CHUNKS_FILE"
+bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh --pretty > "$INDEX_FILE"
+bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh --index "$INDEX_FILE" --pretty > "$CHUNKS_FILE"
+bash scripts/02.rag-rulebook/compile-retrieval-policy/script.sh \
+  --current \
+  --index "$INDEX_FILE" \
+  --output "$COMPILED_POLICY_FILE" \
+  --pretty
 
 bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --chunks "$CHUNKS_FILE" \
+  --compiled-policy "$COMPILED_POLICY_FILE" \
   --request-text "Build the RAG rulebook retrieval selector fixture using routing recognition sources." \
   --session-layer 02.rag-rulebook \
   --session-mode implementation \
@@ -65,8 +74,11 @@ assert packet["routing"]["status"] == "ready"
 assert packet["routing"]["layer"] == "02.rag-rulebook"
 assert packet["routing"]["classification_source"] == "request-context-plus-recognition-sources"
 assert packet["intent"]["source"] == "mixed"
+assert packet["provenance"]["compiled_policy"]["schema"] == "rag-rulebook/compiled-retrieval-policy/v1"
+assert packet["provenance"]["compiled_policy"]["compiled_policy_id"].startswith("compiled.retrieval-policy.retrieval-selector.v1.")
 assert packet["provenance"]["policy_pack"]["policy_pack_id"] == "retrieval-selector.v1"
 assert packet["provenance"]["recognition_sources"]["matched_terms"] > 0
+assert packet["provenance"]["retrieval_order"][0] == "load compiled retrieval policy"
 assert packet["request"]["recognition_source_matches"]
 assert any(match["source_id"] == "recognition.generated.routing" for match in packet["request"]["recognition_source_matches"])
 assert len(packet["selected_chunks"]) >= 3
@@ -80,6 +92,7 @@ PY
 
 bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --generate-current \
+  --compiled-policy "$COMPILED_POLICY_FILE" \
   --max-chunks 3 > "$CURRENT_PACKET_FILE"
 
 python3 - "$CURRENT_PACKET_FILE" <<'PY'
@@ -92,7 +105,7 @@ from pathlib import Path
 packet = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert packet["schema"] == "rag-rulebook/context-packet/v1"
 assert len(packet["selected_chunks"]) == 3
-assert packet["provenance"]["retrieval_order"][0] == "validate retrieval policy pack"
+assert packet["provenance"]["retrieval_order"][0] == "load compiled retrieval policy"
 PY
 
 echo "Retrieval selector fixture generator smoke test passed."

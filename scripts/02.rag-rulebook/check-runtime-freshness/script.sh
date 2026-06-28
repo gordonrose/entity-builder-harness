@@ -254,6 +254,7 @@ files = manifest.get("files") if isinstance(manifest.get("files"), dict) else {}
 expected_runtime_files = {
     "rulebook_index": ("rulebook-index.json", "rag-rulebook/rulebook-index/v1"),
     "rulebook_chunks": ("rulebook-chunks.json", "rag-rulebook/chunk-set/v1"),
+    "compiled_retrieval_policy": ("compiled-retrieval-policy.json", "rag-rulebook/compiled-retrieval-policy/v1"),
 }
 for name, (expected_relative_path, expected_schema) in expected_runtime_files.items():
     raw_path = files.get(name)

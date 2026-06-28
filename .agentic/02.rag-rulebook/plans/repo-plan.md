@@ -55,8 +55,10 @@ use validated local context packets while the deploy corpus is being built.
 The local runtime path is executable: `build-local-runtime` writes a local
 deterministic cache, `check-runtime-freshness` verifies that cache against live
 inputs, and `query-local-context` returns validated context packets from the
-cache. This local runtime is the proof target before a hosted API or MCP surface
-is treated as shippable.
+cache. The runtime now includes a compiled retrieval policy artifact so selector
+behavior is loaded from governed policy inputs rather than hidden selector
+constants. This local runtime is the proof target before a hosted API or MCP
+surface is treated as shippable.
 
 The prototype rulebook proves useful structure:
 
@@ -679,17 +681,19 @@ The location is not the final domain corpus model.
      executing compiled policy instead of duplicating precedence, intent
      resolution, evidence bundle, corpus-routing, or confidence behavior in
      hidden constants.
-   - Treat hard-coded selector behavior as allowed only in prototype fixture
-     scripts until a compiler exists.
-   - Define the future compiler input set as validated policy packs, imported
-     dimensions, generated and curated recognition sources, corpus ownership,
-     rule graph metadata, and selector feature flags.
+   - Treat hard-coded selector behavior as allowed only when it is local
+     runtime glue that consumes compiled policy, not as independent selector
+     doctrine.
+   - Compile validated policy packs, imported dimensions, generated and
+     curated recognition sources, corpus ownership, rule graph metadata, and
+     selector feature flags before local runtime or hosted runtime query use.
    - Require compiled policy provenance so packets and A/B evaluations can
      explain which policy inputs shaped retrieval.
-   - Status: standard and policy obligation present in
-     `standards/retrieval-selector-policy-system.md` and
-     `policies/retrieval-selector/v1.yml`; compiler script is not implemented
-     yet.
+   - Status: present in
+     `schemas/compiled-retrieval-policy.schema.yml`,
+     `scripts/02.rag-rulebook/compile-retrieval-policy/`,
+     `scripts/02.rag-rulebook/build-local-runtime/`, and
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`.
 
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a

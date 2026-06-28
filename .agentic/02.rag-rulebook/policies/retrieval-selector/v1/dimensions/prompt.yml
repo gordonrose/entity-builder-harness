@@ -154,6 +154,27 @@ classification_outputs:
   - inferred_evidence_families
   - prompt_conflicts_with_session
   - prompt_confidence
+intent_resolution:
+  default_intent_id: intent.context.retrieve
+  precedence:
+    - intent.no-action.explanation
+    - intent.explanation.tutor
+    - intent.discovery.explanation
+    - intent.planning.guidance
+    - intent.planning.decision-support
+    - intent.git.commit
+    - intent.deploy.execution
+    - intent.implementation.request
+  labels:
+    intent.context.retrieve: Retrieve governed context
+    intent.no-action.explanation: Explain without execution
+    intent.explanation.tutor: Explain
+    intent.discovery.explanation: Discover and explain
+    intent.planning.guidance: Plan or guide
+    intent.planning.decision-support: Support a planning decision
+    intent.git.commit: Commit changes
+    intent.deploy.execution: Deploy execution
+    intent.implementation.request: Implementation request
 validation_examples:
   - name: prompt boosts exact artifact match
     given: User asks to update `retrieval-policy-pack.schema.yml`.

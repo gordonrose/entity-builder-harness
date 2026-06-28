@@ -152,8 +152,9 @@ fi
 RUNTIME_DIR="${RUNTIME_DIR%/}"
 MANIFEST_FILE="$RUNTIME_DIR/manifest.json"
 CHUNKS_FILE="$RUNTIME_DIR/rulebook-chunks.json"
+COMPILED_POLICY_FILE="$RUNTIME_DIR/compiled-retrieval-policy.json"
 
-if [ ! -f "$MANIFEST_FILE" ] || [ ! -f "$CHUNKS_FILE" ]; then
+if [ ! -f "$MANIFEST_FILE" ] || [ ! -f "$CHUNKS_FILE" ] || [ ! -f "$COMPILED_POLICY_FILE" ]; then
   echo "ERROR: local RAG/rulebook runtime is missing: $RUNTIME_DIR" >&2
   echo "Run: bash scripts/02.rag-rulebook/build-local-runtime/script.sh --output-dir \"$RUNTIME_DIR\" --pretty" >&2
   exit 1
@@ -166,6 +167,7 @@ COMMAND=(
   bash
   scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
   --chunks "$CHUNKS_FILE"
+  --compiled-policy "$COMPILED_POLICY_FILE"
   --request-text "$REQUEST_TEXT"
   --session-layer "$SESSION_LAYER"
   --session-mode "$SESSION_MODE"

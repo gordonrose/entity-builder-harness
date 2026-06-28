@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 464
-  term_count: 937
+  indexed_artifacts: 468
+  term_count: 946
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3642,6 +3642,24 @@ terms:
   canonical_id: rag-rulebook.retirements.readme
   evidence_path: .agentic/02.rag-rulebook/retirements/README.md
   confidence_weight: 1
+- term: rag-rulebook.schema.compiled-retrieval-policy
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.schema.compiled-retrieval-policy
+  evidence_path: .agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.schema.compiled-retrieval-policy
+  evidence_path: .agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml
+  confidence_weight: 1
+- term: compiled-retrieval-policy.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: rag-rulebook.schema.compiled-retrieval-policy
+  evidence_path: .agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml
+  confidence_weight: 1
 - term: rag-rulebook.schema.context-packet
   category: artifact-id
   match_type: exact
@@ -4259,6 +4277,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.commit-gates.smoke-test
   evidence_path: scripts/02.rag-rulebook/commit-gates/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.compile-retrieval-policy.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.compile-retrieval-policy.readme
+  evidence_path: scripts/02.rag-rulebook/compile-retrieval-policy/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/compile-retrieval-policy/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.compile-retrieval-policy.readme
+  evidence_path: scripts/02.rag-rulebook/compile-retrieval-policy/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.compile-retrieval-policy
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.compile-retrieval-policy
+  evidence_path: scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.compile-retrieval-policy
+  evidence_path: scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.compile-retrieval-policy.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.compile-retrieval-policy.smoke-test
+  evidence_path: scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.compile-retrieval-policy.smoke-test
+  evidence_path: scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.evaluate-retrieval-selector-fixtures.readme
   category: artifact-id

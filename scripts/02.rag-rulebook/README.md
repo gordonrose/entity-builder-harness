@@ -38,9 +38,14 @@ validation, and standalone service adapters.
   diagnostics consistency.
 - `generate-rulebook-chunks/script.sh` emits read-only
   `rag-rulebook/chunk-set/v1` JSON chunks from a validated rulebook index.
+- `compile-retrieval-policy/script.sh` emits
+  `rag-rulebook/compiled-retrieval-policy/v1` JSON from validated retrieval
+  policy, imported dimensions, recognition sources, corpus ownership, and rule
+  graph metadata.
 - `build-local-runtime/script.sh` writes a local deterministic runtime cache
   containing the generated rulebook index, chunk set, manifest, and validation
-  report, plus fingerprints for live selector inputs.
+  report, plus compiled retrieval policy and fingerprints for live selector
+  inputs.
 - `check-runtime-freshness/script.sh` verifies that a built local runtime cache
   still matches current governed input and runtime-output fingerprints.
 - `check-source-projections/script.sh` verifies that governed source material

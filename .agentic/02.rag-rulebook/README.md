@@ -124,6 +124,9 @@ final homes.
   contract for generated and curated prompt recognition vocabularies.
 - `schemas/recognition-candidate.schema.yml` - defines the v1 review record
   for important unmatched or ambiguous prompt terms.
+- `schemas/compiled-retrieval-policy.schema.yml` - defines the v1 runtime
+  artifact compiled from governed retrieval policy, recognition sources, corpus
+  ownership, and graph metadata.
 - `schemas/source-to-rule-derivation-report.schema.yml` - defines the v1
   report contract for source-to-rule derivation and semantic drift review.
 - `schemas/retirement-record.schema.yml` - defines the v1 record contract for
@@ -169,7 +172,10 @@ final homes.
   without mutating curated sources.
 - `scripts/02.rag-rulebook/build-local-runtime/script.sh` - builds an ignored
   local runtime cache with generated index, chunks, manifest, and validation
-  report, plus fingerprints for live selector inputs.
+  report, plus compiled retrieval policy and fingerprints for live selector
+  inputs.
+- `scripts/02.rag-rulebook/compile-retrieval-policy/script.sh` - compiles
+  validated retrieval selector policy into a runtime JSON artifact.
 - `scripts/02.rag-rulebook/check-runtime-freshness/script.sh` - verifies that
   a built local runtime cache still matches current governed input and
   runtime-output fingerprints.

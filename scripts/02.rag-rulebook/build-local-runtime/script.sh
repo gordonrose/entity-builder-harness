@@ -90,6 +90,7 @@ require_executable "scripts/02.rag-rulebook/validate-retrieval-policy-pack/scrip
 require_executable "scripts/02.rag-rulebook/generate-rulebook-index/script.sh"
 require_executable "scripts/02.rag-rulebook/validate-rulebook-index/script.sh"
 require_executable "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"
+require_executable "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -99,6 +100,7 @@ mkdir -p "$OUTPUT_DIR"
 
 INDEX_FILE="$OUTPUT_DIR/rulebook-index.json"
 CHUNKS_FILE="$OUTPUT_DIR/rulebook-chunks.json"
+COMPILED_POLICY_FILE="$OUTPUT_DIR/compiled-retrieval-policy.json"
 MANIFEST_FILE="$OUTPUT_DIR/manifest.json"
 VALIDATION_REPORT_FILE="$OUTPUT_DIR/validation-report.json"
 
@@ -134,11 +136,18 @@ bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh \
   --index "$INDEX_FILE" \
   --pretty > "$CHUNKS_FILE"
 
+bash scripts/02.rag-rulebook/compile-retrieval-policy/script.sh \
+  --current \
+  --index "$INDEX_FILE" \
+  --output "$COMPILED_POLICY_FILE" \
+  --pretty
+
 python3 - \
   "$ROOT" \
   "$OUTPUT_DIR" \
   "$INDEX_FILE" \
   "$CHUNKS_FILE" \
+  "$COMPILED_POLICY_FILE" \
   "$POLICY_REPORT" \
   "$RECOGNITION_SOURCES_REPORT" \
   "$RECOGNITION_CANDIDATES_REPORT" \
@@ -160,14 +169,15 @@ root = Path(sys.argv[1])
 output_dir = Path(sys.argv[2])
 index_file = Path(sys.argv[3])
 chunks_file = Path(sys.argv[4])
-policy_report_path = Path(sys.argv[5])
-recognition_sources_report_path = Path(sys.argv[6])
-recognition_candidates_report_path = Path(sys.argv[7])
-generated_sources_check_path = Path(sys.argv[8])
-index_validation_report_path = Path(sys.argv[9])
-manifest_file = Path(sys.argv[10])
-validation_report_file = Path(sys.argv[11])
-pretty = sys.argv[12] == "true"
+compiled_policy_file = Path(sys.argv[5])
+policy_report_path = Path(sys.argv[6])
+recognition_sources_report_path = Path(sys.argv[7])
+recognition_candidates_report_path = Path(sys.argv[8])
+generated_sources_check_path = Path(sys.argv[9])
+index_validation_report_path = Path(sys.argv[10])
+manifest_file = Path(sys.argv[11])
+validation_report_file = Path(sys.argv[12])
+pretty = sys.argv[13] == "true"
 
 
 def load_json(path: Path) -> dict:
@@ -226,9 +236,11 @@ FINGERPRINT_INPUTS = {
     ],
     "chunk_generation": ["scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"],
     "validation_machinery": [
+        ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
         "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh",
         "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
         "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh",
+        "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh",
         "scripts/02.rag-rulebook/validate-derivation-reports/script.sh",
         "scripts/02.rag-rulebook/validate-retirement-records/script.sh",
         "scripts/02.rag-rulebook/check-corpus-root-changes/script.sh",
@@ -301,6 +313,7 @@ def fingerprint_file(path: Path) -> dict:
 
 index = load_json(index_file)
 chunks = load_json(chunks_file)
+compiled_policy = load_json(compiled_policy_file)
 policy_report = load_json(policy_report_path)
 recognition_sources_report = load_json(recognition_sources_report_path)
 recognition_candidates_report = load_json(recognition_candidates_report_path)
@@ -325,6 +338,12 @@ validation_report = {
         "recognition_candidates": recognition_candidates_report,
         "generated_recognition_sources_check": generated_sources_check_path.read_text(encoding="utf-8").splitlines(),
         "rulebook_index": index_validation_report,
+        "compiled_retrieval_policy": {
+            "schema": compiled_policy.get("schema"),
+            "compiled_policy_id": compiled_policy.get("compiled_policy_id"),
+            "content_hash": compiled_policy.get("content_hash"),
+            "policy_pack": compiled_policy.get("policy_pack"),
+        },
     },
 }
 
@@ -336,6 +355,7 @@ manifest = {
     "files": {
         "rulebook_index": rel(index_file),
         "rulebook_chunks": rel(chunks_file),
+        "compiled_retrieval_policy": rel(compiled_policy_file),
         "manifest": rel(manifest_file),
         "validation_report": rel(validation_report_file),
     },
@@ -355,6 +375,7 @@ manifest = {
         "runtime_outputs": {
             "rulebook_index": fingerprint_file(index_file),
             "rulebook_chunks": fingerprint_file(chunks_file),
+            "compiled_retrieval_policy": fingerprint_file(compiled_policy_file),
         },
     },
     "counts": {
@@ -367,6 +388,8 @@ manifest = {
         "chunks": chunk_counts.get("chunks", 0),
         "citations": chunk_counts.get("citations", 0),
         "recognition_source_terms": recognition_sources_report.get("counts", {}).get("terms", 0),
+        "compiled_policy_dimensions": len(compiled_policy.get("dimensions", [])),
+        "compiled_policy_recognition_sources": len(compiled_policy.get("recognition_sources", {}).get("sources", [])),
         "recognition_candidates": recognition_candidates_report.get("counts", {}).get("candidates", 0),
     },
     "constraints": {
@@ -388,6 +411,7 @@ if not validation_report["ok"]:
 print(f"Built local RAG/rulebook runtime: {rel(output_dir)}")
 print(f"  index: {rel(index_file)}")
 print(f"  chunks: {rel(chunks_file)}")
+print(f"  compiled policy: {rel(compiled_policy_file)}")
 print(f"  manifest: {rel(manifest_file)}")
 print(f"  validation: {rel(validation_report_file)}")
 PY

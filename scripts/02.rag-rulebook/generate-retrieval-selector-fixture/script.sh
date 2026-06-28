@@ -55,6 +55,7 @@ except ImportError:
 PACKET_SCHEMA = "rag-rulebook/context-packet/v1"
 CHUNK_SET_SCHEMA = "rag-rulebook/chunk-set/v1"
 GENERATOR_VERSION = "retrieval-selector-fixture-v1"
+COMPILED_POLICY_SCHEMA = "rag-rulebook/compiled-retrieval-policy/v1"
 POLICY_PACK_PATH = ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml"
 RECOGNITION_ROOT = ".agentic/02.rag-rulebook/recognition-sources"
 CANDIDATE_ROOT = ".agentic/02.rag-rulebook/recognition-candidates"
@@ -64,6 +65,7 @@ PACKET_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-context-packet/scrip
 POLICY_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh"
 RECOGNITION_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-recognition-sources/script.sh"
 CANDIDATE_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh"
+COMPILED_POLICY_SCRIPT = "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh"
 DEFAULT_REQUEST = "Build the first deterministic RAG rulebook retrieval selector fixture."
 DEFAULT_SESSION_LAYER = "02.rag-rulebook"
 DEFAULT_SESSION_MODE = "implementation"
@@ -124,39 +126,6 @@ TOKEN_ALIASES = {
     "validation": "validate",
     "validator": "validate",
 }
-INTENT_PRECEDENCE = [
-    "intent.no-action.explanation",
-    "intent.explanation.tutor",
-    "intent.discovery.explanation",
-    "intent.planning.guidance",
-    "intent.planning.decision-support",
-    "intent.git.commit",
-    "intent.deploy.execution",
-    "intent.implementation.request",
-]
-INTENT_LABELS = {
-    "intent.context.retrieve": "Retrieve governed context",
-    "intent.no-action.explanation": "Explain without execution",
-    "intent.explanation.tutor": "Explain",
-    "intent.discovery.explanation": "Discover and explain",
-    "intent.planning.guidance": "Plan or guide",
-    "intent.planning.decision-support": "Support a planning decision",
-    "intent.git.commit": "Commit changes",
-    "intent.deploy.execution": "Deploy execution",
-    "intent.implementation.request": "Implementation request",
-}
-EVIDENCE_BUNDLES = {
-    "question.architecture-boundary.capability-placement": {
-        "always_source_paths": [
-            "docs/harness/architecture/rules/concerns/dependency-direction.yml",
-        ],
-        "family_source_paths": {
-            "evidence.layer.apps": "docs/harness/architecture/rules/layers/apps.yml",
-            "evidence.layer.platform": "docs/harness/architecture/rules/layers/platform.yml",
-        },
-    }
-}
-
 
 def repo_root() -> Path:
     result = subprocess.run(
@@ -184,6 +153,8 @@ Options:
   --focused-path <path>       Focused path signal. Repeatable.
   --no-focused-paths          Use no focused path signals.
   --max-chunks <n>            Maximum selected chunks. Default: 6. Range: 3-12.
+  --compiled-policy <path>    Compiled retrieval policy JSON. If omitted, a
+                              temporary current compiled policy is generated.
 
 Emits a validated rag-rulebook/context-packet/v1 JSON fixture to stdout. The
 command is read-only and performs deterministic fixture selection only.
@@ -201,6 +172,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--focused-path", action="append", dest="focused_paths")
     parser.add_argument("--no-focused-paths", action="store_true")
     parser.add_argument("--max-chunks", type=int, default=6)
+    parser.add_argument("--compiled-policy")
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
@@ -269,6 +241,43 @@ def validate_recognition_candidates() -> dict[str, Any]:
     if report.get("ok") is not True:
         raise ValueError("recognition candidates are invalid")
     return report
+
+
+def load_compiled_policy(path: str | None) -> dict[str, Any]:
+    if path:
+        compiled = json.loads(repo_path(path).read_text(encoding="utf-8"))
+        if not isinstance(compiled, dict):
+            raise ValueError("compiled retrieval policy JSON must be an object")
+    else:
+        compiled = run_json(["bash", COMPILED_POLICY_SCRIPT, "--current"])
+    if compiled.get("schema") != COMPILED_POLICY_SCHEMA:
+        raise ValueError(f"compiled retrieval policy schema must be {COMPILED_POLICY_SCHEMA}")
+    return compiled
+
+
+def compiled_policy_pack(compiled_policy: dict[str, Any]) -> dict[str, Any]:
+    policy_pack = compiled_policy.get("policy_pack")
+    return policy_pack if isinstance(policy_pack, dict) else {}
+
+
+def compiled_policy_report(compiled_policy: dict[str, Any]) -> dict[str, Any]:
+    provenance = dict_value(compiled_policy.get("provenance"))
+    report = provenance.get("policy_report")
+    return report if isinstance(report, dict) else {"ok": True, "counts": {}}
+
+
+def compiled_recognition_report(compiled_policy: dict[str, Any]) -> dict[str, Any]:
+    provenance = dict_value(compiled_policy.get("provenance"))
+    report = provenance.get("recognition_report")
+    return report if isinstance(report, dict) else {"ok": True, "counts": {}}
+
+
+def compiled_recognition_sources(compiled_policy: dict[str, Any]) -> list[dict[str, Any]]:
+    recognition_sources = dict_value(compiled_policy.get("recognition_sources"))
+    sources = list_of_dicts(recognition_sources.get("sources"))
+    if not sources:
+        raise ValueError("compiled retrieval policy has no recognition sources")
+    return sources
 
 
 def load_chunk_set(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
@@ -483,18 +492,31 @@ def matched_intent_ids(recognition_matches: list[dict[str, Any]], *, prompt_only
     return ids
 
 
-def resolve_intent_id(recognition_matches: list[dict[str, Any]]) -> str:
+def resolve_intent_id(recognition_matches: list[dict[str, Any]], compiled_policy: dict[str, Any]) -> str:
     intent_ids = matched_intent_ids(recognition_matches)
-    for intent_id in INTENT_PRECEDENCE:
+    intent_resolution = dict_value(compiled_policy.get("intent_resolution"))
+    precedence = list_of_strings(intent_resolution.get("precedence"))
+    default_intent_id = str(intent_resolution.get("default_intent_id") or "intent.context.retrieve")
+    for intent_id in precedence:
         if intent_id in intent_ids:
             return intent_id
-    return "intent.context.retrieve"
+    return default_intent_id
 
 
-def corpus_gap_blocking(gap: dict[str, Any], recognition_matches: list[dict[str, Any]]) -> bool:
+def intent_label(compiled_policy: dict[str, Any], intent_id: str) -> str:
+    labels = dict_value(dict_value(compiled_policy.get("intent_resolution")).get("labels"))
+    label = labels.get(intent_id)
+    return str(label) if isinstance(label, str) else intent_id
+
+
+def corpus_gap_blocking(
+    gap: dict[str, Any],
+    recognition_matches: list[dict[str, Any]],
+    compiled_policy: dict[str, Any],
+) -> bool:
     behavior = dict_value(gap.get("local_query_behavior"))
     blocking_by_intent = dict_value(behavior.get("blocking_by_intent"))
-    resolved_intent_id = resolve_intent_id(recognition_matches)
+    resolved_intent_id = resolve_intent_id(recognition_matches, compiled_policy)
     if isinstance(blocking_by_intent.get(resolved_intent_id), bool):
         return bool(blocking_by_intent[resolved_intent_id])
     return bool(behavior.get("blocking") is True)
@@ -505,6 +527,7 @@ def corpus_gap_records_gaps(
     candidates: list[dict[str, Any]],
     recognition_matches: list[dict[str, Any]],
     request_text: str,
+    compiled_policy: dict[str, Any],
 ) -> list[dict[str, Any]]:
     emitted: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -524,7 +547,7 @@ def corpus_gap_records_gaps(
             continue
         if not corpus_gap_matches_request(gap, candidates_by_id, request_text):
             continue
-        blocking = corpus_gap_blocking(gap, recognition_matches)
+        blocking = corpus_gap_blocking(gap, recognition_matches, compiled_policy)
         detail_required_chunk_ids: list[str] = []
         if blocking:
             for detail in list_of_dicts(gap.get("execution_blocking_gaps")):
@@ -582,6 +605,7 @@ def matched_corpus_gap_required_chunk_ids(
     candidates: list[dict[str, Any]],
     recognition_matches: list[dict[str, Any]],
     request_text: str,
+    compiled_policy: dict[str, Any],
 ) -> list[str]:
     chunk_ids: list[str] = []
     seen: set[str] = set()
@@ -595,7 +619,7 @@ def matched_corpus_gap_required_chunk_ids(
             continue
         if not corpus_gap_matches_request(gap, candidates_by_id, request_text):
             continue
-        if not corpus_gap_blocking(gap, recognition_matches):
+        if not corpus_gap_blocking(gap, recognition_matches, compiled_policy):
             continue
         for detail in list_of_dicts(gap.get("execution_blocking_gaps")):
             for chunk_id in list_of_strings(detail.get("required_chunk_ids")):
@@ -630,7 +654,18 @@ def matched_candidate_evidence_paths(candidates: list[dict[str, Any]], request_t
     return paths
 
 
-def matched_evidence_bundle_source_paths(recognition_matches: list[dict[str, Any]]) -> list[str]:
+def compiled_evidence_bundles(compiled_policy: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {
+        str(bundle.get("question_category_id")): bundle
+        for bundle in list_of_dicts(compiled_policy.get("evidence_bundles"))
+        if isinstance(bundle.get("question_category_id"), str)
+    }
+
+
+def matched_evidence_bundle_source_paths(
+    recognition_matches: list[dict[str, Any]],
+    compiled_policy: dict[str, Any],
+) -> list[str]:
     category_ids = {
         str(match.get("canonical_id"))
         for match in recognition_matches
@@ -643,8 +678,9 @@ def matched_evidence_bundle_source_paths(recognition_matches: list[dict[str, Any
     }
     paths: list[str] = []
     seen: set[str] = set()
+    evidence_bundles = compiled_evidence_bundles(compiled_policy)
     for category_id in sorted(category_ids):
-        bundle = EVIDENCE_BUNDLES.get(category_id)
+        bundle = evidence_bundles.get(category_id)
         if not bundle:
             continue
         for source_path in list_of_strings(bundle.get("always_source_paths")):
@@ -667,6 +703,7 @@ def matched_evidence_bundle_source_paths(recognition_matches: list[dict[str, Any
 def evidence_bundle_gaps(
     recognition_matches: list[dict[str, Any]],
     selected_chunks: list[dict[str, Any]],
+    compiled_policy: dict[str, Any],
 ) -> list[dict[str, Any]]:
     category_ids = {
         str(match.get("canonical_id"))
@@ -684,8 +721,9 @@ def evidence_bundle_gaps(
         if isinstance(chunk.get("source_path"), str)
     }
     gaps: list[dict[str, Any]] = []
+    evidence_bundles = compiled_evidence_bundles(compiled_policy)
     for category_id in sorted(category_ids):
-        bundle = EVIDENCE_BUNDLES.get(category_id)
+        bundle = evidence_bundles.get(category_id)
         if not bundle:
             gaps.append(
                 {
@@ -1178,6 +1216,7 @@ def select_chunks(
 def build_packet(
     args: argparse.Namespace,
     policy: dict[str, Any],
+    compiled_policy: dict[str, Any],
     policy_report: dict[str, Any],
     recognition_report: dict[str, Any],
     candidate_report: dict[str, Any],
@@ -1196,7 +1235,7 @@ def build_packet(
         + prototype_bridge_corpora(args.session_layer)
     )
     candidate_evidence_paths = matched_candidate_evidence_paths(recognition_candidates, args.request_text)
-    evidence_bundle_source_paths = matched_evidence_bundle_source_paths(recognition_matches)
+    evidence_bundle_source_paths = matched_evidence_bundle_source_paths(recognition_matches, compiled_policy)
     evidence_source_paths = candidate_evidence_paths + evidence_bundle_source_paths
     ranking_paths = list(args.focused_paths) + evidence_source_paths
     ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, ranking_paths, session_corpus)
@@ -1210,6 +1249,7 @@ def build_packet(
         recognition_candidates,
         recognition_matches,
         args.request_text,
+        compiled_policy,
     )
     graph_expansion_source_paths = related_rule_source_paths(candidate_ranked)
     required_source_paths = rule_evidence_paths(candidate_evidence_paths)
@@ -1298,7 +1338,7 @@ def build_packet(
         for layer in prompt_layer_matches
         if layer != args.session_layer and re.fullmatch(r"[0-9]{2}\.[a-z0-9-]+", layer)
     )
-    resolved_intent_id = resolve_intent_id(recognition_matches)
+    resolved_intent_id = resolve_intent_id(recognition_matches, compiled_policy)
     side_effect_session_conflict = False
     if prompt_layer_conflicts:
         if resolved_intent_id == "intent.deploy.execution":
@@ -1352,8 +1392,8 @@ def build_packet(
             }
         )
     gaps.extend(candidate_coverage_gaps(recognition_candidates, args.request_text))
-    gaps.extend(corpus_gap_records_gaps(corpus_gaps, recognition_candidates, recognition_matches, args.request_text))
-    gaps.extend(evidence_bundle_gaps(recognition_matches, selected_chunks))
+    gaps.extend(corpus_gap_records_gaps(corpus_gaps, recognition_candidates, recognition_matches, args.request_text, compiled_policy))
+    gaps.extend(evidence_bundle_gaps(recognition_matches, selected_chunks, compiled_policy))
     gaps = enrich_gap_evidence(gaps, selected_chunks)
 
     selected_context_tokens = sum(
@@ -1442,7 +1482,7 @@ def build_packet(
         },
         "intent": {
             "id": resolved_intent_id,
-            "label": INTENT_LABELS.get(resolved_intent_id, resolved_intent_id),
+            "label": intent_label(compiled_policy, resolved_intent_id),
             "mode": args.session_mode,
             "layer": args.session_layer,
             "workflow": args.session_workflow,
@@ -1542,6 +1582,11 @@ def build_packet(
         },
         "provenance": {
             "service_version": GENERATOR_VERSION,
+            "compiled_policy": {
+                "schema": compiled_policy.get("schema"),
+                "compiled_policy_id": compiled_policy.get("compiled_policy_id"),
+                "content_hash": compiled_policy.get("content_hash"),
+            },
             "policy_pack": {
                 "policy_pack_id": policy.get("policy_pack_id"),
                 "version": policy.get("version"),
@@ -1568,8 +1613,8 @@ def build_packet(
                 for corpus_id in selected_corpus_ids
             ],
             "retrieval_order": [
-                "validate retrieval policy pack",
-                "validate recognition sources",
+                "load compiled retrieval policy",
+                "validate compiled policy provenance",
                 "load generated chunks",
                 "match prompt, session metadata, and focused paths against recognition sources",
                 "resolve intent forms with governed precedence before deciding blocking behavior",
@@ -1624,11 +1669,12 @@ def validate_packet(packet: dict[str, Any], chunk_set_raw: str) -> None:
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
-        policy_report = validate_policy_pack()
-        recognition_report = validate_recognition_sources()
+        compiled_policy = load_compiled_policy(args.compiled_policy)
+        policy_report = compiled_policy_report(compiled_policy)
+        recognition_report = compiled_recognition_report(compiled_policy)
         candidate_report = validate_recognition_candidates()
-        policy = load_yaml(POLICY_PACK_PATH)
-        sources = load_recognition_sources()
+        policy = compiled_policy_pack(compiled_policy)
+        sources = compiled_recognition_sources(compiled_policy)
         candidates = load_recognition_candidates()
         corpus_gaps = load_corpus_gaps()
         chunk_set, chunk_set_raw = load_chunk_set(args)
@@ -1642,6 +1688,7 @@ def main(argv: list[str]) -> int:
         packet = build_packet(
             args,
             policy,
+            compiled_policy,
             policy_report,
             recognition_report,
             candidate_report,

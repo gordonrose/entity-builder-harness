@@ -189,6 +189,27 @@ fields:
     items:
       type: string
 
+  intent_resolution:
+    type: object
+    note: Prompt dimension only. Defines governed default intent, intent precedence, and intent labels for compiled selector policy.
+
+  evidence_bundles:
+    type: array
+    note: Evidence-bundles dimension only. Maps recognized question categories to required source paths and evidence-family source paths.
+    item:
+      type: object
+      required_fields:
+        - question_category_id
+      fields:
+        question_category_id:
+          type: string
+        always_source_paths:
+          type: array
+          items:
+            type: string
+        family_source_paths:
+          type: object
+
 field_guide:
   - path: dimension_id
     what_it_is: Stable ID for one retrieval selection dimension.

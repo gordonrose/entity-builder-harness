@@ -60,6 +60,13 @@ ranking_effects:
   - Required evidence-family source paths survive token trimming before optional chunks.
   - Canonical layer and concern rules outrank nearby generic chunks for architecture boundary questions.
   - Missing expected evidence reduces retrieval confidence even when selected chunks are individually high scoring.
+evidence_bundles:
+  - question_category_id: question.architecture-boundary.capability-placement
+    always_source_paths:
+      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    family_source_paths:
+      evidence.layer.apps: docs/harness/architecture/rules/layers/apps.yml
+      evidence.layer.platform: docs/harness/architecture/rules/layers/platform.yml
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.
