@@ -52,7 +52,7 @@ compiled = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert compiled["schema"] == "rag-rulebook/compiled-retrieval-policy/v1"
 assert compiled["compiled_policy_id"].startswith("compiled.retrieval-policy.retrieval-selector.v1.")
 assert compiled["policy_pack"]["policy_pack_id"] == "retrieval-selector.v1"
-assert len(compiled["dimensions"]) == 14
+assert len(compiled["dimensions"]) == 15
 assert len(compiled["recognition_sources"]["sources"]) == 7
 assert compiled["recognition_sources"]["counts"]["terms"] > 0
 assert compiled["intent_resolution"]["default_intent_id"] == "intent.context.retrieve"
@@ -60,6 +60,12 @@ assert compiled["intent_resolution"]["precedence"][0] == "intent.no-action.expla
 assert compiled["intent_resolution"]["labels"]["intent.deploy.execution"] == "Deploy execution"
 assert compiled["evidence_bundles"][0]["question_category_id"] == "question.architecture-boundary.capability-placement"
 assert compiled["evidence_bundles"][0]["family_source_paths"]["evidence.layer.apps"].endswith("apps.yml")
+assert compiled["retrieval_strategy"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
+assert [stage["stage_id"] for stage in compiled["retrieval_strategy"]["stages"]][:3] == [
+    "exact-identifiers",
+    "generated-concepts",
+    "curated-concepts",
+]
 assert compiled["feature_flags"]["semantic_recall_enabled"] is False
 assert len(compiled["content_hash"]) == 64
 assert compiled["input_fingerprints"]["policy_pack"]["sha256"]

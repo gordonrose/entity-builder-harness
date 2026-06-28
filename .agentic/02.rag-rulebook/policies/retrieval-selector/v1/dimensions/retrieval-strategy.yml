@@ -1,0 +1,139 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.retrieval-strategy
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define the ordered retrieval strategy stages used to select and explain context packets.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+#     - id: rag-rulebook.script.compile-retrieval-policy
+#       path: scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: retrieval-strategy
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Define the selector's reusable staged retrieval shape so misses can be debugged and improved without one-off prompt patches.
+required_inputs:
+  - Compiled policy pack.
+  - Prompt recognition matches.
+  - Focused path signals.
+  - Generated chunks.
+  - Rule graph metadata.
+  - Evidence bundle policy.
+expected_actions:
+  - Run exact identifier recognition before broad concept matching.
+  - Apply generated concept sources before curated broad terms.
+  - Expand bounded graph evidence before final ranking.
+  - Apply evidence bundles before trimming selected chunks.
+  - Emit a selector trace that records which stages ran and which signals shaped selection.
+banned_actions:
+  - Do not let session metadata replace prompt-specific retrieval strategy.
+  - Do not skip exact identifier matching because a broad curated term matched first.
+  - Do not graph-expand without a bounded rule source or artifact-summary signal.
+  - Do not hide missing evidence-family requirements inside an otherwise high-confidence packet.
+output_obligations:
+  - strategy_id
+  - stage_ids
+  - stage_statuses
+  - recognition_match_counts
+  - candidate_counts
+  - required_evidence_paths
+  - selected_chunk_ids
+gap_or_stop_conditions:
+  - Emit a missing-evidence gap when a strategy stage requires evidence that does not survive selection.
+  - Lower confidence when question-category evidence bundles do not produce selected canonical evidence.
+  - Keep side-effect execution blocked when strategy retrieval crosses layers without matching execution governance.
+ranking_effects:
+  - Exact identifiers and focused paths outrank broad concepts.
+  - Generated concept matches outrank curated broad vocabulary.
+  - Evidence bundle source paths survive trimming before optional ranked chunks.
+  - Graph expansion is bounded and feeds required source paths before final selection.
+retrieval_strategy:
+  strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+  stages:
+    - stage_id: exact-identifiers
+      rank: 1
+      purpose: Match exact corpus IDs, artifact IDs, file paths, rule IDs, and rule-pack IDs from prompt or focused paths.
+      primary_inputs:
+        - recognition.generated.artifacts
+        - recognition.generated.routing
+      expected_outputs:
+        - exact_target_terms
+        - exact_target_paths
+    - stage_id: generated-concepts
+      rank: 2
+      purpose: Apply generated artifact, routing, workflow, schema, and corpus concepts before broad curated terms.
+      primary_inputs:
+        - generated recognition sources
+      expected_outputs:
+        - generated_match_counts
+        - candidate_corpus_ids
+    - stage_id: curated-concepts
+      rank: 3
+      purpose: Apply reviewed action, intent, risk, alias, question-category, and evidence-family vocabulary.
+      primary_inputs:
+        - curated recognition sources
+      expected_outputs:
+        - intent_id
+        - question_category_ids
+        - evidence_family_ids
+    - stage_id: graph-expansion
+      rank: 4
+      purpose: Add bounded related rule source paths from selected artifact-summary signals.
+      primary_inputs:
+        - rule graph metadata
+        - artifact-summary chunks
+      expected_outputs:
+        - graph_expansion_source_paths
+    - stage_id: evidence-bundles
+      rank: 5
+      purpose: Promote canonical evidence families for recognized question categories before final trimming.
+      primary_inputs:
+        - evidence-bundles policy
+        - question-category matches
+        - evidence-family matches
+      expected_outputs:
+        - required_evidence_source_paths
+        - missing_evidence_gaps
+    - stage_id: final-ranking
+      rank: 6
+      purpose: Score, filter, trim, and validate selected chunks after required evidence has been preserved.
+      primary_inputs:
+        - ranked chunks
+        - required chunk IDs
+        - required source paths
+      expected_outputs:
+        - selected_chunk_ids
+        - retrieval_confidence
+validation_examples:
+  - name: exact identifiers run before broad terms
+    given: The prompt names an exact corpus and also contains broad words such as platform or app.
+    expect: The selector trace lists exact-identifiers before curated-concepts and includes the exact corpus target.
+  - name: architecture boundary uses evidence bundles
+    given: The prompt asks whether a capability belongs in apps or platform.
+    expect: The selector trace lists evidence-bundles as applied and selected chunks include apps, platform, and dependency-direction evidence.
+  - name: graph expansion is bounded
+    given: Artifact-summary chunks expose related rule source paths.
+    expect: The selector trace lists graph-expansion and records only bounded source paths that exist in the ranked chunk set.
+can_change_by:
+  - Add a new retrieval stage with an evaluation fixture.
+  - Change stage order only with policy-pack version review.
+  - Add stage trace outputs.
+  - Add confidence penalties tied to specific strategy stages.

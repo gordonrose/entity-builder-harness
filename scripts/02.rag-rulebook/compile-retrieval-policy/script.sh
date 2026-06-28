@@ -332,6 +332,47 @@ def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[d
     return bundles
 
 
+def compile_retrieval_strategy(strategy_dimension: dict[str, Any]) -> dict[str, Any]:
+    strategy = dict_value(strategy_dimension.get("retrieval_strategy"))
+    strategy_id = str(strategy.get("strategy_id") or "").strip()
+    if not strategy_id:
+        raise ValueError("retrieval-strategy dimension retrieval_strategy.strategy_id is required")
+    stages = []
+    seen_stage_ids: set[str] = set()
+    for raw_stage in sorted(list_of_dicts(strategy.get("stages")), key=lambda item: int(item.get("rank") or 9999)):
+        stage_id = str(raw_stage.get("stage_id") or "").strip()
+        rank = raw_stage.get("rank")
+        purpose = str(raw_stage.get("purpose") or "").strip()
+        if not stage_id:
+            raise ValueError("retrieval-strategy stage_id is required")
+        if stage_id in seen_stage_ids:
+            raise ValueError(f"duplicate retrieval-strategy stage_id: {stage_id}")
+        if not isinstance(rank, int) or isinstance(rank, bool):
+            raise ValueError(f"retrieval-strategy stage rank must be an integer: {stage_id}")
+        if not purpose:
+            raise ValueError(f"retrieval-strategy stage purpose is required: {stage_id}")
+        stages.append(
+            {
+                "stage_id": stage_id,
+                "rank": rank,
+                "purpose": purpose,
+                "primary_inputs": list_of_strings(raw_stage.get("primary_inputs")),
+                "expected_outputs": list_of_strings(raw_stage.get("expected_outputs")),
+            }
+        )
+        seen_stage_ids.add(stage_id)
+    if not stages:
+        raise ValueError("retrieval-strategy stages are required")
+    expected_ranks = list(range(1, len(stages) + 1))
+    actual_ranks = sorted(stage["rank"] for stage in stages)
+    if actual_ranks != expected_ranks:
+        raise ValueError("retrieval-strategy stage ranks must be contiguous starting at 1")
+    return {
+        "strategy_id": strategy_id,
+        "stages": stages,
+    }
+
+
 def edge_type_counts(edges: list[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for edge in edges:
@@ -363,6 +404,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("rulebook index has unsupported schema")
     prompt_dimension = dimension_by_id(dimensions, "prompt")
     evidence_dimension = dimension_by_id(dimensions, "evidence-bundles")
+    strategy_dimension = dimension_by_id(dimensions, "retrieval-strategy")
     generated_at = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     graph_edges = list_of_dicts(index.get("graph_edges"))
     compiled = {
@@ -386,6 +428,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
         "thresholds": policy.get("thresholds") or {},
         "intent_resolution": compile_intent_resolution(prompt_dimension, sources),
         "evidence_bundles": compile_evidence_bundles(evidence_dimension, sources),
+        "retrieval_strategy": compile_retrieval_strategy(strategy_dimension),
         "recognition_sources": {
             "counts": recognition_report.get("counts"),
             "sources": sources,

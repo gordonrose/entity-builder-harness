@@ -73,7 +73,8 @@ validation, and standalone service adapters.
   proves changed rule files still reach generated index and chunks.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet for request text plus
-  request context and session safety metadata, refusing stale runtime caches.
+  request context and session safety metadata, refusing stale runtime caches
+  and including selector trace diagnostics.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.
@@ -82,9 +83,11 @@ validation, and standalone service adapters.
 - `generate-retrieval-selector-fixture/script.sh` emits a validated
   `rag-rulebook/context-packet/v1` selector fixture from the active policy
   pack, recognition-source matches, recognition-candidate coverage gaps,
-  session-like metadata, focused paths, and generated or saved chunks.
+  session-like metadata, focused paths, generated or saved chunks, and compiled
+  retrieval strategy.
 - `evaluate-retrieval-selector-fixtures/script.sh` runs machine-readable
-  retrieval selector evaluation fixtures against generated selector packets.
+  retrieval selector evaluation fixtures against generated selector packets,
+  including selector trace assertions when fixtures require them.
 - `generate-recognition-sources/script.sh` emits or checks generated
   `rag-rulebook/recognition-source/v1` YAML lookup sources derived from the
   artifact metadata index and governed routing, layer, corpus, mode, and

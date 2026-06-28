@@ -73,6 +73,9 @@ dimensions:
   - id: evidence-bundles
     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
 
+  - id: retrieval-strategy
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+
   - id: session-metadata
     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/session-metadata.yml
 

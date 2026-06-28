@@ -59,6 +59,8 @@ assert packet["routing"]["workflow"] == ".agentic/01.harness/workflows/change-ha
 assert packet["routing"]["status"] == "ready"
 assert any(corpus["corpus_id"] == "corpus.02.rag-rulebook" for corpus in packet["matched_corpora"])
 assert any("mcp.server.deployment.architecture" in chunk["chunk_id"] for chunk in packet["selected_chunks"])
+assert packet["selector_trace"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
+assert packet["selector_trace"]["candidate_counts"]["selected"] == len(packet["selected_chunks"])
 assert packet["confidence"]["overall"] > 0
 assert packet["citations"]
 PY

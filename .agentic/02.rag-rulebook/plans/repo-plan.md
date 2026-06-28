@@ -57,8 +57,10 @@ deterministic cache, `check-runtime-freshness` verifies that cache against live
 inputs, and `query-local-context` returns validated context packets from the
 cache. The runtime now includes a compiled retrieval policy artifact so selector
 behavior is loaded from governed policy inputs rather than hidden selector
-constants. This local runtime is the proof target before a hosted API or MCP
-surface is treated as shippable.
+constants. Context packets now include a compact selector trace so retrieval
+misses can be diagnosed by stage instead of treated as isolated prompt gaps.
+This local runtime is the proof target before a hosted API or MCP surface is
+treated as shippable.
 
 The prototype rulebook proves useful structure:
 
@@ -694,6 +696,26 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/compile-retrieval-policy/`,
      `scripts/02.rag-rulebook/build-local-runtime/`, and
      `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`.
+
+7an. Add retrieval strategy policy and selector trace.
+   - Define a reusable staged retrieval strategy in governed policy so the
+     selector can move through exact identifiers, generated concepts, curated
+     concepts, bounded graph expansion, evidence bundles, and final ranking.
+   - Compile the retrieval strategy into the local runtime policy artifact.
+   - Emit a compact selector trace in context packets with stage IDs, stage
+     statuses, recognition counts, candidate counts, required evidence, and
+     selected chunk IDs.
+   - Extend retrieval selector evaluations so fixtures can assert required
+     stage IDs and applied stages.
+   - Add cross-session architecture-boundary fixture coverage so this is a
+     reusable retrieval-shape improvement, not a one-off platform question
+     patch.
+   - Status: present in
+     `policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml`,
+     `scripts/02.rag-rulebook/compile-retrieval-policy/`,
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/`,
+     `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/`, and
+     `evaluations/retrieval-selector/v1/fixtures/question-category-capability-placement-cross-session.yml`.
 
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a

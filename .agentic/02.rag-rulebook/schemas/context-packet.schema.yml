@@ -215,6 +215,36 @@ fields:
       classification_source:
         type: string
 
+  selector_trace:
+    type: object
+    required_when_present:
+      - strategy_id
+      - stages
+      - recognition_match_counts
+      - candidate_counts
+      - required_evidence
+    fields:
+      strategy_id:
+        type: string
+      compiled_policy_id:
+        type: string
+      stages:
+        type: array
+        items:
+          type: object
+          required_fields:
+            - stage_id
+            - rank
+            - status
+            - summary
+            - signals
+      recognition_match_counts:
+        type: object
+      candidate_counts:
+        type: object
+      required_evidence:
+        type: object
+
   matched_corpora:
     type: array
     item:
@@ -754,6 +784,14 @@ field_guide:
     what_it_does: "Shows whether routing came from session metadata, classifier output, user input, or inference."
     rules:
       - "Prefer deterministic sources over model-only inference."
+
+  - path: selector_trace
+    what_it_is: "A compact diagnostic report explaining which retrieval strategy stages ran."
+    what_it_does: "Lets A/B evaluation identify whether misses came from recognition, evidence bundles, graph expansion, filtering, or final ranking."
+    rules:
+      - "Should identify the compiled strategy ID."
+      - "Should include ordered stage IDs and statuses."
+      - "Should include enough counts to debug retrieval without reading the whole repo."
 
   - path: matched_corpora
     what_it_is: "The corpus packages selected for the task."

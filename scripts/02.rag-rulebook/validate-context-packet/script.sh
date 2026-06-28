@@ -68,6 +68,7 @@ REQUIRED_TOP_LEVEL = [
 ]
 ALLOWED_INTENT_SOURCES = {"deterministic", "inferred", "user-supplied", "mixed"}
 ALLOWED_ROUTING_STATUSES = {"ready", "needs-clarification", "blocked"}
+ALLOWED_SELECTOR_TRACE_STAGE_STATUSES = {"applied", "skipped", "unknown"}
 ALLOWED_RULESET_TYPES = {"layer", "concern", "standard", "workflow"}
 ALLOWED_CHECK_TIMING = {"before-edit", "before-commit", "before-deploy", "after-change"}
 ALLOWED_STOP_SEVERITY = {"warning", "blocking"}
@@ -245,6 +246,10 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
     confidence = dict_field(packet, "confidence", errors)
     budgets = dict_field(packet, "budgets", errors)
     provenance = dict_field(packet, "provenance", errors)
+    selector_trace = packet.get("selector_trace")
+    if selector_trace is not None and not isinstance(selector_trace, dict):
+        errors.append("selector_trace must be an object when present")
+        selector_trace = None
     matched_corpora = list_field(packet, "matched_corpora", errors)
     matched_rule_packs = list_field(packet, "matched_rule_packs", errors)
     matched_rulesets = list_field(packet, "matched_rulesets", errors)
@@ -267,6 +272,43 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
     require_fields("confidence", confidence, ["overall", "retrieval", "routing"], errors)
     require_fields("budgets", budgets, ["max_context_tokens", "selected_context_tokens", "trim_policy"], errors)
     require_fields("provenance", provenance, ["service_version", "corpus_index_versions", "retrieval_order"], errors)
+    if selector_trace is not None:
+        require_fields(
+            "selector_trace",
+            selector_trace,
+            ["strategy_id", "stages", "recognition_match_counts", "candidate_counts", "required_evidence"],
+            errors,
+        )
+        if not isinstance(selector_trace.get("strategy_id"), str) or not selector_trace.get("strategy_id"):
+            errors.append("selector_trace.strategy_id must be a non-empty string")
+        stages = selector_trace.get("stages")
+        if not isinstance(stages, list) or not stages:
+            errors.append("selector_trace.stages must be a non-empty array")
+            stages = []
+        stage_ids: list[str] = []
+        for index, stage in enumerate(stages, start=1):
+            if not isinstance(stage, dict):
+                errors.append(f"selector_trace.stages[{index}] must be an object")
+                continue
+            require_fields(
+                f"selector_trace.stages[{index}]",
+                stage,
+                ["stage_id", "rank", "status", "summary", "signals"],
+                errors,
+            )
+            if isinstance(stage.get("stage_id"), str) and stage.get("stage_id"):
+                stage_ids.append(stage["stage_id"])
+            else:
+                errors.append(f"selector_trace.stages[{index}].stage_id must be a non-empty string")
+            if not isinstance(stage.get("rank"), int) or isinstance(stage.get("rank"), bool):
+                errors.append(f"selector_trace.stages[{index}].rank must be an integer")
+            if stage.get("status") not in ALLOWED_SELECTOR_TRACE_STAGE_STATUSES:
+                errors.append(f"selector_trace.stages[{index}].status is invalid: {stage.get('status')}")
+            if not isinstance(stage.get("summary"), str) or not stage.get("summary"):
+                errors.append(f"selector_trace.stages[{index}].summary must be a non-empty string")
+            if not isinstance(stage.get("signals"), dict):
+                errors.append(f"selector_trace.stages[{index}].signals must be an object")
+        report_duplicate("selector_trace.stages[].stage_id", stage_ids, errors)
 
     validate_probability(intent.get("confidence"), "intent.confidence", errors)
     if intent.get("source") not in ALLOWED_INTENT_SOURCES:

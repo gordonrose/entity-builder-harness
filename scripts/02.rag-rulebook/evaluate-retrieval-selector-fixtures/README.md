@@ -44,6 +44,11 @@ Fixtures may also assert `expected.gaps.required_evidence_chunk_ids` and
 `expected.gaps.required_citation_ids` when blocking decisions must be
 auditable back to exact selected chunks and citations.
 
+Fixtures may assert `expected.selector_trace.strategy_id`,
+`expected.selector_trace.required_stage_ids`, and
+`expected.selector_trace.required_applied_stage_ids` when a retrieval-shape
+improvement must prove the selector reached the expected strategy stages.
+
 Run all current fixtures:
 
 ```bash

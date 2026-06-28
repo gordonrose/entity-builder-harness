@@ -77,6 +77,7 @@ REQUIRED_DIMENSIONS = [
     "prompt",
     "request-context",
     "evidence-bundles",
+    "retrieval-strategy",
     "session-metadata",
     "layer-mode-workflow",
     "focused-paths",
@@ -403,6 +404,51 @@ def validate_dimension_contract(
         combined = "\n".join(list_of_strings(dimension.get("expected_actions")) + list_of_strings(dimension.get("banned_actions"))).lower()
         if "disabled" not in combined or "do not enable" not in combined:
             errors.append("dimension semantic-recall must explicitly keep semantic recall disabled in v1")
+    if manifest_id == "retrieval-strategy":
+        strategy = dimension.get("retrieval_strategy")
+        if not isinstance(strategy, dict):
+            errors.append("dimension retrieval-strategy must include retrieval_strategy")
+        else:
+            if not isinstance(strategy.get("strategy_id"), str) or not strategy.get("strategy_id"):
+                errors.append("dimension retrieval-strategy retrieval_strategy.strategy_id must be a non-empty string")
+            stages = list_of_dicts(strategy.get("stages"))
+            if len(stages) < 3:
+                errors.append("dimension retrieval-strategy retrieval_strategy.stages must contain at least three stages")
+            ranks: list[int] = []
+            stage_ids: list[str] = []
+            for index, stage in enumerate(stages, start=1):
+                require_fields(
+                    f"{owner}.retrieval_strategy.stages[{index}]",
+                    stage,
+                    ["stage_id", "rank", "purpose", "primary_inputs", "expected_outputs"],
+                    errors,
+                )
+                if isinstance(stage.get("rank"), int) and not isinstance(stage.get("rank"), bool):
+                    ranks.append(stage["rank"])
+                else:
+                    errors.append(f"{owner}.retrieval_strategy.stages[{index}].rank must be an integer")
+                if isinstance(stage.get("stage_id"), str) and stage.get("stage_id"):
+                    stage_ids.append(stage["stage_id"])
+                else:
+                    errors.append(f"{owner}.retrieval_strategy.stages[{index}].stage_id must be a non-empty string")
+                if not isinstance(stage.get("purpose"), str) or not stage.get("purpose"):
+                    errors.append(f"{owner}.retrieval_strategy.stages[{index}].purpose must be a non-empty string")
+                for field in ["primary_inputs", "expected_outputs"]:
+                    if not list_of_strings(stage.get(field)):
+                        errors.append(f"{owner}.retrieval_strategy.stages[{index}].{field} must be a non-empty string array")
+            if ranks and sorted(ranks) != list(range(1, len(ranks) + 1)):
+                errors.append("dimension retrieval-strategy stage ranks must be contiguous starting at 1")
+            report_duplicate("retrieval_strategy.stages[].stage_id", stage_ids, errors)
+            required_stage_ids = {
+                "exact-identifiers",
+                "generated-concepts",
+                "curated-concepts",
+                "graph-expansion",
+                "evidence-bundles",
+                "final-ranking",
+            }
+            for stage_id in sorted(required_stage_ids - set(stage_ids)):
+                errors.append(f"dimension retrieval-strategy missing required stage: {stage_id}")
     if len(list_of_strings(dimension.get("banned_actions"))) < 2:
         warnings.append(f"{owner} should include more than one banned action")
 

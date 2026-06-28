@@ -79,6 +79,8 @@ assert packet["provenance"]["compiled_policy"]["compiled_policy_id"].startswith(
 assert packet["provenance"]["policy_pack"]["policy_pack_id"] == "retrieval-selector.v1"
 assert packet["provenance"]["recognition_sources"]["matched_terms"] > 0
 assert packet["provenance"]["retrieval_order"][0] == "load compiled retrieval policy"
+assert packet["selector_trace"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
+assert [stage["stage_id"] for stage in packet["selector_trace"]["stages"]][-1] == "final-ranking"
 assert packet["request"]["recognition_source_matches"]
 assert any(match["source_id"] == "recognition.generated.routing" for match in packet["request"]["recognition_source_matches"])
 assert len(packet["selected_chunks"]) >= 3
@@ -106,6 +108,7 @@ packet = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert packet["schema"] == "rag-rulebook/context-packet/v1"
 assert len(packet["selected_chunks"]) == 3
 assert packet["provenance"]["retrieval_order"][0] == "load compiled retrieval policy"
+assert packet["selector_trace"]["candidate_counts"]["selected"] == 3
 PY
 
 echo "Retrieval selector fixture generator smoke test passed."

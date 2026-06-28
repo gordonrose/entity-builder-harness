@@ -135,6 +135,7 @@ fields:
             - prompt
             - request-context
             - evidence-bundles
+            - retrieval-strategy
             - session-metadata
             - layer-mode-workflow
             - focused-paths

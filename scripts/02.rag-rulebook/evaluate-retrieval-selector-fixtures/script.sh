@@ -178,6 +178,7 @@ def run_selector_fixture(fixture: dict[str, Any], chunks_path: Path) -> dict[str
 
 def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
     recognition_matches = recognition_source_matches(packet)
+    trace_stages = selector_trace_stages(packet)
     return {
         "matched_corpora": {
             item.get("corpus_id")
@@ -246,6 +247,16 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             for item in recognition_matches
             if isinstance(item.get("canonical_id"), str)
         },
+        "selector_trace_stage_ids": {
+            item.get("stage_id")
+            for item in trace_stages
+            if isinstance(item.get("stage_id"), str)
+        },
+        "selector_trace_applied_stage_ids": {
+            item.get("stage_id")
+            for item in trace_stages
+            if isinstance(item.get("stage_id"), str) and item.get("status") == "applied"
+        },
     }
 
 
@@ -275,6 +286,17 @@ def recognition_source_matches(packet: dict[str, Any]) -> list[dict[str, Any]]:
     return [
         item
         for item in packet.get("request", {}).get("recognition_source_matches", [])
+        if isinstance(item, dict)
+    ]
+
+
+def selector_trace_stages(packet: dict[str, Any]) -> list[dict[str, Any]]:
+    selector_trace = packet.get("selector_trace")
+    if not isinstance(selector_trace, dict):
+        return []
+    return [
+        item
+        for item in selector_trace.get("stages", [])
         if isinstance(item, dict)
     ]
 
@@ -497,6 +519,26 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
         "selected_chunk_ids",
         sets["selected_chunk_ids"],
         list_of_strings(selected_chunks.get("required_chunk_ids")),
+        errors,
+    )
+
+    selector_trace = dict_value(expected.get("selector_trace"))
+    compare_object_fields(
+        "selector_trace",
+        dict_value(packet.get("selector_trace")),
+        {key: value for key, value in selector_trace.items() if key in {"strategy_id"}},
+        errors,
+    )
+    require_contains(
+        "selector_trace.stage_ids",
+        sets["selector_trace_stage_ids"],
+        list_of_strings(selector_trace.get("required_stage_ids")),
+        errors,
+    )
+    require_contains(
+        "selector_trace.applied_stage_ids",
+        sets["selector_trace_applied_stage_ids"],
+        list_of_strings(selector_trace.get("required_applied_stage_ids")),
         errors,
     )
 

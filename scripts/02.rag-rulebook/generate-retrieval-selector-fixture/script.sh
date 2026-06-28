@@ -1022,6 +1022,179 @@ def category_summary(matches: list[dict[str, Any]]) -> dict[str, int]:
     return dict(sorted(counts.items()))
 
 
+def source_id_summary(matches: list[dict[str, Any]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for match in matches:
+        source_id = str(match.get("source_id") or "unknown")
+        counts[source_id] = counts.get(source_id, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def selector_trace_stage(
+    stage: dict[str, Any],
+    status: str,
+    summary: str,
+    signals: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "stage_id": stage.get("stage_id"),
+        "rank": stage.get("rank"),
+        "status": status,
+        "summary": summary,
+        "signals": signals,
+    }
+
+
+def build_selector_trace(
+    compiled_policy: dict[str, Any],
+    recognition_matches: list[dict[str, Any]],
+    chunks: list[dict[str, Any]],
+    ranked: list[tuple[float, int, str, dict[str, Any]]],
+    candidate_ranked: list[tuple[float, int, str, dict[str, Any]]],
+    used_candidate_filter: bool,
+    allowed_corpus_ids: list[str],
+    candidate_evidence_paths: list[str],
+    evidence_bundle_source_paths: list[str],
+    graph_expansion_source_paths: list[str],
+    required_chunk_ids: list[str],
+    required_source_paths: list[str],
+    selected_chunks: list[dict[str, Any]],
+    gaps: list[dict[str, Any]],
+    selected_context_tokens: int,
+) -> dict[str, Any]:
+    retrieval_strategy = dict_value(compiled_policy.get("retrieval_strategy"))
+    strategy_id = str(retrieval_strategy.get("strategy_id") or "unknown")
+    stages = list_of_dicts(retrieval_strategy.get("stages"))
+    exact_categories = {"corpus-id", "artifact-id", "file-path", "rule-id", "rule-pack-id"}
+    exact_matches = [match for match in recognition_matches if match.get("category") in exact_categories]
+    generated_matches = [
+        match
+        for match in recognition_matches
+        if str(match.get("source_id") or "").startswith("recognition.generated.")
+    ]
+    curated_matches = [
+        match
+        for match in recognition_matches
+        if str(match.get("source_id") or "").startswith("recognition.curated.")
+    ]
+    missing_evidence_gap_ids = [
+        str(gap.get("id"))
+        for gap in gaps
+        if gap.get("type") == "missing-evidence" and isinstance(gap.get("id"), str)
+    ]
+    stage_records: list[dict[str, Any]] = []
+    for stage in stages:
+        stage_id = str(stage.get("stage_id") or "")
+        if stage_id == "exact-identifiers":
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied" if exact_matches else "skipped",
+                    "Matched exact corpus, artifact, path, rule, or rule-pack identifiers before broad concepts.",
+                    {
+                        "match_count": len(exact_matches),
+                        "categories": category_summary(exact_matches),
+                    },
+                )
+            )
+        elif stage_id == "generated-concepts":
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied" if generated_matches else "skipped",
+                    "Applied generated artifact, routing, workflow, schema, and corpus concepts.",
+                    {
+                        "match_count": len(generated_matches),
+                        "source_ids": source_id_summary(generated_matches),
+                    },
+                )
+            )
+        elif stage_id == "curated-concepts":
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied" if curated_matches else "skipped",
+                    "Applied reviewed intent, action, risk, alias, question-category, and evidence-family vocabulary.",
+                    {
+                        "match_count": len(curated_matches),
+                        "source_ids": source_id_summary(curated_matches),
+                        "categories": category_summary(curated_matches),
+                    },
+                )
+            )
+        elif stage_id == "graph-expansion":
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied" if graph_expansion_source_paths else "skipped",
+                    "Added bounded related rule source paths from artifact-summary signals.",
+                    {
+                        "source_paths": graph_expansion_source_paths,
+                    },
+                )
+            )
+        elif stage_id == "evidence-bundles":
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied" if evidence_bundle_source_paths else "skipped",
+                    "Promoted canonical evidence families for recognized question categories before trimming.",
+                    {
+                        "candidate_evidence_paths": candidate_evidence_paths,
+                        "bundle_source_paths": evidence_bundle_source_paths,
+                        "missing_evidence_gap_ids": missing_evidence_gap_ids,
+                    },
+                )
+            )
+        elif stage_id == "final-ranking":
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied",
+                    "Scored, filtered, trimmed, and validated chunks after required evidence was preserved.",
+                    {
+                        "used_candidate_filter": used_candidate_filter,
+                        "selected_chunk_ids": [
+                            str(chunk.get("chunk_id"))
+                            for chunk in selected_chunks
+                            if isinstance(chunk.get("chunk_id"), str)
+                        ],
+                    },
+                )
+            )
+        else:
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "unknown",
+                    "No selector trace implementation exists for this compiled strategy stage.",
+                    {},
+                )
+            )
+    return {
+        "strategy_id": strategy_id,
+        "compiled_policy_id": compiled_policy.get("compiled_policy_id"),
+        "recognition_match_counts": {
+            "by_category": category_summary(recognition_matches),
+            "by_source_id": source_id_summary(recognition_matches),
+        },
+        "candidate_counts": {
+            "chunks_total": len(chunks),
+            "ranked": len(ranked),
+            "after_corpus_filter": len(candidate_ranked),
+            "selected": len(selected_chunks),
+        },
+        "candidate_filter_used": used_candidate_filter,
+        "candidate_corpus_ids": allowed_corpus_ids,
+        "required_evidence": {
+            "source_paths": sorted(set(required_source_paths)),
+            "chunk_ids": required_chunk_ids,
+        },
+        "selected_context_tokens": selected_context_tokens,
+        "stages": stage_records,
+    }
+
+
 def matched_corpus_ids(matches: list[dict[str, Any]], session_corpus: str) -> list[str]:
     corpus_ids = [session_corpus]
     for match in matches:
@@ -1401,6 +1574,23 @@ def build_packet(
         for chunk in selected_chunks
         if isinstance(chunk.get("token_estimate"), int)
     )
+    selector_trace = build_selector_trace(
+        compiled_policy,
+        recognition_matches,
+        chunks,
+        ranked,
+        candidate_ranked,
+        used_candidate_filter,
+        allowed_corpus_ids,
+        candidate_evidence_paths,
+        evidence_bundle_source_paths,
+        graph_expansion_source_paths,
+        required_chunk_ids,
+        required_source_paths,
+        selected_chunks,
+        gaps,
+        selected_context_tokens,
+    )
     source_index_id = chunk_set.get("source_index_id") or chunk_set.get("provenance", {}).get("source_index_id")
     source_index_hash = chunk_set.get("provenance", {}).get("source_index_fingerprint")
     packet_fingerprint = hashlib.sha256(
@@ -1418,6 +1608,8 @@ def build_packet(
                 ],
                 "gaps": [gap.get("id") for gap in gaps],
                 "source_index_id": source_index_id,
+                "compiled_policy_id": compiled_policy.get("compiled_policy_id"),
+                "strategy_id": selector_trace.get("strategy_id"),
             },
             sort_keys=True,
         ).encode("utf-8")
@@ -1491,6 +1683,7 @@ def build_packet(
             "evidence_ref_ids": selected_citation_ids,
         },
         "action_authorization": action_authorization,
+        "selector_trace": selector_trace,
         "routing": {
             "layer": args.session_layer,
             "mode": args.session_mode,

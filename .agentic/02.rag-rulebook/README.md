@@ -185,6 +185,8 @@ final homes.
 - `scripts/02.rag-rulebook/query-local-context/script.sh` - reads a local
   runtime cache and emits a validated context packet for request text plus
   request context and session safety metadata, refusing stale runtime caches.
+  Packets include selector trace diagnostics for recognition, strategy stages,
+  evidence bundles, filtering, and selected chunks.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -
@@ -202,7 +204,8 @@ final homes.
   The prompt dimension now names recognition sources and extraction rules for
   turning raw user language into structured retrieval signals. The evidence
   bundle dimension maps recognized question categories to required source
-  families before ranking.
+  families before ranking. The retrieval strategy dimension defines the staged
+  selector trace used by local runtime packets and evaluations.
 - `evaluations/retrieval-selector/v1/fixtures/` - active selector evaluation
   fixtures with expected and banned context-packet outcomes.
 

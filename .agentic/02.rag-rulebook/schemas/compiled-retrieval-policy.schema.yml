@@ -46,6 +46,7 @@ required_fields:
   - thresholds
   - intent_resolution
   - evidence_bundles
+  - retrieval_strategy
   - recognition_sources
   - corpus_ownership
   - rule_graph
@@ -110,6 +111,16 @@ fields:
     rules:
       - Evidence bundles must come from governed evidence-bundles policy.
       - Every source path must resolve or be reported as a compilation error.
+
+  retrieval_strategy:
+    type: object
+    required_fields:
+      - strategy_id
+      - stages
+    description: Ordered staged retrieval strategy compiled from governed retrieval-strategy policy.
+    rules:
+      - Runtime selector code must use this stage order when reporting selector trace behavior.
+      - Stage IDs must remain stable enough for evaluation fixtures to assert them.
 
   recognition_sources:
     type: object

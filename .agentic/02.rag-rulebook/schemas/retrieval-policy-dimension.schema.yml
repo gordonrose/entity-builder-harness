@@ -63,6 +63,7 @@ fields:
       - prompt
       - request-context
       - evidence-bundles
+      - retrieval-strategy
       - session-metadata
       - layer-mode-workflow
       - focused-paths
@@ -209,6 +210,39 @@ fields:
             type: string
         family_source_paths:
           type: object
+
+  retrieval_strategy:
+    type: object
+    note: Retrieval-strategy dimension only. Defines ordered selector stages and the traceable outputs each stage must emit.
+    required_fields:
+      - strategy_id
+      - stages
+    fields:
+      strategy_id:
+        type: string
+      stages:
+        type: array
+        item:
+          type: object
+          required_fields:
+            - stage_id
+            - rank
+            - purpose
+          fields:
+            stage_id:
+              type: string
+            rank:
+              type: integer
+            purpose:
+              type: string
+            primary_inputs:
+              type: array
+              items:
+                type: string
+            expected_outputs:
+              type: array
+              items:
+                type: string
 
 field_guide:
   - path: dimension_id

@@ -89,7 +89,7 @@ assert manifest["fingerprints"]["runtime_outputs"]["rulebook_chunks"]["sha256"]
 assert manifest["fingerprints"]["runtime_outputs"]["compiled_retrieval_policy"]["sha256"]
 assert manifest["counts"]["chunk_candidates"] == manifest["counts"]["chunks"]
 assert manifest["counts"]["chunks"] > 0
-assert manifest["counts"]["compiled_policy_dimensions"] == 14
+assert manifest["counts"]["compiled_policy_dimensions"] == 15
 assert manifest["counts"]["compiled_policy_recognition_sources"] == 7
 assert manifest["files"]["rulebook_index"].endswith("rulebook-index.json")
 assert manifest["files"]["rulebook_chunks"].endswith("rulebook-chunks.json")
@@ -97,6 +97,7 @@ assert manifest["files"]["compiled_retrieval_policy"].endswith("compiled-retriev
 assert validation["reports"]["compiled_retrieval_policy"]["schema"] == "rag-rulebook/compiled-retrieval-policy/v1"
 assert compiled_policy["intent_resolution"]["precedence"][0] == "intent.no-action.explanation"
 assert compiled_policy["evidence_bundles"]
+assert compiled_policy["retrieval_strategy"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
 PY
 
 echo "Local RAG/rulebook runtime smoke test passed."
