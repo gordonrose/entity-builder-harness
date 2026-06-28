@@ -717,6 +717,20 @@ The location is not the final domain corpus model.
      `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/`, and
      `evaluations/retrieval-selector/v1/fixtures/question-category-capability-placement-cross-session.yml`.
 
+7ao. Add compact context packet output for agent use.
+   - Keep full JSON packets available for debugging, provenance, selector
+     trace review, and evaluation failure analysis.
+   - Add a compact output mode that returns selected chunk content, concise
+     citations, confidence, gaps, required checks, and stop conditions without
+     the full debug/provenance payload.
+   - Use A/B context evaluation to compare full debug packet tokens,
+     selected-content tokens, and source-verification tokens so compact packet
+     savings are visible.
+   - Preserve selector trace access on demand so retrieval misses can still be
+     diagnosed without making every ordinary agent query consume the full
+     debug packet.
+   - Status: planned.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.

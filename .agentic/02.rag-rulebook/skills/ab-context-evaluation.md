@@ -92,6 +92,10 @@ Capture:
 - stop conditions
 - confidence
 - required checks
+- selector trace strategy, stage statuses, candidate counts, required evidence,
+  and selected chunk IDs
+- packet size and selected-content size when token savings are part of the
+  evaluation
 - any missing corpus or stale-runtime signals
 
 ## Source Verification Path
@@ -122,8 +126,12 @@ sections when useful:
   did not naturally surface.
 - `Improve RAG`: candidate corpus, recognition-source, chunking, policy,
   evaluation, or freshness changes that would improve the RAG answer.
+- `Selector Diagnosis`: when the packet misses important evidence, use the
+  selector trace to classify the miss as recognition, evidence-bundle,
+  graph-expansion, filtering, final-ranking, freshness, or corpus-coverage.
 - `Token Estimate`: rough estimate of tokens saved by using the RAG packet
-  instead of direct source verification.
+  instead of direct source verification. Compare both the full debug packet and
+  the selected-content-only view when the full packet includes large provenance.
 
 If the report would distract from a simple answer, keep it short, but still
 name the important comparison result.
@@ -132,9 +140,10 @@ name the important comparison result.
 
 Use an approximate, non-billing estimate:
 
-- RAG tokens: serialized context packet characters divided by 4.
+- RAG debug tokens: serialized context packet characters divided by 4.
+- RAG selected-content tokens: selected chunk content characters divided by 4.
 - Source tokens: inspected source-output characters divided by 4.
-- Estimated saved tokens: `max(source_tokens - rag_tokens, 0)`.
+- Estimated saved tokens: `max(source_tokens - rag_selected_content_tokens, 0)`.
 - Estimated saving percent: saved tokens divided by source tokens when source
   tokens are greater than zero.
 
