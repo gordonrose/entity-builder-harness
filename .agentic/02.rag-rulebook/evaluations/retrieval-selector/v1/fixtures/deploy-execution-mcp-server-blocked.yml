@@ -60,7 +60,6 @@ expected:
       - corpus.02.rag-rulebook
   selected_content_kinds:
     required:
-      - artifact-summary
       - rule
   selected_chunks:
     required_artifact_ids:

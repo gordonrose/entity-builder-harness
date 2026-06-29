@@ -1,0 +1,203 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.supply-chain-provenance
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - agentic
+#   - security
+#   - sre
+#   kind: rule
+#   purpose: Define supply-chain provenance rules for GitHub Actions to ECS Fargate deployment of the RAG/rulebook service.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.source-projections.v1
+#     path: .agentic/02.rag-rulebook/source-projections/v1.yml
+id: concern.rag-rulebook-supply-chain-provenance
+title: RAG/rulebook supply-chain provenance rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-29T20:49:40Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  source_material:
+    - path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+      sha256: d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0
+
+description: >
+  Rules for proving GitHub workflow identity, build inputs, container image,
+  generated corpus package, and ECS deploy output before the RAG/rulebook
+  service is deployed.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".github/workflows/**"
+    - ".agentic/aws/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+    - "scripts/04.deploy/**"
+
+rules:
+  - id: supply-chain-provenance.pins-deploy-workflow-and-build-inputs
+    title: Deployment workflow and build inputs are pinned or governed
+    severity: error
+    summary: >
+      Production-capable GitHub Actions deployment must use governed refs,
+      explicit permissions, pinned actions, deterministic dependency installs,
+      and trusted runner boundaries before it can publish deployable artifacts.
+    must:
+      - "Pin third-party GitHub Actions to immutable SHAs or governed allowlisted versions."
+      - "Declare workflow permissions and job permissions explicitly, including id-token: write only where OIDC is required."
+      - "Use lockfiles and deterministic package-manager commands for dependency installation."
+      - "Record runner class and trust model, especially for self-hosted runners."
+      - "Set job timeouts and avoid untrusted caches or artifacts in production-capable jobs."
+    must_not:
+      - "Do not use floating action refs for production-capable deployment jobs without a recorded exception."
+      - "Do not download and execute unreviewed remote scripts during deployment."
+      - "Do not let pull-request-controlled caches or artifacts influence production deployment."
+    required_checks:
+      - "Verify action references and reusable workflow references are pinned or governed."
+      - "Verify workflow and job permissions are least-privilege."
+      - "Verify lockfiles, deterministic installs, timeouts, and cache trust are present."
+    agent_guidance: >
+      Supply-chain proof begins before the image build. If the workflow itself
+      is not trustworthy, the artifact it creates is not deployable.
+
+  - id: supply-chain-provenance.proves-image-sbom-scan-and-attestation
+    title: Service image provenance is traceable
+    severity: error
+    summary: >
+      The service image must be traceable from source commit to immutable ECR
+      digest, with scan, SBOM, and attestation evidence appropriate for the
+      target environment.
+    must:
+      - "Record source commit SHA, Dockerfile path, build context, base image digest, image digest, ECR repository, and image tag policy."
+      - "Run vulnerability scanning with explicit severity thresholds before staging or production deployment."
+      - "Generate or reference an SBOM for the service image."
+      - "Generate or reference artifact attestation when the deployment target requires it."
+      - "Fail closed when image digest or scan result is missing for staging or production."
+    must_not:
+      - "Do not deploy from a floating tag as the only image identity."
+      - "Do not hide failed image scans behind manual approval without an accepted risk record."
+      - "Do not claim attestation or SBOM coverage unless an artifact path, workflow output, or external evidence id is named."
+    required_checks:
+      - "Verify image digest, source commit, Dockerfile, and base image evidence."
+      - "Verify scan threshold and result."
+      - "Verify SBOM and attestation evidence where required."
+    agent_guidance: >
+      Use immutable digests in deployment records. Human-readable tags are
+      helpful labels, not sufficient artifact identity.
+
+  - id: supply-chain-provenance.verifies-corpus-package-and-generated-artifacts
+    title: Corpus package provenance is part of deployment provenance
+    severity: error
+    summary: >
+      RAG deployment must verify generated rules, indexes, chunks, recognition
+      sources, policy versions, and corpus package hashes before the service can
+      answer remote context queries.
+    must:
+      - "Record corpus package id, corpus package version, corpus package sha256, rulebook index version, chunk set version, recognition source versions, compiled policy version, and runtime cache fingerprint."
+      - "Verify source projection, derivation report, generated rule, generated index, generated chunk, fixture, and local runtime freshness gates before publishing a corpus package."
+      - "Store corpus package provenance with enough detail to identify source material hashes and generator versions."
+      - "Treat stale corpus, stale chunk, stale index, or stale recognition-source fingerprints as deployment blockers for staging and production unless an explicit non-production policy says otherwise."
+    must_not:
+      - "Do not publish generated RAG artifacts when their source inputs or generator versions are unknown."
+      - "Do not let the service answer from uncommitted local files after deployment."
+      - "Do not treat Markdown source acceptance as equivalent to generated YAML, chunk, index, and runtime freshness."
+    required_checks:
+      - "Verify source projections are current."
+      - "Verify derivation reports are current."
+      - "Verify generated index and chunks include the derived rules."
+      - "Verify local runtime freshness before package or deploy."
+    agent_guidance: >
+      A RAG service deploys knowledge, not just code. Provenance for the corpus
+      and generated retrieval artifacts is mandatory.
+
+  - id: supply-chain-provenance.separates-publish-and-promote-authority
+    title: Publish and promote authority are separated
+    severity: error
+    summary: >
+      The workflow should separate build, publish, deploy, verify, and rollback
+      permissions so producing an artifact does not automatically authorize
+      sensitive environment deployment.
+    must:
+      - "Separate build, package, publish, deploy, verify, and rollback into distinct jobs or clearly distinct phases with named outputs."
+      - "Restrict who can publish images and corpus packages."
+      - "Restrict who can promote artifacts to staging and production environments."
+      - "Use GitHub environments and approvals before jobs can assume sensitive AWS roles or access protected secrets."
+      - "Record workflow run id, environment, approver path, image digest, corpus hash, ECS deployment id, and verification result."
+    must_not:
+      - "Do not let a successful build job imply production approval."
+      - "Do not use the same broad AWS role for build, publish, deploy, verify, and rollback when narrower roles are feasible."
+      - "Do not allow production promotion from unprotected refs."
+    required_checks:
+      - "Verify stage boundaries and outputs."
+      - "Verify protected environment approvals."
+      - "Verify publish and promote permissions are least-privilege."
+    agent_guidance: >
+      Green builds make deployment possible; they do not make deployment
+      authorized. Keep artifact creation separate from environment promotion.
+
+  - id: supply-chain-provenance.blocks-on-unverified-artifact-identity
+    title: Unverified artifact identity blocks deployment
+    severity: error
+    summary: >
+      Deployment execution must block when the image, corpus package, generated
+      runtime artifacts, or workflow identity cannot be linked to the intended
+      commit and environment.
+    must:
+      - "Block staging and production deploys when image digest, corpus hash, source commit, workflow run id, OIDC role, or environment approval is missing."
+      - "Block when generated YAML, chunks, index, recognition sources, or runtime cache are stale relative to source inputs."
+      - "Emit the smallest governed next action needed to repair missing provenance."
+      - "Keep planning and explanation prompts non-mutating when provenance is incomplete."
+    must_not:
+      - "Do not downgrade missing production provenance to a warning for deploy execution."
+      - "Do not deploy artifacts built from an ambiguous source ref."
+      - "Do not use local fallback corpus behavior for staging or production unless a governed incident response path authorizes it."
+    required_checks:
+      - "Verify deploy-readiness manifest artifact_provenance and corpus_package sections."
+      - "Verify runtime freshness and fingerprint checks."
+      - "Verify workflow identity and target environment approval evidence."
+    agent_guidance: >
+      A missing provenance field is a deploy stop condition. The correct output
+      is a blocking gap plus the next governed check, not an inferred value.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md"
+    sections:
+      - "GitHub Actions Policy"
+      - "Supply-Chain Integrity Policy"
+      - "AWS OIDC Policy"
+      - "Corpus Package And Runtime Freshness"
+      - "Deploy-Readiness Manifest Contract"
+      - "Stop-Condition Table"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml."
+  - "It requires pinned or governed GitHub Actions and deterministic build inputs."
+  - "It treats image digest, SBOM, scan, and attestation evidence as deployment proof."
+  - "It treats generated RAG corpus and chunk provenance as deployment proof."
+  - "It blocks deploy execution when artifact identity or runtime freshness is missing."

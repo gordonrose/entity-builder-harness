@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 491
-  term_count: 993
+  indexed_artifacts: 493
+  term_count: 997
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3186,6 +3186,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-06-29-github-actions-to-ecs-fargate
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-29-github-actions-to-ecs-fargate
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-29-github-actions-to-ecs-fargate
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-reports.readme
   category: artifact-id
   match_type: exact
@@ -3221,6 +3233,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-execution-mcp-server-blocked
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.deploy-planning-ecs-fargate
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-planning-ecs-fargate
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-planning-ecs-fargate
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
   category: artifact-id

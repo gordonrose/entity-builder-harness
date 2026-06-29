@@ -30,8 +30,10 @@ owner_layer: 04.deploy
 owner_path: .agentic/aws/
 summary: >
   GitHub Actions to ECS Fargate source material for the RAG/rulebook service has
-  passed OKF source review, but it has not yet been derived into structured
-  deploy rules, indexed chunks, selector fixtures, or executable deploy proof.
+  passed OKF source review and has been derived into structured deploy rules
+  with selector proof. Deployment execution remains blocked until concrete
+  GitHub Actions workflow, AWS target manifest, runtime evidence, and deploy
+  readiness proof exist.
 observed_prompt: >
   Given the selected ECS Fargate direction, how should the repo publish and
   deploy the RAG/rulebook service to AWS through GitHub Actions?
@@ -42,9 +44,9 @@ match_terms:
   - RAG/rulebook service
   - deploy-readiness manifest
 target_question: >
-  What deploy-layer rules, chunks, evaluations, readiness checks, and workflow
-  proof are required before the accepted ECS Fargate source can guide or execute
-  production deployment?
+  What deploy-layer workflow, target manifest, readiness checks, and runtime
+  evidence are still required before the accepted ECS Fargate source can guide
+  production deployment execution?
 source_material:
   status: accepted
   evidence_paths:
@@ -79,8 +81,11 @@ required_coverage:
       Architect, agentic engineer, and senior SRE review scores exceed the OKF
       acceptance threshold before derivation begins.
   structured_rulebook:
-    status: missing
-    evidence_paths: []
+    status: present
+    evidence_paths:
+      - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+      - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
     expected_paths:
       - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
       - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
@@ -89,24 +94,28 @@ required_coverage:
       Derived rules must carry source_derivation provenance with the accepted
       source path, source hash, generator or reviewer proof, and derivation report.
   derivation_report:
-    status: missing
-    evidence_paths: []
+    status: present
+    evidence_paths:
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
     expected_paths:
-      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/planned-github-actions-to-ecs-fargate.yml
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
     expectation: >
       A derivation report must explain which source claims became which rules,
       which claims stayed prose-only, and which claims remain blocked.
   indexed_chunks:
-    status: missing
-    evidence_paths: []
+    status: present-via-generator
+    evidence_paths:
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
     expectation: >
       Generated index and chunks must include the derived deploy rules before
       retrieval treats the ECS Fargate guidance as active corpus coverage.
   selector_evaluation:
-    status: missing
-    evidence_paths: []
+    status: present
+    evidence_paths:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml
     expected_paths:
-      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/planned-deploy-ecs-fargate.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml
     expectation: >
       Retrieval fixtures must prove ECS deployment planning prompts select the
       derived deploy evidence, while deploy-execution prompts remain blocked
@@ -119,11 +128,10 @@ required_coverage:
       workflow, image provenance, AWS target, rollback, and alarm evidence for
       the selected ECS service before any production deploy.
 needed_outputs:
-  - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
-  - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
-  - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
-  - .agentic/02.rag-rulebook/derivation-reports/04.deploy/planned-github-actions-to-ecs-fargate.yml
-  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/planned-deploy-ecs-fargate.yml
+  - .github/workflows/deploy-rag-rulebook-ecs.yml
+  - docs/04.deploy/manifests/02.rag-rulebook/staging-ecs-fargate.yml
+  - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh updates for ECS-specific manifest fields
+  - AWS target inspection evidence for the selected ECS cluster, service, network, IAM roles, logs, alarms, and rollback target
 local_query_behavior:
   should_emit_gap: true
   blocking: false
@@ -139,19 +147,19 @@ execution_blocking_gaps:
   - id: gap.deploy.ecs-fargate-rules-not-derived
     type: missing-rule-projection
     description: >
-      ECS Fargate deployment execution is blocked until the accepted source is
-      converted into structured deploy rules with source_derivation provenance.
+      Resolved for planning coverage. ECS Fargate source is converted into
+      structured deploy rules with source_derivation provenance.
     suggested_resolution: >
-      Run the governed source-to-rule derivation workflow and review the
-      resulting deploy rules before treating the guidance as active corpus.
+      Keep the derivation report pending until human review or future automated
+      acceptance, but do not treat this as a deploy-execution blocker by itself.
   - id: gap.deploy.ecs-fargate-selector-proof-missing
     type: missing-evaluation
     description: >
-      Retrieval is not proven for ECS Fargate deployment prompts until selector
-      fixtures cover planning, explanation, implementation, and execution forms.
+      Resolved for planning coverage. A selector fixture proves ECS Fargate
+      planning prompts retrieve the derived deploy evidence.
     suggested_resolution: >
-      Add selector fixtures that require the derived ECS deployment, supply-chain,
-      and data-boundary rules for matching prompts.
+      Add execution and negative fixtures when a concrete workflow and
+      deploy-readiness manifest exist.
   - id: gap.deploy.ecs-fargate-readiness-proof-missing
     type: missing-validator
     description: >
@@ -161,8 +169,9 @@ execution_blocking_gaps:
       Add or update deploy-readiness validation after the ECS workflow and
       target manifest exist.
 suggested_resolution: >
-  Derive the accepted source into deploy-owned rules, generate chunks, add
-  selector proof, and only then use it as active ECS Fargate deployment guidance.
+  Add the concrete GitHub Actions workflow, deploy-readiness manifest,
+  ECS-specific verifier coverage, and AWS target inspection evidence before
+  using the ECS Fargate guidance for deployment execution.
 review:
   required: true
   owner: 04.deploy
