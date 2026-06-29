@@ -252,6 +252,17 @@ def rule_content(rule: dict[str, Any], rule_body: Any) -> str:
     return "\n".join(lines)
 
 
+def rule_body_field(rule_body: Any, field_name: str) -> str:
+    if not isinstance(rule_body, dict):
+        return ""
+    value = rule_body.get(field_name)
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        return "\n".join(str(item).strip() for item in value if str(item).strip())
+    return ""
+
+
 def rule_pack_step_content(pack: dict[str, Any], step_body: Any) -> str:
     step_id = step_body.get("id") if isinstance(step_body, dict) else None
     instruction = step_body.get("instruction") if isinstance(step_body, dict) else step_body
@@ -389,6 +400,12 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             "citation_ids": source_ref_ids,
             "source_ref_ids": source_ref_ids,
         }
+        if content_kind == "rule" and rule:
+            chunk["rule_title"] = str(rule.get("title") or "").strip()
+            chunk["rule_summary"] = str(rule.get("summary") or "").strip()
+            chunk["rule_must_text"] = rule_body_field(section_body, "must")
+            chunk["rule_must_not_text"] = rule_body_field(section_body, "must_not")
+            chunk["rule_agent_guidance"] = rule_body_field(section_body, "agent_guidance")
         source_derivation = candidate.get("source_derivation") or artifact.get("source_derivation")
         if isinstance(source_derivation, dict):
             chunk["source_derivation"] = source_derivation

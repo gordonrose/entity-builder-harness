@@ -42,6 +42,7 @@ expected_actions:
   - Apply generated concept sources before curated broad terms.
   - Expand bounded graph evidence before final ranking.
   - Apply evidence bundles before trimming selected chunks.
+  - Re-rank rule chunks inside required source paths using prompt terms, evidence-family terms, rule IDs, rule titles, rule summaries, and rule body fields.
   - Emit a selector trace that records which stages ran and which signals shaped selection.
 banned_actions:
   - Do not let session metadata replace prompt-specific retrieval strategy.
@@ -55,6 +56,7 @@ output_obligations:
   - recognition_match_counts
   - candidate_counts
   - required_evidence_paths
+  - selected_rule_ids_by_source
   - selected_chunk_ids
 gap_or_stop_conditions:
   - Emit a missing-evidence gap when a strategy stage requires evidence that does not survive selection.
@@ -64,6 +66,7 @@ ranking_effects:
   - Exact identifiers and focused paths outrank broad concepts.
   - Generated concept matches outrank curated broad vocabulary.
   - Evidence bundle source paths survive trimming before optional ranked chunks.
+  - Within required evidence sources, rule title and summary matches outrank broad file-level matches.
   - Graph expansion is bounded and feeds required source paths before final selection.
 retrieval_strategy:
   strategy_id: retrieval-selector.v1.hybrid-deterministic-first
@@ -112,8 +115,19 @@ retrieval_strategy:
       expected_outputs:
         - required_evidence_source_paths
         - missing_evidence_gaps
-    - stage_id: final-ranking
+    - stage_id: intra-source-reranking
       rank: 6
+      purpose: Re-rank chunks inside required source paths so the most specific rule section survives final selection.
+      primary_inputs:
+        - required source paths
+        - prompt terms
+        - evidence-family matches
+        - rule IDs, titles, summaries, and structured rule body fields
+      expected_outputs:
+        - selected_rule_ids_by_required_source
+        - intra_source_reranking_stage_status
+    - stage_id: final-ranking
+      rank: 7
       purpose: Score, filter, trim, and validate selected chunks after required evidence has been preserved.
       primary_inputs:
         - ranked chunks
@@ -132,6 +146,9 @@ validation_examples:
   - name: graph expansion is bounded
     given: Artifact-summary chunks expose related rule source paths.
     expect: The selector trace lists graph-expansion and records only bounded source paths that exist in the ranked chunk set.
+  - name: required sources are re-ranked by rule fields
+    given: An evidence bundle selects a long source file with multiple rule chunks.
+    expect: The selector trace lists intra-source-reranking and selected chunks include the best matching rule IDs from required source paths.
 can_change_by:
   - Add a new retrieval stage with an evaluation fixture.
   - Change stage order only with policy-pack version review.

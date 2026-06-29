@@ -76,9 +76,15 @@ validation, and standalone service adapters.
   `rag-rulebook/context-packet-compact/v1` view, for request text plus request
   context and session safety metadata, refusing stale runtime caches and
   including selector trace diagnostics.
+- `run-local-service/script.sh` starts the thin local HTTP service for the MSP
+  API surface: `GET /health`, `GET /version`, and `POST /context/query`.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.
+- `validate-okf-source-material-reviews/script.sh` validates accepted OKF
+  source-material review records, including current source hashes, required
+  reviewer roles, reviewer scores above threshold, final blocker state, and
+  final decision consistency.
 - `generate-context-packet-fixture/script.sh` emits a small validated
   `rag-rulebook/context-packet/v1` fixture from generated or saved chunks.
 - `generate-retrieval-selector-fixture/script.sh` emits a validated

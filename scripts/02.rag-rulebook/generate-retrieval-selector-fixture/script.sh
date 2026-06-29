@@ -869,11 +869,86 @@ def chunk_haystack(chunk: dict[str, Any]) -> str:
         chunk.get("artifact_ref"),
         chunk.get("source_path"),
         chunk.get("content_kind"),
+        chunk.get("rule_title"),
+        chunk.get("rule_summary"),
+        chunk.get("rule_must_text"),
+        chunk.get("rule_must_not_text"),
+        chunk.get("rule_agent_guidance"),
         chunk.get("content"),
         " ".join(list_of_strings(chunk.get("rule_ids"))),
         " ".join(list_of_strings(chunk.get("pack_refs"))),
     ]
     return "\n".join(str(part).lower() for part in parts if part)
+
+
+RERANK_STOP_TERMS = STOP_WORDS | {
+    "category",
+    "concern",
+    "evidence",
+    "explain",
+    "family",
+    "implementation",
+    "implemented",
+    "layer",
+    "platform",
+    "policy",
+    "question",
+    "repo",
+    "rule",
+    "rules",
+    "work",
+    "works",
+}
+
+
+def rerank_terms(prompt_terms: list[str], recognition_matches: list[dict[str, Any]]) -> list[str]:
+    terms: list[str] = []
+    seen: set[str] = set()
+
+    def add(raw: str) -> None:
+        for token in tokenize(raw.replace(".", " ").replace("-", " ")):
+            if token in RERANK_STOP_TERMS or token in seen:
+                continue
+            seen.add(token)
+            terms.append(token)
+
+    for term in prompt_terms:
+        add(term)
+    for match in recognition_matches:
+        if match.get("category") != "evidence-family":
+            continue
+        add(str(match.get("term") or ""))
+    return terms
+
+
+def count_term(text: str, term: str) -> int:
+    if not text or not term:
+        return 0
+    if " " in term:
+        return text.count(term)
+    return len(re.findall(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text))
+
+
+def field_score(text: Any, terms: list[str], weight: float) -> float:
+    value = str(text or "").lower()
+    return sum(count_term(value, term) * weight for term in terms)
+
+
+def intra_source_score(chunk: dict[str, Any], prompt_terms: list[str], recognition_matches: list[dict[str, Any]]) -> float:
+    if chunk.get("content_kind") != "rule":
+        return 0.0
+    terms = rerank_terms(prompt_terms, recognition_matches)
+    if not terms:
+        return 0.0
+    score = 0.0
+    score += field_score(" ".join(list_of_strings(chunk.get("rule_ids"))), terms, 100)
+    score += field_score(chunk.get("rule_title"), terms, 80)
+    score += field_score(chunk.get("rule_summary"), terms, 40)
+    score += field_score(chunk.get("rule_must_text"), terms, 10)
+    score += field_score(chunk.get("rule_must_not_text"), terms, 10)
+    score += field_score(chunk.get("rule_agent_guidance"), terms, 6)
+    score += field_score(chunk.get("content"), terms, 1)
+    return score
 
 
 def source_rank(chunk: dict[str, Any]) -> int:
@@ -890,7 +965,8 @@ def score_chunk(
 ) -> float:
     haystack = chunk_haystack(chunk)
     score = 0.0
-    for term in prompt_terms:
+    scoring_terms = rerank_terms(prompt_terms, recognition_matches)
+    for term in scoring_terms:
         score += haystack.count(term)
 
     chunk_corpus = str(chunk.get("corpus_id") or "")
@@ -934,13 +1010,14 @@ def score_chunk(
             score += 4 * weight
 
     kind = chunk.get("content_kind")
-    term_set = set(prompt_terms)
+    term_set = set(scoring_terms)
     if kind == "required-check" and term_set.intersection({"check", "validate", "governed", "gate"}):
         score += 6
     if kind == "rule" and term_set.intersection({"rule", "policy", "selector", "retrieval", "governed"}):
         score += 5
     if kind == "artifact-summary" and term_set.intersection({"artifact", "source", "rulebook", "rag"}):
         score += 4
+    score += intra_source_score(chunk, prompt_terms, recognition_matches)
     return score
 
 
@@ -1045,6 +1122,26 @@ def selector_trace_stage(
     }
 
 
+def selected_rule_ids_by_source(
+    selected_chunks: list[dict[str, Any]],
+    source_paths: list[str],
+) -> dict[str, list[str]]:
+    required_sources = set(source_paths)
+    result: dict[str, list[str]] = {}
+    for chunk in selected_chunks:
+        source_path = str(chunk.get("source_path") or "")
+        if source_path not in required_sources or chunk.get("content_kind") != "rule":
+            continue
+        rule_ids = list_of_strings(chunk.get("rule_ids"))
+        if not rule_ids:
+            continue
+        result.setdefault(source_path, [])
+        for rule_id in rule_ids:
+            if rule_id not in result[source_path]:
+                result[source_path].append(rule_id)
+    return dict(sorted(result.items()))
+
+
 def build_selector_trace(
     compiled_policy: dict[str, Any],
     recognition_matches: list[dict[str, Any]],
@@ -1143,6 +1240,19 @@ def build_selector_trace(
                         "candidate_evidence_paths": candidate_evidence_paths,
                         "bundle_source_paths": evidence_bundle_source_paths,
                         "missing_evidence_gap_ids": missing_evidence_gap_ids,
+                    },
+                )
+            )
+        elif stage_id == "intra-source-reranking":
+            selected_by_source = selected_rule_ids_by_source(selected_chunks, required_source_paths)
+            stage_records.append(
+                selector_trace_stage(
+                    stage,
+                    "applied" if selected_by_source else "skipped",
+                    "Re-ranked rule chunks inside required source paths using prompt and evidence-family terms.",
+                    {
+                        "required_source_paths": sorted(set(required_source_paths)),
+                        "selected_rule_ids_by_source": selected_by_source,
                     },
                 )
             )
@@ -1326,6 +1436,7 @@ def select_chunks(
 ) -> list[tuple[float, dict[str, Any]]]:
     selected: dict[str, tuple[float, dict[str, Any]]] = {}
     required_ids = set(required_chunk_ids or [])
+    required_sources = set(required_source_paths or [])
 
     def add(item: tuple[float, int, str, dict[str, Any]] | None) -> None:
         if item is None:
@@ -1375,8 +1486,18 @@ def select_chunks(
     if len(ordered) <= max_chunks:
         return ordered
 
-    required = [item for item in ordered if item[1].get("chunk_id") in required_ids]
-    optional = [item for item in ordered if item[1].get("chunk_id") not in required_ids]
+    required = [
+        item
+        for item in ordered
+        if item[1].get("chunk_id") in required_ids
+        or item[1].get("source_path") in required_sources
+    ]
+    optional = [
+        item
+        for item in ordered
+        if item[1].get("chunk_id") not in required_ids
+        and item[1].get("source_path") not in required_sources
+    ]
     limited = required[:max_chunks]
     if len(limited) < max_chunks:
         limited.extend(optional[: max_chunks - len(limited)])

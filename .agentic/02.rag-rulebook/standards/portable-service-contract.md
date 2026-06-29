@@ -154,3 +154,31 @@ The first implementation should be read-only:
 - emit chunk records from structured YAML fields
 - validate references and duplicate IDs
 - avoid server runtime, embeddings, network calls, and corpus moves
+
+Status: this minimum implementation is now complete and remains the baseline
+for deterministic rulebook correctness.
+
+## Local Service MSP Boundary
+
+After the minimum implementation passes, the first service-shaped MSP may add a
+local HTTP surface only when it preserves the same read-only behavior.
+
+The local service may:
+
+- bind to loopback by default
+- expose `/health`, `/version`, and `/context/query`
+- delegate retrieval to the validated local runtime and context-query command
+- fail closed when the runtime cache is missing or stale
+- validate request size, content type, `maxChunks`, focused paths, and output
+  format before invoking the query command
+
+The local service must not:
+
+- bind to non-loopback interfaces without an explicit opt-in and service token
+- claim hosted authentication or authorization coverage
+- expose write, deploy, corpus mutation, or MCP tool execution
+- hide stale runtime state behind successful health checks
+- leak absolute local paths or subprocess internals in public error responses
+
+Hosted API, MCP exposure, multi-tenant auth, account management, and AWS
+deployment remain separate governed phases.

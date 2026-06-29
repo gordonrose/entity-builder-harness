@@ -388,12 +388,48 @@ fields:
           type: string
         artifact_id:
           type: string
+        artifact_ref:
+          type: string
+        content_kind:
+          type: string
+          examples:
+            - artifact-summary
+            - rule
         source_path:
+          type: string
+        source_ref_ids:
+          type: array
+          items:
+            type: string
+        section_path:
           type: string
         rule_ids:
           type: array
           items:
             type: string
+        rule_refs:
+          type: array
+          items:
+            type: string
+        pack_refs:
+          type: array
+          items:
+            type: string
+        rule_title:
+          type: string
+          description: Optional structured title for rule chunks.
+        rule_summary:
+          type: string
+          description: Optional structured summary for rule chunks.
+        rule_must_text:
+          type: string
+          description: Optional newline-delimited must statements for rule chunks.
+        rule_must_not_text:
+          type: string
+          description: Optional newline-delimited must-not statements for rule chunks.
+        rule_agent_guidance:
+          type: string
+          description: Optional agent-facing guidance for rule chunks.
         content:
           type: string
           description: Minimal text needed by the consuming model.

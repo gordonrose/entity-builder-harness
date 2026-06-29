@@ -39,11 +39,21 @@ If the source material belongs to another corpus owner, keep the source under
 that corpus and use this workflow only for the reusable derivation machinery
 and report contract.
 
+Before this workflow can accept source material as approved, the source must
+have an accepted OKF source-material review record using:
+
+`rag-rulebook/okf-source-material-review/v1`
+
+If the review record is missing, blocked, or still needs revision, stop and use
+`review-okf-source-material.md` first.
+
 ## Flow
 
 1. Identify changed source material.
 2. Confirm the owning corpus and layer.
 3. Confirm whether the source state is approved, pending review, or removed.
+   For approved source, confirm the accepted OKF review record and reviewer
+   scores above 9.5/10.
 4. Load existing structured rules, rule packs, corpus gaps, recognition
    candidates, and active selector fixtures that may be affected.
 5. Extract the important claims from the source.
@@ -63,6 +73,7 @@ Stop before durable rulebook acceptance when:
 
 - source ownership is unclear
 - source approval is missing
+- accepted OKF source-material review is missing
 - changed source contradicts existing rules
 - drift affects existing chunks or fixtures and no update plan exists
 - the report cannot identify affected artifacts

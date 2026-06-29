@@ -1,6 +1,6 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
-#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-implementation
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-tight-budget
 #   version: 1
 #   status: active
 #   layer: 02.rag-rulebook
@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: evaluation-fixture
-#   purpose: Prove policy-plus-implementation questions retrieve concern, ownership, and runtime implementation evidence.
+#   purpose: Prove tight context budgets preserve the exact logging policy rule from required evidence sources.
 #   portability:
 #     class: reusable
 #     targets:
@@ -21,18 +21,18 @@
 #       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 
 schema: rag-rulebook/retrieval-selector-evaluation/v1
-fixture_id: retrieval-selector.v1.question-category-logging-policy-implementation
+fixture_id: retrieval-selector.v1.question-category-logging-policy-tight-budget
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove logging policy explanation questions retrieve concept definition, layer ownership, and implementation mechanics.
+purpose: Prove required evidence source paths and exact rule sections survive final trimming when max_chunks is tight.
 input:
-  request_text: explain the logging policy for this repo, how it works and how it's implemented?
+  request_text: explain the logging policy for this repo, how it works and how it's implemented
   session:
     layer: 02.rag-rulebook
     mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md
   no_focused_paths: true
-  max_chunks: 8
+  max_chunks: 3
 expected:
   routing:
     layer: 02.rag-rulebook
@@ -45,35 +45,17 @@ expected:
     status: not-requested
   matched_corpora:
     required:
+      - corpus.01.harness
       - corpus.02.rag-rulebook
   selected_corpora:
     required:
       - corpus.03.product.platform
   recognition:
-    required_source_ids:
-      - recognition.curated.intent-forms
-      - recognition.curated.question-categories
-    required_matches:
-      - source_id: recognition.curated.intent-forms
-        term: Explain
-        category: intent-form
-        canonical_id: intent.explanation.tutor
-        matched_input: prompt
-      - source_id: recognition.curated.question-categories
-        term: how it works
-        category: question-category
-        canonical_id: question.policy-implementation.explain
-        matched_input: prompt
-      - source_id: recognition.curated.question-categories
-        term: logging policy
-        category: evidence-family
-        canonical_id: evidence.concern.reporting-analytics-audit
-        matched_input: prompt
-      - source_id: recognition.curated.question-categories
-        term: logging
-        category: evidence-family
-        canonical_id: evidence.platform.observability
-        matched_input: prompt
+    required_canonical_ids:
+      - intent.explanation.tutor
+      - question.policy-implementation.explain
+      - evidence.concern.reporting-analytics-audit
+      - evidence.platform.observability
   gaps:
     allowed:
       - gap.selector-fixture.prototype-corpus-bridge
@@ -81,10 +63,8 @@ expected:
   selected_chunks:
     required_artifact_ids:
       - artifact.concern.reporting.analytics.audit
-      - artifact.layer.platform
     required_rule_ids:
       - reporting-analytics-audit.logging-is-structured-operational-detail
-      - platform.security-and-observability-are-mechanisms
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_stage_ids:
@@ -106,12 +86,13 @@ expected:
 banned:
   selected_corpora:
     - corpus.04.deploy
+  selected_rule_ids:
+    - reporting-analytics-audit.audit-is-accountability-evidence
 source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
   - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-  - docs/harness/architecture/rules/layers/platform.yml
 update_triggers:
-  - Policy-plus-implementation question-category recognition changes.
-  - Platform runtime module names or artifact IDs change.
-  - Reporting, analytics, audit, logging, monitoring, or observability rule IDs or paths change.
+  - Logging rule ID, title, summary, or aliases change.
+  - Intra-source reranking or final trimming changes.

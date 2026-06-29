@@ -41,6 +41,12 @@ every durable output structured, reviewable, reproducible, and testable.
 
 Source material may be human-authored and approved as prose.
 
+Before semantic derivation starts, production-grade OKF source material must
+pass the `okf-source-material-quality` review loop. That loop requires
+architect, agentic engineer, SecOps engineer, and senior SRE review, and every
+reviewer must score the material above `9.5/10` with no blocking gaps
+remaining.
+
 Structured rulebook outputs must still pass a derivation review before they are
 treated as retrieval-ready knowledge.
 
@@ -147,6 +153,8 @@ must name the replacement.
 - Compare changed source material with existing rules before writing new rules.
 - Generate a source-to-rule work order before asking an agent to draft or
   revise source-derived YAML.
+- Confirm the accepted OKF source-material review record before semantic
+  derivation.
 - Generate a source-to-rule draft packet when the agent needs source and
   current-artifact content to propose semantic changes.
 - Name affected rules, rule packs, corpus gaps, recognition candidates, chunks,
@@ -168,6 +176,8 @@ Do not:
 
 - treat source material as retrieval-ready rulebook coverage by itself
 - let an LLM rewrite rules without a derivation report
+- derive production rules from source material that has not passed the OKF
+  source-material review loop
 - hide contradictions behind a polished summary
 - mark chunks or selector evaluations current when they were not regenerated
 - update source material without regenerating or revalidating derived YAML

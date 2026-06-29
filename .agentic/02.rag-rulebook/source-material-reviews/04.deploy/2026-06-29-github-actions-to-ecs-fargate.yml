@@ -41,6 +41,7 @@ threshold:
   required_roles:
     - architect
     - agentic-engineer
+    - secops-engineer
     - senior-sre
   pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
 iterations:
@@ -425,7 +426,7 @@ iterations:
       Reviewed revised source hash
       d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0.
       All required reviewer roles passed above 9.5 with no blocking gaps:
-      architect 9.7, agentic engineer 9.6, senior SRE 9.6.
+      architect 9.7, agentic engineer 9.6, SecOps engineer 9.6, senior SRE 9.6.
     reviewer_assessments:
       - role: architect
         overall_score: 9.7
@@ -486,6 +487,41 @@ iterations:
         evidence:
           - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
           - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+      - role: secops-engineer
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.6
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.6
+          machine_readability: 9.6
+          cost_optimization: 9.6
+          security: 9.7
+          performance: 9.6
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: SECOPS3-REC-001
+            priority: medium
+            summary: Clarify GitHub OIDC subject-template and AWS IAM aud/sub condition expectations before IAM rule derivation.
+          - recommendation_id: SECOPS3-REC-002
+            priority: medium
+            summary: Add a machine-checkable execution variable for maximum AWS deploy role session duration.
+          - recommendation_id: SECOPS3-REC-003
+            priority: low
+            summary: Align source material artifact metadata with the accepted review gate when source status conventions are settled.
+          - recommendation_id: SECOPS3-REC-004
+            priority: low
+            summary: Add a CloudTrail or EventBridge guardrail field for unexpected deploy-role API actions outside the allowlist.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-supply-chain
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-oidc
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-iam
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-data-boundaries
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-stop-conditions
       - role: senior-sre
         overall_score: 9.6
         decision: pass
@@ -521,6 +557,7 @@ iterations:
       agreement:
         - The source material now meets the OKF acceptance threshold.
         - Iteration 2 blockers were closed.
+        - The added SecOps review found no blocking security gaps under the four-role gate.
         - Source projection update remains required before source-to-rule derivation.
         - Follow-up recommendations are non-blocking for source-material acceptance.
       disagreement: []
@@ -542,6 +579,18 @@ iterations:
           reason: Stable section IDs already exist; map enrichment can occur before chunk generation.
         - recommendation_id: AE3-REC-004
           summary: Deferred to deploy-readiness manifest schema work.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SECOPS3-REC-001
+          summary: Deferred to IAM/OIDC rule derivation.
+          reason: Non-blocking for source acceptance; should be captured before IAM rule generation.
+        - recommendation_id: SECOPS3-REC-002
+          summary: Deferred to deploy-readiness manifest schema work.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SECOPS3-REC-003
+          summary: Deferred to artifact metadata convention update.
+          reason: Source hash must remain stable for the accepted review record.
+        - recommendation_id: SECOPS3-REC-004
+          summary: Deferred to observability and security-operation rule derivation.
           reason: Non-blocking for source acceptance.
         - recommendation_id: SRE3-REC-001
           summary: Deferred to IAM/OIDC rule or appendix derivation.

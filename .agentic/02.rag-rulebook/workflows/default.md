@@ -53,8 +53,10 @@ another layer's workflow, split the work into separate governed phases.
 - If corpus ownership is unclear, stop and ask whether to update the layer
   boundary before continuing.
 - If source material is created, changed, removed, or reorganized in a way that
-  affects rulebook knowledge, use `derive-rules-from-source.md` before treating
-  downstream rules, chunks, or selector evaluations as current.
+  affects rulebook knowledge, use `review-okf-source-material.md` before
+  `derive-rules-from-source.md`. Do not treat downstream rules, chunks, or
+  selector evaluations as current until review, derivation, and validation are
+  complete.
 
 ## Default Flow
 
@@ -68,7 +70,10 @@ another layer's workflow, split the work into separate governed phases.
 5. Check `plans/repo-plan.md` when choosing the next small slice.
 6. For planning, discovery, or investigation tasks, run the A/B context
    evaluation skill before treating the answer as complete.
-7. If source material drives the change, create or update a derivation report
-   that names claims, drift, conflicts, affected artifacts, and validation.
-8. Validate YAML or metadata headers when edited.
-9. Summarize boundaries, assumptions, and any deferred migration.
+7. If source material drives the change, create or update an OKF
+   source-material review record and complete the reviewer loop before
+   derivation.
+8. After source review acceptance, create or update a derivation report that
+   names claims, drift, conflicts, affected artifacts, and validation.
+9. Validate YAML or metadata headers when edited.
+10. Summarize boundaries, assumptions, and any deferred migration.

@@ -23,9 +23,15 @@ used_by:
 
 ## Goal
 
-Create a portable RAG/rulebook service model that can support multiple modular
-domain corpora without folding product, design-system, deployment, education,
-and harness instructions into one harness-owned corpus.
+Create a portable Operational Knowledge Framework with a RAG/rulebook delivery
+model that can support multiple modular domain corpora without folding product,
+design-system, deployment, education, and harness instructions into one
+harness-owned corpus.
+
+The OKF is the governed knowledge system: source material, rules, rule packs,
+policies, provenance, reviews, evaluations, checks, stop conditions, and
+corpus packages. RAG is one delivery/runtime interface over that governed
+knowledge, serving small validated context packets to agents.
 
 Corpus IDs should align with the numbered layer system, including
 `corpus.02.rag-rulebook` as the self-corpus for the service's own governance.
@@ -72,6 +78,12 @@ The prototype rulebook proves useful structure:
 - metadata headers
 
 The location is not the final domain corpus model.
+
+Production-grade source material now needs an OKF quality review loop before
+source-to-rule derivation. That loop requires architect, agentic engineer,
+SecOps engineer, and senior SRE review, and every reviewer must score the
+source material above 9.5/10 with no blocking gaps remaining before structured
+YAML, chunks, selector evaluations, or deploy guidance are treated as current.
 
 ## Ordered Plan
 
@@ -756,6 +768,61 @@ The location is not the final domain corpus model.
      plus
      `evaluations/retrieval-selector/v1/fixtures/question-category-platform-runtime-modules-policy-implementation.yml`.
 
+7aq. Add generic intra-source rule reranking.
+   - Improve accuracy after evidence bundles select the right source file by
+     re-ranking rule chunks inside required sources.
+   - Use generated rule metadata rather than prompt-specific hard-coded rule
+     mappings: rule IDs, titles, summaries, `must`, `must_not`, and
+     `agent_guidance` fields.
+   - Add an `intra-source-reranking` strategy stage between
+     `evidence-bundles` and `final-ranking` so A/B diagnosis can distinguish
+     right-file/wrong-section misses from recognition or bundle misses.
+   - Extend retrieval fixtures so they can require selected rule IDs, proving
+     that the exact section survives selection.
+   - Prove the behavior with logging, platform server, and platform workers
+     fixtures so the improvement is not specific to a single logging prompt.
+   - Status: present in
+     `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh`,
+     `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`,
+     `scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh`,
+     `policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml`,
+     `evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-implementation.yml`,
+     `evaluations/retrieval-selector/v1/fixtures/question-category-platform-server-policy-implementation.yml`,
+     and
+     `evaluations/retrieval-selector/v1/fixtures/question-category-platform-workers-policy-implementation.yml`.
+
+7ar. Add generated projection-set suggestions for new source material.
+   - Detect new or changed governed source material and generate suggested
+     source projection manifest entries before semantic derivation begins.
+   - Keep suggestions review-only: do not auto-accept owning corpus, expected
+     rule paths, derivation reports, selector fixtures, or corpus gaps without
+     agent/human review.
+   - Use source path, heading outline, artifact metadata, corpus root, and
+     existing projection patterns to propose bounded projection sets.
+   - Add commit-gate guidance that distinguishes orphan-source blockers from
+     suggested projection candidates, so new source material can move through a
+     governed queue instead of becoming manual bookkeeping.
+   - Status: planned after the first MSP shipping path is established.
+
+7as. Add OKF source-material quality review loop.
+   - Treat source material as the canonical human-authored input to the OKF,
+     not as retrieval-ready coverage by itself.
+   - Require iterative review by architect, agentic engineer,
+     SecOps engineer, and senior SRE roles before production source material
+     can proceed to source-to-rule derivation.
+   - Assess coverage, necessity, production-grade gaps, execution variables,
+     human readability, machine readability, cost optimization, security,
+     performance, and token optimization.
+   - Require every reviewer to score above 9.5/10 and record no blocking gaps.
+   - Store review records under
+     `.agentic/02.rag-rulebook/source-material-reviews/`.
+   - Apply recommendations and rerun all reviewers until the threshold is met.
+   - Status: present in `standards/okf-source-material-quality.md`,
+     `workflows/review-okf-source-material.md`,
+     `schemas/okf-source-material-review.schema.yml`,
+     `source-material-reviews/README.md`, and
+     `scripts/02.rag-rulebook/validate-okf-source-material-reviews/`.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.
@@ -784,6 +851,10 @@ The location is not the final domain corpus model.
      `docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md`
      and
      `corpus-gaps/04.deploy/mcp-server-deployment.yml`.
+   - Note: existing source material predates the OKF quality review loop. New
+     production-grade vertical source material, including GitHub Actions to ECS
+     Fargate deployment guidance, must pass the OKF review loop before YAML
+     derivation.
 
 8b. Add first deploy corpus structured rulebook coverage.
    - Convert the `02.rag-rulebook` deploy source material into structured
@@ -930,6 +1001,7 @@ The location is not the final domain corpus model.
      protected environment configuration, selected AWS runtime target, and
      passing target manifest exist.
    - Status: present in
+     `.github/workflows/rag-rulebook-msp-checks.yml`,
      `.agentic/aws/workflows/deploy-rag-rulebook-service.md`,
      `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh`,
      `scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh`,
@@ -963,6 +1035,10 @@ The location is not the final domain corpus model.
 
 11. Shape the first MVP service.
    - Target: provider-agnostic governed context for coding agents.
+   - First hosted AWS runtime target: ECS Fargate. App Runner remains a
+     legacy/existing-service verifier value, but it is not the preferred target
+     for this new MSP because AWS is no longer accepting new App Runner
+     customers after April 30, 2026.
    - User flow: engineer creates an account, installs a small local client,
      adds bootstrap instructions to `AGENTS.md` or `CLAUDE.md`, points local
      config at the hosted service, authenticates, and retrieves validated
@@ -979,8 +1055,17 @@ The location is not the final domain corpus model.
      readiness.
    - MCP should be a later access surface over the same service capabilities,
      starting read-only before any write-capable or deploy-capable tools.
-   - Status: planned after local runtime test, GitHub Actions skeleton, and
-     runtime target decision.
+   - Status: ECS Fargate selected as the first hosted target after local
+     runtime test and GitHub Actions skeleton. Thin local-only service API
+     skeleton is present in `.agentic/02.rag-rulebook/service/` and
+     `scripts/02.rag-rulebook/run-local-service/`. It is loopback-first,
+     validates request shape, fails closed on stale runtime, and requires an
+     explicit token for non-loopback development binds. Hosted auth, account
+     management, AWS deployment, and MCP exposure remain pending.
+   - Structure rule: keep RAG/rulebook service machinery inside the
+     `02.rag-rulebook` layer until a governed extraction creates a standalone
+     service repo. Do not create root `apps/` or `platform/` runtime folders in
+     this harness repo for the RAG/rulebook MSP.
 
 ## Non-Goals For The Current Stage
 
@@ -991,9 +1076,25 @@ The location is not the final domain corpus model.
 - Do not merge domain corpora into one instruction set.
 - Do not deploy RAG to AWS before local runtime behavior and deploy-corpus
   checks are proven.
+- Do not derive production-grade deploy YAML from source material that has not
+  passed the OKF source-material review loop.
 
 ## Next Small Slice
 
-Return to MSP shipping work by adding the actual GitHub Actions workflow
-skeleton while keeping deploy execution blocked until a protected environment,
-selected AWS runtime target, and passing readiness manifest exist.
+Derive the accepted GitHub Actions to ECS Fargate source material into governed
+`corpus.04.deploy` YAML rules and proof artifacts.
+
+That slice should:
+
+- keep the Markdown source canonical
+- use the source-to-rule work order and draft packet before semantic edits
+- generate or update the structured deploy rules with source hashes and
+  derivation provenance
+- add or update the derivation report
+- refresh source projection manifest coverage
+- prove the new rules are indexed, chunked, and selectable
+- add deploy-readiness and retrieval selector fixtures for the new rule
+  families
+- keep actual AWS deployment blocked until the target manifest, protected
+  GitHub environment, OIDC trust, immutable image artifact, and ECS Fargate
+  readiness checks pass

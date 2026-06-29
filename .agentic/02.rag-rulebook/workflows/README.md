@@ -24,6 +24,9 @@ used_by:
 - `default.md` - govern changes to standalone RAG/rulebook service design,
   intent and context-packet schemas, rulebook corpus generation, indexing,
   chunking, graph retrieval, and domain corpus boundaries.
+- `review-okf-source-material.md` - govern iterative architect, agentic
+  engineer, and senior SRE review of OKF source material before it can be
+  treated as approved input for derivation.
 - `derive-rules-from-source.md` - govern approved source-material conversion
   into structured rules, with required drift and conflict review.
 - `review-recognition-candidates.md` - govern review of unmatched, ambiguous,

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 486
-  term_count: 983
+  indexed_artifacts: 491
+  term_count: 993
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3354,6 +3354,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-implementation
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-implementation.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-tight-budget
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-tight-budget
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-tight-budget.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-tight-budget.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-tight-budget
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-tight-budget.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-platform-runtime-modules-policy-implementation
   category: artifact-id
   match_type: exact
@@ -4188,6 +4200,18 @@ terms:
   canonical_id: rag-rulebook.workflows.review-recognition-candidates
   evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   confidence_weight: 1
+- term: rag-rulebook.workflow.github-actions.msp-checks
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.workflow.github-actions.msp-checks
+  evidence_path: .github/workflows/rag-rulebook-msp-checks.yml
+  confidence_weight: 1
+- term: .github/workflows/rag-rulebook-msp-checks.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.workflow.github-actions.msp-checks
+  evidence_path: .github/workflows/rag-rulebook-msp-checks.yml
+  confidence_weight: 1
 - term: rag-rulebook.rules.readme
   category: artifact-id
   match_type: exact
@@ -5003,6 +5027,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.validate-derivation-reports.smoke-test
   evidence_path: scripts/02.rag-rulebook/validate-derivation-reports/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-okf-source-material-reviews.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-okf-source-material-reviews.readme
+  evidence_path: scripts/02.rag-rulebook/validate-okf-source-material-reviews/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-okf-source-material-reviews/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-okf-source-material-reviews.readme
+  evidence_path: scripts/02.rag-rulebook/validate-okf-source-material-reviews/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-okf-source-material-reviews
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-okf-source-material-reviews
+  evidence_path: scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-okf-source-material-reviews
+  evidence_path: scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.validate-okf-source-material-reviews.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-okf-source-material-reviews.smoke-test
+  evidence_path: scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.validate-okf-source-material-reviews.smoke-test
+  evidence_path: scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.validate-recognition-candidates.readme
   category: artifact-id

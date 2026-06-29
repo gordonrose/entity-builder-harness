@@ -20,7 +20,7 @@ set -euo pipefail
 #       - entity-builder
 #       - design-system-builder
 #   effects:
-#     - reads-files
+#     - read-only
 #     - writes-files
 #   used_by:
 #     - id: rag-rulebook.schema.compiled-retrieval-policy

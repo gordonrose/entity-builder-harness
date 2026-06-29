@@ -74,6 +74,12 @@ if [ -d "$LAYER_DIR/derivation-reports" ]; then
   echo "RAG/rulebook source derivation reports are valid."
 fi
 
+if [ -d "$LAYER_DIR/source-material-reviews" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh"
+  bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current
+  echo "RAG/rulebook OKF source-material reviews are valid."
+fi
+
 if [ -d "$LAYER_DIR/retirements" ]; then
   require_executable "scripts/02.rag-rulebook/validate-retirement-records/script.sh"
   bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
@@ -155,6 +161,10 @@ echo "RAG/rulebook source material coverage smoke passed."
 require_executable "scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh"
 bash scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh >/dev/null
 echo "RAG/rulebook retirement record smoke passed."
+
+require_executable "scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh"
+bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh >/dev/null
+echo "RAG/rulebook OKF source-material review smoke passed."
 
 require_executable "scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh >/dev/null

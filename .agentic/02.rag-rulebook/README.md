@@ -62,7 +62,9 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer guides: `.agentic/02.rag-rulebook/guides/`
 - Layer schemas: `.agentic/02.rag-rulebook/schemas/`
 - Layer policies: `.agentic/02.rag-rulebook/policies/`
+- Layer service runtime: `.agentic/02.rag-rulebook/service/`
 - Layer derivation reports: `.agentic/02.rag-rulebook/derivation-reports/`
+- Layer source material reviews: `.agentic/02.rag-rulebook/source-material-reviews/`
 - Layer retirement records: `.agentic/02.rag-rulebook/retirements/`
 - Layer corpus gaps: `.agentic/02.rag-rulebook/corpus-gaps/`
 - Layer plans: `.agentic/02.rag-rulebook/plans/`
@@ -79,6 +81,9 @@ final homes.
 
 - `workflows/default.md` - plan or change RAG/rulebook schemas, corpora,
   indexes, graph retrieval, context packets, or standalone service boundaries.
+- `workflows/review-okf-source-material.md` - review OKF source material with
+  architect, agentic engineer, SecOps engineer, and senior SRE roles until
+  every reviewer scores above 9.5/10 before source-to-rule derivation.
 - `workflows/derive-rules-from-source.md` - convert approved source material
   into structured rulebook proposals with drift and conflict review.
 - `workflows/review-recognition-candidates.md` - review unmatched or ambiguous
@@ -107,6 +112,8 @@ final homes.
   rules for retrieval selector and context-packet behavior.
 - `standards/source-to-rule-derivation.md` - defines how approved source
   material becomes structured rules while preserving drift and conflict review.
+- `standards/okf-source-material-quality.md` - defines the production-grade
+  source-material quality gate and iterative reviewer loop before derivation.
 
 ## Schemas
 
@@ -129,6 +136,8 @@ final homes.
   ownership, and graph metadata.
 - `schemas/source-to-rule-derivation-report.schema.yml` - defines the v1
   report contract for source-to-rule derivation and semantic drift review.
+- `schemas/okf-source-material-review.schema.yml` - defines the v1 review
+  record contract for the OKF source-material quality loop.
 - `schemas/retirement-record.schema.yml` - defines the v1 record contract for
   retired, renamed, superseded, or retained-retired RAG/rulebook artifacts.
 - `recognition-sources/generated/artifacts.yml` - generated lookup source for
@@ -155,6 +164,9 @@ final homes.
 - `derivation-reports/` - durable reports for source-material changes that
   affect structured rulebook content, drift, conflict review, indexes, chunks,
   or selector evaluations.
+- `source-material-reviews/` - durable review records for source material that
+  must pass architect, agentic engineer, SecOps engineer, and senior SRE review
+  before source-to-rule derivation.
 - `retirements/` - durable records for retired source material, rules, rule
   packs, derivation reports, corpus gaps, recognition sources, evaluations,
   generated indexes, chunks, runtime caches, workflows, and scripts.
@@ -179,6 +191,9 @@ final homes.
 - `scripts/02.rag-rulebook/check-runtime-freshness/script.sh` - verifies that
   a built local runtime cache still matches current governed input and
   runtime-output fingerprints.
+- `.agentic/02.rag-rulebook/service/` - layer-owned local HTTP service
+  skeleton for `/health`, `/version`, and `/context/query`, used to prove the
+  provider-agnostic API shape before hosted deployment or MCP exposure.
 - `scripts/02.rag-rulebook/check-corpus-root-changes/script.sh` - detects
   changed governed corpus-root files and requires retirement, coverage,
   indexing, or chunking proof depending on the change type.

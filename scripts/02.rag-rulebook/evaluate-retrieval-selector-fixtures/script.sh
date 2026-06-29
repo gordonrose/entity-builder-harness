@@ -205,6 +205,12 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             for item in packet.get("selected_chunks", [])
             if isinstance(item, dict) and isinstance(item.get("chunk_id"), str)
         },
+        "selected_rule_ids": {
+            rule_id
+            for item in packet.get("selected_chunks", [])
+            if isinstance(item, dict)
+            for rule_id in list_of_strings(item.get("rule_ids"))
+        },
         "gap_ids": {
             item.get("id")
             for item in packet.get("gaps", [])
@@ -521,6 +527,12 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
         list_of_strings(selected_chunks.get("required_chunk_ids")),
         errors,
     )
+    require_contains(
+        "selected_rule_ids",
+        sets["selected_rule_ids"],
+        list_of_strings(selected_chunks.get("required_rule_ids")),
+        errors,
+    )
 
     selector_trace = dict_value(expected.get("selector_trace"))
     compare_object_fields(
@@ -567,6 +579,7 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
             errors.append(f"gaps contains unexpected value: {gap_id}")
     require_absent("blocking_gaps", sets["blocking_gap_ids"], list_of_strings(banned.get("blocking_gaps")), errors)
     require_absent("gaps", sets["gap_ids"], list_of_strings(banned.get("gaps")), errors)
+    require_absent("selected_rule_ids", sets["selected_rule_ids"], list_of_strings(banned.get("selected_rule_ids")), errors)
 
     checks = dict_value(expected.get("required_checks"))
     min_checks = checks.get("min_count")
