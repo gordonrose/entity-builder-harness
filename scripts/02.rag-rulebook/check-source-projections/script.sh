@@ -494,7 +494,12 @@ def main(argv: list[str]) -> int:
         errors.append(f"duplicate projection set id: {set_id}")
 
     active_sets = [item for item in normalized_sets if item["status"] == "active"]
-    declared_sources = {path for item in active_sets for path in item["source_paths"]}
+    declaration_sets = [
+        item
+        for item in normalized_sets
+        if item["status"] in {"active", "planned"}
+    ]
+    declared_sources = {path for item in declaration_sets for path in item["source_paths"]}
     declared_rules = {path for item in active_sets for path in item["rule_paths"]}
 
     current_sources = current_source_material_files()
@@ -504,7 +509,7 @@ def main(argv: list[str]) -> int:
 
     missing_sources = sorted(declared_sources - current_sources)
     for path in missing_sources:
-        errors.append(f"active projection manifest declares missing source material: {path}")
+        errors.append(f"projection manifest declares missing source material: {path}")
 
     derived_rules = current_derived_rule_files(errors)
     undeclared_derived_rules = sorted(set(derived_rules) - declared_rules)

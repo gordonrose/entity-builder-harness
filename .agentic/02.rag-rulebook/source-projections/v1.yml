@@ -88,3 +88,33 @@ projection_sets:
       - Deploy source projects into separate deploy-track rules for service shape, GitHub release control, AWS runtime boundaries, and readiness checks.
       - The corpus gap remains open for concrete GitHub Actions and AWS target implementation proof.
 
+  - id: projection.04.deploy.02-rag-rulebook.github-actions-to-ecs-fargate
+    status: planned
+    projection_mode: planned
+    source_material:
+      - path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+        role: primary
+    target:
+      corpus_id: corpus.04.deploy
+      owner_layer: 04.deploy
+      deploy_track: 02.rag-rulebook
+    expected_rule_paths:
+      - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+      - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/planned-github-actions-to-ecs-fargate.yml
+    corpus_gap_paths:
+      - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/github-actions-to-ecs-fargate.yml
+    expected_selector_evaluations:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/planned-deploy-ecs-fargate.yml
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
+      - bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+    notes:
+      - Source material passed OKF review on 2026-06-29 and is registered before source-to-rule derivation.
+      - Planned outputs must not be treated as active retrieval or deploy coverage until derivation report, rules, chunks, and selector evaluations exist.
+      - Source acceptance record lives at .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml.
