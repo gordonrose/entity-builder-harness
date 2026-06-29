@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-28T15:03:29Z
-latest_commit_sha: f910e7d
-chat_duration: 273038s (03:03:50:38)
-estimated_chat_tokens: 9233282 estimated from chat transcript bytes (36933126 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 277.00 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-06-29T21:39:25Z
+latest_commit_sha: 004bf24
+chat_duration: 383194s (04:10:26:34)
+estimated_chat_tokens: 13234240 estimated from chat transcript bytes (52936958 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 397.03 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -922,6 +922,17 @@ Summary: Added A/B context evaluation skill, wired it into the RAG workflow, and
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-06-29T21:39:25Z - Commit recorded
+
+Commit: `004bf24`
+
+Message: Derive ECS Fargate deploy rules
+
+Summary: Derived the accepted ECS Fargate deploy source into active 04.deploy rules, source projection, derivation report, recognition source update, and selector fixture proof.
+
+ADR impact: No ADR required; implements active RAG/rulebook deploy-corpus projection already governed by the repo plan.
+
 ## Commits
 
 
@@ -1164,6 +1175,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added A/B context evaluation skill, wired it into the RAG workflow, and committed source-to-rule handoff helpers.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `004bf24`
+  Time UTC: 2026-06-29T21:39:25Z
+  Message: Derive ECS Fargate deploy rules
+  Summary: Derived the accepted ECS Fargate deploy source into active 04.deploy rules, source projection, derivation report, recognition source update, and selector fixture proof.
+  ADR impact: No ADR required; implements active RAG/rulebook deploy-corpus projection already governed by the repo plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1177,11 +1195,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-28T15:03:29Z
-Latest commit SHA: f910e7d
-Chat duration: 273038s (03:03:50:38)
-Estimated chat tokens: 9233282 estimated from chat transcript bytes (36933126 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 277.00 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-06-29T21:39:25Z
+Latest commit SHA: 004bf24
+Chat duration: 383194s (04:10:26:34)
+Estimated chat tokens: 13234240 estimated from chat transcript bytes (52936958 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 397.03 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
