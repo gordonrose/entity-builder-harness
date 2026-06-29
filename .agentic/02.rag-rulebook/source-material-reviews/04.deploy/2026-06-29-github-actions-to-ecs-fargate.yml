@@ -1,0 +1,45 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.04-deploy.github-actions-to-ecs-fargate.2026-06-29
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: review-record
+#   purpose: Track the OKF source-material review loop for GitHub Actions to ECS Fargate deployment source material.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#     - id: deploy.source-material.02-rag-rulebook.github-actions-to-ecs-fargate
+#       path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+#     - id: rag-rulebook.workflow.review-okf-source-material
+#       path: .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-06-29.04-deploy.github-actions-to-ecs-fargate
+status: needs-review
+source_material:
+  path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+  corpus_id: corpus.04.deploy
+  vertical: github-actions-to-aws-ecs-fargate-for-rag-rulebook-service
+  source_state: draft
+  target_rule_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations: []
+final_decision:
+  status: pending
+  summary: Iteration 1 has not yet been recorded.
