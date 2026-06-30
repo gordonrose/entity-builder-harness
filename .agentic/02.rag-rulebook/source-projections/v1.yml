@@ -119,3 +119,32 @@ projection_sets:
       - ECS Fargate, supply-chain provenance, and context-provider data-boundary rules are active for planning and explanation prompts.
       - Deploy execution remains blocked until concrete GitHub Actions workflow, target manifest, AWS target, and readiness proof exist.
       - Source acceptance record lives at .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml.
+
+  - id: projection.04.deploy.shared.container-image-management
+    status: active
+    projection_mode: manual-reviewed
+    source_material:
+      - path: docs/04.deploy/source-material/shared/container-image-management.md
+        role: primary
+    target:
+      corpus_id: corpus.04.deploy
+      owner_layer: 04.deploy
+    expected_rule_paths:
+      - docs/04.deploy/rules/shared/container-image-management.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+    corpus_gap_paths: []
+    expected_selector_evaluations:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+      - bash scripts/04.deploy/validate-container-boundaries/script.sh --json
+      - bash scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+    notes:
+      - Shared deploy source projects into one active container-image-management concern rule.
+      - The rule is shared across deploy tracks because Dockerfile placement and image boundary policy should not fork per service.
+      - The validator enforces the infra image boundary before the first Dockerfile is introduced.
+      - Source acceptance record lives at .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml.

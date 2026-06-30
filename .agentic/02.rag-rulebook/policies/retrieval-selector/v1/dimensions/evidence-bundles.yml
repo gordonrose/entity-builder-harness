@@ -86,6 +86,13 @@ evidence_bundles:
       evidence.platform.server: docs/harness/architecture/rules/layers/platform.yml
       evidence.platform.testing: docs/harness/architecture/rules/layers/platform.yml
       evidence.platform.workers: docs/harness/architecture/rules/layers/platform.yml
+      evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+  - question_category_id: question.deploy.container-governance
+    always_source_paths:
+      - docs/04.deploy/rules/shared/container-image-management.yml
+      - docs/harness/architecture/rules/layers/infra.yml
+    family_source_paths:
+      evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.
@@ -99,6 +106,9 @@ validation_examples:
   - name: policy plus implementation retrieves concern and owner evidence
     given: User asks how a policy works and how it is implemented.
     expect: The selector includes the matched concern evidence and the owning platform or layer evidence rather than answering from the concern alone.
+  - name: container governance retrieves shared deploy evidence
+    given: User asks how Dockerfiles or container images should be managed to avoid sprawl.
+    expect: The selector includes the shared container-image-management rule and infra ownership evidence before target-specific deployment chunks.
 can_change_by:
   - Add question categories.
   - Add evidence-family terms.

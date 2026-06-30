@@ -256,6 +256,37 @@ terms:
       - queue policy
       - job policy
     confidence_weight: 0.7
+  - term: container images
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.container-image-management
+    evidence_path: docs/04.deploy/rules/shared/container-image-management.yml
+    aliases:
+      - container image
+      - Dockerfiles
+      - Dockerfile
+      - docker files
+      - image definitions
+      - image definition
+      - image sprawl
+      - container sprawl
+      - build context
+      - dockerignore
+      - .dockerignore
+    confidence_weight: 0.74
+  - term: container governance
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.container-governance
+    aliases:
+      - manage Dockerfiles
+      - manage container images
+      - where should Dockerfiles live
+      - where should container images live
+      - prevent Dockerfile sprawl
+      - prevent container sprawl
+      - avoid image sprawl
+    confidence_weight: 0.79
   - term: platform testing
     category: evidence-family
     match_type: phrase

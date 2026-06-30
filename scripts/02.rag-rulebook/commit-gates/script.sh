@@ -138,6 +138,16 @@ require_executable "scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.s
 bash scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh >/dev/null
 echo "RAG/rulebook local runtime freshness smoke passed."
 
+if [ -d "infra" ]; then
+  require_executable "scripts/04.deploy/validate-container-boundaries/script.sh"
+  bash scripts/04.deploy/validate-container-boundaries/script.sh --json >/dev/null
+  echo "Deploy container boundaries are valid."
+
+  require_executable "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+  bash scripts/04.deploy/validate-container-boundaries/smoke-test.sh >/dev/null
+  echo "Deploy container boundary smoke passed."
+fi
+
 require_executable "scripts/02.rag-rulebook/check-source-projections/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-source-projections/smoke-test.sh >/dev/null
 echo "RAG/rulebook source projection smoke passed."

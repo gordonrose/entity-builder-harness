@@ -1,0 +1,353 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.04-deploy.container-image-management.2026-06-30
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#     - security
+#   kind: review-record
+#   purpose: Track the OKF review loop for shared container image management source material and anti-sprawl artifacts.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#     - id: deploy.source-material.shared.container-image-management
+#       path: docs/04.deploy/source-material/shared/container-image-management.md
+#     - id: rag-rulebook.workflow.review-okf-source-material
+#       path: .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-06-30.04-deploy.container-image-management
+status: accepted
+source_material:
+  path: docs/04.deploy/source-material/shared/container-image-management.md
+  corpus_id: corpus.04.deploy
+  vertical: shared-container-image-management-and-anti-sprawl
+  source_state: accepted
+  sha256: f6f224ce56fb55b65fc575502454a68a81da368273d56fc1aa5eb78f2d80d221
+  target_rule_paths:
+    - docs/04.deploy/rules/shared/container-image-management.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - secops-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations:
+  - iteration: 1
+    source_revision_summary: >
+      Reviewed the first shared container image management source material and
+      accompanying rule, validator, fixture, and infra scaffold integration.
+      The artifacts establish a single infra-owned Dockerfile boundary, a
+      deterministic validator, retrieval fixture coverage, and commit-gate
+      enforcement before any real Dockerfile is added.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.8
+          machine_readability: 9.7
+          cost_optimization: 9.6
+          security: 9.6
+          performance: 9.6
+          token_optimization: 9.8
+        requested_dimension_scores:
+          completeness: 9.7
+          readiness_to_reduce_token_count: 9.8
+          human_readability: 9.8
+          best_in_class_standards: 9.6
+          security_performance_cleanliness_scalability: 9.6
+          reduced_risk_of_drift_gaps_contamination: 9.7
+          alignment_with_spirit_of_rest_of_repo: 9.8
+        recommendations:
+          - recommendation_id: ARCH-REC-001
+            priority: low
+            summary: When the first real Dockerfile is added, add a small diagram showing source, image, runtime, and deploy-readiness relationships.
+        evidence:
+          - docs/04.deploy/source-material/shared/container-image-management.md
+          - docs/04.deploy/rules/shared/container-image-management.yml
+          - infra/04.deploy/02.rag-rulebook/image/README.md
+      - role: agentic-engineer
+        perspective_alias: senior-staff-engineer
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.6
+          necessity: 9.7
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.6
+          security: 9.6
+          performance: 9.6
+          token_optimization: 9.8
+        requested_dimension_scores:
+          completeness: 9.6
+          readiness_to_reduce_token_count: 9.8
+          human_readability: 9.7
+          best_in_class_standards: 9.6
+          security_performance_cleanliness_scalability: 9.6
+          reduced_risk_of_drift_gaps_contamination: 9.8
+          alignment_with_spirit_of_rest_of_repo: 9.8
+        recommendations:
+          - recommendation_id: AE-REC-001
+            priority: low
+            summary: Add Dockerfile path checks to deploy-readiness manifest validation when the first manifest is introduced.
+        evidence:
+          - scripts/04.deploy/validate-container-boundaries/script.sh
+          - scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+          - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+      - role: secops-engineer
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.6
+          machine_readability: 9.7
+          cost_optimization: 9.6
+          security: 9.8
+          performance: 9.6
+          token_optimization: 9.7
+        requested_dimension_scores:
+          completeness: 9.7
+          readiness_to_reduce_token_count: 9.7
+          human_readability: 9.6
+          best_in_class_standards: 9.7
+          security_performance_cleanliness_scalability: 9.8
+          reduced_risk_of_drift_gaps_contamination: 9.8
+          alignment_with_spirit_of_rest_of_repo: 9.7
+        recommendations:
+          - recommendation_id: SEC-REC-001
+            priority: low
+            summary: When image scanning is implemented, pin severity thresholds and accepted-risk record shape in the deploy-readiness manifest.
+        evidence:
+          - docs/04.deploy/source-material/shared/container-image-management.md
+          - docs/04.deploy/rules/shared/container-image-management.yml
+          - scripts/04.deploy/validate-container-boundaries/script.sh
+      - role: senior-sre
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.7
+          cost_optimization: 9.7
+          security: 9.7
+          performance: 9.7
+          token_optimization: 9.8
+        requested_dimension_scores:
+          completeness: 9.7
+          readiness_to_reduce_token_count: 9.8
+          human_readability: 9.7
+          best_in_class_standards: 9.7
+          security_performance_cleanliness_scalability: 9.7
+          reduced_risk_of_drift_gaps_contamination: 9.8
+          alignment_with_spirit_of_rest_of_repo: 9.8
+        recommendations:
+          - recommendation_id: SRE-REC-001
+            priority: low
+            summary: When the first image exists, add image smoke-test output to deploy evidence and rollback records.
+        evidence:
+          - docs/04.deploy/rules/shared/container-image-management.yml
+          - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+          - scripts/02.rag-rulebook/commit-gates/script.sh
+    cross_review_summary:
+      agreement:
+        - The artifacts create a clear infra-owned image boundary before any Dockerfile exists.
+        - The validator converts the anti-sprawl rule into executable commit-boundary enforcement.
+        - The retrieval fixture reduces future token cost by making the shared container rule discoverable.
+        - Security and SRE concerns are covered without authorizing deployment or AWS mutation.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-REC-001
+          summary: Superseded by iteration 2 hardening around effective ignore-file semantics and boundary diagrams deferred to the first real Dockerfile slice.
+        - recommendation_id: AE-REC-001
+          summary: Deferred to the deploy-readiness manifest slice where Dockerfile paths become manifest fields.
+        - recommendation_id: SEC-REC-001
+          summary: Partly applied in iteration 2 through minimum ignore-file coverage; scan thresholds remain deferred to image provenance implementation.
+        - recommendation_id: SRE-REC-001
+          summary: Deferred to the first image smoke-test and deploy evidence slice.
+      rejected: []
+    rerun_required: true
+  - iteration: 2
+    source_revision_summary: >
+      Applied review-loop hardening: the validator now fails closed for invalid
+      roots, enforces minimum ignore-file coverage, supports effective
+      image/.dockerignore or Dockerfile.dockerignore semantics, and includes
+      negative smoke tests for weak ignore files and missing roots. Source and
+      rule language now use effective-ignore-file wording, source hash
+      provenance was refreshed, and the derivation report includes source
+      projection validation evidence.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.6
+          security: 9.8
+          performance: 9.7
+          token_optimization: 9.8
+        requested_dimension_scores:
+          completeness: 9.7
+          readiness_to_reduce_token_count: 9.8
+          human_readability: 9.7
+          best_in_class_standards: 9.7
+          security_performance_cleanliness_scalability: 9.8
+          reduced_risk_of_drift_gaps_contamination: 9.7
+          alignment_with_spirit_of_rest_of_repo: 9.8
+        recommendations: []
+        evidence:
+          - docs/04.deploy/source-material/shared/container-image-management.md
+          - docs/04.deploy/rules/shared/container-image-management.yml
+          - scripts/04.deploy/validate-container-boundaries/script.sh
+          - scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+      - role: agentic-engineer
+        perspective_alias: senior-staff-engineer
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.6
+          necessity: 9.7
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.6
+          security: 9.6
+          performance: 9.6
+          token_optimization: 9.8
+        requested_dimension_scores:
+          completeness: 9.6
+          readiness_to_reduce_token_count: 9.8
+          human_readability: 9.7
+          best_in_class_standards: 9.6
+          security_performance_cleanliness_scalability: 9.6
+          reduced_risk_of_drift_gaps_contamination: 9.7
+          alignment_with_spirit_of_rest_of_repo: 9.8
+        recommendations: []
+        evidence:
+          - scripts/04.deploy/validate-container-boundaries/script.sh
+          - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+          - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - role: secops-engineer
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.7
+          machine_readability: 9.7
+          cost_optimization: 9.6
+          security: 9.7
+          performance: 9.6
+          token_optimization: 9.7
+        requested_dimension_scores:
+          completeness: 9.7
+          readiness_to_reduce_token_count: 9.7
+          human_readability: 9.7
+          best_in_class_standards: 9.6
+          security_performance_cleanliness_scalability: 9.6
+          reduced_risk_of_drift_gaps_contamination: 9.7
+          alignment_with_spirit_of_rest_of_repo: 9.7
+        recommendations: []
+        evidence:
+          - scripts/04.deploy/validate-container-boundaries/script.sh
+          - scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+          - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+      - role: senior-sre
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.7
+          cost_optimization: 9.7
+          security: 9.7
+          performance: 9.7
+          token_optimization: 9.8
+        requested_dimension_scores:
+          completeness: 9.7
+          readiness_to_reduce_token_count: 9.8
+          human_readability: 9.7
+          best_in_class_standards: 9.6
+          security_performance_cleanliness_scalability: 9.7
+          reduced_risk_of_drift_gaps_contamination: 9.8
+          alignment_with_spirit_of_rest_of_repo: 9.8
+        recommendations: []
+        evidence:
+          - docs/04.deploy/rules/shared/container-image-management.yml
+          - scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+          - scripts/02.rag-rulebook/commit-gates/script.sh
+    cross_review_summary:
+      agreement:
+        - The final artifacts prevent Dockerfile sprawl and weak ignore-file contamination before any service image exists.
+        - The validator now turns the highest-risk prose policy into deterministic checks.
+        - Projection, derivation, fixture, recognition, and commit-gate wiring make the policy discoverable and maintainable.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-BLOCK-001
+          summary: Effective ignore-file semantics replaced sibling-only .dockerignore wording across source, rules, and success criteria.
+        - recommendation_id: ARCH-BLOCK-002
+          summary: Minimum ignore-file contamination coverage is now enforced by the validator and smoke-tested.
+        - recommendation_id: SEC-BLOCK-001
+          summary: Invalid validation roots fail closed and are covered by a negative smoke fixture.
+        - recommendation_id: SEC-BLOCK-002
+          summary: Derivation report validation evidence now includes source projection validation.
+      rejected: []
+    rerun_required: false
+final_decision:
+  status: accepted
+  summary: >
+    Accepted after two review iterations. The source material, shared rule,
+    validator, retrieval fixture, projection manifest, derivation report, and
+    commit-gate integration are strong enough to govern container placement and
+    effective ignore-file protection before the first Dockerfile is introduced.
+    Remaining recommendations are explicitly deferred to later implementation
+    slices that require a real image, image scan, or deploy-readiness manifest.
+  accepted_source_sha256: f6f224ce56fb55b65fc575502454a68a81da368273d56fc1aa5eb78f2d80d221
+  accepted_at_utc: "2026-06-30T00:00:00Z"
+  required_before_derivation:
+    - docs/04.deploy/rules/shared/container-image-management.yml
+    - scripts/04.deploy/validate-container-boundaries/script.sh
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml

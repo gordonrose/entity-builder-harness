@@ -19,6 +19,8 @@ portability:
 used_by:
 - id: deploy.script.verify-rag-rulebook-deploy-readiness
   path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+- id: deploy.script.validate-container-boundaries
+  path: scripts/04.deploy/validate-container-boundaries/script.sh
 -->
 # Deploy Scripts
 
@@ -30,5 +32,8 @@ mutating effect and require current-chat approval.
 
 Current commands:
 
+- `validate-container-boundaries/`: read-only Dockerfile and container image
+  placement validation so deployable images stay under governed `infra/**`
+  image directories.
 - `verify-rag-rulebook-deploy-readiness/`: read-only manifest validation for
   RAG/rulebook GitHub-to-AWS deployment readiness.

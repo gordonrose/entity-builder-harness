@@ -1066,6 +1066,24 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      `02.rag-rulebook` layer until a governed extraction creates a standalone
      service repo. Do not create root `apps/` or `platform/` runtime folders in
      this harness repo for the RAG/rulebook MSP.
+   - Infra rule: actual deployment implementation belongs under `infra/`, not
+     under `.agentic/`, `docs/`, `apps/`, or `platform/`. Use
+     `infra/04.deploy/02.rag-rulebook/` for the first ECS Fargate deployment
+     target, container packaging boundary, environment manifests, IaC, and
+     GitHub Actions deploy templates. Keep `.github/workflows/` as the live
+     GitHub workflow surface, but keep the reviewed deployment definition and
+     templates under `infra/**`.
+
+12. Introduce the first infra implementation boundary.
+   - Create `infra/` as the implementation home for infrastructure-as-code,
+     deployment definitions, container packaging boundaries, environment
+     manifests, and deploy workflow templates.
+   - Keep deploy knowledge in `docs/04.deploy/`, deploy process in
+     `.agentic/aws/`, deploy checks in `scripts/04.deploy/`, and service
+     runtime machinery in `.agentic/02.rag-rulebook/service/`.
+   - Keep this slice non-mutating: no AWS calls, no GitHub deployment, no
+     Terraform/CDK/Pulumi apply, no secrets, and no live production target.
+   - Status: scaffold present in `infra/04.deploy/02.rag-rulebook/`.
 
 ## Non-Goals For The Current Stage
 
@@ -1081,20 +1099,20 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
 
 ## Next Small Slice
 
-Derive the accepted GitHub Actions to ECS Fargate source material into governed
-`corpus.04.deploy` YAML rules and proof artifacts.
+Build the first deployable-service implementation slice under the new
+`infra/04.deploy/02.rag-rulebook/` boundary.
 
 That slice should:
 
-- keep the Markdown source canonical
-- use the source-to-rule work order and draft packet before semantic edits
-- generate or update the structured deploy rules with source hashes and
-  derivation provenance
-- add or update the derivation report
-- refresh source projection manifest coverage
-- prove the new rules are indexed, chunked, and selectable
-- add deploy-readiness and retrieval selector fixtures for the new rule
-  families
-- keep actual AWS deployment blocked until the target manifest, protected
-  GitHub environment, OIDC trust, immutable image artifact, and ECS Fargate
-  readiness checks pass
+- add container packaging for the existing local service without moving service
+  source code out of `.agentic/02.rag-rulebook/service/`
+- add deterministic image build and image smoke-test scripts under
+  `scripts/02.rag-rulebook/`
+- add a concrete staging deploy-readiness manifest under the infra boundary
+  with placeholder-safe, non-secret values and explicit unknowns
+- extend the deploy-readiness verifier only for fields needed by the staging
+  ECS Fargate manifest
+- keep actual AWS deployment blocked until the protected GitHub environment,
+  OIDC trust, ECR repository, ECS cluster/service, ALB/TLS boundary, immutable
+  image digest, corpus package identity, and rollback target are real and
+  verified

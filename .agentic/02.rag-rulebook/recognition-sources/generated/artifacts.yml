@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 493
-  term_count: 997
+  indexed_artifacts: 499
+  term_count: 1009
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3198,6 +3198,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-29-github-actions-to-ecs-fargate
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-06-30-container-image-management
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-30-container-image-management
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-30-container-image-management
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-reports.readme
   category: artifact-id
   match_type: exact
@@ -3209,6 +3221,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.derivation-reports.readme
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/README.md
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.container-image-management
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.container-image-management
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.container-image-management
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.curated-prompt-vocabulary
   category: artifact-id
@@ -4031,6 +4055,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.source-material-review.04-deploy.github-actions-to-ecs-fargate.2026-06-29
   evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.04-deploy.container-image-management.2026-06-30
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-management.2026-06-30
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-management.2026-06-30
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml
   confidence_weight: 1
 - term: rag-rulebook.source-material-reviews.readme
   category: artifact-id
@@ -5399,6 +5435,42 @@ terms:
   match_type: exact
   canonical_id: deploy.scripts.readme
   evidence_path: scripts/04.deploy/README.md
+  confidence_weight: 1
+- term: deploy.script.validate-container-boundaries.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.validate-container-boundaries.readme
+  evidence_path: scripts/04.deploy/validate-container-boundaries/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/validate-container-boundaries/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.validate-container-boundaries.readme
+  evidence_path: scripts/04.deploy/validate-container-boundaries/README.md
+  confidence_weight: 1
+- term: deploy.script.validate-container-boundaries
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.validate-container-boundaries
+  evidence_path: scripts/04.deploy/validate-container-boundaries/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/validate-container-boundaries/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.validate-container-boundaries
+  evidence_path: scripts/04.deploy/validate-container-boundaries/script.sh
+  confidence_weight: 1
+- term: deploy.script.validate-container-boundaries.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.validate-container-boundaries.smoke-test
+  evidence_path: scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.validate-container-boundaries.smoke-test
+  evidence_path: scripts/04.deploy/validate-container-boundaries/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id

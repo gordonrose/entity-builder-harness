@@ -24,9 +24,9 @@ used_by:
 
 Use this track for deploy knowledge reused by multiple targets.
 
-Examples include GitHub release control, AWS identity boundaries, deployment
-observability, rollback expectations, stale corpus handling, and production
-stop conditions.
+Examples include container image management, GitHub release control, AWS
+identity boundaries, deployment observability, rollback expectations, stale
+corpus handling, and production stop conditions.
 
 Do not put target-specific deployment details here unless they apply to more
 than one deploy track.

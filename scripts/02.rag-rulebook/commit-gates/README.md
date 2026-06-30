@@ -62,6 +62,9 @@ required.
   manifest, and validation-report generation remain wired together.
 - Require and run the local runtime freshness smoke test so fresh, missing,
   stale, and corrupt runtime states fail or pass deterministically.
+- Require and run the deploy-layer container boundary validator when
+  `infra/` exists so Dockerfiles cannot sprawl outside governed image
+  directories.
 - Require and run the source-material coverage smoke test so orphan source
   material fails deterministically.
 - Require and run the retirement-record smoke test so missing prior hashes,
