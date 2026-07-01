@@ -11,11 +11,11 @@ workflow: .agentic/01.harness/workflows/change-harness.md
 status: ready
 raised_at_utc: 2026-06-25T11:12:51Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl
-latest_commit_at_utc: 2026-06-29T21:39:25Z
-latest_commit_sha: 004bf24
-chat_duration: 383194s (04:10:26:34)
-estimated_chat_tokens: 13234240 estimated from chat transcript bytes (52936958 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-estimated_chat_cost: USD 397.03 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-01T09:42:42Z
+latest_commit_sha: a059bac
+chat_duration: 512991s (05:22:29:51)
+estimated_chat_tokens: 14987738 estimated from chat transcript bytes (59950951 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+estimated_chat_cost: USD 449.63 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -933,6 +933,17 @@ Summary: Derived the accepted ECS Fargate deploy source into active 04.deploy ru
 
 ADR impact: No ADR required; implements active RAG/rulebook deploy-corpus projection already governed by the repo plan.
 
+
+### 2026-07-01T09:42:42Z - Commit recorded
+
+Commit: `a059bac`
+
+Message: Add RAG rulebook ECS staging deploy path
+
+Summary: Added the RAG rulebook ECS Fargate staging deploy path, GitHub Actions workflow, container image build/smoke scripts, CloudFormation scaffolds, and deploy-readiness verification updates.
+
+ADR impact: No ADR; this implements the previously agreed ECS staging deploy direction.
+
 ## Commits
 
 
@@ -1182,6 +1193,13 @@ ADR impact: No ADR required; implements active RAG/rulebook deploy-corpus projec
   Summary: Derived the accepted ECS Fargate deploy source into active 04.deploy rules, source projection, derivation report, recognition source update, and selector fixture proof.
   ADR impact: No ADR required; implements active RAG/rulebook deploy-corpus projection already governed by the repo plan.
 
+
+- Commit: `a059bac`
+  Time UTC: 2026-07-01T09:42:42Z
+  Message: Add RAG rulebook ECS staging deploy path
+  Summary: Added the RAG rulebook ECS Fargate staging deploy path, GitHub Actions workflow, container image build/smoke scripts, CloudFormation scaffolds, and deploy-readiness verification updates.
+  ADR impact: No ADR; this implements the previously agreed ECS staging deploy direction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1195,11 +1213,11 @@ Reason: Adding a first-class agentic layer and renumbering later metadata layers
 ## Session Metrics
 
 Raised at UTC: 2026-06-25T11:12:51Z
-Latest commit at UTC: 2026-06-29T21:39:25Z
-Latest commit SHA: 004bf24
-Chat duration: 383194s (04:10:26:34)
-Estimated chat tokens: 13234240 estimated from chat transcript bytes (52936958 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
-Estimated chat cost: USD 397.03 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-01T09:42:42Z
+Latest commit SHA: a059bac
+Chat duration: 512991s (05:22:29:51)
+Estimated chat tokens: 14987738 estimated from chat transcript bytes (59950951 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/06/25/rollout-2026-06-25T02-03-04-019efc4d-4c05-7003-b932-f9db433f587e.jsonl)
+Estimated chat cost: USD 449.63 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
