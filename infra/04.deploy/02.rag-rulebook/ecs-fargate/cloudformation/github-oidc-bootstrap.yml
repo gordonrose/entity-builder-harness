@@ -114,6 +114,7 @@ Resources:
                   - elasticloadbalancing:DescribeTargetGroups
                   - elasticloadbalancing:ModifyRule
                   - route53:ChangeResourceRecordSets
+                  - route53:GetChange
                   - route53:GetHostedZone
                   - route53:ListResourceRecordSets
                   - logs:CreateLogGroup
@@ -123,6 +124,7 @@ Resources:
                   - secretsmanager:CreateSecret
                   - secretsmanager:DeleteSecret
                   - secretsmanager:DescribeSecret
+                  - secretsmanager:GetRandomPassword
                   - secretsmanager:PutResourcePolicy
                   - secretsmanager:TagResource
                   - secretsmanager:UpdateSecret
