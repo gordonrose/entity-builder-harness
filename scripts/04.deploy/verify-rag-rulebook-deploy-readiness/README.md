@@ -57,11 +57,23 @@ planning or explanation caller.
 
 The manifest schema is `deploy/rag-rulebook-readiness-manifest/v1`.
 
+The current staging manifest lives at:
+
+```bash
+infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+```
+
+It is expected to remain blocked until the remote `main` commit, protected
+GitHub environment, OIDC role, immutable image digest, ECS service evidence,
+runtime artifact hashes, rollback target, and health check proof exist.
+
 The manifest names the concrete deployment candidate:
 
 - GitHub repository, source policy, ref, commit SHA, workflow, environment,
   protection model, OIDC role, OIDC audience, OIDC repository/ref/environment
-  conditions, and artifact provenance requirements
+  conditions, and artifact provenance requirements. For GitHub Environments,
+  the OIDC subject may be environment-scoped when the environment deployment
+  branch policy restricts deploys to the governed ref.
 - immutable deployable artifacts and generated RAG/rulebook corpus artifacts
 - AWS account, region, runtime family, service target, network boundary, secret
   store, health check, and rollback target

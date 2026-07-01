@@ -78,6 +78,13 @@ validation, and standalone service adapters.
   including selector trace diagnostics.
 - `run-local-service/script.sh` starts the thin local HTTP service for the MSP
   API surface: `GET /health`, `GET /version`, and `POST /context/query`.
+- `build-service-image/script.sh` builds the governed local container image for
+  the existing RAG/rulebook HTTP service from
+  `infra/04.deploy/02.rag-rulebook/image/Dockerfile`; it does not publish,
+  deploy, call AWS, or mutate GitHub.
+- `smoke-test-service-image/script.sh` builds and runs that image locally,
+  mounts a freshly built runtime cache read-only, and verifies health, version,
+  token enforcement, and compact context-query behavior.
 - `validate-context-packet/script.sh` validates a
   `rag-rulebook/context-packet/v1` JSON packet against a generated
   `rag-rulebook/chunk-set/v1` JSON chunk set.

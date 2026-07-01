@@ -1,0 +1,208 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Foundation resources for the RAG rulebook staging ECS Fargate service.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: staging
+  ServiceName:
+    Type: String
+    Default: rag-rulebook-staging
+  RepositoryName:
+    Type: String
+    Default: rag-rulebook-service
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+  ExistingAlbSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  ExistingHttpsListenerArn:
+    Type: String
+  ExistingAlbDnsName:
+    Type: String
+  ExistingAlbCanonicalHostedZoneId:
+    Type: String
+  HostedZoneId:
+    Type: String
+  HostName:
+    Type: String
+    Default: rag.kanbien.com
+  ListenerRulePriority:
+    Type: Number
+    Default: 40
+  LogRetentionDays:
+    Type: Number
+    Default: 14
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref RepositoryName
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: IMMUTABLE
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep the last 10 staging images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/ecs/rag-rulebook-staging
+      RetentionInDays: !Ref LogRetentionDays
+
+  ServiceTokenSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: rag-rulebook/staging/service-token
+      Description: Bearer token for the staging RAG rulebook API until Cognito auth is implemented.
+      GenerateSecretString:
+        PasswordLength: 48
+        ExcludePunctuation: true
+
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rag-rulebook-staging-task-execution
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: read-service-token-secret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref ServiceTokenSecret
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rag-rulebook-staging-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow the staging ALB to reach the RAG rulebook service.
+      GroupName: rag-rulebook-staging-service
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref ExistingAlbSecurityGroupId
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: rag-rulebook-staging
+      VpcId: !Ref VpcId
+      Port: 3000
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckEnabled: true
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      Matcher:
+        HttpCode: "200"
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "30"
+
+  HostRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ExistingHttpsListenerArn
+      Priority: !Ref ListenerRulePriority
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref HostName
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  DnsAlias:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref HostName
+      Type: A
+      AliasTarget:
+        DNSName: !Ref ExistingAlbDnsName
+        HostedZoneId: !Ref ExistingAlbCanonicalHostedZoneId
+        EvaluateTargetHealth: true
+
+Outputs:
+  RepositoryUri:
+    Value: !GetAtt Repository.RepositoryUri
+    Export:
+      Name: !Sub ${AWS::StackName}-RepositoryUri
+  LogGroupName:
+    Value: !Ref LogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-LogGroupName
+  ServiceTokenSecretArn:
+    Value: !Ref ServiceTokenSecret
+    Export:
+      Name: !Sub ${AWS::StackName}-ServiceTokenSecretArn
+  TaskExecutionRoleArn:
+    Value: !GetAtt TaskExecutionRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskExecutionRoleArn
+  TaskRoleArn:
+    Value: !GetAtt TaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskRoleArn
+  ServiceSecurityGroupId:
+    Value: !Ref ServiceSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-ServiceSecurityGroupId
+  TargetGroupArn:
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupArn
+  PublicSubnetIdsCsv:
+    Value: !Join [",", !Ref PublicSubnetIds]
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnetIdsCsv
+  HostName:
+    Value: !Ref HostName
+    Export:
+      Name: !Sub ${AWS::StackName}-HostName

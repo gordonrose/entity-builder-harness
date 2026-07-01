@@ -8,7 +8,6 @@ domain: infra.ci-cd
 disciplines:
 - agentic
 - sre
-- security
 kind: capability-readme
 purpose: Explain the read-only container boundary validator that prevents Dockerfile sprawl.
 portability:

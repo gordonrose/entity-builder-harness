@@ -11,7 +11,6 @@ set -euo pipefail
 #   disciplines:
 #   - agentic
 #   - sre
-#   - security
 #   kind: script
 #   purpose: Validate container image placement and ignore-file coverage without mutating the repo.
 #   portability:
@@ -177,6 +176,18 @@ MINIMUM_IGNORE_FAMILIES: list[tuple[str, tuple[str, ...]]] = [
     ("temporary output", ("tmp", "temp", "*.tmp")),
     ("dependency folders", ("node_modules", ".venv", "vendor", "__pycache__")),
     ("generated runtime caches", (".cache/02.rag-rulebook", "runtime-cache", "local-runtime")),
+    ("local agent and editor state", (".codex", ".agents", ".vscode", ".idea")),
+    ("package manager and publishing credentials", (".npmrc", ".pypirc")),
+]
+
+ALLOWLIST_LATE_DENY_FAMILIES: list[tuple[str, tuple[str, ...]]] = [
+    ("local agent state", (".codex", ".agents")),
+    ("editor state", (".vscode", ".idea")),
+    ("package manager and publishing credentials", (".npmrc", ".pypirc")),
+    ("environment files", (".env", "*.env")),
+    ("cloud credentials", (".aws",)),
+    ("private keys", ("*.pem", "*.key", "id_rsa")),
+    ("secrets and credentials", ("secret", "secrets", "credential", "credentials")),
 ]
 
 
@@ -189,6 +200,19 @@ def normalized_ignore_lines(path: Path) -> list[str]:
         if line.startswith("!"):
             continue
         lines.append(line.rstrip("/"))
+    return lines
+
+
+def parsed_ignore_lines(path: Path) -> list[tuple[int, bool, str]]:
+    lines: list[tuple[int, bool, str]] = []
+    for index, raw in enumerate(path.read_text(encoding="utf-8").splitlines()):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        negated = line.startswith("!")
+        if negated:
+            line = line[1:]
+        lines.append((index, negated, line.rstrip("/")))
     return lines
 
 
@@ -210,6 +234,29 @@ def validate_ignore_coverage(path: Path) -> None:
             path_text,
             ".dockerignore coverage is too weak for a governed image boundary.",
             "Add ignore patterns for: " + ", ".join(missing) + ".",
+        )
+
+    parsed = parsed_ignore_lines(path)
+    negated_indexes = [index for index, negated, _line in parsed if negated]
+    if not negated_indexes:
+        return
+    last_allowlist_index = max(negated_indexes)
+    missing_late_denies: list[str] = []
+    late_deny_lines = [
+        line
+        for index, negated, line in parsed
+        if not negated and index > last_allowlist_index
+    ]
+    for family, tokens in ALLOWLIST_LATE_DENY_FAMILIES:
+        if not any(line_covers_token(line, token) for line in late_deny_lines for token in tokens):
+            missing_late_denies.append(family)
+    if missing_late_denies:
+        error(
+            path_text,
+            ".dockerignore allowlist can re-include high-risk files without late deny rules.",
+            "Add non-negated deny patterns after the final allowlist entry for: "
+            + ", ".join(missing_late_denies)
+            + ".",
         )
 
 

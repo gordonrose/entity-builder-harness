@@ -41,3 +41,23 @@ Future files in this directory should define or reference:
 Do not add a deployable AWS target here unless the deploy-readiness checker can
 validate its manifest and block unsafe execution.
 
+## Current MSP Target
+
+The current staging target is defined under `cloudformation/` and reuses the
+existing `kanbien-staging-alb` HTTPS boundary with a new host rule for
+`rag.kanbien.com`.
+
+The split is:
+
+- `cloudformation/github-oidc-bootstrap.yml`: one-time GitHub OIDC deployment
+  role bootstrap.
+- `cloudformation/foundation.yml`: ECR, log group, service token secret, task
+  roles, target group, ALB host rule, and Route53 alias.
+- `cloudformation/service.yml`: immutable image-digest ECS task definition and
+  Fargate service.
+
+The staging deploy-readiness manifest is:
+
+```bash
+infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+```

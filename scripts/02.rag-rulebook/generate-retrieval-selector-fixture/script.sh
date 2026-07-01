@@ -38,6 +38,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -128,13 +129,31 @@ TOKEN_ALIASES = {
 }
 
 def repo_root() -> Path:
+    override = os.environ.get("RAG_REPO_ROOT")
+    if override:
+        root = Path(override).resolve()
+        assert_repo_root(root)
+        return root
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         check=True,
         text=True,
         stdout=subprocess.PIPE,
     )
-    return Path(result.stdout.strip())
+    root = Path(result.stdout.strip())
+    assert_repo_root(root)
+    return root
+
+
+def assert_repo_root(root: Path) -> None:
+    markers = [
+        "package.json",
+        ".agentic/02.rag-rulebook/service",
+        "scripts/02.rag-rulebook",
+    ]
+    for marker in markers:
+        if not (root / marker).exists():
+            raise SystemExit(f"ERROR: RAG repo root is missing required marker: {marker}")
 
 
 ROOT = repo_root()

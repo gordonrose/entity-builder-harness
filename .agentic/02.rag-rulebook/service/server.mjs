@@ -37,6 +37,11 @@ import { queryLocalContext } from "./query-local-context.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(process.env.RAG_REPO_ROOT || path.join(__dirname, "../../.."));
+for (const marker of ["package.json", ".agentic/02.rag-rulebook/service", "scripts/02.rag-rulebook"]) {
+  if (!existsSync(path.join(rootDir, marker))) {
+    throw new Error(`RAG repo root is missing required marker: ${marker}`);
+  }
+}
 const packageJson = JSON.parse(readFileSync(path.join(rootDir, "package.json"), "utf8"));
 
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);

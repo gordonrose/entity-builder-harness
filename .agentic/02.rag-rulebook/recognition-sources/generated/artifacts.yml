@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 499
-  term_count: 1009
+  indexed_artifacts: 511
+  term_count: 1033
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4368,6 +4368,30 @@ terms:
   canonical_id: rag-rulebook.script.build-local-runtime.smoke-test
   evidence_path: scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh
   confidence_weight: 1
+- term: rag-rulebook.script.build-service-image.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.build-service-image.readme
+  evidence_path: scripts/02.rag-rulebook/build-service-image/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/build-service-image/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.build-service-image.readme
+  evidence_path: scripts/02.rag-rulebook/build-service-image/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.build-service-image
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.build-service-image
+  evidence_path: scripts/02.rag-rulebook/build-service-image/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/build-service-image/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.build-service-image
+  evidence_path: scripts/02.rag-rulebook/build-service-image/script.sh
+  confidence_weight: 1
 - term: rag-rulebook.script.check-corpus-root-changes.readme
   category: artifact-id
   match_type: exact
@@ -5016,6 +5040,30 @@ terms:
   canonical_id: rag-rulebook.script.run-local-service.smoke-test
   evidence_path: scripts/02.rag-rulebook/run-local-service/smoke-test.sh
   confidence_weight: 1
+- term: rag-rulebook.script.smoke-test-service-image.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.smoke-test-service-image.readme
+  evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/smoke-test-service-image/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.smoke-test-service-image.readme
+  evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.smoke-test-service-image
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.smoke-test-service-image
+  evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/smoke-test-service-image/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.smoke-test-service-image
+  evidence_path: scripts/02.rag-rulebook/smoke-test-service-image/script.sh
+  confidence_weight: 1
 - term: rag-rulebook.script.validate-context-packet.readme
   category: artifact-id
   match_type: exact
@@ -5423,6 +5471,102 @@ terms:
   match_type: exact
   canonical_id: aws.workflows.plan-aws-change
   evidence_path: .agentic/aws/workflows/plan-aws-change.md
+  confidence_weight: 1
+- term: github.workflow.deploy-rag-rulebook-staging
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.deploy-rag-rulebook-staging
+  evidence_path: .github/workflows/deploy-rag-rulebook-staging.yml
+  confidence_weight: 1
+- term: .github/workflows/deploy-rag-rulebook-staging.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.deploy-rag-rulebook-staging
+  evidence_path: .github/workflows/deploy-rag-rulebook-staging.yml
+  confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.ecs-fargate.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.ecs-fargate.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/ecs-fargate/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.ecs-fargate.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.ecs-fargate.cloudformation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.ecs-fargate.cloudformation.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.ecs-fargate.cloudformation.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.github-actions.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.github-actions.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/github-actions/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/github-actions/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.github-actions.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/github-actions/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.02-rag-rulebook.image.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.image.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/image/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/02.rag-rulebook/image/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.02-rag-rulebook.image.readme
+  evidence_path: infra/04.deploy/02.rag-rulebook/image/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.readme
+  evidence_path: infra/04.deploy/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.readme
+  evidence_path: infra/04.deploy/README.md
+  confidence_weight: 1
+- term: infra.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.readme
+  evidence_path: infra/README.md
+  confidence_weight: 1
+- term: infra/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.readme
+  evidence_path: infra/README.md
   confidence_weight: 1
 - term: deploy.scripts.readme
   category: artifact-id

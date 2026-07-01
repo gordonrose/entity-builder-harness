@@ -1,0 +1,229 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: github.workflow.deploy-rag-rulebook-staging
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: ci-workflow
+#   purpose: Deploy the RAG/rulebook service to the staging ECS Fargate target.
+#   portability:
+#     class: internal
+#     targets: []
+#   effects:
+#   - network
+#   used_by:
+#   - id: aws.workflows.deploy-rag-rulebook-service
+#     path: .agentic/aws/workflows/deploy-rag-rulebook-service.md
+#   - id: infra.04-deploy.02-rag-rulebook.ecs-fargate.cloudformation.readme
+#     path: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/README.md
+
+name: Deploy RAG Rulebook Staging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: rag-rulebook-staging
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-1
+  FOUNDATION_STACK: rag-rulebook-staging-foundation
+  SERVICE_STACK: rag-rulebook-staging-service
+  ECR_REPOSITORY: rag-rulebook-service
+  SERVICE_URL: https://rag.kanbien.com
+
+jobs:
+  deploy:
+    name: Deploy staging ECS service
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install script dependencies
+        run: python -m pip install PyYAML==6.0.2
+
+      - name: Enforce remote-main deploy source
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Deploy blocked: expected refs/heads/main, got $GITHUB_REF" >&2
+            exit 1
+          fi
+
+      - name: Run RAG rulebook commit gates
+        run: bash scripts/02.rag-rulebook/commit-gates/script.sh
+
+      - name: Build local RAG runtime
+        run: |
+          bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
+            --output-dir "$RUNNER_TEMP/rag-rulebook-runtime" \
+            --pretty
+
+      - name: Verify local runtime freshness
+        run: |
+          bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
+            --runtime-dir "$RUNNER_TEMP/rag-rulebook-runtime" \
+            --json
+
+      - name: Report static staging deploy manifest gaps
+        run: |
+          bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh \
+            --manifest infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml \
+            --allow-blocked \
+            --caller-intent planning \
+            --json
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.RAG_RULEBOOK_AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Apply foundation stack
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$FOUNDATION_STACK" \
+            --template-file infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              VpcId=vpc-0063b6c3d2d781f3c \
+              PublicSubnetIds=subnet-05d385e4d57b18032,subnet-0397df802e31ff6fe \
+              ExistingAlbSecurityGroupId=sg-08d590b0aee6e2e60 \
+              ExistingHttpsListenerArn=arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750 \
+              ExistingAlbDnsName=kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com \
+              ExistingAlbCanonicalHostedZoneId=Z32O12XQLNTSW2 \
+              HostedZoneId=Z0909415EFV969Z95D5F \
+              HostName=rag.kanbien.com \
+              ListenerRulePriority=40 \
+              LogRetentionDays=14
+
+      - name: Resolve ECR repository
+        id: ecr
+        run: |
+          repository_uri="$(
+            aws cloudformation describe-stacks \
+              --stack-name "$FOUNDATION_STACK" \
+              --query "Stacks[0].Outputs[?OutputKey=='RepositoryUri'].OutputValue | [0]" \
+              --output text
+          )"
+          echo "repository-uri=$repository_uri" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Check for existing commit image
+        id: existing-image
+        run: |
+          set +e
+          digest="$(
+            aws ecr describe-images \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-ids imageTag="$GITHUB_SHA" \
+              --query "imageDetails[0].imageDigest" \
+              --output text 2>/dev/null
+          )"
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ] && [ "$digest" != "None" ] && [ -n "$digest" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build image
+        if: steps.existing-image.outputs.exists != 'true'
+        run: |
+          bash scripts/02.rag-rulebook/build-service-image/script.sh \
+            --tag "${{ steps.ecr.outputs.repository-uri }}:${GITHUB_SHA}"
+
+      - name: Push image
+        if: steps.existing-image.outputs.exists != 'true'
+        run: docker push "${{ steps.ecr.outputs.repository-uri }}:${GITHUB_SHA}"
+
+      - name: Resolve immutable image digest
+        id: image
+        run: |
+          digest="${{ steps.existing-image.outputs.digest }}"
+          if [ -z "$digest" ]; then
+            digest="$(
+              aws ecr describe-images \
+                --repository-name "$ECR_REPOSITORY" \
+                --image-ids imageTag="$GITHUB_SHA" \
+                --query "imageDetails[0].imageDigest" \
+                --output text
+            )"
+          fi
+          image_uri="${{ steps.ecr.outputs.repository-uri }}@$digest"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "image-uri=$image_uri" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy service stack
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$SERVICE_STACK" \
+            --template-file infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              FoundationStackName="$FOUNDATION_STACK" \
+              ClusterArn=arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging \
+              ServiceName=rag-rulebook-staging \
+              ImageUri="${{ steps.image.outputs.image-uri }}" \
+              DesiredCount=1 \
+              Cpu=256 \
+              Memory=512
+
+      - name: Wait for ECS service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging \
+            --services rag-rulebook-staging
+
+      - name: Verify HTTPS health
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "$SERVICE_URL/health" >/tmp/health.json; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "RAG rulebook service did not become healthy at $SERVICE_URL" >&2
+          exit 1
+
+      - name: Record deployment summary
+        run: |
+          {
+            echo "## RAG Rulebook staging deploy"
+            echo ""
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Image: ${{ steps.image.outputs.image-uri }}"
+            echo "- URL: $SERVICE_URL"
+            echo "- Foundation stack: $FOUNDATION_STACK"
+            echo "- Service stack: $SERVICE_STACK"
+          } >> "$GITHUB_STEP_SUMMARY"

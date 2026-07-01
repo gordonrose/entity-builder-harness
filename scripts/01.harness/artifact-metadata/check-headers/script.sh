@@ -58,6 +58,7 @@ PATH_PREFIXES = (
     "docs/00.chat/",
     "docs/02.rag-rulebook/",
     "docs/harness/",
+    "infra/",
     "scripts/",
 )
 ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$")
@@ -183,6 +184,7 @@ def collect_all_paths() -> list[str]:
         ROOT / "docs/00.chat",
         ROOT / "docs/02.rag-rulebook",
         ROOT / "docs/harness",
+        ROOT / "infra",
     ]
     collected: list[str] = []
     for root in roots:
@@ -209,6 +211,7 @@ def is_markdown_artifact(path: str) -> bool:
         or path.startswith("docs/aws/")
         or path.startswith("docs/education/")
         or path.startswith("docs/harness/")
+        or path.startswith("infra/")
         or path.startswith("scripts/")
     )
 

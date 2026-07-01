@@ -79,6 +79,13 @@ derived view of the same validated packet, intended for normal agent context
 augmentation. It must not contain independent retrieval behavior. If the compact
 view is insufficient, rerun the same query with `--format full`.
 
+## Git-Less Runtime Packaging
+
+By default, the command finds the repo root through Git. Container images and
+other packaged runtimes should set `RAG_REPO_ROOT` to the mounted application
+root, such as `/app`, so query-time validation can run without copying `.git`
+into the image.
+
 ## Effects
 
 This command is read-only. It does not build the runtime, mutate sources, call

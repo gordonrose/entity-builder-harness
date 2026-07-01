@@ -30,14 +30,16 @@ first hosted RAG/rulebook service.
 The first target is ECS Fargate behind an HTTPS boundary, deployed from GitHub
 Actions with OIDC and immutable service/corpus artifacts.
 
-This scaffold is intentionally non-mutating. It does not deploy, publish, call
-AWS, or configure GitHub. It only creates the correct home for the files needed
-to make that deployment safe.
+This scaffold is repo-side deployment implementation. The files here do not
+mutate AWS by themselves, but the GitHub workflow and CloudFormation templates
+are intended to be executed only after deploy-readiness and AWS execution
+approval gates pass.
 
 ## Layout
 
 - `image/` owns the container packaging boundary for the existing service.
 - `ecs-fargate/` owns ECS Fargate target definitions and future IaC.
+- `environments/` owns non-secret environment manifests used by deploy checks.
 - `github-actions/` owns reviewed deployment workflow templates and notes.
 
 Live GitHub workflow files still live in `.github/workflows/`. If a workflow is
@@ -59,4 +61,3 @@ without planning overrides and names real, non-secret evidence for GitHub OIDC,
 AWS account and region, ECR repository, ECS cluster/service, ALB/TLS boundary,
 image digest, corpus package identity, health checks, rollback, logs, alarms,
 cost controls, and owner escalation.
-

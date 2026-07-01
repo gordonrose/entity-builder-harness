@@ -41,3 +41,16 @@ Required future proof:
 - ECS service stability and post-deploy context-query smoke test
 - rollback and disablement evidence
 
+## Current Workflow
+
+The first deploy workflow is:
+
+```bash
+.github/workflows/deploy-rag-rulebook-staging.yml
+```
+
+It is manual-only, targets the protected `staging` GitHub environment, assumes
+AWS through OIDC, applies the staging foundation stack, builds and pushes the
+service image to ECR, resolves the immutable image digest, deploys the ECS
+service stack, waits for service stability, and checks
+`https://rag.kanbien.com/health`.

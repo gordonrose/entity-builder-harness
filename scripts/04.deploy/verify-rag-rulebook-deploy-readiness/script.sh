@@ -225,7 +225,6 @@ def validate(data: dict) -> None:
     require_string(data, "github.oidc.ref_condition")
     require_string(data, "github.oidc.environment_condition")
     require_true(data, "github.oidc.trust_scoped_to_repository")
-    require_true(data, "github.oidc.trust_scoped_to_ref")
     require_true(data, "github.oidc.workflow_has_id_token_permission")
     require_true(data, "github.artifact_provenance.attestation_required")
     require_true(data, "github.artifact_provenance.immutable_artifact_required")
@@ -327,6 +326,8 @@ def validate(data: dict) -> None:
     ref_condition = get(data, "github.oidc.ref_condition")
     environment_condition = get(data, "github.oidc.environment_condition")
     audience = get(data, "github.oidc.audience")
+    trust_scoped_to_ref = get(data, "github.oidc.trust_scoped_to_ref") is True
+    environment_branch_policy = get(data, "github.environment.protection_rules.deployment_branch_policy") is True
 
     if audience != "sts.amazonaws.com":
         block(
@@ -345,6 +346,12 @@ def validate(data: dict) -> None:
             "github.oidc.ref_condition",
             "OIDC ref condition does not match the deploy ref",
             "Set github.oidc.ref_condition to the exact github.ref value.",
+        )
+    if not trust_scoped_to_ref and not environment_branch_policy:
+        block(
+            "github.oidc.trust_scoped_to_ref",
+            "OIDC trust is not directly ref-scoped and the GitHub environment is not branch-restricted",
+            "Scope OIDC directly to the governed ref or restrict the GitHub environment deployment branch policy to the governed ref.",
         )
     if isinstance(environment, str) and isinstance(environment_condition, str) and environment_condition != environment:
         block(

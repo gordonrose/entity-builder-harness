@@ -31,7 +31,10 @@ set -euo pipefail
 #     - id: rag-rulebook.script.build-local-runtime.smoke-test
 #       path: scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh
 
-ROOT="$(git rev-parse --show-toplevel)"
+ROOT="${RAG_REPO_ROOT:-}"
+if [ -z "$ROOT" ]; then
+  ROOT="$(git rev-parse --show-toplevel)"
+fi
 cd "$ROOT"
 
 OUTPUT_DIR=".cache/02.rag-rulebook"
@@ -160,6 +163,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -196,6 +200,9 @@ def rel(path: Path) -> str:
 
 
 def git_sha() -> str:
+    env_sha = os.environ.get("RAG_SOURCE_COMMIT_SHA", "").strip()
+    if env_sha:
+        return env_sha
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=root,

@@ -53,6 +53,13 @@ The service exposes:
 - `GET /version`
 - `POST /context/query`
 
+## Git-Less Runtime Packaging
+
+By default, the service runner finds the repo root through Git. Container
+images and other packaged runtimes should set `RAG_REPO_ROOT` to the mounted
+application root, such as `/app`, so the service can run without copying
+`.git` into the image.
+
 This command starts a local process only. It does not deploy to AWS, mutate
 GitHub, build containers, publish corpus packages, or expose MCP tools.
 

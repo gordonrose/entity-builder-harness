@@ -31,7 +31,17 @@ set -euo pipefail
 #     - id: rag-rulebook.script.commit-gates
 #       path: scripts/02.rag-rulebook/commit-gates/script.sh
 
-ROOT="$(git rev-parse --show-toplevel)"
+if [ -n "${RAG_REPO_ROOT:-}" ]; then
+  ROOT="$(cd "$RAG_REPO_ROOT" && pwd)"
+else
+  ROOT="$(git rev-parse --show-toplevel)"
+fi
+for marker in package.json .agentic/02.rag-rulebook/service scripts/02.rag-rulebook; do
+  if [ ! -e "$ROOT/$marker" ]; then
+    echo "ERROR: RAG repo root is missing required marker: $marker" >&2
+    exit 2
+  fi
+done
 cd "$ROOT"
 
 RUNTIME_DIR=".cache/02.rag-rulebook"

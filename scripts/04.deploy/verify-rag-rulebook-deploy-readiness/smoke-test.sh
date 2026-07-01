@@ -38,7 +38,7 @@ schema: deploy/rag-rulebook-readiness-manifest/v1
 deployment:
   service_id: rag-rulebook-mcp
   environment: staging
-  runtime_target: aws.app-runner.rag-rulebook-staging
+  runtime_target: aws.ecs-fargate.rag-rulebook-staging
 github:
   repository: owner/entity-builder-harness-001
   source_policy: remote-main
@@ -61,7 +61,7 @@ github:
     ref_condition: refs/heads/main
     environment_condition: staging
     trust_scoped_to_repository: true
-    trust_scoped_to_ref: true
+    trust_scoped_to_ref: false
     workflow_has_id_token_permission: true
   artifact_provenance:
     attestation_required: true
@@ -76,16 +76,18 @@ artifacts:
 aws:
   account_id: "123456789012"
   region: eu-west-1
-  runtime_family: app-runner
+  runtime_family: ecs-fargate
   service_name: rag-rulebook-staging
   iam_role_name: github-rag-rulebook-deploy
-  network_boundary: private-ingress-vpc-connector
+  network_boundary: existing-staging-alb-host-rule
   secret_store: aws-secrets-manager
   health_check: /healthz
-  rollback_target: previous-app-runner-service-version
-  app_runner:
-    service_arn: arn:aws:apprunner:eu-west-1:123456789012:service/rag-rulebook-staging/0123456789abcdef0123456789abcdef
-    auto_scaling_configuration_arn: arn:aws:apprunner:eu-west-1:123456789012:autoscalingconfiguration/rag-rulebook-staging/1/0123456789abcdef0123456789abcdef
+  rollback_target: previous-ecs-task-definition-and-image-digest
+  ecs:
+    cluster_arn: arn:aws:ecs:eu-west-1:123456789012:cluster/rag-rulebook-staging
+    service_arn: arn:aws:ecs:eu-west-1:123456789012:service/rag-rulebook-staging/rag-rulebook-staging
+    task_definition_arn: arn:aws:ecs:eu-west-1:123456789012:task-definition/rag-rulebook-staging:1
+    deployment_circuit_breaker_enabled: true
 mcp:
   spec_version: "2025-11-25"
   transport: streamable-http
@@ -183,7 +185,7 @@ assert ready["blocking_gaps"] == []
 assert ready["summary"]["github"]["source_policy"] == "remote-main"
 assert ready["summary"]["github"]["ref"] == "refs/heads/main"
 assert ready["summary"]["github"]["workflow_path"] == ".github/workflows/deploy-rag-rulebook-service.yml"
-assert ready["summary"]["aws"]["runtime_family"] == "app-runner"
+assert ready["summary"]["aws"]["runtime_family"] == "ecs-fargate"
 
 assert blocked["ok"] is False
 assert blocked["status"] == "blocked"

@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ECS Fargate service for the RAG rulebook staging app.
+
+Parameters:
+  FoundationStackName:
+    Type: String
+    Default: rag-rulebook-staging-foundation
+  ClusterArn:
+    Type: String
+    Default: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+  ServiceName:
+    Type: String
+    Default: rag-rulebook-staging
+  ImageUri:
+    Type: String
+    Description: Immutable image URI using repository@sha256:digest.
+  DesiredCount:
+    Type: Number
+    Default: 1
+  Cpu:
+    Type: String
+    Default: "256"
+  Memory:
+    Type: String
+    Default: "512"
+
+Resources:
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref ServiceName
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskRoleArn
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: rag-rulebook
+          Image: !Ref ImageUri
+          Essential: true
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          Environment:
+            - Name: HOST
+              Value: 0.0.0.0
+            - Name: PORT
+              Value: "3000"
+            - Name: RAG_ALLOW_NON_LOOPBACK
+              Value: "1"
+            - Name: RAG_REPO_ROOT
+              Value: /app
+            - Name: RAG_RUNTIME_DIR
+              Value: /app/.cache/02.rag-rulebook
+            - Name: NODE_ENV
+              Value: production
+          Secrets:
+            - Name: RAG_SERVICE_TOKEN
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-ServiceTokenSecretArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-LogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: rag-rulebook
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref ClusterArn
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
+      PlatformVersion: LATEST
+      EnableExecuteCommand: false
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${FoundationStackName}-ServiceSecurityGroupId
+          Subnets: !Split
+            - ","
+            - Fn::ImportValue: !Sub ${FoundationStackName}-PublicSubnetIdsCsv
+      LoadBalancers:
+        - ContainerName: rag-rulebook
+          ContainerPort: 3000
+          TargetGroupArn:
+            Fn::ImportValue: !Sub ${FoundationStackName}-TargetGroupArn
+      TaskDefinition: !Ref TaskDefinition
+
+Outputs:
+  ServiceArn:
+    Value: !Ref Service
+  TaskDefinitionArn:
+    Value: !Ref TaskDefinition

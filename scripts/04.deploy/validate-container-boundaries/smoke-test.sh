@@ -11,7 +11,6 @@ set -euo pipefail
 #   disciplines:
 #   - agentic
 #   - sre
-#   - security
 #   kind: script
 #   purpose: Smoke test the read-only container boundary validator.
 #   portability:
@@ -68,6 +67,12 @@ __pycache__
 .cache/02.rag-rulebook
 runtime-cache
 local-runtime
+.codex
+.agents
+.vscode
+.idea
+.npmrc
+.pypirc
 EOF
 
 bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/valid" --json \
@@ -166,6 +171,12 @@ __pycache__
 .cache/02.rag-rulebook
 runtime-cache
 local-runtime
+.codex
+.agents
+.vscode
+.idea
+.npmrc
+.pypirc
 EOF
 cat > "$TMP_ROOT/root-context/.dockerignore" <<'EOF'
 .git
@@ -177,5 +188,55 @@ if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_R
 fi
 grep -q ".dockerignore coverage is too weak" "$TMP_ROOT/root-context.json" \
   || fail "root-context report did not mention weak repo-root ignore coverage"
+
+mkdir -p "$TMP_ROOT/late-deny/infra/04.deploy/02.rag-rulebook/image"
+cat > "$TMP_ROOT/late-deny/infra/04.deploy/02.rag-rulebook/image/Dockerfile" <<'EOF'
+FROM node:22
+EOF
+cat > "$TMP_ROOT/late-deny/infra/04.deploy/02.rag-rulebook/image/README.md" <<'EOF'
+# Image
+EOF
+cat > "$TMP_ROOT/late-deny/infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore" <<'EOF'
+*
+.git
+.cache
+commitLogs
+.env
+*.env
+secrets
+credentials
+.aws
+*.pem
+*.key
+id_rsa
+*.log
+logs
+tmp
+temp
+*.tmp
+node_modules
+.venv
+vendor
+__pycache__
+.cache/02.rag-rulebook
+runtime-cache
+local-runtime
+.codex
+.agents
+.vscode
+.idea
+.npmrc
+.pypirc
+!scripts/
+!scripts/02.rag-rulebook/
+!scripts/02.rag-rulebook/**
+EOF
+
+if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/late-deny" --json \
+  > "$TMP_ROOT/late-deny.json"; then
+  fail "validator accepted allowlist without late high-risk deny patterns"
+fi
+grep -q "allowlist can re-include high-risk files" "$TMP_ROOT/late-deny.json" \
+  || fail "late-deny report did not mention allowlist re-include risk"
 
 echo "Container boundary validator smoke test passed."

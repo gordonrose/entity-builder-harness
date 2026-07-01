@@ -1085,34 +1085,80 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      Terraform/CDK/Pulumi apply, no secrets, and no live production target.
    - Status: scaffold present in `infra/04.deploy/02.rag-rulebook/`.
 
+13. Add the first deployable-service image boundary.
+   - Package the existing local RAG/rulebook HTTP service without moving source
+     code out of `.agentic/02.rag-rulebook/service/`.
+   - Keep the container implementation under
+     `infra/04.deploy/02.rag-rulebook/image/` and keep executable build/smoke
+     commands under `scripts/02.rag-rulebook/`.
+   - Support Git-less container runtime by allowing service and query scripts
+     to resolve the repo root from `RAG_REPO_ROOT`.
+   - Validate the container build context denylist before building.
+   - Smoke-test the image by mounting a freshly built runtime cache read-only,
+     then verifying health, version, token enforcement, and compact
+     context-query behavior.
+   - Keep this slice local-only: no registry push, no AWS call, no GitHub
+     deployment, no secrets, and no live production target.
+   - Status: present in `infra/04.deploy/02.rag-rulebook/image/`,
+     `scripts/02.rag-rulebook/build-service-image/`, and
+     `scripts/02.rag-rulebook/smoke-test-service-image/`.
+
+14. Add the staging ECS Fargate deploy package.
+   - Add a non-secret staging deploy-readiness manifest under
+     `infra/04.deploy/02.rag-rulebook/environments/staging/`.
+   - Reuse the existing `kanbien-staging-alb` and wildcard `*.kanbien.com`
+     certificate for `rag.kanbien.com` instead of creating a second ALB.
+   - Add CloudFormation templates for one-time GitHub OIDC bootstrap, reusable
+     staging foundation resources, and the ECS service/task definition.
+   - Add a manual GitHub Actions deployment workflow that assumes AWS through
+     OIDC, applies the foundation stack, builds and pushes the service image,
+     resolves the immutable ECR digest, deploys ECS, waits for stability, and
+     checks `https://rag.kanbien.com/health`.
+   - Keep the readiness manifest blocked until remote-main commit evidence,
+     protected GitHub environment evidence, OIDC trust, generated runtime
+     hashes, immutable image digest, ECS service evidence, rollback evidence,
+     and health proof exist.
+   - Status: present in
+     `infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml`,
+     `infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/`, and
+     `.github/workflows/deploy-rag-rulebook-staging.yml`.
+
+15. Make the service image self-contained for ECS.
+   - Build the deterministic RAG/rulebook runtime cache inside the image so ECS
+     does not depend on a local bind mount.
+   - Keep the mounted-runtime image smoke test as a fallback development check,
+     but treat image-embedded runtime as the hosted MSP path.
+   - Status: present in
+     `infra/04.deploy/02.rag-rulebook/image/Dockerfile`.
+
 ## Non-Goals For The Current Stage
 
-- Do not build the deployed RAG server.
+- Do not execute AWS or GitHub mutations without the approved AWS execution
+  workflow and explicit current-chat approval for the exact commands.
 - Do not build an MCP server.
 - Do not move `docs/harness/architecture/` files.
 - Do not introduce embeddings before deterministic indexes and chunks exist.
 - Do not merge domain corpora into one instruction set.
-- Do not deploy RAG to AWS before local runtime behavior and deploy-corpus
-  checks are proven.
+- Do not deploy RAG to AWS before local runtime behavior, deploy-corpus checks,
+  GitHub environment protection, OIDC trust, immutable image digest, rollback
+  evidence, and health checks are proven.
 - Do not derive production-grade deploy YAML from source material that has not
   passed the OKF source-material review loop.
 
 ## Next Small Slice
 
-Build the first deployable-service implementation slice under the new
-`infra/04.deploy/02.rag-rulebook/` boundary.
+Validate and review the staging deploy package, then run the approved AWS
+bootstrap only after the exact commands and rollback path are accepted.
 
 That slice should:
 
-- add container packaging for the existing local service without moving service
-  source code out of `.agentic/02.rag-rulebook/service/`
-- add deterministic image build and image smoke-test scripts under
-  `scripts/02.rag-rulebook/`
-- add a concrete staging deploy-readiness manifest under the infra boundary
-  with placeholder-safe, non-secret values and explicit unknowns
-- extend the deploy-readiness verifier only for fields needed by the staging
-  ECS Fargate manifest
-- keep actual AWS deployment blocked until the protected GitHub environment,
-  OIDC trust, ECR repository, ECS cluster/service, ALB/TLS boundary, immutable
-  image digest, corpus package identity, and rollback target are real and
-  verified
+- validate the CloudFormation templates without mutating AWS
+- validate the staging deploy-readiness manifest in planning mode
+- configure the GitHub `staging` environment and
+  `RAG_RULEBOOK_AWS_DEPLOY_ROLE_ARN` repository variable
+- apply `github-oidc-bootstrap.yml` with `gordon-kanbien` only after explicit
+  AWS execution approval
+- merge/push the workflow to remote `main`
+- run the manual deploy workflow
+- update the readiness manifest with the real commit, image digest, runtime
+  hashes, ECS task/service evidence, rollback target, and health result
