@@ -1,0 +1,273 @@
+{
+  "info": {
+    "_postman_id": "5f6f7253-1da2-4b68-a0e8-8ec45625d3d8",
+    "name": "RAG Rulebook Service",
+    "description": "Smoke-test collection for the hosted RAG/rulebook service. Keep ragToken local to Postman; do not commit real tokens.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Unauthenticated readiness check. Expected status is 200 with status=ready."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"health returns 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"runtime is ready and fresh\", function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql(\"ready\");",
+              "  pm.expect(body.runtime.ready).to.eql(true);",
+              "  pm.expect(body.freshness.fresh).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Version",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/version",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "version"
+          ]
+        },
+        "description": "Unauthenticated service metadata check."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"version returns 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"version identifies the service\", function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.service).to.eql(\"rag-rulebook-service\");",
+              "  pm.expect(body.runtime.ready).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Context Query Compact",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ragToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"compact\",\n  \"maxChunks\": {{maxChunks}},\n  \"session\": {\n    \"layer\": \"02.rag-rulebook\",\n    \"mode\": \"discovery\",\n    \"workflow\": \".agentic/02.rag-rulebook/workflows/default.md\"\n  },\n  \"noFocusedPaths\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/context/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "context",
+            "query"
+          ]
+        },
+        "description": "Authenticated compact context packet query for normal agent use."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"compact query returns 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"compact query returns a compact packet\", function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.schema).to.eql(\"rag-rulebook/context-packet-compact/v1\");",
+              "  pm.expect(body.routing.status).to.eql(\"ready\");",
+              "  pm.expect(body.selected_chunks.length).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Context Query Full",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{ragToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"full\",\n  \"maxChunks\": {{maxChunks}},\n  \"focusedPaths\": [\n    \"docs/02.rag-rulebook\",\n    \"docs/04.deploy\"\n  ],\n  \"session\": {\n    \"layer\": \"02.rag-rulebook\",\n    \"mode\": \"discovery\",\n    \"workflow\": \".agentic/02.rag-rulebook/workflows/default.md\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/context/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "context",
+            "query"
+          ]
+        },
+        "description": "Authenticated full context packet query for provenance and debugging."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"full query returns 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"full query returns canonical packet\", function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.schema).to.eql(\"rag-rulebook/context-packet/v1\");",
+              "  pm.expect(body.routing.status).to.eql(\"ready\");",
+              "  pm.expect(body.selected_chunks.length).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Context Query Unauthorized Check",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"compact\",\n  \"maxChunks\": {{maxChunks}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/context/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "context",
+            "query"
+          ]
+        },
+        "description": "Negative test. Expected status is 401 when no bearer token is sent."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"query requires authorization\", function () {",
+              "  pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test(\"unauthorized response has stable code\", function () {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.error.code).to.eql(\"unauthorized\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://rag.kanbien.com",
+      "type": "string"
+    },
+    {
+      "key": "ragToken",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "requestText",
+      "value": "explain the logging policy for this repo, how it works and how it is implemented",
+      "type": "string"
+    },
+    {
+      "key": "maxChunks",
+      "value": "6",
+      "type": "string"
+    }
+  ]
+}
