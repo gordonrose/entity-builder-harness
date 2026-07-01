@@ -157,6 +157,7 @@ Resources:
               - Sid: SecurityGroupForService
                 Effect: Allow
                 Action:
+                  - ec2:AuthorizeSecurityGroupEgress
                   - ec2:AuthorizeSecurityGroupIngress
                   - ec2:CreateSecurityGroup
                   - ec2:CreateTags
