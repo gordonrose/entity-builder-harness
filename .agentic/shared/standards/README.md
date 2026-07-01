@@ -3,7 +3,7 @@ schema: agentic-artifact/v2
 id: shared.standards.readme
 version: 1
 status: active
-layer: 05.shared
+layer: 06.shared
 domain: governance
 disciplines:
 - agentic

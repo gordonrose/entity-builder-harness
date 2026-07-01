@@ -1,0 +1,98 @@
+schema: deploy/rag-rulebook-readiness-manifest/v1
+deployment:
+  service_id: rag-rulebook-mcp
+  environment: staging
+  runtime_target: aws.ecs-fargate.rag-rulebook-staging
+github:
+  repository: gordonrose/entity-builder-harness
+  source_policy: remote-main
+  ref: refs/heads/main
+  commit_sha: pending-remote-main-merge
+  workflow_path: .github/workflows/deploy-rag-rulebook-staging.yml
+  workflow_name: Deploy RAG Rulebook Staging
+  trigger: workflow_dispatch
+  environment:
+    name: staging
+    protection_rules:
+      required_reviewers: false
+      deployment_branch_policy: true
+      prevent_self_review: false
+  oidc:
+    role_arn: arn:aws:iam::337159794548:role/github-rag-rulebook-staging-deploy
+    audience: sts.amazonaws.com
+    subject_condition: repo:gordonrose/entity-builder-harness:environment:staging
+    repository_condition: gordonrose/entity-builder-harness
+    ref_condition: refs/heads/main
+    environment_condition: staging
+    trust_scoped_to_repository: true
+    trust_scoped_to_ref: false
+    workflow_has_id_token_permission: true
+  artifact_provenance:
+    attestation_required: true
+    immutable_artifact_required: true
+  deployment_history_required: true
+artifacts:
+  source_commit_sha: pending-remote-main-merge
+  image_digest: pending-ecr-image-digest
+  corpus_package_version: pending-runtime-package-version
+  rulebook_index_sha: pending-runtime-rulebook-index-sha
+  chunk_set_sha: pending-runtime-chunk-set-sha
+aws:
+  account_id: "337159794548"
+  region: eu-west-1
+  runtime_family: ecs-fargate
+  service_name: rag-rulebook-staging
+  iam_role_name: github-rag-rulebook-staging-deploy
+  network_boundary: existing-kanbien-staging-alb-host-rule
+  secret_store: aws-secrets-manager
+  health_check: /health
+  rollback_target: previous-ecs-task-definition-and-image-digest
+  ecs:
+    cluster_arn: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+    service_arn: arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging
+    task_definition_arn: arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:1
+    deployment_circuit_breaker_enabled: true
+  staging_target:
+    hosted_zone_id: Z0909415EFV969Z95D5F
+    hostname: rag.kanbien.com
+    certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+    vpc_id: vpc-0063b6c3d2d781f3c
+    public_subnet_ids:
+      - subnet-05d385e4d57b18032
+      - subnet-0397df802e31ff6fe
+    existing_alb_arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
+    existing_https_listener_arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750
+    existing_alb_dns_name: kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com
+    existing_alb_canonical_hosted_zone_id: Z32O12XQLNTSW2
+    existing_alb_security_group_id: sg-08d590b0aee6e2e60
+mcp:
+  spec_version: "2025-11-25"
+  transport: streamable-http
+  authentication_model: staging-service-token
+  authorization_boundary: read-only-context-query
+  audit_log: cloudwatch-log-group:/aws/ecs/rag-rulebook-staging
+  exposed_capabilities:
+    - resources.read
+    - context.query
+operations:
+  owner: gordon-kanbien
+  escalation_path: owner-direct
+  budget_name: rag-rulebook-staging-25-usd
+  quotas_checked: true
+  rate_limit: 60rpm
+  concurrency_limit: "2"
+  token_budget_limit: "20000"
+  throttle_strategy: return-429-with-retry-after
+  rollback_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#rollback
+  disablement_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#disablement
+checks:
+  rag_rulebook_commit_gate_passed: false
+  generated_sources_current: false
+  local_runtime_built: false
+  local_runtime_freshness_verified: false
+  remote_main_sha_verified: false
+  branch_protection_verified: false
+  github_environment_protection_verified: false
+  aws_target_verified: false
+  rollback_verified: false
+  health_check_verified: false

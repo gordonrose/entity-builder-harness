@@ -1,0 +1,356 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.source-to-rule-derivation-report
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 report contract for source-to-rule derivation and semantic drift review.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.source-to-rule-derivation
+#       path: .agentic/02.rag-rulebook/standards/source-to-rule-derivation.md
+#     - id: rag-rulebook.workflow.derive-rules-from-source
+#       path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+#     - id: rag-rulebook.derivation-reports.readme
+#       path: .agentic/02.rag-rulebook/derivation-reports/README.md
+#     - id: rag-rulebook.script.validate-derivation-reports
+#       path: scripts/02.rag-rulebook/validate-derivation-reports/script.sh
+
+schema: rag-rulebook-source-to-rule-derivation-report-schema/v1
+report_schema: rag-rulebook/source-to-rule-derivation-report/v1
+
+purpose: Define the durable report shape used when source material is converted into structured rules and checked for semantic drift or conflict.
+
+principles:
+  - Source material is the approved human-readable input, not automatic retrieval coverage.
+  - Derivation reports make LLM-assisted semantic work reviewable and repeatable.
+  - Conflict and drift must be visible before structured rule changes are accepted.
+  - Generated indexes, chunks, and selector evaluations remain pending until scripts prove them current.
+  - Reports should be narrow and tied to concrete source paths.
+
+required_fields:
+  - schema
+  - report_id
+  - status
+  - source_change
+  - target
+  - semantic_review
+  - proposed_updates
+  - downstream_effects
+  - validation
+  - review
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/source-to-rule-derivation-report/v1
+
+  report_id:
+    type: string
+    format: lower-dot-id
+    description: Stable report identifier, usually based on date, target corpus, and topic.
+
+  status:
+    type: enum
+    allowed_values:
+      - needs-review
+      - accepted
+      - blocked
+      - superseded
+    description: Current lifecycle state of the derivation report.
+
+  source_change:
+    type: object
+    required_fields:
+      - change_type
+      - approved_source_state
+      - changed_paths
+      - summary
+    fields:
+      change_type:
+        type: enum
+        allowed_values:
+          - created
+          - updated
+          - removed
+          - split
+          - merged
+          - reorganized
+      approved_source_state:
+        type: enum
+        allowed_values:
+          - approved
+          - pending-review
+          - removed
+      changed_paths:
+        type: array
+        items:
+          type: string
+      summary:
+        type: string
+
+  target:
+    type: object
+    required_fields:
+      - corpus_id
+      - owner_layer
+    fields:
+      corpus_id:
+        type: string
+        examples:
+          - corpus.02.rag-rulebook
+          - corpus.04.deploy
+      owner_layer:
+        type: string
+      deploy_track:
+        type: string
+      expected_rule_paths:
+        type: array
+        items:
+          type: string
+      affected_rule_paths:
+        type: array
+        items:
+          type: string
+      affected_rulesets:
+        type: array
+        items:
+          type: string
+      affected_evaluations:
+        type: array
+        items:
+          type: string
+      affected_corpus_gaps:
+        type: array
+        items:
+          type: string
+
+  semantic_review:
+    type: object
+    required_fields:
+      - source_claims
+      - conflicts
+      - drift
+      - ownership
+    fields:
+      source_claims:
+        type: array
+        items:
+          type: object
+          required_fields:
+            - claim_id
+            - summary
+            - evidence_path
+          fields:
+            claim_id:
+              type: string
+            summary:
+              type: string
+            evidence_path:
+              type: string
+      conflicts:
+        type: object
+        required_fields:
+          - status
+          - items
+        fields:
+          status:
+            type: enum
+            allowed_values:
+              - none-found
+              - suspected
+              - confirmed
+          search_scope:
+            type: array
+            items:
+              type: string
+          items:
+            type: array
+            items:
+              type: object
+      drift:
+        type: object
+        required_fields:
+          - status
+          - items
+        fields:
+          status:
+            type: enum
+            allowed_values:
+              - none-found
+              - expected
+              - suspected
+              - confirmed
+          items:
+            type: array
+            items:
+              type: object
+      ownership:
+        type: object
+        required_fields:
+          - status
+          - notes
+        fields:
+          status:
+            type: enum
+            allowed_values:
+              - ok
+              - needs-review
+              - conflict
+          notes:
+            type: array
+            items:
+              type: string
+
+  proposed_updates:
+    type: object
+    fields:
+      rules:
+        type: array
+        items:
+          type: string
+      rule_packs:
+        type: array
+        items:
+          type: string
+      recognition_sources:
+        type: array
+        items:
+          type: string
+      recognition_candidates:
+        type: array
+        items:
+          type: string
+      corpus_gaps:
+        type: array
+        items:
+          type: string
+      evaluations:
+        type: array
+        items:
+          type: string
+      notes:
+        type: array
+        items:
+          type: string
+
+  downstream_effects:
+    type: object
+    required_fields:
+      - index_required
+      - chunks_required
+      - selector_evaluation_required
+      - publish_required
+    fields:
+      index_required:
+        type: boolean
+      chunks_required:
+        type: boolean
+      selector_evaluation_required:
+        type: boolean
+      publish_required:
+        type: boolean
+      stale_artifacts:
+        type: array
+        items:
+          type: string
+
+  validation:
+    type: object
+    required_fields:
+      - required_checks
+      - checks_run
+      - checks_pending
+    fields:
+      required_checks:
+        type: array
+        items:
+          type: string
+      checks_run:
+        type: array
+        items:
+          type: object
+          required_fields:
+            - command
+            - result
+          fields:
+            command:
+              type: string
+            result:
+              type: enum
+              allowed_values:
+                - passed
+                - failed
+                - skipped
+      checks_pending:
+        type: array
+        items:
+          type: string
+
+  review:
+    type: object
+    required_fields:
+      - required
+      - decision
+    fields:
+      required:
+        type: boolean
+      decision:
+        type: enum
+        allowed_values:
+          - pending
+          - approved
+          - blocked
+          - superseded
+      reviewer:
+        type: string
+      reviewed_at_utc:
+        type: string
+        format: iso-8601-utc
+      superseded_by:
+        type: string
+      notes:
+        type: array
+        items:
+          type: string
+
+field_guidance:
+  source_change:
+    what_it_is: The approved prose or source artifact that triggered rulebook work.
+    what_it_does: Keeps the report anchored to concrete changed paths instead of broad intent.
+    rules:
+      - Name the changed source paths.
+      - Say whether source is approved, pending review, or removed.
+      - Do not use a derivation report to approve the source itself.
+  semantic_review:
+    what_it_is: The LLM-assisted meaning check.
+    what_it_does: Makes source claims, conflicts, drift, and ownership issues explicit.
+    rules:
+      - Name source claims in small units.
+      - Record suspected conflicts even when no final decision exists.
+      - Do not hide drift by only listing proposed edits.
+  downstream_effects:
+    what_it_is: The generated or evaluated artifacts that must change after source derivation.
+    what_it_does: Prevents stale indexes, chunks, fixtures, or published packages from looking current.
+    rules:
+      - Mark index and chunk work required when structured rules change.
+      - Mark selector evaluation required when retrieval behavior changes.
+      - Keep publish required false until a publish workflow exists.
+  review:
+    what_it_is: The human or governed approval state for the derivation report.
+    what_it_does: Separates agent-generated semantic review from accepted governance.
+    rules:
+      - Keep decision pending until reviewed.
+      - Use blocked when conflict or drift lacks resolution.
+      - Use superseded when a later report replaces the report.

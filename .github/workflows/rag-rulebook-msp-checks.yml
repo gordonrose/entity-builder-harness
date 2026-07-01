@@ -1,0 +1,136 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.workflow.github-actions.msp-checks
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: infra.ci-cd
+#   disciplines:
+#     - agentic
+#     - sre
+#   kind: ci-workflow
+#   purpose: Run deterministic RAG/rulebook MSP checks in GitHub Actions without deploying to AWS.
+#   portability:
+#     class: internal
+#     targets: []
+#   effects:
+#     - read-only
+#   used_by:
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+
+name: RAG Rulebook MSP Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rag-rulebook-msp-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-runtime:
+    name: Local runtime and context packet checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install script dependencies
+        run: python -m pip install PyYAML==6.0.2
+
+      - name: Run RAG rulebook commit gates
+        run: bash scripts/02.rag-rulebook/commit-gates/script.sh
+
+      - name: Build local RAG runtime
+        run: |
+          bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
+            --output-dir "$RUNNER_TEMP/rag-rulebook-runtime" \
+            --pretty
+
+      - name: Verify local runtime freshness
+        run: |
+          bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh \
+            --runtime-dir "$RUNNER_TEMP/rag-rulebook-runtime" \
+            --json
+
+      - name: Query local context packet
+        run: |
+          bash scripts/02.rag-rulebook/query-local-context/script.sh \
+            --runtime-dir "$RUNNER_TEMP/rag-rulebook-runtime" \
+            --request-text "Explain how the RAG rulebook service should answer a planning question." \
+            --session-layer 02.rag-rulebook \
+            --session-mode discovery \
+            --session-workflow .agentic/02.rag-rulebook/workflows/default.md \
+            --no-focused-paths \
+            --max-chunks 6 \
+            --format compact \
+            --pretty
+
+      - name: Smoke test local service API
+        run: bash scripts/02.rag-rulebook/run-local-service/smoke-test.sh
+
+  deploy-readiness-planning:
+    name: Deploy readiness remains planning-only
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - local-runtime
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install script dependencies
+        run: python -m pip install PyYAML==6.0.2
+
+      - name: Verify deploy-readiness command behavior
+        run: bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+
+      - name: Report deployment block
+        run: |
+          {
+            echo "## RAG Rulebook deployment status"
+            echo ""
+            echo "This workflow proves local runtime and readiness checks only."
+            echo ""
+            echo "AWS deployment is intentionally blocked until:"
+            echo ""
+            echo "- ECS Fargate target proof exists"
+            echo "- a protected GitHub environment exists"
+            echo "- OIDC trust conditions are configured"
+            echo "- a deploy-readiness manifest passes without --allow-blocked"
+          } >> "$GITHUB_STEP_SUMMARY"

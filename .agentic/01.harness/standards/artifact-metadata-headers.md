@@ -46,6 +46,8 @@ This standard applies to new:
 - harness/process Markdown documents under `.agentic/`
 - harness architecture and process documents under `docs/harness/`
 - harness YAML artifacts under `docs/harness/`
+- RAG/rulebook corpus documents and YAML artifacts under
+  `docs/02.rag-rulebook/`
 
 Existing files should be backfilled in focused batches. Until backfill is
 complete, the commit gate enforces metadata for newly added files.

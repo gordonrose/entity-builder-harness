@@ -3,7 +3,7 @@
   id: education.articles.0001-the-next-ai-advantage-is-evidence
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

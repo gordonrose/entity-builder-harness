@@ -1,0 +1,1446 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.context-packet
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: context-packets
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 context-packet contract returned by the portable RAG/rulebook service.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.portable-service-contract
+#       path: .agentic/02.rag-rulebook/standards/portable-service-contract.md
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.guide.context-packet
+#       path: .agentic/02.rag-rulebook/guides/context-packet.md
+#     - id: rag-rulebook.script.validate-context-packet
+#       path: scripts/02.rag-rulebook/validate-context-packet/script.sh
+#     - id: rag-rulebook.script.generate-context-packet-fixture
+#       path: scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+
+schema: rag-rulebook-context-packet-schema/v1
+packet_schema: rag-rulebook/context-packet/v1
+
+purpose: Define the smallest governed context packet a RAG/rulebook service can return to a consuming workbench.
+
+principles:
+  - Prefer deterministic routing, path ownership, artifact metadata, and graph expansion before semantic recall.
+  - Include only context needed for the requested action and explain why each chunk was selected.
+  - Preserve citations and source references for every selected chunk, check, forbidden action, and stop condition.
+  - Return gaps and stop conditions instead of filling governance holes with model judgment.
+  - Keep final task execution outside the packet; the consuming workflow decides what to do next.
+
+compact_output_contract:
+  schema: rag-rulebook/context-packet-compact/v1
+  purpose: >
+    Provide an agent-facing view of a validated full context packet without the
+    full debug, recognition, and provenance payload.
+  source_of_truth: "Derived from `rag-rulebook/context-packet/v1`; it must not run independent retrieval behavior."
+  required_fields:
+    - schema
+    - source_schema
+    - packet_id
+    - generated_at
+    - request
+    - intent
+    - routing
+    - confidence
+    - selected_chunks
+    - citations
+    - gaps
+    - required_checks
+    - forbidden_actions
+    - stop_conditions
+    - budgets
+    - debug
+    - packet_summary
+  field_rules:
+    request:
+      - "Keep raw text, normalized summary, focused paths, and open artifact IDs."
+      - "Do not include full recognition-source matches in compact output."
+    selected_chunks:
+      - "Include selected chunk content because this is the primary agent context."
+      - "Keep rank, IDs, source path, section path, retrieval score, token estimate, selection reason, citations, and rule IDs."
+    citations:
+      - "Include only citations referenced by selected chunks or gaps."
+    debug:
+      - "Point callers to `--format full` for complete selector trace and provenance."
+      - "Include selector strategy ID and stage statuses for quick diagnosis."
+    packet_summary:
+      - "Include counts so callers can quickly inspect packet size and completeness."
+
+teaching_policy:
+  - Use structured `field_guide` entries instead of YAML comments for field explanations.
+  - Keep `description` and `rules` concise enough to render in generated reference docs.
+  - Put conceptual walkthroughs, mental models, and examples in the companion guide.
+
+required_fields:
+  - schema
+  - packet_id
+  - generated_at
+  - request
+  - intent
+  - routing
+  - matched_corpora
+  - matched_rule_packs
+  - matched_rulesets
+  - selected_chunks
+  - required_checks
+  - forbidden_actions
+  - stop_conditions
+  - citations
+  - confidence
+  - gaps
+  - budgets
+  - provenance
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/context-packet/v1
+
+  packet_id:
+    type: string
+    format: stable-run-id
+    description: Unique packet identifier for one retrieval response.
+
+  generated_at:
+    type: string
+    format: iso-8601-utc
+
+  request:
+    type: object
+    required_fields:
+      - raw_text
+      - normalized_summary
+    fields:
+      raw_text:
+        type: string
+      normalized_summary:
+        type: string
+      focused_paths:
+        type: array
+        items:
+          type: string
+      open_artifact_ids:
+        type: array
+        items:
+          type: string
+
+  intent:
+    type: object
+    required_fields:
+      - id
+      - label
+      - confidence
+      - source
+    fields:
+      id:
+        type: string
+        format: lower-dot-id
+      label:
+        type: string
+      mode:
+        type: string
+        examples:
+          - discovery
+          - implementation
+          - review
+      layer:
+        type: string
+        examples:
+          - 02.rag-rulebook
+      workflow:
+        type: string
+      confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+      source:
+        type: enum
+        allowed_values:
+          - deterministic
+          - inferred
+          - user-supplied
+          - mixed
+      evidence_ref_ids:
+        type: array
+        items:
+          type: string
+
+  action_authorization:
+    type: object
+    description: Optional explicit authorization decision for side-effecting actions named by the request.
+    required_fields:
+      - requested_action
+      - side_effect_class
+      - execution_allowed
+      - status
+      - resolved_intent_id
+      - blocking_gap_ids
+    fields:
+      requested_action:
+        type: string
+        examples:
+          - deploy
+          - deployment-guidance
+          - edit
+          - commit
+          - context-retrieval
+      side_effect_class:
+        type: enum
+        allowed_values:
+          - none
+          - write
+          - git
+          - deploy
+          - destructive
+      execution_allowed:
+        type: boolean
+      status:
+        type: enum
+        allowed_values:
+          - allowed
+          - blocked
+          - not-executable-intent
+          - not-requested
+          - requires-deploy-workflow-approval
+      resolved_intent_id:
+        type: string
+      blocking_gap_ids:
+        type: array
+        items:
+          type: string
+
+  routing:
+    type: object
+    required_fields:
+      - layer
+      - mode
+      - workflow
+      - status
+    fields:
+      layer:
+        type: string
+      mode:
+        type: string
+      workflow:
+        type: string
+      status:
+        type: enum
+        allowed_values:
+          - ready
+          - needs-clarification
+          - blocked
+      task_type:
+        type: string
+      target_paths:
+        type: array
+        items:
+          type: string
+      classification_source:
+        type: string
+
+  selector_trace:
+    type: object
+    required_when_present:
+      - strategy_id
+      - stages
+      - recognition_match_counts
+      - candidate_counts
+      - required_evidence
+    fields:
+      strategy_id:
+        type: string
+      compiled_policy_id:
+        type: string
+      stages:
+        type: array
+        items:
+          type: object
+          required_fields:
+            - stage_id
+            - rank
+            - status
+            - summary
+            - signals
+      recognition_match_counts:
+        type: object
+      candidate_counts:
+        type: object
+      required_evidence:
+        type: object
+
+  matched_corpora:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - corpus_id
+        - owner_layer
+        - match_reason
+        - confidence
+      fields:
+        corpus_id:
+          type: string
+          format: numbered-corpus-id
+          examples:
+            - corpus.02.rag-rulebook
+            - corpus.03.product.design-system
+        owner_layer:
+          type: string
+        manifest_path:
+          type: string
+        match_reason:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+
+  matched_rule_packs:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - id
+        - corpus_id
+        - selection_reason
+      fields:
+        id:
+          type: string
+        corpus_id:
+          type: string
+        path:
+          type: string
+        selection_reason:
+          type: string
+        citation_ids:
+          type: array
+          items:
+            type: string
+
+  matched_rulesets:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - id
+        - corpus_id
+        - ruleset_type
+        - selection_reason
+      fields:
+        id:
+          type: string
+        corpus_id:
+          type: string
+        ruleset_type:
+          type: enum
+          allowed_values:
+            - layer
+            - concern
+            - standard
+            - workflow
+        path:
+          type: string
+        rule_ids:
+          type: array
+          items:
+            type: string
+        selection_reason:
+          type: string
+        citation_ids:
+          type: array
+          items:
+            type: string
+
+  selected_chunks:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - chunk_id
+        - corpus_id
+        - artifact_id
+        - source_path
+        - content
+        - rank
+        - token_estimate
+        - selection_reason
+        - citation_ids
+      fields:
+        chunk_id:
+          type: string
+        corpus_id:
+          type: string
+        artifact_id:
+          type: string
+        artifact_ref:
+          type: string
+        content_kind:
+          type: string
+          examples:
+            - artifact-summary
+            - rule
+        source_path:
+          type: string
+        source_ref_ids:
+          type: array
+          items:
+            type: string
+        section_path:
+          type: string
+        rule_ids:
+          type: array
+          items:
+            type: string
+        rule_refs:
+          type: array
+          items:
+            type: string
+        pack_refs:
+          type: array
+          items:
+            type: string
+        rule_title:
+          type: string
+          description: Optional structured title for rule chunks.
+        rule_summary:
+          type: string
+          description: Optional structured summary for rule chunks.
+        rule_must_text:
+          type: string
+          description: Optional newline-delimited must statements for rule chunks.
+        rule_must_not_text:
+          type: string
+          description: Optional newline-delimited must-not statements for rule chunks.
+        rule_agent_guidance:
+          type: string
+          description: Optional agent-facing guidance for rule chunks.
+        content:
+          type: string
+          description: Minimal text needed by the consuming model.
+        rank:
+          type: integer
+          minimum: 1
+        token_estimate:
+          type: integer
+          minimum: 1
+        retrieval_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        selection_reason:
+          type: string
+        citation_ids:
+          type: array
+          min_items: 1
+          items:
+            type: string
+
+  required_checks:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - id
+        - description
+        - timing
+        - citation_ids
+      fields:
+        id:
+          type: string
+        description:
+          type: string
+        timing:
+          type: enum
+          allowed_values:
+            - before-edit
+            - before-commit
+            - before-deploy
+            - after-change
+        command:
+          type: string
+          required_when_known: false
+        citation_ids:
+          type: array
+          min_items: 1
+          items:
+            type: string
+
+  forbidden_actions:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - action
+        - reason
+        - citation_ids
+      fields:
+        action:
+          type: string
+        reason:
+          type: string
+        citation_ids:
+          type: array
+          min_items: 1
+          items:
+            type: string
+
+  stop_conditions:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - id
+        - condition
+        - severity
+        - citation_ids
+      fields:
+        id:
+          type: string
+        condition:
+          type: string
+        severity:
+          type: enum
+          allowed_values:
+            - warning
+            - blocking
+        suggested_resolution:
+          type: string
+        citation_ids:
+          type: array
+          min_items: 1
+          items:
+            type: string
+
+  citations:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - id
+        - source_path
+        - source_type
+      fields:
+        id:
+          type: string
+        corpus_id:
+          type: string
+        artifact_id:
+          type: string
+        source_path:
+          type: string
+        source_type:
+          type: enum
+          allowed_values:
+            - source
+            - rule
+            - rule-pack
+            - workflow
+            - standard
+            - schema
+            - plan
+        line_start:
+          type: integer
+          minimum: 1
+        line_end:
+          type: integer
+          minimum: 1
+        source_ref:
+          type: string
+
+  confidence:
+    type: object
+    required_fields:
+      - overall
+      - retrieval
+      - routing
+    fields:
+      overall:
+        type: number
+        minimum: 0
+        maximum: 1
+      retrieval:
+        type: number
+        minimum: 0
+        maximum: 1
+      routing:
+        type: number
+        minimum: 0
+        maximum: 1
+      notes:
+        type: array
+        items:
+          type: string
+
+  gaps:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - id
+        - type
+        - description
+        - blocking
+      fields:
+        id:
+          type: string
+        type:
+          type: enum
+          allowed_values:
+            - missing-corpus
+            - ambiguous-intent
+            - ambiguous-ownership
+            - missing-reference
+            - budget-overflow
+            - missing-validator
+            - unsupported-action
+        description:
+          type: string
+        blocking:
+          type: boolean
+        required_evidence_chunk_ids:
+          type: array
+          items:
+            type: string
+        citation_ids:
+          type: array
+          items:
+            type: string
+        suggested_resolution:
+          type: string
+
+  budgets:
+    type: object
+    required_fields:
+      - max_context_tokens
+      - selected_context_tokens
+      - trim_policy
+    fields:
+      max_context_tokens:
+        type: integer
+        minimum: 1
+      selected_context_tokens:
+        type: integer
+        minimum: 0
+      trim_policy:
+        type: enum
+        allowed_values:
+          - deterministic-first
+          - cite-required-context-only
+          - fail-when-over-budget
+
+  provenance:
+    type: object
+    required_fields:
+      - service_version
+      - corpus_index_versions
+      - retrieval_order
+    fields:
+      service_version:
+        type: string
+      corpus_index_versions:
+        type: array
+        items:
+          type: object
+          required_fields:
+            - corpus_id
+            - index_version
+          fields:
+            corpus_id:
+              type: string
+            index_version:
+              type: string
+            content_hash:
+              type: string
+      retrieval_order:
+        type: array
+        items:
+          type: string
+      generator:
+        type: string
+
+field_guide:
+  - path: schema
+    what_it_is: "The literal packet schema identifier."
+    what_it_does: "Lets consumers reject packets that use an unsupported contract."
+    rules:
+      - "Must be `rag-rulebook/context-packet/v1`."
+
+  - path: packet_id
+    what_it_is: "A unique ID for one retrieval response."
+    what_it_does: "Allows logs, diagnostics, and follow-up validation to refer to the exact packet."
+    rules:
+      - "Must be stable for the generated packet."
+      - "Must not be reused for a different retrieval response."
+
+  - path: generated_at
+    what_it_is: "The UTC timestamp when the packet was produced."
+    what_it_does: "Helps consumers understand freshness and debug stale context."
+    rules:
+      - "Use ISO-8601 UTC format."
+
+  - path: request
+    what_it_is: "The retrieval request as understood by the service."
+    what_it_does: "Preserves the original user signal and the normalized task summary."
+    rules:
+      - "Must include raw text and a normalized summary."
+      - "Should include focused paths and open artifacts when available."
+
+  - path: request.raw_text
+    what_it_is: "The user's original request text."
+    what_it_does: "Keeps the packet traceable to the natural language input."
+    rules:
+      - "Do not rewrite this field except for exact transport normalization."
+
+  - path: request.normalized_summary
+    what_it_is: "A short deterministic summary of the request."
+    what_it_does: "Gives retrieval and routing a compact task statement."
+    rules:
+      - "Should preserve the user's actual intent."
+      - "Should not add inferred scope that is not supported by evidence."
+
+  - path: request.focused_paths
+    what_it_is: "Paths the user or workbench is focused on."
+    what_it_does: "Improves path ownership and artifact matching."
+    rules:
+      - "Only include paths available to the current request context."
+
+  - path: request.open_artifact_ids
+    what_it_is: "Stable artifact IDs visible in the current work context."
+    what_it_does: "Lets retrieval use artifact metadata before broad search."
+    rules:
+      - "Use artifact IDs from metadata headers when available."
+
+  - path: intent
+    what_it_is: "The normalized interpretation of what the user is trying to do."
+    what_it_does: "Turns natural language into a deterministic routing and retrieval input."
+    rules:
+      - "Must include confidence and source."
+      - "Low-confidence intent must produce a gap or clarification path."
+
+  - path: intent.id
+    what_it_is: "The stable machine name for the intent."
+    what_it_does: "Lets deterministic workflows key off a known task pattern."
+    rules:
+      - "Use lowercase dot-separated IDs."
+
+  - path: intent.label
+    what_it_is: "A human-readable name for the intent."
+    what_it_does: "Makes diagnostics and teaching output easier to read."
+    rules:
+      - "Keep it short and plain."
+
+  - path: intent.mode
+    what_it_is: "The work mode implied by the request."
+    what_it_does: "Distinguishes discovery, implementation, review, and similar flows."
+    rules:
+      - "Should align with the consuming workbench's mode vocabulary."
+
+  - path: intent.layer
+    what_it_is: "The numbered layer the intent belongs to."
+    what_it_does: "Connects retrieval to the right governance boundary."
+    rules:
+      - "Use the numbered layer taxonomy."
+
+  - path: intent.workflow
+    what_it_is: "The workflow most likely to govern the task."
+    what_it_does: "Gives the consumer a deterministic next governance anchor."
+    rules:
+      - "Do not invent a workflow when ownership is unclear."
+
+  - path: intent.confidence
+    what_it_is: "How confident the service is in the normalized intent."
+    what_it_does: "Controls whether the consumer can proceed or should ask for clarification."
+    rules:
+      - "Use a value from 0 to 1."
+      - "Low values should create a gap."
+
+  - path: intent.source
+    what_it_is: "How the intent was derived."
+    what_it_does: "Separates deterministic evidence from inference."
+    rules:
+      - "Use `deterministic`, `inferred`, `user-supplied`, or `mixed`."
+
+  - path: action_authorization
+    what_it_is: "An optional explicit authorization decision for a requested side-effecting action."
+    what_it_does: "Makes safety decisions such as deployment denial visible without requiring consumers to infer them from routing alone."
+    rules:
+      - "Use this field when the prompt appears to request write, git, deploy, or destructive action."
+      - "When execution is blocked, list the blocking gap IDs."
+      - "Do not set `execution_allowed: true` while routing is blocked or blocking gaps exist."
+      - "RAG selector packets must not authorize deploy execution; deployment approval belongs to the deploy workflow, explicit user approval, and readiness verifier."
+
+  - path: action_authorization.execution_allowed
+    what_it_is: "Whether the requested side-effecting action may proceed."
+    what_it_does: "Gives downstream workflows a direct safety signal."
+    rules:
+      - "Must be false when the prompt is planning, explanation, or no-action."
+      - "Must be false for deploy execution in RAG selector packets."
+      - "Must be false when any blocking gap is present."
+
+  - path: gaps.required_evidence_chunk_ids
+    what_it_is: "Selected chunk IDs that justify a gap."
+    what_it_does: "Keeps blocking decisions auditable and traceable to exact retrieved evidence."
+    rules:
+      - "Use for blocking gaps when a specific rule chunk explains the block."
+      - "Every listed chunk should be present in `selected_chunks`."
+
+  - path: gaps.citation_ids
+    what_it_is: "Packet citations that support the gap."
+    what_it_does: "Lets reviewers reconstruct why a gap was emitted without scanning all selected chunks."
+    rules:
+      - "Use citations from the selected evidence chunks."
+
+  - path: intent.evidence_ref_ids
+    what_it_is: "References that support the intent classification."
+    what_it_does: "Makes the intent auditable."
+    rules:
+      - "Entries should resolve to citations or other packet evidence."
+
+  - path: routing
+    what_it_is: "The proposed governance route for the consuming workflow."
+    what_it_does: "Tells the consumer which layer, mode, and workflow should handle the task."
+    rules:
+      - "Must include layer, mode, workflow, and status."
+
+  - path: routing.layer
+    what_it_is: "The selected numbered layer."
+    what_it_does: "Anchors the task to a governance owner."
+    rules:
+      - "Must not conflict with matched corpus ownership."
+
+  - path: routing.mode
+    what_it_is: "The selected work mode."
+    what_it_does: "Helps the consumer choose implementation, review, discovery, or other behavior."
+    rules:
+      - "Should match the intent mode unless a workflow explicitly overrides it."
+
+  - path: routing.workflow
+    what_it_is: "The workflow path or ID selected for the task."
+    what_it_does: "Gives agents a specific process to load next."
+    rules:
+      - "Must be backed by cited governance when available."
+
+  - path: routing.status
+    what_it_is: "Whether the route is ready, blocked, or needs clarification."
+    what_it_does: "Prevents the consumer from treating weak retrieval as permission to act."
+    rules:
+      - "Use `ready`, `needs-clarification`, or `blocked`."
+
+  - path: routing.task_type
+    what_it_is: "A compact task category."
+    what_it_does: "Helps choose validators, schemas, and expected outputs."
+    rules:
+      - "Prefer stable vocabulary over free-form prose."
+
+  - path: routing.target_paths
+    what_it_is: "Paths expected to be read or changed."
+    what_it_does: "Improves path-scoped retrieval and validation."
+    rules:
+      - "Do not include speculative paths without evidence."
+
+  - path: routing.classification_source
+    what_it_is: "The source of the route classification."
+    what_it_does: "Shows whether routing came from session metadata, classifier output, user input, or inference."
+    rules:
+      - "Prefer deterministic sources over model-only inference."
+
+  - path: selector_trace
+    what_it_is: "A compact diagnostic report explaining which retrieval strategy stages ran."
+    what_it_does: "Lets A/B evaluation identify whether misses came from recognition, evidence bundles, graph expansion, filtering, or final ranking."
+    rules:
+      - "Should identify the compiled strategy ID."
+      - "Should include ordered stage IDs and statuses."
+      - "Should include enough counts to debug retrieval without reading the whole repo."
+
+  - path: matched_corpora
+    what_it_is: "The corpus packages selected for the task."
+    what_it_does: "Keeps retrieval modular instead of merging every domain into one instruction set."
+    rules:
+      - "Each entry must name a corpus ID and match reason."
+
+  - path: matched_corpora[].corpus_id
+    what_it_is: "The numbered corpus ID."
+    what_it_does: "Identifies the domain knowledge package used for retrieval."
+    rules:
+      - "Use the numbered corpus vocabulary or an approved subcorpus."
+
+  - path: matched_corpora[].owner_layer
+    what_it_is: "The numbered layer that owns the corpus."
+    what_it_does: "Makes ownership and routing conflicts visible."
+    rules:
+      - "Must agree with the corpus manifest when one exists."
+
+  - path: matched_corpora[].manifest_path
+    what_it_is: "The path to the corpus manifest."
+    what_it_does: "Lets consumers inspect source roots, generated roots, and retrieval policy."
+    rules:
+      - "Include when a manifest exists."
+
+  - path: matched_corpora[].match_reason
+    what_it_is: "Why this corpus was selected."
+    what_it_does: "Makes retrieval explainable."
+    rules:
+      - "Use a specific reason such as path ownership, intent match, or artifact metadata."
+
+  - path: matched_corpora[].confidence
+    what_it_is: "Confidence in the corpus match."
+    what_it_does: "Helps decide whether cross-corpus retrieval is safe."
+    rules:
+      - "Use a value from 0 to 1."
+
+  - path: matched_rule_packs
+    what_it_is: "Rule packs selected for the task."
+    what_it_does: "Adds task-shaped governance beyond broad corpus matching."
+    rules:
+      - "Each selected rule pack should have a selection reason."
+
+  - path: matched_rule_packs[].id
+    what_it_is: "The stable rule-pack ID."
+    what_it_does: "Lets consumers trace selected task guidance."
+    rules:
+      - "Use the ID from the rule-pack artifact when available."
+
+  - path: matched_rule_packs[].corpus_id
+    what_it_is: "The corpus that owns the rule pack."
+    what_it_does: "Prevents task guidance from losing its domain boundary."
+    rules:
+      - "Must match one of the selected or related corpora."
+
+  - path: matched_rule_packs[].path
+    what_it_is: "The current path to the rule-pack artifact."
+    what_it_does: "Supports citation and debugging."
+    rules:
+      - "Treat as a path hint, not the stable identity."
+
+  - path: matched_rule_packs[].selection_reason
+    what_it_is: "Why the rule pack was selected."
+    what_it_does: "Shows whether selection was deterministic, graph-expanded, or recalled."
+    rules:
+      - "Must be specific enough for review."
+
+  - path: matched_rule_packs[].citation_ids
+    what_it_is: "Citations supporting the selected rule pack."
+    what_it_does: "Connects rule-pack inclusion to source evidence."
+    rules:
+      - "Entries should resolve to `citations`."
+
+  - path: matched_rulesets
+    what_it_is: "Layer, concern, standard, or workflow rulesets selected for the task."
+    what_it_does: "Carries reusable governance into the packet."
+    rules:
+      - "Rulesets should be selected by ownership, dependency, or graph relationship."
+
+  - path: matched_rulesets[].id
+    what_it_is: "The stable ruleset ID."
+    what_it_does: "Lets consumers trace selected governance."
+    rules:
+      - "Use artifact metadata IDs when available."
+
+  - path: matched_rulesets[].corpus_id
+    what_it_is: "The corpus that owns the ruleset."
+    what_it_does: "Keeps ruleset guidance tied to its corpus boundary."
+    rules:
+      - "Must not silently cross ownership boundaries."
+
+  - path: matched_rulesets[].ruleset_type
+    what_it_is: "The type of ruleset selected."
+    what_it_does: "Helps consumers interpret whether the guidance is layer, concern, standard, or workflow level."
+    rules:
+      - "Use one of the allowed values."
+
+  - path: matched_rulesets[].path
+    what_it_is: "The current path to the ruleset."
+    what_it_does: "Supports citation, debugging, and migration planning."
+    rules:
+      - "Treat as a path hint."
+
+  - path: matched_rulesets[].rule_ids
+    what_it_is: "Specific rule IDs selected inside the ruleset."
+    what_it_does: "Lets retrieval narrow a long ruleset to relevant rules."
+    rules:
+      - "Prefer specific rule IDs over whole-file inclusion."
+
+  - path: matched_rulesets[].selection_reason
+    what_it_is: "Why the ruleset was selected."
+    what_it_does: "Explains the retrieval path."
+    rules:
+      - "Name the deterministic match, graph edge, or recall reason."
+
+  - path: matched_rulesets[].citation_ids
+    what_it_is: "Citations supporting the selected ruleset."
+    what_it_does: "Makes selected governance auditable."
+    rules:
+      - "Entries should resolve to `citations`."
+
+  - path: selected_chunks
+    what_it_is: "The minimal text chunks sent to the consuming model."
+    what_it_does: "Provides the actual augmented context while keeping the packet small."
+    rules:
+      - "Every chunk must explain why it was selected."
+      - "Every chunk must have at least one citation."
+
+  - path: selected_chunks[].chunk_id
+    what_it_is: "The stable chunk ID."
+    what_it_does: "Allows validation, deduplication, and retrieval diagnostics."
+    rules:
+      - "Must identify one chunk, not a whole corpus."
+
+  - path: selected_chunks[].corpus_id
+    what_it_is: "The corpus that produced the chunk."
+    what_it_does: "Keeps selected context tied to domain ownership."
+    rules:
+      - "Must reference a matched or explicitly related corpus."
+
+  - path: selected_chunks[].artifact_id
+    what_it_is: "The artifact that owns the chunk."
+    what_it_does: "Connects chunk text back to a stable source artifact."
+    rules:
+      - "Use metadata IDs when available."
+
+  - path: selected_chunks[].source_path
+    what_it_is: "The current path to the source artifact."
+    what_it_does: "Allows humans and tools to inspect the chunk source."
+    rules:
+      - "Do not use path as the stable identity."
+
+  - path: selected_chunks[].rule_ids
+    what_it_is: "Specific rules represented by the chunk."
+    what_it_does: "Preserves rule-level traceability."
+    rules:
+      - "Use when the chunk comes from structured rules."
+
+  - path: selected_chunks[].content
+    what_it_is: "The selected text sent as model context."
+    what_it_does: "Provides only the needed evidence or instruction."
+    rules:
+      - "Keep it minimal."
+      - "Do not include uncited generated explanation as if it were source."
+
+  - path: selected_chunks[].rank
+    what_it_is: "The chunk's order in the selected context list."
+    what_it_does: "Lets consumers preserve retrieval priority."
+    rules:
+      - "Start at 1."
+
+  - path: selected_chunks[].token_estimate
+    what_it_is: "Estimated token cost of the chunk content."
+    what_it_does: "Supports context-budget trimming."
+    rules:
+      - "Must be positive."
+
+  - path: selected_chunks[].retrieval_score
+    what_it_is: "Optional normalized retrieval score."
+    what_it_does: "Helps diagnostics compare selected chunks."
+    rules:
+      - "Use 0 to 1 when present."
+      - "Do not let score override deterministic stop conditions."
+
+  - path: selected_chunks[].selection_reason
+    what_it_is: "Why the chunk was selected."
+    what_it_does: "Makes context augmentation explainable."
+    rules:
+      - "Name the route, graph edge, keyword, semantic match, or rule dependency."
+
+  - path: selected_chunks[].citation_ids
+    what_it_is: "Citations backing the chunk."
+    what_it_does: "Lets consumers verify the selected text."
+    rules:
+      - "Must contain at least one citation."
+
+  - path: required_checks
+    what_it_is: "Checks the consuming workflow should run."
+    what_it_does: "Turns retrieved governance into concrete verification obligations."
+    rules:
+      - "Every check must have a citation."
+
+  - path: required_checks[].id
+    what_it_is: "Stable check identifier."
+    what_it_does: "Lets validators and reports refer to the check."
+    rules:
+      - "Prefer existing script or checklist IDs."
+
+  - path: required_checks[].description
+    what_it_is: "Plain-English check description."
+    what_it_does: "Explains what must be verified."
+    rules:
+      - "Keep it action-oriented."
+
+  - path: required_checks[].timing
+    what_it_is: "When the check should run."
+    what_it_does: "Prevents checks from being run too late."
+    rules:
+      - "Use an allowed timing value."
+
+  - path: required_checks[].command
+    what_it_is: "Optional command for the check."
+    what_it_does: "Lets consumers run deterministic validation when known."
+    rules:
+      - "Only include governed commands."
+
+  - path: required_checks[].citation_ids
+    what_it_is: "Citations requiring the check."
+    what_it_does: "Shows why the check is mandatory."
+    rules:
+      - "Must contain at least one citation."
+
+  - path: forbidden_actions
+    what_it_is: "Actions the consumer must not take."
+    what_it_does: "Carries negative governance into the packet."
+    rules:
+      - "Every forbidden action must have a reason and citation."
+
+  - path: forbidden_actions[].action
+    what_it_is: "The prohibited action."
+    what_it_does: "Names exactly what must not happen."
+    rules:
+      - "Keep it concrete."
+
+  - path: forbidden_actions[].reason
+    what_it_is: "Why the action is prohibited."
+    what_it_does: "Helps humans understand the guardrail."
+    rules:
+      - "Tie the reason to governance, not preference."
+
+  - path: forbidden_actions[].citation_ids
+    what_it_is: "Citations backing the prohibition."
+    what_it_does: "Makes the negative constraint auditable."
+    rules:
+      - "Must contain at least one citation."
+
+  - path: stop_conditions
+    what_it_is: "Conditions that should pause or block action."
+    what_it_does: "Prevents the model from improvising through missing governance."
+    rules:
+      - "Blocking stop conditions must affect routing status."
+
+  - path: stop_conditions[].id
+    what_it_is: "Stable stop-condition ID."
+    what_it_does: "Lets reports and validators refer to the condition."
+    rules:
+      - "Use a clear lower-dot or lower-kebab ID."
+
+  - path: stop_conditions[].condition
+    what_it_is: "The condition that triggers the stop."
+    what_it_does: "Explains what the consumer should watch for."
+    rules:
+      - "Make it observable."
+
+  - path: stop_conditions[].severity
+    what_it_is: "Whether the condition warns or blocks."
+    what_it_does: "Controls whether the consumer can continue."
+    rules:
+      - "Use `warning` or `blocking`."
+
+  - path: stop_conditions[].suggested_resolution
+    what_it_is: "Recommended next step when the condition appears."
+    what_it_does: "Helps humans recover without improvising."
+    rules:
+      - "Keep it advisory, not an ungoverned command."
+
+  - path: stop_conditions[].citation_ids
+    what_it_is: "Citations backing the stop condition."
+    what_it_does: "Makes the stop auditable."
+    rules:
+      - "Must contain at least one citation."
+
+  - path: citations
+    what_it_is: "The source-reference table for the packet."
+    what_it_does: "Lets every selected chunk, check, prohibition, and stop condition point back to source."
+    rules:
+      - "Citation IDs must be unique within the packet."
+
+  - path: citations[].id
+    what_it_is: "The citation identifier."
+    what_it_does: "Provides a stable packet-local reference."
+    rules:
+      - "Must be referenced by packet evidence when used."
+
+  - path: citations[].corpus_id
+    what_it_is: "The corpus that owns the cited source."
+    what_it_does: "Keeps citations tied to corpus boundaries."
+    rules:
+      - "Use when the citation comes from a corpus package."
+
+  - path: citations[].artifact_id
+    what_it_is: "The stable artifact ID for the cited source."
+    what_it_does: "Supports path moves and generated indexes."
+    rules:
+      - "Use metadata IDs when available."
+
+  - path: citations[].source_path
+    what_it_is: "The current source path."
+    what_it_does: "Lets humans inspect the cited material."
+    rules:
+      - "Must point to the source used for retrieval."
+
+  - path: citations[].source_type
+    what_it_is: "The kind of source cited."
+    what_it_does: "Helps consumers interpret source authority."
+    rules:
+      - "Use one of the allowed values."
+
+  - path: citations[].line_start
+    what_it_is: "The first cited line."
+    what_it_does: "Makes citations precise."
+    rules:
+      - "Use when line positions are known."
+
+  - path: citations[].line_end
+    what_it_is: "The last cited line."
+    what_it_does: "Makes citations precise."
+    rules:
+      - "Use when line positions are known."
+      - "Must not be before `line_start`."
+
+  - path: citations[].source_ref
+    what_it_is: "Optional source-local reference label."
+    what_it_does: "Names a section, rule, ADR, or source reference."
+    rules:
+      - "Use stable source labels when available."
+
+  - path: confidence
+    what_it_is: "Confidence scores for the packet."
+    what_it_does: "Shows whether routing and retrieval are strong enough to use."
+    rules:
+      - "Must include overall, retrieval, and routing scores."
+
+  - path: confidence.overall
+    what_it_is: "Overall confidence in the packet."
+    what_it_does: "Summarizes usability for the consumer."
+    rules:
+      - "Use 0 to 1."
+
+  - path: confidence.retrieval
+    what_it_is: "Confidence in selected retrieval results."
+    what_it_does: "Separates evidence quality from routing quality."
+    rules:
+      - "Use 0 to 1."
+
+  - path: confidence.routing
+    what_it_is: "Confidence in layer, mode, and workflow routing."
+    what_it_does: "Shows whether workflow selection is safe."
+    rules:
+      - "Use 0 to 1."
+
+  - path: confidence.notes
+    what_it_is: "Optional confidence explanation."
+    what_it_does: "Captures caveats without hiding them in prose elsewhere."
+    rules:
+      - "Keep notes short and diagnostic."
+
+  - path: gaps
+    what_it_is: "Known missing or ambiguous information."
+    what_it_does: "Makes insufficiency explicit instead of letting the model guess."
+    rules:
+      - "Blocking gaps must affect routing status."
+
+  - path: gaps[].id
+    what_it_is: "Stable gap identifier."
+    what_it_does: "Lets consumers report and resolve gaps."
+    rules:
+      - "Use a clear packet-local ID."
+
+  - path: gaps[].type
+    what_it_is: "The category of the gap."
+    what_it_does: "Helps route recovery or clarification."
+    rules:
+      - "Use one of the allowed values."
+
+  - path: gaps[].description
+    what_it_is: "Plain-English explanation of the gap."
+    what_it_does: "Tells the human or workflow what is missing."
+    rules:
+      - "Name the missing evidence or ambiguity."
+
+  - path: gaps[].blocking
+    what_it_is: "Whether the gap blocks action."
+    what_it_does: "Prevents unsafe continuation."
+    rules:
+      - "If true, routing status must not be `ready`."
+
+  - path: gaps[].suggested_resolution
+    what_it_is: "How to resolve the gap."
+    what_it_does: "Guides clarification or governance updates."
+    rules:
+      - "Do not suggest ungoverned action."
+
+  - path: budgets
+    what_it_is: "Context-size limits and selected token counts."
+    what_it_does: "Keeps augmentation small and predictable."
+    rules:
+      - "Selected tokens must not exceed the max."
+
+  - path: budgets.max_context_tokens
+    what_it_is: "The maximum context budget for selected chunks."
+    what_it_does: "Sets the hard ceiling for packet context."
+    rules:
+      - "Must be positive."
+
+  - path: budgets.selected_context_tokens
+    what_it_is: "Estimated tokens selected for context."
+    what_it_does: "Shows how much of the budget is used."
+    rules:
+      - "Must be zero or positive."
+      - "Must not exceed `max_context_tokens`."
+
+  - path: budgets.trim_policy
+    what_it_is: "The policy used when context is too large."
+    what_it_does: "Makes context reduction deterministic."
+    rules:
+      - "Use an allowed trim policy."
+
+  - path: provenance
+    what_it_is: "How the packet was generated."
+    what_it_does: "Supports reproducibility and debugging."
+    rules:
+      - "Must include service version, index versions, and retrieval order."
+
+  - path: provenance.service_version
+    what_it_is: "The service or design version that produced the packet."
+    what_it_does: "Lets consumers correlate packets with generator behavior."
+    rules:
+      - "Use a real version when runtime exists."
+
+  - path: provenance.corpus_index_versions
+    what_it_is: "The corpus indexes used during retrieval."
+    what_it_does: "Makes retrieval reproducible against a known index snapshot."
+    rules:
+      - "Each entry must include corpus ID and index version."
+
+  - path: provenance.corpus_index_versions[].corpus_id
+    what_it_is: "The indexed corpus ID."
+    what_it_does: "Identifies which corpus index participated in retrieval."
+    rules:
+      - "Use numbered corpus IDs."
+
+  - path: provenance.corpus_index_versions[].index_version
+    what_it_is: "The version or label of the corpus index."
+    what_it_does: "Lets consumers detect stale indexes."
+    rules:
+      - "Use a deterministic version when available."
+
+  - path: provenance.corpus_index_versions[].content_hash
+    what_it_is: "Optional hash of the index content."
+    what_it_does: "Supports exact reconciliation."
+    rules:
+      - "Use when generated indexes exist."
+
+  - path: provenance.retrieval_order
+    what_it_is: "The ordered retrieval strategy used."
+    what_it_does: "Shows whether deterministic retrieval happened before semantic recall."
+    rules:
+      - "Must preserve the actual retrieval order."
+
+  - path: provenance.generator
+    what_it_is: "The generator name."
+    what_it_does: "Identifies the tool or process that produced the packet."
+    rules:
+      - "Use when known."
+
+validation_rules:
+  - "Every `selected_chunks[].citation_ids[]` entry must resolve to an entry in `citations`."
+  - "Every `required_checks`, `forbidden_actions`, and `stop_conditions` entry must have at least one citation."
+  - "Every `matched_corpora[].corpus_id` must use the numbered corpus vocabulary or an approved subcorpus."
+  - "`budgets.selected_context_tokens` must not exceed `budgets.max_context_tokens`."
+  - "If any gap has `blocking: true`, `routing.status` must be `blocked` or `needs-clarification`."
+  - "If `intent.source` is `inferred` and `intent.confidence` is low, the packet must include an ambiguity gap."
+  - "Semantic or vector recall may explain a selection, but it must not override deterministic ownership or stop conditions."
+
+minimal_example:
+  schema: rag-rulebook/context-packet/v1
+  packet_id: packet.example.context-packet
+  generated_at: "2026-06-25T00:00:00Z"
+  request:
+    raw_text: "Create a context-packet schema."
+    normalized_summary: "Design the RAG/Rulebook context-packet contract."
+    focused_paths:
+      - .agentic/02.rag-rulebook/plans/repo-plan.md
+    open_artifact_ids:
+      - rag-rulebook.plan.repo
+  intent:
+    id: rag-rulebook.intent.design-context-packet-schema
+    label: Design context-packet schema
+    mode: implementation
+    layer: 02.rag-rulebook
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+    confidence: 0.95
+    source: deterministic
+    evidence_ref_ids:
+      - citation.plan.context-packet
+  routing:
+    layer: 02.rag-rulebook
+    mode: implementation
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+    status: ready
+    task_type: schema
+    target_paths:
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+    classification_source: session-metadata
+  matched_corpora:
+    - corpus_id: corpus.02.rag-rulebook
+      owner_layer: 02.rag-rulebook
+      match_reason: Task changes the RAG/Rulebook service model.
+      confidence: 0.95
+  matched_rule_packs: []
+  matched_rulesets: []
+  selected_chunks:
+    - chunk_id: chunk.plan.context-packet-next-slice
+      corpus_id: corpus.02.rag-rulebook
+      artifact_id: rag-rulebook.plan.repo
+      source_path: .agentic/02.rag-rulebook/plans/repo-plan.md
+      rule_ids: []
+      content: "Design a context-packet schema including intent, routing metadata, matched corpora, selected chunks, required checks, stop conditions, citations, confidence, and gaps."
+      rank: 1
+      token_estimate: 35
+      retrieval_score: 1.0
+      selection_reason: The repo plan names this as the next small slice.
+      citation_ids:
+        - citation.plan.context-packet
+  required_checks: []
+  forbidden_actions: []
+  stop_conditions: []
+  citations:
+    - id: citation.plan.context-packet
+      corpus_id: corpus.02.rag-rulebook
+      artifact_id: rag-rulebook.plan.repo
+      source_path: .agentic/02.rag-rulebook/plans/repo-plan.md
+      source_type: plan
+      line_start: 58
+      line_end: 61
+      source_ref: "Ordered Plan step 3"
+  confidence:
+    overall: 0.95
+    retrieval: 1.0
+    routing: 0.95
+    notes: []
+  gaps: []
+  budgets:
+    max_context_tokens: 2000
+    selected_context_tokens: 35
+    trim_policy: deterministic-first
+  provenance:
+    service_version: design-only
+    corpus_index_versions:
+      - corpus_id: corpus.02.rag-rulebook
+        index_version: prototype
+    retrieval_order:
+      - deterministic intent and task-type matches
+      - path and artifact metadata matches
+      - required ruleset expansion
+    generator: manual-schema-design

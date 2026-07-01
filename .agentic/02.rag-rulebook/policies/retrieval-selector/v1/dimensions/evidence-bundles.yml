@@ -1,0 +1,117 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define expected evidence families for recognized question categories.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: evidence-bundles
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Ensure recognized question categories retrieve the canonical evidence families needed for an accurate answer.
+required_inputs:
+  - Request-context record.
+  - Prompt-dimension recognition matches.
+  - Question-category recognition matches.
+  - Evidence-family recognition matches.
+  - Generated chunks and source paths.
+expected_actions:
+  - Map recognized question categories to expected evidence families before final ranking.
+  - Add canonical evidence source paths for matched evidence families as required source paths.
+  - Add always-required canonical evidence for the question category when the bundle defines it.
+  - Emit a gap when expected evidence is missing, filtered out, or trimmed away.
+  - Lower retrieval confidence when an expected evidence family is missing from the selected packet.
+banned_actions:
+  - Do not answer architecture boundary questions from only the current session layer when layer-family evidence is named.
+  - Do not treat a single chunk as enough when a question category requires multiple evidence families.
+  - Do not silently drop canonical layer, concern, or workflow evidence because it scored slightly lower than nearby chunks.
+  - Do not use evidence bundles to bypass corpus ownership or execution safety.
+output_obligations:
+  - question_category_ids
+  - expected_evidence_families
+  - selected_evidence_families
+  - missing_evidence_families
+  - evidence_bundle_gaps
+  - confidence_penalties
+gap_or_stop_conditions:
+  - Add a missing-evidence gap when a required evidence family is not selected.
+  - Add a confidence gap when a category is recognized but no evidence family can be resolved.
+  - Block only when a workflow marks the missing evidence as required for side-effect safety.
+ranking_effects:
+  - Required evidence-family source paths survive token trimming before optional chunks.
+  - Canonical layer and concern rules outrank nearby generic chunks for architecture boundary questions.
+  - Missing expected evidence reduces retrieval confidence even when selected chunks are individually high scoring.
+evidence_bundles:
+  - question_category_id: question.architecture-boundary.capability-placement
+    always_source_paths:
+      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    family_source_paths:
+      evidence.layer.apps: docs/harness/architecture/rules/layers/apps.yml
+      evidence.layer.platform: docs/harness/architecture/rules/layers/platform.yml
+  - question_category_id: question.policy-implementation.explain
+    always_source_paths: []
+    family_source_paths:
+      evidence.concern.ci-quality: docs/harness/architecture/rules/concerns/ci-quality.yml
+      evidence.concern.config-runtime-settings: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+      evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
+      evidence.concern.events-messaging-async: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      evidence.concern.identity-access-security: docs/harness/architecture/rules/concerns/identity-access-security.yml
+      evidence.concern.reporting-analytics-audit: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.platform.config: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.contracts: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.health: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.observability: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.runtime: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.security: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.server: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.testing: docs/harness/architecture/rules/layers/platform.yml
+      evidence.platform.workers: docs/harness/architecture/rules/layers/platform.yml
+      evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+  - question_category_id: question.deploy.container-governance
+    always_source_paths:
+      - docs/04.deploy/rules/shared/container-image-management.yml
+      - docs/harness/architecture/rules/layers/infra.yml
+    family_source_paths:
+      evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+validation_examples:
+  - name: architecture boundary retrieves layer families
+    given: User asks whether a capability belongs in apps or platform.
+    expect: The selector includes apps and platform canonical layer rules and reports a gap if either family is missing.
+  - name: architecture boundary includes dependency concern
+    given: User asks where a capability should live across layers.
+    expect: The selector includes dependency-direction concern evidence when available.
+  - name: no bundle for unknown category
+    given: No question category matches the request.
+    expect: The selector does not invent an evidence bundle and relies on normal request-context ranking.
+  - name: policy plus implementation retrieves concern and owner evidence
+    given: User asks how a policy works and how it is implemented.
+    expect: The selector includes the matched concern evidence and the owning platform or layer evidence rather than answering from the concern alone.
+  - name: container governance retrieves shared deploy evidence
+    given: User asks how Dockerfiles or container images should be managed to avoid sprawl.
+    expect: The selector includes the shared container-image-management rule and infra ownership evidence before target-specific deployment chunks.
+can_change_by:
+  - Add question categories.
+  - Add evidence-family terms.
+  - Add canonical source paths for a category.
+  - Add category-specific confidence penalties.
+  - Add evaluation fixtures for category misses.

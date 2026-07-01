@@ -1,0 +1,94 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-platform-workers-policy-implementation
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove generic intra-source reranking selects the platform workers/runtime rule for worker policy implementation questions.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-platform-workers-policy-implementation
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove platform worker questions retrieve the exact runtime workers and shutdown rule, not only platform.yml.
+input:
+  request_text: explain how it works and how it's implemented for platform workers, background jobs, queues, job retry, dead-letter handling, and worker shutdown
+  session:
+    layer: 02.rag-rulebook
+    mode: discovery
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+  no_focused_paths: true
+  max_chunks: 8
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    mode: discovery
+    status: ready
+  action_authorization:
+    requested_action: context-retrieval
+    side_effect_class: none
+    execution_allowed: false
+    status: not-requested
+  matched_corpora:
+    required:
+      - corpus.02.rag-rulebook
+  selected_corpora:
+    required:
+      - corpus.03.product.platform
+  recognition:
+    required_canonical_ids:
+      - intent.explanation.tutor
+      - question.policy-implementation.explain
+      - evidence.platform.workers
+  gaps:
+    allowed:
+      - gap.selector-fixture.prototype-corpus-bridge
+    no_unexpected: true
+  selected_chunks:
+    required_artifact_ids:
+      - artifact.layer.platform
+    required_rule_ids:
+      - platform.config-resources-workers-and-shutdown-are-owned-by-runtime
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_stage_ids:
+      - exact-identifiers
+      - generated-concepts
+      - curated-concepts
+      - graph-expansion
+      - evidence-bundles
+      - intra-source-reranking
+      - final-ranking
+    required_applied_stage_ids:
+      - generated-concepts
+      - curated-concepts
+      - evidence-bundles
+      - intra-source-reranking
+      - final-ranking
+  confidence:
+    min_retrieval: 0.7
+banned:
+  selected_corpora:
+    - corpus.04.deploy
+source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+update_triggers:
+  - Platform workers rule ID, title, summary, or aliases change.
+  - Intra-source reranking stage or scoring behavior changes.

@@ -1,0 +1,70 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.corpus-ownership
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how numbered corpus ownership constrains retrieval.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: corpus-ownership
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Select modular numbered corpora without collapsing all domains into one instruction set.
+required_inputs:
+  - Supported corpus IDs from the policy pack.
+  - Corpus ownership metadata from chunks.
+  - Artifact metadata layer and domain fields.
+  - Path-to-corpus mappings.
+  - Allowed cross-corpus relationships.
+expected_actions:
+  - Retrieve from named corpora and subcorpora.
+  - Keep corpus IDs on every selected chunk.
+  - Require explicit policy permission for cross-corpus retrieval.
+  - Treat `corpus.02.rag-rulebook` as the self-corpus for retrieval-service behavior.
+banned_actions:
+  - Do not collapse product, design-system, deploy, education, shared, and harness corpora into one context pool.
+  - Do not select chunks without corpus IDs.
+  - Do not let broad semantic similarity cross corpus boundaries.
+  - Do not let one corpus claim ownership of another numbered corpus without an explicit relationship.
+output_obligations:
+  - matched_corpora
+  - selected_chunk_corpus_ids
+  - cross_corpus_reasons
+  - corpus_ownership_gaps
+gap_or_stop_conditions:
+  - Stop when a corpus claims ownership of another numbered corpus without an explicit relationship.
+  - Stop when a selected chunk lacks a corpus ID.
+  - Add a gap when corpus ownership cannot be resolved for a focused artifact.
+ranking_effects:
+  - Corpus ownership outranks broad semantic recall.
+  - Session and path corpus matches raise retrieval confidence.
+  - Cross-corpus evidence ranks below in-corpus evidence unless required by graph edges.
+validation_examples:
+  - name: self-corpus governs retrieval behavior
+    given: Task concerns retrieval selector policy.
+    expect: "`corpus.02.rag-rulebook` is selected before product or deploy corpora."
+  - name: cross-corpus retrieval needs permission
+    given: A product chunk is semantically similar but no cross-corpus relation exists.
+    expect: The product chunk is excluded or reported as a gap candidate.
+can_change_by:
+  - Add subcorpora.
+  - Add allowed cross-corpus relationships.
+  - Add corpus ownership manifests.

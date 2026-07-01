@@ -1,0 +1,202 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how raw prompt text contributes retrieval hints for a per-request context.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+#     - id: rag-rulebook.standard.recognition-source-system
+#       path: .agentic/02.rag-rulebook/standards/recognition-source-system.md
+#     - id: rag-rulebook.schema.recognition-source
+#       path: .agentic/02.rag-rulebook/schemas/recognition-source.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: prompt
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Turn raw user language into structured prompt signals that feed the per-request context without granting execution permission.
+required_inputs:
+  - Raw user prompt text.
+  - Request form indicators such as question, explanation request, implementation request, commit request, or deploy request.
+  - Normalized prompt tokens.
+  - Governed recognition sources for artifact IDs, file paths, schemas, corpus IDs, layer names, workflow names, rule IDs, action verbs, risk words, aliases, and intent forms.
+  - Session metadata used to compare prompt inference with execution-safety context.
+expected_actions:
+  - Identify the request form before interpreting individual verbs as execution intent.
+  - Extract task nouns, verbs, target artifacts, risk words, and explicit asks by matching prompt text against governed recognition sources.
+  - Normalize obvious plurals, aliases, and known synonyms only when a recognition source defines the mapping.
+  - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
+  - Pass recognized prompt signals to the request-context dimension before session defaults are applied for retrieval.
+  - Preserve the raw prompt in the context-packet request provenance.
+banned_actions:
+  - Do not let prompt interpretation grant edit, commit, deploy, destructive, or infrastructure mutation permission.
+  - Do not infer a different execution workflow from prompt words when the session workflow is ready and current.
+  - Do not expand into unrelated corpora from vague words such as app, design, deploy, or rule without supporting metadata.
+  - Do not hide prompt/session conflict behind a confident summary.
+output_obligations:
+  - prompt_terms
+  - normalized_prompt_terms
+  - matched_intent_terms
+  - matched_artifact_terms
+  - matched_path_terms
+  - matched_action_terms
+  - matched_risk_terms
+  - recognition_source_matches
+  - prompt_conflicts
+  - prompt_confidence
+gap_or_stop_conditions:
+  - Add an ambiguity gap when prompt terms conflict with complete session metadata.
+  - Add a low-confidence gap when only broad prompt terms match and no metadata, path, or corpus evidence supports them.
+ranking_effects:
+  - Exact ID and path terms raise ranking.
+  - Risk words raise required-check and stop-condition ranking.
+  - Prompt signals feed request-context ranking before session defaults are applied.
+  - Broad prompt-only matches rank below exact paths, corpus ownership, and graph evidence.
+recognition_sources:
+  - source_id: recognition.generated.artifacts
+    source_kinds:
+      - artifact-id
+      - file-path
+      - schema-name
+      - rule-id
+      - rule-pack-id
+    generation_mode: generated
+    expected_origin: Artifact metadata, rulebook index, and committed repo paths.
+    purpose: Recognize exact repo things the user names.
+  - source_id: recognition.generated.routing
+    source_kinds:
+      - corpus-id
+      - layer-name
+      - mode-name
+      - workflow-name
+    generation_mode: generated
+    expected_origin: Routing policy, layer metadata, workflow paths, and corpus manifests.
+    purpose: Recognize governed routing and corpus terms.
+  - source_id: recognition.curated.aliases
+    source_kinds:
+      - alias
+      - layer-name
+    generation_mode: curated
+    expected_origin: Human-reviewed aliases that map common language to governed routing terms.
+    purpose: Recognize reviewed phrasing such as RAG rulebook without treating broad language as a new source of truth.
+  - source_id: recognition.curated.intent-forms
+    source_kinds:
+      - intent-form
+    generation_mode: curated
+    expected_origin: Human-reviewed question and command forms with examples.
+    purpose: Recognize the kind of help requested before treating action words as implementation or execution requests.
+  - source_id: recognition.curated.question-categories
+    source_kinds:
+      - question-category
+      - domain-noun
+    generation_mode: curated
+    expected_origin: Human-reviewed question categories and evidence-family hints with evaluation coverage.
+    purpose: Recognize classes of questions that need expected evidence bundles instead of only top-scoring chunks.
+  - source_id: recognition.curated.actions
+    source_kinds:
+      - action-verb
+    generation_mode: curated
+    expected_origin: Human-reviewed action vocabulary with examples.
+    purpose: Recognize requested operations such as create, split, move, validate, retire, or deploy.
+  - source_id: recognition.curated.risks
+    source_kinds:
+      - risk-word
+      - stop-condition
+      - check-name
+    generation_mode: curated
+    expected_origin: Human-reviewed governance, validation, and safety vocabulary.
+    purpose: Recognize words that should raise checks, stops, confidence scrutiny, or validation requirements.
+extraction_rules:
+  - Preserve the raw prompt before normalization.
+  - Match exact file paths and quoted identifiers before splitting text into smaller tokens.
+  - Match request forms before treating action verbs as implementation, commit, deploy, or destructive-action requests.
+  - Match artifact IDs, schema names, corpus IDs, workflow paths, rule IDs, and rule-pack IDs before matching broad nouns.
+  - Match action verbs only when the verb appears in an active action recognition source.
+  - Match risk words only when the word appears in an active risk or stop-condition recognition source.
+  - Treat unmatched nouns as low-confidence prompt terms unless another dimension supports them.
+  - Record which recognition source produced each match.
+term_categories:
+  artifact_terms: Exact artifact IDs, rule IDs, rule-pack IDs, schema names, and repo file paths.
+  routing_terms: Corpus IDs, layer names, mode names, and workflow paths.
+  intent_terms: Curated prompt shapes that indicate planning, explanation, implementation, git execution, or deploy execution.
+  action_terms: Curated verbs that describe the operation the user is asking for.
+  risk_terms: Curated words that imply validation, blockers, safety, destructive action, ambiguity, or governance checks.
+  question_category_terms: Curated prompt shapes that imply expected evidence families.
+  evidence_family_terms: Curated low-authority hints that name canonical evidence families inside a question category.
+  broad_terms: Unmatched nouns or phrases that may help ranking but cannot govern routing alone.
+classification_outputs:
+  - raw_prompt
+  - normalized_prompt_tokens
+  - matched_terms_by_source
+  - matched_terms_by_category
+  - inferred_request_form
+  - inferred_actions
+  - inferred_targets
+  - inferred_risks
+  - inferred_question_categories
+  - inferred_evidence_families
+  - prompt_conflicts_with_session
+  - prompt_confidence
+intent_resolution:
+  default_intent_id: intent.context.retrieve
+  precedence:
+    - intent.no-action.explanation
+    - intent.explanation.tutor
+    - intent.discovery.explanation
+    - intent.planning.guidance
+    - intent.planning.decision-support
+    - intent.git.commit
+    - intent.deploy.execution
+    - intent.implementation.request
+  labels:
+    intent.context.retrieve: Retrieve governed context
+    intent.no-action.explanation: Explain without execution
+    intent.explanation.tutor: Explain
+    intent.discovery.explanation: Discover and explain
+    intent.planning.guidance: Plan or guide
+    intent.planning.decision-support: Support a planning decision
+    intent.git.commit: Commit changes
+    intent.deploy.execution: Deploy execution
+    intent.implementation.request: Implementation request
+validation_examples:
+  - name: prompt boosts exact artifact match
+    given: User asks to update `retrieval-policy-pack.schema.yml`.
+    expect: The schema name matches a generated artifact recognition source and receives a ranking boost without changing the session layer.
+  - name: prompt cannot authorize side effects
+    given: Session metadata says `02.rag-rulebook` and the prompt uses the word product.
+    expect: The selector does not authorize product-layer edits unless an execution workflow and explicit approval allow them.
+  - name: prompt can inform retrieval context
+    given: Session metadata says `02.rag-rulebook` and the prompt asks a planning question about platform and apps.
+    expect: Prompt signals are passed to request-context so platform/apps evidence can be selected without changing execution authorization.
+  - name: unmatched broad noun stays low confidence
+    given: User asks to improve the thing without naming an artifact, path, action source term, or workflow.
+    expect: The prompt dimension emits broad terms and a low-confidence signal instead of inventing a target artifact.
+  - name: reviewed alias maps to governed route
+    given: User asks about the RAG rulebook with a space instead of the generated `rag-rulebook` slug.
+    expect: The curated alias source maps the phrase to `02.rag-rulebook` while session metadata still controls routing.
+  - name: question form controls action interpretation
+    given: User asks `How do I update my harness so we can deploy it behind an MCP server?`.
+    expect: The prompt dimension recognizes `How do I` as planning guidance before treating `update` or `deploy` as execution requests.
+can_change_by:
+  - Add synonyms.
+  - Add request forms.
+  - Add risk words.
+  - Add task vocabulary.
+  - Add artifact aliases.

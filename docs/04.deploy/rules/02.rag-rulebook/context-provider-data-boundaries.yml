@@ -1,0 +1,200 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.context-provider-data-boundaries
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: security.data-boundaries
+#   disciplines:
+#   - agentic
+#   - security
+#   - sre
+#   kind: rule
+#   purpose: Define data-boundary rules for hosted RAG/rulebook context-provider API or MCP surfaces.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.source-projections.v1
+#     path: .agentic/02.rag-rulebook/source-projections/v1.yml
+id: concern.rag-rulebook-context-provider-data-boundaries
+title: RAG/rulebook context-provider data-boundary rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-29T20:49:40Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  source_material:
+    - path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+      sha256: d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0
+
+description: >
+  Rules for protecting repo, corpus, user, tenant, secret, and deployment data
+  when the hosted RAG/rulebook service exposes context packets through an API
+  or MCP surface.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+  - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".agentic/02.rag-rulebook/**"
+    - ".agentic/aws/**"
+    - "scripts/02.rag-rulebook/**"
+    - "scripts/04.deploy/**"
+
+rules:
+  - id: context-provider-data-boundaries.classifies-context-packet-data
+    title: Context-packet data is classified before exposure
+    severity: error
+    summary: >
+      Hosted RAG/rulebook context packets must classify the data they expose so
+      the API or MCP surface can enforce safe retrieval boundaries.
+    must:
+      - "Classify corpus material, source citations, selected chunks, confidence, gaps, required checks, user prompt fragments, repo identifiers, and tenant or account scope."
+      - "Name whether each exposed field is public, internal, tenant-scoped, repo-scoped, sensitive, secret-reference-only, or prohibited."
+      - "Keep packet_token_budget_default, packet_token_budget_max, query_timeout_ms, retrieval_policy_version, and context_packet_schema_version explicit."
+      - "Preserve citations and gaps without exposing unrelated repo content."
+    must_not:
+      - "Do not return full transcripts, unrelated source files, secret values, or unbounded repo content by default."
+      - "Do not let token budget trimming remove required security gaps or citations."
+      - "Do not expose confidence as deployment authorization."
+    required_checks:
+      - "Verify context packet schema version and retrieval policy version are known."
+      - "Verify packet data classes and token budgets are known."
+      - "Verify returned chunks and citations are scoped to the authorized corpus and repo."
+    agent_guidance: >
+      The context packet is a product surface. Treat every field as externally
+      visible unless the deployment explicitly proves otherwise.
+
+  - id: context-provider-data-boundaries.enforces-tenant-repo-and-corpus-authorization
+    title: Tenant, repo, and corpus authorization is enforced
+    severity: error
+    summary: >
+      A hosted context provider must authorize which tenant, repository, corpus,
+      corpus version, and capability surface a caller can access before
+      returning chunks or context packets.
+    must:
+      - "Name auth_model, authorization_model, tenant_or_account_scope, allowed clients, read-only capabilities, rate limits, and disablement switch."
+      - "Authorize repo id, corpus id, corpus version, and capability before retrieval."
+      - "Keep local-only, private, authenticated-public, and public-read-only ingress classes distinct."
+      - "Require authenticated-public access for production unless a public-read-only exception is explicitly approved."
+    must_not:
+      - "Do not use session metadata as the authorization boundary."
+      - "Do not allow a caller to switch corpus, repo, tenant, or deploy target by prompt text alone."
+      - "Do not expose write-capable, deploy-capable, or destructive tools on the first remote context-provider surface."
+    required_checks:
+      - "Verify auth and authorization model are named."
+      - "Verify caller scope maps to allowed repo and corpus versions."
+      - "Verify exposed capabilities are read-only for the initial hosted service."
+    agent_guidance: >
+      Retrieval routing decides what evidence may be useful. Authorization
+      decides what evidence the caller may receive. Keep those concerns
+      separate.
+
+  - id: context-provider-data-boundaries.keeps-secrets-out-of-retrieval-material
+    title: Secret values never enter retrieval material
+    severity: error
+    summary: >
+      Source material, rules, chunks, context packets, fixtures, logs, and MCP
+      or API responses may name secret references, but must never contain secret
+      values.
+    must:
+      - "Record secret store, secret names, parameter names, environment variable names, and owner without values."
+      - "Mark any field naming secrets, keys, tokens, certificates, connection strings, or private endpoints as secret_reference_only."
+      - "Redact secrets from logs, audit records, context packets, generated chunks, derivation reports, and fixtures."
+      - "Treat accidental secret exposure as an incident requiring removal and rotation."
+    must_not:
+      - "Do not commit AWS credentials, GitHub tokens, MCP auth secrets, private keys, session tokens, or connection strings with credential values."
+      - "Do not rely on chunk selection, hidden prompts, or model discretion to protect secrets."
+      - "Do not emit secret values in deployment evidence or failure messages."
+    required_checks:
+      - "Verify changed retrieval and deploy artifacts contain no secret values."
+      - "Verify secret fields are reference-only."
+      - "Verify log and packet redaction expectations are present."
+    agent_guidance: >
+      Anything in the corpus may later be retrieved. Never put a secret value
+      where retrieval can find it.
+
+  - id: context-provider-data-boundaries.exposes-read-only-api-or-mcp-first
+    title: First hosted surface is read-only context retrieval
+    severity: error
+    summary: >
+      The first hosted RAG/rulebook service should expose only read-only context
+      retrieval through API, MCP, or both, with write-capable tools deferred
+      until separate governance exists.
+    must:
+      - "Name interface_type as REST API, MCP, or both."
+      - "Use a governed MCP spec version and remote MCP transport when MCP is exposed."
+      - "Classify resources, prompts, and future tools as read-only, write-capable, deploy-capable, or destructive."
+      - "Keep deployment mutation owned by GitHub Actions, deploy workflows, explicit approval, and deploy-readiness checks."
+      - "Expose only validated context-packet retrieval until write-capable tool governance exists."
+    must_not:
+      - "Do not expose deploy, git mutation, AWS mutation, repo mutation, or product mutation tools from the first hosted surface."
+      - "Do not let a successful retrieval response imply execution_allowed for side effects."
+      - "Do not mix API and MCP semantics without naming the transport, auth, audit, and rate-limit behavior for each."
+    required_checks:
+      - "Verify interface_type, MCP spec version, transport, and read-only capabilities."
+      - "Verify side-effecting capabilities are absent or blocked."
+      - "Verify deploy execution remains owned by deploy workflow and readiness proof."
+    agent_guidance: >
+      Start narrow. A hosted context provider should help agents decide what to
+      do, not perform mutation on their behalf.
+
+  - id: context-provider-data-boundaries.audit-logs-with-redaction-and-minimum-fields
+    title: Audit logs are useful and redacted
+    severity: error
+    summary: >
+      The hosted context provider must log enough to reconstruct retrieval
+      decisions and incidents while redacting secrets, prompts, and unrelated
+      repo content.
+    must:
+      - "Record request id, caller identity or client identity when available, repo id, corpus id, corpus version, commit SHA, selected chunks, citations, emitted gaps, confidence, latency, and error class."
+      - "Record deployment version, image digest, corpus package hash, task definition revision, ECS service deployment id, and health result in deploy evidence."
+      - "Set log group, retention days, metrics namespace, alarm names, dashboard, on-call owner, escalation path, and incident severity matrix."
+      - "Log enough fields to debug wrong-context retrieval, stale corpus, authorization denial, timeout, and rollback."
+    must_not:
+      - "Do not log secret values, full transcripts, unrelated source files, full prompts by default, or private user data beyond the authorized scope."
+      - "Do not let logs become a parallel corpus without the same data-boundary rules."
+      - "Do not suppress deployment or retrieval failures to reduce log volume."
+    required_checks:
+      - "Verify audit fields and retention are named."
+      - "Verify redaction and prohibited fields are named."
+      - "Verify alarms and incident routing exist before public exposure."
+    agent_guidance: >
+      Good logs make retrieval accountable. Unsafe logs leak the thing the
+      context provider was supposed to protect.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md"
+    sections:
+      - "Context-Provider Data Boundaries"
+      - "API And MCP Surface"
+      - "Security Requirements"
+      - "Observability Requirements"
+      - "MCP Or API Exposure Variables"
+      - "Operations Variables"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml."
+  - "It separates retrieval routing from authorization."
+  - "It keeps the first hosted surface read-only."
+  - "It bans secret values from retrieval material and emitted context packets."
+  - "It requires redacted audit logs with enough fields to reconstruct retrieval decisions."

@@ -3,7 +3,7 @@
   id: education.architecture.adr.0002-use-article-editor-agent-before-public-article-drafting
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

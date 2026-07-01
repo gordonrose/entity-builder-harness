@@ -1,0 +1,179 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-execution-mcp-server-blocked
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove deploy-execution prompts for the RAG/rulebook MCP server are blocked until deploy proof is complete.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.deploy-execution-mcp-server-blocked
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove a deploy-execution prompt selects precise MCP deployment evidence but blocks execution on missing AWS, GitHub, transport/auth, executable-check, and cost/capacity proof.
+input:
+  request_text: Deploy the RAG rulebook MCP server to AWS from main.
+  session:
+    layer: 04.deploy
+    mode: implementation
+    workflow: .agentic/aws/workflows/plan-aws-change.md
+  focused_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  max_chunks: 12
+expected:
+  routing:
+    layer: 04.deploy
+    mode: implementation
+    workflow: .agentic/aws/workflows/plan-aws-change.md
+    status: blocked
+  intent:
+    id: intent.deploy.execution
+    label: Deploy execution
+  action_authorization:
+    requested_action: deploy
+    side_effect_class: deploy
+    execution_allowed: false
+    status: blocked
+    resolved_intent_id: intent.deploy.execution
+  matched_corpora:
+    required:
+      - corpus.04.deploy
+      - corpus.02.rag-rulebook
+  selected_corpora:
+    required:
+      - corpus.04.deploy
+      - corpus.02.rag-rulebook
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_artifact_ids:
+      - artifact.concern.rag.rulebook.mcp.server.deployment
+      - artifact.concern.rag.rulebook.github.to.aws.deployment
+      - artifact.concern.rag.rulebook.aws.runtime.boundaries
+      - artifact.concern.rag.rulebook.deployment.readiness.checks
+      - artifact.concern.mcp.server.deployment.architecture
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.protects.remote.main.before.deploy
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.verifies.readiness.manifest.before.execution
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.controls.cost.capacity.and.quotas
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.uses.github.as.release.control.plane
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.has.concrete.workflow.and.readiness.manifest
+      - chunk.rule.artifact.concern.rag.rulebook.aws.runtime.boundaries.aws.runtime.boundaries.names.target.before.mutation
+      - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.transport.auth.model.is.explicit
+  recognition:
+    required_source_ids:
+      - recognition.curated.intent-forms
+      - recognition.curated.aliases
+      - recognition.generated.routing
+    required_categories:
+      - intent-form
+      - layer-name
+      - workflow-name
+    required_canonical_ids:
+      - intent.deploy.execution
+      - 04.deploy
+      - 02.rag-rulebook
+      - aws.workflow.plan-aws-change
+    required_matched_inputs:
+      - prompt
+      - session-metadata
+      - focused-paths
+    required_matches:
+      - source_id: recognition.curated.intent-forms
+        term: Deploy the
+        category: intent-form
+        canonical_id: intent.deploy.execution
+        match_type: alias
+        matched_input: prompt
+      - source_id: recognition.generated.routing
+        term: Deploy
+        category: layer-name
+        canonical_id: 04.deploy
+        matched_input: prompt
+      - source_id: recognition.curated.aliases
+        term: RAG rulebook
+        category: layer-name
+        canonical_id: 02.rag-rulebook
+        matched_input: prompt
+  gaps:
+    required:
+      - gap.corpus.04.deploy.mcp-server-deployment
+      - gap.deploy.missing-aws-runtime-target
+      - gap.deploy.missing-github-workflow
+      - gap.deploy.missing-executable-deploy-checks
+      - gap.deploy.missing-transport-auth-proof
+      - gap.deploy.missing-cost-capacity-quota-boundary
+    blocking_required:
+      - gap.corpus.04.deploy.mcp-server-deployment
+      - gap.deploy.missing-aws-runtime-target
+      - gap.deploy.missing-github-workflow
+      - gap.deploy.missing-executable-deploy-checks
+      - gap.deploy.missing-transport-auth-proof
+      - gap.deploy.missing-cost-capacity-quota-boundary
+    required_evidence_chunk_ids:
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.protects.remote.main.before.deploy
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.verifies.readiness.manifest.before.execution
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.controls.cost.capacity.and.quotas
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.uses.github.as.release.control.plane
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.has.concrete.workflow.and.readiness.manifest
+      - chunk.rule.artifact.concern.rag.rulebook.aws.runtime.boundaries.aws.runtime.boundaries.names.target.before.mutation
+      - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.transport.auth.model.is.explicit
+    required_citation_ids:
+      - source.artifact.docs.04.deploy.rules.02.rag.rulebook.deployment.readiness.checks.yml
+      - source.artifact.docs.04.deploy.rules.02.rag.rulebook.github.to.aws.deployment.yml
+      - source.artifact.docs.04.deploy.rules.02.rag.rulebook.aws.runtime.boundaries.yml
+      - source.artifact.docs.02.rag.rulebook.rules.concerns.mcp.server.deployment.architecture.yml
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
+    no_unexpected: true
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+banned:
+  matched_corpora:
+    - corpus.03.product
+    - corpus.03.product.platform
+  selected_corpora:
+    - corpus.03.product
+    - corpus.03.product.platform
+  recognition_matches:
+    - source_id: recognition.curated.intent-forms
+      canonical_id: intent.planning.guidance
+      matched_input: prompt
+    - source_id: recognition.curated.intent-forms
+      canonical_id: intent.discovery.explanation
+      matched_input: prompt
+  blocking_gaps:
+    - gap.selector-fixture.prompt-session-layer-conflict
+source_refs:
+  - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  - .agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml
+  - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+update_triggers:
+  - Deploy intent-form recognition source changes.
+  - Deploy-layer corpus gap blocking behavior changes.
+  - MCP server deployment rules or related rulesets change.
+  - Selector graph expansion, token trimming, or required chunk behavior changes.
+  - AWS deploy workflow coverage, deploy-readiness verifier behavior, or the gap closes.

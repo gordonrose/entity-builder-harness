@@ -1,0 +1,119 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.02-rag-rulebook.2026-06-27-mcp-server-deployment-architecture
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation and drift review for the MCP server deployment architecture rule.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.rules.concerns.mcp-server-deployment-architecture
+#       path: docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.02.rag-rulebook.2026-06-27.mcp-server-deployment-architecture
+status: needs-review
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+  summary: >
+    First RAG/rulebook source material and structured rule coverage for treating
+    MCP server work as a governed service boundary.
+
+target:
+  corpus_id: corpus.02.rag-rulebook
+  owner_layer: 02.rag-rulebook
+  expected_rule_paths:
+    - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  affected_rule_paths:
+    - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  affected_rulesets: []
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: mcp-is-governed-service-boundary
+      summary: MCP servers expose governed resources, prompts, and tools rather than bypassing layer ownership.
+      evidence_path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+    - claim_id: resources-prompts-tools-are-separate
+      summary: MCP resources, prompts, and tools have different contracts and risk classes.
+      evidence_path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+    - claim_id: context-packets-or-gaps
+      summary: RAG-facing MCP responses should return validated context packets or explicit gaps.
+      evidence_path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+    - claim_id: transport-auth-and-audit-are-explicit
+      summary: Remote MCP exposure requires explicit transport, authorization, and audit boundaries.
+      evidence_path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/02.rag-rulebook/rules/
+      - docs/04.deploy/rules/
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - RAG/rulebook MCP architecture rules live under corpus.02.rag-rulebook.
+      - Deploy execution readiness remains owned by corpus.04.deploy.
+
+proposed_updates:
+  rules:
+    - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates:
+    - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+  notes:
+    - The structured rule already exists and is indexed/chunked by the current RAG/rulebook pipeline.
+    - This report backfills the governed source-to-rule audit trail before source hash provenance becomes commit-critical.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+    - bash scripts/02.rag-rulebook/commit-gates/script.sh
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/commit-gates/script.sh
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: pending
+  notes:
+    - Backfill report added before enforcing source hash provenance on derived YAML rules.

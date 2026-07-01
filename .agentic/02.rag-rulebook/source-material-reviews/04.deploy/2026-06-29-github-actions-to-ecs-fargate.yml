@@ -1,0 +1,615 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.04-deploy.github-actions-to-ecs-fargate.2026-06-29
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: review-record
+#   purpose: Track the OKF source-material review loop for GitHub Actions to ECS Fargate deployment source material.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#     - id: deploy.source-material.02-rag-rulebook.github-actions-to-ecs-fargate
+#       path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+#     - id: rag-rulebook.workflow.review-okf-source-material
+#       path: .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-06-29.04-deploy.github-actions-to-ecs-fargate
+status: accepted
+source_material:
+  path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+  corpus_id: corpus.04.deploy
+  vertical: github-actions-to-aws-ecs-fargate-for-rag-rulebook-service
+  source_state: accepted
+  sha256: d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0
+  target_rule_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+    - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - secops-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations:
+  - iteration: 1
+    source_revision_summary: >
+      Reviewed initial draft hash
+      47d7e8e5f0b57e6b9cce70d83aba7fed92ea38c5da7580e65af99368f878e43e.
+      All reviewer roles blocked acceptance. Recommendations were applied to
+      create revised source hash
+      26dfe36f4e17ad91a37ebee5be49c088af264a2cb51cd038b0c0cb073055337b.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 8.1
+        decision: block
+        blocking_gaps:
+          - gap_id: ARCH-BLOCK-001
+            severity: blocker
+            summary: Source-to-rule ownership was unsafe because target rules were already active projections from mcp-server-deployment.md.
+          - gap_id: ARCH-BLOCK-002
+            severity: major
+            summary: Infrastructure ownership was too abstract and did not separate bootstrap IaC, drift, deploy mutation, and AWS API boundaries.
+          - gap_id: ARCH-BLOCK-003
+            severity: major
+            summary: Supply-chain policy did not require attestations, SBOM, scanning, base-image pinning, runner trust, and provenance verification.
+          - gap_id: ARCH-BLOCK-004
+            severity: major
+            summary: Context-provider data ownership lacked deterministic corpus classification, tenant authorization, cache isolation, redaction, and cross-tenant failure behavior.
+        dimension_scores:
+          coverage: 8.4
+          necessity: 9.0
+          production_grade_gaps: 6.8
+          execution_variables: 8.1
+          human_readability: 9.0
+          machine_readability: 8.2
+          cost_optimization: 7.7
+          security: 7.0
+          performance: 7.4
+          token_optimization: 8.2
+        recommendations:
+          - recommendation_id: ARCH-REC-001
+            priority: blocker
+            summary: Add explicit projection-resolution section.
+          - recommendation_id: ARCH-REC-002
+            priority: blocker
+            summary: Define IaC/runtime ownership, state, drift, mutation allowlist, and forbidden AWS calls.
+          - recommendation_id: ARCH-REC-003
+            priority: blocker
+            summary: Make supply-chain evidence mandatory.
+          - recommendation_id: ARCH-REC-004
+            priority: high
+            summary: Add environment promotion semantics.
+          - recommendation_id: ARCH-REC-005
+            priority: high
+            summary: Add context-provider tenancy and data classification.
+          - recommendation_id: ARCH-REC-006
+            priority: high
+            summary: Add concrete SLO and alarm variables.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/source-projections/v1.yml
+          - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+      - role: agentic-engineer
+        overall_score: 8.4
+        decision: block
+        blocking_gaps:
+          - gap_id: AE-BLOCK-001
+            severity: blocker
+            summary: Execution variables lacked manifest shape with required status, allowed values, source of truth, validation owner, environment overrides, and remediation mapping.
+          - gap_id: AE-BLOCK-002
+            severity: blocker
+            summary: Evaluation fixture coverage was named but not specified.
+          - gap_id: AE-BLOCK-003
+            severity: blocker
+            summary: Source-to-rule derivation readiness lacked claim-to-artifact mapping.
+          - gap_id: AE-BLOCK-004
+            severity: blocker
+            summary: Supply-chain controls were incomplete for production-grade GitHub Actions deployment.
+        dimension_scores:
+          coverage: 8.8
+          necessity: 9.2
+          production_grade_gaps: 7.8
+          execution_variables: 8.0
+          human_readability: 9.0
+          machine_readability: 8.3
+          cost_optimization: 8.2
+          security: 7.8
+          performance: 8.1
+          token_optimization: 8.0
+        recommendations:
+          - recommendation_id: AE-REC-001
+            priority: blocker
+            summary: Add deploy-readiness manifest contract.
+          - recommendation_id: AE-REC-002
+            priority: blocker
+            summary: Add fixture matrix with expected and banned outcomes.
+          - recommendation_id: AE-REC-003
+            priority: high
+            summary: Add claim-to-artifact derivation map.
+          - recommendation_id: AE-REC-004
+            priority: high
+            summary: Promote supply-chain controls into required behavior and stop conditions.
+          - recommendation_id: AE-REC-005
+            priority: medium
+            summary: Add chunking guidance.
+          - recommendation_id: AE-REC-006
+            priority: medium
+            summary: Normalize stop conditions into an ID-based table.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+      - role: senior-sre
+        overall_score: 8.4
+        decision: block
+        blocking_gaps:
+          - gap_id: SRE-BLOCK-001
+            severity: blocker
+            summary: IAM/OIDC lacked exact deploy-role permission envelope, iam:PassRole scoping, resource constraints, and denied admin/delete paths.
+          - gap_id: SRE-BLOCK-002
+            severity: blocker
+            summary: Supply-chain integrity lacked mandatory attestations, SBOM, vulnerability gates, base-image policy, and deploy-time verification.
+          - gap_id: SRE-BLOCK-003
+            severity: blocker
+            summary: Rollback and failure handling lacked timeout thresholds, decision matrix, first-deploy fallback, failed-rollback disablement, and escalation workflow.
+          - gap_id: SRE-BLOCK-004
+            severity: blocker
+            summary: Observability lacked SLOs, thresholds, dashboard evidence, paging rules, synthetic checks, and deploy-failure evidence.
+          - gap_id: SRE-BLOCK-005
+            severity: blocker
+            summary: Performance, capacity, and cost controls lacked baseline load profile, concurrency target, latency target, autoscaling policy, budget thresholds, and quota preflight contract.
+        dimension_scores:
+          coverage: 8.9
+          necessity: 9.2
+          production_grade_gaps: 7.7
+          execution_variables: 8.5
+          human_readability: 9.1
+          machine_readability: 8.4
+          cost_optimization: 8.0
+          security: 7.8
+          performance: 7.9
+          token_optimization: 8.6
+        recommendations:
+          - recommendation_id: SRE-REC-001
+            priority: blocker
+            summary: Add concrete IAM policy boundaries for deploy role, task execution role, and task role.
+          - recommendation_id: SRE-REC-002
+            priority: blocker
+            summary: Make artifact provenance mandatory.
+          - recommendation_id: SRE-REC-003
+            priority: blocker
+            summary: Add rollback runbook material.
+          - recommendation_id: SRE-REC-004
+            priority: high
+            summary: Add SLO, SLI, and alarm thresholds.
+          - recommendation_id: SRE-REC-005
+            priority: high
+            summary: Add capacity model variables.
+          - recommendation_id: SRE-REC-006
+            priority: high
+            summary: Add environment/account promotion matrix.
+          - recommendation_id: SRE-REC-007
+            priority: medium
+            summary: Split broad prose into rule-derivation-ready subclauses with stable IDs.
+          - recommendation_id: SRE-REC-008
+            priority: medium
+            summary: Add incident-response section.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+    cross_review_summary:
+      agreement:
+        - The first draft was useful but not production-grade.
+        - Supply-chain controls were not mandatory enough.
+        - Execution variables needed manifest-level determinism.
+        - Rollback, observability, cost, capacity, and data-boundary policy needed stronger executable detail.
+      disagreement:
+        - Architect emphasized projection ownership and corpus boundaries.
+        - Agentic engineer emphasized fixture and derivation mapping.
+        - Senior SRE emphasized IAM, rollback thresholds, and operational evidence.
+      unresolved_blockers:
+        - All iteration 1 blockers were addressed in the revised source and require full rereview.
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-REC-001
+          summary: Added Source Projection Ownership section and updated target rule paths.
+        - recommendation_id: ARCH-REC-002
+          summary: Added IaC and ownership variables plus Infrastructure Ownership And Drift section.
+        - recommendation_id: ARCH-REC-003
+          summary: Added Supply-Chain Integrity Policy with required provenance evidence.
+        - recommendation_id: ARCH-REC-004
+          summary: Added Environment Promotion Matrix.
+        - recommendation_id: ARCH-REC-005
+          summary: Added Context-Provider Data Boundaries.
+        - recommendation_id: ARCH-REC-006
+          summary: Added SLO, alarm, capacity, and incident variables.
+        - recommendation_id: AE-REC-001
+          summary: Added Deploy-Readiness Manifest Contract.
+        - recommendation_id: AE-REC-002
+          summary: Added Evaluation Fixture Matrix.
+        - recommendation_id: AE-REC-003
+          summary: Added Claim-To-Artifact Derivation Map.
+        - recommendation_id: AE-REC-004
+          summary: Added supply-chain required behavior and stop conditions.
+        - recommendation_id: AE-REC-005
+          summary: Added Chunking Guidance.
+        - recommendation_id: AE-REC-006
+          summary: Added Stop-Condition Table.
+        - recommendation_id: SRE-REC-001
+          summary: Added IAM Permission Boundaries.
+        - recommendation_id: SRE-REC-002
+          summary: Added artifact provenance requirements.
+        - recommendation_id: SRE-REC-003
+          summary: Added Rollback Decision Matrix.
+        - recommendation_id: SRE-REC-004
+          summary: Added SLO, Alarm, And Evidence Thresholds.
+        - recommendation_id: SRE-REC-005
+          summary: Added Capacity Model.
+        - recommendation_id: SRE-REC-006
+          summary: Added Environment Promotion Matrix.
+        - recommendation_id: SRE-REC-007
+          summary: Added stable section structure and claim-to-artifact table.
+        - recommendation_id: SRE-REC-008
+          summary: Added Incident Response And Disablement.
+      rejected: []
+    rerun_required: true
+  - iteration: 2
+    source_revision_summary: >
+      Reviewed revised source hash
+      26dfe36f4e17ad91a37ebee5be49c088af264a2cb51cd038b0c0cb073055337b.
+      Architect passed at 9.6. Agentic engineer and senior SRE blocked
+      acceptance at 9.2. Recommendations were applied to create revised source
+      hash d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.7
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.6
+          machine_readability: 9.5
+          cost_optimization: 9.5
+          security: 9.6
+          performance: 9.5
+          token_optimization: 9.5
+        recommendations:
+          - recommendation_id: ARCH-ITER2-REC-001
+            priority: medium
+            summary: Add or update the source projection manifest before derivation with primary and secondary source roles.
+          - recommendation_id: ARCH-ITER2-REC-002
+            priority: low
+            summary: Preserve durable section or claim IDs beyond heading names.
+          - recommendation_id: ARCH-ITER2-REC-003
+            priority: low
+            summary: Let SRE decide whether IAM needs exact AWS action exemplars.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - role: agentic-engineer
+        overall_score: 9.2
+        decision: block
+        blocking_gaps:
+          - gap_id: AE2-BLOCK-001
+            severity: blocker
+            summary: Fixture matrix was not derivation-ready because fixture-specific source sections, chunk families, rule families, stop IDs, validator evidence, and banned chunks were missing.
+          - gap_id: AE2-BLOCK-002
+            severity: blocker
+            summary: Deploy-readiness manifest contract lacked schema-deterministic per-variable field profile and required-by-environment status.
+        dimension_scores:
+          coverage: 9.4
+          necessity: 9.7
+          production_grade_gaps: 9.1
+          execution_variables: 9.0
+          human_readability: 9.4
+          machine_readability: 9.1
+          cost_optimization: 9.3
+          security: 9.4
+          performance: 9.2
+          token_optimization: 9.0
+        recommendations:
+          - recommendation_id: AE2-REC-001
+            priority: blocker
+            summary: Expand each fixture row into deterministic assertions.
+          - recommendation_id: AE2-REC-002
+            priority: blocker
+            summary: Add manifest field matrix or YAML skeleton mapping required variables to type, environment status, source of truth, validator, owner, stop condition, and remediation.
+          - recommendation_id: AE2-REC-003
+            priority: high
+            summary: Add a source projection entry before derivation.
+          - recommendation_id: AE2-REC-004
+            priority: medium
+            summary: Add stable short section IDs for chunk generation.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - role: senior-sre
+        overall_score: 9.2
+        decision: block
+        blocking_gaps:
+          - gap_id: SRE2-BLOCK-001
+            severity: blocker
+            summary: ECS task execution role and task role trust-policy checks lacked source-account/source-ARN confused-deputy proof.
+          - gap_id: SRE2-BLOCK-002
+            severity: blocker
+            summary: Supply-chain provenance was conditional and lacked mandatory signed fallback and verifier path.
+        dimension_scores:
+          coverage: 9.4
+          necessity: 9.6
+          production_grade_gaps: 9.0
+          execution_variables: 9.3
+          human_readability: 9.5
+          machine_readability: 9.2
+          cost_optimization: 9.3
+          security: 8.8
+          performance: 9.2
+          token_optimization: 9.0
+        recommendations:
+          - recommendation_id: SRE2-REC-001
+            priority: blocker
+            summary: Add ECS task execution role and task role trust-policy requirements.
+          - recommendation_id: SRE2-REC-002
+            priority: blocker
+            summary: Make image, SBOM, and corpus provenance verification unconditional for staging and production.
+          - recommendation_id: SRE2-REC-003
+            priority: high
+            summary: Expand OIDC subject-format variants and CloudTrail-verifiable role-session identity.
+          - recommendation_id: SRE2-REC-004
+            priority: high
+            summary: Add alarm-threshold schema fields.
+          - recommendation_id: SRE2-REC-005
+            priority: medium
+            summary: Add GitHub Actions hardening fields for permissions, timeout, cache trust, runner isolation, and shell constraints.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+    cross_review_summary:
+      agreement:
+        - Iteration 1 fixes substantially improved the source.
+        - Projection ownership, IaC ownership, supply chain, rollback, observability, cost, and stop-condition coverage are much stronger.
+        - Remaining gaps are narrow and concrete.
+      disagreement:
+        - Architect considered the source above threshold.
+        - Agentic engineer required more deterministic fixture and manifest schema detail.
+        - Senior SRE required stronger ECS role trust-policy and unconditional provenance verification.
+      unresolved_blockers:
+        - Iteration 2 engineer and SRE blockers were addressed in the revised source and require full rereview.
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-ITER2-REC-002
+          summary: Added Stable Section IDs.
+        - recommendation_id: AE2-REC-001
+          summary: Expanded fixture matrix with source sections, chunk families, rule families, stop IDs, validator evidence, and banned outcomes.
+        - recommendation_id: AE2-REC-002
+          summary: Added Manifest Field Profiles with typed field object, required-by-environment defaults, source of truth, owner, validator, stop condition, and remediation.
+        - recommendation_id: AE2-REC-004
+          summary: Added stable short section IDs.
+        - recommendation_id: SRE2-REC-001
+          summary: Added ECS task execution role and task role trust-policy requirements, source-account/source-ARN conditions, self-assume prohibition, and validator evidence.
+        - recommendation_id: SRE2-REC-002
+          summary: Required GitHub attestations or signed provenance fallback with verifier command.
+        - recommendation_id: SRE2-REC-003
+          summary: Added OIDC subject format, immutable subject claims, role-session name, and CloudTrail session identity query variables.
+        - recommendation_id: SRE2-REC-004
+          summary: Added alarm field object schema with period, evaluation periods, paging, synthetic cadence, severity, dashboard panel, runbook, and owner.
+        - recommendation_id: SRE2-REC-005
+          summary: Added GitHub job hardening variables and required behavior.
+      rejected:
+        - recommendation_id: ARCH-ITER2-REC-001
+          summary: Not applied in source file because it belongs to the later source projection manifest update before derivation.
+          reason: Non-blocking for source-material acceptance; preserved as next derivation prerequisite.
+        - recommendation_id: ARCH-ITER2-REC-003
+          summary: Not separately applied because SRE-specific IAM recommendations were applied instead.
+          reason: Covered by SRE2 IAM trust-policy patch.
+        - recommendation_id: AE2-REC-003
+          summary: Not applied in source file because source projection update is a later derivation prerequisite.
+          reason: Non-blocking for source-material acceptance once source itself states STOP-SOURCE-PROJECTION.
+    rerun_required: true
+  - iteration: 3
+    source_revision_summary: >
+      Reviewed revised source hash
+      d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0.
+      All required reviewer roles passed above 9.5 with no blocking gaps:
+      architect 9.7, agentic engineer 9.6, SecOps engineer 9.6, senior SRE 9.6.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.6
+          machine_readability: 9.6
+          cost_optimization: 9.6
+          security: 9.7
+          performance: 9.6
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: ARCH3-REC-001
+            priority: high
+            summary: Update source projection manifest before derivation with this ECS source as primary or secondary evidence per target rule family.
+          - recommendation_id: ARCH3-REC-002
+            priority: medium
+            summary: Preserve subsection IDs during derivation.
+          - recommendation_id: ARCH3-REC-003
+            priority: medium
+            summary: Keep derived rules split by claim map.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - role: agentic-engineer
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.6
+          machine_readability: 9.6
+          cost_optimization: 9.6
+          security: 9.7
+          performance: 9.6
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: AE3-REC-001
+            priority: high
+            summary: Update source projection manifest before derivation with explicit projection ownership.
+          - recommendation_id: AE3-REC-002
+            priority: medium
+            summary: Add later fixture rows for STOP-OBSERVABILITY, STOP-COST-CAPACITY, and projection ambiguity.
+          - recommendation_id: AE3-REC-003
+            priority: medium
+            summary: Add stable section IDs into the Claim-To-Artifact Derivation Map.
+          - recommendation_id: AE3-REC-004
+            priority: low
+            summary: Add per-variable overrides for coarse manifest groups where needed.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+      - role: secops-engineer
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.6
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.6
+          machine_readability: 9.6
+          cost_optimization: 9.6
+          security: 9.7
+          performance: 9.6
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: SECOPS3-REC-001
+            priority: medium
+            summary: Clarify GitHub OIDC subject-template and AWS IAM aud/sub condition expectations before IAM rule derivation.
+          - recommendation_id: SECOPS3-REC-002
+            priority: medium
+            summary: Add a machine-checkable execution variable for maximum AWS deploy role session duration.
+          - recommendation_id: SECOPS3-REC-003
+            priority: low
+            summary: Align source material artifact metadata with the accepted review gate when source status conventions are settled.
+          - recommendation_id: SECOPS3-REC-004
+            priority: low
+            summary: Add a CloudTrail or EventBridge guardrail field for unexpected deploy-role API actions outside the allowlist.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-supply-chain
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-oidc
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-iam
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-data-boundaries
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md#ecs-src-stop-conditions
+      - role: senior-sre
+        overall_score: 9.6
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.7
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.6
+          machine_readability: 9.6
+          cost_optimization: 9.6
+          security: 9.6
+          performance: 9.6
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: SRE3-REC-001
+            priority: medium
+            summary: Add AWS-specific OIDC examples before IAM policy generation.
+          - recommendation_id: SRE3-REC-002
+            priority: medium
+            summary: Add non-normative IAM action exemplar appendix before policy generation.
+          - recommendation_id: SRE3-REC-003
+            priority: low
+            summary: Extend alarm field objects with CloudWatch namespace, dimensions, statistic, and missing-data behavior before executable alarm schema generation.
+          - recommendation_id: SRE3-REC-004
+            priority: low
+            summary: Name verifier-command manifest fields for image provenance, SBOM, scan result, and corpus provenance.
+        evidence:
+          - docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+          - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+    cross_review_summary:
+      agreement:
+        - The source material now meets the OKF acceptance threshold.
+        - Iteration 2 blockers were closed.
+        - The added SecOps review found no blocking security gaps under the four-role gate.
+        - Source projection update remains required before source-to-rule derivation.
+        - Follow-up recommendations are non-blocking for source-material acceptance.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied: []
+      rejected:
+        - recommendation_id: ARCH3-REC-001
+          summary: Deferred to source projection manifest update before derivation.
+          reason: Non-blocking for source acceptance and explicitly governed by STOP-SOURCE-PROJECTION.
+        - recommendation_id: AE3-REC-001
+          summary: Deferred to source projection manifest update before derivation.
+          reason: Non-blocking for source acceptance and required before derivation.
+        - recommendation_id: AE3-REC-002
+          summary: Deferred to later selector fixture expansion.
+          reason: Non-blocking improvement; current matrix is enough for source acceptance.
+        - recommendation_id: AE3-REC-003
+          summary: Deferred to derivation step.
+          reason: Stable section IDs already exist; map enrichment can occur before chunk generation.
+        - recommendation_id: AE3-REC-004
+          summary: Deferred to deploy-readiness manifest schema work.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SECOPS3-REC-001
+          summary: Deferred to IAM/OIDC rule derivation.
+          reason: Non-blocking for source acceptance; should be captured before IAM rule generation.
+        - recommendation_id: SECOPS3-REC-002
+          summary: Deferred to deploy-readiness manifest schema work.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SECOPS3-REC-003
+          summary: Deferred to artifact metadata convention update.
+          reason: Source hash must remain stable for the accepted review record.
+        - recommendation_id: SECOPS3-REC-004
+          summary: Deferred to observability and security-operation rule derivation.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SRE3-REC-001
+          summary: Deferred to IAM/OIDC rule or appendix derivation.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SRE3-REC-002
+          summary: Deferred to IAM policy derivation.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SRE3-REC-003
+          summary: Deferred to alarm schema derivation.
+          reason: Non-blocking for source acceptance.
+        - recommendation_id: SRE3-REC-004
+          summary: Deferred to deploy-readiness manifest schema work.
+          reason: Non-blocking for source acceptance.
+    rerun_required: false
+final_decision:
+  status: accepted
+  summary: Source material accepted. All required reviewer roles scored above 9.5 with no blocking gaps remaining.
+  accepted_source_sha256: d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0
+  accepted_at_utc: "2026-06-29T19:58:00Z"
+  required_before_derivation:
+    - Update .agentic/02.rag-rulebook/source-projections/v1.yml with this source as ECS-specific primary or secondary source evidence.
+    - Preserve stable section IDs and claim-map splits during rule and chunk derivation.

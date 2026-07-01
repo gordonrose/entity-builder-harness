@@ -1,0 +1,206 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.ecs-fargate-deployment
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.runtime
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: rule
+#   purpose: Define ECS Fargate runtime rules for deploying the RAG/rulebook service from GitHub Actions to AWS.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.source-projections.v1
+#     path: .agentic/02.rag-rulebook/source-projections/v1.yml
+id: concern.rag-rulebook-ecs-fargate-deployment
+title: RAG/rulebook ECS Fargate deployment rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-29T20:49:40Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml
+  source_material:
+    - path: docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md
+      sha256: d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0
+
+description: >
+  Rules for the ECS Fargate runtime shape used when the RAG/rulebook service is
+  deployed from GitHub Actions to AWS as a read-only context-provider service.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+  - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
+  - .agentic/aws/workflows/deploy-rag-rulebook-service.md
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".github/workflows/**"
+    - ".agentic/aws/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+    - "scripts/04.deploy/**"
+
+rules:
+  - id: ecs-fargate-deployment.selects-ecs-fargate-before-mutation
+    title: ECS Fargate is an explicit runtime decision
+    severity: error
+    summary: >
+      Deployment execution must name `ecs-fargate` as the selected runtime
+      family before ECS-specific task, service, network, scaling, health, and
+      rollback checks can authorize AWS mutation.
+    must:
+      - "Set runtime_family to ecs-fargate in the deploy-readiness manifest before ECS deployment execution."
+      - "Name AWS account, region, cluster, service, task definition path, task definition revision target, and owning layer."
+      - "Keep undecided runtime choices in planning mode until a governed runtime decision exists."
+      - "Record whether the deployment targets local, ci, staging, production, or another governed environment."
+    must_not:
+      - "Do not infer ECS Fargate from AWS wording, Docker wording, or a service name alone."
+      - "Do not apply ECS deployment circuit-breaker, target-group, task, or service-health assumptions to another runtime family."
+      - "Do not mutate AWS while the runtime family is unknown."
+    required_checks:
+      - "Verify deploy-readiness manifest runtime_family is ecs-fargate."
+      - "Verify AWS account, region, cluster, service, and environment are named."
+      - "Verify runtime-specific checks match ECS Fargate rather than App Runner, Lambda, EKS, or another platform."
+    agent_guidance: >
+      ECS-specific instructions are only safe after the runtime is explicit. If
+      the runtime is still an architecture choice, return planning guidance and
+      a blocking deploy-execution gap.
+
+  - id: ecs-fargate-deployment.defines-task-network-and-ingress-contract
+    title: ECS task, network, and ingress contract is complete
+    severity: error
+    summary: >
+      ECS Fargate deployment must define the container, task definition,
+      network, load-balancer, TLS, and ingress model before remote exposure.
+    must:
+      - "Name ECR repository, image digest, Dockerfile path, build context, container name, container port, CPU, memory, ephemeral storage, and platform version."
+      - "Name task execution role, task role, VPC, subnets, security groups, assign_public_ip policy, target group, listener, TLS certificate, and domain where applicable."
+      - "Use target_type ip for Fargate services behind an Application Load Balancer."
+      - "Classify ingress as local-only, private, authenticated-public, or public-read-only."
+      - "Name outbound dependencies needed for ECR, ECS, CloudWatch Logs, Secrets Manager, Systems Manager, S3, corpus package fetches, and observability."
+    must_not:
+      - "Do not expose the service publicly without a recorded ingress class, TLS boundary, auth model, and rate-limit expectation."
+      - "Do not use broad security groups or unrestricted egress without a recorded exception and compensating controls."
+      - "Do not commit endpoint secrets, certificates, tokens, or connection strings with secret values."
+    required_checks:
+      - "Verify container and task-definition fields are known for the target environment."
+      - "Verify network, ingress, TLS, and allowed-client fields are known for staging and production."
+      - "Verify secret values are referenced only by secret store names or parameter names."
+    agent_guidance: >
+      Treat network exposure as a production boundary. If public or
+      authenticated-public ingress is requested, require the data-boundary and
+      access-control rules as part of the same context packet.
+
+  - id: ecs-fargate-deployment.deploys-image-and-corpus-as-immutable-pair
+    title: Image and corpus package are deployed as an immutable pair
+    severity: error
+    summary: >
+      The ECS service must deploy an immutable container image together with a
+      versioned RAG/rulebook corpus package so runtime answers can be traced to
+      exact source and generated artifacts.
+    must:
+      - "Record commit SHA, image digest, corpus package id, corpus package version, corpus package sha256, index hash, chunk hash, policy hash, and generator versions."
+      - "Render the task definition from immutable image and corpus package identities rather than floating tags or implicit latest artifacts."
+      - "Set stale_corpus_behavior to block by default for staging and production."
+      - "Run runtime freshness checks before packaging, querying, or deploying generated RAG artifacts."
+      - "Record the selected context-packet schema version and retrieval policy version."
+    must_not:
+      - "Do not deploy a corpus package that cannot be traced to source material, generated YAML rules, index, chunks, recognition sources, and policy versions."
+      - "Do not use floating image tags as the only deployment identity."
+      - "Do not rebuild a production artifact from a different source state than the tested artifact."
+    required_checks:
+      - "Verify image digest and corpus package hash are present."
+      - "Verify index, chunk, recognition-source, and policy versions are present."
+      - "Verify runtime freshness gate status is passing or blocks deployment."
+    agent_guidance: >
+      For RAG, the corpus is part of the deployable artifact. Never answer
+      deployment readiness from service-image evidence alone.
+
+  - id: ecs-fargate-deployment.requires-health-stability-and-rollback-proof
+    title: ECS deployment stability and rollback proof are required
+    severity: error
+    summary: >
+      ECS Fargate deployment is not ready until service stability, target health,
+      application health, post-deploy context-packet smoke tests, and rollback
+      authority are known.
+    must:
+      - "Enable or explicitly evaluate ECS deployment circuit breaker and rollback behavior for the service."
+      - "Name container health, application health endpoint, target-group health, ECS service stability check, and post-deploy context-packet smoke prompt."
+      - "Record desired count, minimum healthy percent, maximum percent, deployment controller, and stability timeout."
+      - "Name rollback target, previous image digest, previous corpus package, previous task definition revision, rollback workflow or command, and rollback authority."
+      - "Record deployment evidence or rollback evidence after the deploy attempt."
+    must_not:
+      - "Do not call deployment complete before service stability and post-deploy context-packet smoke checks pass."
+      - "Do not deploy when rollback target, rollback authority, or health checks are missing."
+      - "Do not hide alarm, task-start, image-pull, or target-health failures behind a successful workflow exit."
+    required_checks:
+      - "Verify service stability and target health checks are named."
+      - "Verify post-deploy context-packet smoke query is named."
+      - "Verify rollback target and rollback authority are known before mutation."
+      - "Verify alarm and failure-detection evidence is collected."
+    agent_guidance: >
+      The ECS deployment is only successful when the service can answer a
+      governed query and can be rolled back to a known previous image and corpus
+      package if health fails.
+
+  - id: ecs-fargate-deployment.bounds-capacity-cost-and-quota-risk
+    title: Capacity, cost, and quota risk are bounded
+    severity: error
+    summary: >
+      ECS Fargate deployment must define traffic expectations, CPU and memory,
+      autoscaling bounds, budgets, quotas, rate limits, and abuse controls
+      before public or production exposure.
+    must:
+      - "Name expected QPS, max concurrency, query timeout, token budgets, CPU, memory, desired count, min tasks, max tasks, scale-out policy, and scale-in policy."
+      - "Name monthly budget, quota checks, capacity alarm thresholds, and cost owner."
+      - "Define rate limits, backpressure behavior, disablement switch, and incident owner for public or authenticated-public exposure."
+      - "Prefer the smallest production-shaped task size and task count that can satisfy the stated SLOs."
+    must_not:
+      - "Do not expose the service publicly without rate limits, budget controls, and quota checks."
+      - "Do not scale without a max task bound and cost alert."
+      - "Do not optimize for low cost by removing health, logs, or rollback evidence."
+    required_checks:
+      - "Verify CPU, memory, desired count, autoscaling bounds, and expected traffic are known."
+      - "Verify budget, quota, and alarm coverage are known."
+      - "Verify public exposure has rate limits and disablement path."
+    agent_guidance: >
+      Cost controls are part of safety. A cheap runtime that cannot be observed,
+      throttled, or disabled is not production-ready.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md"
+    sections:
+      - "AWS Runtime Shape"
+      - "Required Execution Variables"
+      - "Network And Ingress Variables"
+      - "RAG And Corpus Variables"
+      - "Health Checks And Rollback"
+      - "Cost And Capacity Controls"
+      - "Performance Requirements"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml."
+  - "It blocks ECS-specific execution until runtime_family is ecs-fargate."
+  - "It requires image and corpus package identity before ECS service update."
+  - "It requires service health, target health, smoke-query, rollback, and alarm proof."
+  - "It names cost, quota, autoscaling, and rate-limit boundaries for public exposure."

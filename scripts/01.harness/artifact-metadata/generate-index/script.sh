@@ -125,7 +125,15 @@ def collect_paths_from_args(paths: list[str]) -> list[str]:
 
 
 def collect_all_paths() -> list[str]:
-    roots = [ROOT / "scripts", ROOT / ".agentic", ROOT / "docs/00.chat", ROOT / "docs/harness"]
+    roots = [
+        ROOT / "scripts",
+        ROOT / ".github/workflows",
+        ROOT / ".agentic",
+        ROOT / "docs/00.chat",
+        ROOT / "docs/02.rag-rulebook",
+        ROOT / "docs/harness",
+        ROOT / "infra",
+    ]
     collected: list[str] = []
     for root in roots:
         if root.is_dir():
@@ -134,23 +142,34 @@ def collect_all_paths() -> list[str]:
 
 
 def is_script_artifact(path: str) -> bool:
-    return path.startswith("scripts/") and path.endswith((".sh", ".js"))
+    return (
+        path.startswith("scripts/")
+        and path.endswith((".sh", ".js", ".mjs"))
+    ) or (
+        path.startswith(".agentic/")
+        and path.endswith((".js", ".mjs"))
+    )
 
 
 def is_markdown_artifact(path: str) -> bool:
     return path.endswith(".md") and (
         path.startswith(".agentic/")
         or path.startswith("docs/00.chat/")
+        or path.startswith("docs/02.rag-rulebook/")
         or path.startswith("docs/aws/")
         or path.startswith("docs/education/")
         or path.startswith("docs/harness/")
+        or path.startswith("infra/")
         or path.startswith("scripts/")
     )
 
 
 def is_yaml_artifact(path: str) -> bool:
     return path.endswith((".yml", ".yaml")) and (
-        path.startswith(".agentic/") or path.startswith("docs/harness/")
+        path.startswith(".agentic/")
+        or path.startswith(".github/workflows/")
+        or path.startswith("docs/02.rag-rulebook/")
+        or path.startswith("docs/harness/")
     )
 
 

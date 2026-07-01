@@ -3,7 +3,7 @@
   id: product.workflows.default
   version: 1
   status: active
-  layer: 02.product
+  layer: 03.product
   domain: requirements
   disciplines:
   - requirements

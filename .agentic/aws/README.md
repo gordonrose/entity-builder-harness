@@ -3,7 +3,7 @@
   id: aws.readme
   version: 1
   status: active
-  layer: 03.deploy
+  layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
   - agentic
@@ -49,6 +49,8 @@ they are needed for repeatable operations.
   profile, region, environment, evidence, risk, and rollback notes.
 - `workflows/execute-approved-aws-change.md` - run an explicitly approved AWS
   change and record the result.
+- `workflows/deploy-rag-rulebook-service.md` - govern GitHub-to-AWS deployment
+  of the RAG/rulebook MCP service after readiness proof and explicit approval.
 
 ## Supporting Artifacts
 
@@ -57,6 +59,8 @@ safety reason. Prefer deterministic scripts for repeatable AWS checks.
 
 ## Output Locations
 
+- `docs/04.deploy/` stores RAG-readable deploy corpus source material and
+  future structured deploy rules.
 - `docs/aws/architecture/adrs/` stores durable AWS-layer decisions.
 - `docs/aws/runbooks/` stores repeatable operational procedures when they are
   too detailed for a workflow.

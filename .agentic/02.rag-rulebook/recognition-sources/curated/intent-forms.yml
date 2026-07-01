@@ -1,0 +1,120 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.recognition-source.curated.intent-forms
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: recognition-source
+#   purpose: Curated lookup source for reviewed request forms that indicate the kind of help being asked for.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-recognition-sources
+#       path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/recognition-source/v1
+source_id: recognition.curated.intent-forms
+version: 1
+status: active
+source_kinds:
+  - intent-form
+generation_mode: curated
+owner_layer: 02.rag-rulebook
+purpose: Recognize reviewed question and command forms so prompt interpretation can distinguish planning, explanation, implementation, git execution, and deploy execution.
+match_priority: 35
+used_by_dimensions:
+  - prompt
+  - layer-mode-workflow
+  - confidence-thresholds
+  - validation-handoff
+terms:
+  - term: How do I
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.planning.guidance
+    aliases:
+      - How can I
+      - What is the best way to
+    confidence_weight: 0.95
+  - term: Should we
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.planning.decision-support
+    aliases:
+      - Do we want to
+      - Prepare a deployment plan
+    confidence_weight: 0.9
+  - term: Can you explain
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.explanation.tutor
+    aliases:
+      - Explain
+      - Walk me through
+    confidence_weight: 0.9
+  - term: What is
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.discovery.explanation
+    aliases:
+      - What are
+      - Where is
+    confidence_weight: 0.85
+  - term: Do not deploy
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.no-action.explanation
+    aliases:
+      - Don't deploy
+    confidence_weight: 1
+  - term: Please implement
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.implementation.request
+    aliases:
+      - Implement
+      - Build
+      - Add this
+    confidence_weight: 0.85
+  - term: Commit this
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.git.commit
+    aliases:
+      - Commit the changes
+      - Commit this slice
+    confidence_weight: 0.95
+  - term: Deploy this
+    category: intent-form
+    match_type: phrase
+    canonical_id: intent.deploy.execution
+    aliases:
+      - Deploy the
+      - Deploy the app
+      - Release this
+    confidence_weight: 0.9
+validation_rules:
+  - Intent forms indicate the kind of help requested, but cannot authorize side effects or bypass session safety by themselves.
+  - Planning and explanation forms must not grant implementation, commit, deploy, or destructive-action permission.
+  - Execution forms must remain subject to the current workflow gates and approval rules.
+  - Broad aliases require evaluation coverage before activation.
+refresh_policy:
+  trigger: Review when repeated prompt forms are misclassified as implementation, execution, explanation, or planning.
+  owner: 02.rag-rulebook
+  review_required_when:
+    - Adding a form that can imply write, commit, deploy, or destructive permission.
+    - Increasing confidence weight.
+    - Adding broad aliases that could match unrelated ordinary prose.
+    - Mapping a question form to an execution intent.

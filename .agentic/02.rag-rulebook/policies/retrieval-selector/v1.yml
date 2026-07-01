@@ -1,0 +1,188 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy
+#   purpose: Provide the seed v1 multi-dimensional retrieval selector policy pack.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.retrieval-selector-policy-system
+#       path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+#     - id: rag-rulebook.schema.retrieval-policy-pack
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.script.validate-retrieval-policy-pack
+#       path: scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+#     - id: rag-rulebook.standard.retrieval-selector-evaluations
+#       path: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+
+schema: rag-rulebook/retrieval-policy-pack/v1
+policy_pack_id: retrieval-selector.v1
+version: 1
+status: active
+change_reason: Establish the first editable policy surface for multi-dimensional context selection before implementing a real selector runtime.
+
+applies_to:
+  selector_version: rag-rulebook/retrieval-selector/v1
+  context_packet_schema: rag-rulebook/context-packet/v1
+  chunk_set_schema: rag-rulebook/chunk-set/v1
+  index_schema: rag-rulebook/rulebook-index/v1
+  corpus_ids:
+    - corpus.00.chat
+    - corpus.01.harness
+    - corpus.02.rag-rulebook
+    - corpus.03.product
+    - corpus.03.product.apps
+    - corpus.03.product.core
+    - corpus.03.product.design-system
+    - corpus.03.product.frontend-kit
+    - corpus.03.product.platform
+    - corpus.04.deploy
+    - corpus.05.education
+    - corpus.06.shared
+  layer_modes:
+    - 00.chat:implementation
+    - 01.harness:implementation
+    - 02.rag-rulebook:implementation
+    - 03.product:implementation
+    - 04.deploy:execution
+  workflows:
+    - .agentic/02.rag-rulebook/workflows/default.md
+
+dimensions:
+  - id: prompt
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+
+  - id: request-context
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+
+  - id: evidence-bundles
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+
+  - id: retrieval-strategy
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+
+  - id: session-metadata
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/session-metadata.yml
+
+  - id: layer-mode-workflow
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/layer-mode-workflow.yml
+
+  - id: focused-paths
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
+
+  - id: corpus-ownership
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/corpus-ownership.yml
+
+  - id: rule-graph
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/rule-graph.yml
+
+  - id: required-checks
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/required-checks.yml
+
+  - id: stop-conditions
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/stop-conditions.yml
+
+  - id: token-budget
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/token-budget.yml
+
+  - id: confidence-thresholds
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/confidence-thresholds.yml
+
+  - id: validation-handoff
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/validation-handoff.yml
+
+  - id: semantic-recall
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/semantic-recall.yml
+
+precedence:
+  - rank: 1
+    rule: Stop conditions beat retrieval scores.
+    reason: Retrieval must not make blocked work look safe.
+  - rank: 2
+    rule: Explicit request context beats session defaults for retrieval target selection.
+    reason: The user prompt, focused paths, and exact named artifacts say what evidence the current answer needs.
+  - rank: 3
+    rule: Evidence bundles define required evidence families for recognized question categories.
+    reason: Some questions need canonical layer, concern, workflow, or plan evidence rather than only top-scoring chunks.
+  - rank: 4
+    rule: Session metadata governs provenance, fallback routing, and execution safety.
+    reason: Current chat state remains required for audit and side-effect safety without dominating read-only retrieval.
+  - rank: 5
+    rule: Focused paths and artifact ownership beat semantic similarity.
+    reason: Path ownership provides deterministic scope.
+  - rank: 6
+    rule: Corpus ownership beats cross-corpus convenience.
+    reason: Modular corpora must remain separately governed.
+  - rank: 7
+    rule: Required checks and mandatory rulesets survive trimming.
+    reason: Smaller context must not remove required process.
+  - rank: 8
+    rule: Graph expansion is bounded before ranking.
+    reason: Expansion should add required context, not flood the packet.
+  - rank: 9
+    rule: Deterministic matches precede semantic recall.
+    reason: Semantic recall is supplemental and disabled in v1.
+  - rank: 10
+    rule: Low confidence becomes a gap.
+    reason: The selector must expose uncertainty.
+  - rank: 11
+    rule: Validation failure makes the packet unusable.
+    reason: Consumers should only receive validated context.
+
+thresholds:
+  max_context_tokens: 4000
+  max_selected_chunks: 12
+  min_intent_confidence: 0.7
+  min_routing_confidence: 0.8
+  min_retrieval_confidence: 0.7
+  semantic_recall_enabled: false
+
+validation:
+  required_checks:
+    - "Validate policy packs with `scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh` before selector runtime use."
+    - "Validate recognition sources with `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` before prompt recognition uses generated or curated vocabulary."
+    - "Validate selected packets with `scripts/02.rag-rulebook/validate-context-packet/script.sh`."
+    - "Compile selector behavior from validated policy packs, dimensions, recognition sources, corpus ownership, and graph metadata before production runtime use."
+    - Prove at least one low-confidence request produces a gap before selector runtime is considered usable.
+    - Prove required checks survive trimming.
+    - Prove selected chunk citations resolve after graph expansion.
+  smoke_fixtures:
+    - scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh
+    - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+    - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
+  validator_scripts:
+    - scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
+    - scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+    - scripts/02.rag-rulebook/validate-context-packet/script.sh
+
+evolution:
+  compatible_change_types:
+    - Add prompt vocabulary without changing existing token meaning.
+    - Add a more specific path-to-corpus rule.
+    - Add a stricter stop condition with validation coverage.
+    - Reduce selected context size while preserving required checks and citations.
+    - Add validation requirements with a migration path.
+  review_required_when:
+    - Lowering confidence thresholds.
+    - Increasing max_context_tokens or max_selected_chunks.
+    - Allowing new cross-corpus retrieval.
+    - Enabling semantic recall.
+    - Moving selector behavior from governed policy into runtime constants.
+    - Changing precedence order.
+    - Changing stop-condition severity.
+  breaking_change_policy: Create a new policy pack version or schema version when existing selector behavior would change incompatibly.

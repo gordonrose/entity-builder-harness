@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.rule-graph
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how explicit rule graph edges expand retrieval.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: rule-graph
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Expand context through explicit graph edges rather than accidental proximity.
+required_inputs:
+  - Direct chunk matches.
+  - Rule-pack dependencies.
+  - Required ruleset edges.
+  - Related ruleset edges.
+  - Applies-to edges.
+  - Graph hop limit.
+expected_actions:
+  - Start graph expansion from direct matches.
+  - Add required rulesets before related rulesets.
+  - Bound graph expansion before ranking.
+  - Keep graph-expanded chunks cited.
+banned_actions:
+  - Do not expand through unresolved graph references.
+  - Do not exceed the approved hop limit.
+  - Do not use graph expansion to bypass corpus ownership.
+  - Do not treat related rulesets as mandatory checks.
+output_obligations:
+  - graph_seed_chunk_ids
+  - graph_expanded_chunk_ids
+  - graph_edge_types
+  - graph_hop_count
+  - unresolved_graph_references
+gap_or_stop_conditions:
+  - Report unresolved graph references instead of dropping them silently.
+  - Add a gap when required graph edges cannot resolve.
+ranking_effects:
+  - Required ruleset edges outrank related ruleset edges.
+  - Direct matches outrank graph-expanded matches.
+  - V1 graph expansion is limited to two hops unless a policy change approves more.
+validation_examples:
+  - name: required ruleset expands context
+    given: A matched rule pack requires a ruleset.
+    expect: The required ruleset chunk is added and cited.
+  - name: unresolved edge creates gap
+    given: A required ruleset edge points to a missing rule ID.
+    expect: The selector reports an unresolved graph gap.
+can_change_by:
+  - Add edge types.
+  - Tune hop limits.
+  - Tune edge priority.

@@ -1,0 +1,212 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.rules.concerns.mcp-server-deployment-architecture
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: rule
+#   purpose: Define structured MCP server deployment architecture rules for RAG/rulebook coverage.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+#     path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+#   - id: rag-rulebook.source-material.mcp-server-deployment-architecture
+#     path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+id: concern.mcp-server-deployment-architecture
+title: MCP server deployment architecture rules
+version: 1
+status: active
+corpus_id: corpus.02.rag-rulebook
+owner_layer: 02.rag-rulebook
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-27T07:15:43Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml
+  source_material:
+    - path: docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md
+      sha256: 9993d73be63b4f8cabe615d596c9279dec91e3d99ed82cd08d79cbaef250cb35
+
+description: >
+  Rules for treating MCP server work as a governed service boundary that may
+  expose harness capabilities, context, prompts, or workflows to MCP-capable
+  clients without bypassing layer ownership, approval gates, source coverage,
+  auditability, or deployment governance.
+
+related_rulesets:
+  - .agentic/02.rag-rulebook/standards/portable-service-contract.md
+  - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+  - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+  - .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+  - .agentic/shared/workflows/deployment-process.md
+
+applies_to:
+  paths:
+    - "docs/02.rag-rulebook/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+    - ".agentic/00.chat/**"
+    - ".agentic/01.harness/**"
+    - ".agentic/aws/**"
+
+rules:
+  - id: mcp-server-deployment-architecture.exposes-governed-capabilities
+    title: MCP servers expose governed capabilities
+    severity: error
+    summary: >
+      An MCP server is a service boundary for exposing capabilities to clients.
+      In this harness, exposed capabilities must remain governed by their
+      owning layer rather than becoming a parallel execution path.
+    must:
+      - "Assign every MCP-exposed resource, prompt, or tool to an owning layer before implementation."
+      - "Preserve the owning workflow, approval rules, stop conditions, and validation gates for each exposed capability."
+      - "Classify capabilities as read-only, write-capable, deploy-capable, or destructive before exposing them."
+      - "Return explicit governance gaps when a capability has no approved workflow or command contract."
+    must_not:
+      - "Do not expose ad hoc shell commands as MCP tools without a governed script, workflow, or service contract."
+      - "Do not let MCP access bypass chat lifecycle, git governance, deployment governance, or commit gates."
+      - "Do not treat a recognized prompt term as permission to execute an MCP tool."
+    agent_guidance: >
+      Start with ownership and capability class. If the layer, workflow, or
+      approval boundary is unclear, the correct output is a gap, not a tool.
+
+  - id: mcp-server-deployment-architecture.separates-resources-prompts-and-tools
+    title: MCP resources, prompts, and tools have separate contracts
+    severity: error
+    summary: >
+      MCP servers can expose context resources, reusable prompts, and executable
+      tools. These are different risk surfaces and should not share one vague
+      contract.
+    must:
+      - "Use resources for bounded read-only context such as corpus indexes, rulebook chunks, or validated context packets."
+      - "Use prompts for reusable workflow guidance that still requires runtime classification and governance checks."
+      - "Use tools only for explicit operations with typed inputs, typed outputs, allowed side effects, and required checks."
+      - "Version resource, prompt, and tool schemas so clients cannot silently depend on stale contracts."
+    must_not:
+      - "Do not expose broad repo reads as resources when a smaller corpus, chunk, or packet can answer the request."
+      - "Do not hide write, deploy, or destructive behavior inside prompt or resource endpoints."
+      - "Do not mix retrieval selection and tool execution into one opaque MCP operation."
+    agent_guidance: >
+      Keep context delivery separate from action. A useful MCP server makes the
+      action boundary more visible, not less.
+
+  - id: mcp-server-deployment-architecture.uses-validated-context-packets
+    title: RAG-facing MCP responses use validated context packets
+    severity: error
+    summary: >
+      RAG/rulebook MCP capabilities should return small, cited, validated
+      context packets or explicit gaps instead of dumping long undifferentiated
+      context into the client.
+    must:
+      - "Select context through governed recognition sources, policy dimensions, corpus ownership, and rule graph relationships."
+      - "Return context packets with selected chunks, citations, required checks, stop conditions, token budget, confidence, and gaps."
+      - "Keep partial coverage visible when source material exists but indexed chunks or selector evaluation proof are missing."
+      - "Prefer deterministic generated sources and curated review records before semantic recall is introduced."
+    must_not:
+      - "Do not answer from source material as if it were fully indexed and evaluated retrieval coverage."
+      - "Do not merge harness, product, design-system, deployment, and education corpora into one unscoped context dump."
+      - "Do not hide missing-corpus, missing-source, or missing-evaluation gaps from the client."
+    agent_guidance: >
+      If retrieval is not ready, report the stage that is missing. Partial
+      source coverage is progress, but it is not the same as selectable chunks.
+
+  - id: mcp-server-deployment-architecture.deploy-boundaries-are-explicit
+    title: Deployment boundaries are explicit
+    severity: error
+    summary: >
+      Deploying a harness capability behind an MCP server introduces runtime,
+      network, authentication, authorization, and observability boundaries that
+      must be governed before production exposure.
+    must:
+      - "Define the allowed runtime transport and hosting model for local, staging, and production use."
+      - "Define authentication, authorization, and user-consent expectations before exposing non-local clients."
+      - "Route deploy-capable capabilities through deployment governance rather than general prompt recognition."
+      - "Document environment-specific configuration, secret references, audit logs, health checks, and rollback expectations."
+    must_not:
+      - "Do not deploy an MCP server with missing auth, missing audit behavior, or unclear data exposure boundaries."
+      - "Do not expose deploy-capable operations from the RAG/rulebook layer unless deployment governance owns the execution path."
+      - "Do not assume local-only safety applies to staging or production."
+    agent_guidance: >
+      A deployment plan should name the transport, auth model, data boundary,
+      observability model, and rollback path before implementation starts.
+
+  - id: mcp-server-deployment-architecture.transport-auth-model-is-explicit
+    title: MCP transport determines authorization model
+    severity: error
+    summary: >
+      MCP deployment must name the transport and use the authorization model
+      that fits that transport instead of copying local stdio assumptions into
+      remote HTTP exposure.
+    must:
+      - "Name whether the server uses stdio, local HTTP, remote HTTP, or another governed transport."
+      - "For HTTP-based remote transports, define protected-resource metadata, authorization server discovery, token audience, client identity, allowed scopes, and authorization error behavior."
+      - "For stdio or local development, define environment credential boundaries, subprocess ownership, stderr logging boundaries, and local-only assumptions."
+      - "For Streamable HTTP, define origin validation, authentication expectations, protocol-version handling, and session-id handling."
+    must_not:
+      - "Do not copy local stdio trust assumptions into remote HTTP deployment."
+      - "Do not expose remote HTTP MCP without an explicit authorization model."
+      - "Do not accept bearer tokens, session ids, or environment credentials outside their intended transport and resource boundary."
+    agent_guidance: >
+      Transport is not just implementation detail. It changes the trust model,
+      credential handling, client identity proof, and operational controls.
+
+  - id: mcp-server-deployment-architecture.audits-client-requests
+    title: MCP requests are auditable
+    severity: error
+    summary: >
+      A server boundary needs traceability. The harness should be able to
+      inspect what a client asked for, which context or tool was selected, what
+      approvals were required, and what result was returned.
+    must:
+      - "Record MCP request identity, selected resource/prompt/tool, input summary, approval state, command result, and emitted gaps where applicable."
+      - "Redact secrets and unrelated repo/user data from audit logs."
+      - "Make audit records useful for candidate review, corpus gap reporting, selector evaluation updates, and incident review."
+      - "Define stop conditions for unauthenticated requests, unauthorized capability use, missing audit sinks, or ambiguous approvals."
+    must_not:
+      - "Do not log secret values, full transcripts, or unrelated repo content by default."
+      - "Do not allow production MCP operations without enough audit evidence to reconstruct the decision path."
+      - "Do not let audit logging become the only safety control; it complements approval and validation gates."
+    agent_guidance: >
+      Auditability is how the harness learns safely over time. Keep the record
+      small, structured, and tied to governance decisions.
+
+source_refs:
+  - doc: "docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md"
+    sections:
+      - "Working Definition"
+      - "Why This Matters Here"
+      - "Initial Architecture Questions"
+      - "Governance Expectations"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports"
+    sections:
+      - "stdio"
+      - "Streamable HTTP"
+      - "Security Warning"
+      - "Session Management"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization"
+    sections:
+      - "Protocol Requirements"
+      - "Authorization Server Discovery"
+      - "Access Token Usage"
+
+success_criteria:
+  - "The file exists at docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml."
+  - "It treats MCP servers as governed service boundaries, not direct shell or deploy bypasses."
+  - "It separates MCP resources, prompts, and tools into distinct contracts."
+  - "It requires validated context packets or explicit gaps for RAG-facing responses."
+  - "It requires the MCP transport and matching authorization model to be explicit before remote exposure."
+  - "It keeps deployment, auth, audit, and environment boundaries explicit before production exposure."
+  - "It keeps the MCP recognition candidate coverage evidence aligned with source material, structured rulebook, indexed chunks, and selector evaluation proof."

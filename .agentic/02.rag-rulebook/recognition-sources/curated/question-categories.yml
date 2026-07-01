@@ -1,0 +1,327 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.recognition-source.curated.question-categories
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: recognition-source
+#   purpose: Curated lookup source for reviewed question categories and evidence-family hints.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-recognition-sources
+#       path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+
+schema: rag-rulebook/recognition-source/v1
+source_id: recognition.curated.question-categories
+version: 1
+status: active
+source_kinds:
+  - question-category
+  - domain-noun
+generation_mode: curated
+owner_layer: 02.rag-rulebook
+purpose: Recognize reviewed question categories that require expected evidence bundles, plus low-authority evidence-family hints used only inside those bundles.
+match_priority: 37
+used_by_dimensions:
+  - prompt
+  - request-context
+  - evidence-bundles
+  - confidence-thresholds
+terms:
+  - term: where should
+    category: question-category
+    match_type: phrase
+    canonical_id: question.architecture-boundary.capability-placement
+    aliases:
+      - where does
+      - should live
+      - belongs
+      - belong
+      - part of
+      - one of our apps
+    confidence_weight: 0.8
+  - term: how it works
+    category: question-category
+    match_type: phrase
+    canonical_id: question.policy-implementation.explain
+    aliases:
+      - how does it work
+      - how does this work
+      - how it is implemented
+      - how it's implemented
+      - how is it implemented
+      - explain the policy
+    confidence_weight: 0.78
+  - term: platform
+    category: evidence-family
+    match_type: exact
+    canonical_id: evidence.layer.platform
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    confidence_weight: 0.65
+  - term: apps
+    category: evidence-family
+    match_type: exact
+    canonical_id: evidence.layer.apps
+    evidence_path: docs/harness/architecture/rules/layers/apps.yml
+    aliases:
+      - app
+    confidence_weight: 0.65
+  - term: dependency direction
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.concern.dependency-direction
+    evidence_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    aliases:
+      - dependency boundary
+      - import direction
+    confidence_weight: 0.75
+  - term: platform contracts
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.contracts
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - contracts
+      - app contract
+      - app contracts
+      - platform contract
+      - mount contract
+    confidence_weight: 0.72
+  - term: platform config
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.config
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - config
+      - configuration
+      - runtime config
+      - app config
+      - environment config
+    confidence_weight: 0.72
+  - term: runtime settings
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.concern.config-runtime-settings
+    evidence_path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    aliases:
+      - runtime setting
+      - settings
+      - environment settings
+      - config policy
+    confidence_weight: 0.7
+  - term: platform runtime
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.runtime
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - runtime
+      - request context
+      - job context
+      - resource lifecycle
+      - lifecycle primitives
+    confidence_weight: 0.72
+  - term: platform server
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.server
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - server
+      - middleware
+      - request handling
+      - route adaptation
+      - api versioning
+      - response logging
+    confidence_weight: 0.72
+  - term: platform security
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.security
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - security
+      - authentication
+      - authorization
+      - auth
+      - permissions
+      - cors
+      - rate limiting
+    confidence_weight: 0.72
+  - term: identity access security
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.concern.identity-access-security
+    evidence_path: docs/harness/architecture/rules/concerns/identity-access-security.yml
+    aliases:
+      - identity
+      - access security
+      - auth policy
+      - permission policy
+    confidence_weight: 0.7
+  - term: logging
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.observability
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - observability
+      - logs
+      - logger
+      - request logging
+      - structured logs
+      - log output
+      - metrics
+      - tracing
+      - telemetry
+    confidence_weight: 0.72
+  - term: logging policy
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.concern.reporting-analytics-audit
+    evidence_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    aliases:
+      - audit
+      - analytics
+      - reporting
+      - monitoring
+      - observability policy
+    confidence_weight: 0.72
+  - term: logger contracts
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.layer.packages-core
+    evidence_path: docs/harness/architecture/rules/layers/packages-core.yml
+    aliases:
+      - logger contract
+      - logging contract
+      - redaction
+      - redaction contract
+      - framework-independent logger
+    confidence_weight: 0.68
+  - term: platform health
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.health
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - health
+      - liveness
+      - readiness
+      - health checks
+      - health aggregation
+      - livez
+      - readyz
+    confidence_weight: 0.72
+  - term: platform workers
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.workers
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - workers
+      - worker
+      - background job
+      - background jobs
+      - queue
+      - queues
+      - scheduled jobs
+      - job retry
+      - dead-letter
+    confidence_weight: 0.72
+  - term: events messaging async
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.concern.events-messaging-async
+    evidence_path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    aliases:
+      - event
+      - events
+      - messaging
+      - async
+      - queue policy
+      - job policy
+    confidence_weight: 0.7
+  - term: container images
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.container-image-management
+    evidence_path: docs/04.deploy/rules/shared/container-image-management.yml
+    aliases:
+      - container image
+      - Dockerfiles
+      - Dockerfile
+      - docker files
+      - image definitions
+      - image definition
+      - image sprawl
+      - container sprawl
+      - build context
+      - dockerignore
+      - .dockerignore
+    confidence_weight: 0.74
+  - term: container governance
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.container-governance
+    aliases:
+      - manage Dockerfiles
+      - manage container images
+      - where should Dockerfiles live
+      - where should container images live
+      - prevent Dockerfile sprawl
+      - prevent container sprawl
+      - avoid image sprawl
+    confidence_weight: 0.79
+  - term: platform testing
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform.testing
+    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    aliases:
+      - testing
+      - tests
+      - test helpers
+      - contract tests
+      - integration tests
+      - smoke tests
+    confidence_weight: 0.72
+  - term: ci quality
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.concern.ci-quality
+    evidence_path: docs/harness/architecture/rules/concerns/ci-quality.yml
+    aliases:
+      - ci
+      - quality gates
+      - validation gates
+      - test policy
+      - check policy
+    confidence_weight: 0.7
+validation_rules:
+  - Question categories choose expected evidence families; they do not select execution workflows.
+  - Evidence-family terms are lower authority than exact corpus IDs, artifact IDs, and paths.
+  - Broad evidence-family terms must be used through evidence-bundles policy and must not cross corpus boundaries by themselves.
+  - Every new question category requires at least one selector evaluation fixture before broad use.
+refresh_policy:
+  trigger: Review after A/B evaluation finds a repeated retrieval-shape miss for a class of questions.
+  owner: 02.rag-rulebook
+  review_required_when:
+    - Adding a question category.
+    - Adding a broad evidence-family term.
+    - Increasing confidence weight.
+    - Mapping a question category to side-effecting workflow behavior.

@@ -1,0 +1,291 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.retrieval-policy-pack
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 schema for evolvable retrieval selector policy packs.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.retrieval-selector-policy-system
+#       path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.script.validate-retrieval-policy-pack
+#       path: scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh
+
+schema: rag-rulebook-retrieval-policy-pack-schema/v1
+policy_pack_schema: rag-rulebook/retrieval-policy-pack/v1
+policy_dimension_schema: rag-rulebook/retrieval-policy-dimension/v1
+
+purpose: Define the versioned policy-pack shape used by a retrieval selector to choose small, accurate, validated context packets.
+
+principles:
+  - Keep retrieval behavior configurable through governed policy artifacts.
+  - Treat deterministic metadata, paths, corpus ownership, and graph edges as first-class signals.
+  - Make every dimension explicit so policy changes can be reviewed and tested.
+  - Preserve stop conditions, required checks, citations, and provenance through trimming.
+  - Report gaps when retrieval confidence or governance coverage is insufficient.
+
+teaching_policy:
+  - Use `field_guide` entries to explain field meaning and rules.
+  - Keep conceptual selector behavior in the companion standard.
+  - Prefer structured policy fields over prose-only instructions.
+
+required_fields:
+  - schema
+  - policy_pack_id
+  - version
+  - status
+  - applies_to
+  - change_reason
+  - dimensions
+  - precedence
+  - thresholds
+  - validation
+  - evolution
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/retrieval-policy-pack/v1
+
+  policy_pack_id:
+    type: string
+    format: lower-dot-id
+
+  version:
+    type: integer
+    minimum: 1
+
+  status:
+    type: enum
+    allowed_values:
+      - draft
+      - active
+      - superseded
+      - retired
+
+  supersedes:
+    type: string
+
+  change_reason:
+    type: string
+
+  applies_to:
+    type: object
+    required_fields:
+      - selector_version
+      - context_packet_schema
+      - chunk_set_schema
+      - corpus_ids
+    fields:
+      selector_version:
+        type: string
+      context_packet_schema:
+        type: string
+        allowed_values:
+          - rag-rulebook/context-packet/v1
+      chunk_set_schema:
+        type: string
+        allowed_values:
+          - rag-rulebook/chunk-set/v1
+      index_schema:
+        type: string
+      corpus_ids:
+        type: array
+        items:
+          type: string
+      layer_modes:
+        type: array
+        items:
+          type: string
+      workflows:
+        type: array
+        items:
+          type: string
+
+  dimensions:
+    type: array
+    min_items: 1
+    item:
+      type: object
+      required_fields:
+        - id
+        - path
+      fields:
+        id:
+          type: enum
+          allowed_values:
+            - prompt
+            - request-context
+            - evidence-bundles
+            - retrieval-strategy
+            - session-metadata
+            - layer-mode-workflow
+            - focused-paths
+            - corpus-ownership
+            - rule-graph
+            - required-checks
+            - stop-conditions
+            - token-budget
+            - confidence-thresholds
+            - validation-handoff
+            - semantic-recall
+        path:
+          type: string
+          references_schema: rag-rulebook/retrieval-policy-dimension/v1
+
+  precedence:
+    type: array
+    min_items: 1
+    item:
+      type: object
+      required_fields:
+        - rank
+        - rule
+        - reason
+      fields:
+        rank:
+          type: integer
+          minimum: 1
+        rule:
+          type: string
+        reason:
+          type: string
+
+  thresholds:
+    type: object
+    fields:
+      max_context_tokens:
+        type: integer
+        minimum: 1
+      max_selected_chunks:
+        type: integer
+        minimum: 1
+      min_intent_confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+      min_routing_confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+      min_retrieval_confidence:
+        type: number
+        minimum: 0
+        maximum: 1
+      semantic_recall_enabled:
+        type: boolean
+
+  validation:
+    type: object
+    required_fields:
+      - required_checks
+      - smoke_fixtures
+    fields:
+      required_checks:
+        type: array
+        items:
+          type: string
+      smoke_fixtures:
+        type: array
+        items:
+          type: string
+      validator_scripts:
+        type: array
+        items:
+          type: string
+
+  evolution:
+    type: object
+    required_fields:
+      - compatible_change_types
+      - review_required_when
+    fields:
+      compatible_change_types:
+        type: array
+        items:
+          type: string
+      review_required_when:
+        type: array
+        items:
+          type: string
+      breaking_change_policy:
+        type: string
+
+field_guide:
+  - path: schema
+    what_it_is: The schema ID for this policy-pack document.
+    what_it_does: Lets validators and selectors know which contract to enforce.
+    rules:
+      - Must be `rag-rulebook/retrieval-policy-pack/v1`.
+
+  - path: policy_pack_id
+    what_it_is: Stable ID for the policy pack.
+    what_it_does: Lets context-packet provenance identify which policy selected context.
+    rules:
+      - Should be stable across edits to the same policy line.
+      - Should change when policy ownership or major behavior changes.
+
+  - path: status
+    what_it_is: Lifecycle state for the policy pack.
+    what_it_does: Prevents draft or retired policies from silently driving retrieval.
+    rules:
+      - Active selectors should use `active` policy packs unless explicitly testing.
+
+  - path: applies_to
+    what_it_is: The selector, packet, chunk, index, corpus, and workflow scope.
+    what_it_does: Prevents a policy pack from being used against incompatible inputs.
+    rules:
+      - Must name the context-packet and chunk-set schemas.
+      - Must name supported corpora.
+
+  - path: dimensions
+    what_it_is: The import manifest for the multi-dimensional instruction set.
+    what_it_does: Lets prompt, session, path, corpus, graph, checks, stops, budget, and confidence mature independently in their own dimension files while the policy pack remains one active selector contract.
+    rules:
+      - Must include every required dimension ID exactly once.
+      - Each entry must point to a `rag-rulebook/retrieval-policy-dimension/v1` file.
+      - Dimension behavior belongs in imported files, not inline prose-only notes.
+
+  - path: precedence
+    what_it_is: Ordered conflict-resolution rules.
+    what_it_does: Explains which policy wins when dimensions disagree.
+    rules:
+      - Stop conditions must rank above retrieval scores.
+      - Required checks must outrank budget trimming.
+
+  - path: thresholds
+    what_it_is: Numeric and boolean limits used by the selector.
+    what_it_does: Keeps context size and confidence behavior tunable without code changes.
+    rules:
+      - Lowering confidence thresholds requires review.
+      - Increasing token budget requires review.
+
+  - path: validation
+    what_it_is: Checks and fixtures required before a policy pack is trusted.
+    what_it_does: Connects policy changes to deterministic proof.
+    rules:
+      - Must include at least one smoke fixture or validator requirement.
+
+  - path: evolution
+    what_it_is: Rules for changing the policy pack over time.
+    what_it_does: Distinguishes safe tuning from breaking retrieval behavior.
+    rules:
+      - Breaking changes should create a new version or schema.

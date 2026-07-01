@@ -1,0 +1,68 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.required-checks
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Define how required checks are preserved through retrieval and trimming.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.schema.retrieval-policy-dimension
+#       path: .agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: required-checks
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Preserve checks that must be performed before acting.
+required_inputs:
+  - Workflow required gates.
+  - Rule-pack required checks.
+  - Policy validation requirements.
+  - Selected chunks and citations.
+expected_actions:
+  - Promote required checks from rule packs and workflows into packet required_checks.
+  - Keep checks even when the source chunk would otherwise be trimmed.
+  - Cite every required check.
+  - Preserve check order when the source workflow defines an order.
+banned_actions:
+  - Do not trim required checks to satisfy token budget.
+  - Do not emit required checks without resolvable citations.
+  - Do not merge optional guidance into required checks.
+  - Do not mark a packet ready when required checks are unresolved.
+output_obligations:
+  - required_checks
+  - required_check_citations
+  - required_check_source_chunks
+  - unresolved_required_checks
+gap_or_stop_conditions:
+  - Stop when a required check cannot be cited.
+  - Add a validation gap when required checks conflict or duplicate with different meanings.
+ranking_effects:
+  - Required checks outrank optional context.
+  - Required checks survive token trimming.
+  - Chunks containing required checks receive mandatory retention.
+validation_examples:
+  - name: required check survives trimming
+    given: Token budget is tight and a selected workflow has required checks.
+    expect: Optional context is removed before required checks.
+  - name: unresolved citation blocks packet
+    given: A required check has no citation.
+    expect: Packet validation fails or selector reports a blocking gap.
+can_change_by:
+  - Add task-specific checks.
+  - Add risk-specific checks.
+  - Add source-specific check ordering.

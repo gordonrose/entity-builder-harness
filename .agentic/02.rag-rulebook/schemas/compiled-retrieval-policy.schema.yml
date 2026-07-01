@@ -1,0 +1,158 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.compiled-retrieval-policy
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 compiled retrieval policy artifact consumed by local and hosted selector runtimes.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.standard.retrieval-selector-policy-system
+#       path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+#     - id: rag-rulebook.script.compile-retrieval-policy
+#       path: scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+
+schema: rag-rulebook-compiled-retrieval-policy-schema/v1
+compiled_policy_schema: rag-rulebook/compiled-retrieval-policy/v1
+
+purpose: Define the runtime artifact produced from governed retrieval policy, dimensions, recognition sources, corpus ownership, and rule graph metadata.
+
+principles:
+  - Compile governed policy into a deterministic runtime input before selector execution.
+  - Keep selector code from duplicating precedence, intent resolution, evidence bundles, or corpus routing constants.
+  - Preserve provenance and fingerprints for every source that shaped compiled behavior.
+  - Allow local runtimes, hosted APIs, and MCP adapters to load the same compiled contract.
+
+required_fields:
+  - schema
+  - compiled_policy_id
+  - generated_at
+  - compiler
+  - policy_pack
+  - dimensions
+  - precedence
+  - thresholds
+  - intent_resolution
+  - evidence_bundles
+  - retrieval_strategy
+  - recognition_sources
+  - corpus_ownership
+  - rule_graph
+  - feature_flags
+  - input_fingerprints
+  - content_hash
+  - provenance
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/compiled-retrieval-policy/v1
+
+  compiled_policy_id:
+    type: string
+    format: stable-content-id
+
+  generated_at:
+    type: string
+    format: iso-8601-utc
+
+  compiler:
+    type: object
+    required_fields:
+      - id
+      - version
+      - path
+
+  policy_pack:
+    type: object
+    required_fields:
+      - policy_pack_id
+      - version
+      - status
+      - path
+
+  dimensions:
+    type: array
+    description: Imported dimension metadata and runtime-relevant structured fields.
+
+  precedence:
+    type: array
+    description: Validated precedence rules from the active policy pack.
+
+  thresholds:
+    type: object
+    description: Runtime threshold values copied from governed policy.
+
+  intent_resolution:
+    type: object
+    required_fields:
+      - default_intent_id
+      - precedence
+      - labels
+    rules:
+      - Intent precedence must come from governed policy dimensions, not selector constants.
+      - Every precedence intent should be known to curated intent-form recognition terms or the default intent.
+
+  evidence_bundles:
+    type: array
+    rules:
+      - Evidence bundles must come from governed evidence-bundles policy.
+      - Every source path must resolve or be reported as a compilation error.
+
+  retrieval_strategy:
+    type: object
+    required_fields:
+      - strategy_id
+      - stages
+    description: Ordered staged retrieval strategy compiled from governed retrieval-strategy policy.
+    rules:
+      - Runtime selector code must use this stage order when reporting selector trace behavior.
+      - Stage IDs must remain stable enough for evaluation fixtures to assert them.
+
+  recognition_sources:
+    type: object
+    required_fields:
+      - sources
+      - counts
+    rules:
+      - Generated and curated sources must be included or referenced with content fingerprints.
+      - Runtime prompt recognition should use this compiled source set instead of scanning the repo.
+
+  corpus_ownership:
+    type: object
+    description: Corpus packages and path ownership metadata from the rulebook index.
+
+  rule_graph:
+    type: object
+    description: Rule graph edge metadata used by bounded graph expansion.
+
+  feature_flags:
+    type: object
+    rules:
+      - Semantic recall must remain disabled unless policy explicitly enables it.
+
+  input_fingerprints:
+    type: object
+    description: Hashes of policy, dimensions, recognition sources, schemas, index, and compiler inputs.
+
+  content_hash:
+    type: string
+    format: sha256
+
+  provenance:
+    type: object
+    rules:
+      - Must identify validator reports and source file paths used to produce the compiled policy.

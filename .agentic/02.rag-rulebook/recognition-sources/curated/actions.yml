@@ -1,0 +1,118 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.recognition-source.curated.actions
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: recognition-source
+#   purpose: Curated lookup source for reviewed action words that describe requested operations.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-recognition-sources
+#       path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+
+schema: rag-rulebook/recognition-source/v1
+source_id: recognition.curated.actions
+version: 1
+status: active
+source_kinds:
+  - action-verb
+generation_mode: curated
+owner_layer: 02.rag-rulebook
+purpose: Recognize reviewed action vocabulary so prompt intent can influence selector ranking without changing governed routing.
+match_priority: 40
+used_by_dimensions:
+  - prompt
+  - required-checks
+  - validation-handoff
+terms:
+  - term: add
+    category: action-verb
+    match_type: exact
+    canonical_id: action.add
+    aliases:
+      - adding
+    confidence_weight: 0.8
+  - term: create
+    category: action-verb
+    match_type: exact
+    canonical_id: action.create
+    aliases:
+      - creating
+    confidence_weight: 0.8
+  - term: update
+    category: action-verb
+    match_type: exact
+    canonical_id: action.update
+    aliases:
+      - updating
+    confidence_weight: 0.8
+  - term: move
+    category: action-verb
+    match_type: exact
+    canonical_id: action.move
+    aliases:
+      - moving
+      - migrate
+      - migrating
+    confidence_weight: 0.8
+  - term: split
+    category: action-verb
+    match_type: exact
+    canonical_id: action.split
+    aliases:
+      - splitting
+    confidence_weight: 0.8
+  - term: generate
+    category: action-verb
+    match_type: exact
+    canonical_id: action.generate
+    aliases:
+      - generating
+    confidence_weight: 0.8
+  - term: validate
+    category: action-verb
+    match_type: exact
+    canonical_id: action.validate
+    aliases:
+      - evaluating
+    confidence_weight: 0.85
+  - term: evaluate
+    category: action-verb
+    match_type: exact
+    canonical_id: action.validate
+    aliases:
+      - evaluation
+    confidence_weight: 0.85
+  - term: retire
+    category: action-verb
+    match_type: exact
+    canonical_id: action.retire
+    aliases:
+      - retiring
+    confidence_weight: 0.75
+validation_rules:
+  - Action terms can influence ranking and checks, but cannot select a layer or corpus alone.
+  - Broad actions must not create write permission or destructive-action approval.
+  - Destructive or irreversible actions require separate stop-condition policy before activation.
+refresh_policy:
+  trigger: Review when selector fixtures repeatedly need an action word that is not recognized.
+  owner: 02.rag-rulebook
+  review_required_when:
+    - Adding an action that implies destructive work.
+    - Adding an action that maps to deployment, release, or infrastructure behavior.
+    - Increasing confidence weight.
+    - Adding aliases that could also be domain nouns.

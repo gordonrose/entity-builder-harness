@@ -3,7 +3,7 @@
   id: education.workflows.mine-daily-learning-material
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic

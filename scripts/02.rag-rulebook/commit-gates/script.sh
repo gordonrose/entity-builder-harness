@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.script.commit-gates
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: validation
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: script
+#   purpose: Run RAG/rulebook layer commit-boundary validation when the layer is present.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   effects:
+#     - read-only
+#   used_by:
+#     - id: chat.script.session-log.prepare-chat-session-before-commit
+#       path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+#     - id: rag-rulebook.script.commit-gates.readme
+#       path: scripts/02.rag-rulebook/commit-gates/README.md
+#     - id: rag-rulebook.script.commit-gates.smoke-test
+#       path: scripts/02.rag-rulebook/commit-gates/smoke-test.sh
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+LAYER_DIR=".agentic/02.rag-rulebook"
+
+if [ ! -d "$LAYER_DIR" ]; then
+  echo "RAG/rulebook layer absent; skipping RAG/rulebook commit gates."
+  exit 0
+fi
+
+require_executable() {
+  local path="$1"
+
+  if [ ! -x "$path" ]; then
+    echo "ERROR: required RAG/rulebook gate is missing or not executable: $path" >&2
+    exit 1
+  fi
+}
+
+require_executable "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh"
+bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh --current --json >/dev/null
+echo "RAG/rulebook retrieval policy pack is valid."
+
+require_executable "scripts/02.rag-rulebook/validate-yaml-syntax/script.sh"
+bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+echo "RAG/rulebook governed YAML syntax is valid."
+
+if [ -d "$LAYER_DIR/recognition-sources" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-recognition-sources/script.sh"
+  bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+  echo "RAG/rulebook recognition sources are valid."
+fi
+
+if [ -d "$LAYER_DIR/recognition-candidates" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh"
+  bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh --current
+  echo "RAG/rulebook recognition candidates are valid."
+fi
+
+if [ -d "$LAYER_DIR/derivation-reports" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-derivation-reports/script.sh"
+  bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+  echo "RAG/rulebook source derivation reports are valid."
+fi
+
+if [ -d "$LAYER_DIR/source-material-reviews" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh"
+  bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current
+  echo "RAG/rulebook OKF source-material reviews are valid."
+fi
+
+if [ -d "$LAYER_DIR/retirements" ]; then
+  require_executable "scripts/02.rag-rulebook/validate-retirement-records/script.sh"
+  bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+  echo "RAG/rulebook retirement records are valid."
+fi
+
+require_executable "scripts/02.rag-rulebook/check-corpus-root-changes/script.sh"
+bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current >/dev/null
+echo "RAG/rulebook corpus root changes are valid."
+
+if [ -d "$LAYER_DIR/source-projections" ]; then
+  require_executable "scripts/02.rag-rulebook/check-source-projections/script.sh"
+  bash scripts/02.rag-rulebook/check-source-projections/script.sh --current >/dev/null
+  echo "RAG/rulebook source projections are valid."
+
+  require_executable "scripts/02.rag-rulebook/generate-derived-rules/script.sh"
+  bash scripts/02.rag-rulebook/generate-derived-rules/script.sh --current --check >/dev/null
+  echo "RAG/rulebook derived rule projection plan is current."
+
+  require_executable "scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh"
+  bash scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh --current --json >/dev/null
+  echo "RAG/rulebook source-to-rule work order is valid."
+
+  require_executable "scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh"
+  bash scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/script.sh --current --json >/dev/null
+  echo "RAG/rulebook source-to-rule draft packet is valid."
+fi
+
+require_executable "scripts/02.rag-rulebook/check-source-material-coverage/script.sh"
+bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current >/dev/null
+echo "RAG/rulebook source material coverage is valid."
+
+if [ -d "$LAYER_DIR/recognition-sources/generated" ]; then
+  require_executable "scripts/02.rag-rulebook/generate-recognition-sources/script.sh"
+  bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+  echo "RAG/rulebook generated recognition sources are current."
+fi
+
+require_executable "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh >/dev/null
+echo "RAG/rulebook retrieval selector fixture is valid."
+
+require_executable "scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh"
+bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh >/dev/null
+echo "RAG/rulebook retrieval selector evaluations passed."
+
+require_executable "scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh"
+bash scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh >/dev/null
+echo "RAG/rulebook compiled retrieval policy smoke passed."
+
+require_executable "scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh"
+bash scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh >/dev/null
+echo "RAG/rulebook local runtime build smoke passed."
+
+require_executable "scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-runtime-freshness/smoke-test.sh >/dev/null
+echo "RAG/rulebook local runtime freshness smoke passed."
+
+if [ -d "infra" ]; then
+  require_executable "scripts/04.deploy/validate-container-boundaries/script.sh"
+  bash scripts/04.deploy/validate-container-boundaries/script.sh --json >/dev/null
+  echo "Deploy container boundaries are valid."
+
+  require_executable "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+  bash scripts/04.deploy/validate-container-boundaries/smoke-test.sh >/dev/null
+  echo "Deploy container boundary smoke passed."
+fi
+
+require_executable "scripts/02.rag-rulebook/check-source-projections/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-source-projections/smoke-test.sh >/dev/null
+echo "RAG/rulebook source projection smoke passed."
+
+require_executable "scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-derived-rules/smoke-test.sh >/dev/null
+echo "RAG/rulebook derived rule projection smoke passed."
+
+require_executable "scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh >/dev/null
+echo "RAG/rulebook source-to-rule work-order smoke passed."
+
+require_executable "scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh"
+bash scripts/02.rag-rulebook/generate-source-to-rule-draft-packet/smoke-test.sh >/dev/null
+echo "RAG/rulebook source-to-rule draft packet smoke passed."
+
+require_executable "scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh >/dev/null
+echo "RAG/rulebook source material coverage smoke passed."
+
+require_executable "scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh"
+bash scripts/02.rag-rulebook/validate-retirement-records/smoke-test.sh >/dev/null
+echo "RAG/rulebook retirement record smoke passed."
+
+require_executable "scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh"
+bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh >/dev/null
+echo "RAG/rulebook OKF source-material review smoke passed."
+
+require_executable "scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh >/dev/null
+echo "RAG/rulebook corpus root change smoke passed."
+
+require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
+bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null
+echo "RAG/rulebook local context query smoke passed."
+
+echo "RAG/rulebook commit gates passed."

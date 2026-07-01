@@ -63,6 +63,7 @@ example.
 | lifecycle automation | hook |
 | behavior regression protection | eval |
 | reusable output or document shape | template |
+| machine-readable field or packet contract | schema |
 | canonical few-shot sample | example |
 | durable session state | session log |
 | durable architecture decision | ADR |
@@ -202,12 +203,35 @@ support dry-run mode first.
   instruction-following, or agent/tool behavior.
 - Include fixtures or examples with expected outcomes.
 - Keep subjective evaluation criteria explicit and reviewable.
+- Follow `.agentic/01.harness/standards/evaluation-fixtures.md` for fixture
+  fields, ownership, update rules, and pass/fail governance.
 
 ### Template
 
 - Encode repeated document or output shape.
 - Avoid embedding rules that are already owned by standards.
 - Keep placeholders obvious and minimal.
+
+### Schema
+
+- Encode machine-readable field, packet, manifest, index, or config contracts.
+- New or materially changed schema artifacts should include structured field
+  explanations such as `field_guide` entries with:
+  - field path
+  - what the field is
+  - what the field does
+  - rules or validation expectations
+- Do not rely on YAML comments as the only explanation for schema fields.
+  Comments are useful for maintainers, but parsed tools and RAG indexes cannot
+  reliably use them.
+- Include validation rules in structured data when the rule can be expressed as
+  a deterministic check.
+- Pair each new schema with a companion guide unless the schema is trivial or
+  the owning standard explicitly explains why a guide is unnecessary.
+- The companion guide should explain the mental model, field families, good and
+  bad examples, and how an agent or tool should use the schema.
+- Link the schema and guide through metadata and the relevant layer README or
+  capability index.
 
 ### Example
 
@@ -315,6 +339,8 @@ Add deterministic validation when a rule can be checked without judgment.
 - Validate destructive scripts for dry-run support.
 - Validate references to scripts, gates, workflows, templates, and examples
   when broken references would block future work.
+- Validate schema field guides, companion guides, and schema-guide references
+  after the schema artifact pattern is stable enough to enforce.
 
 Do not add validation for subjective quality until the expected behavior can be
 expressed as fixtures, examples, or clear pass/fail checks.

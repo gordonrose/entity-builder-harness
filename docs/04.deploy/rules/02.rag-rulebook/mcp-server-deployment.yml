@@ -1,0 +1,335 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.02-rag-rulebook.mcp-server-deployment
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: rule
+#   purpose: Define structured deploy rules for RAG/rulebook MCP server deployment through GitHub and AWS.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#     path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+#   - id: deploy.source-material.mcp-server-deployment
+#     path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+id: concern.rag-rulebook-mcp-server-deployment
+title: RAG/rulebook MCP server deployment rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 02.rag-rulebook
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-27T07:15:43Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+  source_material:
+    - path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+      sha256: 3a157d90a185c1e1c92fee76ba507d0cd195f24b59ad2a8c532b0bf47b39de2f
+
+description: >
+  Rules for deploying RAG/rulebook capabilities behind an MCP server through
+  GitHub and AWS without bypassing corpus readiness, deploy governance,
+  approval boundaries, security requirements, observability, or rollback
+  expectations.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+  - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+  - .agentic/aws/workflows/plan-aws-change.md
+  - .agentic/aws/workflows/execute-approved-aws-change.md
+
+applies_to:
+  paths:
+    - "docs/04.deploy/**"
+    - ".agentic/aws/**"
+    - ".agentic/02.rag-rulebook/**"
+    - "scripts/02.rag-rulebook/**"
+    - ".github/workflows/**"
+
+rules:
+  - id: mcp-server-deployment.local-rag-precedes-hosted-rag
+    title: Local RAG proves behavior before hosted RAG deployment
+    severity: error
+    summary: >
+      The repo must prove deterministic local RAG behavior before attempting a
+      hosted RAG service or MCP server deployment.
+    must:
+      - "Build and query the local RAG/rulebook runtime before designing hosted deployment."
+      - "Keep generated recognition sources, indexes, chunks, context packets, and selector evaluations reproducible."
+      - "Use local RAG as authoritative for uncommitted corpus changes."
+      - "Emit explicit gaps when local RAG cannot answer with validated context."
+    must_not:
+      - "Do not deploy hosted RAG before local runtime behavior and deploy corpus checks are proven."
+      - "Do not treat source material as selectable retrieval coverage before structured rules, chunks, and selector evaluations exist."
+      - "Do not add embeddings or hosted dependencies as a substitute for deterministic local proof."
+    required_checks:
+      - "Run the local RAG/runtime build command."
+      - "Run a local context query for the target deployment prompt."
+      - "Run retrieval selector evaluations."
+    agent_guidance: >
+      Local proof is the first gate. If the local runtime cannot explain the
+      deployment request with citations and gaps, hosted deployment planning is
+      premature.
+
+  - id: mcp-server-deployment.publishes-versioned-corpus-packages
+    title: Remote RAG serves published corpus packages
+    severity: error
+    summary: >
+      A remote RAG/rulebook service should serve committed, versioned corpus
+      packages rather than reading a developer's local working tree live.
+    must:
+      - "Publish corpus packages from committed GitHub state."
+      - "Record corpus version, commit SHA, content hash, generated index version, and chunk version."
+      - "Require remote context packets to identify the corpus versions they used."
+      - "Emit a stale-corpus gap when local repo state is ahead of the remote published corpus and local fallback is not selected."
+    must_not:
+      - "Do not let a remote RAG service silently read or depend on an uncommitted local working tree."
+      - "Do not answer from remote corpus state when the requested change depends on unpublished local source material."
+      - "Do not merge deploy, product, chat, and RAG/rulebook corpora into one unversioned context pool."
+    required_checks:
+      - "Compare local commit SHA against remote corpus version before relying on remote RAG."
+      - "Verify generated corpus outputs are current before publishing."
+    agent_guidance: >
+      Remote RAG is authoritative for published corpus; local RAG is
+      authoritative for uncommitted corpus changes.
+
+  - id: mcp-server-deployment.returns-validated-context-packets
+    title: Remote RAG returns validated context packets
+    severity: error
+    summary: >
+      The deployed RAG/rulebook service should be a context provider that
+      returns small, cited, validated context packets.
+    must:
+      - "Accept request text, repo id, commit SHA, session layer, mode, workflow, focused paths, token budget, and corpus expectations."
+      - "Return selected chunks, citations, required checks, stop conditions, confidence, budgets, provenance, and gaps."
+      - "Validate packet schema before returning the response to a client or agent."
+      - "Prefer explicit missing-corpus, stale-corpus, or unsupported-action gaps over broad context dumps."
+    must_not:
+      - "Do not make the RAG service an autonomous deployment actor."
+      - "Do not return uncited long-form context when a small validated packet can answer."
+      - "Do not hide low confidence or missing coverage from the caller."
+    required_checks:
+      - "Validate the context packet schema."
+      - "Verify every selected chunk has a citation."
+      - "Verify required checks and stop conditions are present for deploy-related packets."
+    agent_guidance: >
+      The RAG service informs the agent. The current workflow still governs
+      whether the agent may plan, edit, ask for approval, or stop.
+
+  - id: mcp-server-deployment.exposes-read-only-mcp-first
+    title: MCP deployment starts with read-only exposure
+    severity: error
+    summary: >
+      The first production-safe MCP server surface should expose read-only
+      resources and prompts before any write-capable or deploy-capable tools.
+    must:
+      - "Expose context packet lookup, corpus gap listing, corpus version inspection, and deployment-readiness inspection as read-only capabilities first."
+      - "Keep planning prompts separate from executable tools."
+      - "Document authentication, authorization, consent, and audit expectations before remote MCP exposure."
+      - "Version every resource, prompt, and future tool contract."
+    must_not:
+      - "Do not expose shell, GitHub mutation, AWS mutation, deploy, or destructive tools in the first MCP deployment surface."
+      - "Do not hide write behavior behind a prompt or resource endpoint."
+      - "Do not expose public endpoints before auth, audit, and network boundaries are defined."
+    required_checks:
+      - "List exposed MCP resources and prompts."
+      - "Verify no exposed MCP operation mutates repo, GitHub, or AWS state."
+      - "Verify audit fields are defined before remote exposure."
+    agent_guidance: >
+      Read-only MCP gives us integration value while preserving governance.
+      Tool execution is a later phase with a stricter proof burden.
+
+  - id: mcp-server-deployment.governs-tool-execution-separately
+    title: MCP tools require explicit deploy governance
+    severity: error
+    summary: >
+      Any MCP tool that can write, deploy, or destroy state must be governed as
+      an executable operation with approval, typed contracts, and rollback.
+    must:
+      - "Map every tool to an owning layer, workflow, command surface, and side-effect class."
+      - "Declare typed inputs, typed outputs, allowed side effects, required checks, approval requirements, and stop conditions."
+      - "Route deploy-capable tools through `04.deploy` workflows and AWS approval rules."
+      - "Record tool calls, approvals, command results, emitted gaps, and rollback outcomes."
+    must_not:
+      - "Do not expose ad hoc shell commands as MCP tools."
+      - "Do not treat prompt recognition as approval to invoke a tool."
+      - "Do not allow write-capable or deploy-capable tools without rollback and audit behavior."
+    required_checks:
+      - "Verify the tool has a governed workflow."
+      - "Verify explicit user approval exists for write, deploy, or destructive behavior."
+      - "Verify rollback expectations are documented before production use."
+    agent_guidance: >
+      MCP tool execution raises the risk class. The correct response to missing
+      governance is a blocking gap, not best-effort execution.
+
+  - id: mcp-server-deployment.controls-github-deployments
+    title: GitHub is the release-control plane
+    severity: error
+    summary: >
+      GitHub deployment should provide visible release control, environment
+      protection, artifact provenance, and audit history.
+    must:
+      - "Use protected deployment environments for sensitive targets."
+      - "Define required reviewers, branch or tag restrictions, environment variables, environment secrets, and deployment history expectations."
+      - "Prefer OIDC-based cloud authentication over long-lived cloud credentials in GitHub secrets."
+      - "Separate build, publish corpus, deploy service, verify, and rollback jobs."
+      - "Name target environment, artifact provenance, health checks, rollback plan, and failure notifications before production deployment."
+    must_not:
+      - "Do not deploy from unprotected branches or ambiguous refs."
+      - "Do not rely on long-lived cloud credentials when short-lived OIDC credentials are available."
+      - "Do not combine build, deploy, verification, and rollback into one opaque job."
+    required_checks:
+      - "Verify GitHub environment protections before production deployment."
+      - "Verify deployable branch or tag restrictions."
+      - "Verify secret names or OIDC role assumptions without exposing secret values."
+    agent_guidance: >
+      GitHub should make deployment authorization visible. If environment
+      protections are unknown, deployment execution is blocked.
+
+  - id: mcp-server-deployment.controls-aws-runtime-boundary
+    title: AWS runtime boundary is explicit before mutation
+    severity: error
+    summary: >
+      AWS deployment must name account or profile, region, environment,
+      service target, resource ownership, health checks, and rollback before
+      mutation.
+    must:
+      - "Name AWS account or profile, region, environment, service target, and resource ownership before changing cloud state."
+      - "Use least-privilege IAM or short-lived GitHub OIDC credentials."
+      - "Document secret names or parameter names without recording secret values."
+      - "Review network exposure before public endpoints exist."
+      - "Define health checks at load balancer, service, container, and application levels where applicable."
+    must_not:
+      - "Do not mutate AWS when account, profile, region, environment, or service target is ambiguous."
+      - "Do not store secret values in source material, rules, logs, context packets, or fixtures."
+      - "Do not assume local-only safety applies to staging or production."
+    required_checks:
+      - "Verify AWS account/profile and region."
+      - "Verify target environment and service ownership."
+      - "Verify no secret values are written to repo files."
+    agent_guidance: >
+      AWS ambiguity is a stop condition. Ask for the missing boundary or update
+      the deploy corpus before execution.
+
+  - id: mcp-server-deployment.requires-observability-and-audit
+    title: Deployment is observable and auditable
+    severity: error
+    summary: >
+      Production deployment is not ready if requests, corpus versions,
+      deployment state, health, and rollback cannot be observed.
+    must:
+      - "Record RAG request id, repo id, commit SHA, corpus versions, selected chunks, citations, and emitted gaps."
+      - "Record MCP caller or client identity when available."
+      - "Record GitHub run id for deployment work."
+      - "Record AWS account/profile, region, service, deployment id, health check results, and rollback result."
+      - "Redact secrets and unrelated user or repo content from logs."
+    must_not:
+      - "Do not call deployment production-ready without enough evidence to reconstruct the decision path."
+      - "Do not log secret values, full transcripts, or unrelated repo content by default."
+      - "Do not let audit logging replace approval, validation, or rollback gates."
+    required_checks:
+      - "Verify audit fields exist before remote or production use."
+      - "Verify health check signals are named before deployment."
+      - "Verify rollback result can be recorded."
+    agent_guidance: >
+      Observability is part of deployment safety. If failure cannot be seen,
+      rollback cannot be trusted.
+
+  - id: mcp-server-deployment.defines-rollback-before-mutation
+    title: Rollback is defined before deployment mutation
+    severity: error
+    summary: >
+      Any GitHub-to-AWS deployment path must define how failure is detected,
+      which target is safe to return to, and what evidence proves rollback
+      completed.
+    must:
+      - "Name rollback target before deployment mutation."
+      - "Define failure detection signals such as deployment state, health checks, service events, or error-rate thresholds."
+      - "Define who or what initiates rollback."
+      - "Record rollback action, rollback result, and post-rollback health."
+      - "Prefer deployment mechanisms with clear rollback behavior, such as circuit breaker or blue/green approaches, when the target supports them."
+    must_not:
+      - "Do not deploy when rollback target, rollback authority, or health checks are missing."
+      - "Do not rely on manual memory of the previous deployment as the rollback plan."
+      - "Do not call a rollback complete until health checks and deployment state are verified."
+    required_checks:
+      - "Verify rollback target."
+      - "Verify failure detection signal."
+      - "Verify post-rollback health evidence."
+    agent_guidance: >
+      Rollback is designed before the change, not improvised after failure.
+
+  - id: mcp-server-deployment.blocks-on-readiness-gaps
+    title: Deployment readiness gaps block execution
+    severity: error
+    summary: >
+      Deploy planning may continue with visible gaps, but deploy execution must
+      block when required source material, rules, chunks, evaluations,
+      environment boundaries, auth, audit, health checks, or rollback are
+      missing.
+    must:
+      - "Allow planning prompts to surface nonblocking deploy corpus gaps."
+      - "Block implementation or deploy execution prompts when required deploy coverage or approvals are missing."
+      - "Name the smallest next governed step needed to close the gap."
+      - "Keep the gap visible until selector evaluations prove the target context is retrievable."
+    must_not:
+      - "Do not proceed from planning language into execution without explicit permission and required gates."
+      - "Do not treat partial source material as enough for deploy execution."
+      - "Do not hide missing `corpus.04.deploy` chunks behind RAG/rulebook planning chunks."
+    required_checks:
+      - "Verify source material, structured rules, indexed chunks, and selector evaluations for deploy execution requests."
+      - "Verify approvals before any write, deploy, or destructive action."
+    agent_guidance: >
+      The agent can explain the plan with gaps. It cannot execute the deploy
+      until the deploy corpus and workflow gates say execution is ready.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
+    sections:
+      - "Production-Grade Bar"
+      - "Desired Deployed Shape"
+      - "MCP Boundary"
+      - "Deployment Phases"
+      - "GitHub Deployment Boundary"
+      - "AWS Deployment Boundary"
+      - "Security Requirements"
+      - "Observability Requirements"
+      - "Stop Conditions"
+      - "Source-To-Rule Conversion Targets"
+  - doc: "https://modelcontextprotocol.io/specification/2025-11-25"
+    sections:
+      - "Security and Trust & Safety"
+      - "Server Features"
+  - doc: "https://docs.github.com/en/actions/concepts/security/openid-connect"
+    sections:
+      - "Overview of OpenID Connect"
+      - "Benefits of using OIDC"
+  - doc: "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-circuit-breaker.html"
+    sections:
+      - "How the Amazon ECS deployment circuit breaker detects failures"
+
+success_criteria:
+  - "The file exists at docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml."
+  - "It keeps deploy governance owned by 04.deploy while naming 02.rag-rulebook as the deploy track."
+  - "It converts source-material deployment claims into named rules, required checks, stop conditions, and rollback expectations."
+  - "It blocks deploy execution when corpus, workflow, environment, auth, audit, health, or rollback coverage is missing."
+  - "It links to deeper GitHub-to-AWS and AWS runtime boundary concerns."

@@ -1,0 +1,256 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation and drift review for the first MCP server deploy rulebook slice.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#       path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+#     - id: deploy.rules.02-rag-rulebook.mcp-server-deployment
+#       path: docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.04.deploy.2026-06-26.mcp-server-deployment
+status: needs-review
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+  summary: >
+    First deploy corpus source material for running the RAG/rulebook capability
+    behind an MCP server through local-first RAG, GitHub, and AWS.
+
+target:
+  corpus_id: corpus.04.deploy
+  owner_layer: 04.deploy
+  deploy_track: 02.rag-rulebook
+  expected_rule_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  affected_rule_paths:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+    - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  affected_rulesets: []
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
+  affected_corpus_gaps:
+    - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+
+semantic_review:
+  source_claims:
+    - claim_id: local-rag-before-hosted-rag
+      summary: Local RAG must work before hosted RAG or AWS deployment is treated as executable.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: versioned-corpus-packages
+      summary: Remote RAG should answer from published, versioned corpus packages rather than uncommitted local files.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: read-only-mcp-first
+      summary: MCP exposure begins with read-only resources, prompts, and context-packet tools before any mutation tools exist.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: deployment-boundaries
+      summary: GitHub and AWS deployment boundaries require explicit auth, audit, health checks, rollback, and stop conditions.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: github-release-control
+      summary: GitHub must provide protected release control, environment authorization, artifact provenance, and deployment history before AWS mutation.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: aws-runtime-boundaries
+      summary: AWS runtime deployment must name account or profile, region, service target, network exposure, secrets boundary, health checks, and rollback proof before mutation.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: remote-main-readiness
+      summary: Remote main deployment requires exact commit, protected release controls, required checks, trigger, and target environment before AWS mutation.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: immutable-artifact-promotion
+      summary: Deployment should promote immutable build artifacts and versioned corpus packages instead of rebuilding untraceable outputs per environment.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: supply-chain-and-secret-proof
+      summary: Production deployment needs artifact provenance, governed secret stores, and redaction boundaries for corpus, chunks, fixtures, logs, and MCP responses.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: mcp-access-control-threat-model
+      summary: Remote MCP exposure requires spec version, capability classification, access control, audit, and threat-model coverage before public use.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: cost-capacity-quotas
+      summary: Remote MCP and RAG endpoints need expected traffic, rate limits, concurrency, token budgets, quotas, budgets, scaling, throttling, and backpressure controls before exposure.
+      evidence_path: docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    - claim_id: concrete-github-to-aws-workflow
+      summary: GitHub-to-AWS deployment needs a governed workflow that names required inputs, release control, OIDC, artifact provenance, AWS target, MCP exposure, rollback, disablement, and stop conditions.
+      evidence_path: .agentic/aws/workflows/deploy-rag-rulebook-service.md
+    - claim_id: executable-readiness-manifest
+      summary: Deploy execution needs a read-only manifest verifier that fails closed until GitHub, artifact, AWS, MCP, operations, and local-check proof is complete.
+      evidence_path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    - claim_id: deploy-source-policy-and-oidc-conditions
+      summary: Deploy readiness must prove the GitHub source policy matches the ref and must name OIDC audience, subject, repository, ref, and environment conditions.
+      evidence_path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    - claim_id: planning-override-is-not-deploy-approval
+      summary: Blocked deploy-readiness reports may exit successfully only for explicit planning or explanation callers and must emit exit_overridden_for_planning.
+      evidence_path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    - claim_id: local-runtime-is-commit-gated
+      summary: Local runtime build and local context query smoke tests must pass in the RAG/rulebook commit gate because local deterministic RAG is the bridge to hosted RAG/MCP.
+      evidence_path: scripts/02.rag-rulebook/commit-gates/script.sh
+    - claim_id: mcp-spec-version-is-governed
+      summary: Deploy readiness must use a governed MCP specification version rather than any non-empty string.
+      evidence_path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    - claim_id: mcp-transport-is-enumerated
+      summary: Remote MCP transport readiness is constrained to governed transport values rather than any non-empty string.
+      evidence_path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    - claim_id: selector-does-not-authorize-deploy
+      summary: Retrieval selector packets may retrieve deploy evidence and blockers, but cannot grant deployment execution permission.
+      evidence_path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/02.rag-rulebook/rules/
+      - docs/04.deploy/source-material/
+      - docs/04.deploy/rules/
+      - .agentic/aws/workflows/
+      - .agentic/02.rag-rulebook/corpus-gaps/
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/
+      - scripts/04.deploy/
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - Deploy rules live under docs/04.deploy/rules because deployment is owned by corpus.04.deploy.
+      - The deploy track is 02.rag-rulebook because this slice deploys the RAG/rulebook capability.
+
+proposed_updates:
+  rules:
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  rule_packs: []
+  recognition_sources:
+    - .agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml
+  recognition_candidates:
+    - .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+  corpus_gaps:
+    - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml
+  notes:
+    - The structured deploy rulebook exists, generated index/chunk proof is present, and the MCP planning selector fixture now selects corpus.04.deploy chunks.
+    - GitHub-to-AWS release control and AWS runtime boundary concerns now exist as separate deploy-track rulesets.
+    - Remote-main-to-AWS deployment readiness checks now cover branch protection, runtime selection, IaC ownership, immutable artifacts, supply-chain evidence, secrets, MCP threat modeling, operations, and executable proof status.
+    - Cost, capacity, and quota controls now exist as explicit deployment readiness coverage.
+    - MCP specification references were updated to version 2025-11-25.
+    - Deploy-execution selector proof now blocks the prompt "Deploy the RAG rulebook MCP server to AWS from main." on specific deploy proof gaps.
+    - The curated intent-form source now recognizes "Deploy the" as deploy execution, with evaluation coverage.
+    - Planning, explanation, deployment-plan, and explicit no-action deploy prompts now have negative fixtures proving they do not resolve to deploy execution.
+    - Context packets now carry explicit action authorization and blocking gaps now carry selected evidence chunks and citations.
+    - Context-packet schema, guide, generator, and validator updates make final resolved intent and side-effect authorization explicit instead of requiring downstream consumers to infer deploy safety from routing status alone.
+    - Recognition-candidate schema and validator updates split MCP retrieval coverage from deploy execution readiness so covered retrieval does not imply executable deployment approval.
+    - Retrieval selector evaluator updates allow fixtures to assert resolved intent, action authorization, required blocking evidence chunks, and blocking evidence citations.
+    - GitHub-to-AWS workflow coverage is now present as a governed AWS workflow, and executable deploy checks are now present as a read-only readiness-manifest verifier.
+    - Actual deploy execution remains blocked until a concrete GitHub Actions workflow file, protected environment configuration, selected AWS runtime target, and passing target manifest exist.
+    - YAML syntax validation is now part of the RAG/rulebook commit gate so schema and rulebook YAML parse failures are caught before narrower validators.
+    - Runtime family is now constrained to governed runtime values with runtime-specific proof blocks in the deploy-readiness verifier.
+    - Deploy readiness now requires a source policy that matches the GitHub ref, named OIDC conditions, and a governed MCP transport value.
+    - Deploy readiness now requires the MCP specification version to be one of the governed allowed values.
+    - Blocked readiness reports can only exit successfully for explicit planning or explanation callers and expose exit_overridden_for_planning as a non-execution marker.
+    - Local runtime build and local context query smoke tests now run from the RAG/rulebook commit gate.
+    - Corpus gap coverage now separates GitHub-to-AWS rulebook coverage from the missing actual GitHub Actions workflow file.
+    - "Retrieval selector packets no longer have a path to `execution_allowed: true` for deploy side effects; deploy authorization remains owned by the deploy workflow, explicit approval, and readiness verifier."
+    - Side-effecting prompts with session-layer conflicts now emit blocking gaps, except valid deploy sessions may mention the deployed target layer.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+    - bash scripts/02.rag-rulebook/commit-gates/script.sh
+    - bash scripts/01.harness/check-deterministic-process-drift.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+    - bash scripts/01.harness/check-governed-script-command-drift.sh
+    - git diff --check
+    - bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/smoke-test.sh
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+    - bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
+    - bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+  checks_run:
+    - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+      result: passed
+    - command: bash scripts/02.rag-rulebook/commit-gates/script.sh
+      result: passed
+    - command: bash scripts/01.harness/check-deterministic-process-drift.sh --paths docs/04.deploy .agentic/02.rag-rulebook
+      result: passed
+    - command: bash scripts/01.harness/check-governed-script-command-drift.sh
+      result: passed
+    - command: git diff --check
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh
+      result: passed
+    - command: bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: pending
+  notes:
+    - First report created after the first deploy structured-rule slice to establish the governed shape.
+    - Keep pending until human review or a future validator confirms report shape and downstream proof.

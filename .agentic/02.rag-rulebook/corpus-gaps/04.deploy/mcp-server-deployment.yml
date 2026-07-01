@@ -1,0 +1,215 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.corpus-gap.04-deploy.mcp-server-deployment
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: corpus-gap
+#   purpose: Track missing deploy-layer corpus coverage for MCP server deployment before curated deploy guidance is safe.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#     path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+#   - id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
+#     path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+#   - id: rag-rulebook.evaluation.retrieval-selector.v1.deploy-execution-mcp-server-blocked
+#     path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+#   - id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
+#     path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+#   - id: aws.workflows.deploy-rag-rulebook-service
+#     path: .agentic/aws/workflows/deploy-rag-rulebook-service.md
+#   - id: deploy.script.verify-rag-rulebook-deploy-readiness
+#     path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+schema: rag-rulebook/corpus-gap/v1
+gap_id: gap.corpus.04.deploy.mcp-server-deployment
+status: open
+target_corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+owner_path: .agentic/aws/
+summary: >
+  MCP server deployment is covered enough for RAG/rulebook planning, first
+  deploy corpus guidance, GitHub-to-AWS workflow coverage, and read-only
+  readiness checking, but not yet enough for actual deployment execution.
+observed_prompt: How do I update my harness so we can deploy it behind an MCP server?
+match_terms:
+  - MCP server
+  - Model Context Protocol
+related_candidate:
+  candidate_id: recognition-candidate.2026-06-26.domain-noun.mcp-server
+  path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+target_question: >
+  What deploy-layer source material, rules, chunks, evaluations, checks, and
+  stop conditions are required before the harness can safely guide MCP server
+  deployment through GitHub and AWS?
+scope:
+  included:
+    - Local RAG context usage before hosted RAG deployment.
+    - GitHub-driven deployment path for harness or rulebook services.
+    - AWS environment, profile, region, account, and resource boundaries.
+    - MCP server runtime boundaries for resources, prompts, and tools.
+    - Secrets, IAM, network exposure, health checks, rollback, and audit trails.
+    - Stop conditions for missing AWS governance or unsafe deploy requests.
+  excluded:
+    - Mutating AWS resources while the gap is being documented.
+    - Storing secrets, credentials, tokens, or private keys in corpus files.
+    - Treating RAG/rulebook planning chunks as deploy-runbook proof.
+    - Building or deploying the production RAG server in this gap record.
+required_coverage:
+  source_material:
+    status: present
+    evidence_paths:
+      - docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md
+    expectation: >
+      Human-readable deployment source material explains the intended local,
+      GitHub, MCP server, and AWS deployment flow.
+  structured_rulebook:
+    status: present
+    evidence_paths:
+      - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml
+    expectation: >
+      Deploy-layer YAML rules define allowed actions, banned actions, required
+      checks, stop conditions, rollback expectations, and ownership boundaries.
+  indexed_chunks:
+    status: present
+    evidence_paths:
+      - scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      - scripts/02.rag-rulebook/validate-rulebook-index/script.sh
+    expectation: >
+      The deploy-layer rulebook content is indexed and chunked as
+      corpus.04.deploy without being mixed into corpus.02.rag-rulebook.
+  selector_evaluation:
+    status: present
+    evidence_paths:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+    expectation: >
+      Retrieval selector fixtures prove planning prompts select relevant
+      corpus.04.deploy chunks when the governed gap matches, surface the
+      remaining deploy gap, and block deploy-execution prompts with specific
+      missing deploy proof gaps.
+  local_runtime_query:
+    status: present
+    expectation: >
+      Local context queries may use this gap record to explain missing deploy
+      coverage before hosted RAG exists.
+  github_to_aws_workflow_rulebook_coverage:
+    status: present
+    evidence_paths:
+      - .agentic/aws/workflows/deploy-rag-rulebook-service.md
+      - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+    expectation: >
+      The deploy layer defines the GitHub-to-AWS workflow boundary, required
+      inputs, protected environment model, OIDC preference, artifact provenance,
+      deployment phases, rollback, disablement, and stop conditions.
+  actual_github_actions_workflow:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      A concrete .github/workflows/deploy-rag-rulebook-service.yml file still
+      needs to exist before deploy execution can be considered.
+  executable_deploy_checks:
+    status: present
+    evidence_paths:
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/README.md
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+    expectation: >
+      A read-only manifest verifier exists and fails closed unless the
+      GitHub source policy, ref, artifact, AWS, MCP transport/auth,
+      operations, and local-check fields prove deployment readiness.
+needed_outputs:
+  - .github/workflows/deploy-rag-rulebook-service.yml
+  - deploy-readiness-manifest for the selected GitHub environment and AWS runtime target
+local_query_behavior:
+  should_emit_gap: true
+  blocking: false
+  blocking_by_intent:
+    intent.planning.guidance: false
+    intent.planning.decision-support: false
+    intent.explanation.tutor: false
+    intent.discovery.explanation: false
+    intent.no-action.explanation: false
+    intent.implementation.request: true
+    intent.deploy.execution: true
+execution_blocking_gaps:
+  - id: gap.deploy.missing-aws-runtime-target
+    type: missing-reference
+    description: >
+      Deploy execution is blocked until the AWS account or profile, region,
+      service family, runtime target, network boundary, and rollback target are
+      named before mutation.
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.rag.rulebook.aws.runtime.boundaries.aws.runtime.boundaries.names.target.before.mutation
+    suggested_resolution: >
+      Add a deploy workflow/runbook step that names the selected AWS runtime
+      target and its rollback boundary before any AWS mutation.
+  - id: gap.deploy.missing-github-workflow
+    type: missing-validator
+    description: >
+      Deploy execution is blocked until an actual GitHub workflow file,
+      protected environment, OIDC role trust, artifact provenance path, and
+      deployment history path are instantiated for the selected target.
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.uses.github.as.release.control.plane
+      - chunk.rule.artifact.concern.rag.rulebook.github.to.aws.deployment.github.to.aws.deployment.has.concrete.workflow.and.readiness.manifest
+    suggested_resolution: >
+      Add the actual GitHub Actions workflow and environment configuration for
+      publishing and deploying the RAG/rulebook service.
+  - id: gap.deploy.missing-executable-deploy-checks
+    type: missing-validator
+    description: >
+      Deploy execution is blocked until a candidate deploy-readiness manifest
+      exists and scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      returns a ready report for that exact target.
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.protects.remote.main.before.deploy
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.verifies.readiness.manifest.before.execution
+    suggested_resolution: >
+      Produce a candidate deploy-readiness manifest and make the read-only
+      verifier pass before deployment execution.
+  - id: gap.deploy.missing-transport-auth-proof
+    type: missing-validator
+    description: >
+      Deploy execution is blocked until the remote MCP transport, authentication
+      model, authorization boundary, and secret placement are explicit.
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.mcp.server.deployment.architecture.mcp.server.deployment.architecture.transport.auth.model.is.explicit
+    suggested_resolution: >
+      Add deploy-ready MCP transport and auth proof before exposing the service
+      beyond local read-only usage.
+  - id: gap.deploy.missing-cost-capacity-quota-boundary
+    type: missing-validator
+    description: >
+      Deploy execution is blocked until expected traffic, rate limits,
+      concurrency, token budget, AWS quotas, budgets, and backpressure controls
+      are defined.
+    required_chunk_ids:
+      - chunk.rule.artifact.concern.rag.rulebook.deployment.readiness.checks.deployment.readiness.checks.controls.cost.capacity.and.quotas
+    suggested_resolution: >
+      Add cost, capacity, quota, and throttling proof for the selected hosted
+      RAG/MCP runtime before remote exposure.
+suggested_resolution: >
+  Add the concrete GitHub Actions workflow file, target deploy-readiness
+  manifest, and selected AWS runtime target before using this context for
+  deployment execution.
+review:
+  required: true
+  owner: 04.deploy
+  cadence: Review when MCP deployment source material, deploy rules, chunk
+    generation, or selector evaluations are added.

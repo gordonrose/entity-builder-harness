@@ -1,0 +1,872 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.schema.rulebook-index
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: schema
+#   purpose: Define the v1 rulebook index contract for current and proposed corpus rulebook artifacts.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.plan.repo
+#       path: .agentic/02.rag-rulebook/plans/repo-plan.md
+#     - id: rag-rulebook.plan.prototype-corpus-migration-map
+#       path: .agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml
+#     - id: rag-rulebook.guide.rulebook-index
+#       path: .agentic/02.rag-rulebook/guides/rulebook-index.md
+#     - id: rag-rulebook.script.generate-rulebook-index
+#       path: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+#     - id: rag-rulebook.script.validate-rulebook-index
+#       path: scripts/02.rag-rulebook/validate-rulebook-index/script.sh
+#     - id: rag-rulebook.script.generate-rulebook-chunks
+#       path: scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+
+schema: rag-rulebook-rulebook-index-schema/v1
+index_schema: rag-rulebook/rulebook-index/v1
+
+purpose: Define the catalogue a RAG/rulebook service uses to find rulebook artifacts, rules, chunks, references, corpus ownership, and migration targets.
+
+principles:
+  - Index current prototype paths and proposed corpus paths at the same time.
+  - Preserve stable metadata IDs and rulebook IDs separately from current file paths.
+  - Represent rule-pack dependencies and related rulesets as graph edges.
+  - Report unresolved references instead of silently dropping them.
+  - Keep the index deterministic and reproducible before adding embeddings or network calls.
+
+teaching_policy:
+  - Use `field_guide` entries to explain field meaning and rules.
+  - Put conceptual walkthroughs and usage examples in the companion guide.
+  - Keep migration semantics explicit so the index can prove before-and-after equivalence.
+
+required_fields:
+  - schema
+  - index_id
+  - generated_at
+  - source_roots
+  - corpus_packages
+  - artifacts
+  - rules
+  - rule_packs
+  - chunk_candidates
+  - graph_edges
+  - source_references
+  - path_mappings
+  - unresolved_references
+  - diagnostics
+  - provenance
+
+fields:
+  schema:
+    type: string
+    allowed_values:
+      - rag-rulebook/rulebook-index/v1
+
+  index_id:
+    type: string
+    format: stable-run-id
+    description: Unique identifier for one generated index snapshot.
+
+  generated_at:
+    type: string
+    format: iso-8601-utc
+
+  source_roots:
+    type: array
+    min_items: 1
+    item:
+      type: object
+      required_fields:
+        - root_id
+        - path
+        - role
+      fields:
+        root_id:
+          type: string
+        path:
+          type: string
+        role:
+          type: enum
+          allowed_values:
+            - prototype-corpus
+            - corpus-package
+            - migration-map
+            - generated-index
+        migration_status:
+          type: enum
+          allowed_values:
+            - current
+            - proposed
+            - migrated
+            - deprecated
+
+  corpus_packages:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - corpus_id
+        - owner_layer
+        - status
+      fields:
+        corpus_id:
+          type: string
+          format: numbered-corpus-id
+        owner_layer:
+          type: string
+        status:
+          type: enum
+          allowed_values:
+            - current
+            - proposed
+            - migrated
+            - deprecated
+        manifest_path:
+          type: string
+        proposed_root:
+          type: string
+        purpose:
+          type: string
+        source_root_ids:
+          type: array
+          items:
+            type: string
+
+  artifacts:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - artifact_ref
+        - artifact_type
+        - corpus_id
+        - current_path
+        - migration_status
+      fields:
+        artifact_ref:
+          type: string
+          description: Packet-local reference for this indexed artifact.
+        metadata_id:
+          type: string
+          description: Stable `agentic-artifact` metadata ID when present.
+        rulebook_id:
+          type: string
+          description: Rulebook-level `id` field when present inside YAML.
+        artifact_type:
+          type: enum
+          allowed_values:
+            - source-guide
+            - source-original
+            - adr
+            - layer-ruleset
+            - concern-ruleset
+            - rule-pack
+            - schema
+            - guide
+            - standard
+            - plan
+        title:
+          type: string
+        status:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        corpus_id:
+          type: string
+        current_path:
+          type: string
+        proposed_path:
+          type: string
+        migration_status:
+          type: enum
+          allowed_values:
+            - current
+            - target-candidate
+            - split-review-required
+            - preserve-with-source-guide
+            - migrated
+            - deprecated
+        applies_to_paths:
+          type: array
+          items:
+            type: string
+        related_ruleset_refs:
+          type: array
+          items:
+            type: string
+        required_ruleset_refs:
+          type: array
+          items:
+            type: string
+        source_ref_ids:
+          type: array
+          items:
+            type: string
+        source_derivation:
+          type: object
+          description: >
+            Optional source-to-rule provenance copied from structured YAML when
+            the artifact is a generated projection of governed source material.
+        diagnostics:
+          type: array
+          items:
+            type: string
+
+  rules:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - rule_ref
+        - rule_id
+        - artifact_ref
+        - corpus_id
+      fields:
+        rule_ref:
+          type: string
+        rule_id:
+          type: string
+        artifact_ref:
+          type: string
+        corpus_id:
+          type: string
+        title:
+          type: string
+        severity:
+          type: string
+        summary:
+          type: string
+        section_path:
+          type: string
+        source_ref_ids:
+          type: array
+          items:
+            type: string
+        chunk_candidate_ids:
+          type: array
+          items:
+            type: string
+
+  rule_packs:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - pack_ref
+        - pack_id
+        - artifact_ref
+        - corpus_id
+      fields:
+        pack_ref:
+          type: string
+        pack_id:
+          type: string
+        artifact_ref:
+          type: string
+        corpus_id:
+          type: string
+        task_type:
+          type: string
+        applies_when:
+          type: array
+          items:
+            type: string
+        required_ruleset_refs:
+          type: array
+          items:
+            type: string
+        required_checks:
+          type: array
+          items:
+            type: string
+        agent_step_ids:
+          type: array
+          items:
+            type: string
+
+  chunk_candidates:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - chunk_id
+        - artifact_ref
+        - corpus_id
+        - content_kind
+        - source_path
+      fields:
+        chunk_id:
+          type: string
+        artifact_ref:
+          type: string
+        rule_ref:
+          type: string
+        pack_ref:
+          type: string
+        corpus_id:
+          type: string
+        content_kind:
+          type: enum
+          allowed_values:
+            - artifact-summary
+            - rule
+            - rule-section
+            - rule-pack-step
+            - required-check
+            - source-reference
+            - migration-entry
+        section_path:
+          type: string
+        source_path:
+          type: string
+        token_estimate:
+          type: integer
+          minimum: 1
+        source_ref_ids:
+          type: array
+          items:
+            type: string
+        source_derivation:
+          type: object
+          description: >
+            Optional source-to-rule provenance carried forward so generated
+            chunks can identify the source material hash behind a rule.
+
+  graph_edges:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - edge_id
+        - from_ref
+        - to_ref
+        - edge_type
+      fields:
+        edge_id:
+          type: string
+        from_ref:
+          type: string
+        to_ref:
+          type: string
+        edge_type:
+          type: enum
+          allowed_values:
+            - contains-rule
+            - contains-pack
+            - contains-chunk
+            - required-ruleset
+            - related-ruleset
+            - applies-to-path
+            - cites-source
+            - proposed-migration-target
+            - belongs-to-corpus
+            - split-review-needed
+        reason:
+          type: string
+        source_ref_ids:
+          type: array
+          items:
+            type: string
+
+  source_references:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - source_ref_id
+        - source_path
+        - source_type
+      fields:
+        source_ref_id:
+          type: string
+        corpus_id:
+          type: string
+        artifact_ref:
+          type: string
+        source_path:
+          type: string
+        source_type:
+          type: enum
+          allowed_values:
+            - source-guide
+            - source-original
+            - adr
+            - rule
+            - rule-pack
+            - schema
+            - guide
+            - plan
+        line_start:
+          type: integer
+          minimum: 1
+        line_end:
+          type: integer
+          minimum: 1
+        section:
+          type: string
+
+  path_mappings:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - current_path
+        - proposed_path
+        - proposed_corpus_id
+        - migration_status
+      fields:
+        current_path:
+          type: string
+        proposed_path:
+          type: string
+        proposed_corpus_id:
+          type: string
+        migration_status:
+          type: enum
+          allowed_values:
+            - target-candidate
+            - split-review-required
+            - preserve-with-source-guide
+            - migrated
+            - deprecated
+        artifact_ref:
+          type: string
+        update_requirements:
+          type: array
+          items:
+            type: string
+
+  unresolved_references:
+    type: array
+    item:
+      type: object
+      required_fields:
+        - ref
+        - ref_type
+        - owner_ref
+        - severity
+      fields:
+        ref:
+          type: string
+        ref_type:
+          type: enum
+          allowed_values:
+            - related-ruleset
+            - required-ruleset
+            - source-reference
+            - metadata-used-by
+            - path-mapping
+            - corpus-manifest
+        owner_ref:
+          type: string
+        severity:
+          type: enum
+          allowed_values:
+            - warning
+            - error
+            - blocking
+        suggested_resolution:
+          type: string
+
+  diagnostics:
+    type: object
+    required_fields:
+      - ok
+      - counts
+      - warnings
+      - errors
+    fields:
+      ok:
+        type: boolean
+      counts:
+        type: object
+        fields:
+          corpus_packages:
+            type: integer
+            minimum: 0
+          artifacts:
+            type: integer
+            minimum: 0
+          rules:
+            type: integer
+            minimum: 0
+          rule_packs:
+            type: integer
+            minimum: 0
+          chunk_candidates:
+            type: integer
+            minimum: 0
+          graph_edges:
+            type: integer
+            minimum: 0
+          unresolved_references:
+            type: integer
+            minimum: 0
+      warnings:
+        type: array
+        items:
+          type: string
+      errors:
+        type: array
+        items:
+          type: string
+
+  provenance:
+    type: object
+    required_fields:
+      - generator
+      - generator_version
+      - inputs
+      - git_commit
+    fields:
+      generator:
+        type: string
+      generator_version:
+        type: string
+      git_commit:
+        type: string
+      inputs:
+        type: array
+        items:
+          type: object
+          required_fields:
+            - path
+            - role
+          fields:
+            path:
+              type: string
+            role:
+              type: string
+            content_hash:
+              type: string
+
+field_guide:
+  - path: schema
+    what_it_is: "The literal rulebook index schema identifier."
+    what_it_does: "Lets consumers reject unsupported index shapes."
+    rules:
+      - "Must be `rag-rulebook/rulebook-index/v1`."
+  - path: index_id
+    what_it_is: "A unique ID for one generated index snapshot."
+    what_it_does: "Lets diagnostics and comparisons refer to an exact index."
+    rules:
+      - "Must not be reused for different index contents."
+  - path: generated_at
+    what_it_is: "The UTC time when the index was generated."
+    what_it_does: "Shows freshness and helps compare before-and-after migration runs."
+    rules:
+      - "Use ISO-8601 UTC."
+  - path: source_roots
+    what_it_is: "The roots scanned or used to generate the index."
+    what_it_does: "Separates prototype corpus inputs, corpus packages, and migration maps."
+    rules:
+      - "Must include at least one root."
+  - path: source_roots[].root_id
+    what_it_is: "A packet-local source-root identifier."
+    what_it_does: "Lets artifacts and provenance refer to a scan root."
+    rules:
+      - "Must be unique within `source_roots`."
+  - path: source_roots[].path
+    what_it_is: "The repository path for the source root."
+    what_it_does: "Tells humans and tools what was scanned."
+    rules:
+      - "Use repository-relative paths."
+  - path: source_roots[].role
+    what_it_is: "The role the root played in generation."
+    what_it_does: "Distinguishes current corpus files from proposed package or generated index roots."
+    rules:
+      - "Use one of the allowed values."
+  - path: corpus_packages
+    what_it_is: "The corpus packages known to the index."
+    what_it_does: "Makes corpus ownership searchable before selecting chunks."
+    rules:
+      - "Every indexed artifact should belong to one corpus package."
+  - path: corpus_packages[].corpus_id
+    what_it_is: "The numbered corpus ID."
+    what_it_does: "Identifies the knowledge package that owns artifacts and rules."
+    rules:
+      - "Use numbered corpus vocabulary or an approved subcorpus."
+  - path: corpus_packages[].owner_layer
+    what_it_is: "The numbered layer that owns the corpus."
+    what_it_does: "Prevents path-based retrieval from crossing governance boundaries silently."
+    rules:
+      - "Must agree with the corpus manifest once a manifest exists."
+  - path: corpus_packages[].status
+    what_it_is: "Whether the corpus is current, proposed, migrated, or deprecated."
+    what_it_does: "Lets one index represent both present and future structure."
+    rules:
+      - "Use an allowed status value."
+  - path: corpus_packages[].manifest_path
+    what_it_is: "The current path to the corpus manifest."
+    what_it_does: "Lets consumers inspect source roots and retrieval policy."
+    rules:
+      - "Required once physical corpus packages exist."
+  - path: artifacts
+    what_it_is: "The artifacts discovered in the corpus or migration map."
+    what_it_does: "Creates the catalogue of rulebooks, guides, ADRs, schemas, and plans."
+    rules:
+      - "Every artifact must have an `artifact_ref`, type, corpus, current path, and migration status."
+  - path: artifacts[].artifact_ref
+    what_it_is: "The index-local reference for an artifact."
+    what_it_does: "Provides a stable target for graph edges inside this index."
+    rules:
+      - "Must be unique within `artifacts`."
+  - path: artifacts[].metadata_id
+    what_it_is: "The stable `agentic-artifact` metadata ID."
+    what_it_does: "Preserves identity across file moves."
+    rules:
+      - "Use when an artifact metadata header exists."
+  - path: artifacts[].rulebook_id
+    what_it_is: "The rulebook-level YAML `id` field."
+    what_it_does: "Preserves rulebook identity separately from metadata identity."
+    rules:
+      - "Use for YAML rulebooks and rule packs when present."
+  - path: artifacts[].artifact_type
+    what_it_is: "The kind of artifact indexed."
+    what_it_does: "Helps retrieval choose whether to use a source guide, ruleset, rule pack, schema, or plan."
+    rules:
+      - "Use one of the allowed values."
+  - path: artifacts[].corpus_id
+    what_it_is: "The corpus that owns this artifact."
+    what_it_does: "Makes retrieval and migration corpus-aware."
+    rules:
+      - "Must match a `corpus_packages[].corpus_id`."
+  - path: artifacts[].current_path
+    what_it_is: "The artifact's current repository path."
+    what_it_does: "Lets the generator prove what exists today."
+    rules:
+      - "Must exist for current-state index runs."
+  - path: artifacts[].proposed_path
+    what_it_is: "The artifact's proposed future corpus path."
+    what_it_does: "Lets migration planning compare current and target structure."
+    rules:
+      - "Use only for proposed or migrated path mappings."
+  - path: artifacts[].migration_status
+    what_it_is: "The migration state for this artifact."
+    what_it_does: "Shows whether the artifact is current, a target candidate, mixed, migrated, or deprecated."
+    rules:
+      - "Mixed concerns should use `split-review-required`."
+  - path: artifacts[].applies_to_paths
+    what_it_is: "Path globs from rulebook `applies_to.paths`."
+    what_it_does: "Supports path-based retrieval before semantic search."
+    rules:
+      - "Preserve globs exactly as authored."
+  - path: artifacts[].related_ruleset_refs
+    what_it_is: "Rulesets listed as related by this artifact."
+    what_it_does: "Creates related-ruleset graph edges."
+    rules:
+      - "Every resolvable ref should produce a graph edge."
+  - path: artifacts[].required_ruleset_refs
+    what_it_is: "Rulesets required by this artifact or rule pack."
+    what_it_does: "Creates required-ruleset graph edges."
+    rules:
+      - "Unresolved refs must appear in `unresolved_references`."
+  - path: rules
+    what_it_is: "Individual rules extracted from ruleset artifacts."
+    what_it_does: "Lets retrieval select rule-level context instead of whole files."
+    rules:
+      - "Each rule must link back to its artifact and corpus."
+  - path: rules[].rule_ref
+    what_it_is: "The index-local reference for a rule."
+    what_it_does: "Allows graph edges and chunk candidates to target one rule."
+    rules:
+      - "Must be unique within `rules`."
+  - path: rules[].rule_id
+    what_it_is: "The authored rule ID."
+    what_it_does: "Preserves the rulebook's stable rule name."
+    rules:
+      - "Must not be rewritten by path migration."
+  - path: rules[].section_path
+    what_it_is: "The structural location of the rule in its source artifact."
+    what_it_does: "Supports deterministic chunking by YAML structure."
+    rules:
+      - "Use a stable path such as `rules[3]` or a named section."
+  - path: rule_packs
+    what_it_is: "Task rule packs extracted from rule-pack artifacts."
+    what_it_does: "Lets retrieval match task workflows to required rulesets and checks."
+    rules:
+      - "Each rule pack must link to its artifact and corpus."
+  - path: rule_packs[].task_type
+    what_it_is: "The task type governed by the rule pack."
+    what_it_does: "Supports deterministic intent-to-rule-pack matching."
+    rules:
+      - "Preserve the authored `task_type` value."
+  - path: rule_packs[].required_ruleset_refs
+    what_it_is: "Rulesets the rule pack requires."
+    what_it_does: "Creates dependency edges that retrieval can expand."
+    rules:
+      - "Must resolve or be reported as unresolved."
+  - path: chunk_candidates
+    what_it_is: "Structured units that can become retrieval chunks."
+    what_it_does: "Prepares later chunk generation without arbitrary character windows."
+    rules:
+      - "Chunk candidates should come from meaningful YAML sections."
+  - path: chunk_candidates[].chunk_id
+    what_it_is: "The proposed chunk identifier."
+    what_it_does: "Allows context packets to refer to selected chunks."
+    rules:
+      - "Must be deterministic from artifact and section identity."
+  - path: chunk_candidates[].content_kind
+    what_it_is: "The kind of content represented by the chunk."
+    what_it_does: "Helps retrievers rank summaries, rules, checks, and migration entries differently."
+    rules:
+      - "Use one of the allowed values."
+  - path: graph_edges
+    what_it_is: "Relationships between indexed artifacts, rules, chunks, corpora, paths, and sources."
+    what_it_does: "Lets retrieval expand from one match to required or related context deterministically."
+    rules:
+      - "Every edge must have from, to, and type."
+  - path: graph_edges[].edge_type
+    what_it_is: "The relationship kind."
+    what_it_does: "Explains why traversal should happen."
+    rules:
+      - "Use allowed values such as `required-ruleset`, `related-ruleset`, or `contains-rule`."
+  - path: source_references
+    what_it_is: "Citable source locations used by indexed artifacts or chunks."
+    what_it_does: "Lets context packets cite retrieved context."
+    rules:
+      - "Citation IDs must be unique within the index."
+  - path: path_mappings
+    what_it_is: "Current-to-proposed path mappings from migration planning."
+    what_it_does: "Lets the same index support prototype paths and future corpus paths."
+    rules:
+      - "Each mapping must name current path, proposed path, proposed corpus, and migration status."
+  - path: unresolved_references
+    what_it_is: "References the generator could not resolve."
+    what_it_does: "Prevents broken links from disappearing during indexing."
+    rules:
+      - "Blocking unresolved refs must make diagnostics not ok."
+  - path: diagnostics
+    what_it_is: "Counts, warnings, errors, and overall index health."
+    what_it_does: "Lets CI or agents decide whether the index is safe to use."
+    rules:
+      - "`ok` must be false when errors or blocking unresolved references exist."
+  - path: provenance
+    what_it_is: "How the index was generated."
+    what_it_does: "Makes the index reproducible and comparable."
+    rules:
+      - "Must name generator, version, git commit, and input paths."
+
+validation_rules:
+  - "Every `artifacts[].corpus_id` must resolve to `corpus_packages[].corpus_id`."
+  - "Every `rules[].artifact_ref` must resolve to `artifacts[].artifact_ref`."
+  - "Every `rule_packs[].artifact_ref` must resolve to `artifacts[].artifact_ref`."
+  - "Every `chunk_candidates[].artifact_ref` must resolve to `artifacts[].artifact_ref`."
+  - "Every `graph_edges[].from_ref` and `graph_edges[].to_ref` should resolve to an indexed artifact, rule, rule pack, chunk, corpus, source reference, or path mapping."
+  - "Every related ruleset or required ruleset that cannot resolve must appear in `unresolved_references`."
+  - "Every current YAML rulebook or rule-pack artifact should appear exactly once in `artifacts`."
+  - "Every migration-map YAML artifact should have a matching `path_mappings` entry."
+  - "If `unresolved_references` contains an error or blocking entry, `diagnostics.ok` must be false."
+  - "The generator must not use embeddings, network calls, or semantic search to create this deterministic index."
+
+minimal_example:
+  schema: rag-rulebook/rulebook-index/v1
+  index_id: index.example.rulebook
+  generated_at: "2026-06-25T00:00:00Z"
+  source_roots:
+    - root_id: root.prototype
+      path: docs/harness/architecture
+      role: prototype-corpus
+      migration_status: current
+    - root_id: root.migration-map
+      path: .agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml
+      role: migration-map
+      migration_status: proposed
+  corpus_packages:
+    - corpus_id: corpus.03.product.core
+      owner_layer: 03.product
+      status: proposed
+      proposed_root: corpus.03.product.core
+      purpose: Stable product-neutral core contracts and shared primitives.
+      source_root_ids:
+        - root.prototype
+        - root.migration-map
+  artifacts:
+    - artifact_ref: artifact.layer.packages-core
+      metadata_id: harness.architecture.rules.layers.packages-core
+      rulebook_id: layer.packages-core
+      artifact_type: layer-ruleset
+      title: packages/core rules
+      status: active
+      version: 1
+      corpus_id: corpus.03.product.core
+      current_path: docs/harness/architecture/rules/layers/packages-core.yml
+      proposed_path: corpus.03.product.core/rules/layers/packages-core.yml
+      migration_status: target-candidate
+      applies_to_paths:
+        - packages/core/**
+      related_ruleset_refs:
+        - docs/harness/architecture/rules/concerns/ci-quality.yml
+        - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      required_ruleset_refs: []
+      source_ref_ids: []
+      diagnostics: []
+  rules:
+    - rule_ref: rule.packages-core.shared-foundation
+      rule_id: packages-core.shared-foundation
+      artifact_ref: artifact.layer.packages-core
+      corpus_id: corpus.03.product.core
+      title: Core contains stable shared foundations
+      severity: error
+      summary: Packages/core should contain stable shared contracts and primitives.
+      section_path: rules[0]
+      source_ref_ids: []
+      chunk_candidate_ids:
+        - chunk.rule.packages-core.shared-foundation
+  rule_packs: []
+  chunk_candidates:
+    - chunk_id: chunk.rule.packages-core.shared-foundation
+      artifact_ref: artifact.layer.packages-core
+      rule_ref: rule.packages-core.shared-foundation
+      corpus_id: corpus.03.product.core
+      content_kind: rule
+      section_path: rules[0]
+      source_path: docs/harness/architecture/rules/layers/packages-core.yml
+      token_estimate: 80
+      source_ref_ids: []
+  graph_edges:
+    - edge_id: edge.artifact.layer-packages-core.belongs-to-corpus
+      from_ref: artifact.layer.packages-core
+      to_ref: corpus.03.product.core
+      edge_type: belongs-to-corpus
+      reason: Migration map proposes packages-core rules for the core corpus.
+      source_ref_ids: []
+  source_references: []
+  path_mappings:
+    - current_path: docs/harness/architecture/rules/layers/packages-core.yml
+      proposed_path: corpus.03.product.core/rules/layers/packages-core.yml
+      proposed_corpus_id: corpus.03.product.core
+      migration_status: target-candidate
+      artifact_ref: artifact.layer.packages-core
+      update_requirements:
+        - Update related ruleset paths after move.
+        - Preserve metadata ID unless the artifact splits.
+  unresolved_references: []
+  diagnostics:
+    ok: true
+    counts:
+      corpus_packages: 1
+      artifacts: 1
+      rules: 1
+      rule_packs: 0
+      chunk_candidates: 1
+      graph_edges: 1
+      unresolved_references: 0
+    warnings: []
+    errors: []
+  provenance:
+    generator: manual-schema-example
+    generator_version: design-only
+    git_commit: unknown
+    inputs:
+      - path: docs/harness/architecture/rules/layers/packages-core.yml
+        role: prototype-ruleset

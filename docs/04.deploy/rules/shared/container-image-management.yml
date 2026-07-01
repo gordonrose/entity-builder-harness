@@ -1,0 +1,204 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.shared.container-image-management
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   - security
+#   kind: rule
+#   purpose: Define shared container image management rules that prevent deployable image sprawl.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: deploy.source-material.shared.container-image-management
+#     path: docs/04.deploy/source-material/shared/container-image-management.md
+#   - id: deploy.script.validate-container-boundaries
+#     path: scripts/04.deploy/validate-container-boundaries/script.sh
+id: concern.container-image-management
+title: Shared container image management rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-06-30T00:00:00Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+  source_material:
+    - path: docs/04.deploy/source-material/shared/container-image-management.md
+      sha256: f6f224ce56fb55b65fc575502454a68a81da368273d56fc1aa5eb78f2d80d221
+
+description: >
+  Shared rules for placing, naming, validating, and governing container image
+  definitions so deployable image behavior does not sprawl across the repo.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/infra.yml
+  - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
+  - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+
+applies_to:
+  paths:
+    - "infra/**"
+    - ".github/workflows/**"
+    - "scripts/04.deploy/**"
+    - "scripts/02.rag-rulebook/**"
+    - "docs/04.deploy/**"
+
+rules:
+  - id: container-image-management.uses-infra-image-boundary
+    title: Container definitions stay under infra image boundaries
+    severity: error
+    summary: >
+      Dockerfiles and deployable image definitions must live under a governed
+      infra image directory so agents and deploy checks do not have to guess
+      which container artifacts are real.
+    must:
+      - "Place deployable Dockerfiles at infra/<deploy-layer>/<deploy-track>/image/Dockerfile."
+      - "Keep service source code in the owning service layer; use the image directory for packaging boundaries."
+      - "Keep live GitHub workflow files in .github/workflows/ while keeping reviewed image definitions under infra/**."
+      - "Add a sibling README.md and an effective ignore file when a Dockerfile is added."
+    must_not:
+      - "Do not add Dockerfiles under .agentic/**, docs/**, scripts/**, apps/**, platform/**, packages/**, or the repo root."
+      - "Do not create multiple competing Dockerfiles for the same deploy track without a reviewed exception."
+      - "Do not treat a documentation-only Docker snippet as deployable infrastructure."
+    required_checks:
+      - "Run scripts/04.deploy/validate-container-boundaries/script.sh."
+      - "Verify every Dockerfile path is under infra/<deploy-layer>/<deploy-track>/image/Dockerfile."
+      - "Verify every Dockerfile has sibling README.md and an effective ignore file."
+    agent_guidance: >
+      If a prompt asks to add a Dockerfile, first select the deploy track and
+      image boundary. If the target cannot be named, stop and ask for a
+      placement decision rather than creating a new container pattern.
+
+  - id: container-image-management.bounds-build-context
+    title: Build context is explicit and contamination-resistant
+    severity: error
+    summary: >
+      Container builds must name their build context and ignore unsafe repo
+      paths so secrets, session logs, caches, and stale generated artifacts are
+      not copied into images.
+    must:
+      - "Name the Dockerfile path, build context, and effective dockerignore path in build scripts or deploy manifests."
+      - "Ensure the effective ignore file matches the declared build context: image/.dockerignore for image-directory context, or repo-root .dockerignore / image/Dockerfile.dockerignore for repo-root context."
+      - "Ignore .git, .cache, commitLogs, env files, credentials, local logs, temporary output, dependency folders, and unreviewed generated runtime caches."
+      - "Copy the smallest practical set of files into the image."
+      - "Document any repo-root build context in the image README."
+    must_not:
+      - "Do not copy the entire repo into an image without a reviewed reason and strong .dockerignore coverage."
+      - "Do not copy secrets, private keys, cloud credentials, SSO caches, or production config values into images."
+      - "Do not rely on a CI-only ignore rule that is absent from local image builds."
+    required_checks:
+      - "Verify the effective ignore file exists and covers the minimum contamination set before image smoke tests are treated as deployment evidence."
+      - "Verify image build scripts use the governed Dockerfile path."
+      - "Verify deploy-readiness manifests and build scripts agree on Dockerfile path and build context."
+    agent_guidance: >
+      Build context is a security boundary. A passing local image build is not
+      sufficient if the image can accidentally include unreviewed or sensitive
+      files.
+
+  - id: container-image-management.requires-runtime-hardening
+    title: Runtime image is hardened before remote exposure
+    severity: error
+    summary: >
+      Deployable service images need hardened runtime defaults, explicit ports,
+      health checks, and bounded write paths before staging or production use.
+    must:
+      - "Use a minimal reviewed base image and pin the base image by digest before production deployment."
+      - "Run as a non-root user in the final runtime stage unless a reviewed exception exists."
+      - "Name the container port, entrypoint, health endpoint, and smoke-test command."
+      - "Avoid package managers, compilers, and build-only dependencies in the final runtime stage unless justified."
+      - "Bound any writable runtime paths."
+    must_not:
+      - "Do not expose a remotely reachable service image without health checks and a smoke test."
+      - "Do not keep root runtime, broad filesystem writes, or unnecessary build tools without explicit review."
+      - "Do not use base-image tags as production proof without digest evidence."
+    required_checks:
+      - "Verify image smoke tests prove container startup and health endpoints."
+      - "Verify runtime user and port expectations are documented."
+      - "Verify production deploy-readiness includes base-image digest evidence."
+    agent_guidance: >
+      Treat image hardening as part of deployment readiness, not as a final
+      polish task after the service is already exposed.
+
+  - id: container-image-management.proves-image-provenance
+    title: Image provenance is mandatory for staging and production
+    severity: error
+    summary: >
+      Staging and production deployments must promote immutable image digests
+      with traceable source, scan, SBOM, and attestation or signed-provenance
+      evidence.
+    must:
+      - "Record source commit SHA, Dockerfile path, build context, base image digest, image digest, ECR repository, and workflow run id."
+      - "Generate or reference an SBOM for staging and production images."
+      - "Run vulnerability scanning with explicit severity thresholds before staging or production deployment."
+      - "Generate artifact attestation or a governed signed-provenance fallback."
+      - "Deploy by image digest rather than floating tag."
+    must_not:
+      - "Do not deploy an image that cannot be linked to the tested source commit and generated corpus artifacts."
+      - "Do not hide missing SBOM, scan, or attestation evidence behind manual approval without an accepted risk record."
+      - "Do not claim an image is current when runtime freshness or corpus package identity is unknown."
+    required_checks:
+      - "Verify image digest and source commit are present before deploy execution."
+      - "Verify SBOM, scan, and attestation evidence where staging or production is targeted."
+      - "Verify image identity is paired with the corpus package identity for RAG/rulebook services."
+    agent_guidance: >
+      For context-provider services, the image and corpus package are one
+      deployment unit. Never treat a service image alone as enough deployment
+      evidence.
+
+  - id: container-image-management.keeps-token-and-drift-cost-low
+    title: Container conventions reduce token cost and drift
+    severity: warning
+    summary: >
+      A single predictable image boundary lets agents retrieve precise
+      container context without scanning the whole repository or confusing
+      experiments with deployable artifacts.
+    must:
+      - "Use one image directory per deploy track unless an exception is recorded."
+      - "Keep image README files concise and focused on build context, runtime, security, and smoke proof."
+      - "Update deploy-readiness manifests when Dockerfile path, port, runtime user, or image identity changes."
+      - "Add retrieval/evaluation coverage when a new shared container rule changes answer behavior."
+    must_not:
+      - "Do not add duplicate container instructions in AGENTS.md, workflow prose, service README files, and deploy rules."
+      - "Do not leave stale Dockerfiles or image templates after changing deployment approach."
+      - "Do not let GitHub workflows build undocumented Dockerfile paths."
+    required_checks:
+      - "Verify container boundary validation passes at commit time."
+      - "Verify generated chunks include the shared container-image rule before relying on RAG answers about containers."
+      - "Verify stale or retired image paths have retirement records if they were previously active."
+    agent_guidance: >
+      The goal is not just tidy files. The goal is a retrieval shape where
+      agents can find one authoritative image boundary and stop.
+
+source_refs:
+  - doc: "docs/04.deploy/source-material/shared/container-image-management.md"
+    sections:
+      - "Canonical Placement"
+      - "Ownership Boundaries"
+      - "Build Context"
+      - "Base Image Policy"
+      - "Runtime User And Permissions"
+      - "Provenance, SBOM, Scans, And Attestations"
+      - "Drift, Gaps, And Contamination Controls"
+
+success_criteria:
+  - "Dockerfiles are allowed only under infra/<deploy-layer>/<deploy-track>/image/Dockerfile."
+  - "Every Dockerfile has a sibling README.md and an effective ignore file for the declared build context."
+  - "Image build scripts and deploy-readiness manifests must name Dockerfile and build context."
+  - "Staging and production images require immutable digest, SBOM, scan, and provenance evidence."
+  - "The container boundary validator fails closed for Dockerfile sprawl."

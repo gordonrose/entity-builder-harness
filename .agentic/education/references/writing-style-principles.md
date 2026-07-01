@@ -3,7 +3,7 @@
   id: education.references.writing-style-principles
   version: 1
   status: active
-  layer: 04.education
+  layer: 05.education
   domain: education
   disciplines:
   - agentic
