@@ -65,6 +65,9 @@ DEFAULT_CORPUS_RULE_ROOTS = (
 
 
 def repo_root() -> Path:
+    override = os.environ.get("RAG_REPO_ROOT")
+    if override:
+        return Path(override).resolve()
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         check=True,
@@ -78,6 +81,10 @@ ROOT = repo_root()
 
 
 def run_git(args: list[str]) -> str:
+    if args == ["rev-parse", "HEAD"]:
+        env_sha = os.environ.get("RAG_SOURCE_COMMIT_SHA", "").strip()
+        if env_sha:
+            return env_sha
     result = subprocess.run(["git", *args], check=True, text=True, stdout=subprocess.PIPE)
     return result.stdout.strip()
 

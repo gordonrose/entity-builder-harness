@@ -47,33 +47,20 @@ build
 !package.json
 
 !.agentic/
-!.agentic/02.rag-rulebook/
-!.agentic/02.rag-rulebook/**
-!.agentic/01.harness/
-!.agentic/01.harness/workflows/
-!.agentic/01.harness/workflows/**
+!.agentic/**
 
 !.github/
 !.github/workflows/
 !.github/workflows/**
 
 !infra/
-!infra/04.deploy/
-!infra/04.deploy/02.rag-rulebook/
-!infra/04.deploy/02.rag-rulebook/**
+!infra/**
 
 !scripts/
-!scripts/02.rag-rulebook/
-!scripts/02.rag-rulebook/**
+!scripts/**
 
 !docs/
-!docs/harness/
-!docs/harness/architecture/
-!docs/harness/architecture/**
-!docs/02.rag-rulebook/
-!docs/02.rag-rulebook/**
-!docs/04.deploy/
-!docs/04.deploy/**
+!docs/**
 
 # Re-apply high-risk denies after broad allowlist rules. Docker ignore ordering
 # is last-match-wins, so these prevent allowed source roots from re-including

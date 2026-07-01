@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -69,6 +70,9 @@ ROUTING_SOURCE_ARTIFACTS = [
 
 
 def repo_root() -> Path:
+    override = os.environ.get("RAG_REPO_ROOT")
+    if override:
+        return Path(override).resolve()
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         check=True,

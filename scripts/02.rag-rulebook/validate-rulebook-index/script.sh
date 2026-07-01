@@ -66,6 +66,9 @@ REQUIRED_TOP_LEVEL = [
 
 
 def repo_root() -> Path:
+    override = os.environ.get("RAG_REPO_ROOT")
+    if override:
+        return Path(override).resolve()
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         check=True,

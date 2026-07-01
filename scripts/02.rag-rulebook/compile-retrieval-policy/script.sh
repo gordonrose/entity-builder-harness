@@ -37,6 +37,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -65,6 +66,9 @@ COMPILER_VERSION = 1
 
 
 def repo_root() -> Path:
+    override = os.environ.get("RAG_REPO_ROOT")
+    if override:
+        return Path(override).resolve()
     result = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         check=True,

@@ -44,19 +44,17 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY package.json ./package.json
-COPY .agentic/02.rag-rulebook/ ./.agentic/02.rag-rulebook/
-COPY .agentic/01.harness/workflows/ ./.agentic/01.harness/workflows/
+COPY .agentic/ ./.agentic/
 COPY .github/workflows/ ./.github/workflows/
-COPY infra/04.deploy/02.rag-rulebook/ ./infra/04.deploy/02.rag-rulebook/
-COPY scripts/02.rag-rulebook/ ./scripts/02.rag-rulebook/
-COPY docs/harness/architecture/ ./docs/harness/architecture/
-COPY docs/02.rag-rulebook/ ./docs/02.rag-rulebook/
-COPY docs/04.deploy/ ./docs/04.deploy/
+COPY infra/ ./infra/
+COPY scripts/ ./scripts/
+COPY docs/ ./docs/
 
 RUN mkdir -p /app/.cache \
-  && RAG_REPO_ROOT=/app RAG_SOURCE_COMMIT_SHA="${SOURCE_COMMIT_SHA}" bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
-    --output-dir /app/.cache/02.rag-rulebook \
-    --pretty >/tmp/rag-rulebook-runtime-build.log \
+  && (RAG_REPO_ROOT=/app RAG_SOURCE_COMMIT_SHA="${SOURCE_COMMIT_SHA}" bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
+      --output-dir /app/.cache/02.rag-rulebook \
+      --pretty >/tmp/rag-rulebook-runtime-build.log \
+    || { cat /tmp/rag-rulebook-runtime-build.log >&2; exit 1; }) \
   && chown node:node /app/.cache \
   && find /app -path /app/.cache -prune -o -type d -exec chmod 0755 {} + \
   && find /app -path /app/.cache -prune -o -type f -exec chmod 0644 {} + \
