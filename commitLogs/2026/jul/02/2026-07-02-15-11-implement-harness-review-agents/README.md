@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-02T15:29:46Z
-latest_commit_sha: 291edca
-chat_duration: 4726s (00:01:18:46)
-estimated_chat_tokens: 246264 estimated from chat transcript bytes (985055 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 7.39 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-02T15:35:35Z
+latest_commit_sha: fe5ef5c
+chat_duration: 5075s (00:01:24:35)
+estimated_chat_tokens: 270790 estimated from chat transcript bytes (1083157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 8.12 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -154,6 +154,17 @@ Decision: Add single-agent and review-board invocation workflows
 
 Rationale: The workflows govern narrow agent selection, evidence gathering, output templates, board composition, blocker handling, and review-authority limits.
 
+
+### 2026-07-02T15:35:35Z - Commit recorded
+
+Commit: `fe5ef5c`
+
+Message: Add harness agent invocation workflows
+
+Summary: Added single-agent and review-board invocation workflows, updated agent/use-case indexes, and regenerated artifact plus routing recognition sources.
+
+ADR impact: ADR not needed; this implements workflow support for the approved harness review-agent capability.
+
 ## Commits
 
 
@@ -185,6 +196,13 @@ Rationale: The workflows govern narrow agent selection, evidence gathering, outp
   Summary: Added shared human-readable and machine-readable review-agent output templates, indexed them from the harness README, and regenerated artifact recognition sources.
   ADR impact: ADR not needed; this adds implementation support artifacts for the approved review-agent capability.
 
+
+- Commit: `fe5ef5c`
+  Time UTC: 2026-07-02T15:35:35Z
+  Message: Add harness agent invocation workflows
+  Summary: Added single-agent and review-board invocation workflows, updated agent/use-case indexes, and regenerated artifact plus routing recognition sources.
+  ADR impact: ADR not needed; this implements workflow support for the approved harness review-agent capability.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -198,11 +216,11 @@ Reason: Step 1 adds fixture-quality use cases for an approved harness capability
 ## Session Metrics
 
 Raised at UTC: 2026-07-02T14:11:00Z
-Latest commit at UTC: 2026-07-02T15:29:46Z
-Latest commit SHA: 291edca
-Chat duration: 4726s (00:01:18:46)
-Estimated chat tokens: 246264 estimated from chat transcript bytes (985055 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 7.39 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-02T15:35:35Z
+Latest commit SHA: fe5ef5c
+Chat duration: 5075s (00:01:24:35)
+Estimated chat tokens: 270790 estimated from chat transcript bytes (1083157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 8.12 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
