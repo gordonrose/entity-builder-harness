@@ -1,0 +1,63 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.templates.agent-scorecard
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#     - agentic
+#   kind: template
+#   purpose: Provide the shared machine-readable scorecard shape for harness review agents.
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: harness.standards.agent-contracts
+#       path: .agentic/01.harness/standards/agent-contracts.md
+#     - id: harness.agents.readme
+#       path: .agentic/01.harness/agents/README.md
+
+schema: harness/agent-scorecard/v1
+agent:
+  id: harness.agents.example
+  name: Example Agent
+review:
+  mode: review
+  task: Replace with task or artifact under review.
+  reviewed_at_utc: YYYY-MM-DDTHH:MM:SSZ
+  decision: pass
+  confidence: medium
+  critical_blocker_present: false
+  overall_score: 0
+evidence:
+  sources:
+    - path: path/or/source
+      kind: file
+      note: Why this evidence matters.
+  gaps: []
+findings:
+  critical: []
+  high: []
+  medium: []
+  low: []
+scores:
+  - dimension: example_dimension
+    score: 0
+    evidence: Evidence supporting the score.
+    notes: Brief explanation.
+delegation_requests:
+  - target_agent_id: harness.agents.example
+    blocking_question: Question the receiving agent must answer.
+    evidence_already_reviewed:
+      - path/or/source
+    needed_decision: pass | pass_with_notes | block | delegate | not_applicable
+required_follow_up: []
+quality_gate:
+  blocks_when:
+    - critical_blocker_present is true
+    - any required score is below 3
+    - decision is delegate and delegated review is missing

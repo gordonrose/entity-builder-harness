@@ -54,6 +54,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Create six bounded harness review agents
   Rationale: The agent directory now defines CFO, prompt, backend architecture, SRE, SecOps, and UX/UI reviewer contracts with required sections, rubrics, authority boundaries, and delegation lanes.
 
+
+- Decision: Create shared report and scorecard templates
+  Rationale: Review-agent outputs now have one human-readable report shape and one machine-readable scorecard shape so findings, blockers, scores, evidence gaps, and delegation requests are consistent.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -120,6 +124,13 @@ Message: Add harness review agent specs
 Summary: Added the harness agent directory, six bounded review-agent specs, harness README indexing, and generated recognition-source entries for the new agents.
 
 ADR impact: ADR not needed; this implements the approved review-agent structure under existing artifact ownership rules.
+
+
+### 2026-07-02T15:25:31Z - Decision
+
+Decision: Create shared report and scorecard templates
+
+Rationale: Review-agent outputs now have one human-readable report shape and one machine-readable scorecard shape so findings, blockers, scores, evidence gaps, and delegation requests are consistent.
 
 ## Commits
 

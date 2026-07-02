@@ -63,6 +63,11 @@ Future Codex sessions continuing rulebook work should start by reading
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.
 
+## Templates
+
+- `templates/agent-review-report.md` - provides the shared human-readable report shape for review-agent findings.
+- `templates/agent-scorecard.yml` - provides the shared machine-readable scorecard shape for review-agent decisions.
+
 ## Chat Workbench Docs
 
 - `docs/00.chat/` - indexes chat-owned docs for portable chat harness and public workbench bootstrap behavior.
