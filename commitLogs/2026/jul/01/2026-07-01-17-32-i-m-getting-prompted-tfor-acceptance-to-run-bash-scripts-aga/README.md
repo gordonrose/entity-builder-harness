@@ -11,11 +11,11 @@ workflow: .agentic/shared/workflows/change-shared-process.md
 status: ready
 raised_at_utc: 2026-07-01T16:32:40Z
 codex_session_log_path: /home/owner/.codex/sessions/2026/07/01/rollout-2026-07-01T17-31-58-019f1e85-e111-7032-8926-c5cfe82f0e5d.jsonl
-latest_commit_at_utc: 2026-07-02T09:51:09Z
-latest_commit_sha: 8e79c1e
-chat_duration: 62309s (00:17:18:29)
-estimated_chat_tokens: 288289 estimated from chat transcript bytes (1153153 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/01/rollout-2026-07-01T17-31-58-019f1e85-e111-7032-8926-c5cfe82f0e5d.jsonl)
-estimated_chat_cost: USD 8.65 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-02T09:55:29Z
+latest_commit_sha: c8fd123
+chat_duration: 62569s (00:17:22:49)
+estimated_chat_tokens: 327676 estimated from chat transcript bytes (1310702 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/01/rollout-2026-07-01T17-31-58-019f1e85-e111-7032-8926-c5cfe82f0e5d.jsonl)
+estimated_chat_cost: USD 9.83 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -70,6 +70,17 @@ Summary: Made governed script execution metadata-driven, routed RAG package comm
 
 ADR impact: ADR not needed; implements existing governed-script permission and generated-source refresh policies.
 
+
+### 2026-07-02T09:55:29Z - Commit recorded
+
+Commit: `c8fd123`
+
+Message: Allow governed branch refresh through runner
+
+Summary: Allowed governed branch-refresh scripts to run through the approved runner form while keeping destructive effects blocked, and updated active command examples.
+
+ADR impact: ADR not needed; narrows implementation to match existing refresh and permission policies.
+
 ## Commits
 
 
@@ -79,6 +90,13 @@ ADR impact: ADR not needed; implements existing governed-script permission and g
   Message: Make governed script runner metadata-driven
   Summary: Made governed script execution metadata-driven, routed RAG package commands through the runner, refreshed generated recognition sources, and added automatic recognition-source repair during local runtime builds.
   ADR impact: ADR not needed; implements existing governed-script permission and generated-source refresh policies.
+
+
+- Commit: `c8fd123`
+  Time UTC: 2026-07-02T09:55:29Z
+  Message: Allow governed branch refresh through runner
+  Summary: Allowed governed branch-refresh scripts to run through the approved runner form while keeping destructive effects blocked, and updated active command examples.
+  ADR impact: ADR not needed; narrows implementation to match existing refresh and permission policies.
 
 ## Main Refresh Conflicts
 
@@ -95,11 +113,11 @@ decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-01T16:32:40Z
-Latest commit at UTC: 2026-07-02T09:51:09Z
-Latest commit SHA: 8e79c1e
-Chat duration: 62309s (00:17:18:29)
-Estimated chat tokens: 288289 estimated from chat transcript bytes (1153153 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/01/rollout-2026-07-01T17-31-58-019f1e85-e111-7032-8926-c5cfe82f0e5d.jsonl)
-Estimated chat cost: USD 8.65 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-02T09:55:29Z
+Latest commit SHA: c8fd123
+Chat duration: 62569s (00:17:22:49)
+Estimated chat tokens: 327676 estimated from chat transcript bytes (1310702 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/01/rollout-2026-07-01T17-31-58-019f1e85-e111-7032-8926-c5cfe82f0e5d.jsonl)
+Estimated chat cost: USD 9.83 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
