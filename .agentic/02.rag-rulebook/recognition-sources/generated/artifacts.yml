@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 525
-  term_count: 1061
+  indexed_artifacts: 528
+  term_count: 1067
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3209,6 +3209,42 @@ terms:
   match_type: exact
   canonical_id: harness.script.check-rule-test-taxonomy
   evidence_path: scripts/01.harness/check-rule-test-taxonomy.sh
+  confidence_weight: 1
+- term: harness.script.metrics.compare-task-token-consumption.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.readme
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/metrics/compare-task-token-consumption/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.readme
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/README.md
+  confidence_weight: 1
+- term: harness.script.metrics.compare-task-token-consumption.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.impl
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.js
+  confidence_weight: 1
+- term: scripts/01.harness/metrics/compare-task-token-consumption/script.js
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.impl
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.js
+  confidence_weight: 1
+- term: harness.script.metrics.compare-task-token-consumption
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.sh
+  confidence_weight: 1
+- term: scripts/01.harness/metrics/compare-task-token-consumption/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.sh
   confidence_weight: 1
 - term: harness.script.plan-artifact-path-migration
   category: artifact-id

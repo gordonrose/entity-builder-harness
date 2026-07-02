@@ -62,6 +62,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Add single-agent and review-board invocation workflows
   Rationale: The workflows govern narrow agent selection, evidence gathering, output templates, board composition, blocker handling, and review-authority limits.
 
+
+- Decision: Add deterministic CFO token comparison script
+  Rationale: The CFO agent now has a read-only JSON-producing script that compares a task query with committed session logs and reports count, min, max, mean, median, Q1, Q3, trend, and current-task comparison.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -164,6 +168,13 @@ Message: Add harness agent invocation workflows
 Summary: Added single-agent and review-board invocation workflows, updated agent/use-case indexes, and regenerated artifact plus routing recognition sources.
 
 ADR impact: ADR not needed; this implements workflow support for the approved harness review-agent capability.
+
+
+### 2026-07-02T15:37:23Z - Decision
+
+Decision: Add deterministic CFO token comparison script
+
+Rationale: The CFO agent now has a read-only JSON-producing script that compares a task query with committed session logs and reports count, min, max, mean, median, Q1, Q3, trend, and current-task comparison.
 
 ## Commits
 

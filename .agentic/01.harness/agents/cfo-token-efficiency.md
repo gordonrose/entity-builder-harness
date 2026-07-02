@@ -43,7 +43,7 @@ safe reduction review to the agent that owns the cause.
 - current estimated chat tokens and cost, when available
 - comparable committed session logs
 - task type or similarity hint
-- output from the token-comparison script, when available
+- output from `scripts/01.harness/metrics/compare-task-token-consumption/script.sh`
 - list of agents already invoked or proposed
 
 ## Required First Move
@@ -73,7 +73,7 @@ inventing a trend.
 
 - `commitLogs/**/README.md`
 - `scripts/00.chat/reporting/generate-commit-log-summary/script.sh`
-- future CFO token-comparison script output
+- `scripts/01.harness/metrics/compare-task-token-consumption/script.sh`
 - current context packet budget fields, when available
 - `.agentic/01.harness/agents/use-cases.md`
 

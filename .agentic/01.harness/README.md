@@ -87,6 +87,7 @@ Future Codex sessions continuing rulebook work should start by reading
 - `scripts/01.harness/artifact-metadata/check-headers/script.sh` - capability-scoped entrypoint for artifact metadata header checks.
 - `scripts/01.harness/artifact-metadata/generate-index/script.sh` - emits a JSON artifact index from v1 and v2 metadata headers.
 - `scripts/01.harness/check-rule-test-taxonomy.sh` - validates declared architecture rulebook layer test taxonomy scope, CI vocabulary references, substitute limits, and negative-evidence guardrails.
+- `scripts/01.harness/metrics/compare-task-token-consumption/script.sh` - emits CFO token-consumption statistics for sessions similar to a supplied task query.
 
 ## Data
 
