@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-02T15:35:35Z
-latest_commit_sha: fe5ef5c
-chat_duration: 5075s (00:01:24:35)
-estimated_chat_tokens: 270790 estimated from chat transcript bytes (1083157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 8.12 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-02T15:41:49Z
+latest_commit_sha: 4da1fd1
+chat_duration: 5449s (00:01:30:49)
+estimated_chat_tokens: 304124 estimated from chat transcript bytes (1216494 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 9.12 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -176,6 +176,17 @@ Decision: Add deterministic CFO token comparison script
 
 Rationale: The CFO agent now has a read-only JSON-producing script that compares a task query with committed session logs and reports count, min, max, mean, median, Q1, Q3, trend, and current-task comparison.
 
+
+### 2026-07-02T15:41:49Z - Commit recorded
+
+Commit: `4da1fd1`
+
+Message: Add CFO token comparison metrics script
+
+Summary: Added a read-only CFO token-comparison metrics script with README, JSON output, harness README indexing, CFO agent wiring, and regenerated artifact recognition sources.
+
+ADR impact: ADR not needed; this adds deterministic support for the approved CFO agent.
+
 ## Commits
 
 
@@ -214,6 +225,13 @@ Rationale: The CFO agent now has a read-only JSON-producing script that compares
   Summary: Added single-agent and review-board invocation workflows, updated agent/use-case indexes, and regenerated artifact plus routing recognition sources.
   ADR impact: ADR not needed; this implements workflow support for the approved harness review-agent capability.
 
+
+- Commit: `4da1fd1`
+  Time UTC: 2026-07-02T15:41:49Z
+  Message: Add CFO token comparison metrics script
+  Summary: Added a read-only CFO token-comparison metrics script with README, JSON output, harness README indexing, CFO agent wiring, and regenerated artifact recognition sources.
+  ADR impact: ADR not needed; this adds deterministic support for the approved CFO agent.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -227,11 +245,11 @@ Reason: Step 1 adds fixture-quality use cases for an approved harness capability
 ## Session Metrics
 
 Raised at UTC: 2026-07-02T14:11:00Z
-Latest commit at UTC: 2026-07-02T15:35:35Z
-Latest commit SHA: fe5ef5c
-Chat duration: 5075s (00:01:24:35)
-Estimated chat tokens: 270790 estimated from chat transcript bytes (1083157 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 8.12 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-02T15:41:49Z
+Latest commit SHA: 4da1fd1
+Chat duration: 5449s (00:01:30:49)
+Estimated chat tokens: 304124 estimated from chat transcript bytes (1216494 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 9.12 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
