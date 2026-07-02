@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 523
-  term_count: 1057
+  indexed_artifacts: 525
+  term_count: 1061
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2393,6 +2393,30 @@ terms:
   match_type: exact
   canonical_id: harness.workflows.review-rule-artifact
   evidence_path: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
+  confidence_weight: 1
+- term: harness.workflows.run-agent-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflows.run-agent-review
+  evidence_path: .agentic/01.harness/workflows/run-agent-review.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/run-agent-review.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflows.run-agent-review
+  evidence_path: .agentic/01.harness/workflows/run-agent-review.md
+  confidence_weight: 1
+- term: harness.workflows.run-review-board
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflows.run-review-board
+  evidence_path: .agentic/01.harness/workflows/run-review-board.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/run-review-board.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflows.run-review-board
+  evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
 - term: harness.adr.0001-record-harness-session-decisions-before-commit
   category: artifact-id

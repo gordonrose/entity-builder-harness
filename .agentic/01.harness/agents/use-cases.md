@@ -16,10 +16,10 @@ portability:
   - entity-builder
   - design-system-builder
 used_by:
-- id: harness.workflows.change-harness
-  path: .agentic/01.harness/workflows/change-harness.md
-- id: harness.workflows.build-capability-workflow
-  path: .agentic/01.harness/workflows/build-capability-workflow.md
+- id: harness.workflows.run-agent-review
+  path: .agentic/01.harness/workflows/run-agent-review.md
+- id: harness.workflows.run-review-board
+  path: .agentic/01.harness/workflows/run-review-board.md
 -->
 
 # Harness Agent Use Cases

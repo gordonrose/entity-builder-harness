@@ -58,6 +58,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Create shared report and scorecard templates
   Rationale: Review-agent outputs now have one human-readable report shape and one machine-readable scorecard shape so findings, blockers, scores, evidence gaps, and delegation requests are consistent.
 
+
+- Decision: Add single-agent and review-board invocation workflows
+  Rationale: The workflows govern narrow agent selection, evidence gathering, output templates, board composition, blocker handling, and review-authority limits.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -142,6 +146,13 @@ Message: Add harness agent report templates
 Summary: Added shared human-readable and machine-readable review-agent output templates, indexed them from the harness README, and regenerated artifact recognition sources.
 
 ADR impact: ADR not needed; this adds implementation support artifacts for the approved review-agent capability.
+
+
+### 2026-07-02T15:30:49Z - Decision
+
+Decision: Add single-agent and review-board invocation workflows
+
+Rationale: The workflows govern narrow agent selection, evidence gathering, output templates, board composition, blocker handling, and review-authority limits.
 
 ## Commits
 

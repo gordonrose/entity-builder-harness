@@ -26,6 +26,10 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 Use `workflows/migrate-artifact-paths.md` for moving, renaming, retiring, or removing committed files or directories.
 
+Use `workflows/run-agent-review.md` for single-agent review invocation.
+
+Use `workflows/run-review-board.md` for multi-agent review-board composition.
+
 ## Architecture Rulebook Operating Pack
 
 This folder includes operating guidance for Codex while building the architecture

@@ -47,6 +47,8 @@ Use a review board when independent risks need separate owners.
 
 - [Agent Contract Standard](../standards/agent-contracts.md)
 - [Harness Agent Use Cases](use-cases.md)
+- [Run Agent Review Workflow](../workflows/run-agent-review.md)
+- [Run Review Board Workflow](../workflows/run-review-board.md)
 
 ## Selection Rule
 
