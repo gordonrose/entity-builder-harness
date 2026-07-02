@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 512
-  term_count: 1035
+  indexed_artifacts: 513
+  term_count: 1037
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -1841,6 +1841,18 @@ terms:
   match_type: exact
   canonical_id: harness.readme
   evidence_path: .agentic/01.harness/README.md
+  confidence_weight: 1
+- term: harness.agents.use-cases
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.use-cases
+  evidence_path: .agentic/01.harness/agents/use-cases.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/use-cases.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.use-cases
+  evidence_path: .agentic/01.harness/agents/use-cases.md
   confidence_weight: 1
 - term: harness.capability.artifact-metadata
   category: artifact-id
