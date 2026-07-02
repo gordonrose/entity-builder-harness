@@ -84,6 +84,7 @@ Future Codex sessions continuing rulebook work should start by reading
 
 ## Scripts
 
+- `scripts/01.harness/agents/validate-harness-agents/script.sh` - validates harness review-agent contracts, use cases, templates, workflows, and CFO fixtures.
 - `scripts/01.harness/artifact-metadata/check-headers/script.sh` - capability-scoped entrypoint for artifact metadata header checks.
 - `scripts/01.harness/artifact-metadata/generate-index/script.sh` - emits a JSON artifact index from v1 and v2 metadata headers.
 - `scripts/01.harness/check-rule-test-taxonomy.sh` - validates declared architecture rulebook layer test taxonomy scope, CI vocabulary references, substitute limits, and negative-evidence guardrails.

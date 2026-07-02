@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 528
-  term_count: 1067
+  indexed_artifacts: 535
+  term_count: 1081
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3089,6 +3089,90 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.rules.layers.scripts-command-surface
   evidence_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
+  confidence_weight: 1
+- term: harness.script.agents.validate-harness-agents.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.readme
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.readme
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-a
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-a
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-a
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-b
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-b
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/02/2026-01-02-00-00-chat-workflow-startup-b/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/02/2026-01-02-00-00-chat-workflow-startup-b/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-b
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/02/2026-01-02-00-00-chat-workflow-startup-b/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-c
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-c
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/03/2026-01-03-00-00-chat-workflow-startup-c/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/03/2026-01-03-00-00-chat-workflow-startup-c/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-c
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/03/2026-01-03-00-00-chat-workflow-startup-c/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-unrelated
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-unrelated
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/04/2026-01-04-00-00-unrelated-task/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/04/2026-01-04-00-00-unrelated-task/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-unrelated
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/04/2026-01-04-00-00-unrelated-task/README.md
+  confidence_weight: 1
+- term: harness.script.agents.validate-harness-agents.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.impl
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.js
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/script.js
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.impl
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.js
+  confidence_weight: 1
+- term: harness.script.agents.validate-harness-agents
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.sh
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.sh
   confidence_weight: 1
 - term: harness.script.artifact-metadata.backfill-v2-headers
   category: artifact-id

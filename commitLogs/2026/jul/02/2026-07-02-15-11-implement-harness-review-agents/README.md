@@ -66,6 +66,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Add deterministic CFO token comparison script
   Rationale: The CFO agent now has a read-only JSON-producing script that compares a task query with committed session logs and reports count, min, max, mean, median, Q1, Q3, trend, and current-task comparison.
 
+
+- Decision: Add executable validation for harness review agents
+  Rationale: The validation script now checks agent contracts, use-case coverage, templates, workflows, and CFO token-comparison fixture behavior before the capability can be considered complete.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -186,6 +190,13 @@ Message: Add CFO token comparison metrics script
 Summary: Added a read-only CFO token-comparison metrics script with README, JSON output, harness README indexing, CFO agent wiring, and regenerated artifact recognition sources.
 
 ADR impact: ADR not needed; this adds deterministic support for the approved CFO agent.
+
+
+### 2026-07-02T15:44:26Z - Decision
+
+Decision: Add executable validation for harness review agents
+
+Rationale: The validation script now checks agent contracts, use-case coverage, templates, workflows, and CFO token-comparison fixture behavior before the capability can be considered complete.
 
 ## Commits
 
