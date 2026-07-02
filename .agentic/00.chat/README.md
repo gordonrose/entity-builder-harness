@@ -29,6 +29,13 @@ This layer covers chat creation, session metadata, chat-owned worktrees,
 session logs, commit checkpoints, main-refresh coordination, closeout,
 cleanup, shortcuts, and on-demand chat reports.
 
+This layer does not classify a whole chat into one durable layer, mode, or
+workflow. Prompt interpretation belongs to the RAG/rulebook retrieval selector.
+Each prompt should receive a fresh context packet whose routing helps select
+the right chunks for that prompt. The chat layer may record the latest context
+packet ID and summary for continuity, but chat lifecycle metadata remains about
+branch, worktree, session log, metrics, transcript, and git state.
+
 ## Source Of Truth
 
 - Active chat state: current branch session log under `commitLogs/`

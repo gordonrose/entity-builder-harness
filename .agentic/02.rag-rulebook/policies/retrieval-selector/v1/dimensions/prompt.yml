@@ -43,11 +43,11 @@ expected_actions:
   - Extract task nouns, verbs, target artifacts, risk words, and explicit asks by matching prompt text against governed recognition sources.
   - Normalize obvious plurals, aliases, and known synonyms only when a recognition source defines the mapping.
   - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
-  - Pass recognized prompt signals to the request-context dimension before session defaults are applied for retrieval.
+  - Pass recognized prompt signals to the request-context dimension before session continuity is considered for retrieval.
   - Preserve the raw prompt in the context-packet request provenance.
 banned_actions:
   - Do not let prompt interpretation grant edit, commit, deploy, destructive, or infrastructure mutation permission.
-  - Do not infer a different execution workflow from prompt words when the session workflow is ready and current.
+  - Do not let prompt words bypass branch/worktree ownership or explicit approval for side-effecting actions.
   - Do not expand into unrelated corpora from vague words such as app, design, deploy, or rule without supporting metadata.
   - Do not hide prompt/session conflict behind a confident summary.
 output_obligations:
@@ -62,12 +62,12 @@ output_obligations:
   - prompt_conflicts
   - prompt_confidence
 gap_or_stop_conditions:
-  - Add an ambiguity gap when prompt terms conflict with complete session metadata.
+  - Add an ambiguity gap when prompt terms conflict with current lifecycle or continuity metadata.
   - Add a low-confidence gap when only broad prompt terms match and no metadata, path, or corpus evidence supports them.
 ranking_effects:
   - Exact ID and path terms raise ranking.
   - Risk words raise required-check and stop-condition ranking.
-  - Prompt signals feed request-context ranking before session defaults are applied.
+  - Prompt signals feed request-context ranking before session continuity is considered.
   - Broad prompt-only matches rank below exact paths, corpus ownership, and graph evidence.
 recognition_sources:
   - source_id: recognition.generated.artifacts

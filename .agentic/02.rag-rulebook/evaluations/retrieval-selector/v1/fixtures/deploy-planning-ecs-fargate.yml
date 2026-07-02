@@ -31,6 +31,7 @@ purpose: Prove a planning prompt about GitHub Actions to ECS Fargate selects the
 input:
   request_text: Prepare an ECS Fargate deployment plan for the RAG rulebook service with supply-chain provenance and context-provider data boundaries.
   session:
+    trust_routing: true
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md

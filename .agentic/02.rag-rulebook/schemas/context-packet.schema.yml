@@ -139,6 +139,9 @@ fields:
         type: array
         items:
           type: string
+      previous_packet_id:
+        type: string
+        description: Optional prior context packet used only as conversation continuity evidence. Client-supplied values are unverified until resolved by a governed packet store.
 
   intent:
     type: object
@@ -253,6 +256,17 @@ fields:
           type: string
       classification_source:
         type: string
+        description: Source family used to select current-prompt routing. Use request-context-plus-recognition-sources for prompt-first route resolution.
+      scope:
+        type: enum
+        description: Routing scope. Use prompt for current-prompt retrieval routing; do not use chat-level routing for new packets.
+        allowed_values:
+          - prompt
+      previous_packet_id:
+        type: string
+      continuity_reason:
+        type: string
+        description: Short display-only continuity note. It must not be used as prompt recognition input or side-effect authorization evidence.
 
   selector_trace:
     type: object
@@ -671,6 +685,24 @@ fields:
         type: array
         items:
           type: string
+      session_context:
+        type: object
+        fields:
+          source:
+            type: string
+            description: Provenance source for supplied lifecycle and legacy routing fields.
+            examples:
+              - client-supplied-unverified
+              - governed-local-session-resolution
+          verification_status:
+            type: string
+            description: Whether legacy routing hints were only recorded as provenance or trusted by a governed local caller for routing.
+            examples:
+              - unverified
+              - routing-hints-trusted-by-governed-caller
+          execution_safety_role:
+            type: string
+            description: Clarifies that routing provenance is never side-effect authorization.
       generator:
         type: string
 
@@ -813,10 +845,12 @@ field_guide:
       - "Entries should resolve to citations or other packet evidence."
 
   - path: routing
-    what_it_is: "The proposed governance route for the consuming workflow."
-    what_it_does: "Tells the consumer which layer, mode, and workflow should handle the task."
+    what_it_is: "The proposed prompt-level governance route for the consuming workflow."
+    what_it_does: "Tells the consumer which layer, mode, and workflow should handle this context packet."
     rules:
       - "Must include layer, mode, workflow, and status."
+      - "Must be resolved for the current prompt; do not treat it as a durable chat classification."
+      - "Client-supplied continuity fields are unverified provenance unless a governed lookup verifies them."
 
   - path: routing.layer
     what_it_is: "The selected numbered layer."
@@ -1233,8 +1267,8 @@ field_guide:
       - "Use 0 to 1."
 
   - path: confidence.routing
-    what_it_is: "Confidence in layer, mode, and workflow routing."
-    what_it_does: "Shows whether workflow selection is safe."
+    what_it_is: "Confidence in prompt-level layer, mode, and workflow routing."
+    what_it_does: "Shows whether current-prompt workflow selection is safe."
     rules:
       - "Use 0 to 1."
 
@@ -1391,7 +1425,8 @@ minimal_example:
     task_type: schema
     target_paths:
       - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
-    classification_source: session-metadata
+    classification_source: request-context-plus-recognition-sources
+    scope: prompt
   matched_corpora:
     - corpus_id: corpus.02.rag-rulebook
       owner_layer: 02.rag-rulebook

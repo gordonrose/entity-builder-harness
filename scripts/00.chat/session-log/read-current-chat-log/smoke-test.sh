@@ -61,9 +61,10 @@ id: 2026-06-23-18-00-empty-session
 task: empty
 branch: chat/2026-06-23-18-00-empty-session
 worktree:
-layer: harness
-mode: implementation
-workflow: .agentic/01.harness/workflows/change-harness.md
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
 status: ready
 latest_commit_sha:
 -->
@@ -77,9 +78,10 @@ id: 2026-06-23-18-05-recorded-session
 task: recorded
 branch: chat/2026-06-23-18-05-recorded-session
 worktree:
-layer: harness
-mode: implementation
-workflow: .agentic/01.harness/workflows/change-harness.md
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+latest_context_packet_id: packet.selector-fixture.previous
+latest_context_packet_routing_summary: previous prompt routed to 02.rag-rulebook discovery
+latest_context_packet_at_utc: 2026-06-23T18:05:00Z
 status: ready
 latest_commit_sha: abc1234
 -->
@@ -93,8 +95,15 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
   bash scripts/00.chat/session-log/read-current-chat-log/script.sh \
   >"$TMP_ROOT/empty.out"
 
-grep -q '^layer: harness$' "$TMP_ROOT/empty.out" \
-  || fail "empty session metadata was not printed"
+grep -q '^chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md$' "$TMP_ROOT/empty.out" \
+  || fail "empty session lifecycle metadata was not printed"
+
+grep -q '^latest_context_packet_id:$' "$TMP_ROOT/empty.out" \
+  || fail "empty session context packet field was not printed"
+
+if grep -Eq '^(layer|mode|workflow): ' "$TMP_ROOT/empty.out"; then
+  fail "empty session printed durable classification metadata"
+fi
 
 git -C "$REPO" switch --quiet main
 git -C "$REPO" switch --quiet -c chat/2026-06-23-18-05-recorded-session

@@ -655,13 +655,13 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      and wired into `.agentic/02.rag-rulebook/workflows/default.md`.
 
 7ak. Demote session metadata behind request context for retrieval.
-   - Keep session metadata for chat/worktree provenance, fallback routing, and
-     execution safety.
+   - Keep session metadata for chat/worktree provenance, continuity,
+     branch/worktree ownership, and execution safety.
    - Build a fresh request context for each retrieval attempt from prompt
      intent, focused paths, exact corpus/artifact/path terms, and side-effect
      classification.
-   - Let explicit request context beat session defaults for retrieval target
-     selection while preserving session workflow gates for edits, commits,
+   - Let explicit request context beat session continuity for retrieval target
+     selection while preserving lifecycle and workflow gates for edits, commits,
      deploys, destructive actions, and infrastructure mutation.
    - Prove exact cross-session corpus retrieval with an evaluation fixture and
      keep broad nouns from crossing corpus boundaries without supporting

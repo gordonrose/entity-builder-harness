@@ -47,9 +47,13 @@ bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --chunks "$CHUNKS_FILE" \
   --compiled-policy "$COMPILED_POLICY_FILE" \
   --request-text "Build the RAG rulebook retrieval selector fixture using routing recognition sources." \
+  --session-id retrieval-selector-smoke \
+  --session-branch chat/retrieval-selector-smoke \
+  --session-worktree /tmp/retrieval-selector-smoke \
   --session-layer 02.rag-rulebook \
   --session-mode implementation \
   --session-workflow .agentic/02.rag-rulebook/workflows/default.md \
+  --trust-session-routing \
   --focused-path .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml \
   --focused-path .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml \
   --pretty > "$PACKET_FILE"
@@ -72,8 +76,13 @@ report = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
 assert packet["schema"] == "rag-rulebook/context-packet/v1"
 assert packet["routing"]["status"] == "ready"
 assert packet["routing"]["layer"] == "02.rag-rulebook"
+assert packet["routing"]["scope"] == "prompt"
 assert packet["routing"]["classification_source"] == "request-context-plus-recognition-sources"
 assert packet["intent"]["source"] == "mixed"
+assert packet["provenance"]["session_context"]["source"] == "governed-local-session-resolution"
+assert packet["provenance"]["session_context"]["verification_status"] == "routing-hints-trusted-by-governed-caller"
+assert packet["provenance"]["session_context"]["legacy_routing_hint"]["trusted"] is True
+assert "side-effect authorization must still verify ownership" in packet["provenance"]["session_context"]["execution_safety_role"]
 assert packet["provenance"]["compiled_policy"]["schema"] == "rag-rulebook/compiled-retrieval-policy/v1"
 assert packet["provenance"]["compiled_policy"]["compiled_policy_id"].startswith("compiled.retrieval-policy.retrieval-selector.v1.")
 assert packet["provenance"]["policy_pack"]["policy_pack_id"] == "retrieval-selector.v1"
@@ -95,6 +104,9 @@ PY
 bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --generate-current \
   --compiled-policy "$COMPILED_POLICY_FILE" \
+  --session-id retrieval-selector-smoke \
+  --session-branch chat/retrieval-selector-smoke \
+  --session-worktree /tmp/retrieval-selector-smoke \
   --max-chunks 3 > "$CURRENT_PACKET_FILE"
 
 python3 - "$CURRENT_PACKET_FILE" <<'PY'

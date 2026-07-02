@@ -114,14 +114,14 @@ precedence:
     rule: Stop conditions beat retrieval scores.
     reason: Retrieval must not make blocked work look safe.
   - rank: 2
-    rule: Explicit request context beats session defaults for retrieval target selection.
+    rule: Explicit request context beats session continuity for retrieval target selection.
     reason: The user prompt, focused paths, and exact named artifacts say what evidence the current answer needs.
   - rank: 3
     rule: Evidence bundles define required evidence families for recognized question categories.
     reason: Some questions need canonical layer, concern, workflow, or plan evidence rather than only top-scoring chunks.
   - rank: 4
-    rule: Session metadata governs provenance, fallback routing, and execution safety.
-    reason: Current chat state remains required for audit and side-effect safety without dominating read-only retrieval.
+    rule: Session metadata governs provenance, continuity, branch/worktree ownership, and execution safety.
+    reason: Current chat state remains required for audit and side-effect safety without classifying the prompt or chat.
   - rank: 5
     rule: Focused paths and artifact ownership beat semantic similarity.
     reason: Path ownership provides deterministic scope.
@@ -160,6 +160,7 @@ validation:
     - "Compile selector behavior from validated policy packs, dimensions, recognition sources, corpus ownership, and graph metadata before production runtime use."
     - Prove at least one low-confidence request produces a gap before selector runtime is considered usable.
     - Prove required checks survive trimming.
+    - Prove one chat can produce different prompt-level routing across multiple context packets.
     - Prove selected chunk citations resolve after graph expansion.
   smoke_fixtures:
     - scripts/02.rag-rulebook/generate-context-packet-fixture/smoke-test.sh

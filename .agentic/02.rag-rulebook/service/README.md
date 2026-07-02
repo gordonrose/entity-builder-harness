@@ -39,6 +39,21 @@ delegates to `scripts/02.rag-rulebook/query-local-context/script.sh`, which
 loads the built local runtime, checks runtime freshness, and returns a
 validated context packet.
 
+`POST /context/query` requires `requestText` or `request_text`. The optional
+`session` object may carry lifecycle provenance such as `id`, `branch`,
+`worktree`, `latestContextPacketId`, and
+`latestContextPacketRoutingSummary`. `session.layer`, `session.mode`, and
+`session.workflow` are untrusted legacy routing hints only; callers should omit
+them for prompt-first context resolution instead of sending fake chat-level
+routing. HTTP clients cannot mark session routing hints trusted. Only governed
+local session resolution may use the selector CLI's trusted-routing path, and
+that path requires lifecycle proof fields before it will run.
+The service validates these optional fields for size, control characters, and
+basic shape, but it does not verify that client-supplied branch or worktree
+values are the active governed chat. Packets mark this lifecycle context as
+unverified provenance. Side-effect authorization must still verify chat
+ownership through the consuming workflow before acting.
+
 Build the local runtime before starting the service:
 
 ```bash

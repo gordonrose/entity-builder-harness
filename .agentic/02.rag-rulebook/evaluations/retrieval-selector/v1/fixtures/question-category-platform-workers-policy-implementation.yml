@@ -28,6 +28,7 @@ purpose: Prove platform worker questions retrieve the exact runtime workers and 
 input:
   request_text: explain how it works and how it's implemented for platform workers, background jobs, queues, job retry, dead-letter handling, and worker shutdown
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md

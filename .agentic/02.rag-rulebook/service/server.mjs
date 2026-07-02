@@ -49,6 +49,14 @@ const ALLOWED_FORMATS = new Set(["full", "compact"]);
 const MAX_REQUEST_TEXT_CHARS = 8000;
 const MAX_FOCUSED_PATHS = 20;
 const MAX_FOCUSED_PATH_CHARS = 240;
+const MAX_SESSION_ID_CHARS = 160;
+const MAX_SESSION_BRANCH_CHARS = 240;
+const MAX_SESSION_WORKTREE_CHARS = 512;
+const MAX_PACKET_ID_CHARS = 200;
+const MAX_ROUTING_SUMMARY_CHARS = 500;
+const SAFE_ID_PATTERN = /^[A-Za-z0-9._:@/-]*$/;
+const SAFE_BRANCH_PATTERN = /^[A-Za-z0-9._/@-]*$/;
+const SAFE_PACKET_ID_PATTERN = /^[A-Za-z0-9._:-]*$/;
 
 function parseIntegerEnv(name, fallback, { min, max } = {}) {
   const value = Number.parseInt(process.env[name] || String(fallback), 10);
@@ -231,6 +239,11 @@ function stringFromBody(body, camelName, snakeName, fallback) {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
+function stringFromSession(body, camelName, snakeName, fallback = "") {
+  const session = isPlainObject(body.session) ? body.session : {};
+  return stringFromBody(session, camelName, snakeName, fallback);
+}
+
 function focusedPathsFromBody(body) {
   const value = body.focusedPaths ?? body.focused_paths;
   if (!Array.isArray(value)) {
@@ -259,6 +272,73 @@ function validateFocusedPaths(paths) {
       throw badRequest("invalid_focused_path", "focusedPaths entries must be repository-relative paths.");
     }
   }
+}
+
+function hasControlChars(value) {
+  return /[\u0000-\u001f\u007f]/u.test(value);
+}
+
+function validateOptionalString(value, { fieldName, maxLength, pattern } = {}) {
+  if (!value) return "";
+  if (value.length > maxLength || hasControlChars(value)) {
+    throw badRequest("invalid_session_context", `${fieldName} is too long or contains control characters.`);
+  }
+  if (pattern && !pattern.test(value)) {
+    throw badRequest("invalid_session_context", `${fieldName} contains unsupported characters.`);
+  }
+  return value;
+}
+
+function validateSessionWorktree(value) {
+  if (!value) return "";
+  validateOptionalString(value, {
+    fieldName: "session worktree",
+    maxLength: MAX_SESSION_WORKTREE_CHARS,
+  });
+  if (!path.isAbsolute(value) || value.split(/[\\/]/).includes("..")) {
+    throw badRequest("invalid_session_context", "session worktree must be an absolute path without parent traversal.");
+  }
+  return value;
+}
+
+function validateSessionContextFields(fields) {
+  return {
+    sessionId: validateOptionalString(fields.sessionId, {
+      fieldName: "session id",
+      maxLength: MAX_SESSION_ID_CHARS,
+      pattern: SAFE_ID_PATTERN,
+    }),
+    sessionBranch: validateOptionalString(fields.sessionBranch, {
+      fieldName: "session branch",
+      maxLength: MAX_SESSION_BRANCH_CHARS,
+      pattern: SAFE_BRANCH_PATTERN,
+    }),
+    sessionWorktree: validateSessionWorktree(fields.sessionWorktree),
+    sessionLayer: validateOptionalString(fields.sessionLayer, {
+      fieldName: "session layer",
+      maxLength: 80,
+      pattern: SAFE_ID_PATTERN,
+    }),
+    sessionMode: validateOptionalString(fields.sessionMode, {
+      fieldName: "session mode",
+      maxLength: 80,
+      pattern: SAFE_ID_PATTERN,
+    }),
+    sessionWorkflow: validateOptionalString(fields.sessionWorkflow, {
+      fieldName: "session workflow",
+      maxLength: 300,
+      pattern: SAFE_BRANCH_PATTERN,
+    }),
+    previousPacketId: validateOptionalString(fields.previousPacketId, {
+      fieldName: "previous packet id",
+      maxLength: MAX_PACKET_ID_CHARS,
+      pattern: SAFE_PACKET_ID_PATTERN,
+    }),
+    previousRoutingSummary: validateOptionalString(fields.previousRoutingSummary, {
+      fieldName: "previous routing summary",
+      maxLength: MAX_ROUTING_SUMMARY_CHARS,
+    }),
+  };
 }
 
 function validateContextQueryBody(body) {
@@ -334,19 +414,37 @@ async function handleVersion() {
 
 async function handleContextQuery({ body }) {
   const validated = validateContextQueryBody(body);
+  const sessionContext = validateSessionContextFields({
+    sessionId: stringFromBody(body, "sessionId", "session_id", stringFromSession(body, "id", "id")),
+    sessionBranch: stringFromBody(body, "sessionBranch", "session_branch", stringFromSession(body, "branch", "branch")),
+    sessionWorktree: stringFromBody(body, "sessionWorktree", "session_worktree", stringFromSession(body, "worktree", "worktree")),
+    sessionLayer: stringFromBody(body, "sessionLayer", "session_layer", stringFromSession(body, "layer", "layer")),
+    sessionMode: stringFromBody(body, "sessionMode", "session_mode", stringFromSession(body, "mode", "mode")),
+    sessionWorkflow: stringFromBody(
+      body,
+      "sessionWorkflow",
+      "session_workflow",
+      stringFromSession(body, "workflow", "workflow"),
+    ),
+    previousPacketId: stringFromBody(
+      body,
+      "previousPacketId",
+      "previous_packet_id",
+      stringFromSession(body, "latestContextPacketId", "latest_context_packet_id"),
+    ),
+    previousRoutingSummary: stringFromBody(
+      body,
+      "previousRoutingSummary",
+      "previous_routing_summary",
+      stringFromSession(body, "latestContextPacketRoutingSummary", "latest_context_packet_routing_summary"),
+    ),
+  });
 
   const result = await queryLocalContext({
     rootDir: config.rootDir,
     runtimeDir: config.runtimeDir,
     requestText: validated.requestText,
-    sessionLayer: stringFromBody(body, "sessionLayer", "session_layer", body.session?.layer || "02.rag-rulebook"),
-    sessionMode: stringFromBody(body, "sessionMode", "session_mode", body.session?.mode || "discovery"),
-    sessionWorkflow: stringFromBody(
-      body,
-      "sessionWorkflow",
-      "session_workflow",
-      body.session?.workflow || ".agentic/02.rag-rulebook/workflows/default.md",
-    ),
+    ...sessionContext,
     focusedPaths: validated.focusedPaths,
     noFocusedPaths: Boolean(body.noFocusedPaths ?? body.no_focused_paths ?? validated.focusedPaths.length === 0),
     maxChunks: validated.maxChunks,

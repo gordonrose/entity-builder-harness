@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: policy-dimension
-#   purpose: Define how chat and session metadata preserve safety, provenance, and fallback routing.
+#   purpose: Define how chat and session metadata preserve safety, provenance, and continuity without classifying the chat.
 #   portability:
 #     class: reusable
 #     targets:
@@ -27,50 +27,54 @@ dimension_id: session-metadata
 version: 1
 status: active
 applies_to_policy_pack: retrieval-selector.v1
-purpose: Use chat/session metadata as provenance, execution-safety context, and fallback routing without letting it dominate explicit request-context retrieval.
+purpose: Use chat/session metadata as provenance, branch/worktree ownership, execution-safety context, and continuity without treating the chat as one stable layer, mode, or workflow.
 required_inputs:
   - Session ID.
-  - Recorded layer, mode, and workflow.
   - Branch and worktree.
   - Session status.
   - Latest recorded commit metadata when present.
+  - Latest context packet ID and routing summary when present.
 expected_actions:
-  - Preserve recorded layer, mode, workflow, branch, and worktree when metadata is ready.
-  - Use session layer and workflow as fallback retrieval context when the prompt, focused paths, and artifact ownership do not name stronger targets.
-  - Narrow required workflow, safety, and check candidates from the session workflow.
-  - Preserve session metadata in context-packet routing and provenance.
+  - Preserve session ID, branch, worktree, status, commit metadata, and context-packet references when metadata is ready.
+  - Use branch and worktree ownership as execution-safety context for side-effecting actions.
+  - Use the latest context packet as conversational continuity evidence only after a fresh per-prompt request context is built.
+  - Preserve session metadata in context-packet provenance.
 banned_actions:
-  - Do not use session metadata as the primary retrieval target when explicit request context names stronger evidence.
+  - Do not classify a chat session by default into one layer, mode, or workflow.
+  - Do not use session metadata as the primary retrieval target for a new prompt.
+  - Do not copy prior prompt routing into the current packet without fresh request-context resolution.
   - Do not treat missing, unknown, or stale metadata as ready.
   - Do not silently continue when branch or worktree ownership is ambiguous.
   - Do not use prompt terms to bypass a recorded workflow for side-effecting actions.
 output_obligations:
   - session_id
-  - layer
-  - mode
-  - workflow
   - branch
   - worktree
+  - session_status
+  - latest_context_packet_id
+  - latest_context_packet_routing_summary
   - session_metadata_confidence
 gap_or_stop_conditions:
   - Stop when session ownership or worktree state is ambiguous.
-  - Add a metadata gap when layer, mode, or workflow is missing, stale, or unknown.
+  - Add a metadata gap when required lifecycle metadata is missing, stale, or unknown.
+  - Add a continuity gap when latest context-packet metadata is missing and conversation continuity is needed for the prompt.
 ranking_effects:
-  - Complete ready session metadata raises provenance and fallback routing confidence.
-  - Session workflow matches raise required-check and execution-safety ranking.
-  - Explicit request context outranks session defaults for read-only retrieval target selection.
-  - Unknown session metadata lowers routing confidence.
+  - Complete ready session metadata raises provenance and execution-safety confidence.
+  - Branch/worktree matches raise execution-safety ranking.
+  - Explicit request context outranks session continuity for retrieval target selection.
+  - Unknown session metadata lowers packet confidence.
 validation_examples:
-  - name: ready session provides fallback corpus
-    given: Session metadata is ready for `02.rag-rulebook:implementation`.
-    expect: Candidate corpora include `corpus.02.rag-rulebook` when no stronger request-context target is present.
-  - name: request context can retrieve cross-layer evidence
-    given: Session metadata is ready for `02.rag-rulebook:implementation`, but a planning prompt names platform/apps architecture evidence.
-    expect: Retrieval may include platform/apps evidence while session metadata remains in provenance and execution safety.
-  - name: unknown session blocks readiness
-    given: Session layer is `unknown`.
-    expect: The selector reports a metadata gap and does not emit ready routing.
+  - name: ready session provides provenance
+    given: Session metadata has a session ID, branch, worktree, status, and latest context packet reference.
+    expect: The packet preserves those values in provenance while resolving current prompt routing independently.
+  - name: prompt routing changes inside one chat
+    given: The previous prompt routed to `02.rag-rulebook:planning`, but the current prompt asks to commit.
+    expect: The selector resolves commit-oriented routing for the current prompt and treats the previous packet only as continuity evidence.
+  - name: unknown session lifecycle blocks side effects
+    given: Session branch or worktree ownership is unknown.
+    expect: The selector reports a metadata gap and blocks side-effect authorization.
 can_change_by:
   - Add trusted session fields.
   - Add stale-session detection rules.
   - Add recorded-session continuation rules.
+  - Add context-packet continuity fields.

@@ -78,6 +78,7 @@ LOG_FILE="${LOG_DIR}/README.md"
 REPO_ROOT="$(chat_worktree_repo_root)"
 WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$BRANCH")"
 BASE_BRANCH="main"
+CHAT_LIFECYCLE_WORKFLOW=".agentic/00.chat/workflows/chat-start.md"
 
 if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
   BASE_BRANCH="$(git branch --show-current)"
@@ -87,15 +88,6 @@ if [ -z "${BASE_BRANCH// }" ]; then
   echo "ERROR: could not determine a base branch for the chat branch." >&2
   exit 1
 fi
-
-CLASSIFICATION="$(bash scripts/00.chat/classification/classify-task/script.sh "$QUESTION" || true)"
-LAYER="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Layer: //p')"
-MODE="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Mode: //p')"
-WORKFLOW="$(printf '%s\n' "$CLASSIFICATION" | sed -n 's/^Workflow: //p')"
-
-LAYER="${LAYER:-unknown}"
-MODE="${MODE:-unknown}"
-WORKFLOW="${WORKFLOW:-unknown}"
 
 if [ -n "$(git status --porcelain)" ]; then
   WORKTREE_STATUS="dirty"
@@ -119,12 +111,13 @@ id: ${STAMP}-${SLUG}
 task: ${QUESTION}
 branch: ${BRANCH}
 worktree: ${WORKTREE_PATH}
-layer: ${LAYER}
-mode: ${MODE}
-workflow: ${WORKFLOW}
+chat_lifecycle_workflow: ${CHAT_LIFECYCLE_WORKFLOW}
 status: ready
 raised_at_utc: ${RAISED_AT_UTC}
 codex_session_log_path:
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
@@ -201,19 +194,20 @@ CHAT_OPEN_WORKTREE_WINDOW="${CHAT_OPEN_WORKTREE_WINDOW:-skip}" \
 FIRST_PROMPT="Task: ${QUESTION}
 Session log: ${LOG_FILE}
 Chat worktree: ${WORKTREE_PATH}
-Layer: ${LAYER}
-Mode: ${MODE}
-Workflow: ${WORKFLOW}
+Chat lifecycle workflow: ${CHAT_LIFECYCLE_WORKFLOW}
+Latest context packet id:
+Latest context packet routing summary:
 Bootstrap worktree status: ${WORKTREE_STATUS}
 
 If Bootstrap worktree status is dirty, reply exactly:
-Blocked: dirty worktree. Confirm proceed? Layer: ${LAYER}. Mode: ${MODE}. Workflow: ${WORKFLOW}
+Blocked: dirty worktree. Confirm proceed?
 
 Before that response, do not read workflows or run git status/dirty checks.
 
 Governed startup bootstrap has already created this chat branch, worktree, and session log.
 Default mode after startup bootstrap: read-only until I grant write permission in this chat.
 For task writes or commit-boundary work, use the chat worktree above and follow the current workflow gates.
+For prompt-level layer, mode, workflow, and corpus context, query the RAG/rulebook runtime for the current prompt instead of treating the chat session as classified.
 Do not commit without my explicit approval."
 
 print_first_prompt() {

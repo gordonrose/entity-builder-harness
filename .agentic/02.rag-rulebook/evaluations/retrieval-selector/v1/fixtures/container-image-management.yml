@@ -30,6 +30,7 @@ purpose: Prove questions about container sprawl and Dockerfile placement retriev
 input:
   request_text: How should we manage Dockerfiles and container images in this repo so image definitions do not sprawl?
   session:
+    trust_routing: true
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md

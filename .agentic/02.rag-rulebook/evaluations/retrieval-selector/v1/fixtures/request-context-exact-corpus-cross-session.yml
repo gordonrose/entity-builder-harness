@@ -24,7 +24,7 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.request-context-exact-corpus-cross-session
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove explicit request context beats session defaults for retrieval while preserving session provenance.
+purpose: Prove explicit request context beats session continuity for retrieval while preserving session provenance.
 input:
   request_text: Explain the corpus.03.product.platform rules using the exact product platform corpus.
   session:
@@ -36,8 +36,9 @@ input:
   max_chunks: 6
 expected:
   routing:
-    layer: 02.rag-rulebook
-    mode: implementation
+    layer: 03.product
+    mode: discovery
+    workflow: .agentic/product/workflows/default.md
     status: ready
   action_authorization:
     requested_action: context-retrieval
@@ -46,7 +47,6 @@ expected:
     status: not-requested
   matched_corpora:
     required:
-      - corpus.02.rag-rulebook
       - corpus.03.product.platform
   selected_corpora:
     required:

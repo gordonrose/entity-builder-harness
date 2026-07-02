@@ -28,6 +28,7 @@ purpose: Prove an explanation prompt retrieves deploy context without creating d
 input:
   request_text: Can you explain how to deploy the RAG rulebook MCP server?
   session:
+    trust_routing: true
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md

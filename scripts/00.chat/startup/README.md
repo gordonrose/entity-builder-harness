@@ -22,12 +22,13 @@
 # Startup Scripts
 
 Startup scripts create the governed working context for a chat. They handle
-task summaries, classification, branch creation, chat-owned worktrees, session
-logs, and terminal handoff prompts.
+task summaries, branch creation, chat-owned worktrees, session logs, latest
+context-packet continuity fields, and terminal handoff prompts.
 
 Startup is where the harness prevents the first turn from being ambiguous. A
-chat should begin with a known branch, known worktree, known workflow, and
-known session log.
+chat should begin with a known branch, known worktree, known chat lifecycle
+workflow, and known session log. Prompt-level layer, mode, workflow, corpus, and
+rule context is resolved later by the RAG/rulebook runtime for each prompt.
 
 Agents following chat-start should use `resolve-current-chat-session` as the
 startup entrypoint. It reads existing chat metadata when available and
