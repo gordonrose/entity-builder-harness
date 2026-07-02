@@ -51,6 +51,12 @@ metadata_has_line() {
 has_never_persistent_effect() {
   local path="$1"
 
+  case "$path" in
+    scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh)
+      return 1
+      ;;
+  esac
+
   metadata_has_line "$path" "destructive" ||
     metadata_has_line "$path" "push" ||
     metadata_has_line "$path" "history-rewrite" ||

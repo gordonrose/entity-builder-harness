@@ -173,7 +173,7 @@ refresh should be rehearsed before mutating the active chat worktree.
    ```bash
    bash scripts/00.chat/main-refresh/verify-conflict-audit/script.sh \
      --path <conflicted-path> ...
-   bash scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
+   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh <preflight-branch>
    ```
 
 5. Applying the rehearsed refresh fast-forwards the active chat branch, verifies it points at the
