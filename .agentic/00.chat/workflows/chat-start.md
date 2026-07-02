@@ -77,7 +77,7 @@ If `codex_session_log_path` is missing or blank, register the current Codex
 session JSONL before the first task commit:
 
 ```bash
-bash scripts/00.chat/transcript/register-codex-session-log/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/transcript/register-codex-session-log/script.sh
 ```
 
 This records the transcript source used later for estimated chat-token metrics.
@@ -174,7 +174,7 @@ If the user grants write permission but the current session has no chat-owned
 worktree, create or verify it before editing:
 
 ```bash
-bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
 ```
 
 <!-- deterministic-check: allow reason="check-write-location.sh enforces the write-location invariant; workflow states when agents should invoke it" -->

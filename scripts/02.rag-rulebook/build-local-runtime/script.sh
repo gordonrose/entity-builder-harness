@@ -95,6 +95,28 @@ require_executable "scripts/02.rag-rulebook/validate-rulebook-index/script.sh"
 require_executable "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"
 require_executable "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh"
 
+refresh_generated_recognition_sources_if_stale() {
+  local check_output="$1"
+
+  if bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh \
+      --check >"$check_output" 2>&1; then
+    return 0
+  fi
+
+  if grep -Fq "generated recognition source is stale" "$check_output" ||
+    grep -Fq "generated recognition source is missing" "$check_output"; then
+    cat "$check_output" >&2
+    echo "Refreshing generated recognition sources before building local runtime." >&2
+    bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all >&2
+    bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh \
+      --check >"$check_output"
+    return 0
+  fi
+
+  cat "$check_output" >&2
+  return 1
+}
+
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
@@ -125,8 +147,7 @@ bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
   --current \
   --json > "$RECOGNITION_CANDIDATES_REPORT"
 
-bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh \
-  --check > "$GENERATED_SOURCES_CHECK"
+refresh_generated_recognition_sources_if_stale "$GENERATED_SOURCES_CHECK"
 
 bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh \
   --pretty > "$INDEX_FILE"

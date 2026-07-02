@@ -58,8 +58,9 @@ new chat-owned behavior belongs under `scripts/00.chat/<domain>/<capability>/`.
 Use `bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh` to inspect the
 current migration state before moving more chat lifecycle behavior.
 
-Use `bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh` to append the
-required session-log audit trail for governed main-refresh conflict recovery.
+Use `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-main-refresh-conflict/script.sh`
+to append the required session-log audit trail for governed main-refresh
+conflict recovery.
 
 ## Reporting Policy
 

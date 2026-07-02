@@ -37,6 +37,79 @@ action class governed by the active workflow.
 EOF
 }
 
+has_artifact_header() {
+  sed -n '1,80p' "$1" | grep -Fq "agentic-artifact:"
+}
+
+metadata_has_line() {
+  local path="$1"
+  local value="$2"
+
+  sed -n '1,140p' "$path" | grep -Eq "^[#[:space:]]*-[[:space:]]*$value[[:space:]]*$"
+}
+
+has_never_persistent_effect() {
+  local path="$1"
+
+  metadata_has_line "$path" "destructive" ||
+    metadata_has_line "$path" "branches" ||
+    metadata_has_line "$path" "push" ||
+    metadata_has_line "$path" "history-rewrite" ||
+    metadata_has_line "$path" "overwrites" ||
+    metadata_has_line "$path" "cloud" ||
+    metadata_has_line "$path" "database"
+}
+
+classify_script() {
+  local path="$1"
+
+  case "$path" in
+    */lib.sh)
+      echo "ERROR: governed library files must not be invoked directly: $path" >&2
+      return 1
+      ;;
+  esac
+
+  case "$path" in
+    scripts/[0-9][0-9].*/*.sh|scripts/[0-9][0-9].*/*/script.sh|scripts/[0-9][0-9].*/*/smoke-test.sh|\
+    scripts/[0-9][0-9].*/*/*/script.sh|scripts/[0-9][0-9].*/*/*/smoke-test.sh)
+      ;;
+    scripts/shared/*.sh|scripts/shared/*/*.sh)
+      echo "ERROR: retired shared script path must not be invoked directly: $path" >&2
+      return 1
+      ;;
+    *)
+      echo "ERROR: refused script outside canonical governed script paths: $path" >&2
+      return 1
+      ;;
+  esac
+
+  if [ ! -f "$path" ]; then
+    echo "ERROR: governed script does not exist: $path" >&2
+    return 1
+  fi
+
+  if ! has_artifact_header "$path"; then
+    echo "ERROR: script is missing governed agentic-artifact metadata: $path" >&2
+    return 1
+  fi
+
+  if has_never_persistent_effect "$path"; then
+    echo "ERROR: script has effects that are never persistent-auto-approved: $path" >&2
+    return 1
+  fi
+
+  if metadata_has_line "$path" "read-only" &&
+    ! metadata_has_line "$path" "writes-files" &&
+    ! metadata_has_line "$path" "commits" &&
+    ! metadata_has_line "$path" "network"; then
+    printf '%s\n' "always"
+    return 0
+  fi
+
+  printf '%s\n' "approved"
+}
+
 APPROVED_ACTION="no"
 
 if [ $# -eq 0 ]; then
@@ -50,39 +123,15 @@ case "$1" in
     shift
     ;;
   --list)
-    cat <<'EOF'
-always scripts/00.chat/migration/audit-chat-layer-migration/script.sh
-always scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh
-always scripts/00.chat/reporting/generate-commit-log-summary/script.sh
-always scripts/00.chat/reporting/report-chat-workspaces/script.sh
-always scripts/00.chat/local-merge/list-active-chat-branches/script.sh
-always scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
-always scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh
-always scripts/00.chat/session-log/check-commit-prerequisites/script.sh
-always scripts/00.chat/session-log/check-commitlog-deletions/script.sh
-always scripts/00.chat/worktree/check-write-location/script.sh
-always scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh
-always scripts/00.chat/worktree/dirty-worktree-check/script.sh
-always scripts/00.chat/main-refresh/show-main-update-status/script.sh
-always scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
-always scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
-always scripts/01.harness/check-deterministic-process-drift.sh
-always scripts/01.harness/artifact-metadata/check-headers/script.sh
-always scripts/01.harness/artifact-metadata/generate-index/script.sh
-approved scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh
-always scripts/01.harness/check-artifact-metadata-headers.sh
-always scripts/01.harness/check-governed-script-command-drift.sh
-always scripts/01.harness/plan-artifact-path-migration.sh
-always scripts/01.harness/check-artifact-path-migration.sh
-approved scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh
-approved scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
-approved scripts/00.chat/startup/resolve-current-chat-session/script.sh
-approved scripts/00.chat/startup/auto-start-missing-session/script.sh
-approved scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
-approved scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
-approved scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
-approved scripts/00.chat/session-log/record-chat-commit/script.sh
-EOF
+    REPO_ROOT="$(git rev-parse --show-toplevel)"
+    cd "$REPO_ROOT"
+    git ls-files 'scripts/*.sh' 'scripts/*/*.sh' 'scripts/*/*/*.sh' 'scripts/*/*/*/*.sh' |
+      while IFS= read -r script_path; do
+        run_class="$(classify_script "$script_path" 2>/dev/null || true)"
+        if [ -n "$run_class" ]; then
+          printf '%s %s\n' "$run_class" "$script_path"
+        fi
+      done
     exit 0
     ;;
   -h|--help)
@@ -101,99 +150,21 @@ shift
 
 case "$SCRIPT_PATH" in
   /*|*../*|../*|*"/.."|*".."|*"
-"*) 
+"*)
     echo "ERROR: refused non-repository script path: $SCRIPT_PATH" >&2
-    exit 1
-    ;;
-  scripts/shared/*.sh|scripts/shared/*/*.sh|\
-  scripts/00.chat/migration/audit-chat-layer-migration/script.sh|\
-  scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
-  scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\
-  scripts/00.chat/reporting/report-chat-workspaces/script.sh|\
-  scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
-  scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
-  scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
-  scripts/00.chat/session-log/check-commit-prerequisites/script.sh|\
-  scripts/00.chat/session-log/check-commitlog-deletions/script.sh|\
-  scripts/00.chat/worktree/check-write-location/script.sh|\
-  scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
-  scripts/00.chat/worktree/dirty-worktree-check/script.sh|\
-  scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
-  scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
-  scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
-  scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
-  scripts/00.chat/startup/resolve-current-chat-session/script.sh|\
-  scripts/00.chat/startup/auto-start-missing-session/script.sh|\
-  scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
-  scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
-  scripts/00.chat/session-log/record-chat-commit/script.sh|\
-  scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
-  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
-  scripts/01.harness/check-deterministic-process-drift.sh|\
-  scripts/01.harness/artifact-metadata/check-headers/script.sh|\
-  scripts/01.harness/artifact-metadata/generate-index/script.sh|\
-  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh|\
-  scripts/01.harness/check-artifact-metadata-headers.sh|\
-  scripts/01.harness/check-governed-script-command-drift.sh|\
-  scripts/01.harness/plan-artifact-path-migration.sh|\
-  scripts/01.harness/check-artifact-path-migration.sh)
-    ;;
-  *)
-    echo "ERROR: refused script outside governed shared script paths: $SCRIPT_PATH" >&2
     exit 1
     ;;
 esac
 
-RUN_CLASS=""
-case "$SCRIPT_PATH" in
-  scripts/00.chat/migration/audit-chat-layer-migration/script.sh|\
-  scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh|\
-  scripts/00.chat/reporting/generate-commit-log-summary/script.sh|\
-  scripts/00.chat/reporting/report-chat-workspaces/script.sh|\
-  scripts/00.chat/local-merge/list-active-chat-branches/script.sh|\
-  scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh|\
-  scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh|\
-  scripts/00.chat/session-log/check-commit-prerequisites/script.sh|\
-  scripts/00.chat/session-log/check-commitlog-deletions/script.sh|\
-  scripts/00.chat/worktree/check-write-location/script.sh|\
-  scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh|\
-  scripts/00.chat/worktree/dirty-worktree-check/script.sh|\
-  scripts/00.chat/main-refresh/show-main-update-status/script.sh|\
-  scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh|\
-  scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh|\
-  scripts/01.harness/check-deterministic-process-drift.sh|\
-  scripts/01.harness/artifact-metadata/check-headers/script.sh|\
-  scripts/01.harness/artifact-metadata/generate-index/script.sh|\
-  scripts/01.harness/check-artifact-metadata-headers.sh|\
-  scripts/01.harness/check-governed-script-command-drift.sh|\
-  scripts/01.harness/plan-artifact-path-migration.sh|\
-  scripts/01.harness/check-artifact-path-migration.sh)
-    RUN_CLASS="always"
-    ;;
-  scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh|\
-  scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh|\
-  scripts/00.chat/startup/resolve-current-chat-session/script.sh|\
-  scripts/00.chat/startup/auto-start-missing-session/script.sh|\
-  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh|\
-  scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh|\
-  scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh|\
-  scripts/00.chat/session-log/record-chat-commit/script.sh|\
-  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh)
-    RUN_CLASS="approved"
-    ;;
-  *)
-    echo "ERROR: script is not in the governed allowlist: $SCRIPT_PATH" >&2
-    exit 1
-    ;;
-esac
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+RUN_CLASS="$(classify_script "$SCRIPT_PATH")"
 
 if [ "$RUN_CLASS" = "approved" ] && [ "$APPROVED_ACTION" != "yes" ]; then
   echo "ERROR: approval-sensitive script requires --approved-action: $SCRIPT_PATH" >&2
   exit 1
 fi
-
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-cd "$REPO_ROOT"
 
 if [ ! -f "$SCRIPT_PATH" ]; then
   echo "ERROR: governed script does not exist: $SCRIPT_PATH" >&2

@@ -44,6 +44,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/startup/resolve-current-chat-session" \
   "$REPO/scripts/00.chat/upstream/ensure-llm-workbench-repo" \
   "$REPO/scripts/00.chat/worktree/check-write-location" \
+  "$REPO/scripts/02.rag-rulebook/run-local-service" \
   "$REPO/scripts/01.harness" \
   "$REPO/scripts/local"
 
@@ -53,29 +54,49 @@ cp "$SOURCE_ROOT/scripts/01.harness/run-governed-script.sh" \
 make_fixture() {
   local path="$1"
   local label="$2"
+  local effects="${3:-read-only}"
+  local effect
 
   mkdir -p "$REPO/${path%/*}"
   {
     printf '#!/usr/bin/env bash\n'
     printf 'set -euo pipefail\n'
+    printf '\n'
+    printf '# agentic-artifact:\n'
+    printf '#   schema: agentic-artifact/v2\n'
+    printf '#   id: smoke.fixture.%s\n' "$(printf '%s' "$label" | tr -c '[:alnum:]' '-')"
+    printf '#   version: 1\n'
+    printf '#   status: active\n'
+    printf '#   layer: 00.chat\n'
+    printf '#   domain: smoke-test\n'
+    printf '#   disciplines:\n'
+    printf '#   - agentic\n'
+    printf '#   kind: script\n'
+    printf '#   purpose: Fixture script for governed runner smoke tests.\n'
+    printf '#   effects:\n'
+    for effect in $effects; do
+      printf '#   - %s\n' "$effect"
+    done
+    printf '\n'
     printf 'echo "%s:$*"\n' "$label"
   } > "$REPO/$path"
 }
 
 make_fixture "scripts/shared/git/check-write-location.sh" "retired-check"
 make_fixture "scripts/00.chat/worktree/check-write-location/script.sh" "canonical-check"
-make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "retired-workbench"
-make_fixture "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh" "canonical-workbench"
-make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "retired-auto-start"
-make_fixture "scripts/00.chat/startup/auto-start-missing-session/script.sh" "canonical-auto-start"
-make_fixture "scripts/00.chat/startup/resolve-current-chat-session/script.sh" "canonical-resolve-session"
-make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "retired-rename"
-make_fixture "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh" "canonical-approved-action"
-make_fixture "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh" "canonical-prepare"
-make_fixture "scripts/00.chat/session-log/record-chat-commit/script.sh" "canonical-record"
-make_fixture "scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh" "canonical-checkpoint"
-make_fixture "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "dangerous-helper"
+make_fixture "scripts/shared/chat/ensure-llm-workbench-repo.sh" "retired-workbench" "writes-files"
+make_fixture "scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh" "canonical-workbench" "writes-files"
+make_fixture "scripts/shared/chat/request-initialization/auto-start-missing-session.sh" "retired-auto-start" "writes-files"
+make_fixture "scripts/00.chat/startup/auto-start-missing-session/script.sh" "canonical-auto-start" "writes-files"
+make_fixture "scripts/00.chat/startup/resolve-current-chat-session/script.sh" "canonical-resolve-session" "writes-files"
+make_fixture "scripts/shared/chat/rename-current-chat-log-folder.sh" "retired-rename" "writes-files"
+make_fixture "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh" "canonical-approved-action" "writes-files"
+make_fixture "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh" "canonical-prepare" "writes-files"
+make_fixture "scripts/00.chat/session-log/record-chat-commit/script.sh" "canonical-record" "writes-files commits"
+make_fixture "scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh" "canonical-checkpoint" "writes-files"
+make_fixture "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "dangerous-helper" "branches destructive writes-files"
 make_fixture "scripts/01.harness/check-deterministic-process-drift.sh" "allowed-harness"
+make_fixture "scripts/02.rag-rulebook/run-local-service/smoke-test.sh" "canonical-rag-smoke" "writes-files network"
 make_fixture "scripts/local/not-governed.sh" "local-script"
 
 git -C "$REPO" init --quiet
@@ -144,6 +165,15 @@ if [ "$OUT" != "canonical-approved-action:test" ]; then
   fail "canonical approval-sensitive script did not run with --approved-action: $OUT"
 fi
 
+if bash scripts/01.harness/run-governed-script.sh scripts/02.rag-rulebook/run-local-service/smoke-test.sh >"$TMP_ROOT/rag-smoke-missing.out" 2>&1; then
+  fail "RAG service smoke test ran without --approved-action"
+fi
+
+OUT="$(bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/smoke-test.sh)"
+if [ "$OUT" != "canonical-rag-smoke:" ]; then
+  fail "canonical RAG service smoke test did not run through the governed runner: $OUT"
+fi
+
 if bash scripts/01.harness/run-governed-script.sh scripts/00.chat/git/cleanup-empty-chat-branches/script.sh --apply >"$TMP_ROOT/dangerous.out" 2>&1; then
   fail "dangerous helper was allowed"
 fi
@@ -198,6 +228,20 @@ case "$LIST" in
     ;;
   *)
     fail "--list output did not include expected canonical approved entry"
+    ;;
+esac
+
+case "$LIST" in
+  *"approved scripts/02.rag-rulebook/run-local-service/smoke-test.sh"*)
+    ;;
+  *)
+    fail "--list output did not include expected canonical RAG smoke test entry"
+    ;;
+esac
+
+case "$LIST" in
+  *"scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"*)
+    fail "--list output included never-persistent destructive helper"
     ;;
 esac
 

@@ -75,7 +75,7 @@ preflight result.
 Use:
 
 ```bash
-bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh \
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-main-refresh-conflict/script.sh \
   --path <conflicted-path> \
   --type <conflict-type> \
   --reason <classification-reason> \

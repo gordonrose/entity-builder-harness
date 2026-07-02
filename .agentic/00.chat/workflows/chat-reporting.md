@@ -48,13 +48,13 @@ Use the chat-layer reporting skill for human-oriented summary work:
 Use the script for deterministic aggregate metrics:
 
 ```bash
-bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/reporting/generate-commit-log-summary/script.sh
 ```
 
 To write a file, require an explicit output path:
 
 ```bash
-bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh --output <path>
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/reporting/generate-commit-log-summary/script.sh --output <path>
 ```
 
 ## Rules

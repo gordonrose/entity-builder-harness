@@ -106,7 +106,7 @@ commit logs that record commits or are explicitly marked for retention.
 For structured manual session-log entries, use:
 
 ```bash
-bash scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary> <detail>
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary> <detail>
 ```
 
 ## ADR Disposition

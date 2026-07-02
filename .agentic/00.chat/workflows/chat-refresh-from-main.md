@@ -160,7 +160,7 @@ refresh should be rehearsed before mutating the active chat worktree.
    Conflicts` in the current chat session log with:
 
    ```bash
-   bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh ...
+   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-main-refresh-conflict/script.sh ...
    ```
 
    Do not apply the rehearsed refresh until the session log records the audit

@@ -42,19 +42,19 @@ validated context packet.
 Build the local runtime before starting the service:
 
 ```bash
-bash scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty
 ```
 
 Start locally:
 
 ```bash
-bash scripts/02.rag-rulebook/run-local-service/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/script.sh
 ```
 
 Smoke test:
 
 ```bash
-bash scripts/02.rag-rulebook/run-local-service/smoke-test.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/smoke-test.sh
 ```
 
 The local service binds to `127.0.0.1` by default. Non-loopback binding requires

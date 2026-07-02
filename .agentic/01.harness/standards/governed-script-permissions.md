@@ -51,7 +51,8 @@ hide unrelated behavior.
 
 - This standard owns the policy and approval classes.
 - `scripts/01.harness/run-governed-script.sh` owns deterministic
-  enforcement.
+  enforcement and discovers canonical governed scripts from their
+  `agentic-artifact` metadata.
 - Vendor configuration owns only vendor-specific permission mechanics.
 - Workflows still own when a class of action is approved for the current chat.
 
@@ -66,8 +67,9 @@ These scripts may run through the governed runner without a separate chat
 approval when the current workflow allows inspection or validation.
 
 Examples include deterministic read-only checks, classifiers, and reporting
-helpers that do not stage, commit, push, delete, rewrite, clean, overwrite, or
-otherwise mutate repository, branch, runtime, cloud, or data state.
+helpers that do not stage, commit, push, delete, rewrite, clean, overwrite,
+start network listeners, or otherwise mutate repository, branch, runtime,
+cloud, or data state.
 
 ### Approval-Sensitive Governed Actions
 
@@ -75,12 +77,15 @@ These scripts may run through the governed runner only after the current chat
 contains explicit approval for the action class.
 
 Examples include task staging, task commits, governed branch refresh,
-promotion, cleanup, or any helper that mutates Git metadata or repository
-files.
+promotion, local runtime/network smoke tests, cleanup, or any helper that
+mutates Git metadata or repository files.
 
 After the user approves the action class, agents should not ask for a second
 confirmation for each downstream governed script unless the workflow, script,
-or gate reaches a new stop condition.
+or gate reaches a new stop condition. Adding a canonical script with
+`agentic-artifact` metadata should not require a second hard-coded runner
+allow-list entry; the script's declared `effects` determine whether the runner
+treats it as always-runnable or approval-sensitive.
 
 ## Agent-Facing Command Examples
 

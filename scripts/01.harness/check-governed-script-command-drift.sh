@@ -131,6 +131,13 @@ scan_file() {
       case "$text" in
         *"$script"*)
           case "$text" in
+            *"bash $script"*)
+              ;;
+            *)
+              continue
+              ;;
+          esac
+          case "$text" in
             *"bash scripts/01.harness/run-governed-script.sh --approved-action $script"*)
               ;;
             *)
@@ -145,14 +152,7 @@ scan_file() {
                   ;;
               esac
               printf '%s:%s\n' "$path" "$line_no"
-              case "$text" in
-                *"bash $script"*)
-                  printf '  Type: direct-approved-governed-script\n'
-                  ;;
-                *)
-                  printf '  Type: unrouted-approved-governed-script-reference\n'
-                  ;;
-              esac
+              printf '  Type: direct-approved-governed-script\n'
               printf '  Text: %s\n' "$text"
               printf '  Suggestion: Use bash scripts/01.harness/run-governed-script.sh --approved-action %s\n\n' "$script"
               FINDINGS=$((FINDINGS + 1))

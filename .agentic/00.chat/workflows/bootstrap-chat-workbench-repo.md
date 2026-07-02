@@ -118,7 +118,7 @@ the public repo.
 Before writing, run the dry-run planner:
 
 ```bash
-bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh \
   --target <upstream-repo> \
   --dry-run
 ```

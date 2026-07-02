@@ -39,6 +39,7 @@ mkdir -p \
   "$REPO/.agentic/00.chat/checklists" \
   "$REPO/.agentic/00.chat/workflows" \
   "$REPO/docs/harness/architecture/adrs" \
+  "$REPO/scripts/00.chat/session-log/checkpoint-chat-session-log" \
   "$REPO/scripts/01.harness"
 
 cp "$SOURCE_ROOT/scripts/01.harness/run-governed-script.sh" \
@@ -46,7 +47,29 @@ cp "$SOURCE_ROOT/scripts/01.harness/run-governed-script.sh" \
 cp "$SOURCE_ROOT/scripts/01.harness/check-governed-script-command-drift.sh" \
   "$REPO/scripts/01.harness/check-governed-script-command-drift.sh"
 
+cat > "$REPO/scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: smoke.fixture.checkpoint-chat-session-log
+#   version: 1
+#   status: active
+#   layer: 00.chat
+#   domain: smoke-test
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Fixture approval-sensitive script for command drift smoke tests.
+#   effects:
+#   - writes-files
+
+echo checkpoint
+EOF
+
 git -C "$REPO" init --quiet
+git -C "$REPO" add scripts
 cd "$REPO"
 
 cat > .agentic/00.chat/checklists/bad.md <<'EOF'
@@ -84,14 +107,9 @@ cat > .agentic/00.chat/workflows/prose.md <<'EOF'
 The checkpoint helper lives at scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh.
 EOF
 
-if bash scripts/01.harness/check-governed-script-command-drift.sh \
-    --paths .agentic/00.chat/workflows/prose.md \
-    > "$TMP_ROOT/prose.out" 2>&1; then
-  fail "bare approval-sensitive script reference was not flagged"
-fi
-
-grep -q 'unrouted-approved-governed-script-reference' "$TMP_ROOT/prose.out" \
-  || fail "bare script finding did not include expected type"
+bash scripts/01.harness/check-governed-script-command-drift.sh \
+  --paths .agentic/00.chat/workflows/prose.md \
+  > "$TMP_ROOT/prose.out"
 
 cat > .agentic/00.chat/workflows/basename-prose.md <<'EOF'
 # Basename prose

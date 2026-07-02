@@ -78,7 +78,7 @@ bash scripts/00.chat/worktree/check-write-location/script.sh
 If a session log exists but its worktree is missing, recreate or verify it with:
 
 ```bash
-bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/worktree/ensure-chat-worktree/script.sh <session-log>
 ```
 
 The chat-owned worktree has its own files and index. Stage only approved
