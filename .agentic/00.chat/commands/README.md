@@ -38,7 +38,7 @@ npm run chat -- <command> [args...]
 The canonical dispatcher is:
 
 ```bash
-bash scripts/00.chat/command/dispatcher/script.sh <command> [args...]
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/command/dispatcher/script.sh <command> [args...]
 ```
 
 Its capability README is:

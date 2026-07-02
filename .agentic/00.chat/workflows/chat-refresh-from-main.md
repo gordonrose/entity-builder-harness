@@ -140,7 +140,7 @@ refresh should be rehearsed before mutating the active chat worktree.
    worktree:
 
    ```bash
-   bash scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
+   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
    ```
 
 3. If preflight reports conflicts, stop before resolving. Classify each

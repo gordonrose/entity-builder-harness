@@ -96,7 +96,7 @@ For the approved non-rewriting refresh, use the rehearsed preflight refresh flow
 from `.agentic/00.chat/workflows/chat-refresh-from-main.md`:
 
 ```bash
-bash scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
 ```
 
 If the preflight succeeds, run the required checks, apply the rehearsed refresh

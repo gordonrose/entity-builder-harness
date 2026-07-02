@@ -52,7 +52,6 @@ has_never_persistent_effect() {
   local path="$1"
 
   metadata_has_line "$path" "destructive" ||
-    metadata_has_line "$path" "branches" ||
     metadata_has_line "$path" "push" ||
     metadata_has_line "$path" "history-rewrite" ||
     metadata_has_line "$path" "overwrites" ||
