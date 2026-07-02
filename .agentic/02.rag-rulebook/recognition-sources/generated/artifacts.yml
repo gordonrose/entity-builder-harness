@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 514
-  term_count: 1039
+  indexed_artifacts: 521
+  term_count: 1053
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -1842,6 +1842,78 @@ terms:
   canonical_id: harness.readme
   evidence_path: .agentic/01.harness/README.md
   confidence_weight: 1
+- term: harness.agents.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.readme
+  evidence_path: .agentic/01.harness/agents/README.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.readme
+  evidence_path: .agentic/01.harness/agents/README.md
+  confidence_weight: 1
+- term: harness.agents.cfo-token-efficiency
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/cfo-token-efficiency.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/cfo-token-efficiency.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/cfo-token-efficiency.md
+  confidence_weight: 1
+- term: harness.agents.secops-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.secops-engineer
+  evidence_path: .agentic/01.harness/agents/secops-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/secops-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.secops-engineer
+  evidence_path: .agentic/01.harness/agents/secops-engineer.md
+  confidence_weight: 1
+- term: harness.agents.senior-backend-architect
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/senior-backend-architect.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/senior-backend-architect.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/senior-backend-architect.md
+  confidence_weight: 1
+- term: harness.agents.senior-prompt-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/senior-prompt-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/senior-prompt-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/senior-prompt-engineer.md
+  confidence_weight: 1
+- term: harness.agents.senior-sre-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/senior-sre-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/senior-sre-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/senior-sre-engineer.md
+  confidence_weight: 1
 - term: harness.agents.use-cases
   category: artifact-id
   match_type: exact
@@ -1853,6 +1925,18 @@ terms:
   match_type: exact
   canonical_id: harness.agents.use-cases
   evidence_path: .agentic/01.harness/agents/use-cases.md
+  confidence_weight: 1
+- term: harness.agents.ux-ui-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/ux-ui-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/ux-ui-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/ux-ui-engineer.md
   confidence_weight: 1
 - term: harness.capability.artifact-metadata
   category: artifact-id

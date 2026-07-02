@@ -50,6 +50,8 @@ Future Codex sessions continuing rulebook work should start by reading
 
 - `artifact-metadata/` - owns the versioned artifact metadata model, taxonomy,
   v2 schema contract, and future artifact index generator guidance.
+- `agents/` - defines reusable harness review agents, use-case quality bars,
+  and bounded review roles for single-agent and review-board work.
 
 ## Standards
 

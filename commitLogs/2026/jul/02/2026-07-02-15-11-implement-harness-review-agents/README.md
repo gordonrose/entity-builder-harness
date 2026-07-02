@@ -50,6 +50,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Agent contracts govern harness review agents
   Rationale: The standard defines required sections, evidence boundaries, scoring, stop conditions, and delegation so agent files remain bounded reviewers rather than sprawling prompt bundles.
 
+
+- Decision: Create six bounded harness review agents
+  Rationale: The agent directory now defines CFO, prompt, backend architecture, SRE, SecOps, and UX/UI reviewer contracts with required sections, rubrics, authority boundaries, and delegation lanes.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -98,6 +102,13 @@ Message: Add harness agent contract standard
 Summary: Added the harness agent contract standard, indexed it from the harness README, and regenerated artifact recognition sources so review-agent contracts are retrievable.
 
 ADR impact: ADR not needed; this formalizes the approved agent artifact shape under existing harness standards.
+
+
+### 2026-07-02T15:20:30Z - Decision
+
+Decision: Create six bounded harness review agents
+
+Rationale: The agent directory now defines CFO, prompt, backend architecture, SRE, SecOps, and UX/UI reviewer contracts with required sections, rubrics, authority boundaries, and delegation lanes.
 
 ## Commits
 
