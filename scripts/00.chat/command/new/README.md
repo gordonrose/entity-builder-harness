@@ -24,8 +24,8 @@ delegates to `scripts/00.chat/startup/start-new-chat/script.sh`.
 
 The command keeps the public interface small: humans ask for a new chat, and
 startup owns branch creation, worktree creation, session-log initialization,
-classification, and terminal handoff.
+chat lifecycle metadata, and terminal handoff. Prompt-level classification and
+context selection are resolved later by the RAG/rulebook runtime.
 
 This command can create branches, worktrees, and session-log files through the
 startup engine.
-

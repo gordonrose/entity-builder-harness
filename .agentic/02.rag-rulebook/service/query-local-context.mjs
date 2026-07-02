@@ -31,18 +31,27 @@ function commandArgs(input) {
     input.runtimeDir,
     "--request-text",
     input.requestText,
-    "--session-layer",
-    input.sessionLayer,
-    "--session-mode",
-    input.sessionMode,
-    "--session-workflow",
-    input.sessionWorkflow,
     "--max-chunks",
     String(input.maxChunks),
     "--format",
     input.format,
     "--pretty",
   ];
+
+  const addStringArg = (flag, value) => {
+    if (typeof value === "string" && value.trim()) {
+      args.push(flag, value.trim());
+    }
+  };
+
+  addStringArg("--session-id", input.sessionId);
+  addStringArg("--session-branch", input.sessionBranch);
+  addStringArg("--session-worktree", input.sessionWorktree);
+  addStringArg("--session-layer", input.sessionLayer);
+  addStringArg("--session-mode", input.sessionMode);
+  addStringArg("--session-workflow", input.sessionWorkflow);
+  addStringArg("--previous-packet-id", input.previousPacketId);
+  addStringArg("--previous-routing-summary", input.previousRoutingSummary);
 
   if (input.noFocusedPaths) {
     args.push("--no-focused-paths");

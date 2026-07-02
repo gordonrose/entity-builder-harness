@@ -28,6 +28,7 @@ purpose: Prove each runtime module listed in platform.yml has an evidence-family
 input:
   request_text: Explain how it works and how it's implemented for platform contracts, platform config, platform runtime, platform server, platform security, logging, platform health, platform workers, and platform testing.
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md

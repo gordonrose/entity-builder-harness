@@ -28,6 +28,7 @@ purpose: Prove logging policy explanation questions retrieve concept definition,
 input:
   request_text: explain the logging policy for this repo, how it works and how it's implemented?
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md

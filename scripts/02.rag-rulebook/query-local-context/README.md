@@ -45,9 +45,6 @@ Then query it:
 ```bash
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --request-text "How do I update my harness so we can deploy it behind an MCP server?" \
-  --session-layer 01.harness \
-  --session-mode planning \
-  --session-workflow .agentic/01.harness/workflows/change-harness.md \
   --focused-path .agentic/01.harness/workflows/change-harness.md \
   --pretty
 ```
@@ -57,8 +54,18 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
 - `--runtime-dir <path>` chooses the local runtime cache. Default:
   `.cache/02.rag-rulebook`.
 - `--request-text <text>` is required.
-- `--session-layer`, `--session-mode`, and `--session-workflow` provide
-  session metadata.
+- `--session-id`, `--session-branch`, and `--session-worktree` provide
+  lifecycle provenance for the consuming chat/workbench.
+- `--session-layer`, `--session-mode`, and `--session-workflow` are optional
+  legacy routing hints. Omit them for prompt-first context resolution.
+- `--trust-session-routing` allows a governed session resolver to treat those
+  legacy routing hints as verified selector input. It fails unless
+  `--session-id`, `--session-branch`, `--session-worktree`,
+  `--session-layer`, `--session-mode`, and `--session-workflow` are supplied.
+  Do not use it for client-supplied values; the HTTP service intentionally does
+  not expose this trust path.
+- `--previous-packet-id` and `--previous-routing-summary` provide continuity
+  from the previous context packet without making it current routing.
 - `--focused-path <path>` may be repeated.
 - `--no-focused-paths` clears focused path signals.
 - `--max-chunks <n>` controls packet size.

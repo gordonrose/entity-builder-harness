@@ -28,6 +28,7 @@ purpose: Prove category-level evidence bundles pull canonical apps/platform/depe
 input:
   request_text: Should we make RAG Query one of our apps or part of platform?
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md

@@ -28,6 +28,7 @@ purpose: Prove a deploy-execution prompt selects precise MCP deployment evidence
 input:
   request_text: Deploy the RAG rulebook MCP server to AWS from main.
   session:
+    trust_routing: true
     layer: 04.deploy
     mode: implementation
     workflow: .agentic/aws/workflows/plan-aws-change.md
@@ -38,8 +39,8 @@ input:
 expected:
   routing:
     layer: 04.deploy
-    mode: implementation
-    workflow: .agentic/aws/workflows/plan-aws-change.md
+    mode: execution
+    workflow: .agentic/aws/workflows/execute-approved-aws-change.md
     status: blocked
   intent:
     id: intent.deploy.execution

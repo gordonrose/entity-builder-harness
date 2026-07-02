@@ -35,11 +35,17 @@ PORT="${RAG_SERVICE_SMOKE_PORT:-39451}"
 LOG_FILE="$TMP_DIR/service.log"
 
 cleanup() {
+  status=$?
+  if [ "$status" -ne 0 ] && [ -f "$LOG_FILE" ]; then
+    echo "RAG/rulebook service log:" >&2
+    cat "$LOG_FILE" >&2
+  fi
   if [ -n "${SERVICE_PID:-}" ] && kill -0 "$SERVICE_PID" 2>/dev/null; then
     kill "$SERVICE_PID" 2>/dev/null || true
     wait "$SERVICE_PID" 2>/dev/null || true
   fi
   rm -rf "$TMP_DIR"
+  exit "$status"
 }
 trap cleanup EXIT
 
@@ -87,9 +93,11 @@ async function main() {
     body: JSON.stringify({
       requestText: "Explain how the RAG rulebook service should answer a planning question.",
       session: {
-        layer: "02.rag-rulebook",
-        mode: "discovery",
-        workflow: ".agentic/02.rag-rulebook/workflows/default.md",
+        id: "service-smoke-session",
+        branch: "chat/service-smoke-session",
+        worktree: "/tmp/service-smoke-session",
+        latestContextPacketId: "packet.selector-fixture.previous",
+        latestContextPacketRoutingSummary: "previous prompt used 02.rag-rulebook discovery context",
       },
       noFocusedPaths: true,
       maxChunks: 6,
@@ -103,6 +111,90 @@ async function main() {
   const packet = await query.json();
   if (packet.schema !== "rag-rulebook/context-packet-compact/v1") {
     throw new Error(`unexpected packet schema: ${packet.schema}`);
+  }
+  if (packet.routing.scope !== "prompt") {
+    throw new Error(`unexpected routing scope: ${packet.routing.scope}`);
+  }
+  if (packet.routing.layer !== "02.rag-rulebook" || packet.routing.mode !== "planning" || packet.routing.workflow !== ".agentic/02.rag-rulebook/workflows/default.md") {
+    throw new Error(`prompt-first query should resolve from prompt context: ${JSON.stringify(packet.routing)}`);
+  }
+  if (packet.request.previous_packet_id !== "packet.selector-fixture.previous") {
+    throw new Error("previous packet continuity was not preserved");
+  }
+
+  const maliciousHintQuery = await fetch(`${base}/context/query`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      requestText: "Explain the product platform rules for this prompt.",
+      session: {
+        id: "service-smoke-session",
+        branch: "chat/service-smoke-session",
+        worktree: "/tmp/service-smoke-session",
+        layer: "04.deploy",
+        mode: "execution",
+        workflow: ".agentic/aws/workflows/execute-approved-aws-change.md",
+      },
+      focusedPaths: ["docs/harness/architecture/rules/layers/platform.yml"],
+      maxChunks: 6,
+      format: "full",
+    }),
+  });
+  if (maliciousHintQuery.status !== 200) {
+    throw new Error(`malicious-hint query failed with status ${maliciousHintQuery.status}: ${await maliciousHintQuery.text()}`);
+  }
+  const maliciousHintPacket = await maliciousHintQuery.json();
+  const matchedCorpusIds = maliciousHintPacket.matched_corpora.map((corpus) => corpus.corpus_id);
+  if (
+    maliciousHintPacket.routing.layer !== "03.product" ||
+    maliciousHintPacket.routing.mode !== "discovery" ||
+    maliciousHintPacket.routing.workflow !== ".agentic/product/workflows/default.md" ||
+    maliciousHintPacket.intent.layer !== "03.product" ||
+    maliciousHintPacket.intent.mode !== "discovery" ||
+    maliciousHintPacket.intent.workflow !== ".agentic/product/workflows/default.md"
+  ) {
+    throw new Error(`prompt routing did not stay product-scoped under hostile session hint: ${JSON.stringify(maliciousHintPacket.routing)}`);
+  }
+  if (maliciousHintPacket.provenance.session_context.legacy_routing_hint.trusted !== false) {
+    throw new Error("HTTP session routing hints must remain untrusted");
+  }
+  if (!matchedCorpusIds.includes("corpus.03.product.platform")) {
+    throw new Error(`prompt evidence did not select product platform corpus: ${matchedCorpusIds.join(", ")}`);
+  }
+  if (matchedCorpusIds.includes("corpus.04.deploy")) {
+    throw new Error(`untrusted deploy hint leaked into matched corpora: ${matchedCorpusIds.join(", ")}`);
+  }
+
+  const invalidWorktree = await fetch(`${base}/context/query`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      requestText: "Explain prompt context",
+      session: {
+        worktree: "relative/worktree",
+      },
+      noFocusedPaths: true,
+      maxChunks: 6,
+      format: "compact",
+    }),
+  });
+  if (invalidWorktree.status !== 400) {
+    throw new Error(`invalid worktree should return 400, got ${invalidWorktree.status}`);
+  }
+
+  const invalidSummary = await fetch(`${base}/context/query`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      requestText: "Explain prompt context",
+      previousRoutingSummary: "bad\u0001summary",
+      noFocusedPaths: true,
+      maxChunks: 6,
+      format: "compact",
+    }),
+  });
+  if (invalidSummary.status !== 400) {
+    throw new Error(`invalid continuity summary should return 400, got ${invalidSummary.status}`);
   }
 }
 

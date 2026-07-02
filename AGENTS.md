@@ -8,11 +8,11 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 0. Skip steps 1-7 if i start a chat with 'ignore chat start'
 1. Follow `.agentic/00.chat/workflows/chat-start.md`.
-2. Use the current branch’s `commitLogs/<session>/README.md` session metadata as the first source of truth.
-3. Do not reclassify unless the session metadata is missing, incomplete, or marked `unknown`.
-4. Load the workflow listed in the session metadata.
-5. Follow that workflow’s required gates before editing files.
-6. Stop when repo state, branch state, task ownership, classification, workflow choice, or governance coverage is ambiguous or absent.
+2. Use the current branch’s `commitLogs/<session>/README.md` session metadata as the first source of truth for chat lifecycle, branch, worktree, latest context packet references, commits, and metrics.
+3. Do not classify the whole chat by layer, mode, or workflow. Use the RAG/rulebook runtime to resolve prompt-level routing when a prompt needs layer, mode, workflow, corpus, or rule context.
+4. Use `chat_lifecycle_workflow` for chat startup/session lifecycle gates; use the latest context packet only as continuity evidence for future prompt-level RAG queries.
+5. Follow the applicable chat lifecycle gate and any prompt-level RAG/rulebook packet checks before editing files.
+6. Stop when repo state, branch state, task ownership, prompt-level routing, chat lifecycle state, or governance coverage is ambiguous or absent.
 7. Missing governance is a stop condition. If a required action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard, stop before acting. Explain the governance gap and ask whether to update the harness instead of improvising.
 8. Follow shared git approval rules before commits or destructive actions; never push, delete branches, rewrite history, discard work, or overwrite work without explicit user approval.
 9. Default mode is read-only after governed chat-start bootstrap. The chat-start workflow may create or verify the chat branch, worktree, and session log from the opening prompt without separate permission unless the prompt starts with `ignore chat start`. Do not create, edit, move, delete, stage, commit, or format task files unless the user explicitly grants write permission for this chat.

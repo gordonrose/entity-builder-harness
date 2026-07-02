@@ -28,6 +28,7 @@ purpose: Prove reviewed natural-language vocabulary is recognized without expand
 input:
   request_text: Evaluate drift risk before updating the RAG rulebook selector.
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
@@ -37,12 +38,9 @@ input:
 expected:
   routing:
     layer: 02.rag-rulebook
-    mode: implementation
+    mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md
     status: ready
-  matched_corpora:
-    required:
-      - corpus.02.rag-rulebook
   recognition:
     required_source_ids:
       - recognition.curated.actions
@@ -90,10 +88,7 @@ expected:
   citations:
     min_count: 1
 banned:
-  matched_corpora:
-    - corpus.04.deploy
   selected_corpora:
-    - corpus.04.deploy
     - corpus.03.product.platform
   recognition_matches:
     - canonical_id: intent.deploy.execution

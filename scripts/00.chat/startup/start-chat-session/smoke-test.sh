@@ -47,7 +47,6 @@ mkdir -p "$REPO"
 git -C "$REPO" init --quiet --initial-branch=main
 
 mkdir -p \
-  "$REPO/scripts/00.chat/classification/classify-task" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
@@ -58,11 +57,10 @@ mkdir -p \
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
-cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
-chmod +x "$REPO/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
@@ -115,14 +113,24 @@ if [ -z "$session_log" ]; then
 fi
 
 layer="$(sed -n '/<!-- agentic-session/,/-->/s/^layer: //p' "$worktree_path/$session_log" | head -n 1)"
+mode="$(sed -n '/<!-- agentic-session/,/-->/s/^mode: //p' "$worktree_path/$session_log" | head -n 1)"
 workflow="$(sed -n '/<!-- agentic-session/,/-->/s/^workflow: //p' "$worktree_path/$session_log" | head -n 1)"
+chat_lifecycle_workflow="$(sed -n '/<!-- agentic-session/,/-->/s/^chat_lifecycle_workflow: //p' "$worktree_path/$session_log" | head -n 1)"
 
-if [ "$layer" != "chat" ]; then
-  fail "chat startup did not classify the session as chat layer: ${layer:-missing}"
+if [ -n "$layer" ] || [ -n "$mode" ] || [ -n "$workflow" ]; then
+  fail "chat startup wrote durable classification fields"
 fi
 
-if [ "$workflow" != ".agentic/00.chat/workflows/chat-start.md" ]; then
-  fail "chat startup did not use the 00.chat workflow: ${workflow:-missing}"
+if [ "$chat_lifecycle_workflow" != ".agentic/00.chat/workflows/chat-start.md" ]; then
+  fail "chat startup did not record the chat lifecycle workflow: ${chat_lifecycle_workflow:-missing}"
+fi
+
+if ! sed -n '/<!-- agentic-session/,/-->/p' "$worktree_path/$session_log" | grep -q '^latest_context_packet_id:$'; then
+  fail "chat startup did not initialize latest_context_packet_id"
+fi
+
+if ! sed -n '/<!-- agentic-session/,/-->/p' "$worktree_path/$session_log" | grep -q '^latest_context_packet_routing_summary:$'; then
+  fail "chat startup did not initialize latest_context_packet_routing_summary"
 fi
 
 FAKE_BIN="$TMP_ROOT/fake-bin"
@@ -157,6 +165,10 @@ fi
 
 if ! grep -q 'Default mode after startup bootstrap: read-only until I grant write permission in this chat.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
   fail "first prompt did not preserve task write permission boundary"
+fi
+
+if ! grep -q 'For prompt-level layer, mode, workflow, and corpus context, query the RAG/rulebook runtime' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not route prompt classification to RAG/rulebook"
 fi
 
 echo "chat worktree session smoke test passed."

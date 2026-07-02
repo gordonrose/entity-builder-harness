@@ -46,9 +46,15 @@ cd "$ROOT"
 
 RUNTIME_DIR=".cache/02.rag-rulebook"
 REQUEST_TEXT=""
-SESSION_LAYER="02.rag-rulebook"
-SESSION_MODE="implementation"
-SESSION_WORKFLOW=""
+SESSION_ID=""
+SESSION_BRANCH=""
+SESSION_WORKTREE=""
+SESSION_LAYER="unknown"
+SESSION_MODE="unknown"
+SESSION_WORKFLOW="unknown"
+PREVIOUS_PACKET_ID=""
+PREVIOUS_ROUTING_SUMMARY=""
+TRUST_SESSION_ROUTING=false
 MAX_CHUNKS=""
 PRETTY=false
 FORMAT="full"
@@ -62,9 +68,17 @@ Usage:
 
 Options:
   --runtime-dir <path>       Local runtime cache. Default: .cache/02.rag-rulebook
-  --session-layer <layer>    Session layer. Default: 02.rag-rulebook
-  --session-mode <mode>      Session mode. Default: implementation
-  --session-workflow <path>  Session workflow path
+  --session-id <id>          Chat/session ID for provenance
+  --session-branch <branch>  Chat/session branch for provenance
+  --session-worktree <path>  Chat/session worktree for provenance
+  --session-layer <layer>    Legacy session routing hint. Default: unknown
+  --session-mode <mode>      Legacy session routing hint. Default: unknown
+  --session-workflow <path>  Legacy session routing hint. Default: unknown
+  --previous-packet-id <id>  Previous context packet for continuity
+  --previous-routing-summary <text>
+                              Previous packet routing summary
+  --trust-session-routing     Trust supplied session layer/mode/workflow after
+                              governed session ownership verification
   --focused-path <path>      Focused path signal. Repeatable
   --no-focused-paths         Use no focused path signals
   --max-chunks <n>           Maximum selected chunks. Range: 3-12
@@ -95,6 +109,30 @@ while [ "$#" -gt 0 ]; do
       REQUEST_TEXT="$2"
       shift 2
       ;;
+    --session-id)
+      if [ "$#" -lt 2 ]; then
+        echo "ERROR: --session-id requires a value." >&2
+        exit 2
+      fi
+      SESSION_ID="$2"
+      shift 2
+      ;;
+    --session-branch)
+      if [ "$#" -lt 2 ]; then
+        echo "ERROR: --session-branch requires a value." >&2
+        exit 2
+      fi
+      SESSION_BRANCH="$2"
+      shift 2
+      ;;
+    --session-worktree)
+      if [ "$#" -lt 2 ]; then
+        echo "ERROR: --session-worktree requires a value." >&2
+        exit 2
+      fi
+      SESSION_WORKTREE="$2"
+      shift 2
+      ;;
     --session-layer)
       if [ "$#" -lt 2 ]; then
         echo "ERROR: --session-layer requires a layer." >&2
@@ -118,6 +156,26 @@ while [ "$#" -gt 0 ]; do
       fi
       SESSION_WORKFLOW="$2"
       shift 2
+      ;;
+    --previous-packet-id)
+      if [ "$#" -lt 2 ]; then
+        echo "ERROR: --previous-packet-id requires a value." >&2
+        exit 2
+      fi
+      PREVIOUS_PACKET_ID="$2"
+      shift 2
+      ;;
+    --previous-routing-summary)
+      if [ "$#" -lt 2 ]; then
+        echo "ERROR: --previous-routing-summary requires text." >&2
+        exit 2
+      fi
+      PREVIOUS_ROUTING_SUMMARY="$2"
+      shift 2
+      ;;
+    --trust-session-routing)
+      TRUST_SESSION_ROUTING=true
+      shift
       ;;
     --focused-path)
       if [ "$#" -lt 2 ]; then
@@ -197,12 +255,18 @@ COMMAND=(
   --chunks "$CHUNKS_FILE"
   --compiled-policy "$COMPILED_POLICY_FILE"
   --request-text "$REQUEST_TEXT"
+  --session-id "$SESSION_ID"
+  --session-branch "$SESSION_BRANCH"
+  --session-worktree "$SESSION_WORKTREE"
   --session-layer "$SESSION_LAYER"
   --session-mode "$SESSION_MODE"
+  --session-workflow "$SESSION_WORKFLOW"
+  --previous-packet-id "$PREVIOUS_PACKET_ID"
+  --previous-routing-summary "$PREVIOUS_ROUTING_SUMMARY"
 )
 
-if [ -n "$SESSION_WORKFLOW" ]; then
-  COMMAND+=(--session-workflow "$SESSION_WORKFLOW")
+if [ "$TRUST_SESSION_ROUTING" = true ]; then
+  COMMAND+=(--trust-session-routing)
 fi
 
 if [ "$NO_FOCUSED_PATHS" = true ]; then
@@ -270,6 +334,7 @@ compact_request = {
     "normalized_summary": request.get("normalized_summary"),
     "focused_paths": request.get("focused_paths", []),
     "open_artifact_ids": request.get("open_artifact_ids", []),
+    "previous_packet_id": request.get("previous_packet_id"),
 }
 
 compact = {

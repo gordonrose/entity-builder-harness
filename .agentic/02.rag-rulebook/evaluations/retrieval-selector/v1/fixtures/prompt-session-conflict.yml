@@ -28,6 +28,7 @@ purpose: Prove prompt terms cannot authorize side effects even when request cont
 input:
   request_text: Deploy this RAG rulebook workflow now.
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
@@ -36,8 +37,9 @@ input:
   max_chunks: 6
 expected:
   routing:
-    layer: 02.rag-rulebook
-    mode: implementation
+    layer: 04.deploy
+    mode: execution
+    workflow: .agentic/aws/workflows/execute-approved-aws-change.md
     status: blocked
   intent:
     id: intent.deploy.execution
@@ -47,9 +49,6 @@ expected:
     execution_allowed: false
     status: blocked
     resolved_intent_id: intent.deploy.execution
-  matched_corpora:
-    required:
-      - corpus.02.rag-rulebook
   recognition:
     required_source_ids:
       - recognition.generated.routing

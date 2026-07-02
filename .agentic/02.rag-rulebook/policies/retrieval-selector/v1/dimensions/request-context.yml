@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: policy-dimension
-#   purpose: Define the per-prompt request context that selects retrieval evidence before session defaults are applied.
+#   purpose: Define the per-prompt request context that selects retrieval evidence before session continuity is considered.
 #   portability:
 #     class: reusable
 #     targets:
@@ -27,21 +27,26 @@ dimension_id: request-context
 version: 1
 status: active
 applies_to_policy_pack: retrieval-selector.v1
-purpose: Build a fresh per-prompt retrieval request from explicit user intent, recognized concepts, focused paths, and safety constraints before using session metadata as fallback context.
+purpose: Build a fresh per-prompt retrieval request from explicit user intent, recognized concepts, focused paths, and safety constraints before any chat/session lifecycle defaults are considered.
 required_inputs:
   - Raw user prompt text.
   - Prompt-dimension recognition outputs.
   - Focused paths, changed paths, and user-named paths when available.
-  - Session metadata for provenance and safety comparison.
+  - Session metadata for provenance, branch/worktree ownership, and safety comparison.
   - Side-effect classification for write, git, deploy, destructive, or read-only requests.
 expected_actions:
   - Build a request context record for every retrieval attempt instead of reusing session metadata as the retrieval target.
   - Treat explicit user intent, exact corpus IDs, exact artifact IDs, exact paths, and focused paths as primary retrieval signals.
-  - Use session metadata as provenance, safety context, and fallback routing when the prompt and paths do not name stronger retrieval targets.
+  - Resolve layer, mode, workflow, and corpus candidates for the current prompt as retrieval-routing features.
+  - Select the current prompt's layer, mode, and workflow from prompt and focused-path recognition before considering trusted local session routing.
+  - Use chat/session metadata as provenance and safety context, not as the identity of the current prompt.
+  - Use the previous prompt's context packet only as conversational continuity evidence; never reuse it as the current prompt's routing without fresh resolution.
   - Preserve execution safety by keeping side-effecting actions bound to their governed workflow even when retrieval pulls cross-layer evidence.
   - Record prompt/session disagreements as request-context gaps instead of hiding them behind a confident packet.
 banned_actions:
   - Do not let a ready session layer alone prevent retrieval of explicitly requested cross-layer evidence.
+  - Do not classify a whole chat as one stable layer, mode, or workflow.
+  - Do not treat the previous context packet as a cache hit for a new prompt.
   - Do not treat a cross-layer retrieval target as permission to edit, commit, deploy, delete, or mutate infrastructure.
   - Do not promote a single broad noun such as product, app, deploy, or platform into a target corpus without exact terms, paths, focused files, or supporting evidence.
   - Do not drop session metadata from provenance or execution-safety checks.
@@ -51,17 +56,21 @@ output_obligations:
   - explicit_target_terms
   - explicit_target_paths
   - retrieval_target_corpora
+  - prompt_routing_candidates
+  - selected_prompt_routing
   - side_effect_class
   - session_context_role
   - request_context_confidence
 gap_or_stop_conditions:
-  - Add a non-blocking gap when prompt/focused-path retrieval targets differ from session metadata but the request is planning, discovery, or explanation.
+  - Add a non-blocking continuity gap when the current prompt's retrieval targets differ from the previous prompt or recorded session context but the request is planning, discovery, or explanation.
   - Add a blocking stop when a side-effecting request targets a layer or workflow not governed by the current execution workflow.
   - Add a low-confidence gap when only broad terms support cross-layer retrieval.
 ranking_effects:
-  - Explicit request context outranks session defaults for retrieval evidence selection.
+  - Explicit request context outranks session continuity for retrieval evidence selection.
+  - Exact corpus IDs and prompt terms outrank generic storage-path words when selecting prompt routing.
   - Exact prompt/path/corpus/artifact matches outrank broad session-layer matches.
-  - Session metadata still raises provenance, required-check, and execution-safety ranking.
+  - Current-prompt routing outranks prior prompt routing.
+  - Session metadata still raises provenance and execution-safety ranking.
   - Broad prompt nouns require another supporting signal before admitting cross-corpus retrieval.
 validation_examples:
   - name: planning prompt can cross session boundary
@@ -73,6 +82,9 @@ validation_examples:
   - name: broad noun stays weak
     given: The prompt contains only a broad word such as product without exact corpus, artifact, path, or focused-path support.
     expect: The selector does not admit product corpora solely from that noun and reports low confidence if no stronger target exists.
+  - name: same chat can change retrieval routing
+    given: One chat moves from architecture planning to implementation and then to commit.
+    expect: Each prompt receives a fresh request context and context-packet routing; the chat session is not reclassified.
 can_change_by:
   - Add request-form categories.
   - Add side-effect classes.

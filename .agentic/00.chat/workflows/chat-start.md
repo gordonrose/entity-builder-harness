@@ -24,8 +24,9 @@
 
 ## Purpose
 
-Use this at the start of a new chat to identify the active session, layer, mode,
-workflow, and chat-owned worktree with minimal token use.
+Use this at the start of a new chat to identify the active session, chat
+lifecycle workflow, latest context-packet references, and chat-owned worktree
+with minimal token use.
 
 ## Fast Path
 
@@ -40,9 +41,10 @@ verify the chat branch, chat-owned worktree, and session log before task write
 permission is granted. Task edits remain read-only until the user grants write
 permission for the chat.
 
-If it returns valid `layer`, `mode`, and `workflow` values, use them.
+If it returns valid chat lifecycle metadata, use it for session/worktree
+handling.
 
-Do not reclassify.
+Do not classify the whole chat.
 Do not read `.agentic/routing-policy.yaml`.
 Do not load unrelated workflows, skills, standards, or documentation.
 
@@ -107,48 +109,21 @@ Otherwise run:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/resolve-current-chat-session/script.sh "<opening user message>"
 ```
 
-After the command succeeds, use the generated session log, layer, mode,
-workflow, and chat-owned worktree as the current chat context. Do not require
-the user to paste the generated first prompt back into the same chat.
+After the command succeeds, use the generated session log, chat lifecycle
+workflow, latest context-packet references, and chat-owned worktree as the
+current chat context. Do not require the user to paste the generated first
+prompt back into the same chat.
 
-## Unknown Metadata
+## Context Packet Continuity
 
-<!-- deterministic-check: allow reason="classifier script performs deterministic classification; workflow governs fallback behavior and user prompt" -->
-If `layer`, `mode`, or `workflow` is missing or `unknown`, run:
+Do not classify the whole chat into one durable layer, mode, or workflow during
+startup. When later prompts need layer, mode, workflow, corpus, or rule context,
+query the RAG/rulebook runtime for that current prompt.
 
-```bash
-bash scripts/00.chat/classification/classify-task/script.sh "<task from chat log or user message>"
-```
-
-If classification returns a clear `Layer`, `Mode`, and `Workflow`, ask before
-updating the chat log metadata.
-
-If classification fails or returns `unknown` for layer or mode, ask exactly one
-clarifying question:
-
-```txt
-I cannot classify this safely yet. What layer and mode should this use?
-Available layers: mixed, chat, shared, harness, education, aws, product.
-Available modes: implementation, execution, planning, discovery.
-```
-
-After the user answers, propose the classifier taxonomy change that would have
-avoided the miss. Name the words or patterns to add, the target taxonomy bucket,
-and the fixture to preserve it. Ask for write permission before updating
-classifier files.
-
-If the user corrects the proposal, use the corrected layer, mode, words, and
-fixture expectation.
-
-Do not edit files until the user answers.
-
-If classification returns a workflow path that does not exist, respond exactly:
-
-```txt
-Blocked: selected workflow missing. Confirm create it? Layer: <layer>. Workflow: <workflow>.
-```
-
-Do not manually guess another workflow.
+If latest context-packet metadata is missing, leave it blank until a governed
+RAG/rulebook query returns a packet. Record only the latest context packet ID,
+routing summary, and timestamp as continuity references. Do not copy the
+packet's prompt route into chat session `layer`, `mode`, or `workflow` fields.
 
 ## Dirty Worktree
 
@@ -162,7 +137,7 @@ bash scripts/00.chat/worktree/dirty-worktree-check/script.sh
 If dirty, respond exactly:
 
 ```txt
-Blocked: dirty worktree. Confirm proceed? Layer: <layer>. Mode: <mode>. Workflow: <workflow>.
+Blocked: dirty worktree. Confirm proceed?
 ```
 
 Do not explain unless asked.

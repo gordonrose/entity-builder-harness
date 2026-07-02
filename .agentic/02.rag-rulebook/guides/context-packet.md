@@ -58,9 +58,16 @@ classification came from deterministic evidence or inference.
 
 Then read `routing`.
 
-Routing tells the consuming workbench which layer, mode, and workflow should
-own the task. If routing is `blocked` or `needs-clarification`, the consumer
-should not pretend the packet is ready.
+Routing tells the consuming workbench which layer, mode, and workflow govern
+this prompt's retrieved context. It is prompt-level metadata, not a permanent
+classification of the chat. If routing is `blocked` or `needs-clarification`,
+the consumer should not pretend the packet is ready.
+
+A single chat can produce multiple packets with different routing. For example,
+a design prompt may retrieve RAG and chat lifecycle context, a later
+implementation prompt may retrieve change-gate context, and a final commit
+prompt may retrieve chat/git governance. The chat session remains the lifecycle
+container for branch, worktree, commit-log, metrics, and transcript state.
 
 For side-effecting requests, read `action_authorization`.
 
@@ -114,7 +121,7 @@ retrieval.
 allowed, blocked, or not actually an executable intent.
 
 `routing` tells the consumer which layer, mode, and workflow should govern the
-task.
+current prompt's context packet.
 
 `matched_corpora` names the modular corpus packages involved. This prevents the
 RAG system from blending harness, product, design-system, deploy, education,
@@ -180,8 +187,9 @@ implicit.
 
 Use the packet as evidence and governance, not as a script to blindly execute.
 
-If `routing.status` is `ready`, load the selected workflow and proceed within
-the consuming workbench's rules.
+If `routing.status` is `ready`, use the selected chunks, checks, and workflow
+context for the current prompt and proceed within the consuming workbench's
+rules.
 
 If `routing.status` is `needs-clarification`, ask a narrow question or request
 missing deterministic input.

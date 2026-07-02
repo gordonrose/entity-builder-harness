@@ -28,6 +28,7 @@ purpose: Prove platform server and middleware questions retrieve the exact platf
 input:
   request_text: explain how it works and how it's implemented for platform server, middleware, request handling, route adaptation, and response logging
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md

@@ -28,6 +28,7 @@ purpose: Prove request context requires exact terms, paths, or ownership evidenc
 input:
   request_text: For this RAG rulebook task, update the product wording in the selector evaluation notes.
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
@@ -38,9 +39,6 @@ expected:
   routing:
     layer: 02.rag-rulebook
     status: ready
-  matched_corpora:
-    required:
-      - corpus.02.rag-rulebook
   recognition:
     required_source_ids:
       - recognition.generated.routing
@@ -63,7 +61,6 @@ banned:
   selected_corpora:
     - corpus.03.product
     - corpus.03.product.platform
-    - corpus.04.deploy
 source_refs:
   - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml

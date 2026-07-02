@@ -89,9 +89,10 @@ id: 2026-06-19-13-11-test
 task: test
 branch: chat/2026-06-19-13-11-test
 worktree:
-layer: chat
-mode: implementation
-workflow: .agentic/00.chat/workflows/chat-start.md
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
 status: ready
 -->
 EOF
@@ -99,6 +100,10 @@ EOF
 git -C "$REPO" add .
 git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' commit --quiet -m 'base'
 git -C "$REPO" switch --quiet -c chat/2026-06-19-13-11-test
+
+if sed -n '/<!-- agentic-session/,/-->/p' "$REPO/commitLogs/2026/jun/19/2026-06-19-13-11-test/README.md" | grep -Eq '^(layer|mode|workflow): '; then
+  fail "smoke fixture contains durable classification metadata"
+fi
 
 bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
   bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh \

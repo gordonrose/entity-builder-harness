@@ -44,7 +44,6 @@ mkdir -p "$REPO"
 git -C "$REPO" init --quiet --initial-branch=main
 
 mkdir -p \
-  "$REPO/scripts/00.chat/classification/classify-task" \
   "$REPO/scripts/00.chat/command/dispatcher" \
   "$REPO/scripts/00.chat/command/new" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
@@ -67,7 +66,6 @@ cp "$SOURCE_ROOT/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00
 cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/new/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
-cp "$SOURCE_ROOT/scripts/00.chat/classification/classify-task/script.sh" "$REPO/scripts/00.chat/classification/classify-task/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
@@ -79,7 +77,6 @@ chmod +x \
   "$REPO/scripts/00.chat/command/new/script.sh" \
   "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" \
   "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" \
-  "$REPO/scripts/00.chat/classification/classify-task/script.sh" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" \
   "$REPO/scripts/00.chat/worktree/open-window/script.sh" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
@@ -122,8 +119,8 @@ bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
 
 grep -q '^task: use the existing chat start process$' "$TMP_ROOT/resolve-existing.out" \
   || fail "resolver did not return existing session metadata"
-grep -q '^workflow: .agentic/00.chat/workflows/chat-start.md$' "$TMP_ROOT/resolve-existing.out" \
-  || fail "resolver existing-session metadata did not include workflow"
+grep -q '^chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md$' "$TMP_ROOT/resolve-existing.out" \
+  || fail "resolver existing-session metadata did not include chat lifecycle workflow"
 
 branch_count_after="$(git -C "$REPO" branch --format='%(refname:short)' | grep -c '^chat/')"
 if [ "$branch_count_after" != "$branch_count_before" ]; then
