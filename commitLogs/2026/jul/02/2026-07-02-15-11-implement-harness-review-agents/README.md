@@ -70,6 +70,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Add executable validation for harness review agents
   Rationale: The validation script now checks agent contracts, use-case coverage, templates, workflows, and CFO token-comparison fixture behavior before the capability can be considered complete.
 
+
+- Decision: Final review-agent acceptance tests passed
+  Rationale: The completed capability passed the harness-agent validator, CFO live token-comparison smoke, path-scoped deterministic drift check, metadata validation across 23 files, and the full RAG/rulebook commit gate.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -208,6 +212,13 @@ Message: Add harness agent validation script
 Summary: Added executable validation for harness review agents, including contract checks, use-case checks, template and workflow checks, CFO fixture validation, fixture logs, README indexing, and regenerated artifact recognition sources.
 
 ADR impact: ADR not needed; this adds deterministic validation for the approved review-agent capability.
+
+
+### 2026-07-02T15:51:35Z - Decision
+
+Decision: Final review-agent acceptance tests passed
+
+Rationale: The completed capability passed the harness-agent validator, CFO live token-comparison smoke, path-scoped deterministic drift check, metadata validation across 23 files, and the full RAG/rulebook commit gate.
 
 ## Commits
 
