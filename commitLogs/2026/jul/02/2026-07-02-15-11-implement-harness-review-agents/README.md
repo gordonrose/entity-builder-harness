@@ -46,6 +46,10 @@ I'd like to create some sub-agents that my skills and workflows can call to do r
 - Decision: Use cases define the quality bar before implementing harness review agents
   Rationale: The user requested solo and multi-agent use cases before implementation; the matrix now provides fixture-ready triggers, selected agents, passing standards, and failure modes.
 
+
+- Decision: Agent contracts govern harness review agents
+  Rationale: The standard defines required sections, evidence boundaries, scoring, stop conditions, and delegation so agent files remain bounded reviewers rather than sprawling prompt bundles.
+
 ## Activity Log
 
 ### 2026-07-02T14:11:00Z - Session started
@@ -76,6 +80,13 @@ Message: Add harness agent use case matrix
 Summary: Added the review-agent use-case quality matrix, regenerated artifact recognition sources, and recorded the session setup for the harness review-agent capability.
 
 ADR impact: ADR not needed for this slice; it applies existing artifact ownership policy.
+
+
+### 2026-07-02T15:14:00Z - Decision
+
+Decision: Agent contracts govern harness review agents
+
+Rationale: The standard defines required sections, evidence boundaries, scoring, stop conditions, and delegation so agent files remain bounded reviewers rather than sprawling prompt bundles.
 
 ## Commits
 

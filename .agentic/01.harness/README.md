@@ -54,6 +54,7 @@ Future Codex sessions continuing rulebook work should start by reading
 ## Standards
 
 - `standards/agentic-artifact-standards.md` - decides which artifact type should own new harness capabilities, including workflows, skills, standards, gates, hooks, evals, templates, schemas, examples, memory, agents, adapters, and scripts.
+- `standards/agent-contracts.md` - defines the contract, authority boundaries, scoring rules, and report expectations for harness review agents.
 - `standards/artifact-metadata-headers.md` - defines the compatibility v1 metadata header format and points to the versioned artifact metadata capability.
 - `standards/artifact-path-migrations.md` - defines compatibility rules for moving, renaming, retiring, or removing repository artifact paths.
 - `standards/evaluation-fixtures.md` - defines how harness evaluation fixtures are authored, owned, validated, and evolved.
