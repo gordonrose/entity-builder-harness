@@ -28,6 +28,7 @@ purpose: Prove explicit "do not deploy" negation beats deploy execution recognit
 input:
   request_text: Do not deploy the RAG rulebook MCP server; explain the blockers.
   session:
+    trust_routing: true
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md

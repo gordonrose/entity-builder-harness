@@ -28,6 +28,7 @@ purpose: Prove broad prompt language becomes a visible gap when no governed prom
 input:
   request_text: Improve the thing.
   session:
+    trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md

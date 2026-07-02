@@ -8,7 +8,7 @@
   disciplines:
   - agentic
   kind: capability-readme
-  purpose: Explain task summary classification into layer, mode, and workflow.
+  purpose: Document the legacy task classifier that is no longer used by chat startup.
   portability:
     class: required
     targets:
@@ -16,27 +16,23 @@
   used_by:
   - id: chat.script.classification.classify-task
     path: scripts/00.chat/classification/classify-task/script.sh
-  - id: chat.script.startup.start-chat-session
-    path: scripts/00.chat/startup/start-chat-session/script.sh
 -->
-# Classify Task
+# Legacy Classify Task
 
-`script.sh` reads the opening task summary and prints the session routing
-metadata used by chat startup:
+`script.sh` reads a task summary and prints legacy routing metadata:
 
 - `Layer`
 - `Mode`
 - `Workflow`
 - `Reason`
 
-The output is intentionally simple text so shell startup can consume it without
-extra dependencies.
+Chat startup no longer calls this script and must not treat its output as
+session metadata. New prompt-level classification, workflow selection, corpus
+selection, and context-packet routing belong to the RAG/rulebook runtime.
 
 `check-fixtures.sh` verifies the classifier against `fixtures.tsv`. Update the
-fixtures when a new durable routing phrase should be recognized.
+fixtures only when maintaining this legacy compatibility behavior. Do not add
+new prompt-routing policy here.
 
-This capability does not grant write permission, create a branch, or decide
-that unclear governance is safe. If the classifier cannot produce a reliable
-route, the chat startup workflow must stop and ask for clarification or harness
-coverage.
-
+This capability does not grant write permission, create a branch, choose the
+current prompt route, or decide that unclear governance is safe.

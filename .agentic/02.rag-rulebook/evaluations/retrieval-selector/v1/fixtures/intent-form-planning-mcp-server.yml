@@ -28,6 +28,7 @@ purpose: Prove request form recognition separates planning guidance from impleme
 input:
   request_text: How do I update my harness so we can deploy it behind an MCP server?
   session:
+    trust_routing: true
     layer: 01.harness
     mode: planning
     workflow: .agentic/01.harness/workflows/change-harness.md
@@ -37,12 +38,11 @@ input:
 expected:
   routing:
     layer: 01.harness
-    mode: planning
+    mode: discovery
     workflow: .agentic/01.harness/workflows/change-harness.md
     status: ready
   matched_corpora:
     required:
-      - corpus.01.harness
       - corpus.02.rag-rulebook
       - corpus.04.deploy
   selected_corpora:

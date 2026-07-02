@@ -12,7 +12,7 @@ set -euo pipefail
 #     - agentic
 #     - architecture
 #   kind: script
-#   purpose: Generate a deterministic retrieval-selector fixture packet from policy, recognition sources, session metadata, and chunks.
+#   purpose: Generate a deterministic retrieval-selector fixture packet from policy, recognition sources, prompt context, session continuity, and chunks.
 #   portability:
 #     class: reusable
 #     targets:
@@ -68,9 +68,17 @@ RECOGNITION_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-recognition-sou
 CANDIDATE_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh"
 COMPILED_POLICY_SCRIPT = "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh"
 DEFAULT_REQUEST = "Build the first deterministic RAG rulebook retrieval selector fixture."
-DEFAULT_SESSION_LAYER = "02.rag-rulebook"
-DEFAULT_SESSION_MODE = "implementation"
-DEFAULT_SESSION_WORKFLOW = ".agentic/02.rag-rulebook/workflows/default.md"
+DEFAULT_SESSION_LAYER = "unknown"
+DEFAULT_SESSION_MODE = "unknown"
+DEFAULT_SESSION_WORKFLOW = "unknown"
+MAX_SESSION_ID_CHARS = 160
+MAX_SESSION_BRANCH_CHARS = 240
+MAX_SESSION_WORKTREE_CHARS = 512
+MAX_PACKET_ID_CHARS = 200
+MAX_ROUTING_SUMMARY_CHARS = 500
+SAFE_ID_RE = re.compile(r"^[A-Za-z0-9._:@/-]*$")
+SAFE_BRANCH_RE = re.compile(r"^[A-Za-z0-9._/@-]*$")
+SAFE_PACKET_ID_RE = re.compile(r"^[A-Za-z0-9._:-]*$")
 DEFAULT_FOCUSED_PATHS = [
     ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml",
     ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml",
@@ -86,6 +94,17 @@ SESSION_LAYER_TO_CORPUS = {
     "05.education": "corpus.05.education",
     "06.shared": "corpus.06.shared",
 }
+DEFAULT_WORKFLOW_BY_LAYER = {
+    "00.chat": ".agentic/00.chat/workflows/chat-start.md",
+    "01.harness": ".agentic/01.harness/workflows/change-harness.md",
+    "02.rag-rulebook": ".agentic/02.rag-rulebook/workflows/default.md",
+    "03.product": ".agentic/product/workflows/default.md",
+    "04.deploy": ".agentic/aws/workflows/plan-aws-change.md",
+    "05.education": ".agentic/education/workflows/create-educational-resource.md",
+    "06.shared": ".agentic/shared/workflows/change-shared-process.md",
+}
+DEPLOY_EXECUTION_WORKFLOW = ".agentic/aws/workflows/execute-approved-aws-change.md"
+PROMPT_ROUTE_INPUTS = {"prompt", "focused-paths"}
 STOP_WORDS = {
     "a",
     "an",
@@ -166,9 +185,18 @@ def usage() -> str:
 
 Options:
   --request-text <text>       Prompt text used for recognition and ranking.
-  --session-layer <layer>     Session layer. Default: 02.rag-rulebook.
-  --session-mode <mode>       Session mode. Default: implementation.
-  --session-workflow <path>   Session workflow path.
+  --session-id <id>           Chat/session ID for provenance.
+  --session-branch <branch>   Chat/session branch for provenance.
+  --session-worktree <path>   Chat/session worktree for provenance.
+  --session-layer <layer>     Legacy session routing hint. Default: unknown.
+  --session-mode <mode>       Legacy session routing hint. Default: unknown.
+  --session-workflow <path>   Legacy session routing hint. Default: unknown.
+  --previous-packet-id <id>   Previous context packet used as continuity evidence.
+  --previous-routing-summary <text>
+                              Previous packet routing summary.
+  --trust-session-routing     Treat supplied session layer/mode/workflow as
+                              trusted routing hints. Use only after governed
+                              session resolution verifies ownership.
   --focused-path <path>       Focused path signal. Repeatable.
   --no-focused-paths          Use no focused path signals.
   --max-chunks <n>            Maximum selected chunks. Default: 6. Range: 3-12.
@@ -185,9 +213,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--generate-current", action="store_true")
     parser.add_argument("--chunks")
     parser.add_argument("--request-text", default=DEFAULT_REQUEST)
+    parser.add_argument("--session-id", default="")
+    parser.add_argument("--session-branch", default="")
+    parser.add_argument("--session-worktree", default="")
     parser.add_argument("--session-layer", default=DEFAULT_SESSION_LAYER)
     parser.add_argument("--session-mode", default=DEFAULT_SESSION_MODE)
     parser.add_argument("--session-workflow", default=DEFAULT_SESSION_WORKFLOW)
+    parser.add_argument("--previous-packet-id", default="")
+    parser.add_argument("--previous-routing-summary", default="")
+    parser.add_argument("--trust-session-routing", action="store_true")
     parser.add_argument("--focused-path", action="append", dest="focused_paths")
     parser.add_argument("--no-focused-paths", action="store_true")
     parser.add_argument("--max-chunks", type=int, default=6)
@@ -216,7 +250,55 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.focused_paths = []
     elif not args.focused_paths:
         args.focused_paths = list(DEFAULT_FOCUSED_PATHS)
+    validate_session_context_args(args)
     return args
+
+
+def has_control_chars(value: str) -> bool:
+    return any(ord(char) < 32 or ord(char) == 127 for char in value)
+
+
+def validate_optional_string(value: str, *, name: str, max_length: int, pattern: re.Pattern[str] | None = None) -> None:
+    if not value:
+        return
+    if len(value) > max_length or has_control_chars(value):
+        raise SystemExit(f"ERROR: {name} is too long or contains control characters.")
+    if pattern is not None and not pattern.match(value):
+        raise SystemExit(f"ERROR: {name} contains unsupported characters.")
+
+
+def validate_session_context_args(args: argparse.Namespace) -> None:
+    validate_optional_string(args.session_id, name="--session-id", max_length=MAX_SESSION_ID_CHARS, pattern=SAFE_ID_RE)
+    validate_optional_string(args.session_branch, name="--session-branch", max_length=MAX_SESSION_BRANCH_CHARS, pattern=SAFE_BRANCH_RE)
+    validate_optional_string(args.session_layer, name="--session-layer", max_length=80, pattern=SAFE_ID_RE)
+    validate_optional_string(args.session_mode, name="--session-mode", max_length=80, pattern=SAFE_ID_RE)
+    validate_optional_string(args.session_workflow, name="--session-workflow", max_length=300, pattern=SAFE_BRANCH_RE)
+    validate_optional_string(args.previous_packet_id, name="--previous-packet-id", max_length=MAX_PACKET_ID_CHARS, pattern=SAFE_PACKET_ID_RE)
+    validate_optional_string(args.previous_routing_summary, name="--previous-routing-summary", max_length=MAX_ROUTING_SUMMARY_CHARS)
+    if args.session_worktree:
+        validate_optional_string(args.session_worktree, name="--session-worktree", max_length=MAX_SESSION_WORKTREE_CHARS)
+        path = Path(args.session_worktree)
+        if not path.is_absolute() or ".." in path.parts:
+            raise SystemExit("ERROR: --session-worktree must be an absolute path without parent traversal.")
+    if args.trust_session_routing:
+        missing = [
+            option
+            for option, value in [
+                ("--session-id", args.session_id),
+                ("--session-branch", args.session_branch),
+                ("--session-worktree", args.session_worktree),
+                ("--session-layer", args.session_layer if args.session_layer != "unknown" else ""),
+                ("--session-mode", args.session_mode if args.session_mode != "unknown" else ""),
+                ("--session-workflow", args.session_workflow if args.session_workflow != "unknown" else ""),
+            ]
+            if not value
+        ]
+        if missing:
+            raise SystemExit(
+                "ERROR: --trust-session-routing requires governed lifecycle proof fields: "
+                + ", ".join(missing)
+                + "."
+            )
 
 
 def repo_path(path: str | Path) -> Path:
@@ -526,6 +608,149 @@ def intent_label(compiled_policy: dict[str, Any], intent_id: str) -> str:
     labels = dict_value(dict_value(compiled_policy.get("intent_resolution")).get("labels"))
     label = labels.get(intent_id)
     return str(label) if isinstance(label, str) else intent_id
+
+
+def prompt_route_matches(recognition_matches: list[dict[str, Any]], category: str) -> list[dict[str, Any]]:
+    return [
+        match
+        for match in recognition_matches
+        if match.get("category") == category and match.get("matched_input") in PROMPT_ROUTE_INPUTS
+    ]
+
+
+def most_common(values: list[str]) -> str:
+    counts: dict[str, int] = {}
+    for value in values:
+        if not value or value == "mixed":
+            continue
+        counts[value] = counts.get(value, 0) + 1
+    if not counts:
+        return "unknown"
+    return sorted(counts.items(), key=lambda item: (-item[1], item[0]))[0][0]
+
+
+def first_known(values: list[str]) -> str:
+    for value in values:
+        if value and value not in {"unknown", "mixed"}:
+            return value
+    return "unknown"
+
+
+def layer_from_path(path: str) -> str:
+    if path.startswith(".agentic/00.chat/") or path.startswith("docs/00.chat/"):
+        return "00.chat"
+    if path.startswith(".agentic/01.harness/") or path.startswith("docs/01.harness/"):
+        return "01.harness"
+    if path.startswith(".agentic/02.rag-rulebook/") or path.startswith("docs/02.rag-rulebook/"):
+        return "02.rag-rulebook"
+    if path.startswith(".agentic/product/") or path.startswith("docs/03.product/") or "/03.product/" in path:
+        return "03.product"
+    if path.startswith(".agentic/aws/") or path.startswith("docs/04.deploy/") or "/04.deploy/" in path:
+        return "04.deploy"
+    if path.startswith(".agentic/education/") or path.startswith("docs/05.education/") or "/05.education/" in path:
+        return "05.education"
+    if path.startswith(".agentic/shared/") or path.startswith("docs/06.shared/") or "/06.shared/" in path:
+        return "06.shared"
+    return "unknown"
+
+
+def mode_from_intent(intent_id: str) -> str:
+    if intent_id == "intent.deploy.execution":
+        return "execution"
+    if intent_id in {"intent.git.commit", "intent.implementation.request"}:
+        return "implementation"
+    return "discovery"
+
+
+def workflow_from_prompt_match(matches: list[dict[str, Any]], selected_layer: str) -> str:
+    def compatible_path(match: dict[str, Any]) -> str:
+        path = str(match.get("evidence_path") or match.get("canonical_id") or "")
+        if not path.endswith(".md"):
+            return ""
+        if selected_layer == "unknown" or layer_from_path(path) == selected_layer:
+            return path
+        return ""
+
+    prompt_paths = [
+        compatible_path(match)
+        for match in matches
+        if match.get("matched_input") == "prompt"
+    ]
+    focused_paths = [
+        compatible_path(match)
+        for match in matches
+        if match.get("matched_input") == "focused-paths"
+    ]
+    return first_known(prompt_paths + focused_paths)
+
+
+def resolve_prompt_route(recognition_matches: list[dict[str, Any]], resolved_intent_id: str, request_text: str) -> dict[str, str]:
+    corpus_layers = [
+        owner_layer(str(match.get("canonical_id")))
+        for match in prompt_route_matches(recognition_matches, "corpus-id")
+        if isinstance(match.get("canonical_id"), str)
+    ]
+    prompt_layer_values = [
+        str(match.get("canonical_id"))
+        for match in prompt_route_matches(recognition_matches, "layer-name")
+        if isinstance(match.get("canonical_id"), str)
+        and match.get("matched_input") == "prompt"
+    ]
+    focused_layer_values = [
+        str(match.get("canonical_id"))
+        for match in prompt_route_matches(recognition_matches, "layer-name")
+        if isinstance(match.get("canonical_id"), str)
+        and match.get("matched_input") == "focused-paths"
+    ]
+    workflow_matches = prompt_route_matches(recognition_matches, "workflow-name")
+    workflow_layers = []
+    for match in workflow_matches:
+        path_layer = layer_from_path(str(match.get("evidence_path") or ""))
+        if path_layer != "unknown":
+            workflow_layers.append(path_layer)
+    focused_file_layers = []
+    for category in ["file-path", "artifact-id"]:
+        for match in prompt_route_matches(recognition_matches, category):
+            if match.get("matched_input") != "focused-paths":
+                continue
+            path_layer = layer_from_path(str(match.get("evidence_path") or match.get("canonical_id") or ""))
+            if path_layer != "unknown":
+                focused_file_layers.append(path_layer)
+    layer = first_known(corpus_layers) or "unknown"
+    if layer == "unknown":
+        layer = most_common(focused_file_layers)
+    if layer == "unknown":
+        deploy_intent_present = any(
+            intent_id.startswith("intent.deploy.")
+            for intent_id in matched_intent_ids(recognition_matches, prompt_only=False)
+        )
+        deploy_word_present = re.search(r"\bdeploy(?:ment)?\b", request_text, flags=re.IGNORECASE) is not None
+        if (deploy_intent_present or deploy_word_present) and "04.deploy" in prompt_layer_values:
+            layer = "04.deploy"
+        else:
+            layer = most_common(prompt_layer_values)
+    if layer == "02.rag-rulebook" and re.search(r"\bdeploy(?:ment)?\b", request_text, flags=re.IGNORECASE):
+        layer = "04.deploy"
+    if layer == "unknown":
+        layer = most_common(focused_layer_values + workflow_layers)
+
+    mode_values = []
+    for match in prompt_route_matches(recognition_matches, "mode-name"):
+        canonical = str(match.get("canonical_id") or "")
+        mode_values.append(canonical.split(":", 1)[1] if ":" in canonical else canonical)
+    mode = most_common(mode_values)
+    if mode == "unknown" and (layer != "unknown" or resolved_intent_id != "intent.context.retrieve"):
+        mode = mode_from_intent(resolved_intent_id)
+    if layer == "04.deploy" and mode == "discovery":
+        mode = "planning"
+
+    workflow = workflow_from_prompt_match(workflow_matches, layer)
+    if workflow == "unknown" and layer == "04.deploy" and mode == "execution":
+        workflow = DEPLOY_EXECUTION_WORKFLOW
+    elif workflow == "unknown" and layer in DEFAULT_WORKFLOW_BY_LAYER:
+        workflow = DEFAULT_WORKFLOW_BY_LAYER[layer]
+
+    return {"layer": layer, "mode": mode, "workflow": workflow}
 
 
 def corpus_gap_blocking(
@@ -1325,7 +1550,7 @@ def build_selector_trace(
 
 
 def matched_corpus_ids(matches: list[dict[str, Any]], session_corpus: str) -> list[str]:
-    corpus_ids = [session_corpus]
+    corpus_ids = [] if session_corpus in {"", "corpus.unknown"} else [session_corpus]
     for match in matches:
         if match.get("category") == "corpus-id":
             corpus_ids.append(str(match.get("canonical_id")))
@@ -1541,11 +1766,21 @@ def build_packet(
     chunks = list_of_dicts(chunk_set.get("chunks"))
     citations = list_of_dicts(chunk_set.get("citations"))
     prompt_terms = tokenize(args.request_text)
-    session_corpus = SESSION_LAYER_TO_CORPUS.get(args.session_layer, f"corpus.{args.session_layer}")
+    resolved_intent_id = resolve_intent_id(recognition_matches, compiled_policy)
+    prompt_route = resolve_prompt_route(recognition_matches, resolved_intent_id, args.request_text)
+    use_trusted_session_route = args.trust_session_routing and prompt_route["layer"] == "unknown"
+    routing_layer = args.session_layer if use_trusted_session_route else prompt_route["layer"]
+    routing_mode = args.session_mode if use_trusted_session_route else prompt_route["mode"]
+    routing_workflow = args.session_workflow if use_trusted_session_route else prompt_route["workflow"]
+    session_corpus = (
+        SESSION_LAYER_TO_CORPUS.get(args.session_layer, f"corpus.{args.session_layer}")
+        if use_trusted_session_route
+        else "corpus.unknown"
+    )
     allowed_corpus_ids = (
         matched_corpus_ids(recognition_matches, session_corpus)
         + matched_corpus_gap_target_ids(corpus_gaps, recognition_candidates, args.request_text)
-        + prototype_bridge_corpora(args.session_layer)
+        + (prototype_bridge_corpora(args.session_layer) if use_trusted_session_route else [])
     )
     candidate_evidence_paths = matched_candidate_evidence_paths(recognition_candidates, args.request_text)
     evidence_bundle_source_paths = matched_evidence_bundle_source_paths(recognition_matches, compiled_policy)
@@ -1649,10 +1884,13 @@ def build_packet(
     prompt_layer_conflicts = sorted(
         layer
         for layer in prompt_layer_matches
-        if layer != args.session_layer and re.fullmatch(r"[0-9]{2}\.[a-z0-9-]+", layer)
+        if args.trust_session_routing
+        and args.session_layer not in {"", "unknown"}
+        and layer != args.session_layer
+        and re.fullmatch(r"[0-9]{2}\.[a-z0-9-]+", layer)
     )
-    resolved_intent_id = resolve_intent_id(recognition_matches, compiled_policy)
     side_effect_session_conflict = False
+    side_effect_intents = {"intent.deploy.execution", "intent.git.commit", "intent.implementation.request"}
     if prompt_layer_conflicts:
         if resolved_intent_id == "intent.deploy.execution":
             side_effect_session_conflict = args.session_layer != "04.deploy"
@@ -1691,11 +1929,21 @@ def build_packet(
             {
                 "id": "gap.selector-fixture.low-confidence-prompt",
                 "type": "ambiguous-intent",
-                "description": "The prompt produced no governed prompt or focused-path recognition matches, so routing relies on session metadata only.",
+                "description": "The prompt produced no governed prompt or focused-path recognition matches, so current-prompt routing confidence is low.",
                 "blocking": False,
             }
         )
-    if args.session_layer == "02.rag-rulebook" and session_corpus not in selected_corpus_ids:
+    if resolved_intent_id in side_effect_intents and (not args.session_branch or not args.session_worktree):
+        gaps.append(
+            {
+                "id": "gap.selector-fixture.missing-session-ownership-for-side-effect",
+                "type": "ambiguous-ownership",
+                "description": "The prompt requests a side-effecting action, but verified chat branch/worktree ownership is not available in the supplied lifecycle context.",
+                "blocking": True,
+                "suggested_resolution": "Resolve the active chat session and verify branch/worktree ownership before using this packet for side-effecting work.",
+            }
+        )
+    if use_trusted_session_route and args.session_layer == "02.rag-rulebook" and session_corpus not in selected_corpus_ids:
         gaps.append(
             {
                 "id": "gap.selector-fixture.prototype-corpus-bridge",
@@ -1740,6 +1988,12 @@ def build_packet(
                 "session_layer": args.session_layer,
                 "session_mode": args.session_mode,
                 "session_workflow": args.session_workflow,
+                "trust_session_routing": args.trust_session_routing,
+                "session_id": args.session_id,
+                "session_branch": args.session_branch,
+                "session_worktree": args.session_worktree,
+                "previous_packet_id": args.previous_packet_id,
+                "previous_routing_summary": args.previous_routing_summary,
                 "focused_paths": args.focused_paths,
                 "chunk_ids": [chunk.get("chunk_id") for chunk in selected_chunks],
                 "recognition_matches": [
@@ -1810,14 +2064,15 @@ def build_packet(
             "normalized_summary": "Generate a deterministic retrieval selector fixture from governed policy, request context, recognition sources, session safety metadata, and chunks.",
             "focused_paths": args.focused_paths,
             "open_artifact_ids": selected_artifact_ids,
+            "previous_packet_id": args.previous_packet_id,
             "recognition_source_matches": recognition_matches[:80],
         },
         "intent": {
             "id": resolved_intent_id,
             "label": intent_label(compiled_policy, resolved_intent_id),
-            "mode": args.session_mode,
-            "layer": args.session_layer,
-            "workflow": args.session_workflow,
+            "mode": routing_mode,
+            "layer": routing_layer,
+            "workflow": routing_workflow,
             "confidence": recognition_confidence,
             "source": "mixed",
             "evidence_ref_ids": selected_citation_ids,
@@ -1825,13 +2080,19 @@ def build_packet(
         "action_authorization": action_authorization,
         "selector_trace": selector_trace,
         "routing": {
-            "layer": args.session_layer,
-            "mode": args.session_mode,
-            "workflow": args.session_workflow,
+            "layer": routing_layer,
+            "mode": routing_mode,
+            "workflow": routing_workflow,
             "status": routing_status,
             "task_type": "generate_retrieval_selector_fixture",
             "target_paths": args.focused_paths,
             "classification_source": "request-context-plus-recognition-sources",
+            "scope": "prompt",
+            "previous_packet_id": args.previous_packet_id,
+            "continuity_reason": (
+                args.previous_routing_summary
+                or "No previous context packet supplied; current prompt is resolved from request context and available session continuity."
+            ),
             "recognition_summary": category_summary(recognition_matches),
         },
         "matched_corpora": [
@@ -1842,8 +2103,8 @@ def build_packet(
                     "Selected chunks belong to this corpus."
                     if corpus_id in selected_corpus_ids
                     else "Prototype bridge corpus used until final corpus migration."
-                    if corpus_id in prototype_bridge_corpora(args.session_layer)
-                    else "Session metadata or recognition-source terms matched this corpus."
+                    if args.trust_session_routing and corpus_id in prototype_bridge_corpora(args.session_layer)
+                    else "Request context or recognition-source terms matched this corpus."
                 ),
                 "confidence": 1 if corpus_id in selected_corpus_ids else recognition_confidence,
             }
@@ -1901,7 +2162,7 @@ def build_packet(
             "retrieval": retrieval_confidence,
             "routing": recognition_confidence,
             "notes": [
-                "Request context is preferred over session defaults for retrieval target selection.",
+                "Request context is preferred over session continuity for retrieval target selection.",
                 "Session metadata remains provenance and execution-safety context.",
                 "Recognition-source matches are deterministic lookup signals.",
                 "Semantic recall is not enabled for this fixture.",
@@ -1945,14 +2206,42 @@ def build_packet(
                 }
                 for corpus_id in selected_corpus_ids
             ],
+            "session_context": {
+                "source": (
+                    "governed-local-session-resolution"
+                    if args.trust_session_routing
+                    else "client-supplied-unverified"
+                ),
+                "verification_status": (
+                    "routing-hints-trusted-by-governed-caller"
+                    if args.trust_session_routing
+                    else "unverified"
+                ),
+                "execution_safety_role": (
+                    "routing-provenance-only; side-effect authorization must still verify ownership outside the packet"
+                    if args.trust_session_routing
+                    else "provenance-only; side-effect authorization must verify ownership outside the packet"
+                ),
+                "session_id": args.session_id,
+                "branch": args.session_branch,
+                "worktree": args.session_worktree,
+                "legacy_routing_hint": {
+                    "layer": args.session_layer,
+                    "mode": args.session_mode,
+                    "workflow": args.session_workflow,
+                    "trusted": args.trust_session_routing,
+                },
+                "previous_packet_id": args.previous_packet_id,
+                "previous_routing_summary": args.previous_routing_summary,
+            },
             "retrieval_order": [
                 "load compiled retrieval policy",
                 "validate compiled policy provenance",
                 "load generated chunks",
-                "match prompt, session metadata, and focused paths against recognition sources",
+                "match prompt, session continuity metadata, and focused paths against recognition sources",
                 "resolve intent forms with governed precedence before deciding blocking behavior",
-                "restrict candidate chunks by session, recognition, and prototype bridge corpora when enough candidates exist",
-                "score chunks with deterministic recognition, session, path, corpus, and token signals",
+                "restrict candidate chunks by prompt recognition, focused paths, and trusted local routing hints when enough candidates exist",
+                "score chunks with deterministic recognition, path, corpus, trusted routing, and token signals",
                 "preserve required evidence chunks for blocking gaps",
                 "require required-check, rule, and artifact-summary coverage where available",
                 "validate context packet against chunk set before output",
@@ -2011,7 +2300,7 @@ def main(argv: list[str]) -> int:
         candidates = load_recognition_candidates()
         corpus_gaps = load_corpus_gaps()
         chunk_set, chunk_set_raw = load_chunk_set(args)
-        session_text = "\n".join([args.session_layer, args.session_mode, args.session_workflow])
+        session_text = "\n".join([args.session_layer, args.session_mode, args.session_workflow]) if args.trust_session_routing else ""
         recognition_matches = match_recognition_terms(
             sources,
             args.request_text,

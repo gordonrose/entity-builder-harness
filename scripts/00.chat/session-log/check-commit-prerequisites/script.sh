@@ -81,13 +81,16 @@ fi
 
 WORKFLOW=""
 if [ -f "$LOG_FILE" ]; then
-  WORKFLOW="$(metadata_value "workflow")"
+  WORKFLOW="$(metadata_value "chat_lifecycle_workflow")"
+  if [ -z "${WORKFLOW// }" ]; then
+    WORKFLOW="$(metadata_value "workflow")"
+  fi
 fi
 
 if [ -z "${WORKFLOW// }" ]; then
-  fail "session metadata is missing workflow"
+  fail "session metadata is missing chat_lifecycle_workflow"
 else
-  check_file "$WORKFLOW" "declared workflow"
+  check_file "$WORKFLOW" "declared chat lifecycle workflow"
 fi
 
 check_file "$CHECKLIST" "canonical before-commit checklist"

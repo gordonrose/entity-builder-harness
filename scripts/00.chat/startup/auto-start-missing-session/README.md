@@ -55,7 +55,8 @@ prompt that `start-chat-session` would create.
 1. Empty prompt
 
    An empty opening prompt is rejected. There is no task summary to name the
-   session, classify the workflow, or write useful session metadata.
+   session, create a useful branch/worktree identity, or write useful session
+   metadata.
 
 2. Bare `new`
 

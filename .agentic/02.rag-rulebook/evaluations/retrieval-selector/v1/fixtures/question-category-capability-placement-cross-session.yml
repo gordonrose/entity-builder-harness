@@ -28,6 +28,7 @@ purpose: Prove architecture placement questions are handled by strategy and evid
 input:
   request_text: Should we make local RAG Query part of platform or one of our apps?
   session:
+    trust_routing: true
     layer: 00.chat
     mode: implementation
     workflow: .agentic/00.chat/workflows/chat-start.md

@@ -28,6 +28,7 @@ purpose: Prove a deployment question can retrieve deploy context without becomin
 input:
   request_text: How do I deploy the RAG rulebook MCP server to AWS from main?
   session:
+    trust_routing: true
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md

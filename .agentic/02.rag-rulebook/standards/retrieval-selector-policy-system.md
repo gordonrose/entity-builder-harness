@@ -50,7 +50,7 @@ prompt
 + request context
 + evidence bundles
 + chat/session metadata
-+ layer/mode/workflow
++ prompt-level layer/mode/workflow candidates
 + focused paths
 + corpus ownership
 + rule graph
@@ -75,11 +75,17 @@ The active policy pack is a manifest. Each dimension should live in its own
 imported file so the dimension can be reviewed, taught, validated, and evolved
 without turning the pack into one large prose document.
 
-Prompt interpretation should be grounded in governed recognition sources. The
+Prompt interpretation should run for each prompt and be grounded in governed recognition sources. The
 selector should not invent nouns, actions, risk words, aliases, or targets from
 raw language alone. It should match prompt text against generated and curated
 lookup sources, then combine those matches into request context before comparing
 them with session, path, corpus, and graph signals.
+
+Do not classify the chat as one stable layer, mode, or workflow. A chat is the
+lifecycle container for branch, worktree, commit-log, metrics, and transcript
+state. The selector resolves layer, mode, workflow, and corpus candidates for
+the current prompt so it can choose the right context packet. The next prompt
+must be resolved again.
 
 ## Required Dimensions
 
@@ -90,8 +96,8 @@ Every active selector policy pack must address these dimensions.
 | prompt | How raw user language becomes intent signals and task terms. | Adding task vocabulary, synonyms, disambiguation rules, or prompt red flags. |
 | request context | How the current prompt, focused paths, recognized concepts, and side-effect class become the retrieval target for this request. | Adding request forms, side-effect classes, expected evidence bundles, or confidence penalties. |
 | evidence bundles | Which canonical evidence families are required for recognized question categories. | Adding question categories, evidence-family terms, canonical source paths, or missing-evidence confidence penalties. |
-| chat/session metadata | How current session, branch, workflow, and recorded metadata preserve provenance, fallback routing, and execution safety. | Updating trust rules for session fields and continuation state. |
-| layer/mode/workflow | Which layer and workflow boundaries constrain retrieval. | Adding new layers, modes, or workflow ownership rules. |
+| chat/session metadata | How current session, branch, worktree, context-packet references, and recorded metadata preserve provenance, continuity, and execution safety. | Updating trust rules for session fields, context-packet continuity, and continuation state. |
+| layer/mode/workflow | Which prompt-level layer and workflow boundaries constrain retrieval. | Adding new layers, modes, or workflow ownership rules. |
 | focused paths | How open files, changed files, and user-named paths narrow retrieval. | Adding path ownership maps and path-to-corpus rules. |
 | corpus ownership | Which numbered corpora and subcorpora may provide context. | Adding corpus manifests, subcorpus relationships, or cross-corpus permission rules. |
 | rule graph | Which graph edges may expand retrieval beyond the first match. | Adding edge types, hop limits, and expansion priority. |
@@ -158,12 +164,12 @@ generated inputs produced a selection decision.
 When policies conflict, use this order:
 
 1. Stop conditions beat every retrieval score.
-2. Explicit request context beats session defaults for retrieval target
+2. Explicit request context beats session continuity for retrieval target
    selection.
 3. Evidence bundles define required evidence families for recognized question
    categories.
-4. Session metadata governs provenance, fallback routing, and execution
-   safety.
+4. Session metadata governs provenance, continuity, branch/worktree ownership,
+   and execution safety.
 5. Focused paths and artifact ownership beat broad semantic similarity.
 6. Corpus ownership boundaries beat cross-corpus convenience.
 7. Required checks and mandatory rulesets must survive trimming.

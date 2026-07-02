@@ -155,6 +155,12 @@ def run_selector_fixture(fixture: dict[str, Any], chunks_path: Path) -> dict[str
         str(chunks_path),
         "--request-text",
         str(input_data.get("request_text") or ""),
+        "--session-id",
+        str(session.get("id") or fixture.get("id") or "retrieval-selector-evaluation"),
+        "--session-branch",
+        str(session.get("branch") or "chat/retrieval-selector-evaluation"),
+        "--session-worktree",
+        str(session.get("worktree") or "/tmp/retrieval-selector-evaluation"),
         "--session-layer",
         str(session.get("layer") or "02.rag-rulebook"),
         "--session-mode",
@@ -164,6 +170,8 @@ def run_selector_fixture(fixture: dict[str, Any], chunks_path: Path) -> dict[str
         "--max-chunks",
         str(input_data.get("max_chunks") or 6),
     ]
+    if session.get("trust_routing") is True:
+        command.append("--trust-session-routing")
     if input_data.get("no_focused_paths") is True:
         command.append("--no-focused-paths")
     else:
