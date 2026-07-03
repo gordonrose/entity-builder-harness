@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T08:42:45Z
-latest_commit_sha: c77ea1a
-chat_duration: 4255s (00:01:10:55)
-estimated_chat_tokens: 1128418 estimated from chat transcript bytes (4513672 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 33.85 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T09:28:18Z
+latest_commit_sha: c6a91cd
+chat_duration: 6988s (00:01:56:28)
+estimated_chat_tokens: 1406027 estimated from chat transcript bytes (5624105 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 42.18 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -77,6 +77,17 @@ Summary: Merged the earlier review-agent hardening branch into the current chat 
 
 ADR impact: No new ADR required; this is a local consolidation merge of existing governed harness work.
 
+
+### 2026-07-03T09:28:18Z - Commit recorded
+
+Commit: `c6a91cd`
+
+Message: Harden review agent quality gates
+
+Summary: Implemented the external-review follow-up: scorecard semantic validation, parseable workflow routing tables, executable scorecard and negative fixtures, stricter rubric-anchor specificity, richer use-case outcome fields, and CFO v3 weighted similarity plus cost/per-query metadata.
+
+ADR impact: No ADR required; this hardens the existing review-agent harness capability and validators without changing architecture authority boundaries.
+
 ## Commits
 
 
@@ -94,6 +105,13 @@ ADR impact: No new ADR required; this is a local consolidation merge of existing
   Summary: Merged the earlier review-agent hardening branch into the current chat worktree, bringing the review agents, rubrics, standards, templates, workflows, validators, fixtures, and CFO token comparison tooling into this branch.
   ADR impact: No new ADR required; this is a local consolidation merge of existing governed harness work.
 
+
+- Commit: `c6a91cd`
+  Time UTC: 2026-07-03T09:28:18Z
+  Message: Harden review agent quality gates
+  Summary: Implemented the external-review follow-up: scorecard semantic validation, parseable workflow routing tables, executable scorecard and negative fixtures, stricter rubric-anchor specificity, richer use-case outcome fields, and CFO v3 weighted similarity plus cost/per-query metadata.
+  ADR impact: No ADR required; this hardens the existing review-agent harness capability and validators without changing architecture authority boundaries.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -109,11 +127,11 @@ architectural decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T07:31:50Z
-Latest commit at UTC: 2026-07-03T08:42:45Z
-Latest commit SHA: c77ea1a
-Chat duration: 4255s (00:01:10:55)
-Estimated chat tokens: 1128418 estimated from chat transcript bytes (4513672 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 33.85 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T09:28:18Z
+Latest commit SHA: c6a91cd
+Chat duration: 6988s (00:01:56:28)
+Estimated chat tokens: 1406027 estimated from chat transcript bytes (5624105 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 42.18 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
