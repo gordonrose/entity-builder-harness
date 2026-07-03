@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T07:04:53Z
-latest_commit_sha: 7a6e4c5
-chat_duration: 4064s (00:01:07:44)
-estimated_chat_tokens: 750755 estimated from chat transcript bytes (3003020 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 22.52 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T07:15:26Z
+latest_commit_sha: 149a3c4
+chat_duration: 4697s (00:01:18:17)
+estimated_chat_tokens: 825039 estimated from chat transcript bytes (3300155 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 24.75 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -154,6 +154,17 @@ Summary: Upgraded the CFO comparison output to schema v2 with similarity basis, 
 
 ADR impact: not_needed
 
+
+### 2026-07-03T07:15:26Z - Commit recorded
+
+Commit: `149a3c4`
+
+Message: Align harness manifest and backend architect modes
+
+Summary: Updated the 01.harness manifest from architecture-only wording to harness-governance scope, added a governed Backend Architect implementation-mode workflow, aligned the agent contract, and added validator checks for this drift class.
+
+ADR impact: not_needed
+
 ## Commits
 
 
@@ -206,6 +217,13 @@ ADR impact: not_needed
   Summary: Upgraded the CFO comparison output to schema v2 with similarity basis, date range, trend confidence, pricing basis, current-task status, and delegation decisions enforced by validator fixtures.
   ADR impact: not_needed
 
+
+- Commit: `149a3c4`
+  Time UTC: 2026-07-03T07:15:26Z
+  Message: Align harness manifest and backend architect modes
+  Summary: Updated the 01.harness manifest from architecture-only wording to harness-governance scope, added a governed Backend Architect implementation-mode workflow, aligned the agent contract, and added validator checks for this drift class.
+  ADR impact: not_needed
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -219,11 +237,11 @@ Reason: RCA slice documents the scaffold failure and corrective direction; durab
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T05:57:09Z
-Latest commit at UTC: 2026-07-03T07:04:53Z
-Latest commit SHA: 7a6e4c5
-Chat duration: 4064s (00:01:07:44)
-Estimated chat tokens: 750755 estimated from chat transcript bytes (3003020 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 22.52 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T07:15:26Z
+Latest commit SHA: 149a3c4
+Chat duration: 4697s (00:01:18:17)
+Estimated chat tokens: 825039 estimated from chat transcript bytes (3300155 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 24.75 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
