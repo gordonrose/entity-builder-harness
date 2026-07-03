@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T13:05:25Z
-latest_commit_sha: 19f38e3
-chat_duration: 20015s (00:05:33:35)
-estimated_chat_tokens: 1673561 estimated from chat transcript bytes (6694244 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 50.21 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T15:11:07Z
+latest_commit_sha: 6321c85
+chat_duration: 27557s (00:07:39:17)
+estimated_chat_tokens: 2077416 estimated from chat transcript bytes (8309664 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 62.32 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -99,6 +99,17 @@ Summary: Hardened review-agent validation with live scorecard checks, weighted s
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-07-03T15:11:07Z - Commit recorded
+
+Commit: `6321c85`
+
+Message: Harden review scorecards and CFO cost trends
+
+Summary: Hardened live review-agent scorecard validation, expanded Prompt Engineer gate routing, and upgraded CFO token comparison output with cost and cost-per-query trend delegation.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -130,6 +141,13 @@ ADR impact: covered by session ADR disposition
   Summary: Hardened review-agent validation with live scorecard checks, weighted score enforcement, deterministic board composition rules, broadened Prompt Engineer routing, and CFO similarity/delegation fixes.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `6321c85`
+  Time UTC: 2026-07-03T15:11:07Z
+  Message: Harden review scorecards and CFO cost trends
+  Summary: Hardened live review-agent scorecard validation, expanded Prompt Engineer gate routing, and upgraded CFO token comparison output with cost and cost-per-query trend delegation.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -145,11 +163,11 @@ architectural decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T07:31:50Z
-Latest commit at UTC: 2026-07-03T13:05:25Z
-Latest commit SHA: 19f38e3
-Chat duration: 20015s (00:05:33:35)
-Estimated chat tokens: 1673561 estimated from chat transcript bytes (6694244 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 50.21 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T15:11:07Z
+Latest commit SHA: 6321c85
+Chat duration: 27557s (00:07:39:17)
+Estimated chat tokens: 2077416 estimated from chat transcript bytes (8309664 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 62.32 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
