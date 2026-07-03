@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T06:38:06Z
-latest_commit_sha: 93fd81a
-chat_duration: 2457s (00:00:40:57)
-estimated_chat_tokens: 609824 estimated from chat transcript bytes (2439296 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 18.29 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T06:46:17Z
+latest_commit_sha: 1ac2640
+chat_duration: 2948s (00:00:49:08)
+estimated_chat_tokens: 655956 estimated from chat transcript bytes (2623821 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 19.68 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -121,6 +121,17 @@ Summary: Added JSON-compatible professional rubrics for all six review agents, l
 
 ADR impact: not_needed
 
+
+### 2026-07-03T06:46:17Z - Commit recorded
+
+Commit: `1ac2640`
+
+Message: Enforce semantic review agent rubrics
+
+Summary: Upgraded the harness-agent validator to parse JSON-compatible rubrics, enforce semantic rubric fields and score anchors, verify agent-to-rubric links, and prove rejection of a shallow negative rubric fixture.
+
+ADR impact: not_needed
+
 ## Commits
 
 
@@ -152,6 +163,13 @@ ADR impact: not_needed
   Summary: Added JSON-compatible professional rubrics for all six review agents, linked agent docs to rubric sources, and refreshed generated artifact recognition metadata.
   ADR impact: not_needed
 
+
+- Commit: `1ac2640`
+  Time UTC: 2026-07-03T06:46:17Z
+  Message: Enforce semantic review agent rubrics
+  Summary: Upgraded the harness-agent validator to parse JSON-compatible rubrics, enforce semantic rubric fields and score anchors, verify agent-to-rubric links, and prove rejection of a shallow negative rubric fixture.
+  ADR impact: not_needed
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -165,11 +183,11 @@ Reason: RCA slice documents the scaffold failure and corrective direction; durab
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T05:57:09Z
-Latest commit at UTC: 2026-07-03T06:38:06Z
-Latest commit SHA: 93fd81a
-Chat duration: 2457s (00:00:40:57)
-Estimated chat tokens: 609824 estimated from chat transcript bytes (2439296 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 18.29 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T06:46:17Z
+Latest commit SHA: 1ac2640
+Chat duration: 2948s (00:00:49:08)
+Estimated chat tokens: 655956 estimated from chat transcript bytes (2623821 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 19.68 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
