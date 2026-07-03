@@ -78,6 +78,8 @@ approval until that evidence exists.
 
 ## Review Rubric
 
+Scoring source: `rubrics/senior-sre-engineer.yml`.
+
 - Deployment control: change path is governed and reversible.
 - Reliability: failure modes, health, and rollback are visible.
 - Observability: logs, metrics, alarms, and operator signals are usable.

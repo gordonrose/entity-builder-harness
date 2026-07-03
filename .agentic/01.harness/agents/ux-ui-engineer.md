@@ -77,6 +77,8 @@ context before scoring the experience.
 
 ## Review Rubric
 
+Scoring source: `rubrics/ux-ui-engineer.yml`.
+
 - Persona fit: the experience matches the user's role and likely pressure.
 - Task clarity: next actions and outcomes are obvious.
 - Recovery quality: failure states explain actionable options.

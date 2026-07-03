@@ -46,6 +46,7 @@ Use a review board when independent risks need separate owners.
 ## Supporting Artifacts
 
 - [Agent Contract Standard](../standards/agent-contracts.md)
+- [Machine-Readable Agent Rubrics](rubrics/README.md)
 - [Harness Agent Use Cases](use-cases.md)
 - [Review Agent Scaffold Root Cause Analysis](review-agent-scaffold-root-cause-analysis.md)
 - [Run Agent Review Workflow](../workflows/run-agent-review.md)

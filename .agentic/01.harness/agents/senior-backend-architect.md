@@ -78,6 +78,8 @@ rule applies, score current task risk separately from durable rulebook coverage.
 
 ## Review Rubric
 
+Scoring source: `rubrics/senior-backend-architect.yml`.
+
 - Rule alignment: implementation matches current architecture guidance.
 - Boundary clarity: platform, app, entity, feature, and capability ownership is
   visible.

@@ -79,6 +79,8 @@ of these is absent, block security approval until the evidence exists.
 
 ## Review Rubric
 
+Scoring source: `rubrics/secops-engineer.yml`.
+
 - Asset and boundary clarity: protected assets and trust boundaries are named.
 - Auth and access control: callers, scopes, and least privilege are covered.
 - Secret safety: secrets stay out of source, logs, images, and packets.

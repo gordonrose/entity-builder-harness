@@ -79,6 +79,8 @@ inventing a trend.
 
 ## Review Rubric
 
+Scoring source: `rubrics/cfo-token-efficiency.yml`.
+
 - Comparable set quality: historical tasks are relevant and named.
 - Metric completeness: count, min, max, mean, median, Q1, Q3, and trend are
   present when enough data exists.

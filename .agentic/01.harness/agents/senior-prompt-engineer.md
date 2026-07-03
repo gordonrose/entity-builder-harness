@@ -76,6 +76,8 @@ unclear, request governance clarification before scoring.
 
 ## Review Rubric
 
+Scoring source: `rubrics/senior-prompt-engineer.yml`.
+
 - Source-of-truth clarity: one artifact owns each rule.
 - Drift resistance: instructions avoid contradiction and contamination.
 - Deterministic boundary: scriptable behavior is not left as fragile prose.

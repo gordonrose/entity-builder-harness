@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 537
-  term_count: 1085
+  indexed_artifacts: 544
+  term_count: 1099
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -1877,6 +1877,90 @@ terms:
   match_type: exact
   canonical_id: harness.agents.review-agent-scaffold-rca
   evidence_path: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
+  confidence_weight: 1
+- term: harness.agents.rubrics.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.readme
+  evidence_path: .agentic/01.harness/agents/rubrics/README.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.readme
+  evidence_path: .agentic/01.harness/agents/rubrics/README.md
+  confidence_weight: 1
+- term: harness.agents.rubrics.cfo-token-efficiency
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/rubrics/cfo-token-efficiency.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/cfo-token-efficiency.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/rubrics/cfo-token-efficiency.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.secops-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.secops-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/secops-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/secops-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.secops-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/secops-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.senior-backend-architect
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-backend-architect.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/senior-backend-architect.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-backend-architect.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.senior-prompt-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-prompt-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/senior-prompt-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-prompt-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.senior-sre-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-sre-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/senior-sre-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-sre-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.ux-ui-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/ux-ui-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/ux-ui-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/ux-ui-engineer.yml
   confidence_weight: 1
 - term: harness.agents.secops-engineer
   category: artifact-id
