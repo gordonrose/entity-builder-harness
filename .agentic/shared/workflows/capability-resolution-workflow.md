@@ -96,7 +96,7 @@ Default action: require explicit write permission for the current chat before ed
 
 ### unknown
 
-Use when the mode cannot be classified with enough confidence.
+Use when the mode cannot be resolved with enough confidence.
 
 Default action: stop and ask one clarifying question before selecting a workflow or editing files.
 
@@ -114,7 +114,7 @@ Examples:
 ```text
 Layer: harness
 Mode: planning
-Workflow: .agentic/01.harness/workflows/build-capability-workflow.md
+Workflow: upstream llm-workbench harness-maintenance process
 ```
 
 ```text
@@ -135,12 +135,12 @@ Gates run after workflow selection and before action.
 
 At minimum:
 
-- `execution` must use an existing capability, workflow, gate, script, tool, or documented process. If the capability must be created or changed first, reclassify as `implementation`.
+- `execution` must use an existing capability, workflow, gate, script, tool, or documented process. If the capability must be created or changed first, treat the request as `implementation`.
 - `implementation` requires explicit write permission for the current chat.
 - `unknown` must not proceed to edits or commands that mutate state.
 - If a required action, recovery path, workaround, or substitution is not
-  governed by the selected workflow, gate, script, or standard, follow
-  `.agentic/01.harness/standards/missing-governance-stop-condition.md`.
+  governed by the selected workflow, gate, script, or standard, stop and report
+  the missing governance gap before acting.
 
 Workflows may define stricter gates.
 
@@ -165,34 +165,25 @@ Phase 1: discovery
 Phase 2: implementation
 ```
 
-## Classifier Fixtures
+## Prompt Routing Fixtures
 
-Classifier examples live in:
+Prompt-level routing examples belong to the repo's context router when one
+exists. Use that router's fixtures and context-packet checks when prompt
+routing behavior changes.
 
-```text
-scripts/00.chat/classification/classify-task/fixtures.tsv
-```
+Add or update routing fixtures when:
 
-Check them with:
-
-```bash
-bash scripts/00.chat/classification/classify-task/check-fixtures.sh
-```
-
-Add a fixture when:
-
-- classification behavior surprises the user or agent
-- a classifier bug is fixed
+- prompt routing behavior surprises the user or agent
+- a prompt selector bug is fixed
 - a new layer or mode concept is introduced
-- classifier rules are changed and existing behavior should be preserved
+- routing rules are changed and existing behavior should be preserved
 
 ## Session Metadata
 
-Chat session metadata should include all resolved fields:
+Chat session metadata records lifecycle continuity: session log, branch,
+worktree, transcript metrics, and latest context-packet references.
 
-```yaml
-layer: harness
-mode: planning
-```
-
-If existing session metadata lacks `mode`, classify mode from the current user request or session task before selecting a workflow.
+Do not write durable chat-session `layer`, `mode`, or `workflow` fields. When a
+prompt needs those values, resolve them for the current prompt through this
+repo's assistant instructions and any repo-provided context router, then retain
+the packet reference as continuity evidence if a router returns one.

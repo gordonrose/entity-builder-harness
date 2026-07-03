@@ -52,8 +52,9 @@ the startup boundary explicit: branch, worktree, and session-log bootstrap has
 already happened, while task edits remain read-only until the user grants write
 permission. That prevents a new agent from guessing where it should work or
 which chat lifecycle workflow governs the conversation. Prompt-level layer,
-mode, workflow, and corpus routing belongs to the RAG/rulebook runtime for each
-prompt, not to durable chat startup metadata.
+mode, workflow, and corpus routing uses the current request, repo assistant
+instructions, and any repo-provided context router if one exists, not durable
+chat startup metadata.
 
 ## Inputs
 
@@ -111,8 +112,9 @@ to present or pass the session packet in their own way.
 
    Startup records the chat lifecycle workflow and initializes latest
    context-packet fields. It does not classify the whole chat into a task layer,
-   mode, or workflow. The consuming agent should query the RAG/rulebook runtime
-   for each prompt when it needs prompt-level routing context.
+   mode, or workflow. The consuming agent should use the current request, repo
+   assistant instructions, and any repo-provided context router for prompt-level
+   routing context.
 
 4. Capture the starting worktree state.
 
@@ -167,7 +169,8 @@ to present or pass the session packet in their own way.
 - It does not grant task write permission to the agent.
 - It does not decide that dirty root work is safe to ignore.
 - It does not classify the whole chat into one task layer, mode, or workflow.
-- It does not replace prompt-level RAG/rulebook routing.
+- It does not replace prompt-level routing from assistant instructions or a
+  repo-provided context router.
 
 ## Typical Result
 

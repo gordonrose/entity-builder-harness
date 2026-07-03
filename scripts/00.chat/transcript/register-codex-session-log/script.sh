@@ -11,7 +11,7 @@ set -euo pipefail
 #   disciplines:
 #   - agentic
 #   kind: script
-#   purpose: Record the discovered Codex transcript path in the current chat log.
+#   purpose: Record the discovered Codex transcript path as neutral transcript metadata.
 #   portability:
 #     class: required
 #     targets:
@@ -32,8 +32,8 @@ usage() {
 Usage:
   register-codex-session-log.sh
 
-Discovers the current chat's Codex JSONL session log and records its path in
-the current chat session log metadata.
+Discovers the current chat's Codex JSONL session log and records it as neutral
+transcript metadata in the current chat session log.
 EOF
 }
 
@@ -65,9 +65,10 @@ fi
 
 tmp="$(mktemp)"
 
-awk -v codex_path="$CODEX_SESSION_LOG_PATH" '
+awk -v transcript_provider="codex" -v transcript_path="$CODEX_SESSION_LOG_PATH" '
   BEGIN {
     in_meta = 0
+    wrote_provider = 0
     wrote_path = 0
   }
   /^<!-- agentic-session/ {
@@ -75,14 +76,26 @@ awk -v codex_path="$CODEX_SESSION_LOG_PATH" '
     print
     next
   }
-  in_meta && /^codex_session_log_path:/ {
-    print "codex_session_log_path: " codex_path
+  in_meta && /^transcript_provider:/ {
+    print "transcript_provider: " transcript_provider
+    wrote_provider = 1
+    next
+  }
+  in_meta && /^transcript_path:/ {
+    print "transcript_path: " transcript_path
     wrote_path = 1
     next
   }
+  in_meta && /^codex_session_log_path:/ {
+    next
+  }
   in_meta && /^-->/ {
+    if (wrote_provider == 0) {
+      print "transcript_provider: " transcript_provider
+      wrote_provider = 1
+    }
     if (wrote_path == 0) {
-      print "codex_session_log_path: " codex_path
+      print "transcript_path: " transcript_path
       wrote_path = 1
     }
     in_meta = 0
@@ -98,4 +111,5 @@ mv "$tmp" "$LOG_FILE"
 
 echo "Registered Codex session log:"
 echo "session_log=$LOG_FILE"
-echo "codex_session_log_path=$CODEX_SESSION_LOG_PATH"
+echo "transcript_provider=codex"
+echo "transcript_path=$CODEX_SESSION_LOG_PATH"

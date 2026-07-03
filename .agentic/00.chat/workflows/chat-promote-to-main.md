@@ -135,8 +135,7 @@ unrecorded commit, or log-head mismatch, do not merge. Follow the verifier's
 required action and rerun verification.
 
 If the required recovery path is not covered by this workflow, a script, a gate,
-or a standard, use the missing-governance stop response from
-`.agentic/01.harness/standards/missing-governance-stop-condition.md`.
+or a standard, stop and report the missing governance gap before acting.
 
 ## Promotion Policy
 

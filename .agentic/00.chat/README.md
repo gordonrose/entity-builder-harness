@@ -29,12 +29,13 @@ This layer covers chat creation, session metadata, chat-owned worktrees,
 session logs, commit checkpoints, main-refresh coordination, closeout,
 cleanup, shortcuts, and on-demand chat reports.
 
-This layer does not classify a whole chat into one durable layer, mode, or
-workflow. Prompt interpretation belongs to the RAG/rulebook retrieval selector.
-Each prompt should receive a fresh context packet whose routing helps select
-the right chunks for that prompt. The chat layer may record the latest context
-packet ID and summary for continuity, but chat lifecycle metadata remains about
-branch, worktree, session log, metrics, transcript, and git state.
+<!-- deterministic-check: allow reason="prompt routing may be manual or repo-specific; no universal script can decide whether a context router exists" -->
+This layer does not assign a whole chat one durable layer, mode, or workflow.
+Prompt interpretation uses the current request, repo assistant instructions,
+and any repo-provided context router if one exists. When a router returns a
+context packet, the chat layer may record the latest packet ID and summary for
+continuity, but chat lifecycle metadata remains about branch, worktree, session
+log, metrics, transcript, and git state.
 
 ## Source Of Truth
 

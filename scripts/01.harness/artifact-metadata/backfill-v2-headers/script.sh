@@ -309,7 +309,6 @@ def selected_for_batch(path: Path) -> bool:
     if batch == 9:
         return s.startswith((
             "scripts/00.chat/bootstrap/",
-            "scripts/00.chat/classification/",
             "scripts/00.chat/closeout/",
             "scripts/00.chat/command/",
             "scripts/00.chat/metrics/",

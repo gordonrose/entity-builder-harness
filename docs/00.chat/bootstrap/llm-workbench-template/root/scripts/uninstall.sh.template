@@ -1,21 +1,69 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.uninstall
+#   version: 1
+#   status: active
+#   layer: 00.chat
+#   domain: install
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Uninstall manifest-owned llm-workbench files from a target Git repository.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#   used_by:
+#   - id: llm-workbench.docs.install
+#   effects:
+#   - writes-files
+
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/uninstall.sh <target-git-repo>
+  scripts/uninstall.sh [--dry-run|--apply] <target-git-repo>
 
-Removes llm-workbench harness files from a target Git repository.
+Removes llm-workbench-managed files, package scripts, and instruction blocks
+recorded in .llm-workbench/install-manifest.tsv.
 EOF
 }
 
-if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-  usage
-  exit 0
-fi
+MODE=""
+TARGET_REPO=""
 
-TARGET_REPO="${1:-}"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run)
+      [ -z "$MODE" ] || { echo "ERROR: choose one mode." >&2; exit 2; }
+      MODE="dry-run"
+      shift
+      ;;
+    --apply)
+      [ -z "$MODE" ] || { echo "ERROR: choose one mode." >&2; exit 2; }
+      MODE="apply"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "ERROR: unknown argument: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      [ -z "$TARGET_REPO" ] || { echo "ERROR: target repo specified twice." >&2; exit 2; }
+      TARGET_REPO="$1"
+      shift
+      ;;
+  esac
+done
+
+MODE="${MODE:-dry-run}"
 
 if [ -z "$TARGET_REPO" ]; then
   usage >&2
@@ -27,11 +75,125 @@ if [ ! -d "$TARGET_REPO/.git" ]; then
   exit 1
 fi
 
-rm -rf \
-  "$TARGET_REPO/.agentic/00.chat" \
-  "$TARGET_REPO/.agentic/shared" \
-  "$TARGET_REPO/scripts/00.chat" \
-  "$TARGET_REPO/scripts/01.harness"
+SOURCE_REPO="$(cd "$(dirname "$0")/.." && pwd)"
+MANIFEST_PATH="$TARGET_REPO/.llm-workbench/install-manifest.tsv"
 
-echo "Removed llm-workbench harness directories from: $TARGET_REPO"
-echo "Review AGENTS.md and package.json manually before deleting them."
+if [ ! -f "$MANIFEST_PATH" ]; then
+  echo "ERROR: install manifest not found: ${MANIFEST_PATH#$TARGET_REPO/}" >&2
+  exit 1
+fi
+
+remove_managed_block() {
+  local relative_path="$1"
+  local target="$TARGET_REPO/$relative_path"
+  local tmp
+
+  [ -f "$target" ] || return 0
+  tmp="$(mktemp)"
+
+  awk '
+    /<!-- llm-workbench:start -->/ {
+      in_block = 1
+      next
+    }
+    /<!-- llm-workbench:end -->/ {
+      in_block = 0
+      next
+    }
+    in_block == 1 {
+      next
+    }
+    {
+      print
+    }
+  ' "$target" > "$tmp"
+
+  mv "$tmp" "$target"
+}
+
+remove_package_script() {
+  local script_name="$1"
+  local target_package="$TARGET_REPO/package.json"
+  local source_package="$SOURCE_REPO/package.json"
+
+  [ -f "$target_package" ] || return 0
+
+  node - "$target_package" "$source_package" "$script_name" <<'NODE'
+const fs = require('fs');
+const targetPath = process.argv[2];
+const sourcePath = process.argv[3];
+const scriptName = process.argv[4];
+
+const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+const source = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+
+if (!target.scripts || !Object.prototype.hasOwnProperty.call(target.scripts, scriptName)) {
+  process.exit(0);
+}
+
+const expected = source.scripts && source.scripts[scriptName];
+if (expected !== undefined && target.scripts[scriptName] !== expected) {
+  process.exit(0);
+}
+
+delete target.scripts[scriptName];
+if (Object.keys(target.scripts).length === 0) {
+  delete target.scripts;
+}
+
+fs.writeFileSync(targetPath, `${JSON.stringify(target, null, 2)}\n`);
+NODE
+}
+
+cleanup_empty_dirs() {
+  for path in \
+    "$TARGET_REPO/scripts" \
+    "$TARGET_REPO/.agentic" \
+    "$TARGET_REPO/.github" \
+    "$TARGET_REPO/.cursor" \
+    "$TARGET_REPO/.llm-workbench"; do
+    [ -d "$path" ] || continue
+    find "$path" -depth -type d -empty -delete
+  done
+}
+
+echo "llm-workbench uninstall ${MODE}"
+echo
+echo "Target repo: $TARGET_REPO"
+echo "Manifest: ${MANIFEST_PATH#$TARGET_REPO/}"
+echo
+
+while IFS=$'\t' read -r kind value; do
+  [ -n "${kind:-}" ] || continue
+  case "$kind" in
+    create)
+      echo "REMOVE_CREATED $value"
+      if [ "$MODE" = "apply" ]; then
+        rm -f "$TARGET_REPO/$value"
+      fi
+      ;;
+    patch-block)
+      echo "REMOVE_BLOCK $value"
+      if [ "$MODE" = "apply" ]; then
+        remove_managed_block "$value"
+      fi
+      ;;
+    package-script)
+      echo "REMOVE_PACKAGE_SCRIPT $value"
+      if [ "$MODE" = "apply" ]; then
+        remove_package_script "$value"
+      fi
+      ;;
+    *)
+      echo "ERROR: unknown manifest entry kind: $kind" >&2
+      exit 1
+      ;;
+  esac
+done < "$MANIFEST_PATH"
+
+if [ "$MODE" = "apply" ]; then
+  rm -f "$MANIFEST_PATH"
+  cleanup_empty_dirs
+  echo
+  echo "Uninstall completed."
+fi

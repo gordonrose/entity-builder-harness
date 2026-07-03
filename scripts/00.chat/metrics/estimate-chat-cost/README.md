@@ -32,3 +32,9 @@ This capability does not call external pricing APIs. It reads local pricing
 profile data when available and otherwise emits unavailable metadata with a
 reason.
 
+By default it reads `scripts/00.chat/metrics/data/chat-pricing.json`, a
+chat-owned local profile store bundled for standalone installs. Set
+`CHAT_COST_PRICING_FILE` to point at an organization-maintained pricing file and
+`CHAT_COST_PROFILE` to select a profile when local pricing needs to differ from
+the bundled snapshot. The bundled default profile is provider-neutral and marks
+cost unavailable until a concrete pricing profile is selected.

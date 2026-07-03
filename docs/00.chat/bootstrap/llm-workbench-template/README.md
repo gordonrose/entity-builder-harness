@@ -16,8 +16,6 @@
   used_by:
   - id: chat.workflows.bootstrap-chat-workbench-repo
     path: .agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md
-  - id: chat.chat-workbench-public-repo-readiness
-    path: docs/00.chat/chat-workbench-public-repo-readiness.md
 -->
 # llm-workbench Template
 
@@ -45,16 +43,21 @@ material for the public product shell.
 ## Template Paths
 
 - `root/AGENTS.md.template`
+- `root/CLAUDE.md.template`
 - `root/CONTRIBUTING.md.template`
 - `root/LICENSE.template`
+- `root/LLM_WORKBENCH.md.template`
 - `root/package.json.template`
 - `root/README.md.template`
 - `root/SECURITY.md.template`
 - `root/.gitignore.template`
+- `root/.cursor/rules/llm-workbench.mdc.template`
+- `root/.github/copilot-instructions.md.template`
 - `root/docs/concepts.md.template`
 - `root/docs/install.md.template`
 - `root/docs/workflows.md.template`
 - `root/docs/adapting-to-your-repo.md.template`
+- `root/docs/public-beta-contract.md.template`
 - `root/examples/minimal-repo/README.md.template`
 - `root/scripts/install.sh.template`
 - `root/scripts/uninstall.sh.template`

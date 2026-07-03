@@ -1,21 +1,79 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.script.install
+#   version: 1
+#   status: active
+#   layer: 00.chat
+#   domain: install
+#   disciplines:
+#   - agentic
+#   kind: script
+#   purpose: Install the llm-workbench chat harness into a target Git repository.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#   used_by:
+#   - id: llm-workbench.docs.install
+#   effects:
+#   - writes-files
+#   - commits
+
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/install.sh <target-git-repo>
+  scripts/install.sh [--dry-run|--apply] [--init-commit] <target-git-repo>
 
-Copies the llm-workbench harness into a target Git repository.
+Installs the llm-workbench chat harness into a target Git repository.
+
+The installer always plans first. Apply mode refuses to write when the plan has
+conflicts. Existing package.json files are merged by adding only workbench-owned
+chat:* scripts. Existing assistant instruction files are patched with a managed
+llm-workbench block instead of being overwritten.
 EOF
 }
 
-if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-  usage
-  exit 0
-fi
+MODE=""
+INIT_COMMIT="no"
+TARGET_REPO=""
 
-TARGET_REPO="${1:-}"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run)
+      [ -z "$MODE" ] || { echo "ERROR: choose one mode." >&2; exit 2; }
+      MODE="dry-run"
+      shift
+      ;;
+    --apply)
+      [ -z "$MODE" ] || { echo "ERROR: choose one mode." >&2; exit 2; }
+      MODE="apply"
+      shift
+      ;;
+    --init-commit)
+      INIT_COMMIT="yes"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "ERROR: unknown argument: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      [ -z "$TARGET_REPO" ] || { echo "ERROR: target repo specified twice." >&2; exit 2; }
+      TARGET_REPO="$1"
+      shift
+      ;;
+  esac
+done
+
+MODE="${MODE:-apply}"
 
 if [ -z "$TARGET_REPO" ]; then
   usage >&2
@@ -27,22 +85,418 @@ if [ ! -d "$TARGET_REPO/.git" ]; then
   exit 1
 fi
 
+if [ "$INIT_COMMIT" = "yes" ] && [ "$MODE" = "apply" ]; then
+  if git -C "$TARGET_REPO" rev-parse --verify HEAD >/dev/null 2>&1; then
+    echo "ERROR: --init-commit is only for repos with no existing HEAD." >&2
+    exit 2
+  fi
+fi
+
 SOURCE_REPO="$(cd "$(dirname "$0")/.." && pwd)"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-install-plan.XXXXXX")"
+PLAN_PATHS="$TMP_DIR/planned-paths.txt"
+FILE_ACTIONS="$TMP_DIR/file-actions.tsv"
+PACKAGE_OUTPUT="$TMP_DIR/package-output.txt"
+MANIFEST_OUTPUT="$TMP_DIR/install-manifest.tsv"
+MANIFEST_PATH="$TARGET_REPO/.llm-workbench/install-manifest.tsv"
 
-copy_path() {
-  local source="$1"
-  local target="$2"
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
 
-  mkdir -p "$(dirname "$target")"
-  cp -R "$source" "$target"
+: > "$PLAN_PATHS"
+: > "$FILE_ACTIONS"
+: > "$MANIFEST_OUTPUT"
+
+CREATE_COUNT=0
+SAME_COUNT=0
+PATCH_COUNT=0
+CONFLICT_COUNT=0
+PACKAGE_CONFLICTS="no"
+
+managed_block() {
+  cat <<'EOF'
+
+<!-- llm-workbench:start -->
+## llm-workbench
+
+Follow `.agentic/00.chat/workflows/chat-start.md` at the start of each chat.
+Use `commitLogs/<session>/README.md` as the first source of truth for chat
+lifecycle, branch, worktree, context-packet references, commits, and metrics.
+
+Do not assign the whole chat a durable layer, mode, or workflow. When a prompt
+needs layer, mode, workflow, corpus, or rule context, use the current user
+request, this repo's assistant instructions, and any repo-provided context
+router if one exists.
+
+Default mode after governed chat-start bootstrap is read-only until the user
+explicitly grants write permission for task files.
+<!-- llm-workbench:end -->
+EOF
 }
 
-copy_path "$SOURCE_REPO/AGENTS.md" "$TARGET_REPO/AGENTS.md"
-copy_path "$SOURCE_REPO/package.json" "$TARGET_REPO/package.json"
-copy_path "$SOURCE_REPO/.agentic/00.chat" "$TARGET_REPO/.agentic/00.chat"
-copy_path "$SOURCE_REPO/.agentic/shared" "$TARGET_REPO/.agentic/shared"
-copy_path "$SOURCE_REPO/scripts/00.chat" "$TARGET_REPO/scripts/00.chat"
-copy_path "$SOURCE_REPO/scripts/01.harness" "$TARGET_REPO/scripts/01.harness"
+record_path() {
+  printf '%s\n' "$1" >> "$PLAN_PATHS"
+}
 
-echo "Installed llm-workbench harness into: $TARGET_REPO"
-echo "Next: cd \"$TARGET_REPO\" && npm run chat:list"
+plan_file() {
+  local source="$1"
+  local relative_path="$2"
+  local target="$TARGET_REPO/$relative_path"
+
+  record_path "$relative_path"
+
+  if [ -e "$target" ]; then
+    if cmp -s "$source" "$target"; then
+      echo "SAME $relative_path"
+      printf 'SAME\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+      SAME_COUNT=$((SAME_COUNT + 1))
+    else
+      echo "CONFLICT $relative_path"
+      printf 'CONFLICT\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+      CONFLICT_COUNT=$((CONFLICT_COUNT + 1))
+    fi
+  else
+    echo "CREATE $relative_path"
+    printf 'CREATE\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+    CREATE_COUNT=$((CREATE_COUNT + 1))
+  fi
+}
+
+plan_instruction_file() {
+  local source="$1"
+  local relative_path="$2"
+  local target="$TARGET_REPO/$relative_path"
+
+  [ -f "$source" ] || return 0
+  record_path "$relative_path"
+
+  if [ ! -e "$target" ]; then
+    echo "CREATE $relative_path"
+    printf 'CREATE\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+    CREATE_COUNT=$((CREATE_COUNT + 1))
+    return 0
+  fi
+
+  if cmp -s "$source" "$target"; then
+    echo "SAME $relative_path"
+    printf 'SAME\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+    SAME_COUNT=$((SAME_COUNT + 1))
+    return 0
+  fi
+
+  if grep -q 'llm-workbench:start' "$target"; then
+    echo "SAME_BLOCK $relative_path"
+    printf 'SAME_BLOCK\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+    SAME_COUNT=$((SAME_COUNT + 1))
+  else
+    echo "PATCH_BLOCK $relative_path"
+    printf 'PATCH_BLOCK\t%s\t%s\n' "$source" "$relative_path" >> "$FILE_ACTIONS"
+    PATCH_COUNT=$((PATCH_COUNT + 1))
+  fi
+}
+
+plan_tree() {
+  local tree="$1"
+  local file
+  local relative_path
+
+  [ -d "$SOURCE_REPO/$tree" ] || return 0
+
+  while IFS= read -r file; do
+    relative_path="${file#$SOURCE_REPO/}"
+    case "$relative_path" in
+      scripts/00.chat/upstream/*)
+        continue
+        ;;
+    esac
+    plan_file "$file" "$relative_path"
+  done < <(find "$SOURCE_REPO/$tree" -type f | sort)
+}
+
+plan_selected_file() {
+  local path="$1"
+
+  [ -f "$SOURCE_REPO/$path" ] || return 0
+  plan_file "$SOURCE_REPO/$path" "$path"
+}
+
+plan_public_harness_scripts() {
+  plan_selected_file "scripts/01.harness/run-governed-script.sh"
+  plan_selected_file "scripts/01.harness/check-deterministic-process-drift.sh"
+  plan_selected_file "scripts/01.harness/check-governed-script-command-drift.sh"
+  plan_selected_file "scripts/01.harness/artifact-metadata/check-headers/script.sh"
+  plan_selected_file "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh"
+}
+
+plan_package_json() {
+  local target_package="$TARGET_REPO/package.json"
+  local template_package="$SOURCE_REPO/package.json"
+
+  record_path "package.json"
+
+  if [ ! -f "$target_package" ]; then
+    echo "CREATE package.json"
+    printf 'CREATE_PACKAGE\t%s\tpackage.json\n' "$template_package" >> "$FILE_ACTIONS"
+    CREATE_COUNT=$((CREATE_COUNT + 1))
+    return 0
+  fi
+
+  printf 'MERGE_PACKAGE\t%s\tpackage.json\n' "$template_package" >> "$FILE_ACTIONS"
+
+  if ! node - "$target_package" "$template_package" > "$PACKAGE_OUTPUT" <<'NODE'
+const fs = require('fs');
+const targetPath = process.argv[2];
+const templatePath = process.argv[3];
+
+let target;
+let template;
+
+try {
+  target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+} catch (error) {
+  console.log(`CONFLICT package.json invalid-json ${error.message}`);
+  process.exit(1);
+}
+
+try {
+  template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+} catch (error) {
+  console.log(`CONFLICT package.json template-invalid-json ${error.message}`);
+  process.exit(1);
+}
+
+const actualScripts = target.scripts || {};
+const expectedScripts = template.scripts || {};
+let conflicts = 0;
+
+for (const [name, expected] of Object.entries(expectedScripts)) {
+  const actual = actualScripts[name];
+  if (!name.startsWith('chat:') && name !== 'chat') {
+    continue;
+  }
+  if (actual === undefined) {
+    console.log(`PACKAGE_ADD_SCRIPT ${name} ${expected}`);
+  } else if (actual === expected) {
+    console.log(`PACKAGE_SAME_SCRIPT ${name}`);
+  } else {
+    console.log(`PACKAGE_CONFLICT_SCRIPT ${name} actual=${actual} expected=${expected}`);
+    conflicts += 1;
+  }
+}
+
+for (const name of Object.keys(actualScripts).sort()) {
+  if (expectedScripts[name] === undefined || (!name.startsWith('chat:') && name !== 'chat')) {
+    console.log(`PACKAGE_PRESERVE_SCRIPT ${name} ${actualScripts[name]}`);
+  }
+}
+
+process.exit(conflicts > 0 ? 1 : 0);
+NODE
+  then
+    PACKAGE_CONFLICTS="yes"
+    CONFLICT_COUNT=$((CONFLICT_COUNT + 1))
+  fi
+
+  cat "$PACKAGE_OUTPUT"
+}
+
+print_header() {
+  local head
+  local branch
+
+  head="$(git -C "$TARGET_REPO" rev-parse --verify HEAD 2>/dev/null || true)"
+  branch="$(git -C "$TARGET_REPO" branch --show-current 2>/dev/null || true)"
+
+  echo "llm-workbench install ${MODE}"
+  echo
+  echo "Source repo: $SOURCE_REPO"
+  echo "Target repo: $TARGET_REPO"
+  echo "Target branch: ${branch:-<none>}"
+  echo "Target HEAD: ${head:-<unborn>}"
+  echo "Target OS: ${LLM_WORKBENCH_TARGET_OS:-auto}"
+  echo
+}
+
+print_header
+
+echo "Package plan:"
+plan_package_json
+echo
+
+echo "File plan:"
+plan_instruction_file "$SOURCE_REPO/AGENTS.md" "AGENTS.md"
+plan_instruction_file "$SOURCE_REPO/CLAUDE.md" "CLAUDE.md"
+plan_instruction_file "$SOURCE_REPO/.github/copilot-instructions.md" ".github/copilot-instructions.md"
+plan_instruction_file "$SOURCE_REPO/.cursor/rules/llm-workbench.mdc" ".cursor/rules/llm-workbench.mdc"
+plan_instruction_file "$SOURCE_REPO/LLM_WORKBENCH.md" "LLM_WORKBENCH.md"
+plan_tree ".agentic/00.chat"
+plan_tree ".agentic/shared"
+plan_tree "scripts/00.chat"
+plan_public_harness_scripts
+echo
+
+echo "Excluded source paths:"
+echo "EXCLUDE commitLogs/"
+echo "EXCLUDE .agentic/01.harness/"
+echo "EXCLUDE scripts/00.chat/upstream/"
+echo "EXCLUDE docs/"
+echo "EXCLUDE public repo templates, local transcripts, and local worktree paths"
+echo
+
+echo "Summary:"
+echo "create: $CREATE_COUNT"
+echo "same: $SAME_COUNT"
+echo "patch: $PATCH_COUNT"
+echo "conflicts: $CONFLICT_COUNT"
+echo "package_conflicts: $PACKAGE_CONFLICTS"
+echo "mode: $MODE"
+
+if [ "$CONFLICT_COUNT" -gt 0 ]; then
+  exit 1
+fi
+
+copy_file() {
+  local source="$1"
+  local relative_path="$2"
+  local target="$TARGET_REPO/$relative_path"
+
+  mkdir -p "$(dirname "$target")"
+  cp "$source" "$target"
+}
+
+record_manifest() {
+  local kind="$1"
+  local value="$2"
+
+  printf '%s\t%s\n' "$kind" "$value" >> "$MANIFEST_OUTPUT"
+}
+
+patch_instruction_file() {
+  local relative_path="$1"
+  local target="$TARGET_REPO/$relative_path"
+
+  managed_block >> "$target"
+}
+
+merge_package_json() {
+  local target_package="$TARGET_REPO/package.json"
+  local template_package="$SOURCE_REPO/package.json"
+
+  node - "$target_package" "$template_package" <<'NODE'
+const fs = require('fs');
+const targetPath = process.argv[2];
+const templatePath = process.argv[3];
+
+const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
+
+target.scripts = target.scripts || {};
+for (const [name, expected] of Object.entries(template.scripts || {})) {
+  if (!name.startsWith('chat:') && name !== 'chat') {
+    continue;
+  }
+  if (target.scripts[name] === undefined || target.scripts[name] === expected) {
+    target.scripts[name] = expected;
+  } else {
+    throw new Error(`conflicting script during apply: ${name}`);
+  }
+}
+
+fs.writeFileSync(targetPath, `${JSON.stringify(target, null, 2)}\n`);
+NODE
+}
+
+record_added_package_scripts() {
+  sed -n 's/^PACKAGE_ADD_SCRIPT \([^ ]*\) .*/\1/p' "$PACKAGE_OUTPUT" \
+    | while IFS= read -r script_name; do
+        [ -n "$script_name" ] || continue
+        record_manifest "package-script" "$script_name"
+      done
+}
+
+apply_plan() {
+  local action
+  local source
+  local relative_path
+
+  echo
+  echo "Applying clean plan..."
+
+  while IFS=$'\t' read -r action source relative_path; do
+    case "$action" in
+      CREATE)
+        copy_file "$source" "$relative_path"
+        record_manifest "create" "$relative_path"
+        echo "APPLIED_CREATE $relative_path"
+        ;;
+      CREATE_PACKAGE)
+        copy_file "$source" "$relative_path"
+        record_manifest "create" "$relative_path"
+        echo "APPLIED_CREATE package.json"
+        ;;
+      MERGE_PACKAGE)
+        merge_package_json
+        record_added_package_scripts
+        echo "APPLIED_MERGE package.json"
+        ;;
+      PATCH_BLOCK)
+        patch_instruction_file "$relative_path"
+        record_manifest "patch-block" "$relative_path"
+        echo "APPLIED_PATCH_BLOCK $relative_path"
+        ;;
+      SAME|SAME_BLOCK)
+        :
+        ;;
+      *)
+        echo "ERROR: unexpected action in clean plan: $action" >&2
+        exit 1
+        ;;
+    esac
+  done < "$FILE_ACTIONS"
+
+  echo "Apply completed."
+
+  mkdir -p "$(dirname "$MANIFEST_PATH")"
+  cp "$MANIFEST_OUTPUT" "$MANIFEST_PATH"
+  echo "Wrote install manifest: ${MANIFEST_PATH#$TARGET_REPO/}"
+}
+
+if [ "$MODE" = "apply" ]; then
+  apply_plan
+fi
+
+stage_install_paths() {
+  local kind
+  local value
+  local staged_package_json="no"
+
+  while IFS=$'\t' read -r kind value; do
+    case "$kind" in
+      create|patch-block)
+        git -C "$TARGET_REPO" add -- "$value"
+        ;;
+      package-script)
+        if [ "$staged_package_json" = "no" ]; then
+          git -C "$TARGET_REPO" add -- package.json
+          staged_package_json="yes"
+        fi
+        ;;
+    esac
+  done < "$MANIFEST_OUTPUT"
+
+  git -C "$TARGET_REPO" add -- .llm-workbench/install-manifest.tsv
+}
+
+if [ "$INIT_COMMIT" = "yes" ] && [ "$MODE" = "apply" ]; then
+  echo
+  echo "Creating install commit..."
+  stage_install_paths
+  if ! git -C "$TARGET_REPO" diff --cached --quiet; then
+    git -C "$TARGET_REPO" commit -m "Install llm-workbench harness"
+    echo "Install commit created."
+  else
+    echo "No install changes to commit."
+  fi
+fi

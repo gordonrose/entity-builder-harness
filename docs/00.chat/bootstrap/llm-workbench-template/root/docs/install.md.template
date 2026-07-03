@@ -11,11 +11,34 @@
 From the `llm-workbench` repo:
 
 ```bash
-bash scripts/install.sh /path/to/target/repo
+bash scripts/install.sh --dry-run /path/to/target/repo
+bash scripts/install.sh --apply /path/to/target/repo
 ```
 
-The installer copies the workbench harness into the target Git repo. It does
-not copy `commitLogs/` from the workbench repo.
+Dry-run mode prints the package and file plan without writing. Apply mode
+refuses to write when the plan contains conflicts.
+
+The installer copies the workbench harness into the target Git repo. It does not
+copy `commitLogs/` from the workbench repo, overwrite existing assistant
+instruction files, or replace unrelated `package.json` scripts. Existing
+instruction files receive a managed `llm-workbench` block; package files are
+merged by adding workbench-owned `chat` and `chat:*` scripts only.
+
+For an empty Git repo with no first commit yet:
+
+```bash
+bash scripts/install.sh --apply --init-commit /path/to/blank/repo
+```
+
+That creates an install commit after the clean plan is applied.
+`--init-commit` is only for repos with no existing `HEAD`; existing repos should
+review and commit the install changes through their normal process. The install
+commit stages only workbench-owned files, managed instruction blocks,
+`package.json` when workbench scripts were added, and the install manifest.
+
+Target installs do not copy the upstream `.agentic/01.harness` maintenance
+tree. Reusable harness lessons should be promoted back to `llm-workbench`
+instead of creating source-specific harness governance in each target repo.
 
 ## Verify The Install
 
@@ -27,20 +50,60 @@ npm run chat:list
 
 The command should run without requiring a chat session.
 
+The public-beta contract is summarized in `docs/public-beta-contract.md`.
+
 ## First Chat
 
 Open the target repo with your coding agent. The first chat startup should
 create that repo's own `commitLogs/` tree inside the chat-owned worktree and
 use the target repo as the source of truth.
 
+For tools that prefer machine-readable startup packets:
+
+```bash
+npm run chat:new -- --json "Describe the task"
+```
+
+The JSON packet includes the session log, chat-owned worktree, lifecycle
+workflow, latest context-packet references, and first prompt.
+
+## Transcript Metadata
+
+The workbench stores neutral transcript metadata:
+
+- `transcript_provider`
+- `transcript_path`
+- `transcript_bytes`
+- `transcript_source`
+
+Codex transcript discovery can populate these fields automatically. Other
+providers can supply them when recording a commit:
+
+```bash
+CHAT_TRANSCRIPT_PROVIDER=mistral \
+CHAT_TRANSCRIPT_BYTES=4096 \
+CHAT_TRANSCRIPT_SOURCE="Mistral CLI transcript bytes" \
+  bash scripts/00.chat/session-log/record-chat-commit/script.sh \
+    <commit-sha> \
+    "Commit subject" \
+    "Commit summary"
+```
+
+Missing transcript metrics do not block portable mode. Set
+`CHAT_TRANSCRIPT_METRICS_MODE=strict` when a repo wants commit recording to fail
+without transcript metrics.
+
 ## Uninstall
 
 From the `llm-workbench` repo:
 
 ```bash
-bash scripts/uninstall.sh /path/to/target/repo
+bash scripts/uninstall.sh --dry-run /path/to/target/repo
+bash scripts/uninstall.sh --apply /path/to/target/repo
 ```
 
-Uninstall removes harness files that were installed by the workbench. It should
-not remove target repo product code or committed session history unless you
-explicitly choose to clean those files yourself.
+Uninstall reads `.llm-workbench/install-manifest.tsv` from the target repo. It
+removes only workbench-owned files, package scripts, and managed instruction
+blocks recorded in that manifest. It should not remove target repo product code,
+unrelated package scripts, or committed session history unless you explicitly
+clean those files yourself.

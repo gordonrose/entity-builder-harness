@@ -16,8 +16,6 @@ portability:
   - entity-builder
   - design-system-builder
 used_by:
-- id: harness.workflows.change-harness
-  path: .agentic/01.harness/workflows/change-harness.md
 - id: repo.agents
   path: AGENTS.md
 -->

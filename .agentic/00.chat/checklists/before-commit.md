@@ -16,8 +16,6 @@
   used_by:
   - id: chat.workflows.chat-commit
     path: .agentic/00.chat/workflows/chat-commit.md
-  - id: harness.workflows.change-harness
-    path: .agentic/01.harness/workflows/change-harness.md
 -->
 # Chat Before-Commit Checklist
 
@@ -71,17 +69,21 @@ New scripts and harness/process Markdown documents must declare metadata
 headers before entering the repo. Existing files are backfilled in focused
 batches.
 
-## Layer Commit Gates
+## Optional Commit Gates
 
-When `.agentic/02.rag-rulebook` exists, the commit readiness gate runs:
+If this repo defines an optional layer-level commit gate, run that gate
+according to the repo's local instructions. The base llm-workbench install does
+not require any product, deployment, retrieval, or rulebook layer.
+
+## llm-workbench Public-Beta Contract
+
+If the change touches public export, install/uninstall, chat startup, assistant
+adapters, transcript metrics, cost metrics, public templates, or portability
+validation, complete:
 
 ```bash
-bash scripts/02.rag-rulebook/commit-gates/script.sh
+.agentic/00.chat/checklists/llm-workbench-public-beta.md
 ```
-
-The chat harness must call the layer-level gate only. The RAG/rulebook layer
-owns which retrieval, recognition-source, index, chunk, and context-packet
-validators are required at a commit boundary.
 
 ## Commit Log Deletions
 
@@ -136,12 +138,12 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 Record every commit in the chat. The latest recorded commit is treated as the
 current endpoint for chat duration and session metrics.
 
-The recorder must estimate chat-token metrics from `CHAT_TRANSCRIPT_BYTES`,
-`codex_session_log_path`, or a discovered Codex JSONL session log. Never
-substitute the session log file size. If no transcript source can be supplied or
-discovered, stop before recording the commit unless the current workflow
-explicitly permits `ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes` for a legacy or
-recovery case.
+The recorder should estimate chat-token metrics from `CHAT_TRANSCRIPT_BYTES`,
+neutral transcript metadata, or an explicit assistant adapter such as Codex
+JSONL discovery. Never substitute the session log file size. If no transcript
+source can be supplied or discovered, portable mode records token metrics as
+unavailable. Strict mode may still stop before recording the commit when exact
+metrics are required.
 
 The recorder may estimate chat cost from the estimated chat-token metric and the
 checked-in pricing snapshot. Treat `estimated_chat_cost` as an approximate

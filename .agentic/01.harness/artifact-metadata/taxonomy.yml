@@ -50,6 +50,7 @@ disciplines:
   - backend
   - frontend
   - requirements
+  - security
   - sre
 
 statuses:
