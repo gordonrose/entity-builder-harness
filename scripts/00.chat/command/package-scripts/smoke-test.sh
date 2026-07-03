@@ -43,8 +43,13 @@ mkdir -p \
   "$REPO/scripts/00.chat/closeout/build-closeout-prompt" \
   "$REPO/scripts/00.chat/command/close" \
   "$REPO/scripts/00.chat/command/dispatcher" \
+  "$REPO/scripts/00.chat/command/download-repo" \
+  "$REPO/scripts/00.chat/command/download-repo-diff" \
   "$REPO/scripts/00.chat/command/new" \
   "$REPO/scripts/00.chat/command/open-window" \
+  "$REPO/scripts/00.chat/export/create-worktree-bundle" \
+  "$REPO/scripts/00.chat/export/worktree" \
+  "$REPO/scripts/00.chat/export/worktree-diff" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary" \
   "$REPO/scripts/00.chat/reporting/report-chat-workspaces" \
@@ -61,6 +66,11 @@ cp "$SOURCE_ROOT/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00
 cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/new/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/close/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/command/download-repo/script.sh" "$REPO/scripts/00.chat/command/download-repo/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/command/download-repo-diff/script.sh" "$REPO/scripts/00.chat/command/download-repo-diff/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/export/create-worktree-bundle/script.js" "$REPO/scripts/00.chat/export/create-worktree-bundle/script.js"
+cp "$SOURCE_ROOT/scripts/00.chat/export/worktree/script.sh" "$REPO/scripts/00.chat/export/worktree/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/export/worktree-diff/script.sh" "$REPO/scripts/00.chat/export/worktree-diff/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/reporting/report-chat-workspaces/script.sh" "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
@@ -75,6 +85,10 @@ chmod +x \
   "$REPO/scripts/00.chat/command/new/script.sh" \
   "$REPO/scripts/00.chat/command/close/script.sh" \
   "$REPO/scripts/00.chat/command/open-window/script.sh" \
+  "$REPO/scripts/00.chat/command/download-repo/script.sh" \
+  "$REPO/scripts/00.chat/command/download-repo-diff/script.sh" \
+  "$REPO/scripts/00.chat/export/worktree/script.sh" \
+  "$REPO/scripts/00.chat/export/worktree-diff/script.sh" \
   "$REPO/scripts/00.chat/reporting/generate-commit-log-summary/script.sh" \
   "$REPO/scripts/00.chat/reporting/report-chat-workspaces/script.sh" \
   "$REPO/scripts/00.chat/worktree/open-window/script.sh" \
@@ -101,13 +115,21 @@ git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' c
   npm run --silent chat:commit-log-summary > "$TMP_ROOT/summary.out"
   npm run --silent chat:cleanup-empty-branches -- --dry-run > "$TMP_ROOT/cleanup.out"
   CHAT_OPEN_WORKTREE_WINDOW=skip npm run --silent chat:open-window -- "$REPO" > "$TMP_ROOT/open-window.out"
+  npm run --silent chat:download-repo -- --output "$TMP_ROOT/package-full.zip" "$REPO" > "$TMP_ROOT/download-repo.out"
+  npm run --silent chat:download-repo-diff -- --base main --output "$TMP_ROOT/package-diff.zip" "$REPO" > "$TMP_ROOT/download-repo-diff.out"
 )
 
 grep -q '^  close$' "$TMP_ROOT/list.out" || fail "chat:list did not list close"
 grep -q '^  new$' "$TMP_ROOT/list.out" || fail "chat:list did not list new"
 grep -q '^  open-window$' "$TMP_ROOT/list.out" || fail "chat:list did not list open-window"
+grep -q '^  download-repo$' "$TMP_ROOT/list.out" || fail "chat:list did not list download-repo"
+grep -q '^  download-repo-diff$' "$TMP_ROOT/list.out" || fail "chat:list did not list download-repo-diff"
 grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "chat:commit-log-summary did not delegate"
 grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "chat:cleanup-empty-branches did not delegate"
 grep -q '^Skipping VS Code window open: ' "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
+test -f "$TMP_ROOT/package-full.zip" || fail "chat:download-repo did not create a zip"
+test -f "$TMP_ROOT/package-diff.zip" || fail "chat:download-repo-diff did not create a zip"
+grep -q '^Export kind: worktree$' "$TMP_ROOT/download-repo.out" || fail "chat:download-repo did not delegate"
+grep -q '^Export kind: worktree-diff$' "$TMP_ROOT/download-repo-diff.out" || fail "chat:download-repo-diff did not delegate"
 
 echo "chat package scripts smoke test passed."

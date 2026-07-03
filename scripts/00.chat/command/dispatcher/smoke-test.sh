@@ -50,8 +50,13 @@ mkdir -p \
   "$REPO/scripts/00.chat/closeout/build-closeout-prompt" \
   "$REPO/scripts/00.chat/command/close" \
   "$REPO/scripts/00.chat/command/dispatcher" \
+  "$REPO/scripts/00.chat/command/download-repo" \
+  "$REPO/scripts/00.chat/command/download-repo-diff" \
   "$REPO/scripts/00.chat/command/new" \
   "$REPO/scripts/00.chat/command/open-window" \
+  "$REPO/scripts/00.chat/export/create-worktree-bundle" \
+  "$REPO/scripts/00.chat/export/worktree" \
+  "$REPO/scripts/00.chat/export/worktree-diff" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/00.chat/startup/auto-start-missing-session" \
@@ -65,6 +70,11 @@ cp "$SOURCE_ROOT/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00
 cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/new/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/close/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/command/download-repo/script.sh" "$REPO/scripts/00.chat/command/download-repo/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/command/download-repo-diff/script.sh" "$REPO/scripts/00.chat/command/download-repo-diff/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/export/create-worktree-bundle/script.js" "$REPO/scripts/00.chat/export/create-worktree-bundle/script.js"
+cp "$SOURCE_ROOT/scripts/00.chat/export/worktree/script.sh" "$REPO/scripts/00.chat/export/worktree/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/export/worktree-diff/script.sh" "$REPO/scripts/00.chat/export/worktree-diff/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
@@ -74,7 +84,7 @@ cp "$SOURCE_ROOT/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/script
 cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/command/download-repo/script.sh" "$REPO/scripts/00.chat/command/download-repo-diff/script.sh" "$REPO/scripts/00.chat/export/worktree/script.sh" "$REPO/scripts/00.chat/export/worktree-diff/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 chmod 0644 "$REPO/scripts/00.chat/command/new/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
@@ -89,6 +99,8 @@ CHAT_COPY_PROMPT=skip \
 grep -q '^  new$' "$TMP_ROOT/list.out" || fail "new command was not listed"
 grep -q '^  close$' "$TMP_ROOT/list.out" || fail "close command was not listed"
 grep -q '^  open-window$' "$TMP_ROOT/list.out" || fail "open-window command was not listed"
+grep -q '^  download-repo$' "$TMP_ROOT/list.out" || fail "download-repo command was not listed"
+grep -q '^  download-repo-diff$' "$TMP_ROOT/list.out" || fail "download-repo-diff command was not listed"
 
 AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
 CHAT_CLEANUP_EMPTY_BRANCHES=skip \
@@ -152,6 +164,27 @@ grep -q '^Opened VS Code window: ' "$TMP_ROOT/open-window.out" \
   || fail "open window command did not report opened worktree"
 grep -q -- '^--new-window ' "$TMP_ROOT/code-args.out" \
   || fail "open window command did not call code with the chat worktree"
+
+bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
+  bash scripts/00.chat/command/dispatcher/script.sh download repo \
+    --output "$TMP_ROOT/dispatcher-full.zip" \
+  >"$TMP_ROOT/download-repo.out"
+
+test -f "$TMP_ROOT/dispatcher-full.zip" \
+  || fail "download repo command did not create an export zip"
+grep -q '^Export kind: worktree$' "$TMP_ROOT/download-repo.out" \
+  || fail "download repo command did not route to full worktree export"
+
+bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \
+  bash scripts/00.chat/command/dispatcher/script.sh download repo diff \
+    --base main \
+    --output "$TMP_ROOT/dispatcher-diff.zip" \
+  >"$TMP_ROOT/download-repo-diff.out"
+
+test -f "$TMP_ROOT/dispatcher-diff.zip" \
+  || fail "download repo diff command did not create an export zip"
+grep -q '^Export kind: worktree-diff$' "$TMP_ROOT/download-repo-diff.out" \
+  || fail "download repo diff command did not route to changed-files export"
 
 CHAT_COPY_PROMPT=skip \
   bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \

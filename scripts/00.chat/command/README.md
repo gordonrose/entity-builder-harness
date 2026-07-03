@@ -29,3 +29,6 @@ capabilities to live in domain folders such as `startup`, `closeout`, or
 The command domain is mostly routing. A command entrypoint should delegate to a
 capability script rather than duplicating the capability's logic.
 
+Spaced human commands may be normalized by the dispatcher. For example,
+`download repo` routes to `download-repo`, while `download repo diff` routes to
+`download-repo-diff`.
