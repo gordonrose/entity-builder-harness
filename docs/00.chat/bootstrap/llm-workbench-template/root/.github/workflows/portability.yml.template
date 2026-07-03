@@ -42,6 +42,14 @@ jobs:
         with:
           node-version: "20"
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Python validation dependencies
+        shell: bash
+        run: python3 -m pip install PyYAML
+
       - name: Verify public workbench portability
         shell: bash
         run: bash scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
