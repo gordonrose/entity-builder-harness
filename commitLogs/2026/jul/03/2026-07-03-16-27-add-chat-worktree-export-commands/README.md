@@ -101,6 +101,17 @@ Summary: Added portable download repo and download repo diff chat commands with 
 
 ADR impact: No ADR needed; follows existing scripts/00.chat command surface.
 
+
+### 2026-07-03T21:23:09Z - Main refresh conflict recorded
+
+Path: `scripts/00.chat/command/package-scripts/smoke-test.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept main's generalized open-window assertion and retained the chat branch's download repo and download repo diff assertions.
+
 ## Commits
 
 
@@ -113,7 +124,17 @@ ADR impact: No ADR needed; follows existing scripts/00.chat command surface.
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `scripts/00.chat/command/package-scripts/smoke-test.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored test assertion overlap between chat export command coverage and main's generalized open-window assertion.
+  Action: Kept main's generalized open-window assertion and retained the chat branch's download repo and download repo diff assertions.
+  Preflight branch: `agentic/preflight/chat-2026-07-03-16-27-i-would-like-to-add-two-ne-9c4bb4096eff/20260703205751`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-03-16-27-i-would-like-to-add-two-ne-9c4bb4096eff-20260703205751`
+  Files changed by resolution: scripts/00.chat/command/package-scripts/smoke-test.sh and current chat session log
+  Checks: package-scripts smoke passed; export smoke passed
 
 ## ADR Disposition
 

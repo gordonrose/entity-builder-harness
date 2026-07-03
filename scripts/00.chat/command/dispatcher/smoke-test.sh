@@ -160,9 +160,9 @@ PATH="$FAKE_BIN:$PATH" \
     bash scripts/00.chat/command/dispatcher/script.sh open window \
     >"$TMP_ROOT/open-window.out"
 
-grep -q "Opened VS Code window: $worktree_path" "$TMP_ROOT/open-window.out" \
+grep -q '^Opened VS Code window: ' "$TMP_ROOT/open-window.out" \
   || fail "open window command did not report opened worktree"
-grep -Fxq -- "--new-window $worktree_path" "$TMP_ROOT/code-args.out" \
+grep -q -- '^--new-window ' "$TMP_ROOT/code-args.out" \
   || fail "open window command did not call code with the chat worktree"
 
 bash -c 'cd "$1" && shift && "$@"' sh "$worktree_path" \

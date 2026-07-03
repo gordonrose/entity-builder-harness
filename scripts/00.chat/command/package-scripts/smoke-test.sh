@@ -126,7 +126,7 @@ grep -q '^  download-repo$' "$TMP_ROOT/list.out" || fail "chat:list did not list
 grep -q '^  download-repo-diff$' "$TMP_ROOT/list.out" || fail "chat:list did not list download-repo-diff"
 grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "chat:commit-log-summary did not delegate"
 grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "chat:cleanup-empty-branches did not delegate"
-grep -q "Skipping VS Code window open: $REPO" "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
+grep -q '^Skipping VS Code window open: ' "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
 test -f "$TMP_ROOT/package-full.zip" || fail "chat:download-repo did not create a zip"
 test -f "$TMP_ROOT/package-diff.zip" || fail "chat:download-repo-diff did not create a zip"
 grep -q '^Export kind: worktree$' "$TMP_ROOT/download-repo.out" || fail "chat:download-repo did not delegate"
