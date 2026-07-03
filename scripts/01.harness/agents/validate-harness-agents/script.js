@@ -250,21 +250,25 @@ const genericAnchorTerms = new Set([
   'weak', 'without',
 ]);
 
-const nonRepoEvidenceKinds = new Set([
-  'command-output',
-  'context-packet',
-  'external',
-  'external-url',
-  'fixture-path',
-  'inline',
-  'packet',
-  'url',
+const repoLocalEvidenceKinds = new Set([
+  'file',
+  'metric-output',
+  'script-output',
+  'workflow',
+  'template',
+  'schema',
+  'rubric',
+  'scorecard',
 ]);
+
+const urlEvidenceKinds = new Set(['external', 'external-source', 'external-url', 'url']);
+const packetEvidenceKinds = new Set(['context-packet', 'packet']);
 
 const requiredQualityGateBlocks = [
   'critical_blocker_present is true',
   'any required score is below 3',
   'decision is delegate and delegated review is missing',
+  'high findings require block or delegate',
 ];
 
 function tokenizeWords(value) {
@@ -284,10 +288,9 @@ function tokenizeWords(value) {
   }))];
 }
 
-function dimensionLexicon(dimension) {
+function dimensionLexicon(dimension, options = {}) {
   const values = [
-    dimension.id,
-    dimension.name,
+    ...(options.includeIdentity === false ? [] : [dimension.id, dimension.name]),
     ...(Array.isArray(dimension.evidence_required) ? dimension.evidence_required : []),
     ...(Array.isArray(dimension.blocking_conditions) ? dimension.blocking_conditions : []),
     ...(Array.isArray(dimension.delegation_triggers) ? dimension.delegation_triggers : []),
@@ -302,9 +305,6 @@ function repoEvidencePathExists(evidencePath) {
   if (!trimmed) {
     return false;
   }
-  if (/^(https?:\/\/|s3:\/\/|arn:|packet:|context-packet:|command:|inline:)/i.test(trimmed)) {
-    return true;
-  }
   if (path.isAbsolute(trimmed)) {
     const relative = path.relative(repoRoot, trimmed);
     return relative && !relative.startsWith('..') && !path.isAbsolute(relative) && fs.existsSync(trimmed);
@@ -312,15 +312,70 @@ function repoEvidencePathExists(evidencePath) {
   return fs.existsSync(path.join(repoRoot, trimmed));
 }
 
+function isHttpUrl(value) {
+  return /^https?:\/\/\S+$/i.test(String(value || '').trim());
+}
+
+function hasPrefixedPayload(value, prefixPattern) {
+  const match = String(value || '').trim().match(prefixPattern);
+  return Boolean(match && match[1] && match[1].trim().length >= 3);
+}
+
+function validateEvidenceKind(errors, sourceLabel, source, options) {
+  const kind = String(source.kind || '').toLowerCase();
+  const evidencePath = String(source.path || '').trim();
+  if (repoLocalEvidenceKinds.has(kind)) {
+    if (!repoEvidencePathExists(evidencePath)) {
+      errors.push(`${sourceLabel}.path must exist in the repository for repo-local evidence kind ${source.kind}`);
+    }
+    return;
+  }
+  if (urlEvidenceKinds.has(kind)) {
+    if (!isHttpUrl(evidencePath)) {
+      errors.push(`${sourceLabel}.path must be an http(s) URL for evidence kind ${source.kind}`);
+    }
+    return;
+  }
+  if (kind === 'command-output') {
+    if (!repoEvidencePathExists(evidencePath) && !hasPrefixedPayload(evidencePath, /^command:(.+)$/i)) {
+      errors.push(`${sourceLabel}.path must be a repo evidence path or command:<name> for command-output evidence`);
+    }
+    return;
+  }
+  if (packetEvidenceKinds.has(kind)) {
+    if (!repoEvidencePathExists(evidencePath) && !hasPrefixedPayload(evidencePath, /^(packet|context-packet):(.+)$/i)) {
+      errors.push(`${sourceLabel}.path must be a repo packet path or packet:/context-packet: reference for ${source.kind} evidence`);
+    }
+    return;
+  }
+  if (kind === 'inline') {
+    if (!hasPrefixedPayload(evidencePath, /^inline:(.+)$/i)) {
+      errors.push(`${sourceLabel}.path must use inline:<label> for inline evidence`);
+    }
+    const inlineText = [source.note, source.content].filter(nonEmptyString).join(' ');
+    if (inlineText.trim().length < 40) {
+      errors.push(`${sourceLabel}.note or content must contain substantive inline evidence`);
+    }
+    return;
+  }
+  if (kind === 'fixture-path') {
+    if (options.liveScorecard) {
+      errors.push(`${sourceLabel}.kind fixture-path is only allowed in internal validator fixtures`);
+    }
+    return;
+  }
+  errors.push(`${sourceLabel}.kind must be a supported evidence kind`);
+}
+
 function validateScoreEvidenceSpecificity(errors, label, dimension, evidence) {
   if (!dimension || !nonEmptyString(evidence)) {
     return;
   }
-  const lexicon = dimensionLexicon(dimension);
+  const lexicon = dimensionLexicon(dimension, { includeIdentity: false });
   const evidenceTokens = new Set(tokenizeWords(evidence).filter((token) => !genericAnchorTerms.has(token)));
   const matches = [...lexicon].filter((token) => evidenceTokens.has(token));
-  if (matches.length === 0) {
-    errors.push(`${label}.evidence must reference rubric-specific evidence, blocker, delegation, or professional-standard terms for ${dimension.id}`);
+  if (matches.length < 2) {
+    errors.push(`${label}.evidence must reference at least 2 rubric evidence, blocker, delegation, or professional-standard terms for ${dimension.id}; dimension id/name alone is insufficient`);
   }
 }
 
@@ -1010,7 +1065,7 @@ function arrayLength(value) {
   return Array.isArray(value) ? value.length : 0;
 }
 
-function validateEvidenceSources(errors, label, evidence) {
+function validateEvidenceSources(errors, label, evidence, options = {}) {
   if (!isPlainObject(evidence)) {
     errors.push(`${label}.evidence must be an object`);
     return;
@@ -1024,11 +1079,13 @@ function validateEvidenceSources(errors, label, evidence) {
         errors.push(`${sourceLabel} must be an object`);
         return;
       }
-      requireNonEmptyString(errors, `${sourceLabel}.path`, source.path);
+      if (!nonEmptyString(source.path)) {
+        errors.push(`${sourceLabel}.path must be a non-empty string`);
+      }
       if (!nonEmptyString(source.kind)) {
         errors.push(`${sourceLabel}.kind must be a non-empty string`);
-      } else if (!nonRepoEvidenceKinds.has(String(source.kind).toLowerCase()) && !repoEvidencePathExists(source.path)) {
-        errors.push(`${sourceLabel}.path must exist in the repository for repo-local evidence kind ${source.kind}`);
+      } else {
+        validateEvidenceKind(errors, sourceLabel, source, options);
       }
       requireNonEmptyString(errors, `${sourceLabel}.note`, source.note);
     });
@@ -1053,7 +1110,7 @@ function validateQualityGate(errors, label, qualityGate) {
     errors.push(`${label}.quality_gate must be an object`);
     return;
   }
-  requireStringArray(errors, `${label}.quality_gate.blocks_when`, qualityGate.blocks_when, 3);
+  requireStringArray(errors, `${label}.quality_gate.blocks_when`, qualityGate.blocks_when, requiredQualityGateBlocks.length);
   const blocksWhen = Array.isArray(qualityGate.blocks_when) ? qualityGate.blocks_when : [];
   for (const requiredBlock of requiredQualityGateBlocks) {
     if (!blocksWhen.includes(requiredBlock)) {
@@ -1104,7 +1161,7 @@ function weightedOverallScore(dimensions, scoreByDimension) {
   return weightTotal === 0 ? null : roundScore(weightedTotal / weightTotal);
 }
 
-function validateScorecardData(scorecard, label) {
+function validateScorecardData(scorecard, label, options = {}) {
   const errors = [];
   if (!isPlainObject(scorecard)) {
     return [`${label} must be an object`];
@@ -1143,7 +1200,7 @@ function validateScorecardData(scorecard, label) {
     errors.push(`${label}.review.overall_score must be a number from 0 to 5`);
   }
 
-  validateEvidenceSources(errors, label, scorecard.evidence);
+  validateEvidenceSources(errors, label, scorecard.evidence, options);
   validateFindings(errors, label, scorecard.findings);
   validateDelegationRequests(errors, label, scorecard);
   requireStringArray(errors, `${label}.required_follow_up`, scorecard.required_follow_up, 0);
@@ -1217,8 +1274,8 @@ function validateScorecardData(scorecard, label) {
   if (decision === 'pass' && arrayLength(scorecard.evidence?.gaps) > 0) {
     errors.push(`${label}.review.decision pass cannot have unresolved evidence gaps`);
   }
-  if (decision === 'pass' && arrayLength(scorecard.findings?.high) > 0) {
-    errors.push(`${label}.review.decision pass cannot have high findings`);
+  if ((decision === 'pass' || decision === 'pass_with_notes') && arrayLength(scorecard.findings?.high) > 0) {
+    errors.push(`${label}.review.decision ${decision} cannot have high findings`);
   }
   if (decision === 'block' && arrayLength(scorecard.required_follow_up) === 0) {
     errors.push(`${label}.review.decision block requires required_follow_up`);
@@ -1231,8 +1288,8 @@ function cloneData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function expectScorecardInvalid(label, scorecard, expectedErrorText) {
-  const errors = validateScorecardData(scorecard, label);
+function expectScorecardInvalid(label, scorecard, expectedErrorText, options = {}) {
+  const errors = validateScorecardData(scorecard, label, options);
   if (errors.length === 0) {
     failures.push(`${label} expected invalid scorecard but validator accepted it`);
     return;
@@ -1257,7 +1314,14 @@ function validateScorecardSemanticNegativeMutations(baseScorecard) {
     ...score,
     evidence: 'This is sufficiently detailed and acceptable for review.',
   }));
-  expectScorecardInvalid('scorecard semantic negative generic_score_evidence', genericEvidence, 'rubric-specific evidence');
+  expectScorecardInvalid('scorecard semantic negative generic_score_evidence', genericEvidence, 'dimension id/name alone is insufficient');
+
+  const dimensionOnlyEvidence = cloneData(baseScorecard);
+  dimensionOnlyEvidence.scores = dimensionOnlyEvidence.scores.map((score) => ({
+    ...score,
+    evidence: `The ${score.dimension} review has enough detail in this statement to pass because it names the dimension only.`,
+  }));
+  expectScorecardInvalid('scorecard semantic negative dimension_only_score_evidence', dimensionOnlyEvidence, 'dimension id/name alone is insufficient');
 
   const blockWithoutFollowUp = cloneData(baseScorecard);
   blockWithoutFollowUp.review.decision = 'block';
@@ -1269,6 +1333,11 @@ function validateScorecardSemanticNegativeMutations(baseScorecard) {
   const passWithHighFinding = cloneData(baseScorecard);
   passWithHighFinding.findings.high = ['High-severity issue remains unresolved.'];
   expectScorecardInvalid('scorecard semantic negative pass_with_high_finding', passWithHighFinding, 'pass cannot have high findings');
+
+  const passWithNotesHighFinding = cloneData(baseScorecard);
+  passWithNotesHighFinding.review.decision = 'pass_with_notes';
+  passWithNotesHighFinding.findings.high = ['High-severity issue remains unresolved.'];
+  expectScorecardInvalid('scorecard semantic negative pass_with_notes_high_finding', passWithNotesHighFinding, 'pass_with_notes cannot have high findings');
 
   const selfDelegation = cloneData(baseScorecard);
   selfDelegation.review.decision = 'delegate';
@@ -1283,6 +1352,32 @@ function validateScorecardSemanticNegativeMutations(baseScorecard) {
   ];
   selfDelegation.required_follow_up = ['Route the unresolved question to a different responsible agent.'];
   expectScorecardInvalid('scorecard semantic negative self_delegation', selfDelegation, 'must not self-delegate');
+
+  const liveFixturePath = cloneData(baseScorecard);
+  liveFixturePath.evidence.sources[0].path = 'definitely/not/a/real/path/output.json with sufficient length';
+  liveFixturePath.evidence.sources[0].kind = 'fixture-path';
+  expectScorecardInvalid('scorecard semantic negative live_fixture_path_kind', liveFixturePath, 'fixture-path is only allowed', { liveScorecard: true });
+
+  const liveExternalPath = cloneData(baseScorecard);
+  liveExternalPath.evidence.sources[0].path = 'definitely/not/a/real/external/source';
+  liveExternalPath.evidence.sources[0].kind = 'external-url';
+  expectScorecardInvalid('scorecard semantic negative live_external_url_kind', liveExternalPath, 'http(s) URL', { liveScorecard: true });
+
+  const liveCommandPath = cloneData(baseScorecard);
+  liveCommandPath.evidence.sources[0].path = 'definitely/not/a/real/command/output.txt';
+  liveCommandPath.evidence.sources[0].kind = 'command-output';
+  expectScorecardInvalid('scorecard semantic negative live_command_output_kind', liveCommandPath, 'command:<name>', { liveScorecard: true });
+
+  const livePacketPath = cloneData(baseScorecard);
+  livePacketPath.evidence.sources[0].path = 'definitely/not/a/real/context-packet.yml';
+  livePacketPath.evidence.sources[0].kind = 'context-packet';
+  expectScorecardInvalid('scorecard semantic negative live_packet_kind', livePacketPath, 'packet:/context-packet:', { liveScorecard: true });
+
+  const liveInlineWeak = cloneData(baseScorecard);
+  liveInlineWeak.evidence.sources[0].path = 'inline:short';
+  liveInlineWeak.evidence.sources[0].kind = 'inline';
+  liveInlineWeak.evidence.sources[0].note = 'Too short.';
+  expectScorecardInvalid('scorecard semantic negative live_inline_kind', liveInlineWeak, 'substantive inline evidence', { liveScorecard: true });
 }
 
 function validateScorecardFixtures() {
@@ -1385,8 +1480,17 @@ function validateCliScorecards() {
     if (!parsed) {
       continue;
     }
-    failures.push(...validateScorecardData(parsed.data, `scorecard ${parsed.label}`));
+    failures.push(...validateScorecardData(parsed.data, `scorecard ${parsed.label}`, { liveScorecard: true }));
   }
+}
+
+function dimensionEvidenceCue(dimension) {
+  return [
+    ...(Array.isArray(dimension.evidence_required) ? dimension.evidence_required : []),
+    ...(Array.isArray(dimension.blocking_conditions) ? dimension.blocking_conditions : []),
+    ...(Array.isArray(dimension.delegation_triggers) ? dimension.delegation_triggers : []),
+    ...(Array.isArray(dimension.professional_standard_refs) ? dimension.professional_standard_refs : []),
+  ].slice(0, 4).join(', ') || dimension.name;
 }
 
 function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
@@ -1394,8 +1498,8 @@ function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
     dimension: dimension.id,
     score: dimension.id === fixture.expected_blocking_dimension ? 2 : 4,
     evidence: dimension.id === fixture.expected_blocking_dimension
-      ? `Blocking fixture evidence covers ${dimension.id} and ${fixture.expected_blocker_terms.join(', ')}.`
-      : `Non-blocking fixture evidence covers ${dimension.id} and ${dimension.evidence_required?.[0] || dimension.name}.`,
+      ? `Blocking fixture evidence covers ${dimensionEvidenceCue(dimension)} plus ${fixture.expected_blocker_terms.join(', ')}.`
+      : `Non-blocking fixture evidence covers ${dimensionEvidenceCue(dimension)}.`,
     notes: dimension.id === fixture.expected_blocking_dimension
       ? 'Below the required blocking threshold.'
       : 'Not the fixture blocker.',
@@ -1440,6 +1544,7 @@ function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
         'critical_blocker_present is true',
         'any required score is below 3',
         'decision is delegate and delegated review is missing',
+        'high findings require block or delegate',
       ],
     },
   };
@@ -1583,11 +1688,7 @@ function validateTemplates() {
   if (cfoExample) {
     failures.push(...validateScorecardData(cfoExample.data, 'CFO scorecard example'));
     const blocksWhen = cfoExample.data.quality_gate?.blocks_when || [];
-    for (const text of [
-      'critical_blocker_present is true',
-      'any required score is below 3',
-      'decision is delegate and delegated review is missing',
-    ]) {
+    for (const text of requiredQualityGateBlocks) {
       if (!blocksWhen.includes(text)) {
         failures.push(`CFO scorecard example quality_gate.blocks_when missing ${text}`);
       }

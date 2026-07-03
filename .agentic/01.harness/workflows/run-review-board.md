@@ -132,7 +132,7 @@ agent only when that lane can independently block the outcome.
       "when_any": [
         "\\.agentic/01\\.harness/(workflows|templates|agents|standards|prompts|checklists)/",
         "\\.agentic/[^\\s]+/(skills|evals|evaluations|schemas|orchestrators|prompts|gates|checklists)/",
-        "scripts/[^\\s]+/(gates|evaluate|evals?|schemas?)/|scripts/[^\\s]+/(evaluate-|eval-|scorecard|schema)"
+        "scripts/[^\\s]+/(gates|[^/]*-gates|evaluate|evals?|schemas?)/|scripts/[^\\s]+/(evaluate-|eval-|scorecard|schema)"
       ],
       "blocking_scope": "Prompt, workflow, schema, gate, skill, eval, and learnability defects can block harness instruction quality."
     },

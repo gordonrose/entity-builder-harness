@@ -45,7 +45,7 @@
       "sources": [
         {
           "path": "<path or source id>",
-          "kind": "<file | command-output | metric-output | packet | external-source>",
+          "kind": "<file | command-output | metric-output | packet | external-url | inline>",
           "note": "<why this evidence matters>"
         }
       ],
@@ -71,7 +71,8 @@
       "blocks_when": [
         "critical_blocker_present is true",
         "any required score is below 3",
-        "decision is delegate and delegated review is missing"
+        "decision is delegate and delegated review is missing",
+        "high findings require block or delegate"
       ]
     }
   }

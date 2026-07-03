@@ -60,7 +60,7 @@
           {
             "dimension": "comparable_task_set_quality",
             "score": 4,
-            "evidence": "Comparable task set is relevant and named.",
+            "evidence": "Comparable sessions use a named similarity method and sample size.",
             "notes": "Minor uncertainty is documented."
           },
           {
@@ -84,7 +84,7 @@
           {
             "dimension": "delegation_accuracy",
             "score": 4,
-            "evidence": "No delegation is required because the trend is down or justified.",
+            "evidence": "Delegation check names the suspected cost driver and target agent; no blocking question is required.",
             "notes": "Delegation rule was evaluated."
           },
           {
@@ -100,7 +100,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }
@@ -184,7 +185,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }
@@ -261,7 +263,7 @@
           {
             "dimension": "report_actionability",
             "score": 4,
-            "evidence": "The report names the trend, target agent, and blocking question.",
+            "evidence": "The report names the decision, findings, confidence, evidence gaps, and next action.",
             "notes": "Delegated review can proceed."
           }
         ],
@@ -282,7 +284,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }
@@ -329,7 +332,7 @@
           {
             "dimension": "comparable_task_set_quality",
             "score": 4,
-            "evidence": "Comparable set is sufficient.",
+            "evidence": "Comparable sessions use a sufficient similarity method and sample size.",
             "notes": "Similarity is not the blocker."
           },
           {
@@ -353,13 +356,13 @@
           {
             "dimension": "delegation_accuracy",
             "score": 2,
-            "evidence": "SecOps delegation is required but not resolved.",
+            "evidence": "SecOps is the target agent for the suspected cost driver, but the blocking question is unresolved.",
             "notes": "The safety owner is missing."
           },
           {
             "dimension": "report_actionability",
             "score": 4,
-            "evidence": "The report names the blocking issue.",
+            "evidence": "The report names the decision, findings, evidence gaps, and next action for the blocker.",
             "notes": "The next action is clear."
           }
         ],
@@ -380,7 +383,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }
@@ -466,7 +470,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }
@@ -554,7 +559,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }
@@ -644,7 +650,8 @@
           "blocks_when": [
             "critical_blocker_present is true",
             "any required score is below 3",
-            "decision is delegate and delegated review is missing"
+            "decision is delegate and delegated review is missing",
+            "high findings require block or delegate"
           ]
         }
       }

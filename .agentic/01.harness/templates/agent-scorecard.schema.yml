@@ -64,7 +64,8 @@
     "blocks_when": [
       "critical_blocker_present is true",
       "any required score is below 3",
-      "decision is delegate and delegated review is missing"
+      "decision is delegate and delegated review is missing",
+      "high findings require block or delegate"
     ],
     "overall_score_rule": "weighted_average_of_selected_agent_rubric_dimensions"
   }
