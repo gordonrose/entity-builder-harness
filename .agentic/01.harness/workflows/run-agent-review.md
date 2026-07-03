@@ -47,14 +47,76 @@ agent clearly owns the primary risk.
 
 ## Agent Selection
 
-Select the narrowest responsible agent:
+Select the narrowest responsible agent from the canonical routing table below.
+The validator parses this table and runs the executable use-case fixtures
+against it; do not duplicate a separate prose-only routing table elsewhere.
 
-- token trend or efficiency: CFO Token Efficiency
-- prompt surface or instruction hygiene: Senior Prompt Engineer
-- backend architecture or rule gap: Senior Back-End Architect
-- deployment, runtime, reliability, or cloud cost: Senior SRE Engineer
-- security, secrets, auth, exposure, or compliance: SecOps Engineer
-- human-facing repo, chat, CLI, web, or accessibility: UX/UI Engineer
+<!-- review-agent-routing:start -->
+```json
+{
+  "schema": "harness/review-agent-routing/v1",
+  "version": 1,
+  "routes": [
+    {
+      "agent_id": "harness.agents.cfo-token-efficiency",
+      "reason": "token trend, token efficiency, retrieval cost, context-loading waste, or per-query cost",
+      "match_patterns": [
+        "estimated chat token",
+        "token trend|token spend|token consumption|token efficient|token and per-query cost",
+        "retrieval-policy|broad corpora|context loading",
+        "cost visibility|per-query cost|per query cost"
+      ]
+    },
+    {
+      "agent_id": "harness.agents.senior-prompt-engineer",
+      "reason": "prompt surface, instruction hygiene, deterministic boundary, source-of-truth ownership, or human learnability of harness instructions",
+      "match_patterns": [
+        "llm|instructions|instruction surface|prompt surface",
+        "workflow, skill, gate, template, schema, orchestrator, or agent",
+        "\\.agentic/01\\.harness/(workflows|templates|agents)/",
+        "deterministic|source-of-truth|onboarding|context loading|review-board invocation"
+      ]
+    },
+    {
+      "agent_id": "harness.agents.senior-backend-architect",
+      "reason": "backend architecture, platform/app/entity/feature/capability boundary, dependency direction, or durable architecture rule gap",
+      "match_patterns": [
+        "backend|architecture|platform capability|entity|feature|capability boundary|rulebook gap",
+        "docs/harness/architecture/",
+        "src/platform/"
+      ]
+    },
+    {
+      "agent_id": "harness.agents.senior-sre-engineer",
+      "reason": "deployment, runtime, reliability, rollback, observability, AWS/GitHub Actions, or cloud cost",
+      "match_patterns": [
+        "deployment|deploy workflow|github actions|runtime|rollback|observability|service-choice",
+        "aws deployment|aws runtime|\\b(ecs|ecr|rds|route53|cloudwatch)\\b",
+        "hosted service becomes more expensive per query|infrastructure scaling|runtime logging|cloud caching"
+      ]
+    },
+    {
+      "agent_id": "harness.agents.secops-engineer",
+      "reason": "security, secrets, authn/authz, public exposure, least privilege, abuse, audit, OWASP, ISO, or trust boundary",
+      "match_patterns": [
+        "security|public|semi-public|exposes?|secret|credential|authentication|authorization|auth",
+        "least privilege|owasp|iso|trust boundary|audit logging|rate limiting",
+        "security-sensitive"
+      ]
+    },
+    {
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "reason": "human-facing repo, chat, CLI, web, frontend, persona, accessibility, WCAG, recovery, or operator experience",
+      "match_patterns": [
+        "chat or cli|cli|blocked response|fallback|terminal output|human operator",
+        "user-facing|web ui|frontend|design-system|wcag|persona|accessibility",
+        "clear to a human operator"
+      ]
+    }
+  ]
+}
+```
+<!-- review-agent-routing:end -->
 
 Use `.agentic/01.harness/agents/use-cases.md` as the first test fixture source
 when the correct agent is unclear.

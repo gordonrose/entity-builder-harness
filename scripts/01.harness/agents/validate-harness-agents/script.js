@@ -70,6 +70,10 @@ const agents = [
   },
 ];
 
+const agentById = new Map(agents.map((agent) => [agent.agentId, agent]));
+const allowedDecisions = new Set(['pass', 'pass_with_notes', 'block', 'delegate', 'not_applicable']);
+const allowedConfidence = new Set(['low', 'medium', 'high']);
+
 const requiredSections = [
   'Responsibility',
   'Use When',
@@ -116,20 +120,55 @@ function read(relativePath) {
 
 function parseJsonCompatibleFile(relativePath, expectedDescription) {
   const content = read(relativePath);
+  const parsed = parseJsonCompatibleContent(content, relativePath, expectedDescription);
+  return parsed ? { content, data: parsed } : null;
+}
+
+function parseJsonCompatibleContent(content, label, expectedDescription) {
   const start = content.indexOf('{');
   const end = content.lastIndexOf('}');
   if (start === -1 || end === -1 || end < start) {
-    failures.push(`${relativePath} missing JSON-compatible ${expectedDescription} body`);
+    failures.push(`${label} missing JSON-compatible ${expectedDescription} body`);
     return null;
   }
 
   try {
-    return {
-      content,
-      data: JSON.parse(content.slice(start, end + 1)),
-    };
+    return JSON.parse(content.slice(start, end + 1));
   } catch (error) {
-    failures.push(`${relativePath} is not parseable JSON-compatible YAML: ${error.message}`);
+    failures.push(`${label} is not parseable JSON-compatible YAML: ${error.message}`);
+    return null;
+  }
+}
+
+function tryParseJsonCompatibleContent(content) {
+  const start = content.indexOf('{');
+  const end = content.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) {
+    return null;
+  }
+  try {
+    return JSON.parse(content.slice(start, end + 1));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function parseWorkflowJsonBlock(relativePath, markerName, expectedSchema) {
+  const content = read(relativePath);
+  const pattern = new RegExp(`<!-- ${markerName}:start -->\\s*\\\`\\\`\\\`json\\s*([\\s\\S]*?)\\s*\\\`\\\`\\\`\\s*<!-- ${markerName}:end -->`);
+  const match = content.match(pattern);
+  if (!match) {
+    failures.push(`${relativePath} missing ${markerName} JSON block`);
+    return null;
+  }
+  try {
+    const data = JSON.parse(match[1]);
+    if (data.schema !== expectedSchema) {
+      failures.push(`${relativePath} ${markerName}.schema must equal ${expectedSchema}`);
+    }
+    return data;
+  } catch (error) {
+    failures.push(`${relativePath} ${markerName} JSON block is invalid: ${error.message}`);
     return null;
   }
 }
@@ -166,6 +205,59 @@ function meaningfulString(value) {
   }
   const trimmed = value.trim();
   return trimmed.length >= 20 && !/^(ok|good|bad|todo|tbd|none|n\/a)$/i.test(trimmed);
+}
+
+const genericAnchorTerms = new Set([
+  'acceptable', 'adequate', 'advice', 'agent', 'analysis', 'anchor',
+  'available', 'case', 'clear', 'complete', 'context', 'decision',
+  'detail', 'dimension', 'evidence', 'exists', 'explicit', 'field',
+  'follow', 'generic', 'good', 'issue', 'material', 'minor', 'missing',
+  'notes', 'present', 'professional', 'provided', 'review', 'reviewer',
+  'risk', 'score', 'strong', 'surface', 'system', 'task', 'usable',
+  'weak', 'without',
+]);
+
+function tokenizeWords(value) {
+  const tokens = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length >= 4);
+  return [...new Set(tokens.flatMap((token) => {
+    if (token.endsWith('ies') && token.length > 5) {
+      return [token, `${token.slice(0, -3)}y`];
+    }
+    if (token.endsWith('s') && token.length > 4) {
+      return [token, token.slice(0, -1)];
+    }
+    return [token];
+  }))];
+}
+
+function dimensionLexicon(dimension) {
+  const values = [
+    dimension.id,
+    dimension.name,
+    ...(Array.isArray(dimension.evidence_required) ? dimension.evidence_required : []),
+    ...(Array.isArray(dimension.blocking_conditions) ? dimension.blocking_conditions : []),
+    ...(Array.isArray(dimension.delegation_triggers) ? dimension.delegation_triggers : []),
+    ...(Array.isArray(dimension.professional_standard_refs) ? dimension.professional_standard_refs : []),
+  ];
+  const tokens = tokenizeWords(values.join(' ')).filter((token) => !genericAnchorTerms.has(token));
+  return new Set(tokens);
+}
+
+function validateScoreAnchorSpecificity(errors, label, dimension, key) {
+  const anchor = dimension[key];
+  if (!nonEmptyString(anchor)) {
+    return;
+  }
+  const anchorTokens = new Set(tokenizeWords(anchor));
+  const lexicon = dimensionLexicon(dimension);
+  const matches = [...lexicon].filter((token) => anchorTokens.has(token));
+  if (matches.length === 0) {
+    errors.push(`${label}.${key} must include dimension-specific evidence, risk, or control terms`);
+  }
 }
 
 function requireNonEmptyString(errors, label, value) {
@@ -294,6 +386,7 @@ function validateRubricData(rubric, label, agent) {
       const key = `score_${score}`;
       requireNonEmptyString(errors, `${dimensionLabel}.${key}`, dimension[key]);
       if (nonEmptyString(dimension[key])) {
+        validateScoreAnchorSpecificity(errors, dimensionLabel, dimension, key);
         scoreValues.push(dimension[key].trim());
       }
     }
@@ -428,105 +521,60 @@ function hasAny(text, patterns) {
   return patterns.some((pattern) => pattern.test(text));
 }
 
-function selectedAgentsForFixture(fixture) {
+function validateRoutingConfig(routingConfig, label) {
+  const errors = [];
+  if (!isPlainObject(routingConfig)) {
+    return [`${label} must be an object`];
+  }
+  if (!Number.isInteger(routingConfig.version) || routingConfig.version < 1) {
+    errors.push(`${label}.version must be a positive integer`);
+  }
+  if (!Array.isArray(routingConfig.routes) || routingConfig.routes.length !== agents.length) {
+    errors.push(`${label}.routes must contain exactly one route per agent`);
+    return errors;
+  }
+  const seenAgents = new Set();
+  routingConfig.routes.forEach((route, index) => {
+    const routeLabel = `${label}.routes[${index}]`;
+    if (!isPlainObject(route)) {
+      errors.push(`${routeLabel} must be an object`);
+      return;
+    }
+    if (!agentById.has(route.agent_id)) {
+      errors.push(`${routeLabel}.agent_id is unknown: ${route.agent_id}`);
+    } else if (seenAgents.has(route.agent_id)) {
+      errors.push(`${routeLabel}.agent_id duplicates ${route.agent_id}`);
+    } else {
+      seenAgents.add(route.agent_id);
+    }
+    requireNonEmptyString(errors, `${routeLabel}.reason`, route.reason);
+    requireStringArray(errors, `${routeLabel}.match_patterns`, route.match_patterns, 3);
+    if (Array.isArray(route.match_patterns)) {
+      route.match_patterns.forEach((pattern, patternIndex) => {
+        try {
+          RegExp(pattern, 'i');
+        } catch (error) {
+          errors.push(`${routeLabel}.match_patterns[${patternIndex}] is invalid regex: ${error.message}`);
+        }
+      });
+    }
+  });
+  for (const agent of agents) {
+    if (!seenAgents.has(agent.agentId)) {
+      errors.push(`${label}.routes missing ${agent.agentId}`);
+    }
+  }
+  return errors;
+}
+
+function selectedAgentsForFixture(fixture, routingConfig) {
   const text = fixtureText(fixture);
   const selected = new Set();
-
-  if (hasAny(text, [
-    /\bestimated chat token/,
-    /\btoken spend\b/,
-    /\btoken consumption\b/,
-    /\btoken efficient\b/,
-    /\btoken and per-query cost\b/,
-    /\bretrieval-policy\b/,
-    /\bbroad corpora\b/,
-    /\bcontext loading\b/,
-  ])) {
-    selected.add('harness.agents.cfo-token-efficiency');
-  }
-
-  if (hasAny(text, [
-    /\bllm\b/,
-    /\binstructions\b/,
-    /\binstruction surface\b/,
-    /\bworkflow, skill, gate, template, schema, orchestrator, or agent\b/,
-    /\.agentic\/01\.harness\/workflows\//,
-    /\.agentic\/01\.harness\/templates\//,
-    /\.agentic\/01\.harness\/agents\//,
-    /\bdeterministic\b/,
-    /\bsource-of-truth\b/,
-    /\bonboarding\b/,
-    /\bcontext loading\b/,
-  ])) {
-    selected.add('harness.agents.senior-prompt-engineer');
-  }
-
-  if (hasAny(text, [
-    /\bbackend\b/,
-    /\barchitecture\b/,
-    /\bplatform capability\b/,
-    /\bentity\b/,
-    /\bfeature\b/,
-    /\bcapability boundary\b/,
-    /\brulebook gap\b/,
-    /docs\/harness\/architecture\//,
-    /src\/platform\//,
-  ])) {
-    selected.add('harness.agents.senior-backend-architect');
-  }
-
-  if (hasAny(text, [
-    /\bdeployment\b/,
-    /\bdeploy workflow\b/,
-    /\bgithub actions\b/,
-    /\becs\b/,
-    /\becr\b/,
-    /\brds\b/,
-    /\broute53\b/,
-    /\bcloudwatch\b/,
-    /\bruntime\b/,
-    /\brollback\b/,
-    /\bobservability\b/,
-    /\bservice-choice\b/,
-    /\bhosted service becomes more expensive per query\b/,
-  ])) {
-    selected.add('harness.agents.senior-sre-engineer');
-  }
-
-  if (hasAny(text, [
-    /\bsecurity\b/,
-    /\bpublic\b/,
-    /\bsemi-public\b/,
-    /\bexposes?\b/,
-    /\bsecret\b/,
-    /\bcredential\b/,
-    /\bauthentication\b/,
-    /\bauthorization\b/,
-    /\bauth\b/,
-    /\bleast privilege\b/,
-    /\bowasp\b/,
-    /\biso\b/,
-    /\btrust boundary\b/,
-  ])) {
-    selected.add('harness.agents.secops-engineer');
-  }
-
-  if (hasAny(text, [
-    /\bchat or cli\b/,
-    /\bcli\b/,
-    /\bblocked response\b/,
-    /\bfallback\b/,
-    /\bterminal output\b/,
-    /\buser-facing\b/,
-    /\bweb ui\b/,
-    /\bfrontend\b/,
-    /\bdesign-system\b/,
-    /\bwcag\b/,
-    /\bpersona\b/,
-    /\baccessibility\b/,
-    /\bhuman operator\b/,
-  ])) {
-    selected.add('harness.agents.ux-ui-engineer');
+  for (const route of routingConfig?.routes || []) {
+    const patterns = Array.isArray(route.match_patterns) ? route.match_patterns : [];
+    if (patterns.some((pattern) => RegExp(pattern, 'i').test(text))) {
+      selected.add(route.agent_id);
+    }
   }
 
   return [...selected].sort();
@@ -542,7 +590,64 @@ function sameStringSet(left, right) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-function validateUseCaseFixture(fixture, index, useCases) {
+function validateMinimumScores(errors, label, value) {
+  if (!isPlainObject(value)) {
+    errors.push(`${label} must be an object`);
+    return;
+  }
+  if (value.required_dimension_min !== 4) {
+    errors.push(`${label}.required_dimension_min must be 4`);
+  }
+  if (value.block_below !== 3) {
+    errors.push(`${label}.block_below must be 3`);
+  }
+}
+
+function boardRouteByFixtureId(boardRouting, fixtureId) {
+  return (boardRouting?.boards || []).find((board) => board.fixture_id === fixtureId) || null;
+}
+
+function validateBoardRoutingConfig(boardRouting, label) {
+  const errors = [];
+  if (!isPlainObject(boardRouting)) {
+    return [`${label} must be an object`];
+  }
+  if (!Number.isInteger(boardRouting.version) || boardRouting.version < 1) {
+    errors.push(`${label}.version must be a positive integer`);
+  }
+  if (!Array.isArray(boardRouting.boards) || boardRouting.boards.length < 4) {
+    errors.push(`${label}.boards must contain at least 4 board routes`);
+    return errors;
+  }
+  const ids = new Set();
+  boardRouting.boards.forEach((board, index) => {
+    const boardLabel = `${label}.boards[${index}]`;
+    if (!isPlainObject(board)) {
+      errors.push(`${boardLabel} must be an object`);
+      return;
+    }
+    if (!nonEmptyString(board.fixture_id)) {
+      errors.push(`${boardLabel}.fixture_id must be a non-empty string`);
+    } else if (ids.has(board.fixture_id)) {
+      errors.push(`${boardLabel}.fixture_id duplicates ${board.fixture_id}`);
+    } else {
+      ids.add(board.fixture_id);
+    }
+    requireNonEmptyString(errors, `${boardLabel}.title`, board.title);
+    requireNonEmptyString(errors, `${boardLabel}.reason`, board.reason);
+    requireStringArray(errors, `${boardLabel}.agents`, board.agents, 2);
+    if (Array.isArray(board.agents)) {
+      board.agents.forEach((agentId) => {
+        if (!agentById.has(agentId)) {
+          errors.push(`${boardLabel}.agents contains unknown agent id ${agentId}`);
+        }
+      });
+    }
+  });
+  return errors;
+}
+
+function validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRouting) {
   const errors = [];
   const label = `use-case fixture[${index}]`;
   const knownAgentIds = new Set(agents.map((agent) => agent.agentId));
@@ -567,6 +672,13 @@ function validateUseCaseFixture(fixture, index, useCases) {
   requireStringArray(errors, `${label}.highest_standard`, fixture.highest_standard, 3);
   requireStringArray(errors, `${label}.required_evidence`, fixture.required_evidence, 3);
   requireStringArray(errors, `${label}.failure_modes`, fixture.failure_modes, 1);
+  requireStringArray(errors, `${label}.expected_blockers`, fixture.expected_blockers, 0);
+  validateMinimumScores(errors, `${label}.minimum_scores`, fixture.minimum_scores);
+  requireStringArray(errors, `${label}.required_delegation`, fixture.required_delegation, 0);
+  requireStringArray(errors, `${label}.forbidden_delegation`, fixture.forbidden_delegation, 0);
+  if (!allowedDecisions.has(fixture.expected_board_decision)) {
+    errors.push(`${label}.expected_board_decision must be a valid decision`);
+  }
 
   if (Array.isArray(fixture.expected_agents)) {
     for (const agentId of fixture.expected_agents) {
@@ -581,9 +693,29 @@ function validateUseCaseFixture(fixture, index, useCases) {
       errors.push(`${label} multi_agent fixture must expect at least 2 agents`);
     }
 
-    const selectedAgents = selectedAgentsForFixture(fixture);
+    const selectedAgents = selectedAgentsForFixture(fixture, routingConfig);
     if (!sameStringSet(selectedAgents, fixture.expected_agents)) {
       errors.push(`${label} routed to [${selectedAgents.join(', ')}], expected [${sorted(fixture.expected_agents).join(', ')}]`);
+    }
+
+    if (fixture.type === 'single_agent' && fixture.expected_board_decision !== 'not_applicable') {
+      errors.push(`${label} single_agent fixture must set expected_board_decision to not_applicable`);
+    }
+    if (fixture.type === 'multi_agent') {
+      if (fixture.expected_board_decision === 'not_applicable') {
+        errors.push(`${label} multi_agent fixture must name a board decision`);
+      }
+      const boardRoute = boardRouteByFixtureId(boardRouting, fixture.id);
+      if (!boardRoute) {
+        errors.push(`${label} missing matching board route in run-review-board workflow`);
+      } else {
+        if (boardRoute.title !== fixture.title) {
+          errors.push(`${label} board title mismatch: ${boardRoute.title}`);
+        }
+        if (!sameStringSet(boardRoute.agents, fixture.expected_agents)) {
+          errors.push(`${label} board agents [${sorted(boardRoute.agents || []).join(', ')}] do not match expected [${sorted(fixture.expected_agents).join(', ')}]`);
+        }
+      }
     }
   }
 
@@ -595,7 +727,25 @@ function validateUseCaseFixtures() {
   const parsed = parseJsonCompatibleFile(relativePath, 'use-case fixture');
   const useCases = read('.agentic/01.harness/agents/use-cases.md');
   const validatorReadme = read('scripts/01.harness/agents/validate-harness-agents/README.md');
+  const routingConfig = parseWorkflowJsonBlock(
+    '.agentic/01.harness/workflows/run-agent-review.md',
+    'review-agent-routing',
+    'harness/review-agent-routing/v1',
+  );
+  const boardRouting = parseWorkflowJsonBlock(
+    '.agentic/01.harness/workflows/run-review-board.md',
+    'review-board-routing',
+    'harness/review-board-routing/v1',
+  );
+  if (routingConfig) {
+    failures.push(...validateRoutingConfig(routingConfig, 'run-agent-review routing'));
+  }
+  if (boardRouting) {
+    failures.push(...validateBoardRoutingConfig(boardRouting, 'run-review-board routing'));
+  }
   requireText('validator README', validatorReadme, 'fixtures/use-case-fixtures.yml');
+  requireText('validator README', validatorReadme, 'fixtures/scorecard-fixtures.yml');
+  requireText('validator README', validatorReadme, 'fixtures/negative-review-fixtures.yml');
   requireText('use cases', useCases, 'fixtures/use-case-fixtures.yml');
   if (!parsed) {
     return;
@@ -648,7 +798,7 @@ function validateUseCaseFixtures() {
         multiCount += 1;
       }
     }
-    failures.push(...validateUseCaseFixture(fixture, index, useCases));
+    failures.push(...validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRouting));
   }
   if (singleCount < 6) {
     failures.push(`${relativePath} must include at least one single-agent fixture per agent`);
@@ -667,16 +817,404 @@ function validateUseCaseFixtures() {
     highest_standard: ['one', 'two', 'three'],
     required_evidence: ['one', 'two', 'three'],
     failure_modes: ['bad route'],
+    expected_blockers: [],
+    minimum_scores: {
+      required_dimension_min: 4,
+      block_below: 3,
+    },
+    required_delegation: [],
+    forbidden_delegation: [],
+    expected_board_decision: 'not_applicable',
   };
-  const negativeErrors = validateUseCaseFixture(negativeFixture, 999, useCases);
+  const negativeErrors = validateUseCaseFixture(negativeFixture, 999, useCases, routingConfig, boardRouting);
   if (negativeErrors.length === 0) {
     failures.push('use-case fixture validator accepted the bad-routing negative fixture');
   }
 }
 
+const rubricCache = new Map();
+
+function rubricDataForAgent(agentId) {
+  if (rubricCache.has(agentId)) {
+    return rubricCache.get(agentId);
+  }
+  const agent = agentById.get(agentId);
+  if (!agent) {
+    rubricCache.set(agentId, null);
+    return null;
+  }
+  const parsed = parseJsonCompatibleRubric(`.agentic/01.harness/agents/rubrics/${agent.rubricFile}`);
+  const data = parsed?.data || null;
+  rubricCache.set(agentId, data);
+  return data;
+}
+
+function arrayLength(value) {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+function validateEvidenceSources(errors, label, evidence) {
+  if (!isPlainObject(evidence)) {
+    errors.push(`${label}.evidence must be an object`);
+    return;
+  }
+  if (!Array.isArray(evidence.sources) || evidence.sources.length === 0) {
+    errors.push(`${label}.evidence.sources must contain at least one source`);
+  } else {
+    evidence.sources.forEach((source, index) => {
+      const sourceLabel = `${label}.evidence.sources[${index}]`;
+      if (!isPlainObject(source)) {
+        errors.push(`${sourceLabel} must be an object`);
+        return;
+      }
+      requireNonEmptyString(errors, `${sourceLabel}.path`, source.path);
+      if (!nonEmptyString(source.kind)) {
+        errors.push(`${sourceLabel}.kind must be a non-empty string`);
+      }
+      requireNonEmptyString(errors, `${sourceLabel}.note`, source.note);
+    });
+  }
+  if (!Array.isArray(evidence.gaps)) {
+    errors.push(`${label}.evidence.gaps must be an array`);
+  }
+}
+
+function validateFindings(errors, label, findings) {
+  if (!isPlainObject(findings)) {
+    errors.push(`${label}.findings must be an object`);
+    return;
+  }
+  for (const severity of ['critical', 'high', 'medium', 'low']) {
+    requireStringArray(errors, `${label}.findings.${severity}`, findings[severity], 0);
+  }
+}
+
+function validateDelegationRequests(errors, label, scorecard) {
+  if (!Array.isArray(scorecard.delegation_requests)) {
+    errors.push(`${label}.delegation_requests must be an array`);
+    return;
+  }
+  scorecard.delegation_requests.forEach((request, index) => {
+    const requestLabel = `${label}.delegation_requests[${index}]`;
+    if (!isPlainObject(request)) {
+      errors.push(`${requestLabel} must be an object`);
+      return;
+    }
+    if (!agentById.has(request.target_agent_id)) {
+      errors.push(`${requestLabel}.target_agent_id must be a known agent id`);
+    }
+    requireNonEmptyString(errors, `${requestLabel}.blocking_question`, request.blocking_question);
+    requireStringArray(errors, `${requestLabel}.evidence_already_reviewed`, request.evidence_already_reviewed, 1);
+    if (!allowedDecisions.has(request.needed_decision)) {
+      errors.push(`${requestLabel}.needed_decision must be a valid decision`);
+    }
+  });
+}
+
+function validateScorecardData(scorecard, label) {
+  const errors = [];
+  if (!isPlainObject(scorecard)) {
+    return [`${label} must be an object`];
+  }
+  if (scorecard.schema !== 'harness/agent-scorecard/v1') {
+    errors.push(`${label}.schema must equal harness/agent-scorecard/v1`);
+  }
+  if (!isPlainObject(scorecard.agent)) {
+    errors.push(`${label}.agent must be an object`);
+  }
+  const agentId = scorecard.agent?.id;
+  if (!agentById.has(agentId)) {
+    errors.push(`${label}.agent.id must be a known harness review agent`);
+  }
+  if (!isPlainObject(scorecard.review)) {
+    errors.push(`${label}.review must be an object`);
+  }
+  const decision = scorecard.review?.decision;
+  if (!allowedDecisions.has(decision)) {
+    errors.push(`${label}.review.decision must be a valid decision`);
+  }
+  if (!['review', 'planning', 'research', 'implementation'].includes(scorecard.review?.mode)) {
+    errors.push(`${label}.review.mode must be review, planning, research, or implementation`);
+  }
+  requireNonEmptyString(errors, `${label}.review.task`, scorecard.review?.task);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$|^YYYY-MM-DDTHH:MM:SSZ$/.test(scorecard.review?.reviewed_at_utc || '')) {
+    errors.push(`${label}.review.reviewed_at_utc must be an ISO UTC timestamp or template placeholder`);
+  }
+  if (!allowedConfidence.has(scorecard.review?.confidence)) {
+    errors.push(`${label}.review.confidence must be low, medium, or high`);
+  }
+  if (typeof scorecard.review?.critical_blocker_present !== 'boolean') {
+    errors.push(`${label}.review.critical_blocker_present must be boolean`);
+  }
+  if (typeof scorecard.review?.overall_score !== 'number' || scorecard.review.overall_score < 0 || scorecard.review.overall_score > 5) {
+    errors.push(`${label}.review.overall_score must be a number from 0 to 5`);
+  }
+
+  validateEvidenceSources(errors, label, scorecard.evidence);
+  validateFindings(errors, label, scorecard.findings);
+  validateDelegationRequests(errors, label, scorecard);
+  requireStringArray(errors, `${label}.required_follow_up`, scorecard.required_follow_up, 0);
+
+  const rubric = rubricDataForAgent(agentId);
+  const knownDimensions = new Map((rubric?.dimensions || []).map((dimension) => [dimension.id, dimension]));
+  const requiredDimensions = (rubric?.dimensions || []).filter((dimension) => dimension.required);
+  if (!Array.isArray(scorecard.scores) || scorecard.scores.length === 0) {
+    errors.push(`${label}.scores must contain rubric dimension scores`);
+  }
+  const scoreByDimension = new Map();
+  if (Array.isArray(scorecard.scores)) {
+    scorecard.scores.forEach((scoreEntry, index) => {
+      const scoreLabel = `${label}.scores[${index}]`;
+      if (!isPlainObject(scoreEntry)) {
+        errors.push(`${scoreLabel} must be an object`);
+        return;
+      }
+      if (!knownDimensions.has(scoreEntry.dimension)) {
+        errors.push(`${scoreLabel}.dimension must be a known required rubric dimension`);
+      } else if (scoreByDimension.has(scoreEntry.dimension)) {
+        errors.push(`${scoreLabel}.dimension duplicates ${scoreEntry.dimension}`);
+      } else {
+        scoreByDimension.set(scoreEntry.dimension, scoreEntry.score);
+      }
+      if (!Number.isInteger(scoreEntry.score) || scoreEntry.score < 0 || scoreEntry.score > 5) {
+        errors.push(`${scoreLabel}.score must be an integer from 0 to 5`);
+      }
+      requireNonEmptyString(errors, `${scoreLabel}.evidence`, scoreEntry.evidence);
+      requireNonEmptyString(errors, `${scoreLabel}.notes`, scoreEntry.notes);
+    });
+  }
+  for (const dimension of requiredDimensions) {
+    if (!scoreByDimension.has(dimension.id)) {
+      errors.push(`${label}.scores missing required dimension ${dimension.id}`);
+    }
+  }
+
+  const requiredScores = requiredDimensions
+    .map((dimension) => ({ dimension: dimension.id, score: scoreByDimension.get(dimension.id) }))
+    .filter((entry) => typeof entry.score === 'number');
+  const belowThree = requiredScores.filter((entry) => entry.score < 3);
+  const belowFour = requiredScores.filter((entry) => entry.score < 4);
+  const criticalFindings = arrayLength(scorecard.findings?.critical);
+  const criticalBlockerPresent = scorecard.review?.critical_blocker_present === true || criticalFindings > 0;
+
+  if (criticalFindings > 0 && scorecard.review?.critical_blocker_present !== true) {
+    errors.push(`${label}.review.critical_blocker_present must be true when critical findings exist`);
+  }
+  if (criticalBlockerPresent && decision !== 'block') {
+    errors.push(`${label}.review.decision must be block when a critical blocker is present`);
+  }
+  if (belowThree.length > 0 && decision !== 'block') {
+    errors.push(`${label}.review.decision must be block when required scores are below 3`);
+  }
+  if (decision === 'pass' && belowFour.length > 0) {
+    errors.push(`${label}.review.decision pass requires all required scores to be at least 4`);
+  }
+  if (decision === 'delegate' && arrayLength(scorecard.delegation_requests) === 0) {
+    errors.push(`${label}.review.decision delegate requires at least one delegation request`);
+  }
+  if (decision === 'pass' && arrayLength(scorecard.evidence?.gaps) > 0) {
+    errors.push(`${label}.review.decision pass cannot have unresolved evidence gaps`);
+  }
+
+  return errors;
+}
+
+function validateScorecardFixtures() {
+  const relativePath = 'scripts/01.harness/agents/validate-harness-agents/fixtures/scorecard-fixtures.yml';
+  const parsed = parseJsonCompatibleFile(relativePath, 'scorecard fixture');
+  if (!parsed) {
+    return;
+  }
+  const data = parsed.data;
+  if (data.schema !== 'harness/review-agent-scorecard-fixtures/v1') {
+    failures.push(`${relativePath}.schema must equal harness/review-agent-scorecard-fixtures/v1`);
+  }
+  if (!Number.isInteger(data.version) || data.version < 1) {
+    failures.push(`${relativePath}.version must be a positive integer`);
+  }
+  if (!Array.isArray(data.fixtures) || data.fixtures.length < 5) {
+    failures.push(`${relativePath}.fixtures must contain pass, block, delegate, and contradictory negative fixtures`);
+    return;
+  }
+  data.fixtures.forEach((fixture, index) => {
+    const label = `scorecard fixture[${index}]`;
+    if (!isPlainObject(fixture)) {
+      failures.push(`${label} must be an object`);
+      return;
+    }
+    if (!nonEmptyString(fixture.id)) {
+      failures.push(`${label}.id must be a non-empty string`);
+    }
+    if (typeof fixture.expected_valid !== 'boolean') {
+      failures.push(`${label}.expected_valid must be boolean`);
+    }
+    const errors = validateScorecardData(fixture.scorecard, label);
+    if (fixture.expected_valid && errors.length > 0) {
+      failures.push(...errors);
+    }
+    if (fixture.expected_valid === false) {
+      if (errors.length === 0) {
+        failures.push(`${label} expected invalid scorecard but validator accepted it`);
+      } else if (nonEmptyString(fixture.expected_error_contains) && !errors.some((error) => error.includes(fixture.expected_error_contains))) {
+        failures.push(`${label} expected an error containing ${fixture.expected_error_contains}, got: ${errors.join('; ')}`);
+      }
+    }
+  });
+
+  if (tryParseJsonCompatibleContent('# invalid scorecard\nschema: harness/agent-scorecard/v1\nreview:\n  decision: [pass') !== null) {
+    failures.push('scorecard parser accepted malformed YAML without a JSON-compatible body');
+  }
+}
+
+function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
+  return {
+    schema: 'harness/agent-scorecard/v1',
+    agent: {
+      id: fixture.agent_id,
+      name: agentById.get(fixture.agent_id)?.displayName || fixture.agent_id,
+    },
+    review: {
+      mode: 'review',
+      task: fixture.task_text,
+      reviewed_at_utc: '2026-01-01T00:00:00Z',
+      decision: fixture.expected_decision,
+      confidence: 'high',
+      critical_blocker_present: true,
+      overall_score: 2,
+    },
+    evidence: {
+      sources: fixture.changed_paths.map((changedPath) => ({
+        path: changedPath,
+        kind: 'fixture-path',
+        note: `Negative fixture evidence for ${fixture.rubric_negative_fixture}.`,
+      })),
+      gaps: [`Unresolved blocker: ${fixture.expected_blocker_terms.join(', ')}.`],
+    },
+    findings: {
+      critical: [`${fixture.rubric_negative_fixture} must block: ${fixture.expected_blocker_terms.join(', ')}.`],
+      high: [],
+      medium: [],
+      low: [],
+    },
+    scores: rubric.dimensions.map((dimension) => ({
+      dimension: dimension.id,
+      score: dimension.id === fixture.expected_blocking_dimension ? 2 : 4,
+      evidence: dimension.id === fixture.expected_blocking_dimension
+        ? `Blocking fixture evidence covers ${fixture.expected_blocker_terms.join(', ')}.`
+        : `Non-blocking fixture evidence for ${dimension.name}.`,
+      notes: dimension.id === fixture.expected_blocking_dimension
+        ? 'Below the required blocking threshold.'
+        : 'Not the fixture blocker.',
+    })),
+    delegation_requests: [],
+    required_follow_up: [`Resolve ${fixture.rubric_negative_fixture} before passing review.`],
+    quality_gate: {
+      blocks_when: [
+        'critical_blocker_present is true',
+        'any required score is below 3',
+        'decision is delegate and delegated review is missing',
+      ],
+    },
+  };
+}
+
+function validateNegativeReviewFixtures() {
+  const relativePath = 'scripts/01.harness/agents/validate-harness-agents/fixtures/negative-review-fixtures.yml';
+  const parsed = parseJsonCompatibleFile(relativePath, 'negative review fixture');
+  const routingConfig = parseWorkflowJsonBlock(
+    '.agentic/01.harness/workflows/run-agent-review.md',
+    'review-agent-routing',
+    'harness/review-agent-routing/v1',
+  );
+  if (!parsed) {
+    return;
+  }
+  const data = parsed.data;
+  if (data.schema !== 'harness/review-agent-negative-fixtures/v1') {
+    failures.push(`${relativePath}.schema must equal harness/review-agent-negative-fixtures/v1`);
+  }
+  if (!Number.isInteger(data.version) || data.version < 1) {
+    failures.push(`${relativePath}.version must be a positive integer`);
+  }
+  if (!Array.isArray(data.fixtures) || data.fixtures.length < 20) {
+    failures.push(`${relativePath}.fixtures must contain executable negative fixtures across all agents`);
+    return;
+  }
+
+  const fixtureByAgentAndLabel = new Map();
+  data.fixtures.forEach((fixture, index) => {
+    const label = `negative review fixture[${index}]`;
+    if (!isPlainObject(fixture)) {
+      failures.push(`${label} must be an object`);
+      return;
+    }
+    if (!nonEmptyString(fixture.id)) {
+      failures.push(`${label}.id must be a non-empty string`);
+    }
+    if (!agentById.has(fixture.agent_id)) {
+      failures.push(`${label}.agent_id must be a known agent id`);
+      return;
+    }
+    if (!nonEmptyString(fixture.rubric_negative_fixture)) {
+      failures.push(`${label}.rubric_negative_fixture must be a non-empty string`);
+    }
+    requireNonEmptyString(failures, `${label}.task_text`, fixture.task_text);
+    requireStringArray(failures, `${label}.changed_paths`, fixture.changed_paths, 1);
+    if (fixture.expected_decision !== 'block') {
+      failures.push(`${label}.expected_decision must be block`);
+    }
+    if (!nonEmptyString(fixture.expected_blocking_dimension)) {
+      failures.push(`${label}.expected_blocking_dimension must be a non-empty string`);
+    }
+    requireStringArray(failures, `${label}.expected_blocker_terms`, fixture.expected_blocker_terms, 2);
+
+    const rubric = rubricDataForAgent(fixture.agent_id);
+    if (!rubric) {
+      return;
+    }
+    if (!rubric.negative_fixtures.includes(fixture.rubric_negative_fixture)) {
+      failures.push(`${label}.rubric_negative_fixture is not declared in ${fixture.agent_id} rubric`);
+    }
+    if (!rubric.dimensions.some((dimension) => dimension.id === fixture.expected_blocking_dimension)) {
+      failures.push(`${label}.expected_blocking_dimension is not a dimension for ${fixture.agent_id}`);
+    }
+    const selectedAgents = selectedAgentsForFixture({
+      title: fixture.id,
+      task_text: fixture.task_text,
+      changed_paths: fixture.changed_paths,
+    }, routingConfig);
+    if (!selectedAgents.includes(fixture.agent_id)) {
+      failures.push(`${label} routes to [${selectedAgents.join(', ')}], but must include ${fixture.agent_id}`);
+    }
+
+    const key = `${fixture.agent_id}:${fixture.rubric_negative_fixture}`;
+    if (fixtureByAgentAndLabel.has(key)) {
+      failures.push(`${label} duplicates ${key}`);
+    } else {
+      fixtureByAgentAndLabel.set(key, fixture);
+    }
+
+    const scorecard = buildBlockingScorecardFromNegativeFixture(fixture, rubric);
+    const scorecardErrors = validateScorecardData(scorecard, `${label}.synthetic_scorecard`);
+    if (scorecardErrors.length > 0) {
+      failures.push(...scorecardErrors);
+    }
+  });
+
+  for (const agent of agents) {
+    const rubric = rubricDataForAgent(agent.agentId);
+    for (const fixtureName of rubric?.negative_fixtures || []) {
+      const key = `${agent.agentId}:${fixtureName}`;
+      if (!fixtureByAgentAndLabel.has(key)) {
+        failures.push(`${relativePath} missing executable negative fixture for ${key}`);
+      }
+    }
+  }
+}
+
 function validateTemplates() {
   const report = read('.agentic/01.harness/templates/agent-review-report.md');
-  const scorecard = read('.agentic/01.harness/templates/agent-scorecard.yml');
+  const scorecard = parseJsonCompatibleFile('.agentic/01.harness/templates/agent-scorecard.yml', 'scorecard template');
 
   for (const text of [
     'Critical blocker present',
@@ -687,19 +1225,19 @@ function validateTemplates() {
     requireText('agent-review-report template', report, text);
   }
 
-  for (const text of [
-    'schema: harness/agent-scorecard/v1',
-    'critical_blocker_present',
-    'delegation_requests',
-    'quality_gate',
-    'scores:',
-    'dimension:',
-    'score:',
-    'evidence:',
-    'needed_decision: pass | pass_with_notes | block | delegate | not_applicable',
-    'any required score is below 3',
-  ]) {
-    requireText('agent-scorecard template', scorecard, text);
+  if (scorecard) {
+    const errors = validateScorecardData(scorecard.data, 'agent-scorecard template');
+    failures.push(...errors);
+    const blocksWhen = scorecard.data.quality_gate?.blocks_when || [];
+    for (const text of [
+      'critical_blocker_present is true',
+      'any required score is below 3',
+      'decision is delegate and delegated review is missing',
+    ]) {
+      if (!blocksWhen.includes(text)) {
+        failures.push(`agent-scorecard template quality_gate.blocks_when missing ${text}`);
+      }
+    }
   }
 }
 
@@ -711,9 +1249,13 @@ function validateWorkflows() {
   requireText('run-agent-review workflow', single, 'templates/agent-review-report.md');
   requireText('run-agent-review workflow', single, 'templates/agent-scorecard.yml');
   requireText('run-agent-review workflow', single, 'Select the narrowest responsible agent');
+  requireText('run-agent-review workflow', single, '<!-- review-agent-routing:start -->');
+  requireText('run-agent-review workflow', single, '"schema": "harness/review-agent-routing/v1"');
   requireText('run-review-board workflow', board, 'Do not invite every');
   requireText('run-review-board workflow', board, 'Critical findings block the board');
-  requireText('run-review-board workflow', board, 'hosted RAG service deployment');
+  requireText('run-review-board workflow', board, '<!-- review-board-routing:start -->');
+  requireText('run-review-board workflow', board, '"schema": "harness/review-board-routing/v1"');
+  requireText('run-review-board workflow', board, 'Hosted RAG Service Deployment');
   requireText('backend architecture implementation workflow', backendImplementation, 'Senior Back-End Architect is explicitly invoked');
   requireText('backend architecture implementation workflow', backendImplementation, 'Implementation mode is limited to architecture-guideline artifacts');
   requireText('backend architecture implementation workflow', backendImplementation, 'It may not edit');
@@ -729,6 +1271,8 @@ function validateManifestAndBackendMode() {
   requireText('harness manifest', manifest, 'title: Harness governance operating pack');
   requireText('harness manifest', manifest, 'review_agent_capabilities:');
   requireText('harness manifest', manifest, 'review_agent_fixtures: scripts/01.harness/agents/validate-harness-agents/fixtures');
+  requireText('harness manifest', manifest, 'fixtures/scorecard-fixtures.yml');
+  requireText('harness manifest', manifest, 'fixtures/negative-review-fixtures.yml');
   requireText('harness manifest', manifest, 'Create executable harness validators, gates, metrics, or eval runners only when');
   requireText('harness manifest', manifest, 'Implementation-agent mode requires an explicit workflow');
   requireText('harness manifest', manifest, 'Review agents may not edit files during review mode.');
@@ -761,14 +1305,14 @@ function validateCfoFixture() {
   const output = fs.readFileSync(cfoOutputPath, 'utf8');
   const parsed = JSON.parse(output);
 
-  if (parsed.schema !== 'harness/cfo-token-comparison/v2') {
-    failures.push(`CFO fixture expected schema v2, got ${parsed.schema}`);
+  if (parsed.schema !== 'harness/cfo-token-comparison/v3') {
+    failures.push(`CFO fixture expected schema v3, got ${parsed.schema}`);
   }
   if (parsed.similar_tasks.count !== 3) {
     failures.push(`CFO fixture expected 3 similar tasks, got ${parsed.similar_tasks.count}`);
   }
-  if (parsed.similarity_basis.method !== 'jaccard_task_terms') {
-    failures.push(`CFO fixture expected jaccard_task_terms similarity, got ${parsed.similarity_basis.method}`);
+  if (parsed.similarity_basis.method !== 'weighted_jaccard_task_workflow_paths_agents') {
+    failures.push(`CFO fixture expected weighted similarity, got ${parsed.similarity_basis.method}`);
   }
   if (parsed.token_statistics.min !== 100) {
     failures.push(`CFO fixture expected min 100, got ${parsed.token_statistics.min}`);
@@ -800,8 +1344,29 @@ function validateCfoFixture() {
   if (!parsed.current_task || parsed.current_task.delta_from_median !== -20) {
     failures.push('CFO fixture expected current task delta from median to equal -20');
   }
-  if (!parsed.pricing_basis || parsed.pricing_basis.source !== 'fixture token-only basis') {
+  if (!parsed.current_task || parsed.current_task.cost_usd !== 0.018) {
+    failures.push('CFO fixture expected current task cost_usd to equal 0.018');
+  }
+  if (!parsed.current_task || parsed.current_task.cost_per_query_usd !== 0.0018) {
+    failures.push('CFO fixture expected current task cost_per_query_usd to equal 0.0018');
+  }
+  if (!parsed.cost_statistics || parsed.cost_statistics.estimated_chat_cost_usd.median !== 0.02) {
+    failures.push('CFO fixture expected historical cost median to equal 0.02');
+  }
+  if (!parsed.cost_statistics || parsed.cost_statistics.estimated_cost_per_query_usd.median !== 0.002) {
+    failures.push('CFO fixture expected historical cost-per-query median to equal 0.002');
+  }
+  if (!parsed.pricing_basis || parsed.pricing_basis.source !== 'fixture token and cost basis') {
     failures.push('CFO fixture expected pricing basis source to be preserved');
+  }
+  if (!parsed.pricing_basis || parsed.pricing_basis.mode !== 'token_and_cost_when_available') {
+    failures.push('CFO fixture expected token_and_cost_when_available pricing mode');
+  }
+  if (!parsed.pricing_basis || parsed.pricing_basis.historical_cost_samples !== 3) {
+    failures.push('CFO fixture expected 3 historical cost samples');
+  }
+  if (!parsed.similar_tasks.sessions.every((session) => session.cost_basis_fields?.model === 'fixture-model')) {
+    failures.push('CFO fixture expected model cost-basis fields on every similar session');
   }
   if (!parsed.delegation || parsed.delegation.required !== true) {
     failures.push('CFO fixture expected delegation to be required for upward trend');
@@ -815,6 +1380,8 @@ validateAgentFiles();
 validateRubrics();
 validateUseCases();
 validateUseCaseFixtures();
+validateScorecardFixtures();
+validateNegativeReviewFixtures();
 validateTemplates();
 validateWorkflows();
 validateManifestAndBackendMode();

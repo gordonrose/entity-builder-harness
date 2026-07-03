@@ -50,16 +50,61 @@ does not merge their responsibilities into one general opinion.
 Start with the smallest board that owns all blocking risks. Do not invite every
 agent by default.
 
-Common boards:
+Use the canonical board routing table below. The validator parses this table
+and compares it with executable multi-agent use-case fixtures.
 
-- hosted RAG service deployment: Senior SRE Engineer, SecOps Engineer, Senior
-  Back-End Architect, CFO Token Efficiency
-- harness workflow capability: Senior Prompt Engineer, CFO Token Efficiency,
-  UX/UI Engineer
-- product platform feature with public UI: Senior Back-End Architect, UX/UI
-  Engineer, Senior SRE Engineer, SecOps Engineer
-- token spend regression in a secure workflow: CFO Token Efficiency, Senior
-  Prompt Engineer, SecOps Engineer
+<!-- review-board-routing:start -->
+```json
+{
+  "schema": "harness/review-board-routing/v1",
+  "version": 1,
+  "boards": [
+    {
+      "fixture_id": "board.hosted_rag_service_deployment",
+      "title": "Hosted RAG Service Deployment",
+      "agents": [
+        "harness.agents.senior-sre-engineer",
+        "harness.agents.secops-engineer",
+        "harness.agents.senior-backend-architect",
+        "harness.agents.cfo-token-efficiency"
+      ],
+      "reason": "Hosted RAG service deployment needs deploy control, public exposure security, backend boundary review, and token/per-query cost visibility."
+    },
+    {
+      "fixture_id": "board.harness_workflow_capability_build",
+      "title": "Harness Workflow Capability Build",
+      "agents": [
+        "harness.agents.senior-prompt-engineer",
+        "harness.agents.cfo-token-efficiency",
+        "harness.agents.ux-ui-engineer"
+      ],
+      "reason": "Harness workflow capability work needs prompt-surface determinism, comparable token cost review, and a clear human operating path."
+    },
+    {
+      "fixture_id": "board.product_platform_feature_public_ui",
+      "title": "Product Platform Feature With Public UI",
+      "agents": [
+        "harness.agents.senior-backend-architect",
+        "harness.agents.ux-ui-engineer",
+        "harness.agents.senior-sre-engineer",
+        "harness.agents.secops-engineer"
+      ],
+      "reason": "A product platform feature with a public UI needs backend boundary, user experience/accessibility, deploy, and security review lanes."
+    },
+    {
+      "fixture_id": "board.token_spend_regression_secure_workflow",
+      "title": "Token Spend Regression In A Secure Workflow",
+      "agents": [
+        "harness.agents.cfo-token-efficiency",
+        "harness.agents.senior-prompt-engineer",
+        "harness.agents.secops-engineer"
+      ],
+      "reason": "A costly security-sensitive workflow needs token trend review, prompt/context ownership, and security evidence boundaries."
+    }
+  ]
+}
+```
+<!-- review-board-routing:end -->
 
 ## Procedure
 

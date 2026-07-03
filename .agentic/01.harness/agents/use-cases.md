@@ -260,13 +260,21 @@ These use cases should drive agent routing and review-board tests. A test is
 complete only when it verifies:
 
 - selected agents match the use case
+- workflow routing tables select the same agents the fixtures expect
 - required scorecard fields are present
+- scorecard decisions agree with critical blockers, required scores, and
+  delegation requests
 - critical findings cannot be hidden by a high average score
+- each rubric negative-fixture label has an executable blocking case
 - review output names evidence and source-of-truth artifacts
 - implementation and review authority remain separate unless a workflow grants
   write permission to a specific implementing agent
 
-Executable fixtures live at
-`scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml`
-and are enforced by
+Executable fixtures live at:
+
+- `scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml`
+- `scripts/01.harness/agents/validate-harness-agents/fixtures/scorecard-fixtures.yml`
+- `scripts/01.harness/agents/validate-harness-agents/fixtures/negative-review-fixtures.yml`
+
+They are enforced by
 `scripts/01.harness/agents/validate-harness-agents/script.sh`.

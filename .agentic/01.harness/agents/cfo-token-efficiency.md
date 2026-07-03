@@ -100,7 +100,8 @@ clear delegation path. A `3` has enough evidence for a cautious trend note. A
 - similarity basis and comparable-session date range
 - statistics: min, max, mean, median, Q1, Q3
 - trend direction, sample size, slope, and confidence
-- pricing basis or token-only cost basis
+- pricing, model, cost, query-count, or token-only basis, depending on
+  available session metadata
 - current task comparison
 - safe-reduction opportunities
 - delegation requirement, target agents, and blocking question

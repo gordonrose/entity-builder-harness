@@ -190,10 +190,10 @@
         "reason gap is durable"
       ],
       "score_5": "Gap is narrow, durable, evidence-based, and assigned to the right artifact family.",
-      "score_4": "Gap is well-framed with minor scope questions.",
+      "score_4": "Rule gap is well-framed with minor owner-artifact scope questions.",
       "score_3": "Gap is plausible but needs tighter owner wording.",
       "score_2": "Gap is broad or may be a one-off preference.",
-      "score_1": "Gap would create doctrine from local taste.",
+      "score_1": "Rule gap would create durable doctrine from local taste.",
       "score_0": "Gap is absent despite missing governance.",
       "blocking_conditions": [
         "missing governance for required architecture decision",

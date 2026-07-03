@@ -136,7 +136,7 @@
       "score_4": "Boundaries are strong with minor phrasing improvements possible.",
       "score_3": "Boundaries are adequate but rely on reviewer care.",
       "score_2": "Artifact could absorb unrelated rules or unverified claims.",
-      "score_1": "Artifact invites broad context loading or policy mixing.",
+      "score_1": "Artifact drift invites broad context loading or policy-contamination mixing.",
       "score_0": "Artifact contradicts source-of-truth or trusts unverified input.",
       "blocking_conditions": [
         "unverified external claim controls behavior",
@@ -164,7 +164,7 @@
       "score_4": "Instructions are concise with small redundancy.",
       "score_3": "Instructions are longer than ideal but still bounded.",
       "score_2": "Instructions duplicate standards or inflate always-loaded context.",
-      "score_1": "Verbose prose obscures the operating path.",
+      "score_1": "Verbose context prose obscures the operating path and budget boundary.",
       "score_0": "Excessive prompt content creates drift or cost risk.",
       "blocking_conditions": [
         "always-loaded file carries domain procedure that belongs elsewhere"
@@ -191,7 +191,7 @@
       "score_4": "Human path is clear with minor navigation friction.",
       "score_3": "Human path is usable but requires cross-file inference.",
       "score_2": "Human reader needs prior harness knowledge.",
-      "score_1": "Artifact is agent-only and opaque to maintainers.",
+      "score_1": "Human learnability is poor because the artifact is agent-only and opaque to maintainers.",
       "score_0": "Human operator cannot identify how to use or change it.",
       "blocking_conditions": [
         "no discoverable owner or index path"

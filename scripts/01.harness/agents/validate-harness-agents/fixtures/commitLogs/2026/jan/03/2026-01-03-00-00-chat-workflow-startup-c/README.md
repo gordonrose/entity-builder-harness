@@ -30,7 +30,8 @@ raised_at_utc: 2026-01-03T00:00:00Z
 latest_commit_at_utc: 2026-01-03T00:10:00Z
 estimated_chat_tokens: 300
 estimated_chat_cost: USD 0.03 estimated from estimated_chat_tokens
-estimated_chat_cost_basis: fixture
+estimated_chat_cost_basis: profile=fixture; model=fixture-model; rate=USD 0.10/1M tokens; pricing_snapshot=2026-01-01T00:00:00Z
+estimated_query_count: 10
 -->
 
 ## Initial Intent

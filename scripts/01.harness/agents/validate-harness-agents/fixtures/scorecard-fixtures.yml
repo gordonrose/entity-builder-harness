@@ -1,0 +1,569 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.agents.validate-harness-agents.fixtures.scorecards
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - agentic
+#   kind: fixture
+#   purpose: Provide executable scorecard semantic fixtures for harness review-agent validation.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.script.agents.validate-harness-agents
+#     path: scripts/01.harness/agents/validate-harness-agents/script.sh
+{
+  "schema": "harness/review-agent-scorecard-fixtures/v1",
+  "version": 1,
+  "fixtures": [
+    {
+      "id": "scorecard.valid_pass",
+      "expected_valid": true,
+      "scorecard": {
+        "schema": "harness/agent-scorecard/v1",
+        "agent": {
+          "id": "harness.agents.cfo-token-efficiency",
+          "name": "CFO Token Efficiency"
+        },
+        "review": {
+          "mode": "review",
+          "task": "Validate a token-comparison report with adequate evidence.",
+          "reviewed_at_utc": "2026-01-01T00:00:00Z",
+          "decision": "pass",
+          "confidence": "high",
+          "critical_blocker_present": false,
+          "overall_score": 4
+        },
+        "evidence": {
+          "sources": [
+            {
+              "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+              "kind": "metric-output",
+              "note": "Comparable sessions, token statistics, trend, confidence, and pricing basis are present."
+            }
+          ],
+          "gaps": []
+        },
+        "findings": {
+          "critical": [],
+          "high": [],
+          "medium": [],
+          "low": []
+        },
+        "scores": [
+          {
+            "dimension": "comparable_task_set_quality",
+            "score": 4,
+            "evidence": "Comparable task set is relevant and named.",
+            "notes": "Minor uncertainty is documented."
+          },
+          {
+            "dimension": "metric_completeness",
+            "score": 4,
+            "evidence": "Count, min, max, mean, median, q1, q3, and current comparison are present.",
+            "notes": "Pricing basis is preserved."
+          },
+          {
+            "dimension": "trend_confidence",
+            "score": 4,
+            "evidence": "Trend direction, confidence, sample size, and date range are present.",
+            "notes": "Outlier limits are stated."
+          },
+          {
+            "dimension": "safe_savings_model",
+            "score": 4,
+            "evidence": "Savings preserve gates, evidence, safety, and workflow flexibility.",
+            "notes": "No required evidence is removed."
+          },
+          {
+            "dimension": "delegation_accuracy",
+            "score": 4,
+            "evidence": "No delegation is required because the trend is down or justified.",
+            "notes": "Delegation rule was evaluated."
+          },
+          {
+            "dimension": "report_actionability",
+            "score": 4,
+            "evidence": "The report has a decision, findings, confidence, and next action.",
+            "notes": "Another workflow can consume it."
+          }
+        ],
+        "delegation_requests": [],
+        "required_follow_up": [],
+        "quality_gate": {
+          "blocks_when": [
+            "critical_blocker_present is true",
+            "any required score is below 3",
+            "decision is delegate and delegated review is missing"
+          ]
+        }
+      }
+    },
+    {
+      "id": "scorecard.valid_delegate",
+      "expected_valid": true,
+      "scorecard": {
+        "schema": "harness/agent-scorecard/v1",
+        "agent": {
+          "id": "harness.agents.cfo-token-efficiency",
+          "name": "CFO Token Efficiency"
+        },
+        "review": {
+          "mode": "review",
+          "task": "Validate a rising token trend that needs another specialist.",
+          "reviewed_at_utc": "2026-01-01T00:00:00Z",
+          "decision": "delegate",
+          "confidence": "medium",
+          "critical_blocker_present": false,
+          "overall_score": 3
+        },
+        "evidence": {
+          "sources": [
+            {
+              "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+              "kind": "metric-output",
+              "note": "Comparable task set shows a rising workflow-token trend."
+            }
+          ],
+          "gaps": [
+            "The owning prompt surface needs specialist review before savings are approved."
+          ]
+        },
+        "findings": {
+          "critical": [],
+          "high": [],
+          "medium": [
+            "Token trend is rising and the suspected driver is prompt/workflow structure."
+          ],
+          "low": []
+        },
+        "scores": [
+          {
+            "dimension": "comparable_task_set_quality",
+            "score": 4,
+            "evidence": "Comparable sessions are sufficient for a cautious trend.",
+            "notes": "The sample is workflow-specific."
+          },
+          {
+            "dimension": "metric_completeness",
+            "score": 4,
+            "evidence": "Required token statistics and pricing basis are present.",
+            "notes": "Current task comparison is included."
+          },
+          {
+            "dimension": "trend_confidence",
+            "score": 3,
+            "evidence": "Trend is rising with medium confidence.",
+            "notes": "The slope is actionable but needs owner review."
+          },
+          {
+            "dimension": "safe_savings_model",
+            "score": 3,
+            "evidence": "Savings must be constrained by the prompt engineer.",
+            "notes": "No removal is approved yet."
+          },
+          {
+            "dimension": "delegation_accuracy",
+            "score": 4,
+            "evidence": "The prompt engineer owns the suspected workflow-token driver.",
+            "notes": "Blocking question is explicit."
+          },
+          {
+            "dimension": "report_actionability",
+            "score": 4,
+            "evidence": "The report names the trend, target agent, and blocking question.",
+            "notes": "Delegated review can proceed."
+          }
+        ],
+        "delegation_requests": [
+          {
+            "target_agent_id": "harness.agents.senior-prompt-engineer",
+            "blocking_question": "Identify safe prompt or workflow reductions that preserve required evidence and flexibility.",
+            "evidence_already_reviewed": [
+              "scripts/01.harness/metrics/compare-task-token-consumption/output.json"
+            ],
+            "needed_decision": "pass_with_notes"
+          }
+        ],
+        "required_follow_up": [
+          "Run Senior Prompt Engineer review before accepting savings."
+        ],
+        "quality_gate": {
+          "blocks_when": [
+            "critical_blocker_present is true",
+            "any required score is below 3",
+            "decision is delegate and delegated review is missing"
+          ]
+        }
+      }
+    },
+    {
+      "id": "scorecard.valid_block",
+      "expected_valid": true,
+      "scorecard": {
+        "schema": "harness/agent-scorecard/v1",
+        "agent": {
+          "id": "harness.agents.cfo-token-efficiency",
+          "name": "CFO Token Efficiency"
+        },
+        "review": {
+          "mode": "review",
+          "task": "Validate a report that removes security evidence for token savings.",
+          "reviewed_at_utc": "2026-01-01T00:00:00Z",
+          "decision": "block",
+          "confidence": "high",
+          "critical_blocker_present": true,
+          "overall_score": 2
+        },
+        "evidence": {
+          "sources": [
+            {
+              "path": ".agentic/01.harness/workflows/security-review.md",
+              "kind": "workflow",
+              "note": "Security evidence was proposed for removal to reduce context."
+            }
+          ],
+          "gaps": [
+            "No SecOps decision accepts the security-evidence reduction."
+          ]
+        },
+        "findings": {
+          "critical": [
+            "Savings remove required security evidence before a security owner accepts the risk."
+          ],
+          "high": [],
+          "medium": [],
+          "low": []
+        },
+        "scores": [
+          {
+            "dimension": "comparable_task_set_quality",
+            "score": 4,
+            "evidence": "Comparable set is sufficient.",
+            "notes": "Similarity is not the blocker."
+          },
+          {
+            "dimension": "metric_completeness",
+            "score": 4,
+            "evidence": "Token statistics are present.",
+            "notes": "Metrics do not override safety."
+          },
+          {
+            "dimension": "trend_confidence",
+            "score": 4,
+            "evidence": "Trend direction is supported.",
+            "notes": "Trend is not the blocker."
+          },
+          {
+            "dimension": "safe_savings_model",
+            "score": 2,
+            "evidence": "Savings remove a required security evidence source.",
+            "notes": "This is below the blocking threshold."
+          },
+          {
+            "dimension": "delegation_accuracy",
+            "score": 2,
+            "evidence": "SecOps delegation is required but not resolved.",
+            "notes": "The safety owner is missing."
+          },
+          {
+            "dimension": "report_actionability",
+            "score": 4,
+            "evidence": "The report names the blocking issue.",
+            "notes": "The next action is clear."
+          }
+        ],
+        "delegation_requests": [
+          {
+            "target_agent_id": "harness.agents.secops-engineer",
+            "blocking_question": "Can the security evidence reduction be accepted without weakening required controls?",
+            "evidence_already_reviewed": [
+              ".agentic/01.harness/workflows/security-review.md"
+            ],
+            "needed_decision": "block"
+          }
+        ],
+        "required_follow_up": [
+          "Restore the required security evidence or obtain a terminal SecOps decision."
+        ],
+        "quality_gate": {
+          "blocks_when": [
+            "critical_blocker_present is true",
+            "any required score is below 3",
+            "decision is delegate and delegated review is missing"
+          ]
+        }
+      }
+    },
+    {
+      "id": "scorecard.invalid_critical_pass",
+      "expected_valid": false,
+      "expected_error_contains": "critical blocker",
+      "scorecard": {
+        "schema": "harness/agent-scorecard/v1",
+        "agent": {
+          "id": "harness.agents.cfo-token-efficiency",
+          "name": "CFO Token Efficiency"
+        },
+        "review": {
+          "mode": "review",
+          "task": "Invalid pass despite critical blocker.",
+          "reviewed_at_utc": "2026-01-01T00:00:00Z",
+          "decision": "pass",
+          "confidence": "high",
+          "critical_blocker_present": true,
+          "overall_score": 4
+        },
+        "evidence": {
+          "sources": [
+            {
+              "path": "commitLogs/example/README.md",
+              "kind": "file",
+              "note": "Critical blocker evidence exists."
+            }
+          ],
+          "gaps": []
+        },
+        "findings": {
+          "critical": [
+            "Critical blocker exists but the decision says pass."
+          ],
+          "high": [],
+          "medium": [],
+          "low": []
+        },
+        "scores": [
+          {
+            "dimension": "comparable_task_set_quality",
+            "score": 4,
+            "evidence": "Comparable evidence exists.",
+            "notes": "Invalid because blocker is present."
+          },
+          {
+            "dimension": "metric_completeness",
+            "score": 4,
+            "evidence": "Metrics exist.",
+            "notes": "Invalid because blocker is present."
+          },
+          {
+            "dimension": "trend_confidence",
+            "score": 4,
+            "evidence": "Trend evidence exists.",
+            "notes": "Invalid because blocker is present."
+          },
+          {
+            "dimension": "safe_savings_model",
+            "score": 4,
+            "evidence": "Savings evidence exists.",
+            "notes": "Invalid because blocker is present."
+          },
+          {
+            "dimension": "delegation_accuracy",
+            "score": 4,
+            "evidence": "Delegation evidence exists.",
+            "notes": "Invalid because blocker is present."
+          },
+          {
+            "dimension": "report_actionability",
+            "score": 4,
+            "evidence": "Report evidence exists.",
+            "notes": "Invalid because blocker is present."
+          }
+        ],
+        "delegation_requests": [],
+        "required_follow_up": [],
+        "quality_gate": {
+          "blocks_when": [
+            "critical_blocker_present is true",
+            "any required score is below 3",
+            "decision is delegate and delegated review is missing"
+          ]
+        }
+      }
+    },
+    {
+      "id": "scorecard.invalid_low_score_pass",
+      "expected_valid": false,
+      "expected_error_contains": "below 3",
+      "scorecard": {
+        "schema": "harness/agent-scorecard/v1",
+        "agent": {
+          "id": "harness.agents.cfo-token-efficiency",
+          "name": "CFO Token Efficiency"
+        },
+        "review": {
+          "mode": "review",
+          "task": "Invalid pass despite low required score.",
+          "reviewed_at_utc": "2026-01-01T00:00:00Z",
+          "decision": "pass",
+          "confidence": "medium",
+          "critical_blocker_present": false,
+          "overall_score": 3
+        },
+        "evidence": {
+          "sources": [
+            {
+              "path": "commitLogs/example/README.md",
+              "kind": "file",
+              "note": "Comparable set is missing while pass is claimed."
+            }
+          ],
+          "gaps": [
+            "Comparable evidence is absent."
+          ]
+        },
+        "findings": {
+          "critical": [],
+          "high": [
+            "Comparable task set is absent."
+          ],
+          "medium": [],
+          "low": []
+        },
+        "scores": [
+          {
+            "dimension": "comparable_task_set_quality",
+            "score": 2,
+            "evidence": "Comparable set is weak or missing.",
+            "notes": "Below blocking threshold."
+          },
+          {
+            "dimension": "metric_completeness",
+            "score": 4,
+            "evidence": "Metrics exist.",
+            "notes": "Not the blocker."
+          },
+          {
+            "dimension": "trend_confidence",
+            "score": 4,
+            "evidence": "Trend evidence exists.",
+            "notes": "Not the blocker."
+          },
+          {
+            "dimension": "safe_savings_model",
+            "score": 4,
+            "evidence": "Savings evidence exists.",
+            "notes": "Not the blocker."
+          },
+          {
+            "dimension": "delegation_accuracy",
+            "score": 4,
+            "evidence": "Delegation evidence exists.",
+            "notes": "Not the blocker."
+          },
+          {
+            "dimension": "report_actionability",
+            "score": 4,
+            "evidence": "Report evidence exists.",
+            "notes": "Not the blocker."
+          }
+        ],
+        "delegation_requests": [],
+        "required_follow_up": [],
+        "quality_gate": {
+          "blocks_when": [
+            "critical_blocker_present is true",
+            "any required score is below 3",
+            "decision is delegate and delegated review is missing"
+          ]
+        }
+      }
+    },
+    {
+      "id": "scorecard.invalid_delegate_missing_request",
+      "expected_valid": false,
+      "expected_error_contains": "delegation",
+      "scorecard": {
+        "schema": "harness/agent-scorecard/v1",
+        "agent": {
+          "id": "harness.agents.cfo-token-efficiency",
+          "name": "CFO Token Efficiency"
+        },
+        "review": {
+          "mode": "review",
+          "task": "Invalid delegate decision without delegation request.",
+          "reviewed_at_utc": "2026-01-01T00:00:00Z",
+          "decision": "delegate",
+          "confidence": "medium",
+          "critical_blocker_present": false,
+          "overall_score": 3
+        },
+        "evidence": {
+          "sources": [
+            {
+              "path": "commitLogs/example/README.md",
+              "kind": "file",
+              "note": "Rising trend needs another agent but no delegation is supplied."
+            }
+          ],
+          "gaps": [
+            "Missing delegation request."
+          ]
+        },
+        "findings": {
+          "critical": [],
+          "high": [],
+          "medium": [
+            "Delegation decision has no target."
+          ],
+          "low": []
+        },
+        "scores": [
+          {
+            "dimension": "comparable_task_set_quality",
+            "score": 4,
+            "evidence": "Comparable evidence exists.",
+            "notes": "Valid dimension."
+          },
+          {
+            "dimension": "metric_completeness",
+            "score": 4,
+            "evidence": "Metrics exist.",
+            "notes": "Valid dimension."
+          },
+          {
+            "dimension": "trend_confidence",
+            "score": 3,
+            "evidence": "Trend is rising with medium confidence.",
+            "notes": "Delegation is required."
+          },
+          {
+            "dimension": "safe_savings_model",
+            "score": 3,
+            "evidence": "Savings need another owner.",
+            "notes": "Delegation is required."
+          },
+          {
+            "dimension": "delegation_accuracy",
+            "score": 3,
+            "evidence": "The decision says delegate but no request exists.",
+            "notes": "Invalid scorecard shape."
+          },
+          {
+            "dimension": "report_actionability",
+            "score": 4,
+            "evidence": "The report states a next action.",
+            "notes": "Missing delegation still invalidates it."
+          }
+        ],
+        "delegation_requests": [],
+        "required_follow_up": [
+          "Add a delegation request with target agent and blocking question."
+        ],
+        "quality_gate": {
+          "blocks_when": [
+            "critical_blocker_present is true",
+            "any required score is below 3",
+            "decision is delegate and delegated review is missing"
+          ]
+        }
+      }
+    }
+  ]
+}

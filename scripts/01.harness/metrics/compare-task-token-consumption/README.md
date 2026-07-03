@@ -28,15 +28,17 @@ used_by:
 and emits JSON for CFO Token Efficiency review.
 
 The script is read-only. It parses `commitLogs/**/README.md` session metadata,
-computes lexical similarity against the supplied task query, keeps sessions
-with estimated token metrics, and reports:
+computes deterministic weighted similarity against the supplied task query,
+workflow, changed paths, and requested agents, keeps sessions with estimated
+token metrics, and reports:
 
 - similar task count
 - min, max, mean, median, Q1, and Q3 token consumption
-- similarity basis and comparable-session date range
+- weighted similarity basis, component scores, and comparable-session date range
 - trend direction, slope, sample size, and confidence over time
-- historical cost-basis metadata and current pricing-basis note
-- current task comparison, when `--current-tokens` is supplied
+- historical USD cost, model/pricing-basis metadata, query count, and
+  per-query cost when available
+- current task token, cost, and per-query comparison, when supplied
 - delegation requirement, target agents, and blocking question when a trend is
   flat or rising or the current task is above historical Q3
 
@@ -46,6 +48,8 @@ with estimated token metrics, and reports:
 bash scripts/01.harness/metrics/compare-task-token-consumption/script.sh \
   --task-query "update chat startup workflow" \
   --current-tokens 1200000 \
+  --current-cost-usd 14.25 \
+  --current-query-count 250 \
   --workflow ".agentic/00.chat/workflows/chat-start.md" \
   --changed-path ".agentic/00.chat/workflows/chat-start.md" \
   --pricing-basis "current session metadata token estimate"
@@ -56,6 +60,11 @@ Useful options:
 - `--commit-log-root <path>` reads a fixture or alternate commit-log root.
 - `--min-score <number>` changes the similarity cutoff. Default: `0.12`.
 - `--limit <count>` caps the similar session list. Default: `50`.
+- `--current-cost-usd <amount>` records current estimated cost in USD.
+- `--current-query-count <count>` records current query/request count so
+  current per-query cost can be derived.
+- `--current-cost-per-query-usd <amount>` supplies current per-query cost
+  directly when query count is unavailable.
 - `--workflow <id>` records the workflow under review and helps delegation.
 - `--changed-path <path>` may be repeated to help identify the cost driver.
 - `--agent <agent-id>` may be repeated to record agents already involved.

@@ -71,6 +71,9 @@ current_known_artifacts:
     - .agentic/01.harness/templates/agent-review-report.md
     - .agentic/01.harness/templates/agent-scorecard.yml
     - scripts/01.harness/agents/validate-harness-agents/script.sh
+    - scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml
+    - scripts/01.harness/agents/validate-harness-agents/fixtures/scorecard-fixtures.yml
+    - scripts/01.harness/agents/validate-harness-agents/fixtures/negative-review-fixtures.yml
     - scripts/01.harness/metrics/compare-task-token-consumption/script.sh
   standards:
     - .agentic/01.harness/standards/agent-contracts.md

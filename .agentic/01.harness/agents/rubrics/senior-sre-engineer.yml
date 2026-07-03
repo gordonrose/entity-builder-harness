@@ -144,7 +144,7 @@
       "score_3": "Basic signals exist but coverage is incomplete.",
       "score_2": "Signals are insufficient for confident operation.",
       "score_1": "Operator would need ad hoc investigation.",
-      "score_0": "Runtime is effectively blind.",
+      "score_0": "Runtime observability is effectively blind: no health, logs, metrics, alarms, or operator signal.",
       "blocking_conditions": [
         "public or production service lacks critical health signal",
         "no failure-mode visibility"

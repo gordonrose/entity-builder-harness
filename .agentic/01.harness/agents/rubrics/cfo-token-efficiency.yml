@@ -115,7 +115,7 @@
       "score_4": "All token statistics are present; pricing basis is partial but not required for the decision.",
       "score_3": "Most statistics are present and missing fields are explained.",
       "score_2": "Statistics are incomplete enough to weaken the decision.",
-      "score_1": "Only raw totals or anecdotes are provided.",
+      "score_1": "Only raw metric totals or anecdotal token counts are provided.",
       "score_0": "No quantitative token evidence is provided.",
       "blocking_conditions": [
         "missing median",

@@ -34,7 +34,7 @@ const STOP_WORDS = new Set([
 function usage(exitCode) {
   const stream = exitCode === 0 ? process.stdout : process.stderr;
   stream.write(`Usage:
-  script.sh --task-query <text> [--current-tokens <count>] [--commit-log-root <path>] [--min-score <number>] [--limit <count>] [--workflow <id>] [--changed-path <path>] [--agent <agent-id>] [--pricing-basis <text>]
+  script.sh --task-query <text> [--current-tokens <count>] [--current-cost-usd <amount>] [--current-query-count <count>] [--current-cost-per-query-usd <amount>] [--commit-log-root <path>] [--min-score <number>] [--limit <count>] [--workflow <id>] [--changed-path <path>] [--agent <agent-id>] [--pricing-basis <text>]
 
 Emits JSON token-consumption statistics for sessions similar to the task query.
 `);
@@ -45,6 +45,9 @@ function parseArgs(argv) {
   const options = {
     changedPaths: [],
     commitLogRoot: 'commitLogs',
+    currentCostPerQueryUsd: null,
+    currentCostUsd: null,
+    currentQueryCount: null,
     currentTokens: null,
     limit: 50,
     minScore: 0.12,
@@ -70,6 +73,12 @@ function parseArgs(argv) {
       options.taskQuery = next();
     } else if (arg === '--current-tokens') {
       options.currentTokens = parseInteger(next(), '--current-tokens');
+    } else if (arg === '--current-cost-usd') {
+      options.currentCostUsd = parseNumber(next(), '--current-cost-usd');
+    } else if (arg === '--current-query-count') {
+      options.currentQueryCount = parseInteger(next(), '--current-query-count');
+    } else if (arg === '--current-cost-per-query-usd') {
+      options.currentCostPerQueryUsd = parseNumber(next(), '--current-cost-per-query-usd');
     } else if (arg === '--workflow') {
       options.workflow = next();
     } else if (arg === '--changed-path') {
@@ -186,6 +195,96 @@ function jaccard(a, b) {
   return union === 0 ? 0 : intersection / union;
 }
 
+function buildQueryProfile(options) {
+  return {
+    task: tokenize(options.taskQuery),
+    workflow: tokenize(options.workflow),
+    changed_paths: tokenize(options.changedPaths.join(' ')),
+    agents: tokenize(options.requestedAgents.join(' ')),
+    combined: tokenize([
+      options.taskQuery,
+      options.workflow,
+      ...options.changedPaths,
+      ...options.requestedAgents,
+    ].join(' ')),
+  };
+}
+
+function buildSessionProfile(meta, filePath, content) {
+  const contentTokens = tokenize(content);
+  return {
+    task: tokenize(meta.task || ''),
+    workflow: tokenize(meta.chat_lifecycle_workflow || ''),
+    changed_paths: new Set([...tokenize(filePath), ...contentTokens]),
+    agents: new Set(String(content || '').match(/harness\.agents\.[a-z0-9_.-]+/g) || []),
+    combined: new Set([
+      ...tokenize(meta.task || ''),
+      ...tokenize(meta.chat_lifecycle_workflow || ''),
+      ...tokenize(filePath),
+      ...contentTokens,
+    ]),
+  };
+}
+
+const similarityWeights = {
+  task: 0.55,
+  workflow: 0.15,
+  changed_paths: 0.20,
+  agents: 0.10,
+};
+
+function weightedSimilarity(queryProfile, sessionProfile) {
+  const components = {};
+  let weightedScore = 0;
+  let activeWeight = 0;
+  for (const [component, weight] of Object.entries(similarityWeights)) {
+    const queryTokens = queryProfile[component];
+    if (!queryTokens || queryTokens.size === 0) {
+      components[component] = null;
+      continue;
+    }
+    const score = jaccard(queryTokens, sessionProfile[component] || new Set());
+    components[component] = score;
+    weightedScore += score * weight;
+    activeWeight += weight;
+  }
+  return {
+    score: activeWeight === 0 ? jaccard(queryProfile.combined, sessionProfile.combined) : weightedScore / activeWeight,
+    components,
+  };
+}
+
+function parseUsd(value) {
+  const match = String(value || '').match(/\bUSD\s+([0-9]+(?:\.[0-9]+)?)/i);
+  return match ? Number(match[1]) : null;
+}
+
+function parseCostBasis(value) {
+  const fields = {};
+  String(value || '').split(';').forEach((part) => {
+    const separator = part.indexOf('=');
+    if (separator === -1) {
+      return;
+    }
+    const key = part.slice(0, separator).trim();
+    const fieldValue = part.slice(separator + 1).trim();
+    if (key) {
+      fields[key] = fieldValue;
+    }
+  });
+  return fields;
+}
+
+function parseQueryCount(meta) {
+  for (const key of ['estimated_query_count', 'query_count', 'estimated_request_count', 'request_count']) {
+    const parsed = parseTokenCount(meta[key]);
+    if (parsed !== null) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
 function quantile(sortedValues, q) {
   if (sortedValues.length === 0) {
     return null;
@@ -268,39 +367,60 @@ function sessionDate(meta, filePath) {
   return `${match[1]}-${months[match[2]] || '01'}-${match[3]}T00:00:00.000Z`;
 }
 
-function readSessions(root, queryTokens, minScore) {
+function readSessions(root, queryProfile, minScore) {
   return walkReadmes(root).map((filePath) => {
     const content = fs.readFileSync(filePath, 'utf8');
     const meta = parseMetadata(content);
     const task = meta.task || '';
     const tokens = parseTokenCount(meta.estimated_chat_tokens);
-    const score = jaccard(queryTokens, tokenize(task));
+    const similarity = weightedSimilarity(queryProfile, buildSessionProfile(meta, filePath, content));
+    const costUsd = parseUsd(meta.estimated_chat_cost);
+    const queryCount = parseQueryCount(meta);
 
     return {
       path: filePath,
       id: meta.id || path.basename(path.dirname(filePath)),
       task,
       tokens,
-      score,
+      score: similarity.score,
+      similarity_components: similarity.components,
       raised_at_utc: meta.raised_at_utc || '',
       estimated_chat_cost: meta.estimated_chat_cost || '',
       estimated_chat_cost_basis: meta.estimated_chat_cost_basis || '',
+      estimated_chat_cost_usd: costUsd,
+      estimated_query_count: queryCount,
+      estimated_cost_per_query_usd: costUsd !== null && queryCount ? costUsd / queryCount : null,
+      cost_basis_fields: parseCostBasis(meta.estimated_chat_cost_basis),
       sort_date: sessionDate(meta, filePath),
     };
-  }).filter((session) => session.tokens !== null && session.score >= minScore);
+  }).filter((session) => (
+    session.tokens !== null &&
+    session.score >= minScore &&
+    (queryProfile.task.size === 0 || session.similarity_components.task > 0)
+  ));
 }
 
-function currentComparison(currentTokens, metricStats) {
-  if (currentTokens === null || metricStats.count === 0) {
+function currentComparison(options, metricStats, costStats, perQueryStats) {
+  if (options.currentTokens === null && options.currentCostUsd === null && options.currentCostPerQueryUsd === null) {
     return null;
   }
+  const currentCostPerQuery = options.currentCostPerQueryUsd !== null
+    ? options.currentCostPerQueryUsd
+    : (options.currentCostUsd !== null && options.currentQueryCount ? options.currentCostUsd / options.currentQueryCount : null);
   return {
-    tokens: currentTokens,
-    delta_from_median: metricStats.median === null ? null : currentTokens - metricStats.median,
-    ratio_to_median: metricStats.median ? currentTokens / metricStats.median : null,
-    above_q3: metricStats.q3 === null ? null : currentTokens > metricStats.q3,
-    below_q1: metricStats.q1 === null ? null : currentTokens < metricStats.q1,
-    status: currentTokenStatus(currentTokens, metricStats),
+    tokens: options.currentTokens,
+    delta_from_median: options.currentTokens === null || metricStats.median === null ? null : options.currentTokens - metricStats.median,
+    ratio_to_median: options.currentTokens !== null && metricStats.median ? options.currentTokens / metricStats.median : null,
+    above_q3: options.currentTokens === null || metricStats.q3 === null ? null : options.currentTokens > metricStats.q3,
+    below_q1: options.currentTokens === null || metricStats.q1 === null ? null : options.currentTokens < metricStats.q1,
+    status: currentTokenStatus(options.currentTokens, metricStats),
+    cost_usd: options.currentCostUsd,
+    cost_delta_from_median_usd: options.currentCostUsd === null || costStats.median === null ? null : options.currentCostUsd - costStats.median,
+    cost_above_q3: options.currentCostUsd === null || costStats.q3 === null ? null : options.currentCostUsd > costStats.q3,
+    query_count: options.currentQueryCount,
+    cost_per_query_usd: currentCostPerQuery,
+    cost_per_query_delta_from_median_usd: currentCostPerQuery === null || perQueryStats.median === null ? null : currentCostPerQuery - perQueryStats.median,
+    cost_per_query_above_q3: currentCostPerQuery === null || perQueryStats.q3 === null ? null : currentCostPerQuery > perQueryStats.q3,
   };
 }
 
@@ -410,6 +530,12 @@ function delegationDecision(options, metricStats, trend, comparison) {
   if (comparison?.above_q3) {
     reasons.push('current task is above historical Q3');
   }
+  if (comparison?.cost_above_q3) {
+    reasons.push('current task cost is above historical Q3');
+  }
+  if (comparison?.cost_per_query_above_q3) {
+    reasons.push('current task cost per query is above historical Q3');
+  }
 
   const required = reasons.some((reason) => !reason.includes('sample size below'));
   const delegateTo = inferredDelegationTargets(options, trend, comparison);
@@ -425,13 +551,17 @@ function delegationDecision(options, metricStats, trend, comparison) {
 }
 
 const options = parseArgs(process.argv.slice(2));
-const queryTokens = tokenize(options.taskQuery);
-const sessions = readSessions(options.commitLogRoot, queryTokens, options.minScore)
+const queryProfile = buildQueryProfile(options);
+const sessions = readSessions(options.commitLogRoot, queryProfile, options.minScore)
   .sort((a, b) => b.score - a.score || a.sort_date.localeCompare(b.sort_date))
   .slice(0, options.limit)
   .sort((a, b) => a.sort_date.localeCompare(b.sort_date));
 const tokenValues = sessions.map((session) => session.tokens);
+const costValues = sessions.map((session) => session.estimated_chat_cost_usd).filter((value) => value !== null);
+const perQueryValues = sessions.map((session) => session.estimated_cost_per_query_usd).filter((value) => value !== null);
 const metricStats = stats(tokenValues);
+const costMetricStats = stats(costValues);
+const perQueryMetricStats = stats(perQueryValues);
 const slope = linearSlope(sessions);
 const trend = {
   method: 'least_squares_by_chronological_similar_session_index',
@@ -440,10 +570,12 @@ const trend = {
   direction: trendDirection(slope),
   confidence: trendConfidence(sessions, slope),
 };
-const currentTask = currentComparison(options.currentTokens, metricStats);
+const currentTask = currentComparison(options, metricStats, costMetricStats, perQueryMetricStats);
+const queryTerms = [...queryProfile.combined].sort();
+const costBasisValues = [...new Set(sessions.map((session) => session.estimated_chat_cost_basis).filter(Boolean))].sort();
 
 const result = {
-  schema: 'harness/cfo-token-comparison/v2',
+  schema: 'harness/cfo-token-comparison/v3',
   query: {
     task_query: options.taskQuery,
     workflow: options.workflow || null,
@@ -452,14 +584,15 @@ const result = {
     commit_log_root: options.commitLogRoot,
     min_score: options.minScore,
     limit: options.limit,
-    query_terms: [...queryTokens].sort(),
+    query_terms: queryTerms,
   },
   similarity_basis: {
-    method: 'jaccard_task_terms',
+    method: 'weighted_jaccard_task_workflow_paths_agents',
     minimum_score: options.minScore,
     limit: options.limit,
-    query_terms: [...queryTokens].sort(),
-    note: 'Similarity is lexical and should be treated as a candidate set for CFO review, not proof of identical scope.',
+    weights: similarityWeights,
+    query_terms: queryTerms,
+    note: 'Similarity is deterministic and weighted by task text, workflow, changed paths, and requested agents; treat the set as CFO evidence candidates, not proof of identical scope.',
   },
   similar_tasks: {
     count: sessions.length,
@@ -470,17 +603,31 @@ const result = {
       estimated_chat_tokens: session.tokens,
       estimated_chat_cost: session.estimated_chat_cost,
       estimated_chat_cost_basis: session.estimated_chat_cost_basis,
+      estimated_chat_cost_usd: session.estimated_chat_cost_usd,
+      estimated_query_count: session.estimated_query_count,
+      estimated_cost_per_query_usd: session.estimated_cost_per_query_usd,
+      cost_basis_fields: session.cost_basis_fields,
       similarity_score: Number(session.score.toFixed(4)),
+      similarity_components: Object.fromEntries(
+        Object.entries(session.similarity_components).map(([key, value]) => [key, value === null ? null : Number(value.toFixed(4))]),
+      ),
       raised_at_utc: session.raised_at_utc,
     })),
   },
   date_range: dateRange(sessions),
   token_statistics: metricStats,
+  cost_statistics: {
+    estimated_chat_cost_usd: costMetricStats,
+    estimated_cost_per_query_usd: perQueryMetricStats,
+  },
   trend,
   pricing_basis: {
-    mode: 'token_only',
+    mode: costValues.length > 0 ? 'token_and_cost_when_available' : 'token_only',
     source: options.pricingBasis,
-    note: 'This script compares token counts and preserves historical cost-basis metadata; it does not apply live model pricing.',
+    historical_cost_samples: costValues.length,
+    historical_per_query_samples: perQueryValues.length,
+    historical_cost_basis_values: costBasisValues,
+    note: 'This script compares tokens, preserves historical cost/model basis metadata, and compares USD/per-query cost only when those fields are available; it does not fetch live pricing.',
   },
   current_task: currentTask,
   delegation: delegationDecision(options, metricStats, trend, currentTask),

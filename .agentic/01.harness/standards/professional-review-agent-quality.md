@@ -176,6 +176,16 @@ Positive fixtures prove correct review selection. Negative fixtures prove that
 shallow rubrics, missing evidence, invalid scorecards, and unblocked critical
 findings fail.
 
+Routing fixtures must be checked against the workflow routing table, not an
+independent copy of routing rules inside the validator. If a workflow routes a
+security task to the CFO agent, or routes token-cost review to UX/UI, the
+fixture gate must fail.
+
+Each rubric `negative_fixtures` label must have executable fixture data that
+names the triggering task, changed paths, owning agent, expected blocking
+dimension, and expected blocker terms. A negative label without executable
+fixture coverage is not enough for hard-gate use.
+
 ## Validator Rules
 
 The validator checks professional quality, not just file shape.
@@ -190,6 +200,8 @@ It rejects:
 - missing professional references
 - malformed scorecard data
 - scorecard decisions that contradict scores or critical blockers
+- `delegate` scorecards with no delegation request
+- workflow routing tables that contradict executable use-case fixtures
 - use-case fixtures with missing expected agents
 - review-board fixtures that omit a required lane
 - CFO output with rising or flat trend but no delegation requirement
