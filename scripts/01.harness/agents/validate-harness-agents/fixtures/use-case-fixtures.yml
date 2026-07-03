@@ -176,7 +176,8 @@
       "changed_paths": [
         ".agentic/01.harness/prompts/review-agent-context.md",
         ".agentic/01.harness/checklists/evaluate-prompt-surface.md",
-        "scripts/01.harness/evaluate-prompt-surface/script.js"
+        "scripts/01.harness/evaluate-prompt-surface/script.js",
+        "scripts/02.rag-rulebook/commit-gates/script.sh"
       ],
       "expected_agents": [
         "harness.agents.senior-prompt-engineer"

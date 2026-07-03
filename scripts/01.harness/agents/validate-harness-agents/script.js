@@ -250,6 +250,23 @@ const genericAnchorTerms = new Set([
   'weak', 'without',
 ]);
 
+const nonRepoEvidenceKinds = new Set([
+  'command-output',
+  'context-packet',
+  'external',
+  'external-url',
+  'fixture-path',
+  'inline',
+  'packet',
+  'url',
+]);
+
+const requiredQualityGateBlocks = [
+  'critical_blocker_present is true',
+  'any required score is below 3',
+  'decision is delegate and delegated review is missing',
+];
+
 function tokenizeWords(value) {
   const tokens = String(value || '')
     .toLowerCase()
@@ -278,6 +295,33 @@ function dimensionLexicon(dimension) {
   ];
   const tokens = tokenizeWords(values.join(' ')).filter((token) => !genericAnchorTerms.has(token));
   return new Set(tokens);
+}
+
+function repoEvidencePathExists(evidencePath) {
+  const trimmed = String(evidencePath || '').trim().replace(/:\d+(?::\d+)?$/, '');
+  if (!trimmed) {
+    return false;
+  }
+  if (/^(https?:\/\/|s3:\/\/|arn:|packet:|context-packet:|command:|inline:)/i.test(trimmed)) {
+    return true;
+  }
+  if (path.isAbsolute(trimmed)) {
+    const relative = path.relative(repoRoot, trimmed);
+    return relative && !relative.startsWith('..') && !path.isAbsolute(relative) && fs.existsSync(trimmed);
+  }
+  return fs.existsSync(path.join(repoRoot, trimmed));
+}
+
+function validateScoreEvidenceSpecificity(errors, label, dimension, evidence) {
+  if (!dimension || !nonEmptyString(evidence)) {
+    return;
+  }
+  const lexicon = dimensionLexicon(dimension);
+  const evidenceTokens = new Set(tokenizeWords(evidence).filter((token) => !genericAnchorTerms.has(token)));
+  const matches = [...lexicon].filter((token) => evidenceTokens.has(token));
+  if (matches.length === 0) {
+    errors.push(`${label}.evidence must reference rubric-specific evidence, blocker, delegation, or professional-standard terms for ${dimension.id}`);
+  }
 }
 
 function validateScoreAnchorSpecificity(errors, label, dimension, key) {
@@ -983,6 +1027,8 @@ function validateEvidenceSources(errors, label, evidence) {
       requireNonEmptyString(errors, `${sourceLabel}.path`, source.path);
       if (!nonEmptyString(source.kind)) {
         errors.push(`${sourceLabel}.kind must be a non-empty string`);
+      } else if (!nonRepoEvidenceKinds.has(String(source.kind).toLowerCase()) && !repoEvidencePathExists(source.path)) {
+        errors.push(`${sourceLabel}.path must exist in the repository for repo-local evidence kind ${source.kind}`);
       }
       requireNonEmptyString(errors, `${sourceLabel}.note`, source.note);
     });
@@ -1002,6 +1048,20 @@ function validateFindings(errors, label, findings) {
   }
 }
 
+function validateQualityGate(errors, label, qualityGate) {
+  if (!isPlainObject(qualityGate)) {
+    errors.push(`${label}.quality_gate must be an object`);
+    return;
+  }
+  requireStringArray(errors, `${label}.quality_gate.blocks_when`, qualityGate.blocks_when, 3);
+  const blocksWhen = Array.isArray(qualityGate.blocks_when) ? qualityGate.blocks_when : [];
+  for (const requiredBlock of requiredQualityGateBlocks) {
+    if (!blocksWhen.includes(requiredBlock)) {
+      errors.push(`${label}.quality_gate.blocks_when must include ${requiredBlock}`);
+    }
+  }
+}
+
 function validateDelegationRequests(errors, label, scorecard) {
   if (!Array.isArray(scorecard.delegation_requests)) {
     errors.push(`${label}.delegation_requests must be an array`);
@@ -1015,6 +1075,8 @@ function validateDelegationRequests(errors, label, scorecard) {
     }
     if (!agentById.has(request.target_agent_id)) {
       errors.push(`${requestLabel}.target_agent_id must be a known agent id`);
+    } else if (request.target_agent_id === scorecard.agent?.id) {
+      errors.push(`${requestLabel}.target_agent_id must not self-delegate to the reviewing agent`);
     }
     requireNonEmptyString(errors, `${requestLabel}.blocking_question`, request.blocking_question);
     requireStringArray(errors, `${requestLabel}.evidence_already_reviewed`, request.evidence_already_reviewed, 1);
@@ -1085,6 +1147,7 @@ function validateScorecardData(scorecard, label) {
   validateFindings(errors, label, scorecard.findings);
   validateDelegationRequests(errors, label, scorecard);
   requireStringArray(errors, `${label}.required_follow_up`, scorecard.required_follow_up, 0);
+  validateQualityGate(errors, label, scorecard.quality_gate);
 
   const rubric = rubricDataForAgent(agentId);
   const knownDimensions = new Map((rubric?.dimensions || []).map((dimension) => [dimension.id, dimension]));
@@ -1112,6 +1175,7 @@ function validateScorecardData(scorecard, label) {
       }
       requireNonEmptyString(errors, `${scoreLabel}.evidence`, scoreEntry.evidence);
       requireNonEmptyString(errors, `${scoreLabel}.notes`, scoreEntry.notes);
+      validateScoreEvidenceSpecificity(errors, scoreLabel, knownDimensions.get(scoreEntry.dimension), scoreEntry.evidence);
     });
   }
   for (const dimension of requiredDimensions) {
@@ -1153,8 +1217,72 @@ function validateScorecardData(scorecard, label) {
   if (decision === 'pass' && arrayLength(scorecard.evidence?.gaps) > 0) {
     errors.push(`${label}.review.decision pass cannot have unresolved evidence gaps`);
   }
+  if (decision === 'pass' && arrayLength(scorecard.findings?.high) > 0) {
+    errors.push(`${label}.review.decision pass cannot have high findings`);
+  }
+  if (decision === 'block' && arrayLength(scorecard.required_follow_up) === 0) {
+    errors.push(`${label}.review.decision block requires required_follow_up`);
+  }
 
   return errors;
+}
+
+function cloneData(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function expectScorecardInvalid(label, scorecard, expectedErrorText) {
+  const errors = validateScorecardData(scorecard, label);
+  if (errors.length === 0) {
+    failures.push(`${label} expected invalid scorecard but validator accepted it`);
+    return;
+  }
+  if (!errors.some((error) => error.includes(expectedErrorText))) {
+    failures.push(`${label} expected an error containing ${expectedErrorText}, got: ${errors.join('; ')}`);
+  }
+}
+
+function validateScorecardSemanticNegativeMutations(baseScorecard) {
+  const missingQualityGate = cloneData(baseScorecard);
+  delete missingQualityGate.quality_gate;
+  expectScorecardInvalid('scorecard semantic negative missing_quality_gate', missingQualityGate, 'quality_gate');
+
+  const fakeRepoEvidence = cloneData(baseScorecard);
+  fakeRepoEvidence.evidence.sources[0].path = 'docs/fake-review-evidence/does-not-exist.md';
+  fakeRepoEvidence.evidence.sources[0].kind = 'file';
+  expectScorecardInvalid('scorecard semantic negative fake_repo_evidence_path', fakeRepoEvidence, 'path must exist');
+
+  const genericEvidence = cloneData(baseScorecard);
+  genericEvidence.scores = genericEvidence.scores.map((score) => ({
+    ...score,
+    evidence: 'This is sufficiently detailed and acceptable for review.',
+  }));
+  expectScorecardInvalid('scorecard semantic negative generic_score_evidence', genericEvidence, 'rubric-specific evidence');
+
+  const blockWithoutFollowUp = cloneData(baseScorecard);
+  blockWithoutFollowUp.review.decision = 'block';
+  blockWithoutFollowUp.review.critical_blocker_present = true;
+  blockWithoutFollowUp.findings.critical = ['Critical blocker is present and must not pass silently.'];
+  blockWithoutFollowUp.required_follow_up = [];
+  expectScorecardInvalid('scorecard semantic negative block_without_follow_up', blockWithoutFollowUp, 'block requires required_follow_up');
+
+  const passWithHighFinding = cloneData(baseScorecard);
+  passWithHighFinding.findings.high = ['High-severity issue remains unresolved.'];
+  expectScorecardInvalid('scorecard semantic negative pass_with_high_finding', passWithHighFinding, 'pass cannot have high findings');
+
+  const selfDelegation = cloneData(baseScorecard);
+  selfDelegation.review.decision = 'delegate';
+  selfDelegation.evidence.gaps = ['The reviewing agent cannot answer its own delegated question.'];
+  selfDelegation.delegation_requests = [
+    {
+      target_agent_id: selfDelegation.agent.id,
+      blocking_question: 'Can the reviewing agent approve its own unresolved concern?',
+      evidence_already_reviewed: [selfDelegation.evidence.sources[0].path],
+      needed_decision: 'pass_with_notes',
+    },
+  ];
+  selfDelegation.required_follow_up = ['Route the unresolved question to a different responsible agent.'];
+  expectScorecardInvalid('scorecard semantic negative self_delegation', selfDelegation, 'must not self-delegate');
 }
 
 function validateScorecardFixtures() {
@@ -1198,6 +1326,13 @@ function validateScorecardFixtures() {
       }
     }
   });
+
+  const validPassFixture = data.fixtures.find((fixture) => fixture?.id === 'scorecard.valid_pass');
+  if (validPassFixture?.scorecard) {
+    validateScorecardSemanticNegativeMutations(validPassFixture.scorecard);
+  } else {
+    failures.push(`${relativePath} missing scorecard.valid_pass fixture for semantic negative mutations`);
+  }
 
   if (tryParseJsonCompatibleContent('# invalid scorecard\nschema: harness/agent-scorecard/v1\nreview:\n  decision: [pass') !== null) {
     failures.push('scorecard parser accepted malformed YAML without a JSON-compatible body');
@@ -1259,8 +1394,8 @@ function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
     dimension: dimension.id,
     score: dimension.id === fixture.expected_blocking_dimension ? 2 : 4,
     evidence: dimension.id === fixture.expected_blocking_dimension
-      ? `Blocking fixture evidence covers ${fixture.expected_blocker_terms.join(', ')}.`
-      : `Non-blocking fixture evidence for ${dimension.name}.`,
+      ? `Blocking fixture evidence covers ${dimension.id} and ${fixture.expected_blocker_terms.join(', ')}.`
+      : `Non-blocking fixture evidence covers ${dimension.id} and ${dimension.evidence_required?.[0] || dimension.name}.`,
     notes: dimension.id === fixture.expected_blocking_dimension
       ? 'Below the required blocking threshold.'
       : 'Not the fixture blocker.',
@@ -1532,8 +1667,8 @@ function validateCfoFixture() {
   const output = fs.readFileSync(cfoOutputPath, 'utf8');
   const parsed = JSON.parse(output);
 
-  if (parsed.schema !== 'harness/cfo-token-comparison/v3') {
-    failures.push(`CFO fixture expected schema v3, got ${parsed.schema}`);
+  if (parsed.schema !== 'harness/cfo-token-comparison/v3.1') {
+    failures.push(`CFO fixture expected schema v3.1, got ${parsed.schema}`);
   }
   if (parsed.similar_tasks.count !== 3) {
     failures.push(`CFO fixture expected 3 similar tasks, got ${parsed.similar_tasks.count}`);
@@ -1564,6 +1699,18 @@ function validateCfoFixture() {
   }
   if (parsed.trend.confidence.level !== 'medium') {
     failures.push(`CFO fixture expected medium trend confidence, got ${parsed.trend.confidence.level}`);
+  }
+  if (!parsed.cost_trend || parsed.cost_trend.direction !== 'up') {
+    failures.push(`CFO fixture expected upward cost trend, got ${parsed.cost_trend?.direction}`);
+  }
+  if (!parsed.cost_trend || parsed.cost_trend.sample_size !== 3) {
+    failures.push(`CFO fixture expected cost trend sample size 3, got ${parsed.cost_trend?.sample_size}`);
+  }
+  if (!parsed.cost_per_query_trend || parsed.cost_per_query_trend.direction !== 'up') {
+    failures.push(`CFO fixture expected upward cost-per-query trend, got ${parsed.cost_per_query_trend?.direction}`);
+  }
+  if (!parsed.cost_per_query_trend || parsed.cost_per_query_trend.sample_size !== 3) {
+    failures.push(`CFO fixture expected cost-per-query trend sample size 3, got ${parsed.cost_per_query_trend?.sample_size}`);
   }
   if (parsed.date_range.day_span !== 2) {
     failures.push(`CFO fixture expected date range day_span 2, got ${parsed.date_range.day_span}`);
@@ -1596,7 +1743,12 @@ function validateCfoFixture() {
     failures.push('CFO fixture expected model cost-basis fields on every similar session');
   }
   if (!parsed.delegation || parsed.delegation.required !== true) {
-    failures.push('CFO fixture expected delegation to be required for upward trend');
+    failures.push('CFO fixture expected delegation to be required for upward token, cost, or cost-per-query trend');
+  }
+  for (const reason of ['trend direction is up', 'cost trend direction is up', 'cost per query trend direction is up']) {
+    if (!parsed.delegation?.reasons?.includes(reason)) {
+      failures.push(`CFO fixture expected delegation reason: ${reason}`);
+    }
   }
   if (!parsed.delegation.delegate_to.includes('harness.agents.senior-prompt-engineer')) {
     failures.push('CFO fixture expected delegation to Senior Prompt Engineer for workflow token trend');

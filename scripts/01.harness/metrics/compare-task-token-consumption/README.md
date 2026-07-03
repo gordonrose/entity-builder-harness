@@ -35,12 +35,14 @@ token metrics, and reports:
 - similar task count
 - min, max, mean, median, Q1, and Q3 token consumption
 - weighted similarity basis, component scores, and comparable-session date range
-- trend direction, slope, sample size, and confidence over time
+- token, USD cost, and cost-per-query trend direction, slope, sample size, and
+  confidence over time
 - historical USD cost, model/pricing-basis metadata, query count, and
   per-query cost when available
 - current task token, cost, and per-query comparison, when supplied
-- delegation requirement, target agents, and blocking question when a trend is
-  flat or rising or the current task is above historical Q3
+- delegation requirement, target agents, and blocking question when token, cost,
+  or cost-per-query trend is flat or rising, or when the current task is above
+  historical Q3
 
 ## Usage
 

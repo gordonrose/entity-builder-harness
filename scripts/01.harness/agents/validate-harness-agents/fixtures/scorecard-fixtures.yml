@@ -43,7 +43,7 @@
         "evidence": {
           "sources": [
             {
-              "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+              "path": "scripts/01.harness/metrics/compare-task-token-consumption/script.sh",
               "kind": "metric-output",
               "note": "Comparable sessions, token statistics, trend, confidence, and pricing basis are present."
             }
@@ -127,7 +127,7 @@
         "evidence": {
           "sources": [
             {
-              "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+              "path": "scripts/01.harness/metrics/compare-task-token-consumption/script.sh",
               "kind": "metric-output",
               "note": "Every required dimension scores 4, so the weighted overall score must be 4 rather than 5."
             }
@@ -210,7 +210,7 @@
         "evidence": {
           "sources": [
             {
-              "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+              "path": "scripts/01.harness/metrics/compare-task-token-consumption/script.sh",
               "kind": "metric-output",
               "note": "Comparable task set shows a rising workflow-token trend."
             }
@@ -270,7 +270,7 @@
             "target_agent_id": "harness.agents.senior-prompt-engineer",
             "blocking_question": "Identify safe prompt or workflow reductions that preserve required evidence and flexibility.",
             "evidence_already_reviewed": [
-              "scripts/01.harness/metrics/compare-task-token-consumption/output.json"
+              "scripts/01.harness/metrics/compare-task-token-consumption/script.sh"
             ],
             "needed_decision": "pass_with_notes"
           }
@@ -308,7 +308,7 @@
         "evidence": {
           "sources": [
             {
-              "path": ".agentic/01.harness/workflows/security-review.md",
+              "path": ".agentic/01.harness/workflows/run-agent-review.md",
               "kind": "workflow",
               "note": "Security evidence was proposed for removal to reduce context."
             }
@@ -368,7 +368,7 @@
             "target_agent_id": "harness.agents.secops-engineer",
             "blocking_question": "Can the security evidence reduction be accepted without weakening required controls?",
             "evidence_already_reviewed": [
-              ".agentic/01.harness/workflows/security-review.md"
+              ".agentic/01.harness/workflows/run-agent-review.md"
             ],
             "needed_decision": "block"
           }
@@ -407,7 +407,7 @@
         "evidence": {
           "sources": [
             {
-              "path": "commitLogs/example/README.md",
+              "path": "scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md",
               "kind": "file",
               "note": "Critical blocker evidence exists."
             }
@@ -493,7 +493,7 @@
         "evidence": {
           "sources": [
             {
-              "path": "commitLogs/example/README.md",
+              "path": "scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md",
               "kind": "file",
               "note": "Comparable set is missing while pass is claimed."
             }
@@ -581,7 +581,7 @@
         "evidence": {
           "sources": [
             {
-              "path": "commitLogs/example/README.md",
+              "path": "scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md",
               "kind": "file",
               "note": "Rising trend needs another agent but no delegation is supplied."
             }

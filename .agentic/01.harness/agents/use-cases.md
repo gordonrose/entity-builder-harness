@@ -43,8 +43,9 @@ and bounded to their authority.
   work and has unusually high estimated token consumption.
 - Expected agent: CFO Token Efficiency.
 - Highest standard: Compare the current task with similar committed sessions,
-  report count, min, max, mean, median, Q1, Q3, and trend, then recommend only
-  token-reduction review paths that preserve workflow flexibility.
+  report count, min, max, mean, median, Q1, Q3, and token, cost, and
+  cost-per-query trend, then recommend only reduction review paths that preserve
+  workflow flexibility.
 - Passing review: Names the metric source, comparable task set, statistical
   method, trend direction, and any delegated agent request.
 - Failing review: Gives generic thrift advice without comparable-session
@@ -91,8 +92,8 @@ and bounded to their authority.
 
 #### Prompt Eval Gate Surface
 
-- Trigger: A prompt, checklist, schema, gate, eval, or evaluate script changes
-  how harness instruction quality is judged.
+- Trigger: A prompt, checklist, schema, gate, `*-gates` script directory, eval,
+  or evaluate script changes how harness instruction quality is judged.
 - Expected agent: Senior Prompt Engineer.
 - Highest standard: Keep the instruction contract deterministic, rubric-bound,
   and concise while ensuring generated outputs can be scored objectively.

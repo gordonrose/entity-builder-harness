@@ -38,7 +38,7 @@
   "evidence": {
     "sources": [
       {
-        "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+        "path": "scripts/01.harness/metrics/compare-task-token-consumption/script.sh",
         "kind": "metric-output",
         "note": "Comparable-session token statistics, trend, confidence, pricing basis, and delegation result."
       }

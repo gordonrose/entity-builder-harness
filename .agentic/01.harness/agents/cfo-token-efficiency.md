@@ -99,12 +99,14 @@ clear delegation path. A `3` has enough evidence for a cautious trend note. A
 - comparable task count
 - similarity basis and comparable-session date range
 - statistics: min, max, mean, median, Q1, Q3
-- trend direction, sample size, slope, and confidence
+- token, USD cost, and cost-per-query trend direction, sample size, slope, and
+  confidence
 - pricing, model, cost, query-count, or token-only basis, depending on
   available session metadata
 - current task comparison
 - safe-reduction opportunities
-- delegation requirement, target agents, and blocking question
+- delegation requirement, target agents, and blocking question when token, cost,
+  or cost-per-query trend is flat or rising
 - delegation requests
 - decision: `pass`, `pass_with_notes`, `block`, `delegate`, or
   `not_applicable`

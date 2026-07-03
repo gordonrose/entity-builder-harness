@@ -320,13 +320,13 @@ function stats(values) {
   };
 }
 
-function linearSlope(points) {
+function linearSlopeFor(points, valueSelector) {
   if (points.length < 2) {
     return null;
   }
 
   const xs = points.map((_, index) => index + 1);
-  const ys = points.map((point) => point.tokens);
+  const ys = points.map(valueSelector);
   const xMean = mean(xs);
   const yMean = mean(ys);
   let numerator = 0;
@@ -340,11 +340,15 @@ function linearSlope(points) {
   return denominator === 0 ? null : numerator / denominator;
 }
 
-function trendDirection(slope) {
+function linearSlope(points) {
+  return linearSlopeFor(points, (point) => point.tokens);
+}
+
+function trendDirection(slope, flatThreshold = 1) {
   if (slope === null) {
     return 'insufficient_data';
   }
-  if (Math.abs(slope) < 1) {
+  if (Math.abs(slope) < flatThreshold) {
     return 'flat';
   }
   return slope < 0 ? 'down' : 'up';
@@ -454,7 +458,7 @@ function dateRange(sessions) {
   };
 }
 
-function trendConfidence(sessions, slope) {
+function trendConfidence(sessions, slope, flatThreshold = 1) {
   const reasons = [];
   if (sessions.length < 3) {
     reasons.push('fewer than 3 comparable sessions');
@@ -467,7 +471,7 @@ function trendConfidence(sessions, slope) {
     reasons.push('slope unavailable');
     return { level: 'low', reasons };
   }
-  if (Math.abs(slope) < 1) {
+  if (Math.abs(slope) < flatThreshold) {
     reasons.push('trend is effectively flat');
   }
   if (sessions.length >= 5 && reasons.length === 0) {
@@ -509,7 +513,14 @@ function inferredDelegationTargets(options, trend, comparison) {
   return [...targets].sort();
 }
 
-function delegationDecision(options, metricStats, trend, comparison) {
+function nonDownTrendReason(label, trend) {
+  if (!trend || trend.sample_size < 3 || trend.direction === 'down' || trend.direction === 'insufficient_data') {
+    return '';
+  }
+  return `${label} trend direction is ${trend.direction}`;
+}
+
+function delegationDecision(options, metricStats, trend, costTrend, costPerQueryTrend, comparison) {
   const reasons = [];
   if (metricStats.count === 0) {
     return {
@@ -525,6 +536,14 @@ function delegationDecision(options, metricStats, trend, comparison) {
   }
   if (metricStats.count >= 3 && trend.direction !== 'down') {
     reasons.push(`trend direction is ${trend.direction}`);
+  }
+  const costReason = nonDownTrendReason('cost', costTrend);
+  if (costReason) {
+    reasons.push(costReason);
+  }
+  const costPerQueryReason = nonDownTrendReason('cost per query', costPerQueryTrend);
+  if (costPerQueryReason) {
+    reasons.push(costPerQueryReason);
   }
   if (comparison?.above_q3) {
     reasons.push('current task is above historical Q3');
@@ -558,10 +577,14 @@ const sessions = readSessions(options.commitLogRoot, queryProfile, options.minSc
 const tokenValues = sessions.map((session) => session.tokens);
 const costValues = sessions.map((session) => session.estimated_chat_cost_usd).filter((value) => value !== null);
 const perQueryValues = sessions.map((session) => session.estimated_cost_per_query_usd).filter((value) => value !== null);
+const costTrendPoints = sessions.filter((session) => session.estimated_chat_cost_usd !== null);
+const costPerQueryTrendPoints = sessions.filter((session) => session.estimated_cost_per_query_usd !== null);
 const metricStats = stats(tokenValues);
 const costMetricStats = stats(costValues);
 const perQueryMetricStats = stats(perQueryValues);
 const slope = linearSlope(sessions);
+const costSlope = linearSlopeFor(costTrendPoints, (session) => session.estimated_chat_cost_usd);
+const costPerQuerySlope = linearSlopeFor(costPerQueryTrendPoints, (session) => session.estimated_cost_per_query_usd);
 const trend = {
   method: 'least_squares_by_chronological_similar_session_index',
   sample_size: sessions.length,
@@ -569,12 +592,26 @@ const trend = {
   direction: trendDirection(slope),
   confidence: trendConfidence(sessions, slope),
 };
+const costTrend = {
+  method: 'least_squares_by_chronological_similar_session_index',
+  sample_size: costTrendPoints.length,
+  slope_usd_per_session: costSlope,
+  direction: trendDirection(costSlope, 0.000001),
+  confidence: trendConfidence(costTrendPoints, costSlope, 0.000001),
+};
+const costPerQueryTrend = {
+  method: 'least_squares_by_chronological_similar_session_index',
+  sample_size: costPerQueryTrendPoints.length,
+  slope_usd_per_query_per_session: costPerQuerySlope,
+  direction: trendDirection(costPerQuerySlope, 0.000001),
+  confidence: trendConfidence(costPerQueryTrendPoints, costPerQuerySlope, 0.000001),
+};
 const currentTask = currentComparison(options, metricStats, costMetricStats, perQueryMetricStats);
 const queryTerms = [...queryProfile.combined].sort();
 const costBasisValues = [...new Set(sessions.map((session) => session.estimated_chat_cost_basis).filter(Boolean))].sort();
 
 const result = {
-  schema: 'harness/cfo-token-comparison/v3',
+  schema: 'harness/cfo-token-comparison/v3.1',
   query: {
     task_query: options.taskQuery,
     workflow: options.workflow || null,
@@ -620,6 +657,8 @@ const result = {
     estimated_cost_per_query_usd: perQueryMetricStats,
   },
   trend,
+  cost_trend: costTrend,
+  cost_per_query_trend: costPerQueryTrend,
   pricing_basis: {
     mode: costValues.length > 0 ? 'token_and_cost_when_available' : 'token_only',
     source: options.pricingBasis,
@@ -629,7 +668,7 @@ const result = {
     note: 'This script compares tokens, preserves historical cost/model basis metadata, and compares USD/per-query cost only when those fields are available; it does not fetch live pricing.',
   },
   current_task: currentTask,
-  delegation: delegationDecision(options, metricStats, trend, currentTask),
+  delegation: delegationDecision(options, metricStats, trend, costTrend, costPerQueryTrend, currentTask),
 };
 
 process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
