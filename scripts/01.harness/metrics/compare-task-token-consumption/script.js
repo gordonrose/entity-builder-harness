@@ -34,7 +34,7 @@ const STOP_WORDS = new Set([
 function usage(exitCode) {
   const stream = exitCode === 0 ? process.stdout : process.stderr;
   stream.write(`Usage:
-  script.sh --task-query <text> [--current-tokens <count>] [--commit-log-root <path>] [--min-score <number>] [--limit <count>]
+  script.sh --task-query <text> [--current-tokens <count>] [--commit-log-root <path>] [--min-score <number>] [--limit <count>] [--workflow <id>] [--changed-path <path>] [--agent <agent-id>] [--pricing-basis <text>]
 
 Emits JSON token-consumption statistics for sessions similar to the task query.
 `);
@@ -43,11 +43,15 @@ Emits JSON token-consumption statistics for sessions similar to the task query.
 
 function parseArgs(argv) {
   const options = {
+    changedPaths: [],
     commitLogRoot: 'commitLogs',
     currentTokens: null,
     limit: 50,
     minScore: 0.12,
+    pricingBasis: 'token_only_no_model_pricing_applied',
+    requestedAgents: [],
     taskQuery: '',
+    workflow: '',
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -66,6 +70,14 @@ function parseArgs(argv) {
       options.taskQuery = next();
     } else if (arg === '--current-tokens') {
       options.currentTokens = parseInteger(next(), '--current-tokens');
+    } else if (arg === '--workflow') {
+      options.workflow = next();
+    } else if (arg === '--changed-path') {
+      options.changedPaths.push(next());
+    } else if (arg === '--agent') {
+      options.requestedAgents.push(next());
+    } else if (arg === '--pricing-basis') {
+      options.pricingBasis = next();
     } else if (arg === '--commit-log-root') {
       options.commitLogRoot = next();
     } else if (arg === '--min-score') {
@@ -271,6 +283,8 @@ function readSessions(root, queryTokens, minScore) {
       tokens,
       score,
       raised_at_utc: meta.raised_at_utc || '',
+      estimated_chat_cost: meta.estimated_chat_cost || '',
+      estimated_chat_cost_basis: meta.estimated_chat_cost_basis || '',
       sort_date: sessionDate(meta, filePath),
     };
   }).filter((session) => session.tokens !== null && session.score >= minScore);
@@ -286,6 +300,127 @@ function currentComparison(currentTokens, metricStats) {
     ratio_to_median: metricStats.median ? currentTokens / metricStats.median : null,
     above_q3: metricStats.q3 === null ? null : currentTokens > metricStats.q3,
     below_q1: metricStats.q1 === null ? null : currentTokens < metricStats.q1,
+    status: currentTokenStatus(currentTokens, metricStats),
+  };
+}
+
+function currentTokenStatus(currentTokens, metricStats) {
+  if (currentTokens === null || metricStats.count === 0) {
+    return 'not_available';
+  }
+  if (metricStats.q3 !== null && currentTokens > metricStats.q3) {
+    return 'above_q3';
+  }
+  if (metricStats.q1 !== null && currentTokens < metricStats.q1) {
+    return 'below_q1';
+  }
+  return 'within_iqr';
+}
+
+function dateRange(sessions) {
+  const dates = sessions.map((session) => session.sort_date).filter(Boolean).sort();
+  if (dates.length === 0) {
+    return {
+      first_seen_at_utc: null,
+      last_seen_at_utc: null,
+      day_span: null,
+    };
+  }
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  return {
+    first_seen_at_utc: first,
+    last_seen_at_utc: last,
+    day_span: Math.round((Date.parse(last) - Date.parse(first)) / (1000 * 60 * 60 * 24)),
+  };
+}
+
+function trendConfidence(sessions, slope) {
+  const reasons = [];
+  if (sessions.length < 3) {
+    reasons.push('fewer than 3 comparable sessions');
+    return { level: 'low', reasons };
+  }
+  if (sessions.some((session) => !session.sort_date)) {
+    reasons.push('one or more comparable sessions lack dates');
+  }
+  if (slope === null) {
+    reasons.push('slope unavailable');
+    return { level: 'low', reasons };
+  }
+  if (Math.abs(slope) < 1) {
+    reasons.push('trend is effectively flat');
+  }
+  if (sessions.length >= 5 && reasons.length === 0) {
+    reasons.push('at least 5 dated comparable sessions');
+    return { level: 'high', reasons };
+  }
+  reasons.push('minimum comparable sample met');
+  return { level: reasons.some((reason) => reason.includes('lack dates')) ? 'low' : 'medium', reasons };
+}
+
+function inferredDelegationTargets(options, trend, comparison) {
+  const text = [
+    options.taskQuery,
+    options.workflow,
+    ...options.changedPaths,
+    ...options.requestedAgents,
+  ].join(' ').toLowerCase();
+  const targets = new Set();
+
+  if (/\b(workflow|prompt|skill|gate|template|schema|retrieval|context|corpus|rulebook|chat-start|commit-gate)\b/.test(text)) {
+    targets.add('harness.agents.senior-prompt-engineer');
+  }
+  if (/\b(deploy|runtime|aws|ecs|ecr|rds|route53|cloudwatch|service|per-query|per request|cloud)\b/.test(text)) {
+    targets.add('harness.agents.senior-sre-engineer');
+  }
+  if (/\b(secret|security|auth|public|exposure|owasp|iso|credential)\b/.test(text)) {
+    targets.add('harness.agents.secops-engineer');
+  }
+  if (/\b(backend|architecture|platform|entity|feature|capability|dependency)\b/.test(text)) {
+    targets.add('harness.agents.senior-backend-architect');
+  }
+  if (/\b(ux|ui|cli|human|operator|chat|fallback|blocked response|accessibility|wcag)\b/.test(text)) {
+    targets.add('harness.agents.ux-ui-engineer');
+  }
+  if (targets.size === 0 && (trend.direction === 'up' || trend.direction === 'flat' || comparison?.above_q3)) {
+    targets.add('harness.agents.senior-prompt-engineer');
+  }
+
+  return [...targets].sort();
+}
+
+function delegationDecision(options, metricStats, trend, comparison) {
+  const reasons = [];
+  if (metricStats.count === 0) {
+    return {
+      required: false,
+      decision: 'not_applicable',
+      reasons: ['no comparable sessions were found'],
+      delegate_to: [],
+      blocking_question: '',
+    };
+  }
+  if (metricStats.count < 3) {
+    reasons.push('sample size below trend threshold');
+  }
+  if (metricStats.count >= 3 && trend.direction !== 'down') {
+    reasons.push(`trend direction is ${trend.direction}`);
+  }
+  if (comparison?.above_q3) {
+    reasons.push('current task is above historical Q3');
+  }
+
+  const required = reasons.some((reason) => !reason.includes('sample size below'));
+  const delegateTo = inferredDelegationTargets(options, trend, comparison);
+  return {
+    required,
+    decision: required ? 'delegate' : 'pass_with_notes',
+    reasons,
+    delegate_to: required ? delegateTo : [],
+    blocking_question: required
+      ? 'Identify safe token reductions for the suspected cost driver without weakening required evidence, security, reliability, architecture, UX, or workflow flexibility.'
+      : '',
   };
 }
 
@@ -298,15 +433,33 @@ const sessions = readSessions(options.commitLogRoot, queryTokens, options.minSco
 const tokenValues = sessions.map((session) => session.tokens);
 const metricStats = stats(tokenValues);
 const slope = linearSlope(sessions);
+const trend = {
+  method: 'least_squares_by_chronological_similar_session_index',
+  sample_size: sessions.length,
+  slope_tokens_per_session: slope,
+  direction: trendDirection(slope),
+  confidence: trendConfidence(sessions, slope),
+};
+const currentTask = currentComparison(options.currentTokens, metricStats);
 
 const result = {
-  schema: 'harness/cfo-token-comparison/v1',
+  schema: 'harness/cfo-token-comparison/v2',
   query: {
     task_query: options.taskQuery,
+    workflow: options.workflow || null,
+    changed_paths: options.changedPaths,
+    requested_agents: options.requestedAgents,
     commit_log_root: options.commitLogRoot,
     min_score: options.minScore,
     limit: options.limit,
     query_terms: [...queryTokens].sort(),
+  },
+  similarity_basis: {
+    method: 'jaccard_task_terms',
+    minimum_score: options.minScore,
+    limit: options.limit,
+    query_terms: [...queryTokens].sort(),
+    note: 'Similarity is lexical and should be treated as a candidate set for CFO review, not proof of identical scope.',
   },
   similar_tasks: {
     count: sessions.length,
@@ -315,17 +468,22 @@ const result = {
       path: session.path,
       task: session.task,
       estimated_chat_tokens: session.tokens,
+      estimated_chat_cost: session.estimated_chat_cost,
+      estimated_chat_cost_basis: session.estimated_chat_cost_basis,
       similarity_score: Number(session.score.toFixed(4)),
       raised_at_utc: session.raised_at_utc,
     })),
   },
+  date_range: dateRange(sessions),
   token_statistics: metricStats,
-  trend: {
-    method: 'least_squares_by_chronological_similar_session_index',
-    slope_tokens_per_session: slope,
-    direction: trendDirection(slope),
+  trend,
+  pricing_basis: {
+    mode: 'token_only',
+    source: options.pricingBasis,
+    note: 'This script compares token counts and preserves historical cost-basis metadata; it does not apply live model pricing.',
   },
-  current_task: currentComparison(options.currentTokens, metricStats),
+  current_task: currentTask,
+  delegation: delegationDecision(options, metricStats, trend, currentTask),
 };
 
 process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

@@ -33,15 +33,22 @@ with estimated token metrics, and reports:
 
 - similar task count
 - min, max, mean, median, Q1, and Q3 token consumption
-- trend direction over time
+- similarity basis and comparable-session date range
+- trend direction, slope, sample size, and confidence over time
+- historical cost-basis metadata and current pricing-basis note
 - current task comparison, when `--current-tokens` is supplied
+- delegation requirement, target agents, and blocking question when a trend is
+  flat or rising or the current task is above historical Q3
 
 ## Usage
 
 ```bash
 bash scripts/01.harness/metrics/compare-task-token-consumption/script.sh \
   --task-query "update chat startup workflow" \
-  --current-tokens 1200000
+  --current-tokens 1200000 \
+  --workflow ".agentic/00.chat/workflows/chat-start.md" \
+  --changed-path ".agentic/00.chat/workflows/chat-start.md" \
+  --pricing-basis "current session metadata token estimate"
 ```
 
 Useful options:
@@ -49,6 +56,10 @@ Useful options:
 - `--commit-log-root <path>` reads a fixture or alternate commit-log root.
 - `--min-score <number>` changes the similarity cutoff. Default: `0.12`.
 - `--limit <count>` caps the similar session list. Default: `50`.
+- `--workflow <id>` records the workflow under review and helps delegation.
+- `--changed-path <path>` may be repeated to help identify the cost driver.
+- `--agent <agent-id>` may be repeated to record agents already involved.
+- `--pricing-basis <text>` records the basis for any cost interpretation.
 
 The JSON output is intended for review agents and tests, not for direct human
 editing.

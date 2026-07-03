@@ -721,8 +721,14 @@ function validateCfoFixture() {
   const output = fs.readFileSync(cfoOutputPath, 'utf8');
   const parsed = JSON.parse(output);
 
+  if (parsed.schema !== 'harness/cfo-token-comparison/v2') {
+    failures.push(`CFO fixture expected schema v2, got ${parsed.schema}`);
+  }
   if (parsed.similar_tasks.count !== 3) {
     failures.push(`CFO fixture expected 3 similar tasks, got ${parsed.similar_tasks.count}`);
+  }
+  if (parsed.similarity_basis.method !== 'jaccard_task_terms') {
+    failures.push(`CFO fixture expected jaccard_task_terms similarity, got ${parsed.similarity_basis.method}`);
   }
   if (parsed.token_statistics.min !== 100) {
     failures.push(`CFO fixture expected min 100, got ${parsed.token_statistics.min}`);
@@ -742,8 +748,26 @@ function validateCfoFixture() {
   if (parsed.trend.direction !== 'up') {
     failures.push(`CFO fixture expected upward trend, got ${parsed.trend.direction}`);
   }
+  if (parsed.trend.sample_size !== 3) {
+    failures.push(`CFO fixture expected trend sample size 3, got ${parsed.trend.sample_size}`);
+  }
+  if (parsed.trend.confidence.level !== 'medium') {
+    failures.push(`CFO fixture expected medium trend confidence, got ${parsed.trend.confidence.level}`);
+  }
+  if (parsed.date_range.day_span !== 2) {
+    failures.push(`CFO fixture expected date range day_span 2, got ${parsed.date_range.day_span}`);
+  }
   if (!parsed.current_task || parsed.current_task.delta_from_median !== -20) {
     failures.push('CFO fixture expected current task delta from median to equal -20');
+  }
+  if (!parsed.pricing_basis || parsed.pricing_basis.source !== 'fixture token-only basis') {
+    failures.push('CFO fixture expected pricing basis source to be preserved');
+  }
+  if (!parsed.delegation || parsed.delegation.required !== true) {
+    failures.push('CFO fixture expected delegation to be required for upward trend');
+  }
+  if (!parsed.delegation.delegate_to.includes('harness.agents.senior-prompt-engineer')) {
+    failures.push('CFO fixture expected delegation to Senior Prompt Engineer for workflow token trend');
   }
 }
 

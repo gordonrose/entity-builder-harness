@@ -38,6 +38,9 @@ trap cleanup EXIT
 bash "$REPO_ROOT/scripts/01.harness/metrics/compare-task-token-consumption/script.sh" \
   --task-query "chat workflow startup" \
   --current-tokens 180 \
+  --workflow ".agentic/00.chat/workflows/chat-start.md" \
+  --changed-path ".agentic/00.chat/workflows/chat-start.md" \
+  --pricing-basis "fixture token-only basis" \
   --commit-log-root "$SCRIPT_DIR/fixtures/commitLogs" \
   --min-score 0.05 > "$TMP_CFO_OUTPUT"
 
