@@ -39,6 +39,10 @@ It is read-only and covers:
 - the agent README links every agent
 - the rubric README links every rubric
 - the use-case matrix names every single-agent and multi-agent expectation
+- `fixtures/use-case-fixtures.yml` parses and routes every executable use case
+  to the exact expected agent set
+- the executable use-case fixtures require evidence, highest-standard
+  expectations, failure modes, blocker policy, and review-only authority
 - report and scorecard templates expose required fields
 - invocation workflows reference templates, agents, and blocker handling
 - the CFO token-comparison script works against fixture commit logs

@@ -20,6 +20,8 @@ used_by:
   path: .agentic/01.harness/workflows/run-agent-review.md
 - id: harness.workflows.run-review-board
   path: .agentic/01.harness/workflows/run-review-board.md
+- id: harness.script.agents.validate-harness-agents
+  path: scripts/01.harness/agents/validate-harness-agents/script.sh
 -->
 
 # Harness Agent Use Cases
@@ -263,3 +265,8 @@ complete only when it verifies:
 - review output names evidence and source-of-truth artifacts
 - implementation and review authority remain separate unless a workflow grants
   write permission to a specific implementing agent
+
+Executable fixtures live at
+`scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml`
+and are enforced by
+`scripts/01.harness/agents/validate-harness-agents/script.sh`.

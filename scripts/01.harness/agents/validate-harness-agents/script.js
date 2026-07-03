@@ -114,6 +114,26 @@ function read(relativePath) {
   return fs.readFileSync(fullPath, 'utf8');
 }
 
+function parseJsonCompatibleFile(relativePath, expectedDescription) {
+  const content = read(relativePath);
+  const start = content.indexOf('{');
+  const end = content.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) {
+    failures.push(`${relativePath} missing JSON-compatible ${expectedDescription} body`);
+    return null;
+  }
+
+  try {
+    return {
+      content,
+      data: JSON.parse(content.slice(start, end + 1)),
+    };
+  } catch (error) {
+    failures.push(`${relativePath} is not parseable JSON-compatible YAML: ${error.message}`);
+    return null;
+  }
+}
+
 function requireText(label, content, needle) {
   if (!content.includes(needle)) {
     failures.push(`${label} missing text: ${needle}`);
@@ -161,23 +181,7 @@ function requireStringArray(errors, label, value, minLength = 1) {
 }
 
 function parseJsonCompatibleRubric(relativePath) {
-  const content = read(relativePath);
-  const start = content.indexOf('{');
-  const end = content.lastIndexOf('}');
-  if (start === -1 || end === -1 || end < start) {
-    failures.push(`${relativePath} missing JSON-compatible rubric body`);
-    return null;
-  }
-
-  try {
-    return {
-      content,
-      data: JSON.parse(content.slice(start, end + 1)),
-    };
-  } catch (error) {
-    failures.push(`${relativePath} is not parseable JSON-compatible YAML: ${error.message}`);
-    return null;
-  }
+  return parseJsonCompatibleFile(relativePath, 'rubric');
 }
 
 function validateRubricData(rubric, label, agent) {
@@ -406,6 +410,264 @@ function validateUseCases() {
   requireText('use cases', useCases, 'critical findings cannot be hidden by a high average score');
 }
 
+function fixtureText(fixture) {
+  return [
+    fixture.title,
+    fixture.task_text,
+    ...(Array.isArray(fixture.changed_paths) ? fixture.changed_paths : []),
+  ].join(' ').toLowerCase();
+}
+
+function hasAny(text, patterns) {
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+function selectedAgentsForFixture(fixture) {
+  const text = fixtureText(fixture);
+  const selected = new Set();
+
+  if (hasAny(text, [
+    /\bestimated chat token/,
+    /\btoken spend\b/,
+    /\btoken consumption\b/,
+    /\btoken efficient\b/,
+    /\btoken and per-query cost\b/,
+    /\bretrieval-policy\b/,
+    /\bbroad corpora\b/,
+    /\bcontext loading\b/,
+  ])) {
+    selected.add('harness.agents.cfo-token-efficiency');
+  }
+
+  if (hasAny(text, [
+    /\bllm\b/,
+    /\binstructions\b/,
+    /\binstruction surface\b/,
+    /\bworkflow, skill, gate, template, schema, orchestrator, or agent\b/,
+    /\.agentic\/01\.harness\/workflows\//,
+    /\.agentic\/01\.harness\/templates\//,
+    /\.agentic\/01\.harness\/agents\//,
+    /\bdeterministic\b/,
+    /\bsource-of-truth\b/,
+    /\bonboarding\b/,
+    /\bcontext loading\b/,
+  ])) {
+    selected.add('harness.agents.senior-prompt-engineer');
+  }
+
+  if (hasAny(text, [
+    /\bbackend\b/,
+    /\barchitecture\b/,
+    /\bplatform capability\b/,
+    /\bentity\b/,
+    /\bfeature\b/,
+    /\bcapability boundary\b/,
+    /\brulebook gap\b/,
+    /docs\/harness\/architecture\//,
+    /src\/platform\//,
+  ])) {
+    selected.add('harness.agents.senior-backend-architect');
+  }
+
+  if (hasAny(text, [
+    /\bdeployment\b/,
+    /\bdeploy workflow\b/,
+    /\bgithub actions\b/,
+    /\becs\b/,
+    /\becr\b/,
+    /\brds\b/,
+    /\broute53\b/,
+    /\bcloudwatch\b/,
+    /\bruntime\b/,
+    /\brollback\b/,
+    /\bobservability\b/,
+    /\bservice-choice\b/,
+    /\bhosted service becomes more expensive per query\b/,
+  ])) {
+    selected.add('harness.agents.senior-sre-engineer');
+  }
+
+  if (hasAny(text, [
+    /\bsecurity\b/,
+    /\bpublic\b/,
+    /\bsemi-public\b/,
+    /\bexposes?\b/,
+    /\bsecret\b/,
+    /\bcredential\b/,
+    /\bauthentication\b/,
+    /\bauthorization\b/,
+    /\bauth\b/,
+    /\bleast privilege\b/,
+    /\bowasp\b/,
+    /\biso\b/,
+    /\btrust boundary\b/,
+  ])) {
+    selected.add('harness.agents.secops-engineer');
+  }
+
+  if (hasAny(text, [
+    /\bchat or cli\b/,
+    /\bcli\b/,
+    /\bblocked response\b/,
+    /\bfallback\b/,
+    /\bterminal output\b/,
+    /\buser-facing\b/,
+    /\bweb ui\b/,
+    /\bfrontend\b/,
+    /\bdesign-system\b/,
+    /\bwcag\b/,
+    /\bpersona\b/,
+    /\baccessibility\b/,
+    /\bhuman operator\b/,
+  ])) {
+    selected.add('harness.agents.ux-ui-engineer');
+  }
+
+  return [...selected].sort();
+}
+
+function sorted(values) {
+  return [...values].sort();
+}
+
+function sameStringSet(left, right) {
+  const a = sorted(left);
+  const b = sorted(right);
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+function validateUseCaseFixture(fixture, index, useCases) {
+  const errors = [];
+  const label = `use-case fixture[${index}]`;
+  const knownAgentIds = new Set(agents.map((agent) => agent.agentId));
+
+  if (!isPlainObject(fixture)) {
+    return [`${label} must be an object`];
+  }
+  if (!/^[a-z]+[a-z0-9_.-]*$/.test(fixture.id || '')) {
+    errors.push(`${label}.id must be stable dotted/kebab case`);
+  }
+  if (!nonEmptyString(fixture.title)) {
+    errors.push(`${label}.title must be a non-empty string`);
+  } else if (!useCases.includes(`### ${fixture.title}`) && !useCases.includes(`#### ${fixture.title}`)) {
+    errors.push(`${label}.title must match a prose use-case heading`);
+  }
+  if (!['single_agent', 'multi_agent'].includes(fixture.type)) {
+    errors.push(`${label}.type must be single_agent or multi_agent`);
+  }
+  requireNonEmptyString(errors, `${label}.task_text`, fixture.task_text);
+  requireStringArray(errors, `${label}.changed_paths`, fixture.changed_paths, 1);
+  requireStringArray(errors, `${label}.expected_agents`, fixture.expected_agents, 1);
+  requireStringArray(errors, `${label}.highest_standard`, fixture.highest_standard, 3);
+  requireStringArray(errors, `${label}.required_evidence`, fixture.required_evidence, 3);
+  requireStringArray(errors, `${label}.failure_modes`, fixture.failure_modes, 1);
+
+  if (Array.isArray(fixture.expected_agents)) {
+    for (const agentId of fixture.expected_agents) {
+      if (!knownAgentIds.has(agentId)) {
+        errors.push(`${label}.expected_agents contains unknown agent id ${agentId}`);
+      }
+    }
+    if (fixture.type === 'single_agent' && fixture.expected_agents.length !== 1) {
+      errors.push(`${label} single_agent fixture must expect exactly 1 agent`);
+    }
+    if (fixture.type === 'multi_agent' && fixture.expected_agents.length < 2) {
+      errors.push(`${label} multi_agent fixture must expect at least 2 agents`);
+    }
+
+    const selectedAgents = selectedAgentsForFixture(fixture);
+    if (!sameStringSet(selectedAgents, fixture.expected_agents)) {
+      errors.push(`${label} routed to [${selectedAgents.join(', ')}], expected [${sorted(fixture.expected_agents).join(', ')}]`);
+    }
+  }
+
+  return errors;
+}
+
+function validateUseCaseFixtures() {
+  const relativePath = 'scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml';
+  const parsed = parseJsonCompatibleFile(relativePath, 'use-case fixture');
+  const useCases = read('.agentic/01.harness/agents/use-cases.md');
+  const validatorReadme = read('scripts/01.harness/agents/validate-harness-agents/README.md');
+  requireText('validator README', validatorReadme, 'fixtures/use-case-fixtures.yml');
+  requireText('use cases', useCases, 'fixtures/use-case-fixtures.yml');
+  if (!parsed) {
+    return;
+  }
+
+  const data = parsed.data;
+  if (data.schema !== 'harness/review-agent-use-case-fixtures/v1') {
+    failures.push(`${relativePath}.schema must equal harness/review-agent-use-case-fixtures/v1`);
+  }
+  if (!Number.isInteger(data.version) || data.version < 1) {
+    failures.push(`${relativePath}.version must be a positive integer`);
+  }
+  if (!isPlainObject(data.quality_gate_defaults)) {
+    failures.push(`${relativePath}.quality_gate_defaults must be an object`);
+  } else {
+    if (data.quality_gate_defaults.minimum_required_dimension_score !== 4) {
+      failures.push(`${relativePath}.quality_gate_defaults.minimum_required_dimension_score must be 4`);
+    }
+    if (data.quality_gate_defaults.block_below_required_dimension_score !== 3) {
+      failures.push(`${relativePath}.quality_gate_defaults.block_below_required_dimension_score must be 3`);
+    }
+    if (data.quality_gate_defaults.critical_blocker_policy !== 'critical_findings_block_even_when_average_is_passing') {
+      failures.push(`${relativePath}.quality_gate_defaults.critical_blocker_policy must block critical findings`);
+    }
+    if (data.quality_gate_defaults.review_authority !== 'review_only_unless_workflow_grants_write') {
+      failures.push(`${relativePath}.quality_gate_defaults.review_authority must keep review and implementation authority separate`);
+    }
+  }
+
+  if (!Array.isArray(data.fixtures) || data.fixtures.length < 10) {
+    failures.push(`${relativePath}.fixtures must contain at least 10 use cases`);
+    return;
+  }
+
+  let singleCount = 0;
+  let multiCount = 0;
+  const ids = new Set();
+  for (let index = 0; index < data.fixtures.length; index += 1) {
+    const fixture = data.fixtures[index];
+    if (isPlainObject(fixture)) {
+      if (ids.has(fixture.id)) {
+        failures.push(`use-case fixture[${index}].id duplicates ${fixture.id}`);
+      } else {
+        ids.add(fixture.id);
+      }
+      if (fixture.type === 'single_agent') {
+        singleCount += 1;
+      }
+      if (fixture.type === 'multi_agent') {
+        multiCount += 1;
+      }
+    }
+    failures.push(...validateUseCaseFixture(fixture, index, useCases));
+  }
+  if (singleCount < 6) {
+    failures.push(`${relativePath} must include at least one single-agent fixture per agent`);
+  }
+  if (multiCount < 4) {
+    failures.push(`${relativePath} must include at least 4 multi-agent fixtures`);
+  }
+
+  const negativeFixture = {
+    id: 'negative.bad_routing',
+    title: 'Public Endpoint Exposure',
+    type: 'single_agent',
+    task_text: 'A public endpoint exposure changes auth and OWASP-relevant controls.',
+    changed_paths: ['src/server/public-api.ts'],
+    expected_agents: ['harness.agents.cfo-token-efficiency'],
+    highest_standard: ['one', 'two', 'three'],
+    required_evidence: ['one', 'two', 'three'],
+    failure_modes: ['bad route'],
+  };
+  const negativeErrors = validateUseCaseFixture(negativeFixture, 999, useCases);
+  if (negativeErrors.length === 0) {
+    failures.push('use-case fixture validator accepted the bad-routing negative fixture');
+  }
+}
+
 function validateTemplates() {
   const report = read('.agentic/01.harness/templates/agent-review-report.md');
   const scorecard = read('.agentic/01.harness/templates/agent-scorecard.yml');
@@ -488,6 +750,7 @@ function validateCfoFixture() {
 validateAgentFiles();
 validateRubrics();
 validateUseCases();
+validateUseCaseFixtures();
 validateTemplates();
 validateWorkflows();
 validateCfoFixture();
