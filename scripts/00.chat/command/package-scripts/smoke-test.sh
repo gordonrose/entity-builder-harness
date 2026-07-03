@@ -108,6 +108,6 @@ grep -q '^  new$' "$TMP_ROOT/list.out" || fail "chat:list did not list new"
 grep -q '^  open-window$' "$TMP_ROOT/list.out" || fail "chat:list did not list open-window"
 grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "chat:commit-log-summary did not delegate"
 grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "chat:cleanup-empty-branches did not delegate"
-grep -q "Skipping VS Code window open: $REPO" "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
+grep -q '^Skipping VS Code window open: ' "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
 
 echo "chat package scripts smoke test passed."

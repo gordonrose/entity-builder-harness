@@ -92,14 +92,22 @@ insert_section_entry() {
   local section="$1"
   local entry="$2"
   local tmp
+  local entry_tmp
 
   tmp="$(mktemp)"
+  entry_tmp="$(mktemp)"
+  printf '%s\n' "$entry" > "$entry_tmp"
 
-  awk -v section="$section" -v entry="$entry" '
+  if awk -v section="$section" -v entry_path="$entry_tmp" '
     BEGIN {
       in_section = 0
       inserted = 0
       found = 0
+      entry = ""
+      while ((getline line < entry_path) > 0) {
+        entry = entry (entry == "" ? "" : "\n") line
+      }
+      close(entry_path)
     }
     $0 == section {
       found = 1
@@ -131,9 +139,15 @@ insert_section_entry() {
         print entry
       }
     }
-  ' "$LOG_FILE" > "$tmp"
+  ' "$LOG_FILE" > "$tmp"; then
+    mv "$tmp" "$LOG_FILE"
+  else
+    rm -f "$tmp"
+    rm -f "$entry_tmp"
+    return 1
+  fi
 
-  mv "$tmp" "$LOG_FILE"
+  rm -f "$entry_tmp"
 }
 
 RAISED_AT_UTC="$(metadata_value "raised_at_utc")"
