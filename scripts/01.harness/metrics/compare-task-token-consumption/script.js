@@ -482,7 +482,18 @@ function trendConfidence(sessions, slope, flatThreshold = 1) {
   return { level: reasons.some((reason) => reason.includes('lack dates')) ? 'low' : 'medium', reasons };
 }
 
-function inferredDelegationTargets(options, trend, comparison) {
+function hasNonDownTrend(trend) {
+  return trend?.sample_size >= 3 && trend.direction !== 'down' && trend.direction !== 'insufficient_data';
+}
+
+function hasCostRegression(costTrend, costPerQueryTrend, comparison) {
+  return hasNonDownTrend(costTrend)
+    || hasNonDownTrend(costPerQueryTrend)
+    || comparison?.cost_above_q3
+    || comparison?.cost_per_query_above_q3;
+}
+
+function inferredDelegationTargets(options, trend, costTrend, costPerQueryTrend, comparison) {
   const text = [
     options.taskQuery,
     options.workflow,
@@ -505,6 +516,9 @@ function inferredDelegationTargets(options, trend, comparison) {
   }
   if (/\b(ux|ui|cli|human|operator|fallback|blocked response|accessibility|wcag|chat response|chat interface|user-facing chat|operator-facing chat|fallback ux)\b/.test(text)) {
     targets.add('harness.agents.ux-ui-engineer');
+  }
+  if (targets.size === 0 && hasCostRegression(costTrend, costPerQueryTrend, comparison)) {
+    targets.add('harness.agents.senior-sre-engineer');
   }
   if (targets.size === 0 && (trend.direction === 'up' || trend.direction === 'flat' || comparison?.above_q3)) {
     targets.add('harness.agents.senior-prompt-engineer');
@@ -556,7 +570,12 @@ function delegationDecision(options, metricStats, trend, costTrend, costPerQuery
   }
 
   const required = reasons.some((reason) => !reason.includes('sample size below'));
-  const delegateTo = inferredDelegationTargets(options, trend, comparison);
+  const delegateTo = inferredDelegationTargets(options, trend, costTrend, costPerQueryTrend, comparison);
+  if (required && delegateTo.length === 0) {
+    delegateTo.push(hasCostRegression(costTrend, costPerQueryTrend, comparison)
+      ? 'harness.agents.senior-sre-engineer'
+      : 'harness.agents.senior-prompt-engineer');
+  }
   return {
     required,
     decision: required ? 'delegate' : 'pass_with_notes',

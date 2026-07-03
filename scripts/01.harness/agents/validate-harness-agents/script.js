@@ -367,6 +367,15 @@ function validateEvidenceKind(errors, sourceLabel, source, options) {
   errors.push(`${sourceLabel}.kind must be a supported evidence kind`);
 }
 
+function validEvidenceReference(value, knownEvidencePaths) {
+  const trimmed = String(value || '').trim();
+  return knownEvidencePaths.has(trimmed)
+    || repoEvidencePathExists(trimmed)
+    || isHttpUrl(trimmed)
+    || hasPrefixedPayload(trimmed, /^command:(.+)$/i)
+    || hasPrefixedPayload(trimmed, /^(packet|context-packet):(.+)$/i);
+}
+
 function validateScoreEvidenceSpecificity(errors, label, dimension, evidence) {
   if (!dimension || !nonEmptyString(evidence)) {
     return;
@@ -1124,6 +1133,9 @@ function validateDelegationRequests(errors, label, scorecard) {
     errors.push(`${label}.delegation_requests must be an array`);
     return;
   }
+  const knownEvidencePaths = new Set((Array.isArray(scorecard.evidence?.sources) ? scorecard.evidence.sources : [])
+    .map((source) => String(source?.path || '').trim())
+    .filter(Boolean));
   scorecard.delegation_requests.forEach((request, index) => {
     const requestLabel = `${label}.delegation_requests[${index}]`;
     if (!isPlainObject(request)) {
@@ -1137,6 +1149,13 @@ function validateDelegationRequests(errors, label, scorecard) {
     }
     requireNonEmptyString(errors, `${requestLabel}.blocking_question`, request.blocking_question);
     requireStringArray(errors, `${requestLabel}.evidence_already_reviewed`, request.evidence_already_reviewed, 1);
+    if (Array.isArray(request.evidence_already_reviewed)) {
+      request.evidence_already_reviewed.forEach((evidenceRef, evidenceIndex) => {
+        if (nonEmptyString(evidenceRef) && !validEvidenceReference(evidenceRef, knownEvidencePaths)) {
+          errors.push(`${requestLabel}.evidence_already_reviewed[${evidenceIndex}] must reference a reviewed evidence source, repo path, URL, command:<name>, packet:, or context-packet: reference`);
+        }
+      });
+    }
     if (!allowedDecisions.has(request.needed_decision)) {
       errors.push(`${requestLabel}.needed_decision must be a valid decision`);
     }
@@ -1352,6 +1371,20 @@ function validateScorecardSemanticNegativeMutations(baseScorecard) {
   ];
   selfDelegation.required_follow_up = ['Route the unresolved question to a different responsible agent.'];
   expectScorecardInvalid('scorecard semantic negative self_delegation', selfDelegation, 'must not self-delegate');
+
+  const badDelegationEvidence = cloneData(baseScorecard);
+  badDelegationEvidence.review.decision = 'delegate';
+  badDelegationEvidence.evidence.gaps = ['Delegated review evidence must point to a real reviewed source.'];
+  badDelegationEvidence.delegation_requests = [
+    {
+      target_agent_id: 'harness.agents.senior-prompt-engineer',
+      blocking_question: 'Can the prompt surface be reduced without losing required evidence?',
+      evidence_already_reviewed: ['definitely/not/a/real/delegation-evidence.md'],
+      needed_decision: 'pass_with_notes',
+    },
+  ];
+  badDelegationEvidence.required_follow_up = ['Replace the delegation evidence reference with reviewed evidence.'];
+  expectScorecardInvalid('scorecard semantic negative delegation_evidence_reference', badDelegationEvidence, 'evidence_already_reviewed[0] must reference');
 
   const liveFixturePath = cloneData(baseScorecard);
   liveFixturePath.evidence.sources[0].path = 'definitely/not/a/real/path/output.json with sufficient length';
@@ -1845,6 +1878,9 @@ function validateCfoFixture() {
   }
   if (!parsed.delegation || parsed.delegation.required !== true) {
     failures.push('CFO fixture expected delegation to be required for upward token, cost, or cost-per-query trend');
+  }
+  if (parsed.delegation?.required === true && (!Array.isArray(parsed.delegation.delegate_to) || parsed.delegation.delegate_to.length === 0)) {
+    failures.push('CFO fixture required delegation must include at least one delegate_to target');
   }
   for (const reason of ['trend direction is up', 'cost trend direction is up', 'cost per query trend direction is up']) {
     if (!parsed.delegation?.reasons?.includes(reason)) {
