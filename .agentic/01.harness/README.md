@@ -26,11 +26,24 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 Use `workflows/migrate-artifact-paths.md` for moving, renaming, retiring, or removing committed files or directories.
 
-## Architecture Rulebook Operating Pack
+Use `workflows/run-agent-review.md` for single-agent review invocation.
 
-This folder includes operating guidance for Codex while building the architecture
-rules and rule packs. It is not the runtime harness, and it does not replace
-`docs/harness/architecture`.
+Use `workflows/run-review-board.md` for multi-agent review-board composition.
+
+Use `workflows/implement-backend-architecture-guideline.md` only when the
+Senior Back-End Architect has been explicitly invoked in implementation mode
+to update a bounded architecture rule, rule-pack, or related guideline
+artifact.
+
+## Harness Governance Operating Pack
+
+This folder governs harness workflows, standards, review agents, validators,
+templates, fixtures, and architecture-rule artifacts. It is not the product
+runtime, and it does not replace domain source-of-truth docs.
+
+Architecture rulebook work is one capability inside this layer. Review-agent
+rubrics, executable fixtures, and deterministic validators are also governed
+capabilities when a workflow or standard assigns them explicit ownership.
 
 RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
 The architecture rulebook artifacts referenced here remain a prototype corpus
@@ -43,22 +56,32 @@ Canonical rules remain `docs/harness/architecture/rules`.
 
 Canonical rule packs remain `docs/harness/architecture/rule-packs`.
 
-Future Codex sessions continuing rulebook work should start by reading
-`manifest.yml` and `operator-guide.md`.
+Future Codex sessions continuing harness-governance work should start by
+reading `manifest.yml`, the relevant workflow, and any standard named by that
+workflow.
 
 ## Capabilities
 
 - `artifact-metadata/` - owns the versioned artifact metadata model, taxonomy,
   v2 schema contract, and future artifact index generator guidance.
+- `agents/` - defines reusable harness review agents, use-case quality bars,
+  and bounded review roles for single-agent and review-board work.
 
 ## Standards
 
 - `standards/agentic-artifact-standards.md` - decides which artifact type should own new harness capabilities, including workflows, skills, standards, gates, hooks, evals, templates, schemas, examples, memory, agents, adapters, and scripts.
+- `standards/agent-contracts.md` - defines the contract, authority boundaries, scoring rules, and report expectations for harness review agents.
 - `standards/artifact-metadata-headers.md` - defines the compatibility v1 metadata header format and points to the versioned artifact metadata capability.
 - `standards/artifact-path-migrations.md` - defines compatibility rules for moving, renaming, retiring, or removing repository artifact paths.
 - `standards/evaluation-fixtures.md` - defines how harness evaluation fixtures are authored, owned, validated, and evolved.
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.
+- `standards/professional-review-agent-quality.md` - defines the professional-grade quality bar for review-agent rubrics, fixtures, and validation.
+
+## Templates
+
+- `templates/agent-review-report.md` - provides the shared human-readable report shape for review-agent findings.
+- `templates/agent-scorecard.yml` - provides the shared machine-readable scorecard shape for review-agent decisions.
 
 ## Chat Workbench Docs
 
@@ -72,9 +95,11 @@ Future Codex sessions continuing rulebook work should start by reading
 
 ## Scripts
 
+- `scripts/01.harness/agents/validate-harness-agents/script.sh` - validates harness review-agent contracts, use cases, templates, workflows, and CFO fixtures.
 - `scripts/01.harness/artifact-metadata/check-headers/script.sh` - capability-scoped entrypoint for artifact metadata header checks.
 - `scripts/01.harness/artifact-metadata/generate-index/script.sh` - emits a JSON artifact index from v1 and v2 metadata headers.
 - `scripts/01.harness/check-rule-test-taxonomy.sh` - validates declared architecture rulebook layer test taxonomy scope, CI vocabulary references, substitute limits, and negative-evidence guardrails.
+- `scripts/01.harness/metrics/compare-task-token-consumption/script.sh` - emits CFO token-consumption statistics for sessions similar to a supplied task query.
 
 ## Data
 

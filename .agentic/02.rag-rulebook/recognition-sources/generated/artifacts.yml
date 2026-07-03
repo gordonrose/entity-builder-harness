@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 512
-  term_count: 1035
+  indexed_artifacts: 545
+  term_count: 1101
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -1842,6 +1842,198 @@ terms:
   canonical_id: harness.readme
   evidence_path: .agentic/01.harness/README.md
   confidence_weight: 1
+- term: harness.agents.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.readme
+  evidence_path: .agentic/01.harness/agents/README.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.readme
+  evidence_path: .agentic/01.harness/agents/README.md
+  confidence_weight: 1
+- term: harness.agents.cfo-token-efficiency
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/cfo-token-efficiency.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/cfo-token-efficiency.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/cfo-token-efficiency.md
+  confidence_weight: 1
+- term: harness.agents.review-agent-scaffold-rca
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.review-agent-scaffold-rca
+  evidence_path: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.review-agent-scaffold-rca
+  evidence_path: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
+  confidence_weight: 1
+- term: harness.agents.rubrics.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.readme
+  evidence_path: .agentic/01.harness/agents/rubrics/README.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.readme
+  evidence_path: .agentic/01.harness/agents/rubrics/README.md
+  confidence_weight: 1
+- term: harness.agents.rubrics.cfo-token-efficiency
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/rubrics/cfo-token-efficiency.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/cfo-token-efficiency.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.cfo-token-efficiency
+  evidence_path: .agentic/01.harness/agents/rubrics/cfo-token-efficiency.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.secops-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.secops-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/secops-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/secops-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.secops-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/secops-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.senior-backend-architect
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-backend-architect.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/senior-backend-architect.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-backend-architect.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.senior-prompt-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-prompt-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/senior-prompt-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-prompt-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.senior-sre-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-sre-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/senior-sre-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/senior-sre-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.rubrics.ux-ui-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.rubrics.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/ux-ui-engineer.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/rubrics/ux-ui-engineer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.rubrics.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/rubrics/ux-ui-engineer.yml
+  confidence_weight: 1
+- term: harness.agents.secops-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.secops-engineer
+  evidence_path: .agentic/01.harness/agents/secops-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/secops-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.secops-engineer
+  evidence_path: .agentic/01.harness/agents/secops-engineer.md
+  confidence_weight: 1
+- term: harness.agents.senior-backend-architect
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/senior-backend-architect.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/senior-backend-architect.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.senior-backend-architect
+  evidence_path: .agentic/01.harness/agents/senior-backend-architect.md
+  confidence_weight: 1
+- term: harness.agents.senior-prompt-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/senior-prompt-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/senior-prompt-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.senior-prompt-engineer
+  evidence_path: .agentic/01.harness/agents/senior-prompt-engineer.md
+  confidence_weight: 1
+- term: harness.agents.senior-sre-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/senior-sre-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/senior-sre-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.senior-sre-engineer
+  evidence_path: .agentic/01.harness/agents/senior-sre-engineer.md
+  confidence_weight: 1
+- term: harness.agents.use-cases
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.use-cases
+  evidence_path: .agentic/01.harness/agents/use-cases.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/use-cases.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.use-cases
+  evidence_path: .agentic/01.harness/agents/use-cases.md
+  confidence_weight: 1
+- term: harness.agents.ux-ui-engineer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/ux-ui-engineer.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/ux-ui-engineer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.ux-ui-engineer
+  evidence_path: .agentic/01.harness/agents/ux-ui-engineer.md
+  confidence_weight: 1
 - term: harness.capability.artifact-metadata
   category: artifact-id
   match_type: exact
@@ -2034,6 +2226,18 @@ terms:
   canonical_id: harness.prompts.review-rule-artifact
   evidence_path: .agentic/01.harness/prompts/review-rule-artifact.prompt.md
   confidence_weight: 1
+- term: harness.standards.agent-contracts
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standards.agent-contracts
+  evidence_path: .agentic/01.harness/standards/agent-contracts.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/agent-contracts.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standards.agent-contracts
+  evidence_path: .agentic/01.harness/standards/agent-contracts.md
+  confidence_weight: 1
 - term: harness.standards.agentic-artifact-standards
   category: artifact-id
   match_type: exact
@@ -2106,6 +2310,18 @@ terms:
   canonical_id: harness.standards.missing-governance-stop-condition
   evidence_path: .agentic/01.harness/standards/missing-governance-stop-condition.md
   confidence_weight: 1
+- term: harness.standards.professional-review-agent-quality
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standards.professional-review-agent-quality
+  evidence_path: .agentic/01.harness/standards/professional-review-agent-quality.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/professional-review-agent-quality.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standards.professional-review-agent-quality
+  evidence_path: .agentic/01.harness/standards/professional-review-agent-quality.md
+  confidence_weight: 1
 - term: harness.state.rulebook-coverage
   category: artifact-id
   match_type: exact
@@ -2129,6 +2345,30 @@ terms:
   match_type: exact
   canonical_id: harness.state.rulebook-progress
   evidence_path: .agentic/01.harness/state/rulebook-progress.yml
+  confidence_weight: 1
+- term: harness.templates.agent-review-report
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.templates.agent-review-report
+  evidence_path: .agentic/01.harness/templates/agent-review-report.md
+  confidence_weight: 1
+- term: .agentic/01.harness/templates/agent-review-report.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.templates.agent-review-report
+  evidence_path: .agentic/01.harness/templates/agent-review-report.md
+  confidence_weight: 1
+- term: harness.templates.agent-scorecard
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.templates.agent-scorecard
+  evidence_path: .agentic/01.harness/templates/agent-scorecard.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/templates/agent-scorecard.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.templates.agent-scorecard
+  evidence_path: .agentic/01.harness/templates/agent-scorecard.yml
   confidence_weight: 1
 - term: harness.templates.concern-ruleset
   category: artifact-id
@@ -2238,6 +2478,18 @@ terms:
   canonical_id: harness.workflows.create-rule-pack
   evidence_path: .agentic/01.harness/workflows/create-rule-pack.workflow.md
   confidence_weight: 1
+- term: harness.workflows.implement-backend-architecture-guideline
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflows.implement-backend-architecture-guideline
+  evidence_path: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflows.implement-backend-architecture-guideline
+  evidence_path: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  confidence_weight: 1
 - term: harness.workflows.migrate-artifact-paths
   category: artifact-id
   match_type: exact
@@ -2261,6 +2513,30 @@ terms:
   match_type: exact
   canonical_id: harness.workflows.review-rule-artifact
   evidence_path: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
+  confidence_weight: 1
+- term: harness.workflows.run-agent-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflows.run-agent-review
+  evidence_path: .agentic/01.harness/workflows/run-agent-review.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/run-agent-review.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflows.run-agent-review
+  evidence_path: .agentic/01.harness/workflows/run-agent-review.md
+  confidence_weight: 1
+- term: harness.workflows.run-review-board
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflows.run-review-board
+  evidence_path: .agentic/01.harness/workflows/run-review-board.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/run-review-board.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflows.run-review-board
+  evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
 - term: harness.adr.0001-record-harness-session-decisions-before-commit
   category: artifact-id
@@ -2934,6 +3210,90 @@ terms:
   canonical_id: harness.architecture.rules.layers.scripts-command-surface
   evidence_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
   confidence_weight: 1
+- term: harness.script.agents.validate-harness-agents.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.readme
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.readme
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-a
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-a
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-a
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/01/2026-01-01-00-00-chat-workflow-startup-a/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-b
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-b
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/02/2026-01-02-00-00-chat-workflow-startup-b/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/02/2026-01-02-00-00-chat-workflow-startup-b/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-b
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/02/2026-01-02-00-00-chat-workflow-startup-b/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-c
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-c
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/03/2026-01-03-00-00-chat-workflow-startup-c/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/03/2026-01-03-00-00-chat-workflow-startup-c/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-c
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/03/2026-01-03-00-00-chat-workflow-startup-c/README.md
+  confidence_weight: 1
+- term: harness.fixtures.agents.cfo-session-unrelated
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-unrelated
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/04/2026-01-04-00-00-unrelated-task/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/04/2026-01-04-00-00-unrelated-task/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.fixtures.agents.cfo-session-unrelated
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/fixtures/commitLogs/2026/jan/04/2026-01-04-00-00-unrelated-task/README.md
+  confidence_weight: 1
+- term: harness.script.agents.validate-harness-agents.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.impl
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.js
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/script.js
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents.impl
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.js
+  confidence_weight: 1
+- term: harness.script.agents.validate-harness-agents
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.sh
+  confidence_weight: 1
+- term: scripts/01.harness/agents/validate-harness-agents/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.agents.validate-harness-agents
+  evidence_path: scripts/01.harness/agents/validate-harness-agents/script.sh
+  confidence_weight: 1
 - term: harness.script.artifact-metadata.backfill-v2-headers
   category: artifact-id
   match_type: exact
@@ -3053,6 +3413,42 @@ terms:
   match_type: exact
   canonical_id: harness.script.check-rule-test-taxonomy
   evidence_path: scripts/01.harness/check-rule-test-taxonomy.sh
+  confidence_weight: 1
+- term: harness.script.metrics.compare-task-token-consumption.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.readme
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/README.md
+  confidence_weight: 1
+- term: scripts/01.harness/metrics/compare-task-token-consumption/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.readme
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/README.md
+  confidence_weight: 1
+- term: harness.script.metrics.compare-task-token-consumption.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.impl
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.js
+  confidence_weight: 1
+- term: scripts/01.harness/metrics/compare-task-token-consumption/script.js
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption.impl
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.js
+  confidence_weight: 1
+- term: harness.script.metrics.compare-task-token-consumption
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.sh
+  confidence_weight: 1
+- term: scripts/01.harness/metrics/compare-task-token-consumption/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: harness.script.metrics.compare-task-token-consumption
+  evidence_path: scripts/01.harness/metrics/compare-task-token-consumption/script.sh
   confidence_weight: 1
 - term: harness.script.plan-artifact-path-migration
   category: artifact-id

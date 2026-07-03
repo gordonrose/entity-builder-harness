@@ -1,0 +1,103 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: harness.workflows.run-review-board
+version: 1
+status: active
+layer: 01.harness
+domain: governance.agents
+disciplines:
+- agentic
+kind: workflow
+purpose: Govern multi-agent review-board composition for harness review agents.
+portability:
+  class: required
+  targets:
+  - llm-workbench
+  - entity-builder
+  - design-system-builder
+used_by:
+- id: harness.agents.readme
+  path: .agentic/01.harness/agents/README.md
+- id: harness.agents.use-cases
+  path: .agentic/01.harness/agents/use-cases.md
+-->
+
+# Run Review Board
+
+## Purpose
+
+Use this workflow when a task has multiple independent review lanes and each
+lane can block the outcome. The board coordinates separate agent reviews; it
+does not merge their responsibilities into one general opinion.
+
+## Use When
+
+- `.agentic/01.harness/agents/use-cases.md` names more than one expected agent
+- a task touches deployment plus security, architecture, UX, or token spend
+- a single-agent review returns `delegate`
+- a workflow requests an explicit board decision
+
+## Inputs
+
+- user request or task summary
+- changed artifacts, diff, plan, or implementation output
+- candidate agents and selection reasons
+- evidence packet or source paths for each lane
+- board objective and desired terminal decision
+
+## Board Composition
+
+Start with the smallest board that owns all blocking risks. Do not invite every
+agent by default.
+
+Common boards:
+
+- hosted RAG service deployment: Senior SRE Engineer, SecOps Engineer, Senior
+  Back-End Architect, CFO Token Efficiency
+- harness workflow capability: Senior Prompt Engineer, CFO Token Efficiency,
+  UX/UI Engineer
+- product platform feature with public UI: Senior Back-End Architect, UX/UI
+  Engineer, Senior SRE Engineer, SecOps Engineer
+- token spend regression in a secure workflow: CFO Token Efficiency, Senior
+  Prompt Engineer, SecOps Engineer
+
+## Procedure
+
+1. State the board objective and selected agents.
+2. Give each agent only the evidence required for its lane.
+3. Run each agent through `run-agent-review.md`.
+4. Collect scorecards and reports without averaging away blockers.
+5. Name cross-agent conflicts and the decision owner for each conflict.
+6. Return the board decision after every blocking lane is resolved or explicitly
+   recorded as blocked.
+
+## Board Decision Rules
+
+- `pass`: every participating agent returns `pass`.
+- `pass_with_notes`: no participating agent blocks, and at least one returns
+  `pass_with_notes`.
+- `block`: any participating agent returns `block`.
+- `delegate`: any required lane still needs another agent decision.
+- `not_applicable`: the board evidence shows multi-agent review is not needed.
+
+Critical findings block the board even when the average score is high.
+
+## Outputs
+
+- board objective
+- selected agents and reasons
+- per-agent scorecards
+- cross-agent conflicts
+- board decision
+- required follow-up
+
+## Stop Conditions
+
+Stop when a required lane lacks evidence, an agent cannot be selected from the
+contracted set, governance coverage is absent, or the board would need
+implementation authority rather than review authority.
+
+## Completion
+
+The board is complete when it returns a terminal decision with all participating
+agent scorecards attached or referenced.

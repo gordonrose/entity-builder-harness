@@ -1,0 +1,484 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.agents.validate-harness-agents.fixtures.use-cases
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - agentic
+#   kind: fixture
+#   purpose: Provide executable review-agent routing and quality-bar fixtures.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.script.agents.validate-harness-agents
+#     path: scripts/01.harness/agents/validate-harness-agents/script.sh
+{
+  "schema": "harness/review-agent-use-case-fixtures/v1",
+  "version": 1,
+  "quality_gate_defaults": {
+    "minimum_required_dimension_score": 4,
+    "block_below_required_dimension_score": 3,
+    "critical_blocker_policy": "critical_findings_block_even_when_average_is_passing",
+    "review_authority": "review_only_unless_workflow_grants_write"
+  },
+  "fixtures": [
+    {
+      "id": "cfo.repeated_chat_workflow_change",
+      "title": "Repeated Chat Workflow Change",
+      "type": "single_agent",
+      "task_text": "A chat workflow change resembles prior chat-start and commit-gate work and shows unusually high estimated chat token consumption.",
+      "changed_paths": [
+        ".agentic/00.chat/workflows/chat-start.md",
+        "commitLogs/2026/jul/03/example/README.md"
+      ],
+      "expected_agents": [
+        "harness.agents.cfo-token-efficiency"
+      ],
+      "highest_standard": [
+        "compare current tokens with comparable committed sessions",
+        "report count, min, max, mean, median, q1, q3, and trend",
+        "delegate only savings that preserve workflow flexibility"
+      ],
+      "required_evidence": [
+        "current estimated_chat_tokens",
+        "comparable commitLogs sessions",
+        "CFO token comparison output"
+      ],
+      "failure_modes": [
+        "generic thrift advice without comparable-session evidence",
+        "safety-critical workflow context removed for savings"
+      ]
+    },
+    {
+      "id": "cfo.expensive_rag_query_iteration",
+      "title": "Expensive RAG Query Iteration",
+      "type": "single_agent",
+      "task_text": "A retrieval-policy task repeatedly queries broad corpora before narrowing to the same artifacts, creating avoidable token spend.",
+      "changed_paths": [
+        ".agentic/02.rag-rulebook/retrieval/policy.yml",
+        "scripts/02.rag-rulebook/query-local-context/script.js"
+      ],
+      "expected_agents": [
+        "harness.agents.cfo-token-efficiency"
+      ],
+      "highest_standard": [
+        "separate retrieval waste from prompt-shape waste",
+        "identify deterministic narrowing opportunities",
+        "name the safest reviewer for the cost driver"
+      ],
+      "required_evidence": [
+        "retrieval query sequence",
+        "context packet or corpus evidence",
+        "token-spend comparison"
+      ],
+      "failure_modes": [
+        "treats all high token use as waste",
+        "proposes removing required evidence checks"
+      ]
+    },
+    {
+      "id": "prompt.new_workflow_prompt_surface",
+      "title": "New Workflow Prompt Surface",
+      "type": "single_agent",
+      "task_text": "A workflow, skill, gate, template, schema, orchestrator, or agent file changes the instructions an LLM follows.",
+      "changed_paths": [
+        ".agentic/01.harness/workflows/run-agent-review.md",
+        ".agentic/01.harness/templates/agent-review-report.md"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-prompt-engineer"
+      ],
+      "highest_standard": [
+        "eliminate contradiction and duplicated source-of-truth rules",
+        "move scriptable behavior to deterministic checks",
+        "preserve flexible judgment where scripts cannot own it"
+      ],
+      "required_evidence": [
+        "changed instruction artifact",
+        "owning standard or workflow",
+        "deterministic drift output"
+      ],
+      "failure_modes": [
+        "style rewrite without deterministic behavior test",
+        "first-time maintainer path ignored"
+      ]
+    },
+    {
+      "id": "prompt.harness_onboarding_clarity",
+      "title": "Harness Onboarding Clarity",
+      "type": "single_agent",
+      "task_text": "A new operator-facing README is added to a harness layer and must stay concise, learnable, and source-of-truth aligned.",
+      "changed_paths": [
+        ".agentic/01.harness/README.md",
+        ".agentic/01.harness/standards/professional-review-agent-quality.md"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-prompt-engineer"
+      ],
+      "highest_standard": [
+        "make the first-time maintainer path explicit",
+        "keep always-loaded instructions concise",
+        "separate source-of-truth rules from examples"
+      ],
+      "required_evidence": [
+        "README or index path",
+        "owning standard",
+        "always-loaded versus conditional context"
+      ],
+      "failure_modes": [
+        "expert-only navigation",
+        "duplicated doctrine in multiple artifacts"
+      ]
+    },
+    {
+      "id": "backend.platform_capability_addition",
+      "title": "Platform Capability Addition",
+      "type": "single_agent",
+      "task_text": "Product backend work adds a platform, app, entity, feature, or capability boundary.",
+      "changed_paths": [
+        "src/platform/capabilities/example/index.ts",
+        "docs/harness/architecture/rules/platform-capability-boundaries.yml"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-backend-architect"
+      ],
+      "highest_standard": [
+        "map implementation to platform/app/entity/feature/capability boundaries",
+        "name any missing durable architecture rule",
+        "avoid ad hoc local-only structure"
+      ],
+      "required_evidence": [
+        "changed backend paths",
+        "architecture rule or rule gap",
+        "module owner and public contract"
+      ],
+      "failure_modes": [
+        "approves code shape without checking rules",
+        "adds broad doctrine unrelated to observed gap"
+      ]
+    },
+    {
+      "id": "backend.rulebook_gap",
+      "title": "Backend Rulebook Gap",
+      "type": "single_agent",
+      "task_text": "A repeated backend architecture ambiguity is not covered by an existing rulebook rule.",
+      "changed_paths": [
+        "docs/harness/architecture/rule-packs/backend-platform.yml",
+        "docs/harness/architecture/rules/dependency-direction.yml"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-backend-architect"
+      ],
+      "highest_standard": [
+        "separate current task compliance from durable governance coverage",
+        "choose the narrowest owning architecture artifact",
+        "avoid turning one-off preference into doctrine"
+      ],
+      "required_evidence": [
+        "missing rule statement",
+        "existing rule-pack structure",
+        "repeated ambiguity evidence"
+      ],
+      "failure_modes": [
+        "one-off preference becomes repository doctrine",
+        "gap owner artifact is not named"
+      ]
+    },
+    {
+      "id": "sre.deployment_path_change",
+      "title": "Deployment Path Change",
+      "type": "single_agent",
+      "task_text": "GitHub Actions, AWS, ECS, ECR, RDS, Route53, CloudWatch, or deploy workflow behavior changes.",
+      "changed_paths": [
+        ".github/workflows/deploy-rag-rulebook.yml",
+        ".agentic/aws/workflows/deploy-service.md"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-sre-engineer"
+      ],
+      "highest_standard": [
+        "verify deployment control and rollback",
+        "cover observability and environment separation",
+        "show cost and operational failure-mode evidence"
+      ],
+      "required_evidence": [
+        "environment and blast radius",
+        "rollback plan",
+        "logs, metrics, health, or alarms"
+      ],
+      "failure_modes": [
+        "successful deploy treated as readiness proof",
+        "rollback or operator visibility ignored"
+      ]
+    },
+    {
+      "id": "sre.runtime_cost_investigation",
+      "title": "Runtime Cost Investigation",
+      "type": "single_agent",
+      "task_text": "A hosted service becomes more expensive per query or request because of infrastructure, scaling, logging, caching, deployment, or service-choice causes.",
+      "changed_paths": [
+        ".agentic/aws/workflows/inspect-aws-state.md",
+        "docs/04.deploy/rag-rulebook-costs.md"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-sre-engineer"
+      ],
+      "highest_standard": [
+        "separate AWS service cost drivers from application behavior",
+        "preserve security and reliability controls",
+        "name measurable cost signals"
+      ],
+      "required_evidence": [
+        "AWS service topology",
+        "query or request volume",
+        "cost driver and budget signal"
+      ],
+      "failure_modes": [
+        "cheaper service recommended without reliability boundary",
+        "cost cause is asserted without measurement"
+      ]
+    },
+    {
+      "id": "secops.public_endpoint_exposure",
+      "title": "Public Endpoint Exposure",
+      "type": "single_agent",
+      "task_text": "A service, API, MCP endpoint, webhook, or UI becomes public or semi-public and needs authentication, authorization, least privilege, audit logging, rate limiting, OWASP, and ISO-aligned evidence.",
+      "changed_paths": [
+        "src/server/public-api.ts",
+        "docs/04.deploy/public-exposure.md"
+      ],
+      "expected_agents": [
+        "harness.agents.secops-engineer"
+      ],
+      "highest_standard": [
+        "name protected assets, callers, and trust boundaries",
+        "map auth and audit controls to repo/runtime evidence",
+        "distinguish critical blockers from hardening"
+      ],
+      "required_evidence": [
+        "exposure path",
+        "authentication and authorization model",
+        "audit, rate, and abuse controls"
+      ],
+      "failure_modes": [
+        "generic OWASP terms without concrete control mapping",
+        "unknown public exposure is approved"
+      ]
+    },
+    {
+      "id": "secops.secret_handling_change",
+      "title": "Secret Handling Change",
+      "type": "single_agent",
+      "task_text": "Secrets, credentials, environment variables, CI variables, or AWS secret retrieval behavior changes.",
+      "changed_paths": [
+        ".github/workflows/deploy-secrets.yml",
+        ".agentic/aws/workflows/manage-secrets.md"
+      ],
+      "expected_agents": [
+        "harness.agents.secops-engineer"
+      ],
+      "highest_standard": [
+        "trace secrets across source, build, deploy, runtime, logs, and generated artifacts",
+        "prevent broad runtime scopes",
+        "identify rotation or incident evidence when relevant"
+      ],
+      "required_evidence": [
+        "secret source and injection path",
+        "log and artifact exposure review",
+        "runtime permission scope"
+      ],
+      "failure_modes": [
+        "only committed source files are reviewed",
+        "CI or runtime secret exposure is missed"
+      ]
+    },
+    {
+      "id": "ux.chat_cli_interaction_change",
+      "title": "Chat Or CLI Interaction Change",
+      "type": "single_agent",
+      "task_text": "A command, prompt, blocked response, fallback, or CLI output changes how a human operates the harness.",
+      "changed_paths": [
+        ".agentic/00.chat/workflows/chat-start.md",
+        "scripts/00.chat/worktree/dirty-worktree-check/script.sh"
+      ],
+      "expected_agents": [
+        "harness.agents.ux-ui-engineer"
+      ],
+      "highest_standard": [
+        "name persona and primary task",
+        "make recovery actions clear and safe",
+        "keep output scannable without losing safety detail"
+      ],
+      "required_evidence": [
+        "human-facing text or terminal output",
+        "persona and task context",
+        "failure and recovery state"
+      ],
+      "failure_modes": [
+        "UX treated as visual polish only",
+        "blocked state has no actionable recovery"
+      ]
+    },
+    {
+      "id": "ux.design_system_variant_review",
+      "title": "Design-System Variant Review",
+      "type": "single_agent",
+      "task_text": "A frontend input-based design-system variant or reusable component boundary changes and must preserve persona fit, accessibility, predictable controls, and reusable variant behavior.",
+      "changed_paths": [
+        "src/frontend/design-system/inputs/variant.tsx",
+        "docs/design-system/input-variants.md"
+      ],
+      "expected_agents": [
+        "harness.agents.ux-ui-engineer"
+      ],
+      "highest_standard": [
+        "preserve WCAG 2.2 AA evidence where applicable",
+        "check component reuse and interaction predictability",
+        "avoid one-off UI decisions"
+      ],
+      "required_evidence": [
+        "interface or component evidence",
+        "accessibility scope",
+        "existing design-system pattern"
+      ],
+      "failure_modes": [
+        "attractive UI breaks accessibility",
+        "variant behavior becomes local-only"
+      ]
+    },
+    {
+      "id": "board.hosted_rag_service_deployment",
+      "title": "Hosted RAG Service Deployment",
+      "type": "multi_agent",
+      "task_text": "A GitHub Actions to AWS deployment change exposes the RAG rulebook service, touches backend architecture, and needs token and per-query cost visibility.",
+      "changed_paths": [
+        ".github/workflows/deploy-rag-rulebook.yml",
+        ".agentic/aws/workflows/deploy-service.md",
+        "src/server/rag-rulebook-service.ts",
+        "docs/harness/architecture/rules/service-boundaries.yml"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-sre-engineer",
+        "harness.agents.secops-engineer",
+        "harness.agents.senior-backend-architect",
+        "harness.agents.cfo-token-efficiency"
+      ],
+      "highest_standard": [
+        "controlled deployment and rollback",
+        "secure public exposure",
+        "architecture-rule compliance",
+        "token and per-query cost visibility without duplicate review prose"
+      ],
+      "required_evidence": [
+        "deploy plan and environment",
+        "auth/exposure model",
+        "architecture rule mapping",
+        "token or query cost signal"
+      ],
+      "failure_modes": [
+        "critical issue hidden by average score",
+        "overlapping agents duplicate the same checklist"
+      ]
+    },
+    {
+      "id": "board.harness_workflow_capability_build",
+      "title": "Harness Workflow Capability Build",
+      "type": "multi_agent",
+      "task_text": "A new harness workflow, agent, template, schema, or gate is introduced and must be deterministic, learnable, token efficient, and clear to a human operator.",
+      "changed_paths": [
+        ".agentic/01.harness/workflows/new-capability.md",
+        ".agentic/01.harness/templates/new-capability.yml",
+        ".agentic/01.harness/agents/new-review-agent.md"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-prompt-engineer",
+        "harness.agents.cfo-token-efficiency",
+        "harness.agents.ux-ui-engineer"
+      ],
+      "highest_standard": [
+        "deterministic prompt surfaces",
+        "justified token cost against comparable work",
+        "clear human operating path"
+      ],
+      "required_evidence": [
+        "changed instruction surface",
+        "comparable session token evidence",
+        "operator-facing path and recovery state"
+      ],
+      "failure_modes": [
+        "verbose prompt-heavy design approved without script or eval ownership",
+        "human path is left opaque"
+      ]
+    },
+    {
+      "id": "board.product_platform_feature_public_ui",
+      "title": "Product Platform Feature With Public UI",
+      "type": "multi_agent",
+      "task_text": "A backend platform capability adds a public user-facing web UI and touches deployment configuration.",
+      "changed_paths": [
+        "src/platform/capabilities/public-feature/service.ts",
+        "src/frontend/public-feature/page.tsx",
+        ".github/workflows/deploy-public-feature.yml",
+        "docs/04.deploy/public-feature.md"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-backend-architect",
+        "harness.agents.ux-ui-engineer",
+        "harness.agents.senior-sre-engineer",
+        "harness.agents.secops-engineer"
+      ],
+      "highest_standard": [
+        "backend boundaries are compliant",
+        "UI is persona-fit and accessible",
+        "deployment is controlled",
+        "public security controls are blocking dimensions"
+      ],
+      "required_evidence": [
+        "architecture boundary evidence",
+        "interface and accessibility evidence",
+        "deployment and rollback evidence",
+        "auth/exposure evidence"
+      ],
+      "failure_modes": [
+        "one agent approval skips another domain",
+        "public UI ships without accessible recovery or security review"
+      ]
+    },
+    {
+      "id": "board.token_spend_regression_secure_workflow",
+      "title": "Token Spend Regression In A Secure Workflow",
+      "type": "multi_agent",
+      "task_text": "A security-sensitive workflow grows more expensive over time due to repeated context loading and review-board invocation.",
+      "changed_paths": [
+        ".agentic/01.harness/workflows/security-review.md",
+        ".agentic/01.harness/agents/secops-engineer.md",
+        "commitLogs/2026/jul/03/example/README.md"
+      ],
+      "expected_agents": [
+        "harness.agents.cfo-token-efficiency",
+        "harness.agents.senior-prompt-engineer",
+        "harness.agents.secops-engineer"
+      ],
+      "highest_standard": [
+        "quantify token regression",
+        "reduce prompt or artifact-structure waste",
+        "preserve security evidence that cannot be compressed"
+      ],
+      "required_evidence": [
+        "token trend output",
+        "prompt/context-loading evidence",
+        "security evidence boundary"
+      ],
+      "failure_modes": [
+        "cost savings remove a required security control",
+        "security review forces broad context loading with no retrieval strategy"
+      ]
+    }
+  ]
+}

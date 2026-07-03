@@ -1,0 +1,236 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.agents.rubrics.senior-prompt-engineer
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - agentic
+#   kind: rubric
+#   purpose: Define professional scoring rules for Senior Prompt Engineer review.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.agents.senior-prompt-engineer
+#     path: .agentic/01.harness/agents/senior-prompt-engineer.md
+{
+  "schema": "harness/agent-rubric/v1",
+  "agent_id": "harness.agents.senior-prompt-engineer",
+  "version": 1,
+  "minimum_dimensions": 6,
+  "decision_policy": {
+    "pass": "All required dimensions score at least 4 and no contradiction, drift, or source-of-truth blocker remains.",
+    "pass_with_notes": "All required dimensions score at least 3 and residual issues are non-blocking.",
+    "block": "Any required dimension scores below 3, instructions contradict, or deterministic behavior is left as fragile prose.",
+    "delegate": "A domain risk is outside prompt-engineering ownership.",
+    "not_applicable": "No LLM-facing instruction surface is under review."
+  },
+  "professional_standard_refs": [
+    "instruction hierarchy",
+    "source-of-truth ownership",
+    "prompt injection and contamination resistance",
+    "deterministic boundary design",
+    "evaluation fixture readiness"
+  ],
+  "evidence_model": {
+    "required_sources": [
+      "changed prompt or workflow artifact",
+      "owning standard",
+      "deterministic drift output",
+      "relevant use-case fixture"
+    ],
+    "minimum_sample_size_for_trend": 0,
+    "confidence_fields": [
+      "source_of_truth",
+      "loaded_context",
+      "deterministic_boundary",
+      "unresolved_ambiguity"
+    ]
+  },
+  "delegation_model": {
+    "security_prompt_injection": "harness.agents.secops-engineer",
+    "token_verbosity_or_context_cost": "harness.agents.cfo-token-efficiency",
+    "backend_architecture_rule_gap": "harness.agents.senior-backend-architect",
+    "operator_or_cli_confusion": "harness.agents.ux-ui-engineer",
+    "deployment_instruction_risk": "harness.agents.senior-sre-engineer"
+  },
+  "negative_fixtures": [
+    "contradictory_prompt_surface",
+    "duplicated_source_of_truth",
+    "scriptable_behavior_left_as_prompt",
+    "verbose_prompt_without_routing_need"
+  ],
+  "dimensions": [
+    {
+      "id": "instruction_hierarchy",
+      "name": "Instruction Hierarchy",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "owning artifact",
+        "relationship to standards/workflows/scripts",
+        "loaded versus conditional context"
+      ],
+      "score_5": "Instructions have one owner, clear precedence, and conditional loading boundaries.",
+      "score_4": "Hierarchy is clear with minor reference friction.",
+      "score_3": "Hierarchy is understandable but one ownership edge is ambiguous.",
+      "score_2": "Hierarchy requires inference and may cause drift.",
+      "score_1": "Multiple artifacts appear to own the same rule.",
+      "score_0": "Instruction precedence is contradictory or absent.",
+      "blocking_conditions": [
+        "conflicting instructions",
+        "ownerless required behavior"
+      ],
+      "delegation_triggers": [
+        "domain owner needed for rule authority"
+      ],
+      "professional_standard_refs": [
+        "instruction hierarchy",
+        "single source of truth"
+      ]
+    },
+    {
+      "id": "deterministic_boundary",
+      "name": "Deterministic Boundary",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "script or gate availability",
+        "deterministic drift output",
+        "justification for human-governed prose"
+      ],
+      "score_5": "Scriptable behavior is enforced by scripts, gates, schemas, or evals; prose covers judgment only.",
+      "score_4": "Most deterministic behavior is enforced with minor backlog notes.",
+      "score_3": "Deterministic boundary is acceptable but has known manual checks.",
+      "score_2": "Important checks are still prompt prose without adequate reason.",
+      "score_1": "Prompt prose substitutes for available deterministic enforcement.",
+      "score_0": "Critical deterministic behavior is ungoverned.",
+      "blocking_conditions": [
+        "critical scriptable check lacks gate or validator",
+        "allow marker used without reason"
+      ],
+      "delegation_triggers": [
+        "new script or gate required"
+      ],
+      "professional_standard_refs": [
+        "deterministic checks",
+        "eval readiness"
+      ]
+    },
+    {
+      "id": "drift_and_contamination_resistance",
+      "name": "Drift And Contamination Resistance",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "context source",
+        "negative instruction boundaries",
+        "external-source availability notes"
+      ],
+      "score_5": "Artifact resists drift, prompt contamination, and unverified external claims through explicit boundaries.",
+      "score_4": "Boundaries are strong with minor phrasing improvements possible.",
+      "score_3": "Boundaries are adequate but rely on reviewer care.",
+      "score_2": "Artifact could absorb unrelated rules or unverified claims.",
+      "score_1": "Artifact invites broad context loading or policy mixing.",
+      "score_0": "Artifact contradicts source-of-truth or trusts unverified input.",
+      "blocking_conditions": [
+        "unverified external claim controls behavior",
+        "prompt can override governance source"
+      ],
+      "delegation_triggers": [
+        "security prompt-injection risk"
+      ],
+      "professional_standard_refs": [
+        "prompt injection resistance",
+        "context provenance"
+      ]
+    },
+    {
+      "id": "verbosity_and_context_budget",
+      "name": "Verbosity And Context Budget",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "always-loaded text",
+        "conditional references",
+        "token-cost concern when available"
+      ],
+      "score_5": "Instructions are lean, conditional, and retrieval-friendly without hiding required safety gates.",
+      "score_4": "Instructions are concise with small redundancy.",
+      "score_3": "Instructions are longer than ideal but still bounded.",
+      "score_2": "Instructions duplicate standards or inflate always-loaded context.",
+      "score_1": "Verbose prose obscures the operating path.",
+      "score_0": "Excessive prompt content creates drift or cost risk.",
+      "blocking_conditions": [
+        "always-loaded file carries domain procedure that belongs elsewhere"
+      ],
+      "delegation_triggers": [
+        "token_verbosity_or_context_cost"
+      ],
+      "professional_standard_refs": [
+        "minimal prompt surface",
+        "retrieval-friendly instruction design"
+      ]
+    },
+    {
+      "id": "human_learnability",
+      "name": "Human Learnability",
+      "required": true,
+      "weight": 1,
+      "evidence_required": [
+        "first-time operator path",
+        "README or index path",
+        "error or stop-state wording"
+      ],
+      "score_5": "A first-time maintainer can find purpose, trigger, source of truth, and next action quickly.",
+      "score_4": "Human path is clear with minor navigation friction.",
+      "score_3": "Human path is usable but requires cross-file inference.",
+      "score_2": "Human reader needs prior harness knowledge.",
+      "score_1": "Artifact is agent-only and opaque to maintainers.",
+      "score_0": "Human operator cannot identify how to use or change it.",
+      "blocking_conditions": [
+        "no discoverable owner or index path"
+      ],
+      "delegation_triggers": [
+        "operator_or_cli_confusion"
+      ],
+      "professional_standard_refs": [
+        "progressive disclosure",
+        "operator documentation"
+      ]
+    },
+    {
+      "id": "testability",
+      "name": "Testability",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "fixture or eval",
+        "expected outcome",
+        "negative case"
+      ],
+      "score_5": "Behavior has positive and negative fixtures with deterministic validation.",
+      "score_4": "Behavior has positive fixtures and a clear path to negative coverage.",
+      "score_3": "Behavior can be manually checked with explicit expected output.",
+      "score_2": "Behavior has weak fixture coverage.",
+      "score_1": "Behavior is only described in prose.",
+      "score_0": "Behavior cannot be tested from available artifacts.",
+      "blocking_conditions": [
+        "new routing behavior lacks fixture",
+        "critical failure mode lacks negative fixture"
+      ],
+      "delegation_triggers": [
+        "validator or eval runner required"
+      ],
+      "professional_standard_refs": [
+        "evaluation fixtures",
+        "regression protection"
+      ]
+    }
+  ]
+}
