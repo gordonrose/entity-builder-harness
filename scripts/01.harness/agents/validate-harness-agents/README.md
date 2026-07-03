@@ -30,7 +30,14 @@ It is read-only and covers:
 
 - every required agent file exists
 - every agent file has the required contract sections
+- every agent file points to its machine-readable rubric
+- every rubric parses as JSON-compatible YAML
+- every rubric includes decision policy, evidence model, delegation model,
+  negative fixtures, professional references, and score anchors for `0`
+  through `5`
+- the semantic rubric validator rejects a built-in shallow negative fixture
 - the agent README links every agent
+- the rubric README links every rubric
 - the use-case matrix names every single-agent and multi-agent expectation
 - report and scorecard templates expose required fields
 - invocation workflows reference templates, agents, and blocker handling
