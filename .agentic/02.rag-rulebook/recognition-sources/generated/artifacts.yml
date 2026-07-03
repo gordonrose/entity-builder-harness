@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 535
-  term_count: 1081
+  indexed_artifacts: 536
+  term_count: 1083
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -1865,6 +1865,18 @@ terms:
   match_type: exact
   canonical_id: harness.agents.cfo-token-efficiency
   evidence_path: .agentic/01.harness/agents/cfo-token-efficiency.md
+  confidence_weight: 1
+- term: harness.agents.review-agent-scaffold-rca
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.agents.review-agent-scaffold-rca
+  evidence_path: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
+  confidence_weight: 1
+- term: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.agents.review-agent-scaffold-rca
+  evidence_path: .agentic/01.harness/agents/review-agent-scaffold-root-cause-analysis.md
   confidence_weight: 1
 - term: harness.agents.secops-engineer
   category: artifact-id
