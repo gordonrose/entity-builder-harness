@@ -66,6 +66,15 @@ if [ "$COMMAND_NAME" = "open" ] && [ "${1:-}" = "window" ]; then
   shift
 fi
 
+if [ "$COMMAND_NAME" = "download" ] && [ "${1:-}" = "repo" ]; then
+  COMMAND_NAME="download-repo"
+  shift
+  if [ "${1:-}" = "diff" ]; then
+    COMMAND_NAME="download-repo-diff"
+    shift
+  fi
+fi
+
 case "$COMMAND_NAME" in
   *[!a-zA-Z0-9_-]*|'')
     echo "ERROR: invalid chat command name: $COMMAND_NAME" >&2
