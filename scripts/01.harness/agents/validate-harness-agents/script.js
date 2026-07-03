@@ -146,6 +146,12 @@ function requireRegex(label, content, pattern) {
   }
 }
 
+function forbidText(label, content, needle) {
+  if (content.includes(needle)) {
+    failures.push(`${label} must not include stale text: ${needle}`);
+  }
+}
+
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -700,6 +706,7 @@ function validateTemplates() {
 function validateWorkflows() {
   const single = read('.agentic/01.harness/workflows/run-agent-review.md');
   const board = read('.agentic/01.harness/workflows/run-review-board.md');
+  const backendImplementation = read('.agentic/01.harness/workflows/implement-backend-architecture-guideline.md');
 
   requireText('run-agent-review workflow', single, 'templates/agent-review-report.md');
   requireText('run-agent-review workflow', single, 'templates/agent-scorecard.yml');
@@ -707,6 +714,39 @@ function validateWorkflows() {
   requireText('run-review-board workflow', board, 'Do not invite every');
   requireText('run-review-board workflow', board, 'Critical findings block the board');
   requireText('run-review-board workflow', board, 'hosted RAG service deployment');
+  requireText('backend architecture implementation workflow', backendImplementation, 'Senior Back-End Architect is explicitly invoked');
+  requireText('backend architecture implementation workflow', backendImplementation, 'Implementation mode is limited to architecture-guideline artifacts');
+  requireText('backend architecture implementation workflow', backendImplementation, 'It may not edit');
+  requireText('backend architecture implementation workflow', backendImplementation, 'product or backend runtime code');
+}
+
+function validateManifestAndBackendMode() {
+  const manifest = read('.agentic/01.harness/manifest.yml');
+  const readme = read('.agentic/01.harness/README.md');
+  const backendAgent = read('.agentic/01.harness/agents/senior-backend-architect.md');
+  const agentContract = read('.agentic/01.harness/standards/agent-contracts.md');
+
+  requireText('harness manifest', manifest, 'title: Harness governance operating pack');
+  requireText('harness manifest', manifest, 'review_agent_capabilities:');
+  requireText('harness manifest', manifest, 'review_agent_fixtures: scripts/01.harness/agents/validate-harness-agents/fixtures');
+  requireText('harness manifest', manifest, 'Create executable harness validators, gates, metrics, or eval runners only when');
+  requireText('harness manifest', manifest, 'Implementation-agent mode requires an explicit workflow');
+  requireText('harness manifest', manifest, 'Review agents may not edit files during review mode.');
+  forbidText('harness manifest', manifest, 'title: Architecture rulebook operating pack');
+  forbidText('harness manifest', manifest, 'without building runtime harness code');
+  forbidText('harness manifest', manifest, 'Do not build the full agentic harness.');
+  forbidText('harness manifest', manifest, 'Do not create eval runners.');
+
+  requireText('harness README', readme, '## Harness Governance Operating Pack');
+  requireText('harness README', readme, 'workflows/implement-backend-architecture-guideline.md');
+  requireText('harness README', readme, 'deterministic validators are also governed');
+
+  requireText('Senior Back-End Architect agent', backendAgent, '## Implementation Mode');
+  requireText('Senior Back-End Architect agent', backendAgent, 'Default mode is review mode.');
+  requireText('Senior Back-End Architect agent', backendAgent, 'workflows/implement-backend-architecture-guideline.md');
+  requireText('Senior Back-End Architect agent', backendAgent, 'review mode or implementation mode');
+  requireText('agent contract standard', agentContract, 'Implementation-agent authority must name the implementation workflow');
+  requireText('agent contract standard', agentContract, 'A review-mode decision does not imply write authority.');
 }
 
 function validateCfoFixture() {
@@ -777,6 +817,7 @@ validateUseCases();
 validateUseCaseFixtures();
 validateTemplates();
 validateWorkflows();
+validateManifestAndBackendMode();
 validateCfoFixture();
 
 if (failures.length > 0) {

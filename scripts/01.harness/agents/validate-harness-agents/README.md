@@ -45,6 +45,10 @@ It is read-only and covers:
   expectations, failure modes, blocker policy, and review-only authority
 - report and scorecard templates expose required fields
 - invocation workflows reference templates, agents, and blocker handling
+- the harness manifest names the full harness-governance scope and does not
+  regress to architecture-only or eval-runner-prohibited wording
+- the Senior Back-End Architect separates review mode from governed
+  implementation mode
 - the CFO token-comparison script works against fixture commit logs
 
 Run from the repository root:

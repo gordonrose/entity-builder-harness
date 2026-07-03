@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 544
-  term_count: 1099
+  indexed_artifacts: 545
+  term_count: 1101
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2477,6 +2477,18 @@ terms:
   match_type: exact
   canonical_id: harness.workflows.create-rule-pack
   evidence_path: .agentic/01.harness/workflows/create-rule-pack.workflow.md
+  confidence_weight: 1
+- term: harness.workflows.implement-backend-architecture-guideline
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflows.implement-backend-architecture-guideline
+  evidence_path: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflows.implement-backend-architecture-guideline
+  evidence_path: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
   confidence_weight: 1
 - term: harness.workflows.migrate-artifact-paths
   category: artifact-id

@@ -30,11 +30,20 @@ Use `workflows/run-agent-review.md` for single-agent review invocation.
 
 Use `workflows/run-review-board.md` for multi-agent review-board composition.
 
-## Architecture Rulebook Operating Pack
+Use `workflows/implement-backend-architecture-guideline.md` only when the
+Senior Back-End Architect has been explicitly invoked in implementation mode
+to update a bounded architecture rule, rule-pack, or related guideline
+artifact.
 
-This folder includes operating guidance for Codex while building the architecture
-rules and rule packs. It is not the runtime harness, and it does not replace
-`docs/harness/architecture`.
+## Harness Governance Operating Pack
+
+This folder governs harness workflows, standards, review agents, validators,
+templates, fixtures, and architecture-rule artifacts. It is not the product
+runtime, and it does not replace domain source-of-truth docs.
+
+Architecture rulebook work is one capability inside this layer. Review-agent
+rubrics, executable fixtures, and deterministic validators are also governed
+capabilities when a workflow or standard assigns them explicit ownership.
 
 RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
 The architecture rulebook artifacts referenced here remain a prototype corpus
@@ -47,8 +56,9 @@ Canonical rules remain `docs/harness/architecture/rules`.
 
 Canonical rule packs remain `docs/harness/architecture/rule-packs`.
 
-Future Codex sessions continuing rulebook work should start by reading
-`manifest.yml` and `operator-guide.md`.
+Future Codex sessions continuing harness-governance work should start by
+reading `manifest.yml`, the relevant workflow, and any standard named by that
+workflow.
 
 ## Capabilities
 

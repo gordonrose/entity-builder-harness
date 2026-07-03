@@ -80,6 +80,10 @@ They do not edit files, stage changes, commit, push, delete, rewrite history,
 deploy, rotate secrets, or change infrastructure unless a workflow explicitly
 invokes that agent as an implementation agent and grants that authority.
 
+Implementation-agent authority must name the implementation workflow, permitted
+artifact families, forbidden artifact families, validation gates, and stop
+conditions. A review-mode decision does not imply write authority.
+
 When acting as a reviewer, an agent must:
 
 - state whether it is reviewing, planning, researching, or implementing
