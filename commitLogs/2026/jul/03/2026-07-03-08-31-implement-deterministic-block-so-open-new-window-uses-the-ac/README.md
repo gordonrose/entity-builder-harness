@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T15:11:07Z
-latest_commit_sha: 6321c85
-chat_duration: 27557s (00:07:39:17)
-estimated_chat_tokens: 2077416 estimated from chat transcript bytes (8309664 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 62.32 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T15:58:02Z
+latest_commit_sha: ac17e2d
+chat_duration: 30372s (00:08:26:12)
+estimated_chat_tokens: 2176006 estimated from chat transcript bytes (8704022 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 65.28 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -110,6 +110,17 @@ Summary: Hardened live review-agent scorecard validation, expanded Prompt Engine
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-07-03T15:58:02Z - Commit recorded
+
+Commit: `ac17e2d`
+
+Message: Close review scorecard evidence loopholes
+
+Summary: Closed remaining review-agent loopholes by adding kind-specific live evidence validation, banning fixture-path in live scorecards, requiring rubric evidence terms beyond dimension names, mirroring commit-gates board routing, and making high findings require block or delegate.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -148,6 +159,13 @@ ADR impact: covered by session ADR disposition
   Summary: Hardened live review-agent scorecard validation, expanded Prompt Engineer gate routing, and upgraded CFO token comparison output with cost and cost-per-query trend delegation.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `ac17e2d`
+  Time UTC: 2026-07-03T15:58:02Z
+  Message: Close review scorecard evidence loopholes
+  Summary: Closed remaining review-agent loopholes by adding kind-specific live evidence validation, banning fixture-path in live scorecards, requiring rubric evidence terms beyond dimension names, mirroring commit-gates board routing, and making high findings require block or delegate.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -163,11 +181,11 @@ architectural decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T07:31:50Z
-Latest commit at UTC: 2026-07-03T15:11:07Z
-Latest commit SHA: 6321c85
-Chat duration: 27557s (00:07:39:17)
-Estimated chat tokens: 2077416 estimated from chat transcript bytes (8309664 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 62.32 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T15:58:02Z
+Latest commit SHA: ac17e2d
+Chat duration: 30372s (00:08:26:12)
+Estimated chat tokens: 2176006 estimated from chat transcript bytes (8704022 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 65.28 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
