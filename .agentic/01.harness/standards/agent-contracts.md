@@ -35,6 +35,11 @@ instruction piles. An agent should know its lane, ask for the evidence it needs,
 score work against a rubric, and hand off cleanly when another lane owns the
 risk.
 
+For professional-grade review agents, also follow
+`.agentic/01.harness/standards/professional-review-agent-quality.md`. This
+contract standard defines artifact shape; the professional-quality standard
+defines whether the agent is trustworthy enough to influence gates.
+
 ## Agent Ownership
 
 Harness-wide agents live under `.agentic/01.harness/agents/`.
@@ -118,6 +123,11 @@ minimum evidence for its scope.
 
 Every agent must define 3 to 7 scored dimensions. Dimensions must be observable
 from evidence and must map to the agent's responsibility.
+
+For harness review agents under `.agentic/01.harness/agents/`, scored
+dimensions live in machine-readable rubric files under
+`.agentic/01.harness/agents/rubrics/`. Keep the Markdown summary concise and
+point to the rubric as the scoring source of truth.
 
 Scores use this scale:
 

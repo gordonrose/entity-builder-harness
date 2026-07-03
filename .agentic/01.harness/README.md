@@ -66,6 +66,7 @@ Future Codex sessions continuing rulebook work should start by reading
 - `standards/evaluation-fixtures.md` - defines how harness evaluation fixtures are authored, owned, validated, and evolved.
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.
+- `standards/professional-review-agent-quality.md` - defines the professional-grade quality bar for review-agent rubrics, fixtures, and validation.
 
 ## Templates
 

@@ -46,6 +46,10 @@ feedback based on an external review by chatGPT
 - Decision: Root cause is scaffold acceptance instead of judgment validation
   Rationale: The RCA records that the first implementation optimized for artifact completeness and structural validation, not professional-grade rubric depth, executable use cases, or semantic validation.
 
+
+- Decision: Professional review-agent quality standard prevents scaffold completion
+  Rationale: The new standard requires machine-readable rubrics, score anchors, evidence requirements, blockers, professional references, executable use-case fixtures, and semantic validator checks before review agents can be treated as gate-worthy.
+
 ## Activity Log
 
 ### 2026-07-03T05:57:09Z - Session started
@@ -87,6 +91,13 @@ Message: Add review agent scaffold root cause analysis
 Summary: Added the RCA explaining why the first review-agent pass delivered scaffold completeness rather than professional-grade judgment validation.
 
 ADR impact: ADR not needed; this is analysis feeding standards and validation changes.
+
+
+### 2026-07-03T06:18:58Z - Decision
+
+Decision: Professional review-agent quality standard prevents scaffold completion
+
+Rationale: The new standard requires machine-readable rubrics, score anchors, evidence requirements, blockers, professional references, executable use-case fixtures, and semantic validator checks before review agents can be treated as gate-worthy.
 
 ## Commits
 
