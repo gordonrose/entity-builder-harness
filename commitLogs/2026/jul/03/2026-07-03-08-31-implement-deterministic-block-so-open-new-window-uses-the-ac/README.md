@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T15:58:02Z
-latest_commit_sha: ac17e2d
-chat_duration: 30372s (00:08:26:12)
-estimated_chat_tokens: 2176006 estimated from chat transcript bytes (8704022 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 65.28 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T21:31:43Z
+latest_commit_sha: f999d5e
+chat_duration: 50393s (00:13:59:53)
+estimated_chat_tokens: 2230801 estimated from chat transcript bytes (8923201 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 66.92 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -121,6 +121,17 @@ Summary: Closed remaining review-agent loopholes by adding kind-specific live ev
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-07-03T21:31:43Z - Commit recorded
+
+Commit: `f999d5e`
+
+Message: Tighten CFO delegation targets and evidence references
+
+Summary: Ensured required CFO delegations always have delegate_to, defaulted cost-only regressions to Senior SRE Engineer, and validated delegation request evidence references.
+
+ADR impact: covered by session ADR disposition
+
 ## Commits
 
 
@@ -166,6 +177,13 @@ ADR impact: covered by session ADR disposition
   Summary: Closed remaining review-agent loopholes by adding kind-specific live evidence validation, banning fixture-path in live scorecards, requiring rubric evidence terms beyond dimension names, mirroring commit-gates board routing, and making high findings require block or delegate.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `f999d5e`
+  Time UTC: 2026-07-03T21:31:43Z
+  Message: Tighten CFO delegation targets and evidence references
+  Summary: Ensured required CFO delegations always have delegate_to, defaulted cost-only regressions to Senior SRE Engineer, and validated delegation request evidence references.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -181,11 +199,11 @@ architectural decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T07:31:50Z
-Latest commit at UTC: 2026-07-03T15:58:02Z
-Latest commit SHA: ac17e2d
-Chat duration: 30372s (00:08:26:12)
-Estimated chat tokens: 2176006 estimated from chat transcript bytes (8704022 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 65.28 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T21:31:43Z
+Latest commit SHA: f999d5e
+Chat duration: 50393s (00:13:59:53)
+Estimated chat tokens: 2230801 estimated from chat transcript bytes (8923201 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 66.92 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
