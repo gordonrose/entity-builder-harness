@@ -8,16 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-03T05:53:53Z
-codex_session_log_path:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-03T14:37:45Z
+latest_commit_sha: e7a62451d2d458ec832329ebda831f0b0cc5f710
+chat_duration: 31432s (00:08:43:52)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 -->
 
 ## Initial Intent
@@ -64,9 +67,26 @@ acceptance checks, assistant adapters, portable transcript/cost metrics,
 slim public harness-script export, and public ADR exclusion. Temporary evals
 were used for new edge cases and removed after passing.
 
+
+### 2026-07-03T14:37:45Z - Commit recorded
+
+Commit: `e7a62451d2d458ec832329ebda831f0b0cc5f710`
+
+Message: Make llm-workbench public-beta portable
+
+Summary: Implemented provider-neutral llm-workbench install/export hardening, public-beta standards, portability validation, slim public harness scripts, and public ADR exclusion.
+
+ADR impact: ADR not needed; existing standards and validators codify the public-beta contract.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `e7a62451d2d458ec832329ebda831f0b0cc5f710`
+  Time UTC: 2026-07-03T14:37:45Z
+  Message: Make llm-workbench public-beta portable
+  Summary: Implemented provider-neutral llm-workbench install/export hardening, public-beta standards, portability validation, slim public harness scripts, and public ADR exclusion.
+  ADR impact: ADR not needed; existing standards and validators codify the public-beta contract.
 
 ## Main Refresh Conflicts
 
@@ -83,12 +103,12 @@ instead of introducing a new architecture decision record.
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T05:53:53Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-03T14:37:45Z
+Latest commit SHA: e7a62451d2d458ec832329ebda831f0b0cc5f710
+Chat duration: 31432s (00:08:43:52)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
