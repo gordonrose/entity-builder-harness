@@ -12,11 +12,11 @@ codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-0
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-03T06:18:02Z
-latest_commit_sha: 698b037
-chat_duration: 1253s (00:00:20:53)
-estimated_chat_tokens: 477357 estimated from chat transcript bytes (1909426 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-estimated_chat_cost: USD 14.32 estimated from estimated_chat_tokens
+latest_commit_at_utc: 2026-07-03T06:25:30Z
+latest_commit_sha: 8f0bd30
+chat_duration: 1701s (00:00:28:21)
+estimated_chat_tokens: 498898 estimated from chat transcript bytes (1995591 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 14.97 estimated from estimated_chat_tokens
 estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
@@ -99,6 +99,17 @@ Decision: Professional review-agent quality standard prevents scaffold completio
 
 Rationale: The new standard requires machine-readable rubrics, score anchors, evidence requirements, blockers, professional references, executable use-case fixtures, and semantic validator checks before review agents can be treated as gate-worthy.
 
+
+### 2026-07-03T06:25:30Z - Commit recorded
+
+Commit: `8f0bd30`
+
+Message: Add professional review agent quality standard
+
+Summary: Added a professional review-agent quality standard based on the RCA and wired it into the agent contract and harness README.
+
+ADR impact: ADR not needed; this standard directly governs the hardening work.
+
 ## Commits
 
 
@@ -116,6 +127,13 @@ Rationale: The new standard requires machine-readable rubrics, score anchors, ev
   Summary: Added the RCA explaining why the first review-agent pass delivered scaffold completeness rather than professional-grade judgment validation.
   ADR impact: ADR not needed; this is analysis feeding standards and validation changes.
 
+
+- Commit: `8f0bd30`
+  Time UTC: 2026-07-03T06:25:30Z
+  Message: Add professional review agent quality standard
+  Summary: Added a professional review-agent quality standard based on the RCA and wired it into the agent contract and harness README.
+  ADR impact: ADR not needed; this standard directly governs the hardening work.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -129,11 +147,11 @@ Reason: RCA slice documents the scaffold failure and corrective direction; durab
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T05:57:09Z
-Latest commit at UTC: 2026-07-03T06:18:02Z
-Latest commit SHA: 698b037
-Chat duration: 1253s (00:00:20:53)
-Estimated chat tokens: 477357 estimated from chat transcript bytes (1909426 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
-Estimated chat cost: USD 14.32 estimated from estimated_chat_tokens
+Latest commit at UTC: 2026-07-03T06:25:30Z
+Latest commit SHA: 8f0bd30
+Chat duration: 1701s (00:00:28:21)
+Estimated chat tokens: 498898 estimated from chat transcript bytes (1995591 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 14.97 estimated from estimated_chat_tokens
 Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
