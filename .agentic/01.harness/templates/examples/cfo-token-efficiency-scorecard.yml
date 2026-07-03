@@ -1,0 +1,101 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.templates.examples.cfo-token-efficiency-scorecard
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#     - agentic
+#   kind: example
+#   purpose: Provide a valid CFO Token Efficiency scorecard example using the shared scorecard contract.
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: harness.templates.agent-scorecard
+#       path: .agentic/01.harness/templates/agent-scorecard.yml
+#     - id: harness.script.agents.validate-harness-agents
+#       path: scripts/01.harness/agents/validate-harness-agents/script.sh
+{
+  "schema": "harness/agent-scorecard/v1",
+  "agent": {
+    "id": "harness.agents.cfo-token-efficiency",
+    "name": "CFO Token Efficiency"
+  },
+  "review": {
+    "mode": "review",
+    "task": "Compare token consumption for a current workflow task against comparable committed sessions.",
+    "reviewed_at_utc": "2026-01-01T00:00:00Z",
+    "decision": "pass",
+    "confidence": "medium",
+    "critical_blocker_present": false,
+    "overall_score": 4
+  },
+  "evidence": {
+    "sources": [
+      {
+        "path": "scripts/01.harness/metrics/compare-task-token-consumption/output.json",
+        "kind": "metric-output",
+        "note": "Comparable-session token statistics, trend, confidence, pricing basis, and delegation result."
+      }
+    ],
+    "gaps": []
+  },
+  "findings": {
+    "critical": [],
+    "high": [],
+    "medium": [],
+    "low": []
+  },
+  "scores": [
+    {
+      "dimension": "comparable_task_set_quality",
+      "score": 4,
+      "evidence": "Comparable session set is named and relevant, with minor uncertainty called out.",
+      "notes": "No task-type mismatch large enough to change the decision."
+    },
+    {
+      "dimension": "metric_completeness",
+      "score": 4,
+      "evidence": "Count, min, max, mean, median, q1, q3, current comparison, and pricing basis are present.",
+      "notes": "Cost normalization may be partial when historical sessions lack model pricing data."
+    },
+    {
+      "dimension": "trend_confidence",
+      "score": 4,
+      "evidence": "Trend method, sample size, confidence, and date range are stated.",
+      "notes": "Outlier analysis is noted when needed."
+    },
+    {
+      "dimension": "safe_savings_model",
+      "score": 4,
+      "evidence": "Savings recommendations preserve required evidence, gates, flexibility, and cross-agent review needs.",
+      "notes": "No safety-critical context is removed."
+    },
+    {
+      "dimension": "delegation_accuracy",
+      "score": 4,
+      "evidence": "Delegation target owns the cost driver or no delegation is required.",
+      "notes": "Blocking question is present when delegation is required."
+    },
+    {
+      "dimension": "report_actionability",
+      "score": 4,
+      "evidence": "Decision, comparable sessions, statistics, trend, and next action are reproducible.",
+      "notes": "Report can be consumed by another agent or workflow."
+    }
+  ],
+  "delegation_requests": [],
+  "required_follow_up": [],
+  "quality_gate": {
+    "blocks_when": [
+      "critical_blocker_present is true",
+      "any required score is below 3",
+      "decision is delegate and delegated review is missing"
+    ]
+  }
+}

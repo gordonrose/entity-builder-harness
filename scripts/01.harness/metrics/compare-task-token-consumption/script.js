@@ -395,8 +395,7 @@ function readSessions(root, queryProfile, minScore) {
     };
   }).filter((session) => (
     session.tokens !== null &&
-    session.score >= minScore &&
-    (queryProfile.task.size === 0 || session.similarity_components.task > 0)
+    session.score >= minScore
   ));
 }
 
@@ -500,7 +499,7 @@ function inferredDelegationTargets(options, trend, comparison) {
   if (/\b(backend|architecture|platform|entity|feature|capability|dependency)\b/.test(text)) {
     targets.add('harness.agents.senior-backend-architect');
   }
-  if (/\b(ux|ui|cli|human|operator|chat|fallback|blocked response|accessibility|wcag)\b/.test(text)) {
+  if (/\b(ux|ui|cli|human|operator|fallback|blocked response|accessibility|wcag|chat response|chat interface|user-facing chat|operator-facing chat|fallback ux)\b/.test(text)) {
     targets.add('harness.agents.ux-ui-engineer');
   }
   if (targets.size === 0 && (trend.direction === 'up' || trend.direction === 'flat' || comparison?.above_q3)) {

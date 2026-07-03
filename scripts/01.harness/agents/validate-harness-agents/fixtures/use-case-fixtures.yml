@@ -169,6 +169,42 @@
       "expected_board_decision": "not_applicable"
     },
     {
+      "id": "prompt.eval_gate_surface",
+      "title": "Prompt Eval Gate Surface",
+      "type": "single_agent",
+      "task_text": "A prompt, checklist, schema, gate, eval, or evaluate script changes how harness instruction quality is judged.",
+      "changed_paths": [
+        ".agentic/01.harness/prompts/review-agent-context.md",
+        ".agentic/01.harness/checklists/evaluate-prompt-surface.md",
+        "scripts/01.harness/evaluate-prompt-surface/script.js"
+      ],
+      "expected_agents": [
+        "harness.agents.senior-prompt-engineer"
+      ],
+      "highest_standard": [
+        "keep the instruction contract deterministic",
+        "bind generated outputs to a rubric or schema",
+        "preserve concise human learnability"
+      ],
+      "required_evidence": [
+        "changed prompt or checklist",
+        "owning schema or rubric",
+        "deterministic evaluate script"
+      ],
+      "failure_modes": [
+        "prose-only quality claim without a testable gate",
+        "example output drifts from the scorecard schema"
+      ],
+      "expected_blockers": [],
+      "minimum_scores": {
+        "required_dimension_min": 4,
+        "block_below": 3
+      },
+      "required_delegation": [],
+      "forbidden_delegation": [],
+      "expected_board_decision": "not_applicable"
+    },
+    {
       "id": "backend.platform_capability_addition",
       "title": "Platform Capability Addition",
       "type": "single_agent",

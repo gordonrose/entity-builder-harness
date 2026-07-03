@@ -89,6 +89,18 @@ and bounded to their authority.
 - Failing review: Optimizes only for an expert agent and leaves the human path
   opaque.
 
+#### Prompt Eval Gate Surface
+
+- Trigger: A prompt, checklist, schema, gate, eval, or evaluate script changes
+  how harness instruction quality is judged.
+- Expected agent: Senior Prompt Engineer.
+- Highest standard: Keep the instruction contract deterministic, rubric-bound,
+  and concise while ensuring generated outputs can be scored objectively.
+- Passing review: Names the prompt surface, deterministic validator or eval,
+  scorecard contract, and any remaining judgment boundary.
+- Failing review: Adds a prose-only quality claim without a testable gate or
+  lets examples drift from the schema.
+
 ### Senior Back-End Architect
 
 #### Platform Capability Addition

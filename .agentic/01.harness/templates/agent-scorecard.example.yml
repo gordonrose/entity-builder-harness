@@ -1,0 +1,78 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.templates.agent-scorecard.example
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#     - agentic
+#   kind: template
+#   purpose: Provide an agent-neutral scorecard authoring example with placeholders.
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: harness.templates.agent-scorecard
+#       path: .agentic/01.harness/templates/agent-scorecard.yml
+{
+  "schema": "harness/agent-scorecard-example-template/v1",
+  "instructions": [
+    "Replace agent.id and agent.name with the selected review agent.",
+    "Populate scores from the selected agent rubric; do not copy dimensions from another agent.",
+    "Set review.overall_score to the weighted average computed from rubric dimension weights.",
+    "Use templates/examples/cfo-token-efficiency-scorecard.yml only as an agent-specific example."
+  ],
+  "scorecard_shape": {
+    "schema": "harness/agent-scorecard/v1",
+    "agent": {
+      "id": "harness.agents.<selected-agent>",
+      "name": "<Selected Agent Name>"
+    },
+    "review": {
+      "mode": "review | planning | research | implementation",
+      "task": "<task under review>",
+      "reviewed_at_utc": "YYYY-MM-DDTHH:MM:SSZ",
+      "decision": "pass | pass_with_notes | block | delegate | not_applicable",
+      "confidence": "low | medium | high",
+      "critical_blocker_present": false,
+      "overall_score": "<weighted rubric score>"
+    },
+    "evidence": {
+      "sources": [
+        {
+          "path": "<path or source id>",
+          "kind": "<file | command-output | metric-output | packet | external-source>",
+          "note": "<why this evidence matters>"
+        }
+      ],
+      "gaps": []
+    },
+    "findings": {
+      "critical": [],
+      "high": [],
+      "medium": [],
+      "low": []
+    },
+    "scores": [
+      {
+        "dimension": "<rubric dimension id>",
+        "score": 0,
+        "evidence": "<evidence supporting this score>",
+        "notes": "<brief explanation>"
+      }
+    ],
+    "delegation_requests": [],
+    "required_follow_up": [],
+    "quality_gate": {
+      "blocks_when": [
+        "critical_blocker_present is true",
+        "any required score is below 3",
+        "decision is delegate and delegated review is missing"
+      ]
+    }
+  }
+}

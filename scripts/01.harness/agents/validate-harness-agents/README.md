@@ -47,13 +47,14 @@ It is read-only and covers:
   expectations, failure modes, blocker policy, minimum score policy,
   delegation expectations, board decisions, and review-only authority
 - `fixtures/scorecard-fixtures.yml` proves scorecard pass/block/delegate
-  semantics and rejects contradictory decisions
+  semantics, weighted overall-score calculation, and contradictory decisions
 - `fixtures/negative-review-fixtures.yml` provides executable negative cases for
   every rubric `negative_fixtures` label
-- report and scorecard templates expose required fields and the scorecard
-  template parses as JSON-compatible YAML
+- report and scorecard templates expose required fields; the generic scorecard
+  template, scorecard schema, reusable example template, and CFO example parse
+  as JSON-compatible YAML
 - invocation workflows expose parseable routing tables, reference templates,
-  agents, and blocker handling
+  agents, board composition rules, and blocker handling
 - the harness manifest names the full harness-governance scope and does not
   regress to architecture-only or eval-runner-prohibited wording
 - the Senior Back-End Architect separates review mode from governed
@@ -65,4 +66,16 @@ Run from the repository root:
 
 ```bash
 bash scripts/01.harness/agents/validate-harness-agents/script.sh
+```
+
+Validate an actual generated scorecard file:
+
+```bash
+bash scripts/01.harness/agents/validate-harness-agents/script.sh --scorecard .agentic/01.harness/templates/examples/cfo-token-efficiency-scorecard.yml
+```
+
+Validate a directory of generated scorecards:
+
+```bash
+bash scripts/01.harness/agents/validate-harness-agents/script.sh --scorecard-dir tmp/review-scorecards
 ```

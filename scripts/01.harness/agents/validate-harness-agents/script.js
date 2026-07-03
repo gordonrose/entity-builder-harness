@@ -90,17 +90,28 @@ const requiredSections = [
 ];
 
 const failures = [];
-const cfoOutputPath = parseArgs(process.argv.slice(2)).cfoOutputPath;
+const cliOptions = parseArgs(process.argv.slice(2));
+const cfoOutputPath = cliOptions.cfoOutputPath;
 
 function parseArgs(argv) {
-  const options = { cfoOutputPath: '' };
+  const options = {
+    cfoOutputPath: '',
+    scorecardDirs: [],
+    scorecardPaths: [],
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--cfo-output') {
       index += 1;
       options.cfoOutputPath = argv[index] || '';
+    } else if (arg === '--scorecard') {
+      index += 1;
+      options.scorecardPaths.push(argv[index] || '');
+    } else if (arg === '--scorecard-dir') {
+      index += 1;
+      options.scorecardDirs.push(argv[index] || '');
     } else if (arg === '--help' || arg === '-h') {
-      console.log('Usage: script.sh');
+      console.log('Usage: script.sh [--scorecard <path>] [--scorecard-dir <path>]');
       process.exit(0);
     } else {
       failures.push(`unknown argument: ${arg}`);
@@ -122,6 +133,28 @@ function parseJsonCompatibleFile(relativePath, expectedDescription) {
   const content = read(relativePath);
   const parsed = parseJsonCompatibleContent(content, relativePath, expectedDescription);
   return parsed ? { content, data: parsed } : null;
+}
+
+function resolveInputPath(inputPath) {
+  return path.isAbsolute(inputPath) ? inputPath : path.join(repoRoot, inputPath);
+}
+
+function labelForPath(inputPath) {
+  const resolved = resolveInputPath(inputPath);
+  const relative = path.relative(repoRoot, resolved);
+  return relative.startsWith('..') ? resolved : relative;
+}
+
+function parseJsonCompatiblePath(inputPath, expectedDescription) {
+  const resolved = resolveInputPath(inputPath);
+  const label = labelForPath(inputPath);
+  if (!fs.existsSync(resolved)) {
+    failures.push(`missing file: ${label}`);
+    return null;
+  }
+  const content = fs.readFileSync(resolved, 'utf8');
+  const parsed = parseJsonCompatibleContent(content, label, expectedDescription);
+  return parsed ? { content, data: parsed, path: resolved, label } : null;
 }
 
 function parseJsonCompatibleContent(content, label, expectedDescription) {
@@ -647,7 +680,73 @@ function validateBoardRoutingConfig(boardRouting, label) {
   return errors;
 }
 
-function validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRouting) {
+function selectedAgentsFromComposition(fixture, boardComposition) {
+  const text = fixtureText(fixture);
+  const selected = new Set();
+  for (const rule of boardComposition?.rules || []) {
+    const patterns = Array.isArray(rule.when_any) ? rule.when_any : [];
+    if (patterns.some((pattern) => RegExp(pattern, 'i').test(text))) {
+      selected.add(rule.agent_id);
+    }
+  }
+  return [...selected].sort();
+}
+
+function validateBoardCompositionConfig(boardComposition, label) {
+  const errors = [];
+  if (!isPlainObject(boardComposition)) {
+    return [`${label} must be an object`];
+  }
+  if (!Number.isInteger(boardComposition.version) || boardComposition.version < 1) {
+    errors.push(`${label}.version must be a positive integer`);
+  }
+  if (!Array.isArray(boardComposition.rules) || boardComposition.rules.length !== agents.length) {
+    errors.push(`${label}.rules must contain exactly one composition rule per agent`);
+    return errors;
+  }
+  const ids = new Set();
+  const seenAgents = new Set();
+  boardComposition.rules.forEach((rule, index) => {
+    const ruleLabel = `${label}.rules[${index}]`;
+    if (!isPlainObject(rule)) {
+      errors.push(`${ruleLabel} must be an object`);
+      return;
+    }
+    if (!nonEmptyString(rule.id)) {
+      errors.push(`${ruleLabel}.id must be a non-empty string`);
+    } else if (ids.has(rule.id)) {
+      errors.push(`${ruleLabel}.id duplicates ${rule.id}`);
+    } else {
+      ids.add(rule.id);
+    }
+    if (!agentById.has(rule.agent_id)) {
+      errors.push(`${ruleLabel}.agent_id is unknown: ${rule.agent_id}`);
+    } else if (seenAgents.has(rule.agent_id)) {
+      errors.push(`${ruleLabel}.agent_id duplicates ${rule.agent_id}`);
+    } else {
+      seenAgents.add(rule.agent_id);
+    }
+    requireStringArray(errors, `${ruleLabel}.when_any`, rule.when_any, 2);
+    if (Array.isArray(rule.when_any)) {
+      rule.when_any.forEach((pattern, patternIndex) => {
+        try {
+          RegExp(pattern, 'i');
+        } catch (error) {
+          errors.push(`${ruleLabel}.when_any[${patternIndex}] is invalid regex: ${error.message}`);
+        }
+      });
+    }
+    requireNonEmptyString(errors, `${ruleLabel}.blocking_scope`, rule.blocking_scope);
+  });
+  for (const agent of agents) {
+    if (!seenAgents.has(agent.agentId)) {
+      errors.push(`${label}.rules missing ${agent.agentId}`);
+    }
+  }
+  return errors;
+}
+
+function validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRouting, boardComposition) {
   const errors = [];
   const label = `use-case fixture[${index}]`;
   const knownAgentIds = new Set(agents.map((agent) => agent.agentId));
@@ -705,6 +804,10 @@ function validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRo
       if (fixture.expected_board_decision === 'not_applicable') {
         errors.push(`${label} multi_agent fixture must name a board decision`);
       }
+      const composedAgents = selectedAgentsFromComposition(fixture, boardComposition);
+      if (!sameStringSet(composedAgents, fixture.expected_agents)) {
+        errors.push(`${label} board composition selects [${composedAgents.join(', ')}], expected [${sorted(fixture.expected_agents).join(', ')}]`);
+      }
       const boardRoute = boardRouteByFixtureId(boardRouting, fixture.id);
       if (!boardRoute) {
         errors.push(`${label} missing matching board route in run-review-board workflow`);
@@ -737,15 +840,25 @@ function validateUseCaseFixtures() {
     'review-board-routing',
     'harness/review-board-routing/v1',
   );
+  const boardComposition = parseWorkflowJsonBlock(
+    '.agentic/01.harness/workflows/run-review-board.md',
+    'review-board-composition',
+    'harness/review-board-composition/v1',
+  );
   if (routingConfig) {
     failures.push(...validateRoutingConfig(routingConfig, 'run-agent-review routing'));
   }
   if (boardRouting) {
     failures.push(...validateBoardRoutingConfig(boardRouting, 'run-review-board routing'));
   }
+  if (boardComposition) {
+    failures.push(...validateBoardCompositionConfig(boardComposition, 'run-review-board composition'));
+  }
   requireText('validator README', validatorReadme, 'fixtures/use-case-fixtures.yml');
   requireText('validator README', validatorReadme, 'fixtures/scorecard-fixtures.yml');
   requireText('validator README', validatorReadme, 'fixtures/negative-review-fixtures.yml');
+  requireText('validator README', validatorReadme, '--scorecard');
+  requireText('validator README', validatorReadme, '--scorecard-dir');
   requireText('use cases', useCases, 'fixtures/use-case-fixtures.yml');
   if (!parsed) {
     return;
@@ -798,7 +911,7 @@ function validateUseCaseFixtures() {
         multiCount += 1;
       }
     }
-    failures.push(...validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRouting));
+    failures.push(...validateUseCaseFixture(fixture, index, useCases, routingConfig, boardRouting, boardComposition));
   }
   if (singleCount < 6) {
     failures.push(`${relativePath} must include at least one single-agent fixture per agent`);
@@ -826,7 +939,7 @@ function validateUseCaseFixtures() {
     forbidden_delegation: [],
     expected_board_decision: 'not_applicable',
   };
-  const negativeErrors = validateUseCaseFixture(negativeFixture, 999, useCases, routingConfig, boardRouting);
+  const negativeErrors = validateUseCaseFixture(negativeFixture, 999, useCases, routingConfig, boardRouting, boardComposition);
   if (negativeErrors.length === 0) {
     failures.push('use-case fixture validator accepted the bad-routing negative fixture');
   }
@@ -911,6 +1024,24 @@ function validateDelegationRequests(errors, label, scorecard) {
   });
 }
 
+function roundScore(value) {
+  return Math.round(value * 100) / 100;
+}
+
+function weightedOverallScore(dimensions, scoreByDimension) {
+  let weightedTotal = 0;
+  let weightTotal = 0;
+  for (const dimension of dimensions) {
+    const score = scoreByDimension.get(dimension.id);
+    if (typeof score !== 'number') {
+      return null;
+    }
+    weightedTotal += score * dimension.weight;
+    weightTotal += dimension.weight;
+  }
+  return weightTotal === 0 ? null : roundScore(weightedTotal / weightTotal);
+}
+
 function validateScorecardData(scorecard, label) {
   const errors = [];
   if (!isPlainObject(scorecard)) {
@@ -992,6 +1123,13 @@ function validateScorecardData(scorecard, label) {
   const requiredScores = requiredDimensions
     .map((dimension) => ({ dimension: dimension.id, score: scoreByDimension.get(dimension.id) }))
     .filter((entry) => typeof entry.score === 'number');
+  const weightedOverall = weightedOverallScore(rubric?.dimensions || [], scoreByDimension);
+  if (weightedOverall !== null && typeof scorecard.review?.overall_score === 'number') {
+    const delta = Math.abs(scorecard.review.overall_score - weightedOverall);
+    if (delta > 0.05) {
+      errors.push(`${label}.review.overall_score must match weighted rubric score ${weightedOverall}`);
+    }
+  }
   const belowThree = requiredScores.filter((entry) => entry.score < 3);
   const belowFour = requiredScores.filter((entry) => entry.score < 4);
   const criticalFindings = arrayLength(scorecard.findings?.critical);
@@ -1066,7 +1204,70 @@ function validateScorecardFixtures() {
   }
 }
 
+function walkScorecardFiles(dir) {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return walkScorecardFiles(entryPath);
+    }
+    if (entry.isFile() && /\.(ya?ml|json|md)$/.test(entry.name)) {
+      return [entryPath];
+    }
+    return [];
+  });
+}
+
+function validateCliScorecards() {
+  const paths = new Set();
+  for (const inputPath of cliOptions.scorecardPaths) {
+    if (!nonEmptyString(inputPath)) {
+      failures.push('--scorecard requires a path');
+      continue;
+    }
+    paths.add(resolveInputPath(inputPath));
+  }
+  for (const inputDir of cliOptions.scorecardDirs) {
+    if (!nonEmptyString(inputDir)) {
+      failures.push('--scorecard-dir requires a path');
+      continue;
+    }
+    const resolved = resolveInputPath(inputDir);
+    if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+      failures.push(`missing scorecard directory: ${labelForPath(inputDir)}`);
+      continue;
+    }
+    const files = walkScorecardFiles(resolved);
+    if (files.length === 0) {
+      failures.push(`scorecard directory contains no scorecard-like files: ${labelForPath(inputDir)}`);
+    }
+    files.forEach((filePath) => paths.add(filePath));
+  }
+  for (const scorecardPath of paths) {
+    const parsed = parseJsonCompatiblePath(scorecardPath, 'scorecard');
+    if (!parsed) {
+      continue;
+    }
+    failures.push(...validateScorecardData(parsed.data, `scorecard ${parsed.label}`));
+  }
+}
+
 function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
+  const scores = rubric.dimensions.map((dimension) => ({
+    dimension: dimension.id,
+    score: dimension.id === fixture.expected_blocking_dimension ? 2 : 4,
+    evidence: dimension.id === fixture.expected_blocking_dimension
+      ? `Blocking fixture evidence covers ${fixture.expected_blocker_terms.join(', ')}.`
+      : `Non-blocking fixture evidence for ${dimension.name}.`,
+    notes: dimension.id === fixture.expected_blocking_dimension
+      ? 'Below the required blocking threshold.'
+      : 'Not the fixture blocker.',
+  }));
+  const scoreByDimension = new Map(scores.map((score) => [score.dimension, score.score]));
+  const overallScore = weightedOverallScore(rubric.dimensions, scoreByDimension) ?? 2;
+
   return {
     schema: 'harness/agent-scorecard/v1',
     agent: {
@@ -1080,7 +1281,7 @@ function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
       decision: fixture.expected_decision,
       confidence: 'high',
       critical_blocker_present: true,
-      overall_score: 2,
+      overall_score: overallScore,
     },
     evidence: {
       sources: fixture.changed_paths.map((changedPath) => ({
@@ -1096,16 +1297,7 @@ function buildBlockingScorecardFromNegativeFixture(fixture, rubric) {
       medium: [],
       low: [],
     },
-    scores: rubric.dimensions.map((dimension) => ({
-      dimension: dimension.id,
-      score: dimension.id === fixture.expected_blocking_dimension ? 2 : 4,
-      evidence: dimension.id === fixture.expected_blocking_dimension
-        ? `Blocking fixture evidence covers ${fixture.expected_blocker_terms.join(', ')}.`
-        : `Non-blocking fixture evidence for ${dimension.name}.`,
-      notes: dimension.id === fixture.expected_blocking_dimension
-        ? 'Below the required blocking threshold.'
-        : 'Not the fixture blocker.',
-    })),
+    scores,
     delegation_requests: [],
     required_follow_up: [`Resolve ${fixture.rubric_negative_fixture} before passing review.`],
     quality_gate: {
@@ -1214,7 +1406,10 @@ function validateNegativeReviewFixtures() {
 
 function validateTemplates() {
   const report = read('.agentic/01.harness/templates/agent-review-report.md');
-  const scorecard = parseJsonCompatibleFile('.agentic/01.harness/templates/agent-scorecard.yml', 'scorecard template');
+  const template = parseJsonCompatibleFile('.agentic/01.harness/templates/agent-scorecard.yml', 'scorecard template');
+  const schema = parseJsonCompatibleFile('.agentic/01.harness/templates/agent-scorecard.schema.yml', 'scorecard schema');
+  const exampleTemplate = parseJsonCompatibleFile('.agentic/01.harness/templates/agent-scorecard.example.yml', 'scorecard example template');
+  const cfoExample = parseJsonCompatibleFile('.agentic/01.harness/templates/examples/cfo-token-efficiency-scorecard.yml', 'CFO scorecard example');
 
   for (const text of [
     'Critical blocker present',
@@ -1225,17 +1420,41 @@ function validateTemplates() {
     requireText('agent-review-report template', report, text);
   }
 
-  if (scorecard) {
-    const errors = validateScorecardData(scorecard.data, 'agent-scorecard template');
-    failures.push(...errors);
-    const blocksWhen = scorecard.data.quality_gate?.blocks_when || [];
+  if (template) {
+    if (template.data.schema !== 'harness/agent-scorecard-template/v1') {
+      failures.push('agent-scorecard template schema must equal harness/agent-scorecard-template/v1');
+    }
+    if (template.data.scorecard_schema !== 'harness/agent-scorecard/v1') {
+      failures.push('agent-scorecard template must point to harness/agent-scorecard/v1');
+    }
+    requireStringArray(failures, 'agent-scorecard template.required_top_level_fields', template.data.required_top_level_fields, 8);
+    requireStringArray(failures, 'agent-scorecard template.score_rules', template.data.score_rules, 5);
+    requireStringArray(failures, 'agent-scorecard template.examples', template.data.examples, 1);
+  }
+  if (schema) {
+    if (schema.data.schema !== 'harness/agent-scorecard-schema/v1') {
+      failures.push('agent-scorecard schema file must equal harness/agent-scorecard-schema/v1');
+    }
+    if (schema.data.quality_gate?.overall_score_rule !== 'weighted_average_of_selected_agent_rubric_dimensions') {
+      failures.push('agent-scorecard schema must require weighted overall score');
+    }
+  }
+  if (exampleTemplate) {
+    if (exampleTemplate.data.schema !== 'harness/agent-scorecard-example-template/v1') {
+      failures.push('agent-scorecard example template schema must equal harness/agent-scorecard-example-template/v1');
+    }
+    requireStringArray(failures, 'agent-scorecard example template.instructions', exampleTemplate.data.instructions, 3);
+  }
+  if (cfoExample) {
+    failures.push(...validateScorecardData(cfoExample.data, 'CFO scorecard example'));
+    const blocksWhen = cfoExample.data.quality_gate?.blocks_when || [];
     for (const text of [
       'critical_blocker_present is true',
       'any required score is below 3',
       'decision is delegate and delegated review is missing',
     ]) {
       if (!blocksWhen.includes(text)) {
-        failures.push(`agent-scorecard template quality_gate.blocks_when missing ${text}`);
+        failures.push(`CFO scorecard example quality_gate.blocks_when missing ${text}`);
       }
     }
   }
@@ -1255,6 +1474,9 @@ function validateWorkflows() {
   requireText('run-review-board workflow', board, 'Critical findings block the board');
   requireText('run-review-board workflow', board, '<!-- review-board-routing:start -->');
   requireText('run-review-board workflow', board, '"schema": "harness/review-board-routing/v1"');
+  requireText('run-review-board workflow', board, '<!-- review-board-composition:start -->');
+  requireText('run-review-board workflow', board, '"schema": "harness/review-board-composition/v1"');
+  requireText('run-review-board workflow', board, 'only when that lane can independently block the outcome');
   requireText('run-review-board workflow', board, 'Hosted RAG Service Deployment');
   requireText('backend architecture implementation workflow', backendImplementation, 'Senior Back-End Architect is explicitly invoked');
   requireText('backend architecture implementation workflow', backendImplementation, 'Implementation mode is limited to architecture-guideline artifacts');
@@ -1271,6 +1493,9 @@ function validateManifestAndBackendMode() {
   requireText('harness manifest', manifest, 'title: Harness governance operating pack');
   requireText('harness manifest', manifest, 'review_agent_capabilities:');
   requireText('harness manifest', manifest, 'review_agent_fixtures: scripts/01.harness/agents/validate-harness-agents/fixtures');
+  requireText('harness manifest', manifest, 'templates/agent-scorecard.schema.yml');
+  requireText('harness manifest', manifest, 'templates/agent-scorecard.example.yml');
+  requireText('harness manifest', manifest, 'templates/examples/cfo-token-efficiency-scorecard.yml');
   requireText('harness manifest', manifest, 'fixtures/scorecard-fixtures.yml');
   requireText('harness manifest', manifest, 'fixtures/negative-review-fixtures.yml');
   requireText('harness manifest', manifest, 'Create executable harness validators, gates, metrics, or eval runners only when');
@@ -1284,6 +1509,8 @@ function validateManifestAndBackendMode() {
   requireText('harness README', readme, '## Harness Governance Operating Pack');
   requireText('harness README', readme, 'workflows/implement-backend-architecture-guideline.md');
   requireText('harness README', readme, 'deterministic validators are also governed');
+  requireText('harness README', readme, 'templates/agent-scorecard.schema.yml');
+  requireText('harness README', readme, 'templates/examples/cfo-token-efficiency-scorecard.yml');
 
   requireText('Senior Back-End Architect agent', backendAgent, '## Implementation Mode');
   requireText('Senior Back-End Architect agent', backendAgent, 'Default mode is review mode.');
@@ -1374,6 +1601,9 @@ function validateCfoFixture() {
   if (!parsed.delegation.delegate_to.includes('harness.agents.senior-prompt-engineer')) {
     failures.push('CFO fixture expected delegation to Senior Prompt Engineer for workflow token trend');
   }
+  if (parsed.delegation.delegate_to.includes('harness.agents.ux-ui-engineer')) {
+    failures.push('CFO fixture must not delegate to UX/UI for bare chat workflow text without a human-facing interface signal');
+  }
 }
 
 validateAgentFiles();
@@ -1381,6 +1611,7 @@ validateRubrics();
 validateUseCases();
 validateUseCaseFixtures();
 validateScorecardFixtures();
+validateCliScorecards();
 validateNegativeReviewFixtures();
 validateTemplates();
 validateWorkflows();

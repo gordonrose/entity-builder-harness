@@ -24,7 +24,7 @@ id: fixture-unrelated-task
 task: unrelated database migration
 branch: chat/fixture-d
 worktree: /tmp/fixture-d
-chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+chat_lifecycle_workflow: .agentic/product/workflows/database-migration.md
 status: complete
 raised_at_utc: 2026-01-04T00:00:00Z
 latest_commit_at_utc: 2026-01-04T00:10:00Z

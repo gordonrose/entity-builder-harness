@@ -73,8 +73,10 @@ against it; do not duplicate a separate prose-only routing table elsewhere.
       "match_patterns": [
         "llm|instructions|instruction surface|prompt surface",
         "workflow, skill, gate, template, schema, orchestrator, or agent",
-        "\\.agentic/01\\.harness/(workflows|templates|agents)/",
-        "deterministic|source-of-truth|onboarding|context loading|review-board invocation"
+        "\\.agentic/01\\.harness/(workflows|templates|agents|standards|prompts|checklists)/",
+        "\\.agentic/[^\\s]+/(skills|evals|evaluations|schemas|orchestrators|prompts|gates|checklists)/",
+        "scripts/[^\\s]+/(gates|evaluate|evals?|schemas?)/|scripts/[^\\s]+/(evaluate-|eval-|scorecard|schema)",
+        "deterministic|source-of-truth|onboarding|context loading|review-board invocation|prompt eval|instruction schema"
       ]
     },
     {

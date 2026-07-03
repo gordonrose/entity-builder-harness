@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.templates.agent-scorecard.schema
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#     - agentic
+#   kind: schema
+#   purpose: Define the machine-readable field contract for harness review-agent scorecards.
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: harness.templates.agent-scorecard
+#       path: .agentic/01.harness/templates/agent-scorecard.yml
+#     - id: harness.script.agents.validate-harness-agents
+#       path: scripts/01.harness/agents/validate-harness-agents/script.sh
+{
+  "schema": "harness/agent-scorecard-schema/v1",
+  "scorecard_schema": "harness/agent-scorecard/v1",
+  "required_fields": {
+    "agent": [
+      "id",
+      "name"
+    ],
+    "review": [
+      "mode",
+      "task",
+      "reviewed_at_utc",
+      "decision",
+      "confidence",
+      "critical_blocker_present",
+      "overall_score"
+    ],
+    "evidence": [
+      "sources",
+      "gaps"
+    ],
+    "findings": [
+      "critical",
+      "high",
+      "medium",
+      "low"
+    ],
+    "score": [
+      "dimension",
+      "score",
+      "evidence",
+      "notes"
+    ],
+    "delegation_request": [
+      "target_agent_id",
+      "blocking_question",
+      "evidence_already_reviewed",
+      "needed_decision"
+    ]
+  },
+  "quality_gate": {
+    "blocks_when": [
+      "critical_blocker_present is true",
+      "any required score is below 3",
+      "decision is delegate and delegated review is missing"
+    ],
+    "overall_score_rule": "weighted_average_of_selected_agent_rubric_dimensions"
+  }
+}

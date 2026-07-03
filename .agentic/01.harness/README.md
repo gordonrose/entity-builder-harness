@@ -81,7 +81,10 @@ workflow.
 ## Templates
 
 - `templates/agent-review-report.md` - provides the shared human-readable report shape for review-agent findings.
-- `templates/agent-scorecard.yml` - provides the shared machine-readable scorecard shape for review-agent decisions.
+- `templates/agent-scorecard.yml` - provides the shared agent-neutral scorecard template and points to agent-specific examples.
+- `templates/agent-scorecard.schema.yml` - defines the machine-readable scorecard field contract and weighted-score rule.
+- `templates/agent-scorecard.example.yml` - provides a reusable authoring example template for agent-specific scorecards.
+- `templates/examples/cfo-token-efficiency-scorecard.yml` - provides a valid CFO Token Efficiency scorecard example.
 
 ## Chat Workbench Docs
 

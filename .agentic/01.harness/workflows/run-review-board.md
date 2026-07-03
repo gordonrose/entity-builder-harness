@@ -106,6 +106,81 @@ and compares it with executable multi-agent use-case fixtures.
 ```
 <!-- review-board-routing:end -->
 
+For novel work that is not one of the fixture IDs above, compose the smallest
+board by applying the risk-signal rules below. A matched rule adds the named
+agent only when that lane can independently block the outcome.
+
+<!-- review-board-composition:start -->
+```json
+{
+  "schema": "harness/review-board-composition/v1",
+  "version": 1,
+  "rules": [
+    {
+      "id": "token_efficiency_or_budget",
+      "agent_id": "harness.agents.cfo-token-efficiency",
+      "when_any": [
+        "token trend|token spend|token consumption|token efficient",
+        "per-query cost|per query cost|retrieval cost|context loading",
+        "commitLogs/.*/README\\.md"
+      ],
+      "blocking_scope": "Token, cost, and comparable-session evidence can block cost or efficiency claims."
+    },
+    {
+      "id": "instruction_surface_or_eval",
+      "agent_id": "harness.agents.senior-prompt-engineer",
+      "when_any": [
+        "\\.agentic/01\\.harness/(workflows|templates|agents|standards|prompts|checklists)/",
+        "\\.agentic/[^\\s]+/(skills|evals|evaluations|schemas|orchestrators|prompts|gates|checklists)/",
+        "scripts/[^\\s]+/(gates|evaluate|evals?|schemas?)/|scripts/[^\\s]+/(evaluate-|eval-|scorecard|schema)"
+      ],
+      "blocking_scope": "Prompt, workflow, schema, gate, skill, eval, and learnability defects can block harness instruction quality."
+    },
+    {
+      "id": "backend_architecture_boundary",
+      "agent_id": "harness.agents.senior-backend-architect",
+      "when_any": [
+        "backend|architecture|platform capability|entity|feature|capability boundary|dependency",
+        "src/platform/",
+        "docs/harness/architecture/"
+      ],
+      "blocking_scope": "Backend boundary, dependency-direction, and durable architecture-rule gaps can block the work."
+    },
+    {
+      "id": "deployment_runtime_reliability",
+      "agent_id": "harness.agents.senior-sre-engineer",
+      "when_any": [
+        "deployment|deploy workflow|github actions|runtime|rollback|observability",
+        "aws|ecs|ecr|rds|route53|cloudwatch|hosted service",
+        "\\.github/workflows/"
+      ],
+      "blocking_scope": "Deploy control, rollback, observability, runtime reliability, and cloud cost can block release readiness."
+    },
+    {
+      "id": "security_trust_boundary",
+      "agent_id": "harness.agents.secops-engineer",
+      "when_any": [
+        "security|public|semi-public|exposes?|secret|credential|authentication|authorization|auth",
+        "least privilege|owasp|iso|trust boundary|audit logging|rate limiting",
+        "security-sensitive"
+      ],
+      "blocking_scope": "Security controls, secrets, auth, abuse, audit, and trust-boundary findings can block the work."
+    },
+    {
+      "id": "human_facing_interface",
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "when_any": [
+        "chat or cli|cli|blocked response|fallback|terminal output|human operator",
+        "user-facing|web ui|frontend|design-system|wcag|persona|accessibility",
+        "clear to a human operator"
+      ],
+      "blocking_scope": "Human-facing repo, CLI, chat, web, and accessibility defects can block usability or operator safety."
+    }
+  ]
+}
+```
+<!-- review-board-composition:end -->
+
 ## Procedure
 
 1. State the board objective and selected agents.

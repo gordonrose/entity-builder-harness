@@ -70,6 +70,9 @@ current_known_artifacts:
     - .agentic/01.harness/agents/rubrics/README.md
     - .agentic/01.harness/templates/agent-review-report.md
     - .agentic/01.harness/templates/agent-scorecard.yml
+    - .agentic/01.harness/templates/agent-scorecard.schema.yml
+    - .agentic/01.harness/templates/agent-scorecard.example.yml
+    - .agentic/01.harness/templates/examples/cfo-token-efficiency-scorecard.yml
     - scripts/01.harness/agents/validate-harness-agents/script.sh
     - scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml
     - scripts/01.harness/agents/validate-harness-agents/fixtures/scorecard-fixtures.yml
