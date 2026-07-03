@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-03T07:31:50Z
-codex_session_log_path:
+codex_session_log_path: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-03T08:32:09Z
+latest_commit_sha: b7a85e7
+chat_duration: 3619s (00:01:00:19)
+estimated_chat_tokens: 1101094 estimated from chat transcript bytes (4404375 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+estimated_chat_cost: USD 33.03 estimated from estimated_chat_tokens
+estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 -->
 
 ## Initial Intent
@@ -55,9 +55,26 @@ implement deterministic block so open new window uses the active chat worktree, 
 
 Initial intent: implement deterministic block so open new window uses the active chat worktree, not root main
 
+
+### 2026-07-03T08:32:09Z - Commit recorded
+
+Commit: `b7a85e7`
+
+Message: Block open-window outside chat worktrees
+
+Summary: Added deterministic open-window checks that refuse root/main or mismatched chat worktrees, updated command docs, and extended smoke coverage for the blocked and allowed cases.
+
+ADR impact: No ADR required; this enforces the existing chat-owned worktree invariant.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b7a85e7`
+  Time UTC: 2026-07-03T08:32:09Z
+  Message: Block open-window outside chat worktrees
+  Summary: Added deterministic open-window checks that refuse root/main or mismatched chat worktrees, updated command docs, and extended smoke coverage for the blocked and allowed cases.
+  ADR impact: No ADR required; this enforces the existing chat-owned worktree invariant.
 
 ## Main Refresh Conflicts
 
@@ -74,12 +91,12 @@ architectural decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T07:31:50Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-03T08:32:09Z
+Latest commit SHA: b7a85e7
+Chat duration: 3619s (00:01:00:19)
+Estimated chat tokens: 1101094 estimated from chat transcript bytes (4404375 bytes; source: Codex session log: /home/owner/.codex/sessions/2026/07/02/rollout-2026-07-02T15-10-47-019f232a-facb-77a3-a371-ad43d2f3b23f.jsonl)
+Estimated chat cost: USD 33.03 estimated from estimated_chat_tokens
+Estimated chat cost basis: profile=chat-latest-standard-conservative-output; model=chat-latest; tier=standard; context=standard; rate=USD 30/1M tokens; assumption=all estimated chat tokens are costed at the output-token rate because the transcript-byte metric does not split input, cached input, and output tokens; pricing_snapshot=2026-06-19T00:00:00Z; source=https://developers.openai.com/api/docs/pricing
 
 ## Notes
 
