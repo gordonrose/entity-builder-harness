@@ -22,6 +22,10 @@
 `script.sh` is the canonical entrypoint for opening the current chat-owned
 worktree in a new VS Code window.
 
+Do not call `code -n` or `code --new-window` directly for chat work. This
+command verifies that the target is a chat-owned worktree before launching the
+editor.
+
 Run it as:
 
 ```bash
@@ -34,5 +38,5 @@ The hyphenated form also works:
 npm run chat -- open-window
 ```
 
-When run outside a chat branch, pass either a chat worktree path or a session-log
-`README.md` path.
+When run outside a chat branch, pass either a verified chat worktree path or a
+session-log `README.md` path. Passing the root/main worktree is blocked.
