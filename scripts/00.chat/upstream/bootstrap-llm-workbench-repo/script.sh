@@ -89,7 +89,6 @@ fi
 
 SOURCE_REPO="$(git rev-parse --show-toplevel)"
 TEMPLATE_ROOT="$SOURCE_REPO/docs/00.chat/bootstrap/llm-workbench-template/root"
-PUBLIC_ADR_MANIFEST="$SOURCE_REPO/docs/00.chat/public-chat-workbench-adrs.md"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/llm-workbench-bootstrap-plan.XXXXXX")"
 PLAN_PATHS="$TMP_DIR/planned-paths.txt"
 PACKAGE_OUTPUT="$TMP_DIR/package-output.txt"
@@ -158,6 +157,17 @@ plan_tree() {
 
   while IFS= read -r file; do
     relative_path="${file#$SOURCE_REPO/}"
+    case "$relative_path" in
+      scripts/00.chat/classification/*)
+        continue
+        ;;
+      docs/00.chat/chat-workbench-public-repo-readiness.md)
+        continue
+        ;;
+      docs/00.chat/public-chat-workbench-adrs.md)
+        continue
+        ;;
+    esac
     plan_file "$file" "$relative_path"
   done < <(find "$SOURCE_REPO/$tree" -type f | sort)
 }
@@ -169,21 +179,12 @@ plan_selected_file() {
   plan_file "$SOURCE_REPO/$path" "$path"
 }
 
-plan_public_adrs() {
-  local path
-
-  if [ ! -f "$PUBLIC_ADR_MANIFEST" ]; then
-    echo "ERROR: public ADR manifest missing: ${PUBLIC_ADR_MANIFEST#$SOURCE_REPO/}" >&2
-    exit 1
-  fi
-
-  while IFS= read -r path; do
-    case "$path" in
-      docs/harness/architecture/adrs/*.md)
-        plan_selected_file "$path"
-        ;;
-    esac
-  done < "$PUBLIC_ADR_MANIFEST"
+plan_public_harness_scripts() {
+  plan_selected_file "scripts/01.harness/run-governed-script.sh"
+  plan_selected_file "scripts/01.harness/check-deterministic-process-drift.sh"
+  plan_selected_file "scripts/01.harness/check-governed-script-command-drift.sh"
+  plan_selected_file "scripts/01.harness/artifact-metadata/check-headers/script.sh"
+  plan_selected_file "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh"
 }
 
 plan_templates() {
@@ -302,17 +303,15 @@ plan_templates
 plan_tree ".agentic/00.chat"
 plan_tree ".agentic/shared/standards"
 plan_tree ".agentic/shared/workflows"
-plan_tree ".agentic/01.harness"
 plan_tree "scripts/00.chat"
-plan_tree "scripts/01.harness"
+plan_public_harness_scripts
 plan_tree "docs/00.chat"
-plan_selected_file "docs/harness/architecture/adrs/README.md"
-plan_public_adrs
 plan_preserved_target_owned_files
 echo
 
 echo "Excluded source paths:"
 echo "EXCLUDE commitLogs/"
+echo "EXCLUDE .agentic/01.harness/"
 echo "EXCLUDE .agentic/product/"
 echo "EXCLUDE .agentic/education/"
 echo "EXCLUDE .agentic/aws/"
@@ -365,6 +364,87 @@ copy_file() {
   cp "$source" "$target"
 }
 
+sanitize_missing_used_by_paths() {
+  node - "$TARGET_REPO" <<'NODE'
+const fs = require('fs');
+const path = require('path');
+
+const root = process.argv[2];
+const roots = [
+  '.agentic',
+  '.github/workflows',
+  'docs/00.chat',
+  'docs/harness',
+  'scripts',
+];
+const prefixes = [
+  'AGENTS.md',
+  '.github/workflows/',
+  '.agentic/',
+  'docs/00.chat/',
+  'docs/02.rag-rulebook/',
+  'docs/harness/',
+  'infra/',
+  'scripts/',
+];
+
+function existsInTarget(ref) {
+  return fs.existsSync(path.join(root, ref));
+}
+
+function walk(dir) {
+  const fullDir = path.join(root, dir);
+  if (!fs.existsSync(fullDir)) {
+    return [];
+  }
+  const output = [];
+  for (const entry of fs.readdirSync(fullDir, {withFileTypes: true})) {
+    const fullPath = path.join(fullDir, entry.name);
+    const relativePath = path.relative(root, fullPath).split(path.sep).join('/');
+    if (entry.isDirectory()) {
+      output.push(...walk(relativePath));
+    } else if (entry.isFile()) {
+      output.push(relativePath);
+    }
+  }
+  return output;
+}
+
+function normalizeRef(value) {
+  return value.trim().replace(/^['"]|['"]$/g, '');
+}
+
+const files = roots.flatMap(walk).filter((file) => /\.(md|sh|js|mjs|ya?ml)$/.test(file));
+
+for (const file of files) {
+  const fullPath = path.join(root, file);
+  const lines = fs.readFileSync(fullPath, 'utf8').split(/\n/);
+  let changed = false;
+  const sanitized = lines.filter((line, index) => {
+    if (index > 119) {
+      return true;
+    }
+    const match = line.match(/^(\s*(?:#|\/\/)?\s*)path:\s*(.+?)\s*$/);
+    if (!match) {
+      return true;
+    }
+    const ref = normalizeRef(match[2]);
+    if (!prefixes.some((prefix) => ref === prefix || ref.startsWith(prefix))) {
+      return true;
+    }
+    if (existsInTarget(ref)) {
+      return true;
+    }
+    changed = true;
+    return false;
+  });
+  if (changed) {
+    fs.writeFileSync(fullPath, sanitized.join('\n'), 'utf8');
+  }
+}
+NODE
+}
+
 apply_plan() {
   local action
   local source
@@ -402,4 +482,5 @@ apply_plan() {
 
 if [ "$MODE" = "apply" ]; then
   apply_plan
+  sanitize_missing_used_by_paths
 fi

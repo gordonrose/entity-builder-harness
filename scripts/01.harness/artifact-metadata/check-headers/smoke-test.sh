@@ -28,21 +28,19 @@ repo_root="$(git rev-parse --show-toplevel)"
 checker="$repo_root/scripts/01.harness/artifact-metadata/check-headers/script.sh"
 
 bash "$checker" --paths \
-  .agentic/01.harness/artifact-metadata/examples/markdown.v2.md \
-  .agentic/01.harness/artifact-metadata/examples/yaml.v2.yml \
+  .agentic/00.chat/workflows/chat-start.md \
+  .agentic/shared/standards/upstream-repo-bootstrap.md \
+  docs/00.chat/README.md \
+  scripts/00.chat/startup/start-chat-session/script.sh \
   scripts/01.harness/artifact-metadata/check-headers/script.sh \
-  scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh \
-  scripts/01.harness/check-artifact-metadata-headers.sh \
-  docs/02.rag-rulebook/rules/README.md \
-  docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml \
-  docs/harness/architecture/rules/layers/packages-core.yml
+  scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh
 
-tmp_dir="$repo_root/.agentic/01.harness/artifact-metadata/.tmp-check-headers-smoke-$$"
+tmp_dir="$repo_root/scripts/01.harness/artifact-metadata/check-headers/.tmp-check-headers-smoke-$$"
 trap 'rm -rf "$tmp_dir"' EXIT
 mkdir -p "$tmp_dir"
-printf '# Missing Header Fixture\n' > "$tmp_dir/missing.md"
+printf '#!/usr/bin/env bash\n' > "$tmp_dir/missing.sh"
 
-if bash "$checker" --paths "$tmp_dir/missing.md" >/dev/null 2>&1; then
+if bash "$checker" --paths "$tmp_dir/missing.sh" >/dev/null 2>&1; then
   echo "ERROR: missing-header fixture unexpectedly passed." >&2
   exit 1
 fi

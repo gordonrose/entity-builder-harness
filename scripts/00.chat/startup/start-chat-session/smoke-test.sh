@@ -167,8 +167,16 @@ if ! grep -q 'Default mode after startup bootstrap: read-only until I grant writ
   fail "first prompt did not preserve task write permission boundary"
 fi
 
-if ! grep -q 'For prompt-level layer, mode, workflow, and corpus context, query the RAG/rulebook runtime' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
-  fail "first prompt did not route prompt classification to RAG/rulebook"
+if ! grep -q "For prompt-level routing, use the current user request, this repo's assistant instructions, and any repo-provided context router if one exists." "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not explain neutral prompt-level routing"
+fi
+
+if ! grep -q 'Do not assign the whole chat a durable layer, mode, or workflow.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not preserve durable classification guard"
+fi
+
+if grep -q 'query the RAG/rulebook runtime' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt assumes a RAG/rulebook runtime exists"
 fi
 
 echo "chat worktree session smoke test passed."

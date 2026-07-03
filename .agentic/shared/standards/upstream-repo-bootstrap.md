@@ -31,6 +31,9 @@ The standard applies across layers. Layer workflows define the specific
 portable file set for chat, frontend, CRUD factory, AWS CI/CD, or other
 upstream repo types.
 
+For public `llm-workbench` bootstrap or sync work, also apply
+`.agentic/00.chat/standards/llm-workbench-public-beta-contract.md`.
+
 ## Ownership
 
 - The source repo provides working evidence and candidate files.

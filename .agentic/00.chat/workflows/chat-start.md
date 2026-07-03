@@ -44,7 +44,7 @@ permission for the chat.
 If it returns valid chat lifecycle metadata, use it for session/worktree
 handling.
 
-Do not classify the whole chat.
+Do not assign the whole chat a durable layer, mode, or workflow.
 Do not read `.agentic/routing-policy.yaml`.
 Do not load unrelated workflows, skills, standards, or documentation.
 
@@ -74,17 +74,20 @@ session log folder to a concise summary:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh "<short-summary>"
 ```
 
-<!-- deterministic-check: allow reason="register-codex-session-log.sh owns discovery and mutation; workflow governs when to invoke it" -->
-If `codex_session_log_path` is missing or blank, register the current Codex
-session JSONL before the first task commit:
+If the current assistant can provide transcript metadata, record it through the
+neutral `transcript_provider`, `transcript_path`, `transcript_bytes`, and
+`transcript_source` session metadata fields before the first task commit.
+
+For Codex sessions, this optional adapter can discover and register the local
+JSONL transcript path:
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/transcript/register-codex-session-log/script.sh
 ```
 
-This records the transcript source used later for estimated chat-token metrics.
-If the helper cannot find a unique matching Codex session log, continue in
-read-only mode and record the gap before any commit-boundary operation.
+Missing transcript metadata is not a chat-start blocker in portable mode. Commit
+recording will mark token metrics unavailable unless strict transcript metrics
+mode is explicitly requested.
 
 ## Missing Session
 
@@ -116,12 +119,15 @@ prompt back into the same chat.
 
 ## Context Packet Continuity
 
-Do not classify the whole chat into one durable layer, mode, or workflow during
-startup. When later prompts need layer, mode, workflow, corpus, or rule context,
-query the RAG/rulebook runtime for that current prompt.
+<!-- deterministic-check: allow reason="prompt routing may be manual or repo-specific; no universal script can decide whether a context router exists" -->
+Do not assign the whole chat a durable layer, mode, or workflow during startup.
+When later prompts need layer, mode, workflow, corpus, or rule context, use the
+current user request, this repo's assistant instructions, and any repo-provided
+context router if one exists.
 
+<!-- deterministic-check: allow reason="context packets are optional continuity evidence and may come from repo-specific routers" -->
 If latest context-packet metadata is missing, leave it blank until a governed
-RAG/rulebook query returns a packet. Record only the latest context packet ID,
+context-router query returns a packet. Record only the latest context packet ID,
 routing summary, and timestamp as continuity references. Do not copy the
 packet's prompt route into chat session `layer`, `mode`, or `workflow` fields.
 

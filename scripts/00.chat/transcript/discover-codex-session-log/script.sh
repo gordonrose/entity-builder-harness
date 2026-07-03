@@ -61,6 +61,12 @@ append_match() {
   local mtime
 
   if ! mtime="$(stat -c '%Y' "$file" 2>/dev/null)"; then
+    if ! mtime="$(stat -f '%m' "$file" 2>/dev/null)"; then
+      return
+    fi
+  fi
+
+  if [ -z "${mtime// }" ]; then
     return
   fi
 

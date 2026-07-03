@@ -1,6 +1,9 @@
 # llm-workbench
 
-`llm-workbench` is a portable chat harness for governed agentic development.
+`llm-workbench` is a standalone, provider-neutral Git/Bash/npm chat harness for
+blank or existing repos, with safe install/uninstall, assistant adapters, JSON
+startup packets, and portable transcript metadata across common CLI and
+code-assistant workflows.
 
 It gives a Git repo a repeatable way to start work in chat-owned branches and
 worktrees, record session logs, run commit gates, refresh from local `main`, and
@@ -26,10 +29,13 @@ npm run chat:list
 To install the workbench into another Git repo:
 
 ```bash
-bash scripts/install.sh /path/to/target/repo
+bash scripts/install.sh --dry-run /path/to/target/repo
+bash scripts/install.sh --apply /path/to/target/repo
 ```
 
 Then open that target repo with your coding agent and follow its `AGENTS.md`.
+For an empty repository with no first commit yet, add `--init-commit` to the
+apply command.
 
 ## Important Boundaries
 
@@ -40,9 +46,18 @@ The first chat in a target repo creates that repo's own `commitLogs/` inside
 the chat-owned worktree. The workbench does not copy session history from
 another repo.
 
+Installer and uninstall state is tracked in `.llm-workbench/install-manifest.tsv`
+inside the target repo. Uninstall removes only workbench-owned files, package
+scripts, and managed instruction blocks from that manifest.
+
+Chat metadata is provider-neutral. Codex transcript discovery is supported, and
+other tools can supply `CHAT_TRANSCRIPT_PROVIDER`, `CHAT_TRANSCRIPT_PATH`,
+`CHAT_TRANSCRIPT_BYTES`, or `CHAT_TRANSCRIPT_SOURCE` when recording commits.
+
 ## Learn More
 
 - `docs/concepts.md`
 - `docs/install.md`
 - `docs/workflows.md`
 - `docs/adapting-to-your-repo.md`
+- `docs/public-beta-contract.md`

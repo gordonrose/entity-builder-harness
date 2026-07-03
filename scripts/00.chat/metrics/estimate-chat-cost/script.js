@@ -33,9 +33,9 @@ Prints estimated_chat_cost and estimated_chat_cost_basis metadata lines.
 `);
 }
 
-function unavailable(reason) {
-  console.log(`estimated_chat_cost: unavailable; ${reason}`);
-  console.log(`estimated_chat_cost_basis: unavailable; ${reason}`);
+function unavailable(costReason, basisReason = costReason) {
+  console.log(`estimated_chat_cost: unavailable; ${costReason}`);
+  console.log(`estimated_chat_cost_basis: unavailable; ${basisReason}`);
 }
 
 function formatUsd(value) {
@@ -72,7 +72,7 @@ if (!/^\d+$/.test(tokenValue)) {
 const tokenCount = Number(tokenValue);
 const repoRoot = findRepoRoot(process.cwd());
 const pricingPath = process.env.CHAT_COST_PRICING_FILE ||
-  path.join(repoRoot, '.agentic/01.harness/data/openai-chat-pricing.json');
+  path.join(repoRoot, 'scripts/00.chat/metrics/data/chat-pricing.json');
 
 if (!fs.existsSync(pricingPath)) {
   unavailable('pricing snapshot not found');
@@ -93,6 +93,12 @@ const profile = pricing.profiles && pricing.profiles[profileName];
 
 if (!profile) {
   unavailable(`pricing profile not found: ${profileName || 'none'}`);
+  process.exit(0);
+}
+
+if (profile.estimate_rate_usd_per_1m_tokens === null ||
+    profile.estimate_rate_usd_per_1m_tokens === undefined) {
+  unavailable('no pricing profile selected', 'set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE');
   process.exit(0);
 }
 

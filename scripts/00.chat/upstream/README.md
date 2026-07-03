@@ -35,5 +35,7 @@ stay explicit.
 - `bootstrap-llm-workbench-repo/` plans how the public workbench shell and
   canonical chat harness files would be materialized into a target upstream
   repo. Its current implementation is dry-run only.
+- `check-llm-workbench-contract/` runs fast static checks for the public-beta
+  standalone/provider-neutral contract.
 - `ensure-llm-workbench-repo/` checks the source-side canonical local clone of
   `gordonrose/llm-workbench`.

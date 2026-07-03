@@ -48,7 +48,8 @@ The script runs shared gates first:
 - deterministic process drift check for staged files
 - metadata header check for newly staged artifacts
 - governed script command drift check
-- RAG/rulebook commit gates when `.agentic/02.rag-rulebook` exists
+- optional repo-provided commit gate when
+  `LLM_WORKBENCH_OPTIONAL_COMMIT_GATE` is set to a repository-relative script
 
 Then it validates the current chat session:
 

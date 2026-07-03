@@ -36,8 +36,8 @@ Records a commit in the current chat session log and updates rolling latest
 commit session metrics.
 
 The script estimates chat tokens from CHAT_TRANSCRIPT_BYTES when supplied.
-Otherwise it uses codex_session_log_path metadata, or discovers the matching
-Codex JSONL session log and counts its bytes.
+Otherwise it uses neutral transcript_path metadata. Codex transcript discovery
+is available when CHAT_TRANSCRIPT_PROVIDER=codex or LLM_WORKBENCH_TRANSCRIPT_PROVIDER=codex.
 
 The script estimates chat cost from the resulting estimated chat-token count
 when a pricing profile is available.
@@ -149,38 +149,52 @@ if [ -n "${RAISED_AT_UTC// }" ]; then
   fi
 fi
 
-CODEX_SESSION_LOG_PATH="${CODEX_SESSION_LOG_PATH:-$(metadata_value "codex_session_log_path")}"
+TRANSCRIPT_PROVIDER="${CHAT_TRANSCRIPT_PROVIDER:-${TRANSCRIPT_PROVIDER:-$(metadata_value "transcript_provider")}}"
+TRANSCRIPT_PATH="${CHAT_TRANSCRIPT_PATH:-${TRANSCRIPT_PATH:-$(metadata_value "transcript_path")}}"
+TRANSCRIPT_BYTES="${CHAT_TRANSCRIPT_BYTES:-${TRANSCRIPT_BYTES:-$(metadata_value "transcript_bytes")}}"
+TRANSCRIPT_SOURCE="${CHAT_TRANSCRIPT_SOURCE:-${TRANSCRIPT_SOURCE:-$(metadata_value "transcript_source")}}"
+TRANSCRIPT_METRICS_MODE="${CHAT_TRANSCRIPT_METRICS_MODE:-portable}"
 
-if [ -z "${CHAT_TRANSCRIPT_BYTES:-}" ]; then
-  if [ -z "${CODEX_SESSION_LOG_PATH// }" ]; then
-    CODEX_SESSION_LOG_PATH="$(bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$SESSION_ID" "$LOG_FILE" 2>/dev/null || true)"
-  fi
-
-  if [ -n "${CODEX_SESSION_LOG_PATH// }" ] && [ -f "$CODEX_SESSION_LOG_PATH" ]; then
-    CHAT_TRANSCRIPT_BYTES="$(wc -c < "$CODEX_SESSION_LOG_PATH" | tr -d ' ')"
-    CHAT_TRANSCRIPT_SOURCE="${CHAT_TRANSCRIPT_SOURCE:-Codex session log: ${CODEX_SESSION_LOG_PATH}}"
-  fi
+if [ -n "${CODEX_SESSION_LOG_PATH:-}" ]; then
+  TRANSCRIPT_PROVIDER="${TRANSCRIPT_PROVIDER:-codex}"
+  TRANSCRIPT_PATH="$CODEX_SESSION_LOG_PATH"
 fi
 
-if [ -n "${CHAT_TRANSCRIPT_BYTES:-}" ]; then
-  case "$CHAT_TRANSCRIPT_BYTES" in
+case "${TRANSCRIPT_PROVIDER:-${LLM_WORKBENCH_TRANSCRIPT_PROVIDER:-}}" in
+  codex)
+    if [ -z "${TRANSCRIPT_PATH// }" ]; then
+      TRANSCRIPT_PATH="$(bash scripts/00.chat/transcript/discover-codex-session-log/script.sh "$SESSION_ID" "$LOG_FILE" 2>/dev/null || true)"
+    fi
+    if [ -n "${TRANSCRIPT_PATH// }" ]; then
+      TRANSCRIPT_PROVIDER="codex"
+    fi
+    ;;
+esac
+
+if [ -z "${TRANSCRIPT_BYTES:-}" ] && [ -n "${TRANSCRIPT_PATH// }" ] && [ -f "$TRANSCRIPT_PATH" ]; then
+  TRANSCRIPT_BYTES="$(wc -c < "$TRANSCRIPT_PATH" | tr -d ' ')"
+  TRANSCRIPT_SOURCE="${TRANSCRIPT_SOURCE:-${TRANSCRIPT_PROVIDER:-transcript} path: ${TRANSCRIPT_PATH}}"
+fi
+
+if [ -n "${TRANSCRIPT_BYTES:-}" ]; then
+  case "$TRANSCRIPT_BYTES" in
     ''|*[!0-9]*)
       echo "ERROR: CHAT_TRANSCRIPT_BYTES must be a non-negative integer." >&2
       exit 1
       ;;
   esac
 
-  CHAT_TRANSCRIPT_SOURCE="${CHAT_TRANSCRIPT_SOURCE:-chat-supplied transcript byte count}"
-  CHAT_TOKEN_ESTIMATE="$(( (CHAT_TRANSCRIPT_BYTES + 3) / 4 )) estimated from chat transcript bytes (${CHAT_TRANSCRIPT_BYTES} bytes; source: ${CHAT_TRANSCRIPT_SOURCE})"
+  TRANSCRIPT_PROVIDER="${TRANSCRIPT_PROVIDER:-manual}"
+  TRANSCRIPT_SOURCE="${TRANSCRIPT_SOURCE:-chat-supplied transcript byte count}"
+  CHAT_TOKEN_ESTIMATE="$(( (TRANSCRIPT_BYTES + 3) / 4 )) estimated from chat transcript bytes (${TRANSCRIPT_BYTES} bytes; source: ${TRANSCRIPT_SOURCE})"
 elif [ -n "${ESTIMATED_CHAT_TOKENS:-}" ]; then
   CHAT_TOKEN_ESTIMATE="$ESTIMATED_CHAT_TOKENS"
-elif [ "${ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS:-}" = "yes" ]; then
-  CHAT_TOKEN_ESTIMATE="unavailable; transcript source not supplied by chat"
-else
+elif [ "$TRANSCRIPT_METRICS_MODE" = "strict" ] && [ "${ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS:-}" != "yes" ]; then
   echo "ERROR: missing chat transcript metrics." >&2
-  echo "Set CHAT_TRANSCRIPT_BYTES, record codex_session_log_path, or ensure the Codex session log is discoverable." >&2
-  echo "Use ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes only for explicit legacy or recovery cases." >&2
+  echo "Set CHAT_TRANSCRIPT_BYTES, CHAT_TRANSCRIPT_PATH, ESTIMATED_CHAT_TOKENS, or use portable transcript metrics mode." >&2
   exit 1
+else
+  CHAT_TOKEN_ESTIMATE="unavailable; transcript source not supplied by chat"
 fi
 
 CHAT_COST_ESTIMATE="unavailable; estimated chat tokens are unavailable"
@@ -214,14 +228,20 @@ tmp="$(mktemp)"
 awk \
   -v latest_at="$COMMIT_AT_UTC" \
   -v latest_sha="$COMMIT_SHA" \
-  -v codex_path="$CODEX_SESSION_LOG_PATH" \
+  -v transcript_provider="$TRANSCRIPT_PROVIDER" \
+  -v transcript_path="$TRANSCRIPT_PATH" \
+  -v transcript_bytes="$TRANSCRIPT_BYTES" \
+  -v transcript_source="$TRANSCRIPT_SOURCE" \
   -v duration="$CHAT_DURATION" \
   -v chat_tokens="$CHAT_TOKEN_ESTIMATE" \
   -v chat_cost="$CHAT_COST_ESTIMATE" \
   -v chat_cost_basis="$CHAT_COST_BASIS" '
     BEGIN {
       in_meta = 0
-      wrote_codex_path = (codex_path == "")
+      wrote_transcript_provider = 0
+      wrote_transcript_path = 0
+      wrote_transcript_bytes = 0
+      wrote_transcript_source = 0
       wrote_chat_cost = 0
       wrote_chat_cost_basis = 0
     }
@@ -230,19 +250,45 @@ awk \
       print
       next
     }
+    in_meta && /^transcript_provider:/ {
+      print "transcript_provider: " transcript_provider
+      wrote_transcript_provider = 1
+      next
+    }
+    in_meta && /^transcript_path:/ {
+      print "transcript_path: " transcript_path
+      wrote_transcript_path = 1
+      next
+    }
+    in_meta && /^transcript_bytes:/ {
+      print "transcript_bytes: " transcript_bytes
+      wrote_transcript_bytes = 1
+      next
+    }
+    in_meta && /^transcript_source:/ {
+      print "transcript_source: " transcript_source
+      wrote_transcript_source = 1
+      next
+    }
     in_meta && /^codex_session_log_path:/ {
-      if (codex_path != "") {
-        print "codex_session_log_path: " codex_path
-      } else {
-        print
-      }
-      wrote_codex_path = 1
       next
     }
     in_meta && /^-->/ {
-      if (wrote_codex_path == 0) {
-        print "codex_session_log_path: " codex_path
-        wrote_codex_path = 1
+      if (wrote_transcript_provider == 0) {
+        print "transcript_provider: " transcript_provider
+        wrote_transcript_provider = 1
+      }
+      if (wrote_transcript_path == 0) {
+        print "transcript_path: " transcript_path
+        wrote_transcript_path = 1
+      }
+      if (wrote_transcript_bytes == 0) {
+        print "transcript_bytes: " transcript_bytes
+        wrote_transcript_bytes = 1
+      }
+      if (wrote_transcript_source == 0) {
+        print "transcript_source: " transcript_source
+        wrote_transcript_source = 1
       }
       if (wrote_chat_cost == 0) {
         print "estimated_chat_cost: " chat_cost

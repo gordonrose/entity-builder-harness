@@ -28,7 +28,8 @@ context-packet continuity fields, and terminal handoff prompts.
 Startup is where the harness prevents the first turn from being ambiguous. A
 chat should begin with a known branch, known worktree, known chat lifecycle
 workflow, and known session log. Prompt-level layer, mode, workflow, corpus, and
-rule context is resolved later by the RAG/rulebook runtime for each prompt.
+rule context is resolved later from the current request, repo assistant
+instructions, and any repo-provided context router if one exists.
 
 Agents following chat-start should use `resolve-current-chat-session` as the
 startup entrypoint. It reads existing chat metadata when available and

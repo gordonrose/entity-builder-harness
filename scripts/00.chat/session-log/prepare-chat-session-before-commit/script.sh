@@ -32,12 +32,22 @@ bash scripts/01.harness/check-deterministic-process-drift.sh --staged
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 bash scripts/01.harness/check-governed-script-command-drift.sh
 
-if [ -d ".agentic/02.rag-rulebook" ]; then
-  if [ ! -x "scripts/02.rag-rulebook/commit-gates/script.sh" ]; then
-    echo "ERROR: .agentic/02.rag-rulebook exists, but its commit gate is missing or not executable: scripts/02.rag-rulebook/commit-gates/script.sh" >&2
+OPTIONAL_COMMIT_GATE="${LLM_WORKBENCH_OPTIONAL_COMMIT_GATE:-}"
+
+if [ -n "${OPTIONAL_COMMIT_GATE//[[:space:]]/}" ]; then
+  case "$OPTIONAL_COMMIT_GATE" in
+    /*|../*|*/../*|*/..|..|-*|*$'\n'*|*$'\r'*)
+      echo "ERROR: refused non-repository optional commit gate: $OPTIONAL_COMMIT_GATE" >&2
+      exit 1
+      ;;
+  esac
+
+  if [ ! -f "$OPTIONAL_COMMIT_GATE" ]; then
+    echo "ERROR: optional commit gate does not exist: $OPTIONAL_COMMIT_GATE" >&2
     exit 1
   fi
-  bash scripts/02.rag-rulebook/commit-gates/script.sh
+
+  bash "$OPTIONAL_COMMIT_GATE"
 fi
 
 BRANCH="$(git branch --show-current)"

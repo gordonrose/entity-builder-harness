@@ -8,8 +8,18 @@ Chat startup is governed by:
 .agentic/00.chat/workflows/chat-start.md
 ```
 
-At startup the harness finds or creates session metadata, selects the workflow,
-and verifies the chat-owned worktree when writes are allowed.
+At startup the harness finds or creates session metadata, records the chat
+lifecycle workflow, and verifies the chat-owned worktree when writes are
+allowed. It does not assign the whole chat a durable layer, mode, or workflow.
+
+For assistants that can consume structured startup output:
+
+```bash
+npm run chat:new -- --json "Describe the task"
+```
+
+The JSON packet includes the session log, chat-owned worktree, lifecycle
+workflow, latest context-packet references, and first prompt.
 
 ## Commit Work
 
@@ -21,6 +31,16 @@ Commit preparation is governed by:
 
 The before-commit gates check prerequisites, session log safety, deterministic
 process drift, metadata headers, and governed command drift.
+
+Transcript metrics are provider-neutral. Codex can use the bundled transcript
+adapter; other assistants can provide values with `CHAT_TRANSCRIPT_PROVIDER`,
+`CHAT_TRANSCRIPT_PATH`, `CHAT_TRANSCRIPT_BYTES`, and `CHAT_TRANSCRIPT_SOURCE`.
+Portable mode records unavailable metrics without blocking. Strict mode is
+available through `CHAT_TRANSCRIPT_METRICS_MODE=strict`.
+
+Cost metrics are provider-neutral by default. Bundled pricing records cost as
+unavailable until `CHAT_COST_PROFILE` or `CHAT_COST_PRICING_FILE` selects a
+concrete pricing profile.
 
 ## Refresh From Main
 
