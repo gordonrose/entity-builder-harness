@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-03T15:27:21Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-03T20:57:07Z
+latest_commit_sha: a232fca
+chat_duration: 19786s (00:05:29:46)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -90,9 +90,26 @@ ADR needed: no
 
 Reason: No ADR needed; this adds a chat-layer command capability following the existing scripts/00.chat command-surface pattern.
 
+
+### 2026-07-03T20:57:07Z - Commit recorded
+
+Commit: `a232fca`
+
+Message: Add chat worktree export commands
+
+Summary: Added portable download repo and download repo diff chat commands with worktree export bundles, manifests, public llm-workbench templates, and smoke/portability coverage.
+
+ADR impact: No ADR needed; follows existing scripts/00.chat command surface.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `a232fca`
+  Time UTC: 2026-07-03T20:57:07Z
+  Message: Add chat worktree export commands
+  Summary: Added portable download repo and download repo diff chat commands with worktree export bundles, manifests, public llm-workbench templates, and smoke/portability coverage.
+  ADR impact: No ADR needed; follows existing scripts/00.chat command surface.
 
 ## Main Refresh Conflicts
 
@@ -107,12 +124,12 @@ Reason: No ADR needed; this adds a chat-layer command capability following the e
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T15:27:21Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-03T20:57:07Z
+Latest commit SHA: a232fca
+Chat duration: 19786s (00:05:29:46)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
