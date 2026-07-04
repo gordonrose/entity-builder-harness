@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-03T06:15:00Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-04T21:05:22Z
+latest_commit_sha: ceb01ff
+chat_duration: 139822s (01:14:50:22)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -66,9 +66,26 @@ Reapplied the packages/core contract scaffold, repo commit hook, RAG knowledge
 disposition recorder, code-change knowledge coverage gate, source projection,
 derivation report, selector fixture, and ADR 0023.
 
+
+### 2026-07-04T21:05:22Z - Commit recorded
+
+Commit: `ceb01ff`
+
+Message: Add packages core contract slice
+
+Summary: Added packages/core contract scaffold plus RAG knowledge coverage gates, source projection evidence, selector fixture, and ADR 0023.
+
+ADR impact: ADR 0023 records the RAG knowledge-disposition policy.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `ceb01ff`
+  Time UTC: 2026-07-04T21:05:22Z
+  Message: Add packages core contract slice
+  Summary: Added packages/core contract scaffold plus RAG knowledge coverage gates, source projection evidence, selector fixture, and ADR 0023.
+  ADR impact: ADR 0023 records the RAG knowledge-disposition policy.
 
 ## Main Refresh Conflicts
 
@@ -100,12 +117,12 @@ Reason: The task adds a durable commit-boundary policy requiring RAG knowledge d
 ## Session Metrics
 
 Raised at UTC: 2026-07-03T06:15:00Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-04T21:05:22Z
+Latest commit SHA: ceb01ff
+Chat duration: 139822s (01:14:50:22)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
