@@ -52,6 +52,10 @@ require_executable "scripts/02.rag-rulebook/validate-retrieval-policy-pack/scrip
 bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh --current --json >/dev/null
 echo "RAG/rulebook retrieval policy pack is valid."
 
+require_executable "scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh"
+bash scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh --staged
+echo "RAG/rulebook code-change knowledge coverage is valid."
+
 require_executable "scripts/02.rag-rulebook/validate-yaml-syntax/script.sh"
 bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
 echo "RAG/rulebook governed YAML syntax is valid."
@@ -179,6 +183,10 @@ echo "RAG/rulebook OKF source-material review smoke passed."
 require_executable "scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh"
 bash scripts/02.rag-rulebook/check-corpus-root-changes/smoke-test.sh >/dev/null
 echo "RAG/rulebook corpus root change smoke passed."
+
+require_executable "scripts/02.rag-rulebook/check-code-change-knowledge-coverage/smoke-test.sh"
+bash scripts/02.rag-rulebook/check-code-change-knowledge-coverage/smoke-test.sh >/dev/null
+echo "RAG/rulebook code-change knowledge coverage smoke passed."
 
 require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
 bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null

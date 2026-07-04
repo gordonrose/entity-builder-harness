@@ -32,22 +32,22 @@ bash scripts/01.harness/check-deterministic-process-drift.sh --staged
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 bash scripts/01.harness/check-governed-script-command-drift.sh
 
-OPTIONAL_COMMIT_GATE="${LLM_WORKBENCH_OPTIONAL_COMMIT_GATE:-}"
+REPO_COMMIT_GATES_SCRIPT="${CHAT_REPO_COMMIT_GATES_SCRIPT:-scripts/repo/commit-gates/script.sh}"
 
-if [ -n "${OPTIONAL_COMMIT_GATE//[[:space:]]/}" ]; then
-  case "$OPTIONAL_COMMIT_GATE" in
+if [ -n "${REPO_COMMIT_GATES_SCRIPT//[[:space:]]/}" ] && [ -e "$REPO_COMMIT_GATES_SCRIPT" ]; then
+  case "$REPO_COMMIT_GATES_SCRIPT" in
     /*|../*|*/../*|*/..|..|-*|*$'\n'*|*$'\r'*)
-      echo "ERROR: refused non-repository optional commit gate: $OPTIONAL_COMMIT_GATE" >&2
+      echo "ERROR: refused non-repository commit extension hook: $REPO_COMMIT_GATES_SCRIPT" >&2
       exit 1
       ;;
   esac
 
-  if [ ! -f "$OPTIONAL_COMMIT_GATE" ]; then
-    echo "ERROR: optional commit gate does not exist: $OPTIONAL_COMMIT_GATE" >&2
+  if [ ! -x "$REPO_COMMIT_GATES_SCRIPT" ]; then
+    echo "ERROR: repository commit extension hook is not executable: $REPO_COMMIT_GATES_SCRIPT" >&2
     exit 1
   fi
 
-  bash "$OPTIONAL_COMMIT_GATE"
+  bash "$REPO_COMMIT_GATES_SCRIPT"
 fi
 
 BRANCH="$(git branch --show-current)"

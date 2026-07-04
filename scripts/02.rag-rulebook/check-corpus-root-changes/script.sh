@@ -50,10 +50,12 @@ except ImportError:
 
 REPORT_SCHEMA = "rag-rulebook/corpus-root-change-check-report/v1"
 SOURCE_ROOTS = [
+    "docs/harness/architecture/source-material",
     "docs/02.rag-rulebook/source-material",
     "docs/04.deploy/source-material",
 ]
 RULE_ROOTS = [
+    "docs/harness/architecture/rules",
     "docs/02.rag-rulebook/rules",
     "docs/04.deploy/rules",
 ]

@@ -71,6 +71,12 @@ validation, and standalone service adapters.
 - `check-corpus-root-changes/script.sh` detects changed governed corpus-root
   files, requires retirement records for deleted or renamed old paths, and
   proves changed rule files still reach generated index and chunks.
+- `check-code-change-knowledge-coverage/script.sh` detects knowledge-bearing
+  code changes and requires the current chat session log to record whether RAG
+  source material, rules, selector proof, or corpus gaps cover the change.
+- `record-knowledge-disposition/script.sh` writes the current chat session's
+  `## RAG Knowledge Disposition` section for covered, no-impact, or
+  deferred-with-gap code changes.
 - `query-local-context/script.sh` reads a built local runtime cache and emits a
   validated `rag-rulebook/context-packet/v1` packet, or a compact derived
   `rag-rulebook/context-packet-compact/v1` view, for request text plus request

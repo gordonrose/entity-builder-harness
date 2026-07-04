@@ -35,6 +35,8 @@ required.
 ## Current Checks
 
 - Validate the current retrieval selector policy pack.
+- Require a current RAG knowledge disposition when staged code changes affect
+  knowledge-bearing runtime, platform, product, infra, or workflow paths.
 - Validate governed YAML syntax under RAG/rulebook and deploy roots.
 - If recognition sources exist, require and run the recognition-source
   validator.
@@ -72,6 +74,8 @@ required.
   fail deterministically.
 - Require and run the corpus-root change smoke test so deleted governed paths
   without retirement records and added orphan sources fail deterministically.
+- Require and run the code-change knowledge coverage smoke test so missing
+  knowledge disposition fails deterministically.
 - Require and run the local context query smoke test so the runtime cache can
   still produce a validated context packet.
 
