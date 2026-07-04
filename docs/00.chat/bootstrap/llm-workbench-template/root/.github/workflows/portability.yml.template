@@ -1,0 +1,92 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: chat.workflow.portability-ci
+#   version: 1
+#   status: active
+#   layer: 00.chat
+#   domain: validation
+#   disciplines:
+#   - agentic
+#   kind: ci-workflow
+#   purpose: Run llm-workbench portability checks on Linux, macOS, and Windows.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#   used_by:
+#   - id: llm-workbench.public-ci
+name: llm-workbench portability
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  acceptance:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Python validation dependencies
+        shell: bash
+        run: python3 -m pip install PyYAML
+
+      - name: Verify public workbench portability
+        shell: bash
+        run: bash scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+
+      - name: Verify public-beta contract
+        shell: bash
+        run: bash scripts/00.chat/upstream/check-llm-workbench-contract/script.sh --public
+
+      - name: Verify metadata headers
+        shell: bash
+        run: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+
+      - name: Verify startup smoke test
+        shell: bash
+        run: bash scripts/00.chat/startup/start-chat-session/smoke-test.sh
+
+      - name: Verify commit metrics smoke test
+        shell: bash
+        run: bash scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
+
+      - name: Verify command smoke tests
+        shell: bash
+        run: |
+          bash scripts/00.chat/command/package-scripts/smoke-test.sh
+          bash scripts/00.chat/command/dispatcher/smoke-test.sh
+
+      - name: Verify shell syntax
+        shell: bash
+        run: |
+          bash -n scripts/install.sh
+          bash -n scripts/uninstall.sh
+          bash -n scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+          bash -n scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+          bash -n scripts/00.chat/startup/start-chat-session/script.sh
+          bash -n scripts/00.chat/session-log/record-chat-commit/script.sh
+          bash -n scripts/00.chat/command/dispatcher/script.sh
+
+      - name: Verify install smoke test
+        shell: bash
+        run: bash tests/smoke-test-install.sh

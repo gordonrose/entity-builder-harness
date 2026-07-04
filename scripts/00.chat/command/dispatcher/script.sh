@@ -39,7 +39,7 @@ Commands:
 EOF
 
   if [ -d "$COMMAND_DIR" ]; then
-    find "$COMMAND_DIR" -mindepth 2 -maxdepth 2 -type f -path '*/script.sh' -perm -u+x \
+    find "$COMMAND_DIR" -mindepth 2 -maxdepth 2 -type f -path '*/script.sh' \
       ! -path "$COMMAND_DIR/dispatcher/script.sh" \
       | sed -E 's#^scripts/00\.chat/command/([^/]+)/script\.sh$#  \1#' \
       | sort
@@ -66,6 +66,15 @@ if [ "$COMMAND_NAME" = "open" ] && [ "${1:-}" = "window" ]; then
   shift
 fi
 
+if [ "$COMMAND_NAME" = "download" ] && [ "${1:-}" = "repo" ]; then
+  COMMAND_NAME="download-repo"
+  shift
+  if [ "${1:-}" = "diff" ]; then
+    COMMAND_NAME="download-repo-diff"
+    shift
+  fi
+fi
+
 case "$COMMAND_NAME" in
   *[!a-zA-Z0-9_-]*|'')
     echo "ERROR: invalid chat command name: $COMMAND_NAME" >&2
@@ -88,9 +97,4 @@ if [ ! -f "$COMMAND_SCRIPT" ]; then
   exit 2
 fi
 
-if [ ! -x "$COMMAND_SCRIPT" ]; then
-  echo "ERROR: chat command is not executable: $COMMAND_SCRIPT" >&2
-  exit 2
-fi
-
-exec "$COMMAND_SCRIPT" "$@"
+exec bash "$COMMAND_SCRIPT" "$@"

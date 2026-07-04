@@ -48,9 +48,10 @@ LOG_FILE="commitLogs/2026/jun/18/${SESSION_ID}/README.md"
 
 mkdir -p "$REPO/scripts/00.chat/transcript/discover-codex-session-log" \
   "$REPO/scripts/00.chat/metrics/estimate-chat-cost" \
+  "$REPO/scripts/00.chat/metrics/data" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit" \
   "$REPO/scripts/00.chat/session-log/paths" \
-  "$REPO/.agentic/01.harness/data" "$REPO/${LOG_FILE%/README.md}"
+  "$REPO/${LOG_FILE%/README.md}"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/record-chat-commit/script.sh" \
   "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" \
@@ -59,8 +60,8 @@ cp "$SOURCE_ROOT/scripts/00.chat/transcript/discover-codex-session-log/script.sh
   "$REPO/scripts/00.chat/transcript/discover-codex-session-log/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/metrics/estimate-chat-cost/script.js" \
   "$REPO/scripts/00.chat/metrics/estimate-chat-cost/script.js"
-cp "$SOURCE_ROOT/.agentic/01.harness/data/openai-chat-pricing.json" \
-  "$REPO/.agentic/01.harness/data/openai-chat-pricing.json"
+cp "$SOURCE_ROOT/scripts/00.chat/metrics/data/chat-pricing.json" \
+  "$REPO/scripts/00.chat/metrics/data/chat-pricing.json"
 chmod +x "$REPO/scripts/00.chat/session-log/record-chat-commit/script.sh" \
   "$REPO/scripts/00.chat/transcript/discover-codex-session-log/script.sh"
 
@@ -71,6 +72,10 @@ cat > "$REPO/$LOG_FILE" <<EOF
 id: ${SESSION_ID}
 branch: ${BRANCH}
 raised_at_utc: 2026-06-18T00:00:00Z
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
 latest_commit_at_utc:
 latest_commit_sha:
 chat_duration:
@@ -112,6 +117,7 @@ set +e
 (
   cd "$REPO"
   CODEX_HOME="$TMP_ROOT/empty-codex" \
+  CHAT_TRANSCRIPT_METRICS_MODE=strict \
     bash scripts/00.chat/session-log/record-chat-commit/script.sh abc1234 "Test commit" "Missing token metric"
 ) >/dev/null 2>"$TMP_ROOT/missing-metrics.err"
 MISSING_STATUS="$?"
@@ -128,8 +134,7 @@ fi
 (
   cd "$REPO"
   CODEX_HOME="$TMP_ROOT/empty-codex" \
-  ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes \
-    bash scripts/00.chat/session-log/record-chat-commit/script.sh abc1234 "Test commit" "Legacy token metric escape" >/dev/null
+    bash scripts/00.chat/session-log/record-chat-commit/script.sh abc1234 "Test commit" "Portable unavailable token metric" >/dev/null
 )
 
 if grep -q '^estimated_tokens:' "$REPO/$LOG_FILE"; then
@@ -137,11 +142,11 @@ if grep -q '^estimated_tokens:' "$REPO/$LOG_FILE"; then
 fi
 
 if ! grep -q '^estimated_chat_tokens: unavailable; transcript source not supplied by chat$' "$REPO/$LOG_FILE"; then
-  fail "legacy chat token metric escape was not marked unavailable"
+  fail "portable missing transcript metric was not marked unavailable"
 fi
 
 if ! grep -q '^Estimated chat tokens: unavailable; transcript source not supplied by chat$' "$REPO/$LOG_FILE"; then
-  fail "visible legacy chat token metric escape was not marked unavailable"
+  fail "visible portable missing transcript metric was not marked unavailable"
 fi
 
 if ! grep -q '^estimated_chat_cost: unavailable; estimated chat tokens are unavailable$' "$REPO/$LOG_FILE"; then
@@ -158,34 +163,44 @@ cat > "$CODEX_SESSION_LOG" <<EOF
 EOF
 CODEX_SESSION_BYTES="$(wc -c < "$CODEX_SESSION_LOG" | tr -d ' ')"
 CODEX_SESSION_TOKENS="$(( (CODEX_SESSION_BYTES + 3) / 4 ))"
-CODEX_SESSION_COST="$(node -e "const cost=(${CODEX_SESSION_TOKENS}/1000000)*30; console.log(cost > 0 && cost < 1 ? cost.toFixed(4) : cost.toFixed(2));")"
 
 (
   cd "$REPO"
   CODEX_HOME="$CODEX_HOME_FIXTURE" \
+  CHAT_TRANSCRIPT_PROVIDER=codex \
     bash scripts/00.chat/session-log/record-chat-commit/script.sh cde4567 "Test commit 2" "Discovered Codex session metric" >/dev/null
 )
 
-if ! grep -q "^codex_session_log_path: ${CODEX_SESSION_LOG}$" "$REPO/$LOG_FILE"; then
-  fail "discovered Codex session log path was not recorded"
+if ! grep -q '^transcript_provider: codex$' "$REPO/$LOG_FILE"; then
+  fail "discovered Codex provider was not recorded"
 fi
 
-if ! grep -q "^estimated_chat_tokens: ${CODEX_SESSION_TOKENS} estimated from chat transcript bytes (${CODEX_SESSION_BYTES} bytes; source: Codex session log: ${CODEX_SESSION_LOG})$" "$REPO/$LOG_FILE"; then
+if ! grep -q "^transcript_path: ${CODEX_SESSION_LOG}$" "$REPO/$LOG_FILE"; then
+  fail "discovered Codex transcript path was not recorded"
+fi
+
+if ! grep -q "^estimated_chat_tokens: ${CODEX_SESSION_TOKENS} estimated from chat transcript bytes (${CODEX_SESSION_BYTES} bytes; source: codex path: ${CODEX_SESSION_LOG})$" "$REPO/$LOG_FILE"; then
   fail "discovered Codex session byte metric was not recorded"
 fi
 
-if ! grep -q "^estimated_chat_cost: USD ${CODEX_SESSION_COST} estimated from estimated_chat_tokens$" "$REPO/$LOG_FILE"; then
-  fail "discovered Codex session cost metric was not recorded"
+if ! grep -q '^estimated_chat_cost: unavailable; no pricing profile selected$' "$REPO/$LOG_FILE"; then
+  fail "Codex transcript without explicit pricing profile did not leave cost unavailable"
 fi
 
-if ! grep -q '^estimated_chat_cost_basis: profile=chat-latest-standard-conservative-output; model=chat-latest;' "$REPO/$LOG_FILE"; then
-  fail "chat cost basis did not use the default ChatGPT pricing profile"
+if ! grep -q '^estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE$' "$REPO/$LOG_FILE"; then
+  fail "Codex transcript without explicit pricing profile did not explain unavailable cost basis"
+fi
+
+if grep -q '^estimated_chat_cost_basis: profile=.*openai' "$REPO/$LOG_FILE"; then
+  fail "default Codex transcript cost used an OpenAI pricing profile"
 fi
 
 (
   cd "$REPO"
+  CHAT_TRANSCRIPT_PROVIDER=manual \
   CHAT_TRANSCRIPT_BYTES=4096 \
   CHAT_TRANSCRIPT_SOURCE="smoke transcript fixture" \
+  CHAT_COST_PROFILE=openai-chat-latest-standard-conservative-output \
     bash scripts/00.chat/session-log/record-chat-commit/script.sh def5678 "Test commit 3" "Transcript byte token metric" >/dev/null
 )
 
@@ -193,8 +208,16 @@ if ! grep -q '^estimated_chat_tokens: 1024 estimated from chat transcript bytes 
   fail "transcript-byte chat token metric was not recorded"
 fi
 
+if ! grep -q '^transcript_provider: manual$' "$REPO/$LOG_FILE"; then
+  fail "manual transcript provider was not recorded"
+fi
+
 if ! grep -q '^estimated_chat_cost: USD 0.0307 estimated from estimated_chat_tokens$' "$REPO/$LOG_FILE"; then
-  fail "transcript-byte chat cost metric was not recorded"
+  fail "explicit OpenAI chat cost profile did not record transcript-byte cost"
+fi
+
+if ! grep -q '^estimated_chat_cost_basis: profile=openai-chat-latest-standard-conservative-output; model=chat-latest;' "$REPO/$LOG_FILE"; then
+  fail "explicit OpenAI chat cost profile was not recorded in the cost basis"
 fi
 
 if grep -q 'estimated from session log' "$REPO/$LOG_FILE"; then

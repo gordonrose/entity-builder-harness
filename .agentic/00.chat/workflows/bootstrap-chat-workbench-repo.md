@@ -32,6 +32,9 @@ Create the first minimal usable open-source chat workbench repo so engineers can
 read, install, test, and run the portable chat harness from the upstream repo.
 
 This workflow uses `.agentic/shared/standards/upstream-repo-bootstrap.md`.
+It also uses
+`.agentic/00.chat/standards/llm-workbench-public-beta-contract.md` for the
+public `llm-workbench` contract.
 
 ## Required Gates
 
@@ -67,15 +70,12 @@ Initial candidate paths:
 - `.agentic/shared/standards/`
 - `.agentic/shared/workflows/` entries required by cross-layer process and
   capability resolution
-- `.agentic/01.harness/` standards and workflows required by metadata,
-  deterministic process, governed script, and harness-maintenance checks
 - `package.json` chat command scripts as an upstream template, not a direct
   source-repo copy
 - `scripts/00.chat/` canonical chat capability scripts required by the audit
-- `scripts/01.harness/` gates required by chat startup, commit, classifier,
+- `scripts/01.harness/` gates required by chat startup, commit,
   governed script, and deterministic process checks
 - `docs/00.chat/`
-- ADRs listed in `docs/00.chat/public-chat-workbench-adrs.md`
 
 Do not copy the source repo `README.md` directly. It describes the source repo,
 not the upstream workbench.
@@ -96,6 +96,7 @@ outside engineer would use it:
 - `scripts/install.sh`
 - `scripts/uninstall.sh`
 - `tests/smoke-test-install.sh`
+- `docs/public-beta-contract.md`
 
 Starter templates for those files live in:
 
@@ -111,9 +112,8 @@ Use `scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh` to disti
 required scripts from candidate unreferenced scripts before copying scripts
 into the upstream repo.
 
-Use `docs/00.chat/chat-workbench-public-repo-readiness.md` to
-separate files that can be copied as-is from files that must be transformed for
-the public repo.
+Use `docs/00.chat/llm-workbench-acceptance-matrix.md` to verify the current
+public export boundary and the checks that enforce it.
 
 Before writing, run the dry-run planner:
 
@@ -125,6 +125,9 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 
 Only run `--apply` after reviewing a clean plan. Apply mode must refuse to
 write when the plan contains conflicts.
+
+Before commit, complete
+`.agentic/00.chat/checklists/llm-workbench-public-beta.md`.
 
 ## Required Exclusions
 

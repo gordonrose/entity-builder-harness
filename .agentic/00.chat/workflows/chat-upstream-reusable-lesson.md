@@ -37,6 +37,10 @@ files, edit the source repo, push to remotes, or mutate both repos in one step.
 
 Architecture decision: `docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md`.
 
+When the reusable lesson affects public `llm-workbench` startup, install,
+assistant adapters, metrics, portability, or export behavior, it must preserve
+`.agentic/00.chat/standards/llm-workbench-public-beta-contract.md`.
+
 ## Ownership Model
 
 - The source repo provides evidence from real work.
@@ -55,7 +59,7 @@ Before opening the upstream chat, collect:
 - source branch
 - source chat worktree absolute path
 - source session log absolute or repo-relative path
-- source Codex transcript path when recorded in session metadata
+- source transcript provider and path when recorded in session metadata
 - target upstream repo absolute path
 - reusable lesson summary
 - source evidence paths or commands

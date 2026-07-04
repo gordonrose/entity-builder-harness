@@ -28,3 +28,8 @@ Estimates should be transparent about their assumptions. When exact model
 pricing or token splits are unavailable, scripts should record the basis and
 avoid pretending to be precise.
 
+Default chat pricing data lives with the chat metrics scripts at
+`scripts/00.chat/metrics/data/chat-pricing.json`. Treat it as a bundled
+best-effort profile store, not live provider pricing. The bundled default is
+provider-neutral and records cost as unavailable until `CHAT_COST_PROFILE` or
+`CHAT_COST_PRICING_FILE` selects a concrete pricing profile.

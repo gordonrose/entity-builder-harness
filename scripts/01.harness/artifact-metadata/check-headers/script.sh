@@ -83,7 +83,46 @@ ROOT = repo_root()
 
 
 def load_taxonomy() -> dict[str, Any]:
-    path = ROOT / ".agentic/01.harness/artifact-metadata/taxonomy.yml"
+    path = ROOT / ".agentic" / "01.harness" / "artifact-metadata" / "taxonomy.yml"
+    if not path.exists():
+        return {
+            "layers": [
+                {"id": "00.chat"},
+                {"id": "01.harness"},
+                {"id": "02.rag-rulebook"},
+                {"id": "03.product"},
+                {"id": "04.deploy"},
+                {"id": "05.education"},
+                {"id": "06.shared"},
+            ],
+            "disciplines": [
+                "agentic",
+                "architecture",
+                "backend",
+                "frontend",
+                "requirements",
+                "security",
+                "sre",
+            ],
+            "statuses": ["draft", "active", "deprecated", "retired"],
+            "portability_classes": [
+                "required",
+                "reusable",
+                "compatible",
+                "source-only",
+                "internal",
+            ],
+            "script_effects": [
+                "read-only",
+                "writes-files",
+                "stages-files",
+                "commits",
+                "branches",
+                "worktrees",
+                "network",
+                "destructive",
+            ],
+        }
     with path.open("r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle) or {}
     return data

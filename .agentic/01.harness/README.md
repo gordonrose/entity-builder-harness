@@ -106,4 +106,5 @@ workflow.
 
 ## Data
 
-- `data/openai-chat-pricing.json` - versioned pricing snapshot used by chat cost estimation scripts.
+Chat cost-estimation data belongs to `scripts/00.chat/metrics/data/` because
+chat session accounting is owned by the chat layer.

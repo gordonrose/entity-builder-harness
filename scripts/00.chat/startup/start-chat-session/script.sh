@@ -51,6 +51,15 @@ if [ "$CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET" = "yes" ]; then
   CHAT_CLEANUP_EMPTY_BRANCHES="$CHAT_CLEANUP_EMPTY_BRANCHES_SHELL_VALUE"
 fi
 
+OUTPUT_FORMAT="text"
+
+case "${1:-}" in
+  --json)
+    OUTPUT_FORMAT="json"
+    shift
+    ;;
+esac
+
 if [ $# -gt 0 ]; then
   QUESTION="$*"
 else
@@ -95,7 +104,9 @@ else
   WORKTREE_STATUS="clean"
 fi
 
-git status --short
+if [ "$OUTPUT_FORMAT" = "text" ]; then
+  git status --short
+fi
 
 git branch "$BRANCH" "$BASE_BRANCH"
 mkdir -p "${WORKTREE_PATH%/*}"
@@ -114,7 +125,10 @@ worktree: ${WORKTREE_PATH}
 chat_lifecycle_workflow: ${CHAT_LIFECYCLE_WORKFLOW}
 status: ready
 raised_at_utc: ${RAISED_AT_UTC}
-codex_session_log_path:
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
@@ -184,12 +198,16 @@ Estimated chat cost basis:
 - None recorded yet.
 EOF
 
-echo "Created branch: $BRANCH"
-echo "Created log: $LOG_FILE"
-echo "Created worktree: $WORKTREE_PATH"
+if [ "$OUTPUT_FORMAT" = "text" ]; then
+  echo "Created branch: $BRANCH"
+  echo "Created log: $LOG_FILE"
+  echo "Created worktree: $WORKTREE_PATH"
+fi
 
-CHAT_OPEN_WORKTREE_WINDOW="${CHAT_OPEN_WORKTREE_WINDOW:-skip}" \
-  bash scripts/00.chat/worktree/open-window/script.sh "$WORKTREE_PATH"
+if [ "$OUTPUT_FORMAT" = "text" ]; then
+  CHAT_OPEN_WORKTREE_WINDOW="${CHAT_OPEN_WORKTREE_WINDOW:-skip}" \
+    bash scripts/00.chat/worktree/open-window/script.sh "$WORKTREE_PATH"
+fi
 
 FIRST_PROMPT="Task: ${QUESTION}
 Session log: ${LOG_FILE}
@@ -207,8 +225,41 @@ Before that response, do not read workflows or run git status/dirty checks.
 Governed startup bootstrap has already created this chat branch, worktree, and session log.
 Default mode after startup bootstrap: read-only until I grant write permission in this chat.
 For task writes or commit-boundary work, use the chat worktree above and follow the current workflow gates.
-For prompt-level layer, mode, workflow, and corpus context, query the RAG/rulebook runtime for the current prompt instead of treating the chat session as classified.
+For prompt-level routing, use the current user request, this repo's assistant instructions, and any repo-provided context router if one exists. Do not assign the whole chat a durable layer, mode, or workflow.
 Do not commit without my explicit approval."
+
+emit_json_packet() {
+  node - \
+    "$QUESTION" \
+    "$LOG_FILE" \
+    "$WORKTREE_PATH" \
+    "$CHAT_LIFECYCLE_WORKFLOW" \
+    "$WORKTREE_STATUS" \
+    "$FIRST_PROMPT" <<'NODE'
+const [
+  task,
+  sessionLog,
+  chatWorktree,
+  chatLifecycleWorkflow,
+  bootstrapWorktreeStatus,
+  firstPrompt
+] = process.argv.slice(2);
+
+const packet = {
+  schema: 'llm-workbench/startup-packet/v1',
+  task,
+  session_log: sessionLog,
+  chat_worktree: chatWorktree,
+  chat_lifecycle_workflow: chatLifecycleWorkflow,
+  latest_context_packet_id: '',
+  latest_context_packet_routing_summary: '',
+  bootstrap_worktree_status: bootstrapWorktreeStatus,
+  first_prompt: firstPrompt
+};
+
+process.stdout.write(`${JSON.stringify(packet, null, 2)}\n`);
+NODE
+}
 
 print_first_prompt() {
   echo
@@ -239,10 +290,18 @@ copy_first_prompt_with_retry() {
   return 1
 }
 
+if [ "$OUTPUT_FORMAT" = "json" ]; then
+  git -C "$WORKTREE_PATH" add "$LOG_FILE"
+  emit_json_packet
+  exit 0
+fi
+
 if [ "${CHAT_COPY_PROMPT:-copy}" = "skip" ]; then
   print_first_prompt
 elif command -v clip.exe >/dev/null 2>&1; then
   copy_first_prompt_with_retry "clip.exe" clip.exe || print_first_prompt
+elif command -v pbcopy >/dev/null 2>&1; then
+  copy_first_prompt_with_retry "pbcopy" pbcopy || print_first_prompt
 elif command -v xclip >/dev/null 2>&1; then
   copy_first_prompt_with_retry "xclip" xclip -selection clipboard || print_first_prompt
 else

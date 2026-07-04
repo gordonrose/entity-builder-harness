@@ -8,6 +8,8 @@
     "chat:list": "bash scripts/00.chat/command/dispatcher/script.sh list",
     "chat:new": "bash scripts/00.chat/command/dispatcher/script.sh new",
     "chat:open-window": "bash scripts/00.chat/command/dispatcher/script.sh open-window",
+    "chat:download-repo": "bash scripts/00.chat/command/dispatcher/script.sh download-repo",
+    "chat:download-repo-diff": "bash scripts/00.chat/command/dispatcher/script.sh download-repo-diff",
     "chat:close": "bash scripts/00.chat/command/dispatcher/script.sh close",
     "chat:audit-bootstrap": "bash scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh",
     "chat:audit-layer-migration": "bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh",

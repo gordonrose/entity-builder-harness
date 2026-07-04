@@ -23,8 +23,9 @@
 -->
 # Script Layout
 
-This document describes the current script layout. For the migration history,
-see ADR 0017. For the numbered layer command-surface direction, see ADR 0020.
+This document describes the current script layout. Public workbench users
+should treat this file and the current scripts as the operational source of
+truth; maintainer ADRs remain source-side history only.
 
 ## Current Shape
 

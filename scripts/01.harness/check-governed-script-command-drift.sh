@@ -64,9 +64,15 @@ done
 
 collect_default_paths() {
   {
-    [ -f AGENTS.md ] && printf '%s\n' AGENTS.md
-    [ -d .agentic ] && find .agentic -type f
-    [ -d docs/harness ] && find docs/harness -type f
+    if [ -f AGENTS.md ]; then
+      printf '%s\n' AGENTS.md
+    fi
+    if [ -d .agentic ]; then
+      find .agentic -type f
+    fi
+    if [ -d docs/harness ]; then
+      find docs/harness -type f
+    fi
   } | sort -u
 }
 

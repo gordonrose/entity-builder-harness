@@ -59,6 +59,10 @@ npm run chat:list
   summary.
 - `open window [worktree-path|session-log]` - opens a new VS Code window for the
   current or specified chat-owned worktree.
+- `download repo [worktree-path|session-log]` - exports the selected chat
+  worktree as a portable review bundle.
+- `download repo diff [--base <ref>] [worktree-path|session-log]` - exports only
+  files changed relative to a base ref, defaulting to local `main`.
 - `close` - prints or copies a governed prompt for committing approved work, if
   needed, then promoting the chat branch into local `main`.
 

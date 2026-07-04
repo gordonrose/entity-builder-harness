@@ -70,12 +70,13 @@ The script records chat metrics at the commit boundary.
 Preferred transcript sources:
 
 1. `CHAT_TRANSCRIPT_BYTES`, when a caller supplies a byte count directly.
-2. `codex_session_log_path` metadata in the session log.
-3. Discovery of the matching Codex JSONL session log.
+2. Neutral session metadata such as `transcript_path` and `transcript_provider`.
+3. An explicit assistant adapter, for example `CHAT_TRANSCRIPT_PROVIDER=codex`
+   for Codex JSONL discovery.
 
-If transcript metrics cannot be found, the script stops. The explicit
-`ALLOW_MISSING_CHAT_TRANSCRIPT_METRICS=yes` escape hatch exists for legacy or
-recovery cases and records the metric as unavailable.
+If transcript metrics cannot be found, portable mode records the metric as
+unavailable. Set `CHAT_TRANSCRIPT_METRICS_MODE=strict` when a workflow requires
+exact transcript metrics before recording the commit.
 
 When a numeric token estimate is available, the script calls
 `scripts/00.chat/metrics/estimate-chat-cost/script.js` to record a cost estimate
@@ -109,7 +110,8 @@ chat-specific names when encountered.
 
 - missing transcript metrics fail clearly
 - the legacy missing-metrics escape hatch records unavailable metrics
-- Codex JSONL discovery records transcript path, token estimate, cost, and basis
+- assistant transcript discovery records provider, path, token estimate, cost,
+  and basis
 - supplied transcript byte counts override discovery
 - session-log file size is not used as a token source
 

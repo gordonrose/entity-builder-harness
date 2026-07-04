@@ -11,7 +11,7 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "$TARGET_REPO"
-git -C "$TARGET_REPO" init -q
+git -C "$TARGET_REPO" init -q --initial-branch=main
 git -C "$TARGET_REPO" config user.name "llm-workbench smoke test"
 git -C "$TARGET_REPO" config user.email "llm-workbench-smoke@example.invalid"
 
@@ -21,11 +21,50 @@ test -f "$TARGET_REPO/AGENTS.md"
 test -d "$TARGET_REPO/.agentic/00.chat"
 test -d "$TARGET_REPO/scripts/00.chat"
 test -d "$TARGET_REPO/scripts/01.harness"
+test ! -e "$TARGET_REPO/docs/00.chat/public-chat-workbench-adrs.md"
+test ! -e "$TARGET_REPO/docs/harness/architecture/adrs"
+
+for required_path in \
+  scripts/01.harness/run-governed-script.sh \
+  scripts/01.harness/check-deterministic-process-drift.sh \
+  scripts/01.harness/check-governed-script-command-drift.sh \
+  scripts/01.harness/artifact-metadata/check-headers/script.sh \
+  scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh; do
+  test -f "$TARGET_REPO/$required_path"
+done
+
+for source_only_path in \
+  scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh \
+  scripts/01.harness/artifact-metadata/generate-index/script.sh \
+  scripts/01.harness/check-artifact-metadata-headers.sh \
+  scripts/01.harness/check-artifact-path-migration.sh \
+  scripts/01.harness/check-rule-test-taxonomy.sh \
+  scripts/01.harness/plan-artifact-path-migration.sh \
+  scripts/01.harness/smoke-test-artifact-path-migration.sh; do
+  test ! -e "$TARGET_REPO/$source_only_path"
+done
+
+if grep -RIEq '\.agentic/01\.harness|scripts/02\.rag-rulebook|\.agentic/02\.rag-rulebook' \
+  "$TARGET_REPO/scripts/01.harness"; then
+  echo "ERROR: installed target harness scripts reference source-only harness/rulebook surfaces." >&2
+  exit 1
+fi
 
 npm --prefix "$TARGET_REPO" run --silent chat:list >/dev/null
 
 git -C "$TARGET_REPO" add AGENTS.md package.json .agentic scripts
 git -C "$TARGET_REPO" commit -q -m "Install llm-workbench harness"
+
+npm --prefix "$TARGET_REPO" run --silent chat:download-repo -- \
+  --output "$TMP_ROOT/install-full.zip" \
+  "$TARGET_REPO" >/dev/null
+npm --prefix "$TARGET_REPO" run --silent chat:download-repo-diff -- \
+  --base main \
+  --output "$TMP_ROOT/install-diff.zip" \
+  "$TARGET_REPO" >/dev/null
+
+test -f "$TMP_ROOT/install-full.zip"
+test -f "$TMP_ROOT/install-diff.zip"
 
 (
   cd "$TARGET_REPO"

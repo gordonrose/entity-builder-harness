@@ -21,8 +21,6 @@ used_by:
   path: AGENTS.md
 - id: artifact.agentic.routing-policy
   path: .agentic/routing-policy.yaml
-- id: chat.script.classification.classify-task
-  path: scripts/00.chat/classification/classify-task/script.sh
 -->
 
 name: change-harness

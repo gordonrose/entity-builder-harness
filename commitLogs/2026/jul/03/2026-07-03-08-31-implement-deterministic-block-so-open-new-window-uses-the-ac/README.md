@@ -132,6 +132,50 @@ Summary: Ensured required CFO delegations always have delegate_to, defaulted cos
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-07-04T10:33:38Z - Main refresh conflict recorded
+
+Path: `.agentic/00.chat/workflows/chat-start.md`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: stopped before resolving; awaiting user-approved conflict resolution
+
+
+### 2026-07-04T10:33:38Z - Main refresh conflict recorded
+
+Path: `scripts/00.chat/command/package-scripts/smoke-test.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: stopped before resolving; awaiting user-approved conflict resolution
+
+
+### 2026-07-04T20:34:23Z - Main refresh conflict recorded
+
+Path: `.agentic/00.chat/workflows/chat-start.md`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: resolved manually after user approval; kept repo-neutral context-router continuity wording from main and preserved governed open-window wording
+
+
+### 2026-07-04T20:34:31Z - Main refresh conflict recorded
+
+Path: `scripts/00.chat/command/package-scripts/smoke-test.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: resolved manually after user approval; combined chat open-window root rejection coverage with main export command smoke coverage
+
 ## Commits
 
 
@@ -186,7 +230,50 @@ ADR impact: covered by session ADR disposition
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/00.chat/workflows/chat-start.md`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: authored repository content has no more specific governed conflict type
+  Action: stopped before resolving; awaiting user-approved conflict resolution
+  Preflight branch: `agentic/preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88/20260704103305`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88-20260704103305`
+  Files changed by resolution: .agentic/00.chat/workflows/chat-start.md; scripts/00.chat/command/package-scripts/smoke-test.sh
+  Checks: refresh preflight stopped with conflicts
+
+
+- Path: `scripts/00.chat/command/package-scripts/smoke-test.sh`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: authored repository content has no more specific governed conflict type
+  Action: stopped before resolving; awaiting user-approved conflict resolution
+  Preflight branch: `agentic/preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88/20260704103305`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88-20260704103305`
+  Files changed by resolution: .agentic/00.chat/workflows/chat-start.md; scripts/00.chat/command/package-scripts/smoke-test.sh
+  Checks: refresh preflight stopped with conflicts
+
+
+- Path: `.agentic/00.chat/workflows/chat-start.md`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored repository content has no more specific governed conflict type
+  Action: resolved manually after user approval; kept repo-neutral context-router continuity wording from main and preserved governed open-window wording
+  Preflight branch: `agentic/preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88/20260704103305`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88-20260704103305`
+  Files changed by resolution: .agentic/00.chat/workflows/chat-start.md; scripts/00.chat/command/package-scripts/smoke-test.sh; commitLogs/2026/jul/03/2026-07-03-08-31-implement-deterministic-block-so-open-new-window-uses-the-ac/README.md
+  Checks: git diff --check; rg conflict markers; bash -n package smoke; bash package smoke
+
+
+- Path: `scripts/00.chat/command/package-scripts/smoke-test.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored repository content has no more specific governed conflict type
+  Action: resolved manually after user approval; combined chat open-window root rejection coverage with main export command smoke coverage
+  Preflight branch: `agentic/preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88/20260704103305`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-03-08-31-implement-deterministic-bl-3a86ded3eb88-20260704103305`
+  Files changed by resolution: .agentic/00.chat/workflows/chat-start.md; scripts/00.chat/command/package-scripts/smoke-test.sh; commitLogs/2026/jul/03/2026-07-03-08-31-implement-deterministic-block-so-open-new-window-uses-the-ac/README.md
+  Checks: git diff --check; rg conflict markers; bash -n package smoke; bash package smoke
 
 ## ADR Disposition
 

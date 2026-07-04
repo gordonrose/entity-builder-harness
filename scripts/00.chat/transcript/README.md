@@ -21,10 +21,16 @@
 -->
 # Transcript Scripts
 
-Transcript scripts connect chat session logs to local Codex JSONL transcripts.
-That link lets later commit recording estimate transcript size, token usage,
-and cost metadata from real session evidence.
+Transcript scripts connect chat session logs to assistant transcript evidence.
+The core metadata is provider-neutral:
+
+- `transcript_provider`
+- `transcript_path`
+- `transcript_bytes`
+- `transcript_source`
+
+Codex JSONL discovery is one optional adapter for filling those fields. Other
+assistants can provide transcript byte counts or paths directly.
 
 These scripts inspect local transcript files. They do not upload transcripts or
 depend on network access.
-

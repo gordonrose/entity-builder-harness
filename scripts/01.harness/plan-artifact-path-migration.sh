@@ -61,7 +61,7 @@ cd "$REPO_ROOT"
 
 bucket_for_path() {
   case "$1" in
-    AGENTS.md|CLAUDE.md|.agentic/routing-policy.yaml|scripts/00.chat/classification/*)
+    AGENTS.md|CLAUDE.md|.agentic/routing-policy.yaml)
       printf '%s\n' "routing"
       ;;
     .agentic/*)
