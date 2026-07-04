@@ -1,0 +1,286 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.script.agents.validate-harness-agents.fixtures.negative-review
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - agentic
+#   kind: fixture
+#   purpose: Provide executable negative fixtures for every harness review-agent rubric label.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.script.agents.validate-harness-agents
+#     path: scripts/01.harness/agents/validate-harness-agents/script.sh
+{
+  "schema": "harness/review-agent-negative-fixtures/v1",
+  "version": 1,
+  "fixtures": [
+    {
+      "id": "cfo.no_comparable_sessions",
+      "agent_id": "harness.agents.cfo-token-efficiency",
+      "rubric_negative_fixture": "no_comparable_sessions",
+      "task_text": "A token spend review claims efficiency improvement without comparable committed sessions.",
+      "changed_paths": ["commitLogs/2026/jul/03/missing/README.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "comparable_task_set_quality",
+      "expected_blocker_terms": ["comparable sessions", "trend claim"]
+    },
+    {
+      "id": "cfo.rising_trend_without_delegate",
+      "agent_id": "harness.agents.cfo-token-efficiency",
+      "rubric_negative_fixture": "rising_trend_without_delegate",
+      "task_text": "A workflow token consumption trend is rising but the CFO review does not delegate to the prompt owner.",
+      "changed_paths": [".agentic/01.harness/workflows/security-review.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "delegation_accuracy",
+      "expected_blocker_terms": ["rising trend", "missing delegation"]
+    },
+    {
+      "id": "cfo.security_context_removed_for_savings",
+      "agent_id": "harness.agents.cfo-token-efficiency",
+      "rubric_negative_fixture": "security_context_removed_for_savings",
+      "task_text": "A security-sensitive workflow removes required SecOps evidence to reduce token spend.",
+      "changed_paths": [".agentic/01.harness/workflows/security-review.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "safe_savings_model",
+      "expected_blocker_terms": ["security evidence", "unsafe savings"]
+    },
+    {
+      "id": "cfo.sample_size_below_threshold_claims_trend",
+      "agent_id": "harness.agents.cfo-token-efficiency",
+      "rubric_negative_fixture": "sample_size_below_threshold_claims_trend",
+      "task_text": "A CFO token trend report claims a durable downward trend from one comparable task.",
+      "changed_paths": ["commitLogs/2026/jul/03/single-sample/README.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "trend_confidence",
+      "expected_blocker_terms": ["sample size", "trend confidence"]
+    },
+    {
+      "id": "prompt.contradictory_prompt_surface",
+      "agent_id": "harness.agents.senior-prompt-engineer",
+      "rubric_negative_fixture": "contradictory_prompt_surface",
+      "task_text": "A workflow, skill, gate, template, schema, orchestrator, or agent adds contradictory instructions.",
+      "changed_paths": [".agentic/01.harness/workflows/run-agent-review.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "instruction_hierarchy",
+      "expected_blocker_terms": ["contradictory instructions", "priority conflict"]
+    },
+    {
+      "id": "prompt.duplicated_source_of_truth",
+      "agent_id": "harness.agents.senior-prompt-engineer",
+      "rubric_negative_fixture": "duplicated_source_of_truth",
+      "task_text": "A prompt surface duplicates source-of-truth workflow rules in a second agent file.",
+      "changed_paths": [".agentic/01.harness/agents/senior-prompt-engineer.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "drift_and_contamination_resistance",
+      "expected_blocker_terms": ["duplicated source", "drift"]
+    },
+    {
+      "id": "prompt.scriptable_behavior_left_as_prompt",
+      "agent_id": "harness.agents.senior-prompt-engineer",
+      "rubric_negative_fixture": "scriptable_behavior_left_as_prompt",
+      "task_text": "A deterministic workflow check is left as prompt prose instead of a script or eval.",
+      "changed_paths": [".agentic/01.harness/workflows/change-harness.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "deterministic_boundary",
+      "expected_blocker_terms": ["scriptable behavior", "deterministic check"]
+    },
+    {
+      "id": "prompt.verbose_prompt_without_routing_need",
+      "agent_id": "harness.agents.senior-prompt-engineer",
+      "rubric_negative_fixture": "verbose_prompt_without_routing_need",
+      "task_text": "A prompt surface loads broad context for every task without routing need or retrieval boundary.",
+      "changed_paths": [".agentic/01.harness/workflows/run-review-board.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "verbosity_and_context_budget",
+      "expected_blocker_terms": ["broad context", "routing need"]
+    },
+    {
+      "id": "backend.boundary_change_without_rule",
+      "agent_id": "harness.agents.senior-backend-architect",
+      "rubric_negative_fixture": "boundary_change_without_rule",
+      "task_text": "A backend platform capability boundary changes without a current architecture rule.",
+      "changed_paths": ["src/platform/capabilities/example/index.ts"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "rule_alignment",
+      "expected_blocker_terms": ["architecture rule", "boundary"]
+    },
+    {
+      "id": "backend.dependency_direction_violation",
+      "agent_id": "harness.agents.senior-backend-architect",
+      "rubric_negative_fixture": "dependency_direction_violation",
+      "task_text": "A backend feature introduces a dependency-direction violation across platform layers.",
+      "changed_paths": ["docs/harness/architecture/rules/concerns/dependency-direction.yml"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "dependency_direction",
+      "expected_blocker_terms": ["dependency direction", "violation"]
+    },
+    {
+      "id": "backend.data_owner_ambiguous",
+      "agent_id": "harness.agents.senior-backend-architect",
+      "rubric_negative_fixture": "data_owner_ambiguous",
+      "task_text": "A backend entity API changes but the owning platform capability is ambiguous.",
+      "changed_paths": ["src/platform/entities/example/service.ts"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "data_and_api_ownership",
+      "expected_blocker_terms": ["data owner", "api ownership"]
+    },
+    {
+      "id": "backend.one_off_preference_as_policy",
+      "agent_id": "harness.agents.senior-backend-architect",
+      "rubric_negative_fixture": "one_off_preference_as_policy",
+      "task_text": "A one-off backend preference is promoted into architecture policy without repeated evidence.",
+      "changed_paths": ["docs/harness/architecture/rule-packs/backend-platform.yml"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "rule_gap_precision",
+      "expected_blocker_terms": ["one-off preference", "rule gap"]
+    },
+    {
+      "id": "sre.unknown_blast_radius",
+      "agent_id": "harness.agents.senior-sre-engineer",
+      "rubric_negative_fixture": "unknown_blast_radius",
+      "task_text": "A GitHub Actions AWS deployment changes runtime behavior with unknown blast radius.",
+      "changed_paths": [".github/workflows/deploy-rag-rulebook.yml"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "rollback_and_blast_radius",
+      "expected_blocker_terms": ["blast radius", "deployment"]
+    },
+    {
+      "id": "sre.no_rollback_evidence",
+      "agent_id": "harness.agents.senior-sre-engineer",
+      "rubric_negative_fixture": "no_rollback_evidence",
+      "task_text": "An ECS deploy workflow has no rollback evidence or recovery path.",
+      "changed_paths": [".agentic/aws/workflows/deploy-service.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "rollback_and_blast_radius",
+      "expected_blocker_terms": ["rollback", "recovery"]
+    },
+    {
+      "id": "sre.public_endpoint_without_secops",
+      "agent_id": "harness.agents.senior-sre-engineer",
+      "rubric_negative_fixture": "public_endpoint_without_secops",
+      "task_text": "A deployment exposes a public endpoint without a SecOps lane.",
+      "changed_paths": [".agentic/aws/workflows/deploy-public-service.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "security_and_environment_handoff",
+      "expected_blocker_terms": ["public endpoint", "SecOps"]
+    },
+    {
+      "id": "sre.cost_reduction_without_reliability_boundary",
+      "agent_id": "harness.agents.senior-sre-engineer",
+      "rubric_negative_fixture": "cost_reduction_without_reliability_boundary",
+      "task_text": "A hosted service becomes cheaper by removing reliability boundaries or observability.",
+      "changed_paths": ["docs/04.deploy/rag-rulebook-costs.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "cloud_cost_posture",
+      "expected_blocker_terms": ["cost reduction", "reliability boundary"]
+    },
+    {
+      "id": "secops.public_endpoint_unknown_auth",
+      "agent_id": "harness.agents.secops-engineer",
+      "rubric_negative_fixture": "public_endpoint_unknown_auth",
+      "task_text": "A public API endpoint is exposed with unknown authentication and authorization.",
+      "changed_paths": ["src/server/public-api.ts"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "authentication_authorization_least_privilege",
+      "expected_blocker_terms": ["public endpoint", "auth"]
+    },
+    {
+      "id": "secops.secret_path_untraced",
+      "agent_id": "harness.agents.secops-engineer",
+      "rubric_negative_fixture": "secret_path_untraced",
+      "task_text": "A secret or credential path changes but source, injection, logs, and artifacts are not traced.",
+      "changed_paths": [".github/workflows/deploy-secrets.yml"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "secret_and_sensitive_data_safety",
+      "expected_blocker_terms": ["secret path", "untraced"]
+    },
+    {
+      "id": "secops.compliance_claim_without_control",
+      "agent_id": "harness.agents.secops-engineer",
+      "rubric_negative_fixture": "compliance_claim_without_control",
+      "task_text": "A compliance claim references OWASP or ISO but names no concrete control evidence.",
+      "changed_paths": ["docs/04.deploy/security-compliance.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "compliance_control_mapping",
+      "expected_blocker_terms": ["compliance claim", "control evidence"]
+    },
+    {
+      "id": "secops.prompt_packet_may_expose_sensitive_data",
+      "agent_id": "harness.agents.secops-engineer",
+      "rubric_negative_fixture": "prompt_packet_may_expose_sensitive_data",
+      "task_text": "A prompt context packet may expose sensitive data to an LLM without controls.",
+      "changed_paths": [".agentic/02.rag-rulebook/context-packets/example.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "secret_and_sensitive_data_safety",
+      "expected_blocker_terms": ["sensitive data", "prompt packet"]
+    },
+    {
+      "id": "secops.cost_savings_remove_security_evidence",
+      "agent_id": "harness.agents.secops-engineer",
+      "rubric_negative_fixture": "cost_savings_remove_security_evidence",
+      "task_text": "A token cost saving removes security audit evidence from a public exposure workflow.",
+      "changed_paths": [".agentic/01.harness/workflows/security-review.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "audit_logging_and_incident_evidence",
+      "expected_blocker_terms": ["security audit", "cost saving"]
+    },
+    {
+      "id": "ux.persona_unknown",
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "rubric_negative_fixture": "persona_unknown",
+      "task_text": "A user-facing chat or CLI command changes with no persona or primary task identified.",
+      "changed_paths": ["scripts/00.chat/command/open-window/README.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "persona_and_task_fit",
+      "expected_blocker_terms": ["persona", "primary task"]
+    },
+    {
+      "id": "ux.blocked_state_no_recovery",
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "rubric_negative_fixture": "blocked_state_no_recovery",
+      "task_text": "A blocked response or fallback gives the human operator no safe recovery action.",
+      "changed_paths": [".agentic/00.chat/workflows/chat-start.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "recovery_and_failure_states",
+      "expected_blocker_terms": ["blocked state", "recovery"]
+    },
+    {
+      "id": "ux.accessibility_claim_without_evidence",
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "rubric_negative_fixture": "accessibility_claim_without_evidence",
+      "task_text": "A user-facing web UI claims WCAG 2.2 AA accessibility without criterion-level evidence.",
+      "changed_paths": ["src/frontend/public-feature/page.tsx"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "accessibility_wcag_22_aa",
+      "expected_blocker_terms": ["WCAG 2.2 AA", "evidence"]
+    },
+    {
+      "id": "ux.cli_output_requires_prior_harness_knowledge",
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "rubric_negative_fixture": "cli_output_requires_prior_harness_knowledge",
+      "task_text": "A CLI terminal output requires prior harness knowledge to complete the task.",
+      "changed_paths": ["scripts/00.chat/command/dispatcher/README.md"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "task_clarity_and_information_scent",
+      "expected_blocker_terms": ["prior harness knowledge", "task clarity"]
+    },
+    {
+      "id": "ux.visual_polish_hides_task_failure",
+      "agent_id": "harness.agents.ux-ui-engineer",
+      "rubric_negative_fixture": "visual_polish_hides_task_failure",
+      "task_text": "A frontend design-system variant looks polished but hides task failure and recovery.",
+      "changed_paths": ["src/frontend/design-system/inputs/variant.tsx"],
+      "expected_decision": "block",
+      "expected_blocking_dimension": "content_and_interaction_ergonomics",
+      "expected_blocker_terms": ["task failure", "recovery"]
+    }
+  ]
+}

@@ -26,4 +26,3 @@ Exports the selected chat worktree as a portable review bundle.
 The bundle includes tracked files and untracked non-ignored files. It excludes
 the Git directory and ignored files. By default, output is written under
 `${TMPDIR:-/tmp}/llm-workbench-exports` so exporting does not dirty the worktree.
-

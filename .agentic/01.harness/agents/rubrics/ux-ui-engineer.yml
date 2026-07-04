@@ -1,0 +1,267 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.agents.rubrics.ux-ui-engineer
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - frontend
+#   - requirements
+#   kind: rubric
+#   purpose: Define professional scoring rules for UX/UI review.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.agents.ux-ui-engineer
+#     path: .agentic/01.harness/agents/ux-ui-engineer.md
+{
+  "schema": "harness/agent-rubric/v1",
+  "agent_id": "harness.agents.ux-ui-engineer",
+  "version": 1,
+  "minimum_dimensions": 6,
+  "decision_policy": {
+    "pass": "All required dimensions score at least 4 and persona, task clarity, recovery, accessibility, consistency, and content ergonomics are covered.",
+    "pass_with_notes": "All required dimensions score at least 3 and residual friction is non-blocking, owned, and visible.",
+    "block": "Any required dimension scores below 3, persona/task is unknown, WCAG 2.2 AA evidence is missing for a user-facing surface, or recovery is unsafe.",
+    "delegate": "A prompt, security, SRE, architecture, or CFO issue owns an unresolved user-facing risk.",
+    "not_applicable": "No user-facing repo, chat, CLI, web, documentation, or operator interface is under review."
+  },
+  "professional_standard_refs": [
+    "WCAG 2.2 AA",
+    "task-oriented usability",
+    "inclusive and accessible content",
+    "recoverable interaction design",
+    "design-system consistency",
+    "operator experience for CLI and chat"
+  ],
+  "evidence_model": {
+    "required_sources": [
+      "interface artifact or output",
+      "target persona and task",
+      "accessibility evidence when applicable",
+      "failure or recovery state",
+      "existing design-system or content pattern"
+    ],
+    "minimum_sample_size_for_trend": 0,
+    "confidence_fields": [
+      "persona",
+      "primary_task",
+      "interface_type",
+      "accessibility_scope",
+      "recovery_path",
+      "evidence_limit"
+    ]
+  },
+  "delegation_model": {
+    "prompt_or_instruction_confusion": "harness.agents.senior-prompt-engineer",
+    "security_sensitive_interaction": "harness.agents.secops-engineer",
+    "operator_runtime_flow": "harness.agents.senior-sre-engineer",
+    "backend_or_data_contract": "harness.agents.senior-backend-architect",
+    "repeated_review_or_interaction_cost": "harness.agents.cfo-token-efficiency"
+  },
+  "negative_fixtures": [
+    "persona_unknown",
+    "blocked_state_no_recovery",
+    "accessibility_claim_without_evidence",
+    "cli_output_requires_prior_harness_knowledge",
+    "visual_polish_hides_task_failure"
+  ],
+  "dimensions": [
+    {
+      "id": "persona_and_task_fit",
+      "name": "Persona And Task Fit",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "target persona",
+        "primary task",
+        "task pressure or context",
+        "success outcome"
+      ],
+      "score_5": "Persona, task, pressure, and success outcome are explicit and the interface directly supports them.",
+      "score_4": "Persona and task fit are clear with minor context gaps.",
+      "score_3": "Persona and task are usable but require some inference.",
+      "score_2": "Persona or task fit is weak enough to risk wrong design decisions.",
+      "score_1": "Persona appears invented or mismatched.",
+      "score_0": "Persona or primary task is absent.",
+      "blocking_conditions": [
+        "persona unknown",
+        "primary task unknown",
+        "interface optimized for a different user"
+      ],
+      "delegation_triggers": [
+        "prompt_or_instruction_confusion"
+      ],
+      "professional_standard_refs": [
+        "task-oriented usability",
+        "persona-based review"
+      ]
+    },
+    {
+      "id": "task_clarity_and_information_scent",
+      "name": "Task Clarity And Information Scent",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "entry point",
+        "next action",
+        "outcome or state",
+        "information hierarchy"
+      ],
+      "score_5": "The user can identify the entry point, next action, current state, and expected outcome without prior harness knowledge.",
+      "score_4": "Task clarity is strong with minor wording or ordering gaps.",
+      "score_3": "Task clarity is sufficient for completion but requires careful reading.",
+      "score_2": "Task path and next action are ambiguous or easy to misread.",
+      "score_1": "User must infer information scent and next action from unrelated context.",
+      "score_0": "Task cannot be completed from the available interface.",
+      "blocking_conditions": [
+        "next action missing in a blocked state",
+        "status or outcome cannot be determined",
+        "critical instruction is hidden or contradictory"
+      ],
+      "delegation_triggers": [
+        "prompt_or_instruction_confusion",
+        "backend_or_data_contract"
+      ],
+      "professional_standard_refs": [
+        "information scent",
+        "plain-language task flow",
+        "operator experience"
+      ]
+    },
+    {
+      "id": "recovery_and_failure_states",
+      "name": "Recovery And Failure States",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "failure state",
+        "recovery action",
+        "user-safe stop condition",
+        "state preservation"
+      ],
+      "score_5": "Failure states preserve user work, explain the problem, and provide safe, specific recovery actions.",
+      "score_4": "Recovery is clear with minor completeness gaps.",
+      "score_3": "Recovery is workable but requires some external knowledge.",
+      "score_2": "Recovery guidance is vague or risks repeated failure.",
+      "score_1": "Failure state blames the user or sends them to unsupported action.",
+      "score_0": "Failure state has no safe recovery path.",
+      "blocking_conditions": [
+        "blocked state has no next action",
+        "recovery path risks data loss or unsafe mutation",
+        "error hides which state failed"
+      ],
+      "delegation_triggers": [
+        "operator_runtime_flow",
+        "security_sensitive_interaction"
+      ],
+      "professional_standard_refs": [
+        "recoverable interaction design",
+        "error prevention and recovery"
+      ]
+    },
+    {
+      "id": "accessibility_wcag_22_aa",
+      "name": "Accessibility WCAG 2.2 AA",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "applicable WCAG 2.2 AA criteria",
+        "keyboard and focus evidence when UI is interactive",
+        "name/role/value or semantic structure",
+        "contrast or readable output evidence when visual"
+      ],
+      "score_5": "Applicable WCAG 2.2 AA concerns are explicitly checked with evidence for the interface type.",
+      "score_4": "Accessibility posture is strong with minor evidence gaps.",
+      "score_3": "Accessibility is likely acceptable but not fully evidenced.",
+      "score_2": "Accessibility evidence is incomplete for a user-facing surface.",
+      "score_1": "Accessibility is mentioned generically without checking the interface.",
+      "score_0": "Known or likely WCAG 2.2 AA blocker is present or unreviewed.",
+      "blocking_conditions": [
+        "interactive UI lacks keyboard or focus evidence",
+        "visual UI lacks readable contrast evidence",
+        "CLI or chat output is not screen-reader or copy friendly",
+        "accessibility claim has no evidence"
+      ],
+      "delegation_triggers": [
+        "security_sensitive_interaction",
+        "operator_runtime_flow"
+      ],
+      "professional_standard_refs": [
+        "WCAG 2.2 AA",
+        "accessible names and roles",
+        "keyboard access",
+        "readable content"
+      ]
+    },
+    {
+      "id": "component_and_pattern_consistency",
+      "name": "Component And Pattern Consistency",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "existing pattern",
+        "variant or component owner",
+        "reason for deviation",
+        "reuse boundary"
+      ],
+      "score_5": "The interface follows existing component, content, and command-output patterns or documents a justified deviation.",
+      "score_4": "Pattern consistency is clear with minor reuse gaps.",
+      "score_3": "Consistency is acceptable but could be easier to maintain.",
+      "score_2": "New pattern may fragment the system.",
+      "score_1": "Interface uses local-only conventions without reason.",
+      "score_0": "Interface contradicts established patterns or creates incompatible variants.",
+      "blocking_conditions": [
+        "new control or output pattern duplicates existing pattern",
+        "variant boundary is unknown",
+        "design-system behavior is changed without owner evidence"
+      ],
+      "delegation_triggers": [
+        "backend_or_data_contract",
+        "prompt_or_instruction_confusion"
+      ],
+      "professional_standard_refs": [
+        "design-system consistency",
+        "reusable interaction patterns",
+        "content-system governance"
+      ]
+    },
+    {
+      "id": "content_and_interaction_ergonomics",
+      "name": "Content And Interaction Ergonomics",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "copy or labels",
+        "interaction cost",
+        "cognitive load",
+        "support for repeated use"
+      ],
+      "score_5": "Language, layout, command output, or chat flow is concise, predictable, and efficient for repeated use.",
+      "score_4": "Ergonomics are strong with minor copy or flow friction.",
+      "score_3": "Content ergonomics are usable but somewhat verbose or effortful.",
+      "score_2": "Interaction cost is high enough to create mistakes or avoidable token/time spend.",
+      "score_1": "Experience is confusing or tiring for repeated use.",
+      "score_0": "Content or interaction blocks task completion or safe operation.",
+      "blocking_conditions": [
+        "copy instructs unsupported action",
+        "critical state is hidden by verbosity",
+        "interaction requires avoidable repeated rework"
+      ],
+      "delegation_triggers": [
+        "repeated_review_or_interaction_cost",
+        "prompt_or_instruction_confusion"
+      ],
+      "professional_standard_refs": [
+        "plain language",
+        "cognitive load reduction",
+        "efficient repeated workflows"
+      ]
+    }
+  ]
+}

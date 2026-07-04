@@ -21,4 +21,3 @@
 
 Routes the public `download repo diff` command to the changed-files chat
 worktree export capability.
-

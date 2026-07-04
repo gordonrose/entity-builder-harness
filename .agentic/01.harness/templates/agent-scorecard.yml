@@ -1,0 +1,57 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.templates.agent-scorecard
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#     - agentic
+#   kind: template
+#   purpose: Provide the shared machine-readable scorecard shape for harness review agents.
+#   portability:
+#     class: required
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: harness.standards.agent-contracts
+#       path: .agentic/01.harness/standards/agent-contracts.md
+#     - id: harness.agents.readme
+#       path: .agentic/01.harness/agents/README.md
+
+{
+  "schema": "harness/agent-scorecard-template/v1",
+  "scorecard_schema": "harness/agent-scorecard/v1",
+  "purpose": "Define the shared agent-neutral scorecard contract. Agent-specific dimensions come from the selected rubric.",
+  "required_top_level_fields": [
+    "schema",
+    "agent",
+    "review",
+    "evidence",
+    "findings",
+    "scores",
+    "delegation_requests",
+    "required_follow_up",
+    "quality_gate"
+  ],
+  "decision_values": [
+    "pass",
+    "pass_with_notes",
+    "block",
+    "delegate",
+    "not_applicable"
+  ],
+  "score_rules": [
+    "scores[].dimension must name a required dimension from the selected agent rubric",
+    "scores[].score must be an integer from 0 through 5",
+    "review.overall_score must match the weighted average of rubric dimension scores within validator tolerance",
+    "critical_blocker_present or findings.critical requires decision block",
+    "any required dimension score below 3 requires decision block",
+    "decision delegate requires at least one delegation request"
+  ],
+  "examples": [
+    ".agentic/01.harness/templates/examples/cfo-token-efficiency-scorecard.yml"
+  ]
+}

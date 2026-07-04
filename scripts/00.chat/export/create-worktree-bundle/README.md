@@ -35,4 +35,3 @@ npm run chat -- download repo diff
 The helper is intentionally dependency-light: it uses Node built-in modules and
 Git only, so exported `llm-workbench` installs do not depend on a system `zip`
 binary.
-

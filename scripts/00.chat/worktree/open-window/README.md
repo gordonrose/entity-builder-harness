@@ -21,11 +21,16 @@
 -->
 # Open Window Worktree Capability
 
-`script.sh` opens a new VS Code window for a chat-owned worktree.
+`script.sh` opens a new VS Code window for a verified chat-owned worktree.
 
 With no argument, it reads the current chat branch session log and opens the
-`worktree` metadata path. With one argument, it accepts either a worktree path
-or a session-log `README.md` path.
+`worktree` metadata path. With one argument, it accepts either a chat-owned
+worktree path or a session-log `README.md` path.
+
+The script refuses to open a root/main worktree or any path whose checked-out
+branch, session log `branch`, and session log `worktree` metadata do not agree.
+This makes the public open-window command the deterministic boundary for
+editor launches during chat work.
 
 The command is best-effort. If the `code` CLI is unavailable or cannot open the
 window, the script prints a warning and exits successfully so chat startup does

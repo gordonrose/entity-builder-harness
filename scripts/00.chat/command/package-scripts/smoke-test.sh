@@ -109,12 +109,35 @@ EOF
 git -C "$REPO" add package.json scripts commitLogs
 git -C "$REPO" -c user.name='Smoke Test' -c user.email='smoke@example.invalid' commit --quiet -m 'fixture'
 
+CHAT_BRANCH="chat/2026-06-19-test-open-window"
+CHAT_SESSION_ID="${CHAT_BRANCH#chat/}"
+CHAT_WORKTREE="$TMP_ROOT/chat-worktree"
+git -C "$REPO" branch "$CHAT_BRANCH"
+git -C "$REPO" worktree add --quiet "$CHAT_WORKTREE" "$CHAT_BRANCH"
+mkdir -p "$CHAT_WORKTREE/commitLogs/2026/jun/19/$CHAT_SESSION_ID"
+cat > "$CHAT_WORKTREE/commitLogs/2026/jun/19/$CHAT_SESSION_ID/README.md" <<EOF
+# Chat Session: test-open-window
+
+<!-- agentic-session
+id: $CHAT_SESSION_ID
+task: test open window
+branch: $CHAT_BRANCH
+worktree: $CHAT_WORKTREE
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+status: ready
+raised_at_utc: 2026-06-19T00:00:00Z
+-->
+EOF
+
 (
   cd "$REPO"
   npm run --silent chat:list > "$TMP_ROOT/list.out"
   npm run --silent chat:commit-log-summary > "$TMP_ROOT/summary.out"
   npm run --silent chat:cleanup-empty-branches -- --dry-run > "$TMP_ROOT/cleanup.out"
-  CHAT_OPEN_WORKTREE_WINDOW=skip npm run --silent chat:open-window -- "$REPO" > "$TMP_ROOT/open-window.out"
+  if CHAT_OPEN_WORKTREE_WINDOW=skip npm run --silent chat:open-window -- "$REPO" > "$TMP_ROOT/open-window-root.out" 2>&1; then
+    fail "chat:open-window accepted root/main worktree"
+  fi
+  CHAT_OPEN_WORKTREE_WINDOW=skip npm run --silent chat:open-window -- "$CHAT_WORKTREE" > "$TMP_ROOT/open-window.out"
   npm run --silent chat:download-repo -- --output "$TMP_ROOT/package-full.zip" "$REPO" > "$TMP_ROOT/download-repo.out"
   npm run --silent chat:download-repo-diff -- --base main --output "$TMP_ROOT/package-diff.zip" "$REPO" > "$TMP_ROOT/download-repo-diff.out"
 )
@@ -126,7 +149,8 @@ grep -q '^  download-repo$' "$TMP_ROOT/list.out" || fail "chat:list did not list
 grep -q '^  download-repo-diff$' "$TMP_ROOT/list.out" || fail "chat:list did not list download-repo-diff"
 grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "chat:commit-log-summary did not delegate"
 grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "chat:cleanup-empty-branches did not delegate"
-grep -q '^Skipping VS Code window open: ' "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
+grep -q 'ERROR: refusing to open non-chat worktree branch: main' "$TMP_ROOT/open-window-root.out" || fail "chat:open-window did not reject root/main"
+grep -q "Skipping VS Code window open: $CHAT_WORKTREE" "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
 test -f "$TMP_ROOT/package-full.zip" || fail "chat:download-repo did not create a zip"
 test -f "$TMP_ROOT/package-diff.zip" || fail "chat:download-repo-diff did not create a zip"
 grep -q '^Export kind: worktree$' "$TMP_ROOT/download-repo.out" || fail "chat:download-repo did not delegate"

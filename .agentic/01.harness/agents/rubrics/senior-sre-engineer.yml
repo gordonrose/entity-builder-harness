@@ -1,0 +1,249 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.agents.rubrics.senior-sre-engineer
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - sre
+#   - architecture
+#   kind: rubric
+#   purpose: Define professional scoring rules for Senior SRE review.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.agents.senior-sre-engineer
+#     path: .agentic/01.harness/agents/senior-sre-engineer.md
+{
+  "schema": "harness/agent-rubric/v1",
+  "agent_id": "harness.agents.senior-sre-engineer",
+  "version": 1,
+  "minimum_dimensions": 6,
+  "decision_policy": {
+    "pass": "All required dimensions score at least 4 with controlled rollout, rollback, observability, and cost evidence.",
+    "pass_with_notes": "All required dimensions score at least 3 and residual operational gaps are non-blocking.",
+    "block": "Any required dimension scores below 3, blast radius is unknown, rollback is absent, or public exposure lacks SecOps review.",
+    "delegate": "Security, architecture, prompt, UX, or CFO owns an unresolved risk.",
+    "not_applicable": "No deployment, runtime, reliability, or cloud-cost surface is under review."
+  },
+  "professional_standard_refs": [
+    "deployment control",
+    "rollback and release safety",
+    "observability and alerting",
+    "SLO and incident response thinking",
+    "AWS service selection and cost controls"
+  ],
+  "evidence_model": {
+    "required_sources": [
+      "deployment plan or diff",
+      "environment and blast radius",
+      "rollback evidence",
+      "health/metrics/logging evidence",
+      "cost driver evidence"
+    ],
+    "minimum_sample_size_for_trend": 0,
+    "confidence_fields": [
+      "environment",
+      "blast_radius",
+      "rollback_path",
+      "observability_path",
+      "cost_signal"
+    ]
+  },
+  "delegation_model": {
+    "public_exposure_or_auth": "harness.agents.secops-engineer",
+    "backend_boundary": "harness.agents.senior-backend-architect",
+    "operator_experience": "harness.agents.ux-ui-engineer",
+    "deployment_workflow_prompt": "harness.agents.senior-prompt-engineer",
+    "cost_trend": "harness.agents.cfo-token-efficiency"
+  },
+  "negative_fixtures": [
+    "unknown_blast_radius",
+    "no_rollback_evidence",
+    "public_endpoint_without_secops",
+    "cost_reduction_without_reliability_boundary"
+  ],
+  "dimensions": [
+    {
+      "id": "deployment_control",
+      "name": "Deployment Control",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "change path",
+        "environment",
+        "approval boundary",
+        "artifact provenance"
+      ],
+      "score_5": "Deployment path is governed, environment-scoped, provenance-aware, and reversible.",
+      "score_4": "Deployment path is controlled with minor documentation gaps.",
+      "score_3": "Deployment path is usable but needs follow-up evidence.",
+      "score_2": "Deployment controls are incomplete or mostly implicit.",
+      "score_1": "Deployment path risks uncontrolled mutation.",
+      "score_0": "Deployment control is absent or ungoverned.",
+      "blocking_conditions": [
+        "environment unknown",
+        "unreviewed deploy mutation path"
+      ],
+      "delegation_triggers": [
+        "deployment_workflow_prompt"
+      ],
+      "professional_standard_refs": [
+        "change control",
+        "artifact provenance"
+      ]
+    },
+    {
+      "id": "rollback_and_blast_radius",
+      "name": "Rollback And Blast Radius",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "blast radius",
+        "rollback command or plan",
+        "failure mode",
+        "verification signal"
+      ],
+      "score_5": "Blast radius, rollback path, and verification are explicit for each affected environment.",
+      "score_4": "Rollback is clear with minor operational gaps.",
+      "score_3": "Rollback is plausible but not rehearsed.",
+      "score_2": "Rollback or blast-radius evidence is weak.",
+      "score_1": "Rollback depends on manual improvisation.",
+      "score_0": "Blast radius or rollback is unknown.",
+      "blocking_conditions": [
+        "unknown blast radius",
+        "no rollback path for deployable change"
+      ],
+      "delegation_triggers": [
+        "backend_boundary"
+      ],
+      "professional_standard_refs": [
+        "rollback planning",
+        "blast-radius review"
+      ]
+    },
+    {
+      "id": "observability_and_alerting",
+      "name": "Observability And Alerting",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "health checks",
+        "logs",
+        "metrics",
+        "alarms",
+        "operator signal"
+      ],
+      "score_5": "Health, logs, metrics, alarms, and operator signals cover success and failure modes.",
+      "score_4": "Observability is strong with minor alarm or dashboard gaps.",
+      "score_3": "Basic signals exist but coverage is incomplete.",
+      "score_2": "Signals are insufficient for confident operation.",
+      "score_1": "Operator would need ad hoc investigation.",
+      "score_0": "Runtime observability is effectively blind: no health, logs, metrics, alarms, or operator signal.",
+      "blocking_conditions": [
+        "public or production service lacks critical health signal",
+        "no failure-mode visibility"
+      ],
+      "delegation_triggers": [
+        "operator_experience"
+      ],
+      "professional_standard_refs": [
+        "observability",
+        "incident detection"
+      ]
+    },
+    {
+      "id": "reliability_and_capacity",
+      "name": "Reliability And Capacity",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "expected load",
+        "failure mode",
+        "scaling behavior",
+        "degradation path"
+      ],
+      "score_5": "Capacity, scaling, failure, and graceful degradation are explicit and appropriate.",
+      "score_4": "Reliability posture is sound with minor load assumptions.",
+      "score_3": "Reliability is adequate for current scope but needs follow-up.",
+      "score_2": "Capacity or failure assumptions are weak.",
+      "score_1": "Reliability relies on hope or default service behavior.",
+      "score_0": "Capacity or reliability is unreviewed for a risky change.",
+      "blocking_conditions": [
+        "expected load unknown for public service",
+        "no degradation path for critical dependency"
+      ],
+      "delegation_triggers": [
+        "cost_trend"
+      ],
+      "professional_standard_refs": [
+        "SLO thinking",
+        "capacity planning"
+      ]
+    },
+    {
+      "id": "cloud_cost_posture",
+      "name": "Cloud Cost Posture",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "cost drivers",
+        "per-query or per-request signal",
+        "service selection reason",
+        "budget or alarm signal"
+      ],
+      "score_5": "Cost drivers, per-query signals, service choice, and budget controls are explicit.",
+      "score_4": "Cost posture is solid with minor forecast gaps.",
+      "score_3": "Cost posture is acceptable for limited scope.",
+      "score_2": "Cost drivers are only partially understood.",
+      "score_1": "Cost choice is justified by assumption only.",
+      "score_0": "Cost is unreviewed for a cost-bearing service.",
+      "blocking_conditions": [
+        "public endpoint lacks cost guardrail",
+        "cost reduction weakens reliability or security"
+      ],
+      "delegation_triggers": [
+        "cost_trend",
+        "public_exposure_or_auth"
+      ],
+      "professional_standard_refs": [
+        "cloud cost management",
+        "AWS service selection"
+      ]
+    },
+    {
+      "id": "security_and_environment_handoff",
+      "name": "Security And Environment Handoff",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "environment isolation",
+        "secrets handling",
+        "public exposure status",
+        "SecOps decision when needed"
+      ],
+      "score_5": "Environment boundaries, secret paths, and public exposure decisions are clear and handed to SecOps when needed.",
+      "score_4": "Security handoff is clear with minor evidence gaps.",
+      "score_3": "Security handoff is adequate but needs follow-up proof.",
+      "score_2": "Security handoff is incomplete.",
+      "score_1": "Operational review assumes security acceptance.",
+      "score_0": "Public or secret-bearing change lacks SecOps review.",
+      "blocking_conditions": [
+        "public exposure without SecOps review",
+        "secret path unknown"
+      ],
+      "delegation_triggers": [
+        "public_exposure_or_auth"
+      ],
+      "professional_standard_refs": [
+        "least privilege",
+        "environment isolation"
+      ]
+    }
+  ]
+}

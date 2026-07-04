@@ -17,10 +17,10 @@ chat_duration: 31432s (00:08:43:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
-transcript_provider: 
-transcript_path: 
-transcript_bytes: 
-transcript_source: 
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
 -->
 
 ## Initial Intent

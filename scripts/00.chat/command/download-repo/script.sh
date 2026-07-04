@@ -23,4 +23,3 @@ set -euo pipefail
 #   - writes-files
 
 exec bash scripts/00.chat/export/worktree/script.sh "$@"
-

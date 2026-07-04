@@ -1,0 +1,239 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.agents.rubrics.senior-backend-architect
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - architecture
+#   - backend
+#   kind: rubric
+#   purpose: Define professional scoring rules for Senior Back-End Architect review.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.agents.senior-backend-architect
+#     path: .agentic/01.harness/agents/senior-backend-architect.md
+{
+  "schema": "harness/agent-rubric/v1",
+  "agent_id": "harness.agents.senior-backend-architect",
+  "version": 1,
+  "minimum_dimensions": 6,
+  "decision_policy": {
+    "pass": "All required dimensions score at least 4 and any architecture gaps are non-blocking or governed.",
+    "pass_with_notes": "All required dimensions score at least 3 with bounded rule gaps.",
+    "block": "Any required dimension scores below 3, current rules are contradicted, or a durable rule gap blocks safe implementation.",
+    "delegate": "A security, SRE, UX, prompt, or CFO issue owns the blocker.",
+    "not_applicable": "No backend/product architecture surface is under review."
+  },
+  "professional_standard_refs": [
+    "platform/app/entity/feature/capability boundaries",
+    "dependency direction",
+    "data ownership",
+    "API and module contracts",
+    "architecture rulebook governance"
+  ],
+  "evidence_model": {
+    "required_sources": [
+      "changed paths or implementation summary",
+      "architecture rules or rule pack",
+      "context packet when available",
+      "current module ownership evidence"
+    ],
+    "minimum_sample_size_for_trend": 0,
+    "confidence_fields": [
+      "rules_reviewed",
+      "boundary_under_review",
+      "known_gap",
+      "recommended_owner_artifact"
+    ]
+  },
+  "delegation_model": {
+    "runtime_or_deploy_risk": "harness.agents.senior-sre-engineer",
+    "security_or_auth_boundary": "harness.agents.secops-engineer",
+    "human_facing_contract": "harness.agents.ux-ui-engineer",
+    "prompt_or_workflow_rule_surface": "harness.agents.senior-prompt-engineer",
+    "repeated_architecture_review_cost": "harness.agents.cfo-token-efficiency"
+  },
+  "negative_fixtures": [
+    "boundary_change_without_rule",
+    "dependency_direction_violation",
+    "data_owner_ambiguous",
+    "one_off_preference_as_policy"
+  ],
+  "dimensions": [
+    {
+      "id": "rule_alignment",
+      "name": "Rule Alignment",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "specific rule or rule gap",
+        "changed path",
+        "compliance statement"
+      ],
+      "score_5": "Implementation is mapped to current rules with precise compliance evidence.",
+      "score_4": "Implementation aligns with rules with minor interpretive gaps.",
+      "score_3": "Implementation is plausible but needs a follow-up rule clarification.",
+      "score_2": "Rule alignment is weak or inferred.",
+      "score_1": "Implementation likely violates rule intent.",
+      "score_0": "Implementation contradicts known architecture rules.",
+      "blocking_conditions": [
+        "known rule contradiction",
+        "missing rule for durable repeated decision"
+      ],
+      "delegation_triggers": [
+        "prompt_or_workflow_rule_surface"
+      ],
+      "professional_standard_refs": [
+        "architecture rulebook",
+        "rule-pack governance"
+      ]
+    },
+    {
+      "id": "boundary_clarity",
+      "name": "Boundary Clarity",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "platform/app/entity/feature/capability classification",
+        "module owner",
+        "public contract or integration seam"
+      ],
+      "score_5": "Ownership and boundaries are explicit across platform, app, entity, feature, and capability seams.",
+      "score_4": "Boundaries are clear with minor naming or placement ambiguity.",
+      "score_3": "Boundaries are workable but require reviewer inference.",
+      "score_2": "Boundary placement risks future coupling.",
+      "score_1": "Multiple owners or seams conflict.",
+      "score_0": "Boundary is absent or incoherent.",
+      "blocking_conditions": [
+        "owner cannot be identified",
+        "public contract changes without boundary review"
+      ],
+      "delegation_triggers": [
+        "human_facing_contract"
+      ],
+      "professional_standard_refs": [
+        "platform/app/entity/feature/capability approach",
+        "module boundaries"
+      ]
+    },
+    {
+      "id": "dependency_direction",
+      "name": "Dependency Direction",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "dependency direction rule",
+        "import or integration path",
+        "layer ownership"
+      ],
+      "score_5": "Dependencies follow declared direction and keep lower-level modules reusable.",
+      "score_4": "Dependencies are correct with minor documentation gaps.",
+      "score_3": "Dependencies are acceptable but close to an architectural edge.",
+      "score_2": "Dependency direction is unclear or brittle.",
+      "score_1": "Dependency direction likely reverses intended ownership.",
+      "score_0": "Dependency direction violates rulebook constraints.",
+      "blocking_conditions": [
+        "forbidden dependency direction",
+        "shared module depends on feature-specific implementation"
+      ],
+      "delegation_triggers": [
+        "runtime_or_deploy_risk"
+      ],
+      "professional_standard_refs": [
+        "dependency-direction rules",
+        "layered architecture"
+      ]
+    },
+    {
+      "id": "data_and_api_ownership",
+      "name": "Data And API Ownership",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "data owner",
+        "API contract",
+        "validation or persistence boundary"
+      ],
+      "score_5": "Data ownership, API contracts, validation, and persistence boundaries are explicit.",
+      "score_4": "Data/API ownership is clear with small edge-case gaps.",
+      "score_3": "Data/API ownership is adequate but needs follow-up docs.",
+      "score_2": "Ownership is ambiguous enough to risk duplication.",
+      "score_1": "Data or API contract conflicts with existing ownership.",
+      "score_0": "Data ownership or API contract is absent for a changed boundary.",
+      "blocking_conditions": [
+        "data owner unknown",
+        "API contract changed without validation boundary"
+      ],
+      "delegation_triggers": [
+        "security_or_auth_boundary"
+      ],
+      "professional_standard_refs": [
+        "data ownership",
+        "API contract design"
+      ]
+    },
+    {
+      "id": "rule_gap_precision",
+      "name": "Rule Gap Precision",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "gap statement",
+        "owner artifact",
+        "reason gap is durable"
+      ],
+      "score_5": "Gap is narrow, durable, evidence-based, and assigned to the right artifact family.",
+      "score_4": "Rule gap is well-framed with minor owner-artifact scope questions.",
+      "score_3": "Gap is plausible but needs tighter owner wording.",
+      "score_2": "Gap is broad or may be a one-off preference.",
+      "score_1": "Rule gap would create durable doctrine from local taste.",
+      "score_0": "Gap is absent despite missing governance.",
+      "blocking_conditions": [
+        "missing governance for required architecture decision",
+        "one-off preference proposed as durable rule"
+      ],
+      "delegation_triggers": [
+        "prompt_or_workflow_rule_surface"
+      ],
+      "professional_standard_refs": [
+        "missing governance stop condition",
+        "rule authoring standards"
+      ]
+    },
+    {
+      "id": "implementation_mode_boundary",
+      "name": "Implementation Mode Boundary",
+      "required": true,
+      "weight": 1,
+      "evidence_required": [
+        "review mode or implementation mode",
+        "workflow granting authority",
+        "allowed artifact scope"
+      ],
+      "score_5": "Review and implementation authority are explicit and governed.",
+      "score_4": "Authority is clear with minor wording gaps.",
+      "score_3": "Authority is acceptable but implementation mode needs follow-up.",
+      "score_2": "Authority boundary could invite accidental edits.",
+      "score_1": "Agent appears to implement without workflow authority.",
+      "score_0": "Review and implementation authority are conflated.",
+      "blocking_conditions": [
+        "implementation requested without governing workflow",
+        "review-only output patches files"
+      ],
+      "delegation_triggers": [
+        "prompt_or_workflow_rule_surface"
+      ],
+      "professional_standard_refs": [
+        "agent authority model",
+        "governed implementation workflow"
+      ]
+    }
+  ]
+}

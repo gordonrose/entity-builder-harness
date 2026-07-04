@@ -21,4 +21,3 @@
 
 Routes the public `download repo` command to the full chat worktree export
 capability.
-

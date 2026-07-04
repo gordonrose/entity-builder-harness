@@ -1,0 +1,254 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.agents.rubrics.cfo-token-efficiency
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - agentic
+#   kind: rubric
+#   purpose: Define professional scoring rules for CFO token-efficiency review.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.agents.cfo-token-efficiency
+#     path: .agentic/01.harness/agents/cfo-token-efficiency.md
+{
+  "schema": "harness/agent-rubric/v1",
+  "agent_id": "harness.agents.cfo-token-efficiency",
+  "version": 1,
+  "minimum_dimensions": 6,
+  "decision_policy": {
+    "pass": "All required dimensions score at least 4, trend is down or justified, and no delegation is required.",
+    "pass_with_notes": "All required dimensions score at least 3 and non-downward trend has documented justification or accepted delegation.",
+    "block": "Any required dimension scores below 3, comparable evidence is absent for a trend claim, or unsafe savings are recommended.",
+    "delegate": "Trend is flat or rising without accepted justification, or the savings cause belongs to another professional lane.",
+    "not_applicable": "No comparable task set or token metric source can be established."
+  },
+  "professional_standard_refs": [
+    "commitLogs session metadata",
+    "chat cost estimation basis",
+    "statistical sample quality",
+    "safe delegation over quality reduction"
+  ],
+  "evidence_model": {
+    "required_sources": [
+      "current task summary",
+      "current estimated_chat_tokens when available",
+      "commitLogs comparable sessions",
+      "CFO token comparison script output"
+    ],
+    "minimum_sample_size_for_trend": 3,
+    "confidence_fields": [
+      "sample_size",
+      "similarity_basis",
+      "trend_direction",
+      "trend_confidence",
+      "pricing_basis"
+    ]
+  },
+  "delegation_model": {
+    "flat_or_up_trend": "delegate to the agent that owns the suspected cost driver",
+    "prompt_or_workflow_waste": "harness.agents.senior-prompt-engineer",
+    "runtime_or_cloud_cost": "harness.agents.senior-sre-engineer",
+    "security_evidence_cost_conflict": "harness.agents.secops-engineer",
+    "architecture_duplication": "harness.agents.senior-backend-architect",
+    "human_interaction_friction": "harness.agents.ux-ui-engineer"
+  },
+  "negative_fixtures": [
+    "no_comparable_sessions",
+    "rising_trend_without_delegate",
+    "security_context_removed_for_savings",
+    "sample_size_below_threshold_claims_trend"
+  ],
+  "dimensions": [
+    {
+      "id": "comparable_task_set_quality",
+      "name": "Comparable Task Set Quality",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "similarity method",
+        "sample size",
+        "session IDs or paths",
+        "exclusion reason for irrelevant high-score matches"
+      ],
+      "score_5": "Comparable set has at least 5 relevant sessions or a clear reason fewer exist, with path/task evidence and exclusions documented.",
+      "score_4": "Comparable set is relevant and named, with minor uncertainty about one or two matches.",
+      "score_3": "Comparable set is small or partially noisy but adequate for cautious notes.",
+      "score_2": "Comparable set is weak, mixed, or too small for trend conclusions.",
+      "score_1": "Comparable set is mostly unrelated but still used for guidance.",
+      "score_0": "No comparable set is provided while trend or efficiency claims are made.",
+      "blocking_conditions": [
+        "trend claim without comparable sessions",
+        "sample size below threshold with no confidence warning"
+      ],
+      "delegation_triggers": [
+        "similarity cannot classify task type"
+      ],
+      "professional_standard_refs": [
+        "statistical sample quality",
+        "commitLogs metadata"
+      ]
+    },
+    {
+      "id": "metric_completeness",
+      "name": "Metric Completeness",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "count",
+        "min",
+        "max",
+        "mean",
+        "median",
+        "q1",
+        "q3",
+        "current task comparison"
+      ],
+      "score_5": "All required statistics, current comparison, and pricing or token basis are present.",
+      "score_4": "All token statistics are present; pricing basis is partial but not required for the decision.",
+      "score_3": "Most statistics are present and missing fields are explained.",
+      "score_2": "Statistics are incomplete enough to weaken the decision.",
+      "score_1": "Only raw metric totals or anecdotal token counts are provided.",
+      "score_0": "No quantitative token evidence is provided.",
+      "blocking_conditions": [
+        "missing median",
+        "missing quartiles",
+        "missing current comparison when current tokens are available"
+      ],
+      "delegation_triggers": [
+        "cost basis missing for financial recommendation"
+      ],
+      "professional_standard_refs": [
+        "descriptive statistics",
+        "chat cost estimation basis"
+      ]
+    },
+    {
+      "id": "trend_confidence",
+      "name": "Trend Confidence",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "trend method",
+        "date range",
+        "slope or direction",
+        "confidence level",
+        "outlier handling"
+      ],
+      "score_5": "Trend method, confidence, date range, and outlier handling are explicit and defensible.",
+      "score_4": "Trend direction is supported with minor confidence caveats.",
+      "score_3": "Trend is cautious and labeled low confidence where evidence is thin.",
+      "score_2": "Trend is asserted from weak or distorted chronology.",
+      "score_1": "Trend language conflicts with the evidence.",
+      "score_0": "Trend is claimed without time-ordered evidence.",
+      "blocking_conditions": [
+        "flat or rising trend without delegation or justification",
+        "trend direction impossible to reproduce from output"
+      ],
+      "delegation_triggers": [
+        "flat_or_up_trend"
+      ],
+      "professional_standard_refs": [
+        "trend analysis",
+        "outlier disclosure"
+      ]
+    },
+    {
+      "id": "safe_savings_model",
+      "name": "Safe Savings Model",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "savings opportunity",
+        "quality or safety boundary",
+        "affected workflow or agent",
+        "reason savings are safe"
+      ],
+      "score_5": "Savings recommendations reduce avoidable cost while preserving every required gate, evidence source, and flexibility boundary.",
+      "score_4": "Savings are plausible and safe with one minor unresolved detail.",
+      "score_3": "Savings are cautious and require follow-up before implementation.",
+      "score_2": "Savings may weaken evidence, flexibility, or review depth.",
+      "score_1": "Savings are primarily cost-driven without adequate safety analysis.",
+      "score_0": "Savings remove security, governance, or critical context.",
+      "blocking_conditions": [
+        "required safety evidence removed for token reduction",
+        "governance gate skipped to reduce cost"
+      ],
+      "delegation_triggers": [
+        "security_evidence_cost_conflict",
+        "prompt_or_workflow_waste"
+      ],
+      "professional_standard_refs": [
+        "safety-preserving optimization",
+        "governed workflow flexibility"
+      ]
+    },
+    {
+      "id": "delegation_accuracy",
+      "name": "Delegation Accuracy",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "suspected cost driver",
+        "target agent",
+        "blocking question",
+        "evidence already reviewed"
+      ],
+      "score_5": "Delegation target precisely owns the cost driver and receives a clear blocking question with evidence.",
+      "score_4": "Delegation is appropriate with minor detail gaps.",
+      "score_3": "Delegation is broadly correct but needs sharper question framing.",
+      "score_2": "Delegation target may not own the issue.",
+      "score_1": "Delegation is generic or excessive.",
+      "score_0": "Required delegation is absent.",
+      "blocking_conditions": [
+        "delegate_required is true but target agent is absent",
+        "unsafe savings recommended without specialist review"
+      ],
+      "delegation_triggers": [
+        "flat_or_up_trend",
+        "unsafe_savings_boundary"
+      ],
+      "professional_standard_refs": [
+        "bounded agent ownership",
+        "review-board lane ownership"
+      ]
+    },
+    {
+      "id": "report_actionability",
+      "name": "Report Actionability",
+      "required": true,
+      "weight": 1,
+      "evidence_required": [
+        "decision",
+        "findings",
+        "next action",
+        "confidence",
+        "evidence gaps"
+      ],
+      "score_5": "Report is concise, reproducible, and directly usable by another agent or workflow.",
+      "score_4": "Report is actionable with minor formatting or confidence gaps.",
+      "score_3": "Report is usable but needs follow-up to execute.",
+      "score_2": "Report is hard to act on without re-analysis.",
+      "score_1": "Report is mostly generic advice.",
+      "score_0": "Report lacks decision or next action.",
+      "blocking_conditions": [
+        "missing decision",
+        "missing evidence gaps"
+      ],
+      "delegation_triggers": [
+        "report consumer cannot proceed"
+      ],
+      "professional_standard_refs": [
+        "structured review output",
+        "agent scorecard contract"
+      ]
+    }
+  ]
+}

@@ -27,4 +27,3 @@ Use this domain when the user needs to hand the active chat worktree, or only
 its changed files, to another model, engineer, or verification environment.
 The export capability owns the selection and manifest semantics. Zip is only
 the default transport format for the resulting bundle.
-

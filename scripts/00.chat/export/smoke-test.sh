@@ -208,4 +208,3 @@ grep -q '"untracked.txt"' "$TMP_ROOT/diff-manifest.json" \
   || fail "diff manifest is missing untracked file"
 
 echo "chat export smoke test passed."
-

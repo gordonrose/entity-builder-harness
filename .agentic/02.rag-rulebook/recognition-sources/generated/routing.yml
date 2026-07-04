@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 106
-  workflow_files: 31
+  term_count: 112
+  workflow_files: 34
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -379,6 +379,12 @@ terms:
   canonical_id: 01.harness.workflow.create-rule-pack.workflow
   evidence_path: .agentic/01.harness/workflows/create-rule-pack.workflow.md
   confidence_weight: 1
+- term: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.implement-backend-architecture-guideline
+  evidence_path: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  confidence_weight: 1
 - term: .agentic/01.harness/workflows/migrate-artifact-paths.md
   category: workflow-name
   match_type: exact
@@ -390,6 +396,18 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.review-rule-artifact.workflow
   evidence_path: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/run-agent-review.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.run-agent-review
+  evidence_path: .agentic/01.harness/workflows/run-agent-review.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/run-review-board.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.run-review-board
+  evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
 - term: .agentic/02.rag-rulebook/workflows/README.md
   category: workflow-name
@@ -643,6 +661,12 @@ terms:
   canonical_id: aws.workflow.execute-approved-aws-change
   evidence_path: .agentic/aws/workflows/execute-approved-aws-change.md
   confidence_weight: 1
+- term: implement-backend-architecture-guideline.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.implement-backend-architecture-guideline
+  evidence_path: .agentic/01.harness/workflows/implement-backend-architecture-guideline.md
+  confidence_weight: 1
 - term: improve-education-system.md
   category: workflow-name
   match_type: exact
@@ -690,6 +714,18 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.review-rule-artifact.workflow
   evidence_path: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
+  confidence_weight: 1
+- term: run-agent-review.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.run-agent-review
+  evidence_path: .agentic/01.harness/workflows/run-agent-review.md
+  confidence_weight: 1
+- term: run-review-board.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.run-review-board
+  evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
 validation_rules:
 - Generated routing terms must retain evidence paths.

@@ -8,7 +8,7 @@
 #   disciplines:
 #   - agentic
 #   kind: config
-#   purpose: Define Architecture rulebook operating pack configuration for agent routing.
+#   purpose: Define harness governance layer configuration for agent routing.
 #   portability:
 #     class: required
 #     targets:
@@ -20,11 +20,12 @@
 #     path: .agentic/01.harness/README.md
 
 id: agentic.01.harness
-title: Architecture rulebook operating pack
+title: Harness governance operating pack
 status: active
 purpose: >
-  Teach Codex sessions how to continue creating architecture rules and rule
-  packs from canonical markdown guides without building runtime harness code.
+  Govern changes to harness workflows, standards, review agents, validators,
+  templates, evaluation fixtures, architecture rule artifacts, and
+  deterministic checks while preserving source-of-truth boundaries.
 
 read_order:
   - .agentic/01.harness/manifest.yml
@@ -36,6 +37,13 @@ read_order:
   - relevant checklist under .agentic/01.harness/checklists
 
 canonical_paths:
+  review_agents: .agentic/01.harness/agents
+  review_agent_rubrics: .agentic/01.harness/agents/rubrics
+  review_agent_fixtures: scripts/01.harness/agents/validate-harness-agents/fixtures
+  harness_standards: .agentic/01.harness/standards
+  harness_workflows: .agentic/01.harness/workflows
+  harness_templates: .agentic/01.harness/templates
+  harness_validators: scripts/01.harness
   source_guides: docs/harness/architecture/guides/markdown
   layer_rules: docs/harness/architecture/rules/layers
   concern_rules: docs/harness/architecture/rules/concerns
@@ -44,18 +52,36 @@ canonical_paths:
 generated_by_human_or_codex: codex
 
 guardrails:
-  - Do not build the MCP server.
-  - Do not build the full agentic harness.
-  - Do not create executable runtime code.
-  - Do not create eval runners.
+  - Do not build the MCP server unless a future workflow explicitly governs that scope.
+  - Do not build product runtime services from this layer.
+  - Create executable harness validators, gates, metrics, or eval runners only when a workflow or standard identifies deterministic behavior they own.
   - Do not modify production repo code.
   - Do not edit the source markdown guides.
-  - Do not create architecture rules or rule packs unless that artifact is the requested task.
+  - Do not create architecture rules or rule packs unless that artifact is the requested task and the architecture workflow applies.
+  - Review agents may not edit files during review mode.
+  - Implementation-agent mode requires an explicit workflow, bounded artifact scope, and normal chat lifecycle write permission.
   - Work one artifact at a time.
   - Validate YAML after editing YAML files.
   - Summarize assumptions before stopping.
 
 current_known_artifacts:
+  review_agent_capabilities:
+    - .agentic/01.harness/agents/README.md
+    - .agentic/01.harness/agents/rubrics/README.md
+    - .agentic/01.harness/templates/agent-review-report.md
+    - .agentic/01.harness/templates/agent-scorecard.yml
+    - .agentic/01.harness/templates/agent-scorecard.schema.yml
+    - .agentic/01.harness/templates/agent-scorecard.example.yml
+    - .agentic/01.harness/templates/examples/cfo-token-efficiency-scorecard.yml
+    - scripts/01.harness/agents/validate-harness-agents/script.sh
+    - scripts/01.harness/agents/validate-harness-agents/fixtures/use-case-fixtures.yml
+    - scripts/01.harness/agents/validate-harness-agents/fixtures/scorecard-fixtures.yml
+    - scripts/01.harness/agents/validate-harness-agents/fixtures/negative-review-fixtures.yml
+    - scripts/01.harness/metrics/compare-task-token-consumption/script.sh
+  standards:
+    - .agentic/01.harness/standards/agent-contracts.md
+    - .agentic/01.harness/standards/professional-review-agent-quality.md
+    - .agentic/01.harness/standards/evaluation-fixtures.md
   layer_rulesets:
     - docs/harness/architecture/rules/layers/apps.yml
     - docs/harness/architecture/rules/layers/design-system.yml

@@ -1,0 +1,266 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.agents.rubrics.secops-engineer
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: governance.agents
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: rubric
+#   purpose: Define professional scoring rules for SecOps review.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.agents.secops-engineer
+#     path: .agentic/01.harness/agents/secops-engineer.md
+{
+  "schema": "harness/agent-rubric/v1",
+  "agent_id": "harness.agents.secops-engineer",
+  "version": 1,
+  "minimum_dimensions": 6,
+  "decision_policy": {
+    "pass": "All required dimensions score at least 4 and protected assets, trust boundaries, auth, secrets, abuse paths, and audit evidence are covered.",
+    "pass_with_notes": "All required dimensions score at least 3 and residual security gaps are non-critical, owned, and documented.",
+    "block": "Any required dimension scores below 3, public exposure is unknown, auth is absent, secrets may leak, or abuse/audit paths are unreviewed for a risky surface.",
+    "delegate": "A reliability, architecture, prompt, UX, or CFO issue owns an unresolved security-adjacent risk.",
+    "not_applicable": "No security-relevant code, process, deployment, artifact, data, or human-facing trust boundary is under review."
+  },
+  "professional_standard_refs": [
+    "OWASP application security risk thinking",
+    "ISO 27001-style control evidence",
+    "least privilege",
+    "threat modeling",
+    "audit logging and incident evidence",
+    "secret management"
+  ],
+  "evidence_model": {
+    "required_sources": [
+      "changed paths or implementation summary",
+      "asset, caller, and trust-boundary description",
+      "authn/authz and permission evidence",
+      "secret and sensitive-data handling evidence",
+      "logging, audit, and abuse-control evidence"
+    ],
+    "minimum_sample_size_for_trend": 0,
+    "confidence_fields": [
+      "protected_asset",
+      "caller",
+      "trust_boundary",
+      "exposure_path",
+      "control_evidence",
+      "residual_risk"
+    ]
+  },
+  "delegation_model": {
+    "runtime_or_cloud_control": "harness.agents.senior-sre-engineer",
+    "trust_boundary_placement": "harness.agents.senior-backend-architect",
+    "prompt_injection_or_context_contamination": "harness.agents.senior-prompt-engineer",
+    "security_sensitive_user_flow": "harness.agents.ux-ui-engineer",
+    "security_evidence_cost_tradeoff": "harness.agents.cfo-token-efficiency"
+  },
+  "negative_fixtures": [
+    "public_endpoint_unknown_auth",
+    "secret_path_untraced",
+    "compliance_claim_without_control",
+    "prompt_packet_may_expose_sensitive_data",
+    "cost_savings_remove_security_evidence"
+  ],
+  "dimensions": [
+    {
+      "id": "asset_and_trust_boundary",
+      "name": "Asset And Trust Boundary",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "protected asset",
+        "caller or actor",
+        "trust boundary",
+        "exposure path"
+      ],
+      "score_5": "Protected assets, callers, trust boundaries, and exposure paths are explicit and mapped to the changed surface.",
+      "score_4": "Assets and boundaries are clear with minor evidence gaps.",
+      "score_3": "Assets and boundaries are usable but require some reviewer inference.",
+      "score_2": "Boundary evidence is weak enough to miss an exposure path.",
+      "score_1": "Assets or callers are mostly assumed.",
+      "score_0": "Protected asset, caller, trust boundary, or exposure path is absent.",
+      "blocking_conditions": [
+        "protected asset unknown",
+        "caller unknown",
+        "public exposure path unknown"
+      ],
+      "delegation_triggers": [
+        "trust_boundary_placement",
+        "runtime_or_cloud_control"
+      ],
+      "professional_standard_refs": [
+        "threat modeling",
+        "asset inventory",
+        "trust-boundary analysis"
+      ]
+    },
+    {
+      "id": "authentication_authorization_least_privilege",
+      "name": "Authentication Authorization And Least Privilege",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "authentication model",
+        "authorization rules",
+        "permission scope",
+        "least-privilege rationale"
+      ],
+      "score_5": "Authn, authz, permission scope, and least-privilege rationale are concrete and appropriate for the exposure.",
+      "score_4": "Access controls are strong with minor documentation gaps.",
+      "score_3": "Access controls are acceptable but need follow-up proof.",
+      "score_2": "Access controls are incomplete or rely on implicit protection.",
+      "score_1": "Access controls are generic or mismatched to the asset.",
+      "score_0": "Authentication, authorization, or permission scope is missing for a protected surface.",
+      "blocking_conditions": [
+        "public or protected surface lacks auth evidence",
+        "permissions broader than justified",
+        "authorization path unknown"
+      ],
+      "delegation_triggers": [
+        "runtime_or_cloud_control",
+        "trust_boundary_placement"
+      ],
+      "professional_standard_refs": [
+        "OWASP access control",
+        "least privilege",
+        "identity and access management"
+      ]
+    },
+    {
+      "id": "secret_and_sensitive_data_safety",
+      "name": "Secret And Sensitive Data Safety",
+      "required": true,
+      "weight": 3,
+      "evidence_required": [
+        "secret source",
+        "storage and injection path",
+        "log/artifact exposure review",
+        "rotation or recovery notes when relevant"
+      ],
+      "score_5": "Secrets and sensitive data are traced through storage, injection, logs, artifacts, packets, and recovery paths.",
+      "score_4": "Secret handling is safe with minor evidence gaps.",
+      "score_3": "Secret handling is plausible but needs follow-up verification.",
+      "score_2": "Secret flow is partially unknown or weakly documented.",
+      "score_1": "Secret handling relies on assumptions or conventions.",
+      "score_0": "Secret or sensitive-data leakage is possible or unreviewed.",
+      "blocking_conditions": [
+        "secret path cannot be traced",
+        "logs or generated artifacts may expose sensitive data",
+        "credentials appear in source or images"
+      ],
+      "delegation_triggers": [
+        "runtime_or_cloud_control",
+        "security_evidence_cost_tradeoff"
+      ],
+      "professional_standard_refs": [
+        "secret management",
+        "data minimization",
+        "secure logging"
+      ]
+    },
+    {
+      "id": "abuse_injection_and_misuse_resistance",
+      "name": "Abuse Injection And Misuse Resistance",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "input or prompt boundary",
+        "misuse path",
+        "rate or quota control when relevant",
+        "validation and sanitization evidence"
+      ],
+      "score_5": "Injection, prompt contamination, misuse, rate, and validation controls are mapped to realistic abuse paths.",
+      "score_4": "Abuse controls are strong with minor edge-case gaps.",
+      "score_3": "Abuse controls are acceptable for current scope.",
+      "score_2": "Abuse paths are only partially considered.",
+      "score_1": "Abuse analysis is generic or misses likely paths.",
+      "score_0": "Injection, prompt contamination, or misuse risk is unreviewed for a relevant surface.",
+      "blocking_conditions": [
+        "untrusted input reaches privileged action without control evidence",
+        "prompt injection risk is ignored for retrieved context",
+        "public abuse path has no rate, quota, or audit evidence"
+      ],
+      "delegation_triggers": [
+        "prompt_injection_or_context_contamination",
+        "runtime_or_cloud_control"
+      ],
+      "professional_standard_refs": [
+        "OWASP injection",
+        "abuse-case analysis",
+        "prompt-injection resistance"
+      ]
+    },
+    {
+      "id": "audit_logging_and_incident_evidence",
+      "name": "Audit Logging And Incident Evidence",
+      "required": true,
+      "weight": 2,
+      "evidence_required": [
+        "security-relevant events",
+        "audit trail",
+        "redaction policy",
+        "operator investigation path"
+      ],
+      "score_5": "Security events, audit trail, redaction, and investigation evidence are sufficient for incident response.",
+      "score_4": "Audit evidence is strong with minor retention or query gaps.",
+      "score_3": "Audit evidence is usable but incomplete.",
+      "score_2": "Investigation path would require ad hoc reconstruction.",
+      "score_1": "Logging exists but is not security-useful.",
+      "score_0": "Security-relevant actions cannot be audited or investigated.",
+      "blocking_conditions": [
+        "protected action lacks audit trail",
+        "logs expose sensitive data",
+        "operator cannot investigate likely incident"
+      ],
+      "delegation_triggers": [
+        "runtime_or_cloud_control",
+        "security_sensitive_user_flow"
+      ],
+      "professional_standard_refs": [
+        "audit logging",
+        "incident response evidence",
+        "secure observability"
+      ]
+    },
+    {
+      "id": "compliance_control_mapping",
+      "name": "Compliance Control Mapping",
+      "required": true,
+      "weight": 1,
+      "evidence_required": [
+        "standard or control named",
+        "repo-specific evidence",
+        "residual risk or exception",
+        "owner for follow-up"
+      ],
+      "score_5": "OWASP, ISO-aligned, or other security-standard claims map to concrete repo/runtime controls and residual risks.",
+      "score_4": "Control mapping is clear with minor evidence gaps.",
+      "score_3": "Control mapping is usable but partly high-level.",
+      "score_2": "Control references are too generic for confident approval.",
+      "score_1": "Compliance labels are used as decoration.",
+      "score_0": "Compliance is claimed without concrete control evidence.",
+      "blocking_conditions": [
+        "standard named without repo-specific control",
+        "critical residual risk has no owner"
+      ],
+      "delegation_triggers": [
+        "security_evidence_cost_tradeoff"
+      ],
+      "professional_standard_refs": [
+        "ISO 27001-style control evidence",
+        "OWASP risk mapping",
+        "risk acceptance ownership"
+      ]
+    }
+  ]
+}

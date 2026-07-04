@@ -23,4 +23,3 @@ set -euo pipefail
 #   - writes-files
 
 exec node scripts/00.chat/export/create-worktree-bundle/script.js --mode worktree "$@"
-
