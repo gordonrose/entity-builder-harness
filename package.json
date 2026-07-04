@@ -1,6 +1,9 @@
 {
   "name": "entity-builder-harness",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "chat": "bash scripts/00.chat/command/dispatcher/script.sh",
     "chat:list": "bash scripts/00.chat/command/dispatcher/script.sh list",
@@ -19,6 +22,7 @@
     "rag:service": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/script.sh",
     "rag:service:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/run-local-service/smoke-test.sh",
     "rag:image:build": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-service-image/script.sh",
-    "rag:image:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh"
+    "rag:image:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+    "core:check": "node packages/core/tests/core-boundaries.test.mjs"
   }
 }

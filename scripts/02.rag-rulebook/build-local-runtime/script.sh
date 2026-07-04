@@ -240,6 +240,7 @@ FINGERPRINT_INPUTS = {
     "recognition_candidates": [".agentic/02.rag-rulebook/recognition-candidates"],
     "corpus_gaps": [".agentic/02.rag-rulebook/corpus-gaps"],
     "source_material": [
+        "docs/harness/architecture/source-material",
         "docs/02.rag-rulebook/source-material",
         "docs/04.deploy/source-material",
     ],

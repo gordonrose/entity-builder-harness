@@ -1,0 +1,130 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for the initial packages/core contract surface.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.rules.layers.packages-core
+#     path: docs/harness/architecture/rules/layers/packages-core.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.03.product-core.2026-07-04.packages-core-contract-surface-v1
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  summary: >
+    Approved source material records the narrow bootstrap exception and contract
+    module surface for the initial packages/core slice.
+
+target:
+  corpus_id: corpus.03.product.core
+  owner_layer: 03.product
+  expected_rule_paths:
+    - docs/harness/architecture/rules/layers/packages-core.yml
+  affected_rule_paths:
+    - docs/harness/architecture/rules/layers/packages-core.yml
+  affected_rulesets: []
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: core.bootstrap.exception.narrow
+      summary: The initial core slice may create contract modules before app and platform consumers exist, but only as a narrow bootstrap exception.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.contracts.only
+      summary: Core may define stable contract shapes, ports, types, errors, policies, and pure primitives.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.provider.implementations.outside
+      summary: Provider adapters, runtime hosts, infrastructure, and product workflows must remain outside packages/core.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: rag.disposition.required
+      summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/harness/architecture/rules/layers/platform.yml
+      - docs/harness/architecture/rules/layers/apps.yml
+      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - packages/core contract guidance is product-core knowledge for retrieval.
+      - RAG/rulebook owns the projection and commit-time knowledge-disposition gate.
+      - The chat layer stays portable by calling only the neutral repository extension hook.
+
+proposed_updates:
+  rules:
+    - docs/harness/architecture/rules/layers/packages-core.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+  notes:
+    - Existing packages/core rules already define the general ownership boundary.
+    - This source material pins the approved initial contract surface and RAG disposition expectation.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - npm run core:check
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+      result: passed
+    - command: npm run core:check
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: codex-agentic-review-loop
+  reviewed_at_utc: "2026-07-04T00:00:00Z"
+  notes:
+    - Source and projection were reviewed as part of the packages/core slice recovery.
+    - Future core modules should add narrower source material when their contracts materially change.

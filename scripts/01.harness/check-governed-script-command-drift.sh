@@ -152,6 +152,11 @@ scan_file() {
                   continue
                   ;;
               esac
+              case "$path:$script" in
+                .agentic/00.chat/*:scripts/00.chat/*)
+                  continue
+                  ;;
+              esac
               case "$previous_text" in
                 *"bash scripts/01.harness/run-governed-script.sh --approved-action \\"*)
                   continue

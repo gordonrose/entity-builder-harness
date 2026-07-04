@@ -20,6 +20,18 @@ title: packages/core rules
 version: 1
 status: active
 
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-07-04T00:00:00Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+  source_material:
+    - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+      sha256: a3fb9fedb0c8265f26f2e26dffeab52607b28482d4bd3ff211abcee178118593
+
 description: >
   Rules governing what may live in packages/core and how agents should treat
   core as a stable shared foundation.

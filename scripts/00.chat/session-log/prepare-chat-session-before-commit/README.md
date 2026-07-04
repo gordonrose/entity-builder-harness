@@ -48,8 +48,8 @@ The script runs shared gates first:
 - deterministic process drift check for staged files
 - metadata header check for newly staged artifacts
 - governed script command drift check
-- optional repo-provided commit gate when
-  `LLM_WORKBENCH_OPTIONAL_COMMIT_GATE` is set to a repository-relative script
+- optional repository extension hook at `scripts/repo/commit-gates/script.sh`,
+  or `CHAT_REPO_COMMIT_GATES_SCRIPT` when the repo needs to override the hook
 
 Then it validates the current chat session:
 
@@ -78,14 +78,9 @@ Then it validates the current chat session:
 3. Run `record-chat-commit` with the task commit SHA and summary.
 4. If only the session log is dirty, run `checkpoint-chat-session-log`.
 
-## Compatibility
+## Repository Extensions
 
-The governed runner still approves the old path:
-
-```bash
-scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
-```
-
-That file is now a compatibility wrapper around the canonical implementation.
-Checklists should keep using the approved shared path until the governed runner
-allowlist policy is migrated.
+`00.chat` does not own repository-specific, harness-specific, product,
+deployment, or RAG/rulebook commit checks. A repository may provide a neutral
+extension hook at `scripts/repo/commit-gates/script.sh`. If present, this helper
+runs it after portable chat and harness drift checks.

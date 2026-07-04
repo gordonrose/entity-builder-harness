@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 548
-  term_count: 1108
+  indexed_artifacts: 578
+  term_count: 1168
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -77,6 +77,18 @@ terms:
   match_type: exact
   canonical_id: chat.checklists.before-commit
   evidence_path: .agentic/00.chat/checklists/before-commit.md
+  confidence_weight: 1
+- term: chat.checklists.llm-workbench-public-beta
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.checklists.llm-workbench-public-beta
+  evidence_path: .agentic/00.chat/checklists/llm-workbench-public-beta.md
+  confidence_weight: 1
+- term: .agentic/00.chat/checklists/llm-workbench-public-beta.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.checklists.llm-workbench-public-beta
+  evidence_path: .agentic/00.chat/checklists/llm-workbench-public-beta.md
   confidence_weight: 1
 - term: chat.commands.readme
   category: artifact-id
@@ -113,6 +125,18 @@ terms:
   match_type: exact
   canonical_id: chat.skills.session-summary
   evidence_path: .agentic/00.chat/skills/session-summary.md
+  confidence_weight: 1
+- term: chat.standards.llm-workbench-public-beta-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.standards.llm-workbench-public-beta-contract
+  evidence_path: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+  confidence_weight: 1
+- term: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.standards.llm-workbench-public-beta-contract
+  evidence_path: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
   confidence_weight: 1
 - term: chat.standards.main-refresh-conflict-types
   category: artifact-id
@@ -269,6 +293,18 @@ terms:
   match_type: exact
   canonical_id: chat.chat-workbench-public-repo-readiness
   evidence_path: docs/00.chat/chat-workbench-public-repo-readiness.md
+  confidence_weight: 1
+- term: chat.docs.llm-workbench-acceptance-matrix
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.docs.llm-workbench-acceptance-matrix
+  evidence_path: docs/00.chat/llm-workbench-acceptance-matrix.md
+  confidence_weight: 1
+- term: docs/00.chat/llm-workbench-acceptance-matrix.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.docs.llm-workbench-acceptance-matrix
+  evidence_path: docs/00.chat/llm-workbench-acceptance-matrix.md
   confidence_weight: 1
 - term: chat.public-chat-workbench-adrs
   category: artifact-id
@@ -498,6 +534,54 @@ terms:
   canonical_id: chat.script.command.dispatcher.smoke-test
   evidence_path: scripts/00.chat/command/dispatcher/smoke-test.sh
   confidence_weight: 1
+- term: chat.script.command.download-repo-diff.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.command.download-repo-diff.readme
+  evidence_path: scripts/00.chat/command/download-repo-diff/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/command/download-repo-diff/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.command.download-repo-diff.readme
+  evidence_path: scripts/00.chat/command/download-repo-diff/README.md
+  confidence_weight: 1
+- term: chat.script.command.download-repo-diff
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.command.download-repo-diff
+  evidence_path: scripts/00.chat/command/download-repo-diff/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/command/download-repo-diff/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.command.download-repo-diff
+  evidence_path: scripts/00.chat/command/download-repo-diff/script.sh
+  confidence_weight: 1
+- term: chat.script.command.download-repo.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.command.download-repo.readme
+  evidence_path: scripts/00.chat/command/download-repo/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/command/download-repo/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.command.download-repo.readme
+  evidence_path: scripts/00.chat/command/download-repo/README.md
+  confidence_weight: 1
+- term: chat.script.command.download-repo
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.command.download-repo
+  evidence_path: scripts/00.chat/command/download-repo/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/command/download-repo/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.command.download-repo
+  evidence_path: scripts/00.chat/command/download-repo/script.sh
+  confidence_weight: 1
 - term: chat.script.command.new.readme
   category: artifact-id
   match_type: exact
@@ -569,6 +653,102 @@ terms:
   match_type: exact
   canonical_id: chat.script.command.package-scripts.smoke-test
   evidence_path: scripts/00.chat/command/package-scripts/smoke-test.sh
+  confidence_weight: 1
+- term: chat.script.export.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.readme
+  evidence_path: scripts/00.chat/export/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/export/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.readme
+  evidence_path: scripts/00.chat/export/README.md
+  confidence_weight: 1
+- term: chat.script.export.create-worktree-bundle.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.create-worktree-bundle.readme
+  evidence_path: scripts/00.chat/export/create-worktree-bundle/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/export/create-worktree-bundle/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.create-worktree-bundle.readme
+  evidence_path: scripts/00.chat/export/create-worktree-bundle/README.md
+  confidence_weight: 1
+- term: chat.script.export.create-worktree-bundle
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.create-worktree-bundle
+  evidence_path: scripts/00.chat/export/create-worktree-bundle/script.js
+  confidence_weight: 1
+- term: scripts/00.chat/export/create-worktree-bundle/script.js
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.create-worktree-bundle
+  evidence_path: scripts/00.chat/export/create-worktree-bundle/script.js
+  confidence_weight: 1
+- term: chat.script.export.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.smoke-test
+  evidence_path: scripts/00.chat/export/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/00.chat/export/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.smoke-test
+  evidence_path: scripts/00.chat/export/smoke-test.sh
+  confidence_weight: 1
+- term: chat.script.export.worktree-diff.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.worktree-diff.readme
+  evidence_path: scripts/00.chat/export/worktree-diff/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/export/worktree-diff/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.worktree-diff.readme
+  evidence_path: scripts/00.chat/export/worktree-diff/README.md
+  confidence_weight: 1
+- term: chat.script.export.worktree-diff
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.worktree-diff
+  evidence_path: scripts/00.chat/export/worktree-diff/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/export/worktree-diff/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.worktree-diff
+  evidence_path: scripts/00.chat/export/worktree-diff/script.sh
+  confidence_weight: 1
+- term: chat.script.export.worktree.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.worktree.readme
+  evidence_path: scripts/00.chat/export/worktree/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/export/worktree/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.worktree.readme
+  evidence_path: scripts/00.chat/export/worktree/README.md
+  confidence_weight: 1
+- term: chat.script.export.worktree
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.export.worktree
+  evidence_path: scripts/00.chat/export/worktree/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/export/worktree/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.export.worktree
+  evidence_path: scripts/00.chat/export/worktree/script.sh
   confidence_weight: 1
 - term: chat.script.git.readme
   category: artifact-id
@@ -1674,6 +1854,30 @@ terms:
   canonical_id: chat.script.upstream.bootstrap-llm-workbench-repo.smoke-test
   evidence_path: scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh
   confidence_weight: 1
+- term: chat.script.upstream.check-llm-workbench-contract.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.upstream.check-llm-workbench-contract.readme
+  evidence_path: scripts/00.chat/upstream/check-llm-workbench-contract/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/upstream/check-llm-workbench-contract/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.upstream.check-llm-workbench-contract.readme
+  evidence_path: scripts/00.chat/upstream/check-llm-workbench-contract/README.md
+  confidence_weight: 1
+- term: chat.script.upstream.check-llm-workbench-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.upstream.check-llm-workbench-contract
+  evidence_path: scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.upstream.check-llm-workbench-contract
+  evidence_path: scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+  confidence_weight: 1
 - term: chat.script.upstream.ensure-llm-workbench-repo.readme
   category: artifact-id
   match_type: exact
@@ -1697,6 +1901,30 @@ terms:
   match_type: exact
   canonical_id: chat.script.upstream.ensure-llm-workbench-repo
   evidence_path: scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
+  confidence_weight: 1
+- term: chat.script.upstream.validate-llm-workbench-portability.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.upstream.validate-llm-workbench-portability.readme
+  evidence_path: scripts/00.chat/upstream/validate-llm-workbench-portability/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/upstream/validate-llm-workbench-portability/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.upstream.validate-llm-workbench-portability.readme
+  evidence_path: scripts/00.chat/upstream/validate-llm-workbench-portability/README.md
+  confidence_weight: 1
+- term: chat.script.upstream.validate-llm-workbench-portability
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.upstream.validate-llm-workbench-portability
+  evidence_path: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.upstream.validate-llm-workbench-portability
+  evidence_path: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
   confidence_weight: 1
 - term: chat.script.worktree.readme
   category: artifact-id
@@ -2844,6 +3072,18 @@ terms:
   canonical_id: harness.adr.0022-add-rag-rulebook-layer
   evidence_path: docs/harness/architecture/adrs/0022-add-rag-rulebook-layer.md
   confidence_weight: 1
+- term: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  evidence_path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  evidence_path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  confidence_weight: 1
 - term: harness.adr.readme
   category: artifact-id
   match_type: exact
@@ -3252,6 +3492,18 @@ terms:
   canonical_id: harness.architecture.rules.layers.scripts-command-surface
   evidence_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
   confidence_weight: 1
+- term: harness.architecture.source-material.packages-core-contract-surface-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
+  evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  confidence_weight: 1
+- term: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
+  evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  confidence_weight: 1
 - term: harness.script.agents.validate-harness-agents.readme
   category: artifact-id
   match_type: exact
@@ -3612,6 +3864,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.02-rag-rulebook.2026-06-27-mcp-server-deployment-architecture
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   category: artifact-id
   match_type: exact
@@ -3779,6 +4043,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-surface
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-surface
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-surface
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
   category: artifact-id
@@ -4842,6 +5118,42 @@ terms:
   canonical_id: rag-rulebook.script.build-service-image
   evidence_path: scripts/02.rag-rulebook/build-service-image/script.sh
   confidence_weight: 1
+- term: rag-rulebook.script.check-code-change-knowledge-coverage.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-code-change-knowledge-coverage.readme
+  evidence_path: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-code-change-knowledge-coverage.readme
+  evidence_path: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.check-code-change-knowledge-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-code-change-knowledge-coverage
+  evidence_path: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-code-change-knowledge-coverage
+  evidence_path: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.check-code-change-knowledge-coverage.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-code-change-knowledge-coverage.smoke-test
+  evidence_path: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.check-code-change-knowledge-coverage.smoke-test
+  evidence_path: scripts/02.rag-rulebook/check-code-change-knowledge-coverage/smoke-test.sh
+  confidence_weight: 1
 - term: rag-rulebook.script.check-corpus-root-changes.readme
   category: artifact-id
   match_type: exact
@@ -5417,6 +5729,30 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.query-local-context.smoke-test
   evidence_path: scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.record-knowledge-disposition.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.record-knowledge-disposition.readme
+  evidence_path: scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.record-knowledge-disposition.readme
+  evidence_path: scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.record-knowledge-disposition
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.record-knowledge-disposition
+  evidence_path: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.record-knowledge-disposition
+  evidence_path: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
   confidence_weight: 1
 - term: rag-rulebook.script.report-recognition-candidates.readme
   category: artifact-id
@@ -6701,6 +7037,30 @@ terms:
   match_type: exact
   canonical_id: shared.workflows.change-shared-process
   evidence_path: .agentic/shared/workflows/change-shared-process.md
+  confidence_weight: 1
+- term: repo.script.commit-gates.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: repo.script.commit-gates.readme
+  evidence_path: scripts/repo/commit-gates/README.md
+  confidence_weight: 1
+- term: scripts/repo/commit-gates/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: repo.script.commit-gates.readme
+  evidence_path: scripts/repo/commit-gates/README.md
+  confidence_weight: 1
+- term: repo.script.commit-gates
+  category: artifact-id
+  match_type: exact
+  canonical_id: repo.script.commit-gates
+  evidence_path: scripts/repo/commit-gates/script.sh
+  confidence_weight: 1
+- term: scripts/repo/commit-gates/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: repo.script.commit-gates
+  evidence_path: scripts/repo/commit-gates/script.sh
   confidence_weight: 1
 validation_rules:
 - Generated terms must retain evidence paths.

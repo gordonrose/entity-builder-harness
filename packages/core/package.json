@@ -1,0 +1,23 @@
+{
+  "name": "@kanbien/core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./audit": "./src/audit/index.ts",
+    "./authn": "./src/authn/index.ts",
+    "./authz": "./src/authz/index.ts",
+    "./config": "./src/config/index.ts",
+    "./events": "./src/events/index.ts",
+    "./logging": "./src/logging/index.ts",
+    "./persistence": "./src/persistence/index.ts",
+    "./security": "./src/security/index.ts",
+    "./shared": "./src/shared/index.ts",
+    "./tenancy": "./src/tenancy/index.ts",
+    "./validation": "./src/validation/index.ts"
+  },
+  "files": [
+    "src"
+  ]
+}

@@ -69,11 +69,18 @@ New scripts and harness/process Markdown documents must declare metadata
 headers before entering the repo. Existing files are backfilled in focused
 batches.
 
-## Optional Commit Gates
+## Repository Extensions
 
-If this repo defines an optional layer-level commit gate, run that gate
-according to the repo's local instructions. The base llm-workbench install does
-not require any product, deployment, retrieval, or rulebook layer.
+If the repository provides an optional before-commit extension hook, run it:
+
+```bash
+bash scripts/repo/commit-gates/script.sh
+```
+
+This chat checklist does not know which repository-specific, harness-specific,
+or layer-specific checks exist. The repository extension hook owns that
+selection. The base llm-workbench install does not require a repository
+extension hook.
 
 ## llm-workbench Public-Beta Contract
 
@@ -108,7 +115,7 @@ commit logs that record commits or are explicitly marked for retention.
 For structured manual session-log entries, use:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary> <detail>
+bash scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary> <detail>
 ```
 
 ## ADR Disposition
@@ -122,7 +129,7 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 Run:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 ```
 
 Do not commit if the gate fails.
@@ -132,7 +139,7 @@ Do not commit if the gate fails.
 Run:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
+bash scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
 ```
 
 Record every commit in the chat. The latest recorded commit is treated as the
@@ -155,7 +162,7 @@ If `record-chat-commit.sh` leaves only session bookkeeping dirty, prior explicit
 write permission for the chat authorizes the bookkeeping checkpoint commit:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
 ```
 
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
@@ -184,8 +191,7 @@ that as recovery. Import only explicit approved paths into the chat-owned
 worktree before continuing:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action \
-  scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
+bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
   --session-log <session-log> \
   --source-worktree <active-worktree> \
   -- <path>...
