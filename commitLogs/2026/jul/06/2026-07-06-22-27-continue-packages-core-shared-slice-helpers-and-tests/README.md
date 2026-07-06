@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-06T21:57:16Z
-latest_commit_sha: b7fbf1b
-chat_duration: 1780s (00:00:29:40)
+latest_commit_at_utc: 2026-07-06T22:33:47Z
+latest_commit_sha: d290953
+chat_duration: 3971s (00:01:06:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -122,6 +122,17 @@ ADR path: docs/harness/architecture/adrs/0024-use-translation-ready-message-desc
 
 Reason: This slice adds a durable cross-layer rule that displayable contracts pass translation-ready meaning instead of final localized prose.
 
+
+### 2026-07-06T22:33:47Z - Commit recorded
+
+Commit: `d290953`
+
+Message: Add translation-ready core messages
+
+Summary: Added shared MessageDescriptor primitives, updated validation/core error/security/authz displayable contracts, documented the i18n/localization boundary, added ADR 0024, and refreshed generated recognition sources.
+
+ADR impact: ADR 0024 records the translation-ready message descriptor policy.
+
 ## Commits
 
 
@@ -139,6 +150,13 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
   Summary: Added validation issue/result helpers, non-empty invalid-result typing, validation runtime and type tests, and README guidance.
   ADR impact: No ADR impact; this deepens the existing packages/core validation contract surface.
 
+
+- Commit: `d290953`
+  Time UTC: 2026-07-06T22:33:47Z
+  Message: Add translation-ready core messages
+  Summary: Added shared MessageDescriptor primitives, updated validation/core error/security/authz displayable contracts, documented the i18n/localization boundary, added ADR 0024, and refreshed generated recognition sources.
+  ADR impact: ADR 0024 records the translation-ready message descriptor policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -152,9 +170,9 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-06T21:57:16Z
-Latest commit SHA: b7fbf1b
-Chat duration: 1780s (00:00:29:40)
+Latest commit at UTC: 2026-07-06T22:33:47Z
+Latest commit SHA: d290953
+Chat duration: 3971s (00:01:06:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
