@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-06T21:51:09Z
+latest_commit_sha: 2c4ac93
+chat_duration: 1413s (00:00:23:33)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -49,6 +49,10 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Shared helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -69,9 +73,33 @@ ADR needed: no
 
 Reason: Shared helper/test depth fits the existing packages/core contract-surface decision and does not introduce a new architectural policy.
 
+
+### 2026-07-06T21:51:09Z - Commit recorded
+
+Commit: `2c4ac93`
+
+Message: Add core shared helpers
+
+Summary: Added shared helper constructors, Result helpers, fixed clock/request context helpers, TypeScript/runtime tests, and core check tooling.
+
+ADR impact: No ADR impact; this deepens the existing packages/core shared contract surface.
+
+
+### 2026-07-06T21:53:33Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `2c4ac93`
+  Time UTC: 2026-07-06T21:51:09Z
+  Message: Add core shared helpers
+  Summary: Added shared helper constructors, Result helpers, fixed clock/request context helpers, TypeScript/runtime tests, and core check tooling.
+  ADR impact: No ADR impact; this deepens the existing packages/core shared contract surface.
 
 ## Main Refresh Conflicts
 
@@ -86,12 +114,12 @@ Reason: Shared helper/test depth fits the existing packages/core contract-surfac
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-06T21:51:09Z
+Latest commit SHA: 2c4ac93
+Chat duration: 1413s (00:00:23:33)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
@@ -100,7 +128,7 @@ Estimated chat cost basis:
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Shared helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+Reason: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
 Evidence:
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml

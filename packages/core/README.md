@@ -34,3 +34,19 @@ Provider implementations and app runtimes are intentionally out of scope.
 Keep this module small. Tenant, principal, permission, persistence, audit, and
 event-specific concepts should live in their own modules and import shared
 primitives when needed.
+
+## Validation Contracts
+
+`validation` defines the shared shape for explaining why unknown input is or is
+not acceptable:
+
+- `ValidationIssue` names the failed field/path, stable code, and readable message.
+- `validResult` represents accepted input with no issues.
+- `invalidResult` requires at least one issue so failures are explicit.
+- `isValid` and `isInvalid` narrow validation results for callers.
+- `combineValidationResults` merges several validation checks into one result.
+- `withValidationPathPrefix` lets composed validators keep precise nested paths.
+
+Core validation should stay provider-free and product-neutral. Feature-specific
+schemas, API response mapping, UI messages, and persistence constraints belong
+in apps, platform, or feature packages that consume these contracts.

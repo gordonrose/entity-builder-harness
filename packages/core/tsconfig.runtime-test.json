@@ -15,7 +15,7 @@
     ]
   },
   "include": [
-    "src/shared/index.ts",
-    "tests/shared-runtime.test.ts"
+    "src/**/*.ts",
+    "tests/*-runtime.test.ts"
   ]
 }
