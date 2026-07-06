@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-06T21:27:36Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-06T21:51:09Z
-latest_commit_sha: 2c4ac93
-chat_duration: 1413s (00:00:23:33)
+latest_commit_at_utc: 2026-07-06T21:57:16Z
+latest_commit_sha: b7fbf1b
+chat_duration: 1780s (00:00:29:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -91,6 +91,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
 
+
+### 2026-07-06T21:57:16Z - Commit recorded
+
+Commit: `b7fbf1b`
+
+Message: Add core validation helpers
+
+Summary: Added validation issue/result helpers, non-empty invalid-result typing, validation runtime and type tests, and README guidance.
+
+ADR impact: No ADR impact; this deepens the existing packages/core validation contract surface.
+
 ## Commits
 
 
@@ -100,6 +111,13 @@ Rationale: Shared and validation helper additions stay within the approved packa
   Message: Add core shared helpers
   Summary: Added shared helper constructors, Result helpers, fixed clock/request context helpers, TypeScript/runtime tests, and core check tooling.
   ADR impact: No ADR impact; this deepens the existing packages/core shared contract surface.
+
+
+- Commit: `b7fbf1b`
+  Time UTC: 2026-07-06T21:57:16Z
+  Message: Add core validation helpers
+  Summary: Added validation issue/result helpers, non-empty invalid-result typing, validation runtime and type tests, and README guidance.
+  ADR impact: No ADR impact; this deepens the existing packages/core validation contract surface.
 
 ## Main Refresh Conflicts
 
@@ -114,9 +132,9 @@ Reason: Shared helper/test depth fits the existing packages/core contract-surfac
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-06T21:51:09Z
-Latest commit SHA: 2c4ac93
-Chat duration: 1413s (00:00:23:33)
+Latest commit at UTC: 2026-07-06T21:57:16Z
+Latest commit SHA: b7fbf1b
+Chat duration: 1780s (00:00:29:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
