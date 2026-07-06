@@ -62,6 +62,20 @@ SSM, Secrets Manager, databases, or deployment manifests. Those are platform,
 infra, or runtime adapter concerns that should be translated into the core
 `ConfigSource` contract.
 
+## Logging Contract Boundary
+
+The `logging` module should define provider-neutral operational log contracts:
+log levels, log records, logger ports, redactors, redaction helpers, and no-op
+or wrapping loggers that preserve the same public contracts.
+
+Operational log messages may remain direct strings because they are intended
+for developers and operators, not final localized user-facing copy. Sensitive
+or secret fields should be redacted before records reach a concrete sink.
+
+The `logging` module must not write directly to console, CloudWatch,
+OpenTelemetry, files, Datadog, or any other concrete runtime sink. Platform
+adapters own those integrations and should consume the core logger contracts.
+
 ## Message, i18n, and Localization Boundary
 
 Core, platform, and app-facing contracts should pass stable meaning rather than

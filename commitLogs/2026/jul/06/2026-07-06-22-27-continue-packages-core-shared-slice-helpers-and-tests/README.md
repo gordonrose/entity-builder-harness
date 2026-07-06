@@ -65,6 +65,14 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
 
+
+- Decision: Add provider-neutral packages/core logging helpers.
+  Rationale: The logging module now exposes log-record construction, top-level key redaction, redacting logger wrappers, and tests without choosing console, CloudWatch, OpenTelemetry, file, or vendor sinks.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -166,6 +174,20 @@ Summary: Added provider-neutral ConfigSource helpers, typed config readers, tran
 
 ADR impact: No new ADR; this deepens the existing packages/core contract surface.
 
+
+### 2026-07-06T23:56:03Z - Decision
+
+Decision: Add provider-neutral packages/core logging helpers.
+
+Rationale: The logging module now exposes log-record construction, top-level key redaction, redacting logger wrappers, and tests without choosing console, CloudWatch, OpenTelemetry, file, or vendor sinks.
+
+
+### 2026-07-06T23:56:03Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
+
 ## Commits
 
 
@@ -224,11 +246,11 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
+Reason: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
 Evidence:
-- packages/core/src/config/index.ts
-- packages/core/tests/config-runtime.test.ts
-- packages/core/tests/config-types.test.ts
+- packages/core/src/logging/index.ts
+- packages/core/tests/logging-runtime.test.ts
+- packages/core/tests/logging-types.test.ts
 - packages/core/README.md
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml

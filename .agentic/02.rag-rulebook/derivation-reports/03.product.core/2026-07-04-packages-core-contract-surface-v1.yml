@@ -59,6 +59,9 @@ semantic_review:
     - claim_id: core.config.provider.neutral
       summary: The config module may define provider-neutral config sources, primitive readers, schemas, and validation errors, but must not read directly from process.env, files, AWS SSM, Secrets Manager, databases, or deployment manifests.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.logging.provider.neutral
+      summary: The logging module may define operational log records, logger ports, redactors, redaction helpers, and no-op or wrapping loggers, but must not write directly to console, CloudWatch, OpenTelemetry, files, Datadog, or other runtime sinks.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md

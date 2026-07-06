@@ -78,6 +78,23 @@ Core does not read `process.env`, AWS SSM, Secrets Manager, files, or databases.
 Platform adapters can translate those provider-specific sources into
 `ConfigSource`.
 
+## Logging Contracts
+
+`logging` defines operational log contracts without choosing a log sink:
+
+- `LogRecord` captures level, message, correlation id, and diagnostic fields.
+- `logRecord` creates a shallow-copied record so callers can pass fields safely.
+- `Redactor`, `redactLogFields`, and `keyRedactor` define provider-neutral
+  redaction behavior.
+- `redactingLogger` wraps another logger and redacts fields before they reach
+  the sink.
+- `noopLogger` is a safe logger for tests and disabled logging paths.
+
+Log messages are operational text for developers and operators. They are not
+the user-facing translation boundary. Core does not write to console,
+CloudWatch, OpenTelemetry, files, or vendor SDKs; platform adapters own those
+sinks.
+
 ## Validation Contracts
 
 `validation` defines the shared shape for explaining why unknown input is or is
