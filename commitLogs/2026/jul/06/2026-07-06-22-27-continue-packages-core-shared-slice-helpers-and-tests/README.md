@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-06T22:33:47Z
-latest_commit_sha: d290953
-chat_duration: 3971s (00:01:06:11)
+latest_commit_at_utc: 2026-07-06T23:52:55Z
+latest_commit_sha: be843e0
+chat_duration: 8719s (00:02:25:19)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -155,6 +155,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
 
+
+### 2026-07-06T23:52:55Z - Commit recorded
+
+Commit: `be843e0`
+
+Message: Add core config helpers
+
+Summary: Added provider-neutral ConfigSource helpers, typed config readers, translation-ready ConfigError issues, config runtime/type tests, README guidance, and packages/core RAG projection updates.
+
+ADR impact: No new ADR; this deepens the existing packages/core contract surface.
+
 ## Commits
 
 
@@ -179,6 +190,13 @@ Rationale: Added provider-neutral config helpers, runtime/type tests, README gui
   Summary: Added shared MessageDescriptor primitives, updated validation/core error/security/authz displayable contracts, documented the i18n/localization boundary, added ADR 0024, and refreshed generated recognition sources.
   ADR impact: ADR 0024 records the translation-ready message descriptor policy.
 
+
+- Commit: `be843e0`
+  Time UTC: 2026-07-06T23:52:55Z
+  Message: Add core config helpers
+  Summary: Added provider-neutral ConfigSource helpers, typed config readers, translation-ready ConfigError issues, config runtime/type tests, README guidance, and packages/core RAG projection updates.
+  ADR impact: No new ADR; this deepens the existing packages/core contract surface.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -192,9 +210,9 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-06T22:33:47Z
-Latest commit SHA: d290953
-Chat duration: 3971s (00:01:06:11)
+Latest commit at UTC: 2026-07-06T23:52:55Z
+Latest commit SHA: be843e0
+Chat duration: 8719s (00:02:25:19)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
