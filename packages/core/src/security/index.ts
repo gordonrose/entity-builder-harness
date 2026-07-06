@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "../shared/index";
+
 export type SecretString = string & { readonly __brand: "SecretString" };
 
 export interface Hash {
@@ -10,7 +12,4 @@ export interface Hasher {
   verify(value: SecretString, expected: Hash): Promise<boolean>;
 }
 
-export interface PolicyViolation {
-  readonly code: string;
-  readonly message: string;
-}
+export interface PolicyViolation extends MessageDescriptor {}

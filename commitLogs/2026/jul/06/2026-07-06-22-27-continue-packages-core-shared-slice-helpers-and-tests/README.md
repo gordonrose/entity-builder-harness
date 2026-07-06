@@ -53,6 +53,10 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -102,6 +106,22 @@ Summary: Added validation issue/result helpers, non-empty invalid-result typing,
 
 ADR impact: No ADR impact; this deepens the existing packages/core validation contract surface.
 
+
+### 2026-07-06T22:28:59Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
+
+
+### 2026-07-06T22:29:04Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+
+Reason: This slice adds a durable cross-layer rule that displayable contracts pass translation-ready meaning instead of final localized prose.
+
 ## Commits
 
 
@@ -125,9 +145,9 @@ ADR impact: No ADR impact; this deepens the existing packages/core validation co
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path: 
-Reason: Shared helper/test depth fits the existing packages/core contract-surface decision and does not introduce a new architectural policy.
+ADR needed: yes
+ADR path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+Reason: This slice adds a durable cross-layer rule that displayable contracts pass translation-ready meaning instead of final localized prose.
 
 ## Session Metrics
 
@@ -146,10 +166,11 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+Reason: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
 Evidence:
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
 - packages/core/README.md
+- docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
 Corpus gaps:
 - None.

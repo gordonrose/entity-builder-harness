@@ -7,6 +7,8 @@ import {
   isOk,
   isoDateTime,
   isoDateTimeFromDate,
+  messageDescriptor,
+  messageKey,
   ok,
   requestContext,
 } from "../src/shared/index";
@@ -26,6 +28,16 @@ if (!isErr(invalid)) {
   throw new Error("Expected ISO date-time parsing to fail.");
 }
 equal(invalid.error.code, "INVALID_ISO_DATE_TIME");
+equal(invalid.error.defaultMessage, "Expected a valid ISO date-time string.");
+
+const descriptor = messageDescriptor({
+  code: "VALIDATION_REQUIRED",
+  defaultMessage: "Field is required.",
+  messageKey: "validation.required",
+  params: { field: "email" },
+});
+equal(descriptor.messageKey, messageKey("validation.required"));
+equal(descriptor.params?.field, "email");
 
 const success = ok({ enabled: true });
 equal(isOk(success), true);
@@ -34,12 +46,13 @@ if (!isOk(success)) {
 }
 equal(success.value.enabled, true);
 
-const failure = err({ code: "TEST_FAILURE", message: "Expected failure." });
+const failure = err({ code: "TEST_FAILURE", defaultMessage: "Expected failure." });
 equal(isErr(failure), true);
 if (!isErr(failure)) {
   throw new Error("Expected result to be err.");
 }
 equal(failure.error.code, "TEST_FAILURE");
+equal(failure.error.defaultMessage, "Expected failure.");
 
 const fixedNow = new Date("2026-07-06T12:00:00Z");
 const clock = fixedClock(fixedNow);

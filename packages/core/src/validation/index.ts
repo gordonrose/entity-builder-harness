@@ -1,9 +1,9 @@
+import { messageDescriptor, type MessageDescriptor, type MessageKey, type MessageParams } from "../shared/index";
+
 export type ValidationPath = readonly string[];
 
-export interface ValidationIssue {
+export interface ValidationIssue extends MessageDescriptor {
   readonly path: ValidationPath;
-  readonly code: string;
-  readonly message: string;
 }
 
 export type NonEmptyValidationIssues = readonly [ValidationIssue, ...ValidationIssue[]];
@@ -33,12 +33,13 @@ export const validResult: ValidValidationResult = {
 export function validationIssue(input: {
   readonly path?: ValidationPath;
   readonly code: string;
-  readonly message: string;
+  readonly defaultMessage: string;
+  readonly messageKey?: string | MessageKey;
+  readonly params?: MessageParams;
 }): ValidationIssue {
   return {
     path: [...(input.path ?? [])],
-    code: input.code,
-    message: input.message,
+    ...messageDescriptor(input),
   };
 }
 

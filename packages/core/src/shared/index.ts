@@ -3,14 +3,22 @@ export type Brand<Value, Name extends string> = Value & { readonly __brand: Name
 export type EntityId<Name extends string = "EntityId"> = Brand<string, Name>;
 export type CorrelationId = Brand<string, "CorrelationId">;
 export type ISODateTime = Brand<string, "ISODateTime">;
+export type MessageKey = Brand<string, "MessageKey">;
+export type MessageParamValue = string | number | boolean | null;
+export type MessageParams = Readonly<Record<string, MessageParamValue>>;
+
+export interface MessageDescriptor {
+  readonly code: string;
+  readonly defaultMessage: string;
+  readonly messageKey?: MessageKey;
+  readonly params?: MessageParams;
+}
 
 export type Result<Value, Failure = CoreError> =
   | { readonly ok: true; readonly value: Value }
   | { readonly ok: false; readonly error: Failure };
 
-export interface CoreError {
-  readonly code: string;
-  readonly message: string;
+export interface CoreError extends MessageDescriptor {
   readonly cause?: unknown;
   readonly details?: Readonly<Record<string, unknown>>;
 }
@@ -27,13 +35,31 @@ export function correlationId(value: string): CorrelationId {
   return brand<string, "CorrelationId">(value);
 }
 
+export function messageKey(value: string): MessageKey {
+  return brand<string, "MessageKey">(value);
+}
+
+export function messageDescriptor(input: {
+  readonly code: string;
+  readonly defaultMessage: string;
+  readonly messageKey?: string | MessageKey;
+  readonly params?: MessageParams;
+}): MessageDescriptor {
+  return {
+    code: input.code,
+    defaultMessage: input.defaultMessage,
+    ...(input.messageKey === undefined ? {} : { messageKey: messageKey(input.messageKey) }),
+    ...(input.params === undefined ? {} : { params: input.params }),
+  };
+}
+
 export function isoDateTime(value: string): Result<ISODateTime> {
   const timestamp = Date.parse(value);
 
   if (Number.isNaN(timestamp)) {
     return err({
       code: "INVALID_ISO_DATE_TIME",
-      message: "Expected a valid ISO date-time string.",
+      defaultMessage: "Expected a valid ISO date-time string.",
       details: { value },
     });
   }

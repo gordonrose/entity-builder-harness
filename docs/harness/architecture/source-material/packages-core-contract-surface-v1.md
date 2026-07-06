@@ -34,7 +34,7 @@ runtime hosts, or cloud SDK integrations.
 
 The initial package surface may include these contract modules:
 
-- `shared`: branded identifiers, result/error shapes, request context, clocks.
+- `shared`: branded identifiers, result/error shapes, translation-ready message descriptors, request context, clocks.
 - `config`: config source and schema contracts.
 - `logging`: logger, log record, and redaction contracts.
 - `validation`: validation issue and validator contracts.
@@ -45,6 +45,28 @@ The initial package surface may include these contract modules:
 - `security`: defensive policy and secret/hash contracts.
 - `audit`: audit event and recorder contracts.
 - `events`: event envelope and event bus contracts.
+
+## Message, i18n, and Localization Boundary
+
+Core, platform, and app-facing contracts should pass stable meaning rather than
+final localized prose. User-facing or consumer-facing explanations should carry
+machine-stable codes, optional translation keys, fallback/default messages, and
+primitive interpolation params.
+
+Validation issues, core errors, policy denials, notification descriptions,
+report labels, and API/display responses should use translation-ready
+descriptors when they may be shown to people. The fallback/default message is
+for debugging, logs, tests, and untranslated contexts; it is not the canonical
+localized copy.
+
+The `i18n` contract layer owns translation keys, message catalogs, translators,
+fallback behavior, and translation params. The `localization` contract layer
+owns locale-sensitive formatting for dates, times, numbers, currency, and
+regional display conventions. Validation and other core capability modules
+should emit facts that those layers can translate or format later.
+
+Operational logs may keep direct operational messages when they are not
+user-facing display contracts.
 
 ## Placement Rules
 

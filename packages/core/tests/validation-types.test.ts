@@ -15,7 +15,9 @@ const path: ValidationPath = ["profile", "email"];
 const issue = validationIssue({
   path,
   code: "INVALID_EMAIL",
-  message: "Email is invalid.",
+  defaultMessage: "Email is invalid.",
+  messageKey: "validation.invalid_email",
+  params: { field: "email" },
 });
 
 const acceptedIssue: ValidationIssue = issue;
@@ -29,6 +31,12 @@ void acceptedInvalid;
 
 // @ts-expect-error invalid validation results must have at least one issue.
 invalidResult([]);
+
+// @ts-expect-error validation issues require fallback/default text, not only a code.
+validationIssue({ path, code: "MISSING_DEFAULT_MESSAGE" });
+
+// @ts-expect-error validation params must stay localization-friendly primitives.
+validationIssue({ path, code: "BAD_PARAM", defaultMessage: "Bad param.", params: { nested: { value: "nope" } } });
 
 // @ts-expect-error valid results cannot be assigned to invalid results.
 const rejectedInvalid: InvalidValidationResult = validResult;

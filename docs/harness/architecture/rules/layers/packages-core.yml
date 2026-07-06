@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: a3fb9fedb0c8265f26f2e26dffeab52607b28482d4bd3ff211abcee178118593
+      sha256: 95dc0c53457f6e17b0030f5a0c9344d6c315f5d0035402a5975b68e21f745947
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -46,7 +46,7 @@ related_rulesets:
 
 recommended_modules:
   - id: shared
-    purpose: "Common primitives such as IDs, results, errors, clocks, context, and lifecycle."
+    purpose: "Common primitives such as IDs, results, errors, message descriptors, clocks, context, and lifecycle."
     consumed_by: "apps, platform, tests"
   - id: config
     purpose: "Configuration access and validation contracts."
@@ -291,6 +291,27 @@ rules:
       When adding a core module, choose the smallest contract-shaped surface
       that names the Kanbien concept clearly and leaves implementation details
       to apps, platform, or infrastructure.
+
+  - id: core.translation-ready-meaning-not-prose
+    title: Core contracts pass meaning, not final localized prose
+    severity: error
+    summary: >
+      Core, platform, and app-facing contracts should pass stable machine meaning
+      plus translation/localization hooks instead of final user-facing strings.
+    must:
+      - Use translation-ready descriptors for user-facing or consumer-facing explanations.
+      - Prefer stable codes, optional message keys, fallback/default messages, and primitive interpolation params.
+      - Keep validation, errors, policy denials, notifications, reports, and API/display responses compatible with future i18n and localization layers.
+      - Treat fallback/default messages as debugging, testing, log, or untranslated-context text, not canonical localized copy.
+    must_not:
+      - Do not make validation, platform adapters, app services, or core errors own final localized prose.
+      - Do not put message catalogs, translator implementations, locale negotiation, or regional formatting behavior into unrelated core modules.
+      - Do not pass rich objects, dates, money values, or provider-specific objects as translation params; pass stable primitive facts and let localization format them.
+    agent_guidance: >
+      When a contract may eventually be displayed to a person, ask:
+      What happened? What stable code identifies it? Which translation key can
+      render it? Which primitive params does the renderer need? Keep final words
+      and regional formatting in i18n/localization or the presentation boundary.
 
 source_refs:
   - doc: "kanbien-core-architecture-guide.md"

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 578
-  term_count: 1168
+  indexed_artifacts: 579
+  term_count: 1170
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3083,6 +3083,18 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
   evidence_path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  evidence_path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  evidence_path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
   confidence_weight: 1
 - term: harness.adr.readme
   category: artifact-id

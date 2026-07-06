@@ -12,13 +12,17 @@ import {
 const missingName = validationIssue({
   path: ["profile", "name"],
   code: "REQUIRED",
-  message: "Name is required.",
+  defaultMessage: "Name is required.",
+  messageKey: "validation.required",
+  params: { field: "name" },
 });
 
 deepEqual(missingName, {
   path: ["profile", "name"],
   code: "REQUIRED",
-  message: "Name is required.",
+  defaultMessage: "Name is required.",
+  messageKey: "validation.required",
+  params: { field: "name" },
 });
 
 const failed = invalidResult(missingName);
@@ -41,6 +45,7 @@ if (!isInvalid(combinedInvalid)) {
   throw new Error("Expected combined validation result to be invalid.");
 }
 equal(combinedInvalid.issues.length, 1);
-equal(combinedInvalid.issues[0].message, "Name is required.");
+equal(combinedInvalid.issues[0].defaultMessage, "Name is required.");
+equal(combinedInvalid.issues[0].messageKey, "validation.required");
 
 console.log("packages/core validation runtime test passed.");

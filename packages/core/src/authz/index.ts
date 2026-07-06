@@ -1,4 +1,5 @@
 import type { Principal } from "../authn/index";
+import type { MessageDescriptor } from "../shared/index";
 
 export type Permission = `${string}:${string}`;
 
@@ -11,7 +12,7 @@ export interface AuthorizationRequest {
 
 export interface AuthorizationDecision {
   readonly allowed: boolean;
-  readonly reason?: string;
+  readonly reason?: MessageDescriptor;
 }
 
 export interface Authorizer {
