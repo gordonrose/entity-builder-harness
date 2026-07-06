@@ -46,6 +46,22 @@ The initial package surface may include these contract modules:
 - `audit`: audit event and recorder contracts.
 - `events`: event envelope and event bus contracts.
 
+## Config Contract Boundary
+
+The `config` module should define provider-neutral contracts and pure helpers
+for reading primitive runtime settings. It may define a `ConfigSource` port,
+in-memory record-backed sources, required/optional lookup helpers, primitive
+type readers, schemas, and config error shapes.
+
+Config errors should use validation issues and translation-ready descriptors so
+apps can translate missing or invalid configuration messages at their own
+presentation boundary.
+
+The `config` module must not read directly from `process.env`, local files, AWS
+SSM, Secrets Manager, databases, or deployment manifests. Those are platform,
+infra, or runtime adapter concerns that should be translated into the core
+`ConfigSource` contract.
+
 ## Message, i18n, and Localization Boundary
 
 Core, platform, and app-facing contracts should pass stable meaning rather than

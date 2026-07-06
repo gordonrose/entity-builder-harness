@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 95dc0c53457f6e17b0030f5a0c9344d6c315f5d0035402a5975b68e21f745947
+      sha256: 6571cd74b625b7ba4fa21b93a6715647da73c15f7ff75dee66f043e7cde263c5
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -49,7 +49,7 @@ recommended_modules:
     purpose: "Common primitives such as IDs, results, errors, message descriptors, clocks, context, and lifecycle."
     consumed_by: "apps, platform, tests"
   - id: config
-    purpose: "Configuration access and validation contracts."
+    purpose: "Provider-neutral configuration source, primitive reader, schema, and validation-error contracts."
     consumed_by: "runtime apps and platform services"
   - id: logging
     purpose: "Structured log, redaction, and logger contracts."

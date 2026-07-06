@@ -56,6 +56,9 @@ semantic_review:
     - claim_id: core.provider.implementations.outside
       summary: Provider adapters, runtime hosts, infrastructure, and product workflows must remain outside packages/core.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.config.provider.neutral
+      summary: The config module may define provider-neutral config sources, primitive readers, schemas, and validation errors, but must not read directly from process.env, files, AWS SSM, Secrets Manager, databases, or deployment manifests.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md

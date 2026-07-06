@@ -57,6 +57,14 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
 
+
+- Decision: Add provider-neutral packages/core config helpers.
+  Rationale: The config module now exposes primitive ConfigSource readers and translation-ready ConfigError shapes without reading process.env, files, AWS services, databases, or deployment manifests directly.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -133,6 +141,20 @@ Summary: Added shared MessageDescriptor primitives, updated validation/core erro
 
 ADR impact: ADR 0024 records the translation-ready message descriptor policy.
 
+
+### 2026-07-06T23:07:01Z - Decision
+
+Decision: Add provider-neutral packages/core config helpers.
+
+Rationale: The config module now exposes primitive ConfigSource readers and translation-ready ConfigError shapes without reading process.env, files, AWS services, databases, or deployment manifests directly.
+
+
+### 2026-07-06T23:07:01Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
+
 ## Commits
 
 
@@ -184,11 +206,14 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
+Reason: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
 Evidence:
+- packages/core/src/config/index.ts
+- packages/core/tests/config-runtime.test.ts
+- packages/core/tests/config-types.test.ts
+- packages/core/README.md
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
-- packages/core/README.md
-- docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+- .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
 Corpus gaps:
 - None.

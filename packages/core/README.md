@@ -60,6 +60,24 @@ Operational logs may still use direct log messages. User-facing errors,
 validation issues, policy denials, notifications, reports, and API/display
 responses should use translation-ready descriptors.
 
+## Config Contracts
+
+`config` defines how apps and platform code can read product-neutral runtime
+settings without binding core to a provider:
+
+- `ConfigSource` is the small port for looking up a value by key.
+- `recordConfigSource` is a pure in-memory source for tests and simple composed
+  configs.
+- `requiredConfigValue` distinguishes missing values from present `null` values.
+- `stringConfigValue`, `numberConfigValue`, and `booleanConfigValue` add typed
+  reads for common primitive settings.
+- `ConfigError` reports missing or invalid config through validation issues, so
+  config failures stay translation-ready.
+
+Core does not read `process.env`, AWS SSM, Secrets Manager, files, or databases.
+Platform adapters can translate those provider-specific sources into
+`ConfigSource`.
+
 ## Validation Contracts
 
 `validation` defines the shared shape for explaining why unknown input is or is
