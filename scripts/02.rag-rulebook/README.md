@@ -107,7 +107,7 @@ validation, and standalone service adapters.
 - `generate-retrieval-selector-fixture/script.sh` emits a validated
   `rag-rulebook/context-packet/v1` selector fixture from the active policy
   pack, recognition-source matches, recognition-candidate coverage gaps,
-  session-like metadata, focused paths, generated or saved chunks, and compiled
+  session-like metadata, generated or saved chunks, and compiled
   retrieval strategy.
 - `evaluate-retrieval-selector-fixtures/script.sh` runs machine-readable
   retrieval selector evaluation fixtures against generated selector packets,

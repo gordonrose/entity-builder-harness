@@ -47,8 +47,6 @@ const packageJson = JSON.parse(readFileSync(path.join(rootDir, "package.json"), 
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);
 const ALLOWED_FORMATS = new Set(["full", "compact"]);
 const MAX_REQUEST_TEXT_CHARS = 8000;
-const MAX_FOCUSED_PATHS = 20;
-const MAX_FOCUSED_PATH_CHARS = 240;
 const MAX_SESSION_ID_CHARS = 160;
 const MAX_SESSION_BRANCH_CHARS = 240;
 const MAX_SESSION_WORKTREE_CHARS = 512;
@@ -244,34 +242,12 @@ function stringFromSession(body, camelName, snakeName, fallback = "") {
   return stringFromBody(session, camelName, snakeName, fallback);
 }
 
-function focusedPathsFromBody(body) {
-  const value = body.focusedPaths ?? body.focused_paths;
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim());
-}
-
 function parseMaxChunks(body) {
   const value = Number.parseInt(String(body.maxChunks ?? body.max_chunks ?? "6"), 10);
   if (!Number.isInteger(value) || value < 3 || value > 12) {
     throw badRequest("invalid_max_chunks", "maxChunks or max_chunks must be an integer between 3 and 12.");
   }
   return value;
-}
-
-function validateFocusedPaths(paths) {
-  if (paths.length > MAX_FOCUSED_PATHS) {
-    throw badRequest("too_many_focused_paths", `focusedPaths may contain at most ${MAX_FOCUSED_PATHS} paths.`);
-  }
-  for (const focusedPath of paths) {
-    if (focusedPath.length > MAX_FOCUSED_PATH_CHARS || focusedPath.includes("\0")) {
-      throw badRequest("invalid_focused_path", "focusedPaths entries must be non-empty safe relative paths.");
-    }
-    if (path.isAbsolute(focusedPath) || focusedPath.split(/[\\/]/).includes("..")) {
-      throw badRequest("invalid_focused_path", "focusedPaths entries must be repository-relative paths.");
-    }
-  }
 }
 
 function hasControlChars(value) {
@@ -353,8 +329,17 @@ function validateContextQueryBody(body) {
     throw badRequest("request_text_too_long", `requestText may contain at most ${MAX_REQUEST_TEXT_CHARS} characters.`);
   }
 
-  const focusedPaths = focusedPathsFromBody(body);
-  validateFocusedPaths(focusedPaths);
+  if (
+    body.focusedPaths !== undefined ||
+    body.focused_paths !== undefined ||
+    body.noFocusedPaths !== undefined ||
+    body.no_focused_paths !== undefined
+  ) {
+    throw badRequest(
+      "unsupported_request_context",
+      "focusedPaths and noFocusedPaths are retired; include exact paths in requestText until typed request anchors are governed.",
+    );
+  }
 
   const format = stringFromBody(body, "format", "format", "compact");
   if (!ALLOWED_FORMATS.has(format)) {
@@ -363,7 +348,6 @@ function validateContextQueryBody(body) {
 
   return {
     requestText,
-    focusedPaths,
     maxChunks: parseMaxChunks(body),
     format,
   };
@@ -445,8 +429,6 @@ async function handleContextQuery({ body }) {
     runtimeDir: config.runtimeDir,
     requestText: validated.requestText,
     ...sessionContext,
-    focusedPaths: validated.focusedPaths,
-    noFocusedPaths: Boolean(body.noFocusedPaths ?? body.no_focused_paths ?? validated.focusedPaths.length === 0),
     maxChunks: validated.maxChunks,
     format: validated.format,
     timeoutMs: config.queryTimeoutMs,

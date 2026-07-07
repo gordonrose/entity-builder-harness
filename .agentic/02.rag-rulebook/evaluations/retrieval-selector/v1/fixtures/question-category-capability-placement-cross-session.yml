@@ -32,7 +32,6 @@ input:
     layer: 00.chat
     mode: implementation
     workflow: .agentic/00.chat/workflows/chat-start.md
-  no_focused_paths: true
   max_chunks: 8
 expected:
   routing:

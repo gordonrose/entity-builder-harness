@@ -45,9 +45,10 @@ scripts/02.rag-rulebook/query-context/script.sh
 ```
 
 That command is the context-provider boundary for local callers. It accepts
-request text, optional focused paths, optional session provenance, packet
-format, and chunk budget. It returns a validated context packet or a clear
-governance/auth/runtime gap.
+request text, optional session provenance, packet format, and chunk budget.
+Exact paths should be included in request text until typed request anchors are
+governed. It returns a validated context packet or a clear governance/auth/runtime
+gap.
 
 Callers must treat the returned packet as evidence for the next prompt, not as
 permission to mutate files, commit, deploy, or bypass lifecycle gates.

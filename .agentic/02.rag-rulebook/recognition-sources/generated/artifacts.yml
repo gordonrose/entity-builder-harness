@@ -4356,18 +4356,6 @@ terms:
   canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   confidence_weight: 1
-- term: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
-  category: artifact-id
-  match_type: exact
-  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
-  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-  confidence_weight: 1
-- term: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-  category: file-path
-  match_type: exact
-  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
-  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-  confidence_weight: 1
 - term: rag-rulebook.policy.retrieval-selector.v1.dimension.layer-mode-workflow
   category: artifact-id
   match_type: exact
@@ -4523,6 +4511,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
   evidence_path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+  evidence_path: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+  evidence_path: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
   confidence_weight: 1
 - term: rag-rulebook.retirements.readme
   category: artifact-id

@@ -26,16 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core contract modules retrieve core rules and placement boundaries.
 input:
-  request_text: Explain how packages/core logger and audit contracts should be used while keeping provider implementations in platform and product workflows in apps.
+  request_text: Explain how packages/core/src/logging/index.ts and packages/core/src/audit/index.ts contracts should be used with docs/harness/architecture/rules/layers/packages-core.yml while keeping provider implementations in platform and product workflows in apps.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/logging/index.ts
-    - packages/core/src/audit/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
   max_chunks: 8
 expected:
   routing:

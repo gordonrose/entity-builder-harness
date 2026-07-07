@@ -87,8 +87,7 @@ Local mode:
 ```bash
 bash scripts/02.rag-rulebook/query-context/script.sh \
   --provider local \
-  --request-text "Explain the RAG provider contract" \
-  --focused-path docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml \
+  --request-text "Explain the RAG provider contract in docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml" \
   --pretty
 ```
 

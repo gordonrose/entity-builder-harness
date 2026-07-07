@@ -65,8 +65,7 @@ const server = http.createServer((request, response) => {
       schema: body.format === "full" ? "rag-rulebook/context-packet/v1" : "rag-rulebook/context-packet-compact/v1",
       packet_id: "packet.query-context.smoke",
       request: {
-        raw_text: body.requestText,
-        focused_paths: body.focusedPaths || []
+        raw_text: body.requestText
       },
       routing: {
         status: "ready",
@@ -152,13 +151,42 @@ RAG_RULEBOOK_TOKEN=$TOKEN
 EOF
 chmod 644 "$BAD_PERM_CONFIG"
 
+if bash scripts/02.rag-rulebook/query-context/script.sh \
+  --config "$GOOD_CONFIG" \
+  --provider hosted \
+  --request-text "Invalid chunk count should fail before provider call." \
+  --max-chunks banana \
+  > "$TMP_DIR/max-chunks-invalid.out" 2> "$TMP_DIR/max-chunks-invalid.err"; then
+  echo "ERROR: non-numeric max chunks unexpectedly succeeded." >&2
+  exit 1
+fi
+grep -q "max chunks must be an integer between 3 and 12" "$TMP_DIR/max-chunks-invalid.err" || {
+  echo "ERROR: non-numeric max chunks failure did not explain the range." >&2
+  cat "$TMP_DIR/max-chunks-invalid.err" >&2
+  exit 1
+}
+
+if bash scripts/02.rag-rulebook/query-context/script.sh \
+  --config "$GOOD_CONFIG" \
+  --provider hosted \
+  --request-text "Out-of-range chunk count should fail before provider call." \
+  --max-chunks 13 \
+  > "$TMP_DIR/max-chunks-range.out" 2> "$TMP_DIR/max-chunks-range.err"; then
+  echo "ERROR: out-of-range max chunks unexpectedly succeeded." >&2
+  exit 1
+fi
+grep -q "max chunks must be an integer between 3 and 12" "$TMP_DIR/max-chunks-range.err" || {
+  echo "ERROR: out-of-range max chunks failure did not explain the range." >&2
+  cat "$TMP_DIR/max-chunks-range.err" >&2
+  exit 1
+}
+
 SUCCESS_JSON="$TMP_DIR/success.json"
 SUCCESS_ERR="$TMP_DIR/success.err"
 if ! bash scripts/02.rag-rulebook/query-context/script.sh \
   --config "$GOOD_CONFIG" \
   --provider hosted \
-  --request-text "Smoke test the hosted context provider contract." \
-  --focused-path docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml \
+  --request-text "Smoke test the hosted context provider contract in docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml." \
   --format compact \
   --pretty > "$SUCCESS_JSON" 2> "$SUCCESS_ERR"; then
   echo "ERROR: hosted provider success case failed." >&2
@@ -177,9 +205,6 @@ packet = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert packet["schema"] == "rag-rulebook/context-packet-compact/v1"
 assert packet["routing"]["status"] == "ready"
 assert packet["selected_chunks"][0]["corpus_id"] == "corpus.02.rag-rulebook"
-assert packet["request"]["focused_paths"] == [
-    "docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml"
-]
 PY
 
 if grep -R "$TOKEN" "$SUCCESS_JSON" "$SUCCESS_ERR" >/dev/null; then

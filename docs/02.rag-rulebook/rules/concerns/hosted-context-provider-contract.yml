@@ -39,7 +39,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
   source_material:
     - path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
-      sha256: 6a5ab8986da5a7098ed323d299034e39cbfabf705225dd1ae32fd1b35f32f413
+      sha256: ddfb7ecf0da0570c6c70392a10b661354c9471d3601b94595607e2de80f5ad79
 
 description: >
   Rules for keeping hosted/local RAG context-provider selection, local auth

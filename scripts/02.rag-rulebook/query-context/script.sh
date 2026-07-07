@@ -63,8 +63,6 @@ TRUST_SESSION_ROUTING=false
 MAX_CHUNKS=""
 PRETTY=false
 FORMAT="compact"
-NO_FOCUSED_PATHS=false
-FOCUSED_PATHS=()
 
 usage() {
   cat <<'EOF'
@@ -92,8 +90,6 @@ Options:
                               Previous packet routing summary.
   --trust-session-routing     Local-provider only. Trust supplied session
                               layer/mode/workflow after governed session proof.
-  --focused-path <path>       Focused path signal. Repeatable.
-  --no-focused-paths          Use no focused path signals.
   --max-chunks <n>            Maximum selected chunks. Range: 3-12.
   --format <full|compact>     Output format. Default: compact.
   --pretty                    Pretty-print JSON responses.
@@ -214,18 +210,6 @@ while [ "$#" -gt 0 ]; do
       TRUST_SESSION_ROUTING=true
       shift
       ;;
-    --focused-path)
-      if [ "$#" -lt 2 ]; then
-        echo "ERROR: --focused-path requires a path." >&2
-        exit 2
-      fi
-      FOCUSED_PATHS+=("$2")
-      shift 2
-      ;;
-    --no-focused-paths)
-      NO_FOCUSED_PATHS=true
-      shift
-      ;;
     --max-chunks)
       if [ "$#" -lt 2 ]; then
         echo "ERROR: --max-chunks requires a number." >&2
@@ -272,12 +256,42 @@ if [ -z "$REQUEST_TEXT" ]; then
   exit 2
 fi
 
+file_mode_octal() {
+  local path="$1" mode
+  if mode="$(stat -c "%a" "$path" 2>/dev/null)"; then
+    printf "%s\n" "$mode"
+    return
+  fi
+  if mode="$(stat -f "%Lp" "$path" 2>/dev/null)"; then
+    printf "%s\n" "$mode"
+    return
+  fi
+  echo "ERROR: unable to read RAG provider config permissions: $path" >&2
+  exit 1
+}
+
+validate_max_chunks() {
+  if [ -z "$MAX_CHUNKS" ]; then
+    return
+  fi
+  case "$MAX_CHUNKS" in
+    *[!0-9]*)
+      echo "ERROR: max chunks must be an integer between 3 and 12." >&2
+      exit 2
+      ;;
+  esac
+  if [ "$MAX_CHUNKS" -lt 3 ] || [ "$MAX_CHUNKS" -gt 12 ]; then
+    echo "ERROR: max chunks must be an integer between 3 and 12." >&2
+    exit 2
+  fi
+}
+
 load_config() {
   if [ ! -f "$CONFIG_PATH" ]; then
     return
   fi
   local mode mode_num
-  mode="$(stat -c "%a" "$CONFIG_PATH")"
+  mode="$(file_mode_octal "$CONFIG_PATH")"
   mode_num=$((8#$mode))
   if (( (mode_num & 077) != 0 )); then
     echo "ERROR: RAG provider config is group/other-readable: $CONFIG_PATH" >&2
@@ -308,14 +322,6 @@ call_local_provider() {
   )
   if [ "$TRUST_SESSION_ROUTING" = true ]; then
     command+=(--trust-session-routing)
-  fi
-  if [ "$NO_FOCUSED_PATHS" = true ]; then
-    command+=(--no-focused-paths)
-  else
-    local focused_path
-    for focused_path in "${FOCUSED_PATHS[@]}"; do
-      command+=(--focused-path "$focused_path")
-    done
   fi
   if [ -n "$MAX_CHUNKS" ]; then
     command+=(--max-chunks "$MAX_CHUNKS")
@@ -371,7 +377,7 @@ call_hosted_provider() {
       "hosted provider mode does not accept --trust-session-routing; pass session fields as provenance only."
     exit 1
   fi
-  local base_url token request_json focused_paths_file curl_config response_file http_code
+  local base_url token request_json curl_config response_file http_code
   base_url="${BASE_URL_ARG:-${RAG_RULEBOOK_BASE_URL:-}}"
   if [ -z "$base_url" ]; then
     provider_gap \
@@ -399,26 +405,19 @@ call_hosted_provider() {
   fi
 
   request_json="$(mktemp)"
-  focused_paths_file="$(mktemp)"
   curl_config="$(mktemp)"
   response_file="$(mktemp)"
   HOSTED_REQUEST_JSON="$request_json"
-  HOSTED_FOCUSED_PATHS_FILE="$focused_paths_file"
   HOSTED_CURL_CONFIG="$curl_config"
   HOSTED_RESPONSE_FILE="$response_file"
   cleanup_hosted() {
     rm -f \
       "${HOSTED_REQUEST_JSON:-}" \
-      "${HOSTED_FOCUSED_PATHS_FILE:-}" \
       "${HOSTED_CURL_CONFIG:-}" \
       "${HOSTED_RESPONSE_FILE:-}"
   }
   trap cleanup_hosted EXIT
   chmod 600 "$curl_config"
-  local focused_path
-  for focused_path in "${FOCUSED_PATHS[@]}"; do
-    printf "%s\n" "$focused_path" >> "$focused_paths_file"
-  done
 
   REQUEST_TEXT="$REQUEST_TEXT" \
   SESSION_ID="$SESSION_ID" \
@@ -429,20 +428,14 @@ call_hosted_provider() {
   SESSION_WORKFLOW="$SESSION_WORKFLOW" \
   PREVIOUS_PACKET_ID="$PREVIOUS_PACKET_ID" \
   PREVIOUS_ROUTING_SUMMARY="$PREVIOUS_ROUTING_SUMMARY" \
-  NO_FOCUSED_PATHS="$NO_FOCUSED_PATHS" \
   MAX_CHUNKS="$MAX_CHUNKS" \
   FORMAT="$FORMAT" \
-  node - "$request_json" "$focused_paths_file" <<'NODE'
+  node - "$request_json" <<'NODE'
 const fs = require("fs");
-const [requestPath, focusedPathFile] = process.argv.slice(2);
+const [requestPath] = process.argv.slice(2);
 const env = process.env;
-const focusedPaths = fs.readFileSync(focusedPathFile, "utf8")
-  .split("\n")
-  .filter(Boolean);
 const body = {
   requestText: env.REQUEST_TEXT,
-  focusedPaths,
-  noFocusedPaths: env.NO_FOCUSED_PATHS === "true",
   format: env.FORMAT || "compact",
 };
 const optional = {
@@ -504,6 +497,7 @@ NODE
 }
 
 load_config
+validate_max_chunks
 
 PROVIDER="${PROVIDER_ARG:-${RAG_RULEBOOK_PROVIDER:-local}}"
 case "$PROVIDER" in

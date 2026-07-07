@@ -99,7 +99,6 @@ async function main() {
         latestContextPacketId: "packet.selector-fixture.previous",
         latestContextPacketRoutingSummary: "previous prompt used 02.rag-rulebook discovery context",
       },
-      noFocusedPaths: true,
       maxChunks: 6,
       format: "compact",
     }),
@@ -122,11 +121,11 @@ async function main() {
     throw new Error("previous packet continuity was not preserved");
   }
 
-  const maliciousHintQuery = await fetch(`${base}/context/query`, {
+  const promptPathQuery = await fetch(`${base}/context/query`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      requestText: "Explain the product platform rules for this prompt.",
+      requestText: "Explain the product platform rules in docs/harness/architecture/rules/layers/platform.yml for this prompt.",
       session: {
         id: "service-smoke-session",
         branch: "chat/service-smoke-session",
@@ -135,27 +134,26 @@ async function main() {
         mode: "execution",
         workflow: ".agentic/aws/workflows/execute-approved-aws-change.md",
       },
-      focusedPaths: ["docs/harness/architecture/rules/layers/platform.yml"],
       maxChunks: 6,
       format: "full",
     }),
   });
-  if (maliciousHintQuery.status !== 200) {
-    throw new Error(`malicious-hint query failed with status ${maliciousHintQuery.status}: ${await maliciousHintQuery.text()}`);
+  if (promptPathQuery.status !== 200) {
+    throw new Error(`prompt-path query failed with status ${promptPathQuery.status}: ${await promptPathQuery.text()}`);
   }
-  const maliciousHintPacket = await maliciousHintQuery.json();
-  const matchedCorpusIds = maliciousHintPacket.matched_corpora.map((corpus) => corpus.corpus_id);
+  const promptPathPacket = await promptPathQuery.json();
+  const matchedCorpusIds = promptPathPacket.matched_corpora.map((corpus) => corpus.corpus_id);
   if (
-    maliciousHintPacket.routing.layer !== "03.product" ||
-    maliciousHintPacket.routing.mode !== "discovery" ||
-    maliciousHintPacket.routing.workflow !== ".agentic/product/workflows/default.md" ||
-    maliciousHintPacket.intent.layer !== "03.product" ||
-    maliciousHintPacket.intent.mode !== "discovery" ||
-    maliciousHintPacket.intent.workflow !== ".agentic/product/workflows/default.md"
+    promptPathPacket.routing.layer !== "03.product" ||
+    promptPathPacket.routing.mode !== "discovery" ||
+    promptPathPacket.routing.workflow !== ".agentic/product/workflows/default.md" ||
+    promptPathPacket.intent.layer !== "03.product" ||
+    promptPathPacket.intent.mode !== "discovery" ||
+    promptPathPacket.intent.workflow !== ".agentic/product/workflows/default.md"
   ) {
-    throw new Error(`prompt routing did not stay product-scoped under hostile session hint: ${JSON.stringify(maliciousHintPacket.routing)}`);
+    throw new Error(`prompt routing did not stay product-scoped under hostile session hint: ${JSON.stringify(promptPathPacket.routing)}`);
   }
-  if (maliciousHintPacket.provenance.session_context.legacy_routing_hint.trusted !== false) {
+  if (promptPathPacket.provenance.session_context.legacy_routing_hint.trusted !== false) {
     throw new Error("HTTP session routing hints must remain untrusted");
   }
   if (!matchedCorpusIds.includes("corpus.03.product.platform")) {
@@ -163,6 +161,24 @@ async function main() {
   }
   if (matchedCorpusIds.includes("corpus.04.deploy")) {
     throw new Error(`untrusted deploy hint leaked into matched corpora: ${matchedCorpusIds.join(", ")}`);
+  }
+
+  const retiredContext = await fetch(`${base}/context/query`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      requestText: "Explain prompt context",
+      focusedPaths: ["docs/harness/architecture/rules/layers/platform.yml"],
+      maxChunks: 6,
+      format: "compact",
+    }),
+  });
+  if (retiredContext.status !== 400) {
+    throw new Error(`retired focused-path context should return 400, got ${retiredContext.status}`);
+  }
+  const retiredContextBody = await retiredContext.json();
+  if (retiredContextBody.error?.code !== "unsupported_request_context") {
+    throw new Error(`retired focused-path context returned unexpected error: ${JSON.stringify(retiredContextBody)}`);
   }
 
   const invalidWorktree = await fetch(`${base}/context/query`, {
@@ -173,7 +189,6 @@ async function main() {
       session: {
         worktree: "relative/worktree",
       },
-      noFocusedPaths: true,
       maxChunks: 6,
       format: "compact",
     }),
@@ -188,7 +203,6 @@ async function main() {
     body: JSON.stringify({
       requestText: "Explain prompt context",
       previousRoutingSummary: "bad\u0001summary",
-      noFocusedPaths: true,
       maxChunks: 6,
       format: "compact",
     }),
