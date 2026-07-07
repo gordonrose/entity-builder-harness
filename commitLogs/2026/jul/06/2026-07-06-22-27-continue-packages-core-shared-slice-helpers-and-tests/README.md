@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-07T09:23:00Z
-latest_commit_sha: b842481
-chat_duration: 42924s (00:11:55:24)
+latest_commit_at_utc: 2026-07-07T10:54:16Z
+latest_commit_sha: 2babc4e
+chat_duration: 48400s (00:13:26:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -298,6 +298,17 @@ Summary: Hardened packages/core authn, authz, config, and shared primitives; add
 
 ADR impact: Covered by existing packages/core source material/rules plus updated RAG derivation evidence; no new ADR required.
 
+
+### 2026-07-07T10:54:16Z - Commit recorded
+
+Commit: `2babc4e`
+
+Message: Add core persistence contracts
+
+Summary: Added provider-neutral packages/core persistence contracts for pagination, optional totals, persistence errors, optimistic concurrency, repositories, unit-of-work, after-commit hooks, and in-memory test helpers; added runtime/type tests and RAG-facing persistence source/rule/selector evidence.
+
+ADR impact: Covered by updated packages/core source material, projected rules, derivation report, and persistence selector fixture; no new ADR required.
+
 ## Commits
 
 
@@ -343,6 +354,13 @@ ADR impact: Covered by existing packages/core source material/rules plus updated
   Summary: Hardened packages/core authn, authz, config, and shared primitives; added focused runtime/type tests; replaced manual core runtime test enumeration with an auto-discovering runner; updated RAG-facing source material, projected rules, derivation report, and selector fixture.
   ADR impact: Covered by existing packages/core source material/rules plus updated RAG derivation evidence; no new ADR required.
 
+
+- Commit: `2babc4e`
+  Time UTC: 2026-07-07T10:54:16Z
+  Message: Add core persistence contracts
+  Summary: Added provider-neutral packages/core persistence contracts for pagination, optional totals, persistence errors, optimistic concurrency, repositories, unit-of-work, after-commit hooks, and in-memory test helpers; added runtime/type tests and RAG-facing persistence source/rule/selector evidence.
+  ADR impact: Covered by updated packages/core source material, projected rules, derivation report, and persistence selector fixture; no new ADR required.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -356,9 +374,9 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-07T09:23:00Z
-Latest commit SHA: b842481
-Chat duration: 42924s (00:11:55:24)
+Latest commit at UTC: 2026-07-07T10:54:16Z
+Latest commit SHA: 2babc4e
+Chat duration: 48400s (00:13:26:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
