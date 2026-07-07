@@ -1,0 +1,479 @@
+# Chat Session: 2026-07-06-22-27 continue-packages-core-shared-slice-helpers-and-tests
+
+<!-- agentic-session
+id: 2026-07-06-22-27-continue-packages-core-shared-slice-helpers-and-tests
+task: continue packages/core shared slice helpers and tests
+branch: chat/2026-07-06-22-27-continue-packages-core-shared-slice-helpers-and-tests
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-06-22-27-continue-packages-core-shared-slice-helpers-and-tests-4044235903
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+status: ready
+raised_at_utc: 2026-07-06T21:27:36Z
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
+latest_commit_at_utc: 2026-07-07T22:18:31Z
+latest_commit_sha: 2817a14
+chat_duration: 89455s (01:00:50:55)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
+-->
+
+## Initial Intent
+
+continue packages/core shared slice helpers and tests
+
+## Session Log
+
+- Session started.
+- Branch created.
+- Chat-owned worktree created.
+- Commit log initialized.
+
+## Questions Asked
+
+- None recorded yet.
+
+## Issues Raised
+
+- None recorded yet.
+
+## Decisions Made
+
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Shared helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
+
+
+- Decision: Add provider-neutral packages/core config helpers.
+  Rationale: The config module now exposes primitive ConfigSource readers and translation-ready ConfigError shapes without reading process.env, files, AWS services, databases, or deployment manifests directly.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
+
+
+- Decision: Add provider-neutral packages/core logging helpers.
+  Rationale: The logging module now exposes log-record construction, top-level key redaction, redacting logger wrappers, and tests without choosing console, CloudWatch, OpenTelemetry, file, or vendor sinks.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
+
+
+- Decision: Maintain default sensitive log field names in packages/core logging.
+  Rationale: The logging module now owns common provider-neutral sensitive field names, normalized nested redaction, and an extension hook for app/platform-specific sensitive fields.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
+
+
+- Decision: Add provider-neutral packages/core tenancy helpers.
+  Rationale: The tenancy module now exposes TenantId construction, TenantContext construction, TenantResolution, and fixedTenantResolver without deciding hostname, JWT, header, database, AWS, or product-specific tenant discovery.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral tenancy helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for tenant context and discovery boundaries.
+
+
+- Decision: Add provider-neutral packages/core authentication helpers.
+  Rationale: The authn module now exposes global PrincipalId construction, PrincipalType, Principal construction, AuthenticationResult, and fixedAuthenticator while keeping tenant-specific profiles, memberships, provider verification, and authorization outside authn.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral authn helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals versus tenant-specific profiles and memberships.
+
+
+- Decision: Add provider-neutral packages/core authorization helpers.
+  Rationale: The authz module now supports RBAC-friendly permissions, ReBAC-friendly resource and relation facts, ABAC-friendly attributes, explicit allow/deny decisions, decision evidence, and a fixedAuthorizer helper without owning product policies or provider engines.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Updated packages/core events and audit contract guidance after agent review, including explicit audit actor/target accountability, finite/plain JSON value hardening, event helper success semantics, standardized transaction failure vocabulary, selector fixtures, and source/rule projection evidence.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral packages/core security contracts for secret strings, hashes, data classification, security policy violations, policy decisions, policy evaluators, and test helpers, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
+## Activity Log
+
+### 2026-07-06T21:27:36Z - Session started
+
+Initial intent: continue packages/core shared slice helpers and tests
+
+
+### 2026-07-06T21:31:43Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Shared helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+
+
+### 2026-07-06T21:48:01Z - ADR disposition
+
+ADR needed: no
+
+Reason: Shared helper/test depth fits the existing packages/core contract-surface decision and does not introduce a new architectural policy.
+
+
+### 2026-07-06T21:51:09Z - Commit recorded
+
+Commit: `2c4ac93`
+
+Message: Add core shared helpers
+
+Summary: Added shared helper constructors, Result helpers, fixed clock/request context helpers, TypeScript/runtime tests, and core check tooling.
+
+ADR impact: No ADR impact; this deepens the existing packages/core shared contract surface.
+
+
+### 2026-07-06T21:53:33Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Shared and validation helper additions stay within the approved packages/core contract surface and are documented by the core source material, package README, and core rule set.
+
+
+### 2026-07-06T21:57:16Z - Commit recorded
+
+Commit: `b7fbf1b`
+
+Message: Add core validation helpers
+
+Summary: Added validation issue/result helpers, non-empty invalid-result typing, validation runtime and type tests, and README guidance.
+
+ADR impact: No ADR impact; this deepens the existing packages/core validation contract surface.
+
+
+### 2026-07-06T22:28:59Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Translation-ready message descriptors are covered by packages/core source material, derived core rules, package README guidance, and ADR 0024.
+
+
+### 2026-07-06T22:29:04Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+
+Reason: This slice adds a durable cross-layer rule that displayable contracts pass translation-ready meaning instead of final localized prose.
+
+
+### 2026-07-06T22:33:47Z - Commit recorded
+
+Commit: `d290953`
+
+Message: Add translation-ready core messages
+
+Summary: Added shared MessageDescriptor primitives, updated validation/core error/security/authz displayable contracts, documented the i18n/localization boundary, added ADR 0024, and refreshed generated recognition sources.
+
+ADR impact: ADR 0024 records the translation-ready message descriptor policy.
+
+
+### 2026-07-06T23:07:01Z - Decision
+
+Decision: Add provider-neutral packages/core config helpers.
+
+Rationale: The config module now exposes primitive ConfigSource readers and translation-ready ConfigError shapes without reading process.env, files, AWS services, databases, or deployment manifests directly.
+
+
+### 2026-07-06T23:07:01Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral config helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for config contracts.
+
+
+### 2026-07-06T23:52:55Z - Commit recorded
+
+Commit: `be843e0`
+
+Message: Add core config helpers
+
+Summary: Added provider-neutral ConfigSource helpers, typed config readers, translation-ready ConfigError issues, config runtime/type tests, README guidance, and packages/core RAG projection updates.
+
+ADR impact: No new ADR; this deepens the existing packages/core contract surface.
+
+
+### 2026-07-06T23:56:03Z - Decision
+
+Decision: Add provider-neutral packages/core logging helpers.
+
+Rationale: The logging module now exposes log-record construction, top-level key redaction, redacting logger wrappers, and tests without choosing console, CloudWatch, OpenTelemetry, file, or vendor sinks.
+
+
+### 2026-07-06T23:56:03Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
+
+
+### 2026-07-07T00:00:02Z - Commit recorded
+
+Commit: `000308a`
+
+Message: Add core logging helpers
+
+Summary: Added provider-neutral LogRecord construction, top-level field redaction helpers, redacting logger wrappers, logging runtime/type tests, README guidance, and packages/core RAG projection updates.
+
+ADR impact: No new ADR; this deepens the existing packages/core logging contract surface.
+
+
+### 2026-07-07T00:14:52Z - Decision
+
+Decision: Maintain default sensitive log field names in packages/core logging.
+
+Rationale: The logging module now owns common provider-neutral sensitive field names, normalized nested redaction, and an extension hook for app/platform-specific sensitive fields.
+
+
+### 2026-07-07T00:14:52Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
+
+
+### 2026-07-07T00:48:34Z - Decision
+
+Decision: Add provider-neutral packages/core tenancy helpers.
+
+Rationale: The tenancy module now exposes TenantId construction, TenantContext construction, TenantResolution, and fixedTenantResolver without deciding hostname, JWT, header, database, AWS, or product-specific tenant discovery.
+
+
+### 2026-07-07T00:48:34Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral tenancy helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for tenant context and discovery boundaries.
+
+
+### 2026-07-07T01:28:45Z - Decision
+
+Decision: Add provider-neutral packages/core authentication helpers.
+
+Rationale: The authn module now exposes global PrincipalId construction, PrincipalType, Principal construction, AuthenticationResult, and fixedAuthenticator while keeping tenant-specific profiles, memberships, provider verification, and authorization outside authn.
+
+
+### 2026-07-07T01:28:48Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral authn helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals versus tenant-specific profiles and memberships.
+
+
+### 2026-07-07T01:49:50Z - Decision
+
+Decision: Add provider-neutral packages/core authorization helpers.
+
+Rationale: The authz module now supports RBAC-friendly permissions, ReBAC-friendly resource and relation facts, ABAC-friendly attributes, explicit allow/deny decisions, decision evidence, and a fixedAuthorizer helper without owning product policies or provider engines.
+
+
+### 2026-07-07T01:49:50Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
+
+
+### 2026-07-07T09:23:00Z - Commit recorded
+
+Commit: `b842481`
+
+Message: Harden core contract primitives
+
+Summary: Hardened packages/core authn, authz, config, and shared primitives; added focused runtime/type tests; replaced manual core runtime test enumeration with an auto-discovering runner; updated RAG-facing source material, projected rules, derivation report, and selector fixture.
+
+ADR impact: Covered by existing packages/core source material/rules plus updated RAG derivation evidence; no new ADR required.
+
+
+### 2026-07-07T10:54:16Z - Commit recorded
+
+Commit: `2babc4e`
+
+Message: Add core persistence contracts
+
+Summary: Added provider-neutral packages/core persistence contracts for pagination, optional totals, persistence errors, optimistic concurrency, repositories, unit-of-work, after-commit hooks, and in-memory test helpers; added runtime/type tests and RAG-facing persistence source/rule/selector evidence.
+
+ADR impact: Covered by updated packages/core source material, projected rules, derivation report, and persistence selector fixture; no new ADR required.
+
+
+### 2026-07-07T11:53:29Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Updated packages/core events and audit contract guidance after agent review, including explicit audit actor/target accountability, finite/plain JSON value hardening, event helper success semantics, standardized transaction failure vocabulary, selector fixtures, and source/rule projection evidence.
+
+
+### 2026-07-07T19:41:36Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
+
+
+### 2026-07-07T21:34:59Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral packages/core security contracts for secret strings, hashes, data classification, security policy violations, policy decisions, policy evaluators, and test helpers, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
+
+### 2026-07-07T22:10:22Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
+
+### 2026-07-07T22:18:31Z - Commit recorded
+
+Commit: `5f5255e`
+
+Message: Add core security contracts
+
+Summary: Added provider-neutral security contracts, security policy decision helpers, secret/hash/data classification helpers, runtime/type tests, and security retrieval selector fixture.
+
+ADR impact: No new ADR; this deepens the existing packages/core security contract boundary.
+
+
+### 2026-07-07T22:18:31Z - Commit recorded
+
+Commit: `2817a14`
+
+Message: Add core monitoring contracts
+
+Summary: Added provider-neutral monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, tests, source/rule projection updates, and monitoring retrieval fixture.
+
+ADR impact: No new ADR; this deepens the existing packages/core contract surface and records monitoring guidance in source/rule projection.
+
+## Commits
+
+
+
+- Commit: `2c4ac93`
+  Time UTC: 2026-07-06T21:51:09Z
+  Message: Add core shared helpers
+  Summary: Added shared helper constructors, Result helpers, fixed clock/request context helpers, TypeScript/runtime tests, and core check tooling.
+  ADR impact: No ADR impact; this deepens the existing packages/core shared contract surface.
+
+
+- Commit: `b7fbf1b`
+  Time UTC: 2026-07-06T21:57:16Z
+  Message: Add core validation helpers
+  Summary: Added validation issue/result helpers, non-empty invalid-result typing, validation runtime and type tests, and README guidance.
+  ADR impact: No ADR impact; this deepens the existing packages/core validation contract surface.
+
+
+- Commit: `d290953`
+  Time UTC: 2026-07-06T22:33:47Z
+  Message: Add translation-ready core messages
+  Summary: Added shared MessageDescriptor primitives, updated validation/core error/security/authz displayable contracts, documented the i18n/localization boundary, added ADR 0024, and refreshed generated recognition sources.
+  ADR impact: ADR 0024 records the translation-ready message descriptor policy.
+
+
+- Commit: `be843e0`
+  Time UTC: 2026-07-06T23:52:55Z
+  Message: Add core config helpers
+  Summary: Added provider-neutral ConfigSource helpers, typed config readers, translation-ready ConfigError issues, config runtime/type tests, README guidance, and packages/core RAG projection updates.
+  ADR impact: No new ADR; this deepens the existing packages/core contract surface.
+
+
+- Commit: `000308a`
+  Time UTC: 2026-07-07T00:00:02Z
+  Message: Add core logging helpers
+  Summary: Added provider-neutral LogRecord construction, top-level field redaction helpers, redacting logger wrappers, logging runtime/type tests, README guidance, and packages/core RAG projection updates.
+  ADR impact: No new ADR; this deepens the existing packages/core logging contract surface.
+
+
+- Commit: `b842481`
+  Time UTC: 2026-07-07T09:23:00Z
+  Message: Harden core contract primitives
+  Summary: Hardened packages/core authn, authz, config, and shared primitives; added focused runtime/type tests; replaced manual core runtime test enumeration with an auto-discovering runner; updated RAG-facing source material, projected rules, derivation report, and selector fixture.
+  ADR impact: Covered by existing packages/core source material/rules plus updated RAG derivation evidence; no new ADR required.
+
+
+- Commit: `2babc4e`
+  Time UTC: 2026-07-07T10:54:16Z
+  Message: Add core persistence contracts
+  Summary: Added provider-neutral packages/core persistence contracts for pagination, optional totals, persistence errors, optimistic concurrency, repositories, unit-of-work, after-commit hooks, and in-memory test helpers; added runtime/type tests and RAG-facing persistence source/rule/selector evidence.
+  ADR impact: Covered by updated packages/core source material, projected rules, derivation report, and persistence selector fixture; no new ADR required.
+
+
+- Commit: `5f5255e`
+  Time UTC: 2026-07-07T22:18:31Z
+  Message: Add core security contracts
+  Summary: Added provider-neutral security contracts, security policy decision helpers, secret/hash/data classification helpers, runtime/type tests, and security retrieval selector fixture.
+  ADR impact: No new ADR; this deepens the existing packages/core security contract boundary.
+
+
+- Commit: `2817a14`
+  Time UTC: 2026-07-07T22:18:31Z
+  Message: Add core monitoring contracts
+  Summary: Added provider-neutral monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, tests, source/rule projection updates, and monitoring retrieval fixture.
+  ADR impact: No new ADR; this deepens the existing packages/core contract surface and records monitoring guidance in source/rule projection.
+
+## Main Refresh Conflicts
+
+- None recorded yet.
+
+## ADR Disposition
+
+ADR needed: yes
+ADR path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+Reason: This slice adds a durable cross-layer rule that displayable contracts pass translation-ready meaning instead of final localized prose.
+
+## Session Metrics
+
+Raised at UTC: 2026-07-06T21:27:36Z
+Latest commit at UTC: 2026-07-07T22:18:31Z
+Latest commit SHA: 2817a14
+Chat duration: 89455s (01:00:50:55)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
+
+## Notes
+
+- None recorded yet.
+
+## RAG Knowledge Disposition
+
+Status: covered
+Reason: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+Evidence:
+- docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+- docs/harness/architecture/rules/layers/packages-core.yml
+- .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+- .agentic/02.rag-rulebook/source-projections/v1.yml
+Corpus gaps:
+- None.

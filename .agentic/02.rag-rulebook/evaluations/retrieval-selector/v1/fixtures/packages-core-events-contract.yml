@@ -1,6 +1,6 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
-#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-surface
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-events-contract
 #   version: 1
 #   status: active
 #   layer: 02.rag-rulebook
@@ -9,7 +9,7 @@
 #   - agentic
 #   - architecture
 #   kind: evaluation-fixture
-#   purpose: Prove packages/core prompts retrieve core contract guidance and platform placement boundaries.
+#   purpose: Prove packages/core events prompts retrieve event contract and broker-boundary guidance.
 #   portability:
 #     class: reusable
 #     targets:
@@ -21,22 +21,22 @@
 #     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 
 schema: rag-rulebook/retrieval-selector-evaluation/v1
-fixture_id: retrieval-selector.v1.packages-core-contract-surface
+fixture_id: retrieval-selector.v1.packages-core-events-contract
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompts about packages/core contract modules retrieve core rules and placement boundaries.
+purpose: Prove prompts about packages/core event contracts retrieve event envelope, payload, publish, and broker-boundary rules.
 input:
-  request_text: Explain how product code should use packages/core authn and authz contracts for principal claims, permission strings, and denied authorization decisions while leaving credential checks and policy engines outside core.
+  request_text: Explain how product code should use packages/core events contracts for event envelopes, JSON-safe payloads, event type versions, event buses, handlers, after-commit publishing, and broker topics or subscribers.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
   focused_paths:
-    - packages/core/src/authn/index.ts
-    - packages/core/src/authz/index.ts
+    - packages/core/src/events/index.ts
+    - packages/core/src/persistence/index.ts
     - docs/harness/architecture/rules/layers/packages-core.yml
-  max_chunks: 10
+  max_chunks: 8
 expected:
   routing:
     layer: 03.product
@@ -52,11 +52,9 @@ expected:
       - rule
   selected_chunks:
     required_rule_ids:
+      - core.events-contracts-name-publishable-facts
+      - core.persistence-contracts-name-storage-boundaries
       - core.capability-modules-stay-contract-shaped
-      - core.authn-principal-is-global-actor
-      - core.authz-asks-permission-questions-without-owning-policy
-      - dependency.package-runtime-boundaries
-      - adapter-consumption.feature-code-uses-core-contracts
   required_checks:
     min_count: 1
   citations:
@@ -69,8 +67,7 @@ banned:
 source_refs:
   - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
-  - packages/core ownership rules change.
+  - packages/core events ownership rules change.
   - Selector policy changes corpus ownership or evidence bundle behavior.
