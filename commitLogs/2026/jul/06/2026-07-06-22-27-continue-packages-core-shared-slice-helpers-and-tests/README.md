@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-06T23:52:55Z
-latest_commit_sha: be843e0
-chat_duration: 8719s (00:02:25:19)
+latest_commit_at_utc: 2026-07-07T00:00:02Z
+latest_commit_sha: 000308a
+chat_duration: 9146s (00:02:32:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -188,6 +188,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
 
+
+### 2026-07-07T00:00:02Z - Commit recorded
+
+Commit: `000308a`
+
+Message: Add core logging helpers
+
+Summary: Added provider-neutral LogRecord construction, top-level field redaction helpers, redacting logger wrappers, logging runtime/type tests, README guidance, and packages/core RAG projection updates.
+
+ADR impact: No new ADR; this deepens the existing packages/core logging contract surface.
+
 ## Commits
 
 
@@ -219,6 +230,13 @@ Rationale: Added provider-neutral logging helpers, runtime/type tests, README gu
   Summary: Added provider-neutral ConfigSource helpers, typed config readers, translation-ready ConfigError issues, config runtime/type tests, README guidance, and packages/core RAG projection updates.
   ADR impact: No new ADR; this deepens the existing packages/core contract surface.
 
+
+- Commit: `000308a`
+  Time UTC: 2026-07-07T00:00:02Z
+  Message: Add core logging helpers
+  Summary: Added provider-neutral LogRecord construction, top-level field redaction helpers, redacting logger wrappers, logging runtime/type tests, README guidance, and packages/core RAG projection updates.
+  ADR impact: No new ADR; this deepens the existing packages/core logging contract surface.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -232,9 +250,9 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-06T23:52:55Z
-Latest commit SHA: be843e0
-Chat duration: 8719s (00:02:25:19)
+Latest commit at UTC: 2026-07-07T00:00:02Z
+Latest commit SHA: 000308a
+Chat duration: 9146s (00:02:32:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
