@@ -113,6 +113,14 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral packages/core security contracts for secret strings, hashes, data classification, security policy violations, policy decisions, policy evaluators, and test helpers, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -331,6 +339,20 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
 
+
+### 2026-07-07T21:34:59Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral packages/core security contracts for secret strings, hashes, data classification, security policy violations, policy decisions, policy evaluators, and test helpers, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
+
+### 2026-07-07T22:10:22Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
+
 ## Commits
 
 
@@ -410,14 +432,12 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
+Reason: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
 Evidence:
-- docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-- docs/harness/architecture/rules/layers/platform.yml
-- .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+- docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+- docs/harness/architecture/rules/layers/packages-core.yml
+- .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
 - .agentic/02.rag-rulebook/source-projections/v1.yml
-- .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
-- .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 Corpus gaps:
 - None.

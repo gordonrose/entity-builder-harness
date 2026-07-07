@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 6
+  version: 8
   status: active
   layer: 01.harness
   domain: architecture
@@ -37,6 +37,7 @@ The initial package surface may include these contract modules:
 - `shared`: branded identifiers, result/error shapes, translation-ready message descriptors, request context, clocks.
 - `config`: config source and schema contracts.
 - `logging`: logger, log record, and redaction contracts.
+- `monitoring`: health check, metric, signal definition, and label-safety contracts.
 - `validation`: validation issue and validator contracts.
 - `authn`: principal and authenticator contracts.
 - `authz`: permission and authorizer contracts.
@@ -103,6 +104,74 @@ without moving concrete sink behavior into core.
 The `logging` module must not write directly to console, CloudWatch,
 OpenTelemetry, files, Datadog, or any other concrete runtime sink. Platform
 adapters own those integrations and should consume the core logger contracts.
+
+## Monitoring Contract Boundary
+
+The `monitoring` module should define provider-neutral operational signal
+contracts: monitored component references, health check names, health check
+types, health statuses, health check results, metric names, metric kinds,
+metric units, metric points, metrics ports, signal categories, signal intents,
+signal ownership, low-cardinality metric labels, and small pure helpers for
+tests.
+
+Monitoring contracts should support liveness, readiness, dependency, and
+capability probes. Health check results should identify the checked component,
+the check type, the current status, the timestamp, optional duration, optional
+translation-ready explanation, and optional plain serializable metadata.
+
+Metrics should use stable names, explicit kinds, explicit units, finite numeric
+values, timestamps, and safe labels. Metric labels should stay primitive,
+bounded, and low-cardinality. They must not carry secrets, raw credentials,
+tokens, emails, phone numbers, raw user ids, principal ids, request ids,
+correlation ids, trace ids, session ids, IP addresses, raw URLs, raw paths,
+provider objects, class instances, non-finite numeric values, or runtime-only
+values.
+
+Monitoring signal definitions should explain why a signal exists, who owns it,
+which component it describes, and whether it is intended for health detection,
+alerting, capacity planning, debugging, service-level-indicator use, or cost
+control. Basic SLI vocabulary may live in core as signal intent and definition
+metadata, but production SLO targets and alert thresholds belong outside core.
+
+The `monitoring` module must not define CloudWatch, Datadog, Prometheus,
+OpenTelemetry exporters, concrete health endpoints, dashboards, alert
+thresholds, PagerDuty or incident routes, production SLO targets, runtime
+wiring, cloud SDK clients, provider adapters, infrastructure alarms, or
+product-specific uptime commitments. Apps own which product paths matter.
+Platform owns signal emission, aggregation, runtime health wiring, and provider
+adapters. Infra owns monitoring backends, alarms, dashboards, and notification
+routes.
+
+## Security Contract Boundary
+
+The `security` module should define provider-neutral defensive contracts:
+secret string markers, hash algorithm and hash value shapes, hasher ports,
+data sensitivity labels, sensitive value kinds, security policy identifiers,
+security policy violations, policy decisions, policy evaluators, and small
+pure helpers for tests.
+
+Security policy contracts in core name the result of a defensive policy check.
+They may say that a policy allowed an operation or denied it with a stable,
+translation-ready violation reason and plain serializable evidence. Core
+security policy contracts should not implement a policy engine or decide
+product security settings.
+
+Security policy evidence should stay plain and serializable. It must not carry
+secrets, raw credentials, tokens, provider objects, request objects, class
+instances, non-finite numeric values, or runtime-only values.
+
+The `security` module may classify sensitive values for defensive handling
+across logs, audit, events, exports, provider diagnostics, and runtime
+adapters. Classification labels are shared vocabulary; they are not a complete
+data-governance engine.
+
+The `security` module must not define product password rules, tenant-specific
+security policies, MFA workflows, JWT or session parsing, API key checking,
+rate-limit algorithms, secret storage, encryption providers, IAM policies, KMS
+keys, middleware, or concrete hashing algorithms such as bcrypt or Argon2.
+Apps own product-specific security policy. Platform owns runtime enforcement
+and provider adapters. Infra owns cloud security resources and deployment
+topology.
 
 ## Tenancy Contract Boundary
 

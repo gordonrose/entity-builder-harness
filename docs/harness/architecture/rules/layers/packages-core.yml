@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 6
+#   version: 8
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 6
+version: 8
 status: active
 
 source_derivation:
@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: f4b4846306a8a472bba681d814580fc4acdf5d483ee23a6dab996fe0c2f1b607
+      sha256: 92a1eee7ed6d58918e77bbf4894507903287911cb3fe6a19a5fee55aecb2d583
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -55,7 +55,7 @@ recommended_modules:
     purpose: "Provider-neutral operational log record, logger, default sensitive-field redactor, and redacting-wrapper contracts."
     consumed_by: "apps, workers, platform"
   - id: monitoring
-    purpose: "Health check and metrics contracts."
+    purpose: "Provider-neutral health check, metrics, signal definition, SLI-intent, and metric-label safety contracts."
     consumed_by: "apps, workers, platform"
   - id: security
     purpose: "Defensive primitives and security contracts."
@@ -113,7 +113,7 @@ test_taxonomy:
   - type: unit
     role: primary
     minimum_evidence:
-      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, security/tenancy helpers, and result/error shapes without runtime dependencies."
+      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, monitoring signals, security/tenancy helpers, and result/error shapes without runtime dependencies."
     must_not:
       - "Do not count downstream app or platform tests as proof of core-owned primitive, validation, security, tenancy, or failure behavior."
     categories:
@@ -125,7 +125,7 @@ test_taxonomy:
           - "Validation contracts, error models, config contracts, IDs, and defensive primitives accept and reject expected values."
       - id: edge_cases
         should_prove:
-          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, retry limits, and optional metadata behave intentionally."
+          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, metric label limits, retry limits, and optional metadata behave intentionally."
       - id: security_permissions
         should_prove:
           - "Authn, authz, tenancy, security, redaction, and audit primitives preserve isolation and defensive defaults."
@@ -163,7 +163,7 @@ test_taxonomy:
           - "Auth, tenancy, permission, audit, and security contracts preserve the required policy facts across consumers."
       - id: failure_modes
         should_prove:
-          - "Contract-defined errors, retries, and lifecycle states are explicit enough for platform implementations and app consumers."
+          - "Contract-defined errors, retries, health statuses, monitoring signals, and lifecycle states are explicit enough for platform implementations and app consumers."
   - type: integration
     role: conditional
     minimum_evidence:
@@ -335,6 +335,60 @@ rules:
       whether it is common enough for the core logging defaults. If yes, add it
       to the core logging module and tests. If it is product-specific or
       provider-specific, extend the default redactor at the consuming boundary.
+
+  - id: core.monitoring-contracts-name-operational-signals
+    title: Monitoring contracts name operational signals, not provider backends
+    severity: error
+    summary: >
+      packages/core monitoring contracts should define provider-neutral health
+      checks, metrics, signal definitions, ownership, SLI intent, and
+      metric-label safety while leaving runtime health wiring, exporters,
+      alerting, dashboards, and infrastructure outside core.
+    must:
+      - Define monitored component references, health check names, health check types, health statuses, health check results, metric names, metric kinds, metric units, metric points, metrics ports, monitoring signal categories, monitoring signal intents, signal ownership, and small pure helpers.
+      - Support liveness, readiness, dependency, and capability probe contracts without choosing an HTTP endpoint, runtime host, or provider backend.
+      - Keep health check metadata plain, serializable, and finite-number safe.
+      - Use stable metric names, explicit metric kinds, explicit units, finite numeric values, timestamps, and safe labels.
+      - Keep metric labels primitive, bounded, and low-cardinality.
+      - Treat signal definitions as the place to record why a signal exists, who owns it, which component it describes, and whether it supports health detection, alerting, capacity planning, debugging, service-level-indicator use, or cost control.
+      - Include no-op metrics and fixed health-check helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test health check, metric, label-safety, signal-definition, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define CloudWatch, Datadog, Prometheus, OpenTelemetry exporters, concrete health endpoints, dashboards, alert thresholds, PagerDuty or incident routes, production SLO targets, runtime wiring, cloud SDK clients, provider adapters, infrastructure alarms, or product-specific uptime commitments in packages/core.
+      - Do not use metric labels for secrets, raw credentials, tokens, emails, phone numbers, raw user ids, principal ids, request ids, correlation ids, trace ids, session ids, IP addresses, raw URLs, raw paths, provider objects, class instances, non-finite numeric values, or runtime-only values.
+      - Do not use monitoring metrics as audit records, analytics events, product reports, or durable event-bus messages.
+      - Do not make core monitoring import platform observability adapters, cloud SDKs, runtime frameworks, or infra resources.
+    agent_guidance: >
+      Core monitoring is the dictionary for operational signals. Apps decide
+      which product paths matter, platform emits and aggregates signals through
+      concrete adapters, and infra provisions monitoring backends, alarms,
+      dashboards, and notification routes.
+
+  - id: core.security-contracts-name-defensive-policy
+    title: Security contracts name defensive policy, not runtime enforcement
+    severity: error
+    summary: >
+      packages/core security contracts should define provider-neutral sensitive
+      value, hash, classification, policy violation, policy decision, and
+      evaluator shapes while leaving product policy, runtime enforcement,
+      provider adapters, and cloud security resources outside core.
+    must:
+      - Define provider-neutral secret string markers, hash algorithm and hash value shapes, hasher ports, security policy ids, security policy violations, policy decisions, policy evaluators, data sensitivity labels, and sensitive value classifications.
+      - Use security policy decisions to represent allowed or denied defensive policy outcomes with stable translation-ready violation reasons.
+      - Keep security policy evidence plain, serializable, and finite-number safe.
+      - Use sensitive value classification as shared vocabulary for defensive handling across logs, audit, events, exports, provider diagnostics, and runtime adapters.
+      - Keep security policy contracts separate from authorization decisions; authz answers permission questions, security answers defensive handling and policy-safety questions.
+      - Test secret, hash, classification, policy violation, policy decision, evidence-copying, and evaluator helper behavior without runtime providers.
+    must_not:
+      - Do not define product password rules, tenant-specific security policies, MFA workflows, JWT/session parsing, API key checking, rate-limit algorithms, secret storage, encryption providers, IAM policies, KMS keys, middleware, or concrete hashing algorithms in packages/core.
+      - Do not implement a security policy engine in packages/core.
+      - Do not carry secrets, raw credentials, tokens, provider objects, request objects, class instances, non-finite numeric values, or runtime-only values as security policy evidence.
+      - Do not treat data classification labels as a complete data-governance engine or compliance workflow.
+      - Do not make core security import platform security adapters, cloud SDKs, hashing libraries, web middleware, or infra resources.
+    agent_guidance: >
+      Core security is the dictionary for sensitive values and defensive policy
+      outcomes. Apps decide product security rules, platform enforces runtime
+      security behavior, and infra provisions cloud security resources.
 
   - id: core.tenancy-context-provider-neutral
     title: Tenancy contracts define tenant context, not tenant discovery

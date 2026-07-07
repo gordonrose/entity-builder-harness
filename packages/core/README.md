@@ -104,6 +104,66 @@ the user-facing translation boundary. Core does not write to console,
 CloudWatch, OpenTelemetry, files, or vendor SDKs; platform adapters own those
 sinks.
 
+## Monitoring Contracts
+
+`monitoring` defines operational signal contracts without choosing a metrics or
+health backend:
+
+- `MonitoringComponentRef` names the component being observed, such as an API,
+  worker, queue, database, cache, event bus, runtime, or platform adapter.
+- `HealthCheckType`, `HealthStatus`, `HealthCheckResult`, and `HealthCheck`
+  define liveness, readiness, dependency, and capability probe results.
+- `MetricName`, `MetricKind`, `MetricUnit`, `MetricPoint`, and `Metrics`
+  define provider-neutral metric emission.
+- `MetricLabels`, `metricLabels`, `defaultUnsafeMetricLabelNames`, and
+  `defaultMetricLabelStringLengthLimit` keep metric dimensions primitive,
+  bounded, and protected from common secret or high-cardinality labels.
+- `MonitoringSignalDefinition` records why a signal exists, who owns it, what
+  component it describes, and whether it is intended for alerting, capacity
+  planning, health detection, cost control, debugging, or SLI use.
+- `fixedHealthCheck` and `noopMetrics` are pure helpers for tests and composed
+  local flows.
+
+Core monitoring names the shared operational signal language. It does not
+define CloudWatch, Datadog, Prometheus, OpenTelemetry exporters, health HTTP
+endpoints, dashboards, alert thresholds, PagerDuty routes, production SLO
+targets, or runtime wiring. Apps decide which product paths matter, platform
+adapters emit and aggregate signals, and infra provisions monitoring backends,
+alarms, dashboards, and notification routes.
+
+Metric labels should be low-cardinality dimensions such as service, route,
+method, status class, dependency, queue, or job type. Do not use raw user ids,
+principal ids, request ids, correlation ids, session ids, URLs, paths, tokens,
+emails, IP addresses, or secrets as metric labels.
+
+## Security Contracts
+
+`security` defines shared security vocabulary without choosing a runtime
+security provider:
+
+- `SecretString` and `secretString` mark sensitive string values that should
+  not be treated as ordinary display/logging data.
+- `HashAlgorithm`, `HashValue`, `Hash`, and `hash` describe stored hash values
+  without choosing bcrypt, Argon2, KMS, or another implementation.
+- `Hasher` is the small async port for hashing and verifying secrets.
+- `DataSensitivity`, `SensitiveValueKind`, `DataClassification`, and
+  `dataClassification` classify data that needs defensive handling across
+  logs, audit, export, events, or provider adapters.
+- `SecurityPolicyViolationCode`, `SecurityPolicyViolation`, and
+  `securityPolicyViolation` give defensive policy failures stable,
+  translation-ready meanings.
+- `SecurityPolicyDecision`, `securityPolicyAllowed`,
+  `securityPolicyDenied`, `SecurityPolicyEvaluator`, and
+  `fixedSecurityPolicyEvaluator` define provider-neutral policy-result
+  contracts and test helpers.
+
+Core security names the shared contract for sensitive values, hashes,
+classification, and policy outcomes. It does not define product password
+rules, tenant-specific security policy, JWT/session parsing, MFA behavior,
+secret storage, encryption providers, IAM, KMS keys, rate limits, middleware,
+or concrete hashing algorithms. Apps decide product policy, platform enforces
+runtime policy, and infra provisions cloud security resources.
+
 ## Tenancy Contracts
 
 `tenancy` defines the shared way core consumers name tenant ownership and

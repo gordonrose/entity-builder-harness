@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 585
-  term_count: 1182
+  indexed_artifacts: 587
+  term_count: 1186
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4116,6 +4116,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-events-contract
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-monitoring-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-monitoring-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-monitoring-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-persistence-contract
   category: artifact-id
   match_type: exact
@@ -4127,6 +4139,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-persistence-contract
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-security-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-security-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-security-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
   category: artifact-id
