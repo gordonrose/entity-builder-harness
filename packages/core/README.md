@@ -175,6 +175,40 @@ relationship inheritance rules, ABAC policy language, team membership storage,
 or tenant-specific permission meanings. Apps and product modules own those
 policies; platform can bind the port to a policy engine or provider.
 
+## Persistence Contracts
+
+`persistence` defines provider-neutral contracts for loading and saving state:
+
+- `PageRequest`, `pageRequest`, `Page`, and `page` keep pagination shape
+  consistent without choosing a database cursor format.
+- `PageTotal`, `PageTotals`, `pageTotal`, and `pageTotals` provide optional
+  total-count metadata when a product use case needs it. Totals are not
+  required, but when included they must be non-negative whole numbers.
+- `ConcurrencyToken` and `SaveOptions` give repositories a shared optimistic
+  concurrency hook for stale-write protection.
+- `PersistenceErrorCode`, `PersistenceError`, and `persistenceError` give
+  storage failures stable meanings such as conflict, duplicate, timeout,
+  unavailable storage, invalid page request, and transaction failure.
+- `Repository` is the small async port for loading and saving one kind of
+  entity by id.
+- `UnitOfWork`, `Transaction`, and `afterCommit` define transaction boundaries
+  and post-commit side effects without choosing a database.
+- `inMemoryRepository` and `inMemoryUnitOfWork` are pure helpers for tests and
+  composed local flows.
+
+Core does not define tables, indexes, shards, backups, SQL, ORM models, cloud
+clients, or product-specific repositories. Platform adapters translate real
+database behavior into the core contracts. Infra owns deployment resources such
+as backups, indexes, storage topology, and scaling. Apps and product modules
+own product-specific query methods and workflow decisions.
+
+Use totals only when the app use case needs them, because total counts can be
+expensive or approximate in some storage backends. Use `afterCommit` for side
+effects that should only happen after a transaction has successfully committed,
+such as publishing events or scheduling work. Use `expectedConcurrencyToken`
+when a caller needs to prevent stale updates from overwriting newer stored
+state.
+
 ## Validation Contracts
 
 `validation` defines the shared shape for explaining why unknown input is or is

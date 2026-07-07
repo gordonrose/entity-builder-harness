@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 2
+version: 3
 status: active
 
 source_derivation:
@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 57a91945110e1df6fa40590b1b5091104b3fc99d145db90f3b57963955d2938c
+      sha256: 0f4d490225e0b5da5fa760f066f2d47b3cd5bed29f4829d09c569ce4296f201d
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -406,6 +406,34 @@ rules:
       Core should make the authorization question precise. Apps and product
       modules answer it with product policy, and platform may delegate the
       Authorizer port to a policy engine when needed.
+
+  - id: core.persistence-contracts-name-storage-boundaries
+    title: Persistence contracts name storage boundaries
+    severity: error
+    summary: >
+      packages/core persistence contracts should define provider-neutral
+      repository, pagination, error, concurrency, transaction, and after-commit
+      shapes while leaving database implementation, topology, and product
+      queries outside core.
+    must:
+      - Define provider-neutral page request, page, repository, save option, unit-of-work, transaction, and after-commit contracts.
+      - Keep page total counts optional, but require shared non-negative integer page-total contracts when total records or total matching records are included.
+      - Use stable persistence error codes for common storage outcomes such as conflict, duplicate, timeout, unavailable storage, invalid page request, not found, and transaction failure.
+      - Support optimistic concurrency through an expected concurrency token when stale writes must be rejected.
+      - Keep after-commit hooks for side effects that should only run after successful transaction commit.
+      - Include in-memory helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test pagination, conflict, transaction, after-commit, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define SQL, ORM models, database clients, database tables, indexes, shards, backups, object-storage clients, or cloud SDK behavior in packages/core.
+      - Do not put product-specific repositories, product query methods, or workflow decisions in packages/core.
+      - Do not require total counts for every page response or invent product-specific total-count fields outside the shared page-total contract.
+      - Do not expose provider-specific lock, deadlock, network, timeout, or conditional-write error shapes directly to app code.
+      - Do not publish events or run side effects before a transaction is known to have committed.
+    agent_guidance: >
+      Core persistence names the contract and stable failure meanings. Platform
+      translates real storage behavior into that contract, infra provisions the
+      storage topology and resilience resources, and apps decide product-specific
+      query and workflow behavior.
 
   - id: core.translation-ready-meaning-not-prose
     title: Core contracts pass meaning, not final localized prose

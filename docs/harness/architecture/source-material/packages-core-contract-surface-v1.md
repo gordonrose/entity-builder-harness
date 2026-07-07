@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 2
+  version: 3
   status: active
   layer: 01.harness
   domain: architecture
@@ -167,6 +167,42 @@ roles, own relationship inheritance rules, implement ABAC policy language, read
 team membership storage, or hardcode tenant-specific permission meanings. Apps
 and product modules own those policies; platform adapters may bind the core
 authorizer port to a policy engine or provider.
+
+## Persistence Contract Boundary
+
+The `persistence` module should define provider-neutral contracts for loading
+and saving state: page requests, pages, optimistic concurrency tokens,
+optional page total metadata, repository ports, save options, persistence error
+meanings, unit-of-work boundaries, transaction hooks, and small in-memory
+helpers for tests.
+
+Total counts should be optional, because they can be expensive, approximate, or
+unavailable in some storage backends. When a product use case includes total
+records or total matching records, those counts should use the shared
+non-negative integer page-total contract rather than ad hoc numeric fields.
+
+Persistence contracts should use stable error vocabulary for common storage
+failure categories such as conflict, duplicate, timeout, unavailable storage,
+invalid page request, not found, and transaction failure. Platform adapters
+should translate provider-specific database errors, lock failures, deadlocks,
+timeouts, conditional-write failures, and network failures into those stable
+core meanings.
+
+Repository save contracts may support optimistic concurrency through an
+expected concurrency token. This lets app code prevent stale writes from
+overwriting newer state without requiring core to choose a locking strategy or
+database implementation.
+
+Unit-of-work and transaction contracts should define the boundary for grouped
+storage work. After-commit hooks should be reserved for side effects that must
+only run after a successful commit, such as publishing events or scheduling
+post-commit work.
+
+The `persistence` module must not define SQL, ORM models, database clients,
+tables, indexes, shards, backups, object-storage clients, product-specific
+repositories, or product workflow decisions. Platform owns concrete storage
+adapters. Infra owns storage topology, backup resources, indexes, and scaling.
+Apps and product modules own product-specific queries and workflow behavior.
 
 ## Message, i18n, and Localization Boundary
 

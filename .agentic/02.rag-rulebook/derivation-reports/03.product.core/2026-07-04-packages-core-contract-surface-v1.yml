@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -31,8 +31,8 @@ source_change:
     - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   summary: >
     Approved source material records the narrow bootstrap exception, contract
-    module surface, and hardening requirements for the initial packages/core
-    slice.
+    module surface, hardening requirements, and persistence contract boundary
+    for the initial packages/core slice.
 
 target:
   corpus_id: corpus.03.product.core
@@ -44,6 +44,7 @@ target:
   affected_rulesets: []
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
   affected_corpus_gaps: []
 
 semantic_review:
@@ -90,6 +91,24 @@ semantic_review:
     - claim_id: core.authz.denials.reason-required
       summary: Authorization denials must carry translation-ready reasons, and authorization attributes, facts, and evidence should stay plain and serializable.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.provider-neutral-boundary
+      summary: The persistence module may define provider-neutral page, optional page total, repository, save option, persistence error, unit-of-work, transaction, after-commit, concurrency-token, and in-memory test-helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.page-totals.optional-standard
+      summary: Total counts should be optional, but total records or total matching records should use shared non-negative integer page-total contracts when a product use case includes them.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.provider-errors-normalized
+      summary: Platform adapters should translate provider-specific lock, deadlock, timeout, conditional-write, and network failures into stable persistence error meanings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.concurrency-token
+      summary: Repository save contracts may use an expected concurrency token to reject stale writes without requiring core to choose a locking strategy or database implementation.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.after-commit
+      summary: After-commit hooks should be reserved for side effects that must only run after successful transaction commit, such as event publishing or scheduled work.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.no-db-topology
+      summary: Core persistence must not define SQL, ORM models, database clients, tables, indexes, shards, backups, object-storage clients, product-specific repositories, or product workflow decisions.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -120,10 +139,11 @@ proposed_updates:
   corpus_gaps: []
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
   notes:
     - Existing packages/core rules define the general ownership boundary.
-    - This update tightens shared timestamp, config snapshot, authn claim, and authz decision/permission guidance.
-    - The selector fixture now asks for authn/authz contract hardening guidance directly.
+    - This update tightens persistence pagination, optional total-count metadata, error, optimistic concurrency, unit-of-work, transaction, and after-commit guidance.
+    - The new selector fixture asks for persistence contract and storage-boundary guidance directly.
 
 downstream_effects:
   index_required: false
@@ -138,6 +158,7 @@ validation:
     - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
     - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
     - npm run core:check
     - git diff --check
   checks_run:
@@ -148,6 +169,8 @@ validation:
     - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
       result: passed
     - command: npm run core:check
       result: passed
@@ -161,5 +184,5 @@ review:
   reviewer: codex-agentic-review-loop
   reviewed_at_utc: "2026-07-07T00:00:00Z"
   notes:
-    - Source and projection were reviewed as part of the packages/core hardening slice.
+    - Source and projection were reviewed as part of the packages/core persistence slice.
     - Future core modules should add narrower source material when their contracts materially change.
