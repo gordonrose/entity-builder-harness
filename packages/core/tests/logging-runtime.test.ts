@@ -1,7 +1,10 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { correlationId } from "../src/shared/index";
 import {
+  createLogRedactor,
+  defaultLogRedactor,
   defaultRedactedValue,
+  defaultSensitiveLogFieldNames,
   keyRedactor,
   logRecord,
   noopLogger,
@@ -41,6 +44,54 @@ deepEqual(redactLogFields(record.fields ?? {}, ["password"]), {
   service: "api",
   password: defaultRedactedValue,
 });
+
+deepEqual(
+  redactLogFields(
+    {
+      access_token: "access-secret",
+      AccessToken: "second-secret",
+      "set-cookie": "session=secret",
+      service: "api",
+    },
+    defaultSensitiveLogFieldNames,
+  ),
+  {
+    access_token: defaultRedactedValue,
+    AccessToken: defaultRedactedValue,
+    "set-cookie": defaultRedactedValue,
+    service: "api",
+  },
+);
+
+deepEqual(
+  defaultLogRedactor.redact({
+    auth: {
+      token: "nested-secret",
+      detail: { client_secret: "client-secret" },
+    },
+    attempts: [{ apiKey: "api-secret", status: "failed" }],
+    service: "api",
+  }),
+  {
+    auth: {
+      token: defaultRedactedValue,
+      detail: { client_secret: defaultRedactedValue },
+    },
+    attempts: [{ apiKey: defaultRedactedValue, status: "failed" }],
+    service: "api",
+  },
+);
+
+deepEqual(
+  createLogRedactor({ additionalKeys: ["dateOfBirth"], redactedValue: null }).redact({
+    date_of_birth: "2000-01-01",
+    tenant: "tenant-1",
+  }),
+  {
+    date_of_birth: null,
+    tenant: "tenant-1",
+  },
+);
 
 const customRedactor = keyRedactor(["token"], null);
 deepEqual(customRedactor.redact({ token: "abc", tenant: "tenant-1" }), {

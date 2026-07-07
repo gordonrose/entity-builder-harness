@@ -72,6 +72,13 @@ Operational log messages may remain direct strings because they are intended
 for developers and operators, not final localized user-facing copy. Sensitive
 or secret fields should be redacted before records reach a concrete sink.
 
+The `logging` module owns the common default sensitive-field vocabulary used by
+provider-neutral redactors. When new common sensitive fields are discovered,
+they should be maintained in this layer so apps and platform adapters inherit
+the same default defensive behavior. App-specific, platform-specific, or
+provider-specific sensitive fields should extend the default redaction contract
+without moving concrete sink behavior into core.
+
 The `logging` module must not write directly to console, CloudWatch,
 OpenTelemetry, files, Datadog, or any other concrete runtime sink. Platform
 adapters own those integrations and should consume the core logger contracts.

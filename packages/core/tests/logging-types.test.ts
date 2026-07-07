@@ -1,4 +1,7 @@
 import {
+  createLogRedactor,
+  defaultLogRedactor,
+  defaultSensitiveLogFieldNames,
   keyRedactor,
   logRecord,
   redactingLogger,
@@ -26,6 +29,13 @@ const record: LogRecord = logRecord({
 void record;
 
 const redactor: Redactor = keyRedactor(["password", "token"]);
+const defaultKeys: readonly string[] = defaultSensitiveLogFieldNames;
+const defaultRedactor: Redactor = defaultLogRedactor;
+const extendedRedactor: Redactor = createLogRedactor({ additionalKeys: ["dateOfBirth"] });
+void defaultKeys;
+void defaultRedactor;
+void extendedRedactor;
+
 const logger: Logger = {
   write: (_record) => undefined,
 };
@@ -41,3 +51,6 @@ logRecord({ level: "info", message: "Bad correlation.", correlationId: "request-
 
 // @ts-expect-error log records need an operational message.
 logRecord({ level: "info" });
+
+// @ts-expect-error custom sensitive field names must be strings.
+createLogRedactor({ additionalKeys: [123] });

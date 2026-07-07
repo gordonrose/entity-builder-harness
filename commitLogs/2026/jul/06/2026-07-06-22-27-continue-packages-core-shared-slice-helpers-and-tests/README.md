@@ -73,6 +73,14 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
 
+
+- Decision: Maintain default sensitive log field names in packages/core logging.
+  Rationale: The logging module now owns common provider-neutral sensitive field names, normalized nested redaction, and an extension hook for app/platform-specific sensitive fields.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -199,6 +207,20 @@ Summary: Added provider-neutral LogRecord construction, top-level field redactio
 
 ADR impact: No new ADR; this deepens the existing packages/core logging contract surface.
 
+
+### 2026-07-07T00:14:52Z - Decision
+
+Decision: Maintain default sensitive log field names in packages/core logging.
+
+Rationale: The logging module now owns common provider-neutral sensitive field names, normalized nested redaction, and an extension hook for app/platform-specific sensitive fields.
+
+
+### 2026-07-07T00:14:52Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
+
 ## Commits
 
 
@@ -264,7 +286,7 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Added provider-neutral logging helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for logging contracts.
+Reason: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
 Evidence:
 - packages/core/src/logging/index.ts
 - packages/core/tests/logging-runtime.test.ts

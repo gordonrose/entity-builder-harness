@@ -84,11 +84,17 @@ Platform adapters can translate those provider-specific sources into
 
 - `LogRecord` captures level, message, correlation id, and diagnostic fields.
 - `logRecord` creates a shallow-copied record so callers can pass fields safely.
-- `Redactor`, `redactLogFields`, and `keyRedactor` define provider-neutral
-  redaction behavior.
+- `defaultSensitiveLogFieldNames`, `defaultLogRedactor`,
+  `createLogRedactor`, `redactLogFields`, and `keyRedactor` define
+  provider-neutral redaction behavior.
 - `redactingLogger` wraps another logger and redacts fields before they reach
   the sink.
 - `noopLogger` is a safe logger for tests and disabled logging paths.
+
+Common sensitive field names discovered later should be maintained in this
+module so apps and platform adapters inherit the same default defensive
+behavior. App-specific, platform-specific, or provider-specific sensitive
+fields can extend the default redactor through `createLogRedactor`.
 
 Log messages are operational text for developers and operators. They are not
 the user-facing translation boundary. Core does not write to console,
