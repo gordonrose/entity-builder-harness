@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-07T00:00:02Z
-latest_commit_sha: 000308a
-chat_duration: 9146s (00:02:32:26)
+latest_commit_at_utc: 2026-07-07T09:23:00Z
+latest_commit_sha: b842481
+chat_duration: 42924s (00:11:55:24)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -287,6 +287,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
 
+
+### 2026-07-07T09:23:00Z - Commit recorded
+
+Commit: `b842481`
+
+Message: Harden core contract primitives
+
+Summary: Hardened packages/core authn, authz, config, and shared primitives; added focused runtime/type tests; replaced manual core runtime test enumeration with an auto-discovering runner; updated RAG-facing source material, projected rules, derivation report, and selector fixture.
+
+ADR impact: Covered by existing packages/core source material/rules plus updated RAG derivation evidence; no new ADR required.
+
 ## Commits
 
 
@@ -325,6 +336,13 @@ Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, R
   Summary: Added provider-neutral LogRecord construction, top-level field redaction helpers, redacting logger wrappers, logging runtime/type tests, README guidance, and packages/core RAG projection updates.
   ADR impact: No new ADR; this deepens the existing packages/core logging contract surface.
 
+
+- Commit: `b842481`
+  Time UTC: 2026-07-07T09:23:00Z
+  Message: Harden core contract primitives
+  Summary: Hardened packages/core authn, authz, config, and shared primitives; added focused runtime/type tests; replaced manual core runtime test enumeration with an auto-discovering runner; updated RAG-facing source material, projected rules, derivation report, and selector fixture.
+  ADR impact: Covered by existing packages/core source material/rules plus updated RAG derivation evidence; no new ADR required.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -338,9 +356,9 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-07T00:00:02Z
-Latest commit SHA: 000308a
-Chat duration: 9146s (00:02:32:26)
+Latest commit at UTC: 2026-07-07T09:23:00Z
+Latest commit SHA: b842481
+Chat duration: 42924s (00:11:55:24)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
