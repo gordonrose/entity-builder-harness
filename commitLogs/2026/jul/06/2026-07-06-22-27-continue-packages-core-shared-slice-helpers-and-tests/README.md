@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-07T10:54:16Z
-latest_commit_sha: 2babc4e
-chat_duration: 48400s (00:13:26:40)
+latest_commit_at_utc: 2026-07-07T22:18:31Z
+latest_commit_sha: 2817a14
+chat_duration: 89455s (01:00:50:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -353,6 +353,28 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Added provider-neutral packages/core monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, and provider-boundary guidance, with README, source material, rules, derivation report, selector fixture, and source projection coverage.
 
+
+### 2026-07-07T22:18:31Z - Commit recorded
+
+Commit: `5f5255e`
+
+Message: Add core security contracts
+
+Summary: Added provider-neutral security contracts, security policy decision helpers, secret/hash/data classification helpers, runtime/type tests, and security retrieval selector fixture.
+
+ADR impact: No new ADR; this deepens the existing packages/core security contract boundary.
+
+
+### 2026-07-07T22:18:31Z - Commit recorded
+
+Commit: `2817a14`
+
+Message: Add core monitoring contracts
+
+Summary: Added provider-neutral monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, tests, source/rule projection updates, and monitoring retrieval fixture.
+
+ADR impact: No new ADR; this deepens the existing packages/core contract surface and records monitoring guidance in source/rule projection.
+
 ## Commits
 
 
@@ -405,6 +427,20 @@ Rationale: Added provider-neutral packages/core monitoring contracts for health 
   Summary: Added provider-neutral packages/core persistence contracts for pagination, optional totals, persistence errors, optimistic concurrency, repositories, unit-of-work, after-commit hooks, and in-memory test helpers; added runtime/type tests and RAG-facing persistence source/rule/selector evidence.
   ADR impact: Covered by updated packages/core source material, projected rules, derivation report, and persistence selector fixture; no new ADR required.
 
+
+- Commit: `5f5255e`
+  Time UTC: 2026-07-07T22:18:31Z
+  Message: Add core security contracts
+  Summary: Added provider-neutral security contracts, security policy decision helpers, secret/hash/data classification helpers, runtime/type tests, and security retrieval selector fixture.
+  ADR impact: No new ADR; this deepens the existing packages/core security contract boundary.
+
+
+- Commit: `2817a14`
+  Time UTC: 2026-07-07T22:18:31Z
+  Message: Add core monitoring contracts
+  Summary: Added provider-neutral monitoring contracts for health checks, metrics, safe labels, signal ownership, SLI intent, tests, source/rule projection updates, and monitoring retrieval fixture.
+  ADR impact: No new ADR; this deepens the existing packages/core contract surface and records monitoring guidance in source/rule projection.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -418,9 +454,9 @@ Reason: This slice adds a durable cross-layer rule that displayable contracts pa
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T21:27:36Z
-Latest commit at UTC: 2026-07-07T10:54:16Z
-Latest commit SHA: 2babc4e
-Chat duration: 48400s (00:13:26:40)
+Latest commit at UTC: 2026-07-07T22:18:31Z
+Latest commit SHA: 2817a14
+Chat duration: 89455s (01:00:50:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
