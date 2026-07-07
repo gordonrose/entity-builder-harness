@@ -1549,11 +1549,28 @@ def build_selector_trace(
     }
 
 
+def layer_match_can_seed_corpus(match: dict[str, Any]) -> bool:
+    matched_input = str(match.get("matched_input") or "")
+    if matched_input in {"session-metadata", "focused-paths"}:
+        return True
+    if matched_input != "prompt":
+        return False
+    canonical = str(match.get("canonical_id") or "")
+    term = str(match.get("term") or "").strip().lower()
+    if term == canonical.lower() and re.fullmatch(r"[0-9]{2}\.[a-z0-9-]+", canonical):
+        return True
+    return canonical == "04.deploy" and term == "aws"
+
+
 def matched_corpus_ids(matches: list[dict[str, Any]], session_corpus: str) -> list[str]:
     corpus_ids = [] if session_corpus in {"", "corpus.unknown"} else [session_corpus]
     for match in matches:
         if match.get("category") == "corpus-id":
             corpus_ids.append(str(match.get("canonical_id")))
+        elif match.get("category") == "layer-name" and layer_match_can_seed_corpus(match):
+            layer_corpus = SESSION_LAYER_TO_CORPUS.get(str(match.get("canonical_id") or ""))
+            if layer_corpus:
+                corpus_ids.append(layer_corpus)
     seen: set[str] = set()
     result: list[str] = []
     for corpus_id in corpus_ids:
@@ -1692,6 +1709,8 @@ def select_chunks(
 
     for kind in ["required-check", "rule", "artifact-summary"]:
         preferred = next((item for item in ranked if item[3].get("content_kind") == kind and item[0] > 0), None)
+        if kind == "required-check" and preferred is None:
+            continue
         fallback = next((item for item in ranked if item[3].get("content_kind") == kind), None)
         add(preferred or fallback)
 
@@ -1790,7 +1809,7 @@ def build_packet(
     candidate_ranked, used_candidate_filter = candidate_ranked_chunks(
         ranked,
         allowed_corpus_ids,
-        evidence_source_paths,
+        ranking_paths,
     )
     required_chunk_ids = matched_corpus_gap_required_chunk_ids(
         corpus_gaps,

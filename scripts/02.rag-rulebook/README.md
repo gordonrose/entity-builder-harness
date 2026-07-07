@@ -82,6 +82,10 @@ validation, and standalone service adapters.
   `rag-rulebook/context-packet-compact/v1` view, for request text plus request
   context and session safety metadata, refusing stale runtime caches and
   including selector trace diagnostics.
+- `query-context/script.sh` is the RAG-owned provider boundary for callers. It
+  selects hosted, local, or auto provider mode, loads local hosted auth from
+  `~/.config/rag-rulebook/rag.env`, redacts secrets, fails closed on hosted auth
+  errors, and delegates local mode to `query-local-context/script.sh`.
 - `run-local-service/script.sh` starts the thin local HTTP service for the MSP
   API surface: `GET /health`, `GET /version`, and `POST /context/query`.
 - `build-service-image/script.sh` builds the governed local container image for

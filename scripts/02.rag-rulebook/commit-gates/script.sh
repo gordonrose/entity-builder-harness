@@ -192,4 +192,8 @@ require_executable "scripts/02.rag-rulebook/query-local-context/smoke-test.sh"
 bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh >/dev/null
 echo "RAG/rulebook local context query smoke passed."
 
+require_executable "scripts/02.rag-rulebook/query-context/smoke-test.sh"
+bash scripts/02.rag-rulebook/query-context/smoke-test.sh >/dev/null
+echo "RAG/rulebook context provider smoke passed."
+
 echo "RAG/rulebook commit gates passed."

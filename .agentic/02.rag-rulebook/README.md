@@ -202,6 +202,10 @@ final homes.
   request context and session safety metadata, refusing stale runtime caches.
   Packets include selector trace diagnostics for recognition, strategy stages,
   evidence bundles, filtering, and selected chunks.
+- `scripts/02.rag-rulebook/query-context/script.sh` - RAG-owned provider
+  boundary for hosted/local context packet retrieval. It owns provider
+  selection, hosted auth loading, secret redaction, fail-closed auth behavior,
+  and governed local fallback policy.
 - `scripts/02.rag-rulebook/generate-recognition-sources/script.sh` -
   generates and checks metadata-backed recognition sources.
 - `scripts/02.rag-rulebook/validate-recognition-sources/script.sh` -

@@ -1,0 +1,175 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: runtime
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   kind: rule
+#   purpose: Define the RAG rulebook-owned hosted context provider contract and auth/fallback boundaries.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.source-material.hosted-context-provider-contract
+#     path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+#   - id: rag-rulebook.script.query-context
+#     path: scripts/02.rag-rulebook/query-context/script.sh
+id: concern.hosted-context-provider-contract
+title: Hosted context provider contract rules
+version: 1
+status: active
+corpus_id: corpus.02.rag-rulebook
+owner_layer: 02.rag-rulebook
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: generated-projection
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-07-07T00:00:00Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
+  source_material:
+    - path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      sha256: 6a5ab8986da5a7098ed323d299034e39cbfabf705225dd1ae32fd1b35f32f413
+
+description: >
+  Rules for keeping hosted/local RAG context-provider selection, local auth
+  config, redaction, fail-closed behavior, and local fallback policy inside the
+  RAG rulebook layer instead of exposing AWS or bearer-token details to callers.
+
+related_rulesets:
+  - .agentic/02.rag-rulebook/standards/portable-service-contract.md
+  - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+  - docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml
+  - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
+
+applies_to:
+  paths:
+    - "scripts/02.rag-rulebook/query-context/**"
+    - "scripts/02.rag-rulebook/query-local-context/**"
+    - ".agentic/02.rag-rulebook/service/**"
+    - "docs/02.rag-rulebook/**"
+    - ".agentic/02.rag-rulebook/**"
+
+rules:
+  - id: hosted-context-provider-contract.rag-rulebook-owns-provider-selection
+    title: RAG rulebook owns provider selection
+    severity: error
+    summary: >
+      Callers ask the RAG rulebook layer for a context packet. They do not
+      decide whether context comes from hosted RAG, local RAG, AWS Secrets
+      Manager, or a development fallback.
+    must:
+      - "Expose a stable RAG rulebook-owned query interface for callers."
+      - "Keep provider modes, hosted base URL, auth token loading, fallback policy, and redaction inside 02.rag-rulebook."
+      - "Return a validated context packet or an explicit RAG rulebook gap."
+      - "Treat the packet as retrieval evidence, not authorization to mutate files, commit, deploy, or bypass lifecycle gates."
+    must_not:
+      - "Do not require chat/workbench callers to know AWS, bearer-token, Secrets Manager, or rag.env details."
+      - "Do not let provider selection become a 00.chat lifecycle responsibility."
+      - "Do not hide provider failures behind unrelated local fallback."
+    agent_guidance: >
+      If a caller needs context, route through the RAG rulebook provider
+      interface. Keep AWS and token details behind that interface.
+
+  - id: hosted-context-provider-contract.local-config-is-rag-owned
+    title: Local provider config is RAG-owned and uncommitted
+    severity: error
+    summary: >
+      Local hosted-provider credentials belong in a user-local RAG rulebook
+      config file or process environment, never in committed repo artifacts.
+    must:
+      - "Use ~/.config/rag-rulebook/rag.env as the default local config path."
+      - "Keep local config files outside the repository and locked down to the local user."
+      - "Allow secret references such as RAG_RULEBOOK_TOKEN_SECRET_ARN in docs and durable config examples."
+      - "Treat raw token values as runtime-only secrets."
+    must_not:
+      - "Do not commit RAG_RULEBOOK_TOKEN or Authorization header values."
+      - "Do not store raw token values in fixtures, session logs, context packets, generated artifacts, or screenshots."
+      - "Do not put RAG provider credentials under llm-workbench-owned config paths."
+    agent_guidance: >
+      Document names and references. Keep secret values local, private, and
+      outside the repo.
+
+  - id: hosted-context-provider-contract.hosted-auth-fails-closed
+    title: Hosted auth fails closed
+    severity: error
+    summary: >
+      Explicit hosted mode requires working bearer auth. Missing or rejected
+      auth is a RAG rulebook gap, not a reason to silently query local context.
+    must:
+      - "Require a bearer token or governed runtime secret lookup before calling the hosted /context/query endpoint."
+      - "Emit gap.rag-rulebook.hosted-context-provider-auth-missing when hosted mode lacks auth."
+      - "Emit gap.rag-rulebook.hosted-context-provider-auth-rejected when hosted mode receives an unauthorized response."
+      - "Stop rather than falling back when hosted mode is explicit."
+    must_not:
+      - "Do not silently fall back to local RAG when hosted auth is missing or rejected."
+      - "Do not retry with token values printed in diagnostics."
+      - "Do not treat unauthenticated hosted responses as usable context packets."
+    agent_guidance: >
+      Hosted auth failure is usually credential drift or missing setup. Surface
+      it as a precise gap.
+
+  - id: hosted-context-provider-contract.redacts-secret-bearing-fields
+    title: Secret-bearing fields are redacted
+    severity: error
+    summary: >
+      Provider diagnostics may explain what failed, but they must not expose
+      tokens, Authorization headers, or env file contents.
+    must:
+      - "Redact Authorization, RAG_RULEBOOK_TOKEN, bearer token values, and full env file contents from output."
+      - "Remove temporary files that contain authorization headers."
+      - "Limit diagnostics to non-secret metadata such as config path, provider mode, base URL host, secret ARN, profile, region, HTTP status, and gap IDs."
+      - "Keep context packets free of raw credential values."
+    must_not:
+      - "Do not echo env files, curl config files, or request headers containing tokens."
+      - "Do not include secrets in packet provenance or selector traces."
+      - "Do not use verbose network tooling in a way that dumps Authorization headers."
+    agent_guidance: >
+      Debug the boundary without revealing the secret. Prefer gap IDs and
+      sanitized runtime metadata.
+
+  - id: hosted-context-provider-contract.local-fallback-is-governed
+    title: Local fallback is governed
+    severity: error
+    summary: >
+      Local fallback is allowed only under explicit RAG rulebook policy. It is
+      not an invisible substitute for a failed hosted provider.
+    must:
+      - "Allow explicit local mode to delegate to query-local-context and inherit local runtime freshness checks."
+      - "Allow auto mode to use local context only when hosted config is absent or RAG_RULEBOOK_LOCAL_FALLBACK=dev-only permits local development fallback."
+      - "Emit gap.rag-rulebook.hosted-context-provider-local-fallback-blocked when fallback is not governed."
+      - "Keep rejected hosted credentials blocking even when auto mode is enabled."
+    must_not:
+      - "Do not use local fallback for rejected hosted credentials."
+      - "Do not bypass local runtime freshness checks during fallback."
+      - "Do not treat auto mode as permission to hide provider identity from provenance."
+    agent_guidance: >
+      Fallback should make development possible without making production
+      behavior ambiguous.
+
+source_refs:
+  - doc: "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md"
+    sections:
+      - "Stable Interface"
+      - "Provider Modes"
+      - "Local Configuration Boundary"
+      - "Hosted Auth Behavior"
+      - "Redaction"
+      - "Fallback Policy"
+
+success_criteria:
+  - "The stable interface lives under scripts/02.rag-rulebook/query-context/."
+  - "The default local config path is ~/.config/rag-rulebook/rag.env."
+  - "Explicit hosted mode fails closed on missing or rejected auth."
+  - "Token values and Authorization headers are never printed or serialized."
+  - "Local fallback is explicit and governed by RAG rulebook policy."
