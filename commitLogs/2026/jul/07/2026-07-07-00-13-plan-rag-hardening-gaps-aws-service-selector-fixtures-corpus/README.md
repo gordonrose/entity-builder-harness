@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-06T23:13:23Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-07T01:54:15Z
-latest_commit_sha: 407a7c2
-chat_duration: 9652s (00:02:40:52)
+latest_commit_at_utc: 2026-07-07T23:33:31Z
+latest_commit_sha: 1ab8d95
+chat_duration: 87608s (01:00:20:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -90,6 +90,17 @@ Summary: Adds the RAG-owned query-context provider boundary, hosted auth/redacti
 
 ADR impact: No ADR needed; existing RAG rulebook layering principle applied.
 
+
+### 2026-07-07T23:33:31Z - Commit recorded
+
+Commit: `1ab8d95`
+
+Message: Retire focused-path RAG request context
+
+Summary: Retires focused-path request context from the RAG selector and provider API, replaces it with exact paths in request text, adds a retirement record, updates fixtures/docs/schemas, and keeps selector/runtime gates passing.
+
+ADR impact: No ADR needed; this removes an ungoverned request-context hint and preserves the existing RAG rulebook ownership model.
+
 ## Commits
 
 
@@ -99,6 +110,13 @@ ADR impact: No ADR needed; existing RAG rulebook layering principle applied.
   Message: Add RAG-owned hosted context provider boundary
   Summary: Adds the RAG-owned query-context provider boundary, hosted auth/redaction/fallback contract, selector proof, corpus gap, projection records, and commit-gate smoke coverage.
   ADR impact: No ADR needed; existing RAG rulebook layering principle applied.
+
+
+- Commit: `1ab8d95`
+  Time UTC: 2026-07-07T23:33:31Z
+  Message: Retire focused-path RAG request context
+  Summary: Retires focused-path request context from the RAG selector and provider API, replaces it with exact paths in request text, adds a retirement record, updates fixtures/docs/schemas, and keeps selector/runtime gates passing.
+  ADR impact: No ADR needed; this removes an ungoverned request-context hint and preserves the existing RAG rulebook ownership model.
 
 ## Main Refresh Conflicts
 
@@ -113,9 +131,9 @@ Reason: The change applies an existing RAG rulebook layering principle by adding
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T23:13:23Z
-Latest commit at UTC: 2026-07-07T01:54:15Z
-Latest commit SHA: 407a7c2
-Chat duration: 9652s (00:02:40:52)
+Latest commit at UTC: 2026-07-07T23:33:31Z
+Latest commit SHA: 1ab8d95
+Chat duration: 87608s (01:00:20:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
