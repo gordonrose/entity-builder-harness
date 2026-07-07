@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 03ac66fb9464137ca285c644bd7b91ec17f94484644b170b3e01e169fff8ab4e
+      sha256: 06700aa116d1aa6dcd76171037e750969ffe0a54782a28e59b10fd0c6799422d
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -67,7 +67,7 @@ recommended_modules:
     purpose: "Permission and policy decision contracts."
     consumed_by: "apps and feature packages"
   - id: tenancy
-    purpose: "Tenant context and isolation primitives."
+    purpose: "Tenant identifiers, context packets, resolver ports, and isolation primitives."
     consumed_by: "apps, platform, and most runtime modules"
   - id: validation
     purpose: "Standard validation and error models."
@@ -313,6 +313,28 @@ rules:
       whether it is common enough for the core logging defaults. If yes, add it
       to the core logging module and tests. If it is product-specific or
       provider-specific, extend the default redactor at the consuming boundary.
+
+  - id: core.tenancy-context-provider-neutral
+    title: Tenancy contracts define tenant context, not tenant discovery
+    severity: error
+    summary: >
+      packages/core may define tenant identifiers, tenant context packets,
+      resolver ports, and small pure helpers, but runtime tenant discovery
+      belongs in apps or platform adapters.
+    must:
+      - Keep TenantId, TenantContext, TenantResolver, and tenant isolation primitives provider-neutral.
+      - Use tenant context as the shared contract for authorization, audit, logging, events, and persistence scopes.
+      - Keep tenant lookup inputs translated at the app or platform boundary before they enter core contracts.
+      - Test tenant identity, resolver, and isolation helper behavior without runtime providers.
+    must_not:
+      - Do not make packages/core parse hostnames, JWTs, request headers, database rows, AWS accounts, or deployment manifests to discover tenants.
+      - Do not put product-specific tenant lifecycle, billing, onboarding, or workspace behavior in packages/core.
+      - Do not accept unbranded strings where a TenantId is required by a core contract.
+    agent_guidance: >
+      When adding tenant-aware behavior, keep the question split in two:
+      core defines the tenant context shape; apps and platform decide how the
+      current tenant is discovered and then pass that context into core-facing
+      contracts.
 
   - id: core.translation-ready-meaning-not-prose
     title: Core contracts pass meaning, not final localized prose

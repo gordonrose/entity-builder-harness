@@ -81,6 +81,14 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
 
+
+- Decision: Add provider-neutral packages/core tenancy helpers.
+  Rationale: The tenancy module now exposes TenantId construction, TenantContext construction, TenantResolution, and fixedTenantResolver without deciding hostname, JWT, header, database, AWS, or product-specific tenant discovery.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral tenancy helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for tenant context and discovery boundaries.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -220,6 +228,20 @@ Rationale: The logging module now owns common provider-neutral sensitive field n
 Decision: Record RAG knowledge disposition: covered
 
 Rationale: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
+
+
+### 2026-07-07T00:48:34Z - Decision
+
+Decision: Add provider-neutral packages/core tenancy helpers.
+
+Rationale: The tenancy module now exposes TenantId construction, TenantContext construction, TenantResolution, and fixedTenantResolver without deciding hostname, JWT, header, database, AWS, or product-specific tenant discovery.
+
+
+### 2026-07-07T00:48:34Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral tenancy helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for tenant context and discovery boundaries.
 
 ## Commits
 

@@ -101,6 +101,24 @@ the user-facing translation boundary. Core does not write to console,
 CloudWatch, OpenTelemetry, files, or vendor SDKs; platform adapters own those
 sinks.
 
+## Tenancy Contracts
+
+`tenancy` defines the shared way core consumers name tenant ownership and
+isolation:
+
+- `TenantId` is a branded entity id so tenant ids do not get confused with
+  principal ids or other strings.
+- `TenantContext` carries the tenant id plus an isolation key for data,
+  authorization, audit, logs, and events that must stay tenant-scoped.
+- `tenantId` and `tenantContext` create those values consistently.
+- `TenantResolver` is the small async port for resolving tenant context from
+  provider-specific input.
+- `fixedTenantResolver` is a pure helper for tests and composed local flows.
+
+Core does not decide whether tenants come from hostnames, JWT claims, headers,
+database rows, AWS account mappings, or product workflows. Platform and app
+code can translate those inputs into `TenantContext`.
+
 ## Validation Contracts
 
 `validation` defines the shared shape for explaining why unknown input is or is

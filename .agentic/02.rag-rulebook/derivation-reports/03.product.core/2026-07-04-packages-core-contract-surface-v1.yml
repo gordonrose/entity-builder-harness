@@ -65,6 +65,9 @@ semantic_review:
     - claim_id: core.logging.sensitive-fields.maintained
       summary: Common sensitive log field names discovered later should be maintained in the packages/core logging layer, while app-specific, platform-specific, or provider-specific fields extend the default redactor at the consuming boundary.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.tenancy.provider.neutral
+      summary: The tenancy module may define tenant identifiers, tenant context packets, resolver ports, and pure helpers, but must not decide tenant discovery from hostnames, JWT claims, headers, database rows, AWS account mappings, product workflows, or deployment topology.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md

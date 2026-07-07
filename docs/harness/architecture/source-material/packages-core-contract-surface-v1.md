@@ -83,6 +83,21 @@ The `logging` module must not write directly to console, CloudWatch,
 OpenTelemetry, files, Datadog, or any other concrete runtime sink. Platform
 adapters own those integrations and should consume the core logger contracts.
 
+## Tenancy Contract Boundary
+
+The `tenancy` module should define provider-neutral tenant identity and
+isolation contracts: tenant identifiers, tenant context packets, resolver ports,
+and small pure helpers for constructing those values.
+
+Tenant context should carry enough stable information for apps, platform,
+audit, authorization, logging, events, and persistence contracts to preserve
+tenant isolation without depending on runtime providers.
+
+The `tenancy` module must not decide how tenants are discovered from hostnames,
+JWT claims, headers, database rows, AWS account mappings, product workflows, or
+deployment topology. Apps and platform adapters own those inputs and should
+translate them into the core tenant context contract.
+
 ## Message, i18n, and Localization Boundary
 
 Core, platform, and app-facing contracts should pass stable meaning rather than
