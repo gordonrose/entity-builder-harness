@@ -21,6 +21,13 @@ if (!isOk(parsed)) {
 }
 equal(parsed.value, "2026-07-06T14:30:00.000Z");
 
+const parsedOffset = isoDateTime("2026-07-06T14:30:00+02:00");
+equal(parsedOffset.ok, true);
+if (!isOk(parsedOffset)) {
+  throw new Error("Expected ISO date-time with offset parsing to succeed.");
+}
+equal(parsedOffset.value, "2026-07-06T12:30:00.000Z");
+
 const invalid = isoDateTime("not a date");
 equal(invalid.ok, false);
 equal(isErr(invalid), true);
@@ -29,6 +36,15 @@ if (!isErr(invalid)) {
 }
 equal(invalid.error.code, "INVALID_ISO_DATE_TIME");
 equal(invalid.error.defaultMessage, "Expected a valid ISO date-time string.");
+
+const dateOnly = isoDateTime("2026-07-06");
+equal(dateOnly.ok, false);
+
+const proseDate = isoDateTime("July 6, 2026");
+equal(proseDate.ok, false);
+
+const noTimezone = isoDateTime("2026-07-06T14:30:00");
+equal(noTimezone.ok, false);
 
 const descriptor = messageDescriptor({
   code: "VALIDATION_REQUIRED",

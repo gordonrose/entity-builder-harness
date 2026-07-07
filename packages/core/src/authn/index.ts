@@ -3,7 +3,14 @@ import type { TenantId } from "../tenancy/index";
 
 export type PrincipalId = EntityId<"PrincipalId">;
 export type PrincipalType = "user" | "service";
-export type PrincipalClaims = Readonly<Record<string, unknown>>;
+export type PrincipalClaimValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly PrincipalClaimValue[]
+  | { readonly [key: string]: PrincipalClaimValue };
+export type PrincipalClaims = Readonly<Record<string, PrincipalClaimValue>>;
 export type AuthenticationResult = Principal | null;
 
 export interface Principal {
@@ -36,7 +43,7 @@ export function principal(input: {
     type: input.type,
     subject: input.subject,
     ...(input.currentTenantId === undefined ? {} : { currentTenantId: input.currentTenantId }),
-    claims: { ...(input.claims ?? {}) },
+    claims: copyPrincipalClaims(input.claims ?? {}),
     ...(input.scopes === undefined ? {} : { scopes: [...input.scopes] }),
   };
 }
@@ -45,4 +52,24 @@ export function fixedAuthenticator<TCredential>(result: AuthenticationResult): A
   return {
     authenticate: async () => result,
   };
+}
+
+function copyPrincipalClaims(claims: PrincipalClaims): PrincipalClaims {
+  return Object.fromEntries(
+    Object.entries(claims).map(([key, value]) => [key, copyPrincipalClaimValue(value)]),
+  );
+}
+
+function copyPrincipalClaimValue(value: PrincipalClaimValue): PrincipalClaimValue {
+  if (Array.isArray(value)) {
+    return value.map(copyPrincipalClaimValue);
+  }
+
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, copyPrincipalClaimValue(nestedValue)]),
+    );
+  }
+
+  return value;
 }

@@ -1,4 +1,4 @@
-import { deepEqual, equal } from "node:assert/strict";
+import { deepEqual, equal, throws } from "node:assert/strict";
 import { principal, principalId } from "../src/authn/index";
 import {
   allow,
@@ -76,6 +76,23 @@ async function main(): Promise<void> {
       policyId: "deal-team-access",
       matchedRelation: "team.assigned",
     },
+  });
+
+  throws(() => permission("", "read"), /Permission resource/);
+  throws(() => permission("conversation", ""), /Permission action/);
+  throws(() => permission("deal:conversation", "read"), /Permission resource/);
+  throws(() => permission("conversation", "read all"), /Permission action/);
+
+  const mutableEvidence = {
+    matched: { relation: "team.assigned" },
+    tags: ["rebac"],
+  };
+  const copiedEvidence = allow({ evidence: mutableEvidence });
+  mutableEvidence.matched.relation = "changed";
+  mutableEvidence.tags.push("changed");
+  deepEqual(copiedEvidence.evidence, {
+    matched: { relation: "team.assigned" },
+    tags: ["rebac"],
   });
 
   const denied = deny({

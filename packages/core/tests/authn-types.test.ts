@@ -6,6 +6,7 @@ import {
   type Authenticator,
   type Principal,
   type PrincipalClaims,
+  type PrincipalClaimValue,
   type PrincipalId,
   type PrincipalType,
 } from "../src/authn/index";
@@ -16,6 +17,14 @@ const actorType: PrincipalType = "user";
 const claims: PrincipalClaims = {
   email: "person@example.test",
   provider: "test-idp",
+  profile: { locale: "en-GB" },
+  roles: ["viewer"],
+};
+const nestedClaimValue: PrincipalClaimValue = {
+  profile: {
+    locale: "en-GB",
+    flags: [true, false],
+  },
 };
 
 const actor: Principal = principal({
@@ -42,6 +51,7 @@ void service;
 void result;
 void missing;
 void authenticator;
+void nestedClaimValue;
 
 // @ts-expect-error principal IDs must be explicitly branded.
 principal({ id: "principal-123", type: "user", subject: "subject-123" });
@@ -58,3 +68,7 @@ principal({ id: actorId, type: "user", subject: "subject-123", tenantId: tenantI
 // @ts-expect-error authentication result is either a principal or null.
 const invalidResult: AuthenticationResult = undefined;
 void invalidResult;
+
+// @ts-expect-error principal claims must stay provider-neutral and serializable.
+const invalidClaimValue: PrincipalClaimValue = new Date();
+void invalidClaimValue;

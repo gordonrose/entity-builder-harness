@@ -77,3 +77,7 @@ void invalidAttributeValue;
 
 // @ts-expect-error deny decisions need a translation-ready reason.
 deny({});
+
+// @ts-expect-error denied authorization decisions must include a reason even without using the helper.
+const invalidDeniedDecision: AuthorizationDecision = { allowed: false };
+void invalidDeniedDecision;

@@ -3,16 +3,19 @@ import {
   fixedAuthenticator,
   principal,
   principalId,
+  type PrincipalClaims,
 } from "../src/authn/index";
 import { tenantId } from "../src/tenancy/index";
 
 async function main(): Promise<void> {
   const actorId = principalId("principal-123");
   const currentTenantId = tenantId("tenant-123");
-  const claims: Record<string, unknown> = {
+  const claims = {
     email: "person@example.test",
     provider: "test-idp",
-  };
+    profile: { locale: "en-GB" },
+    roles: ["viewer"],
+  } satisfies PrincipalClaims;
   const scopes = ["profile:read", "session:refresh"];
 
   const actor = principal({
@@ -32,13 +35,19 @@ async function main(): Promise<void> {
     claims: {
       email: "person@example.test",
       provider: "test-idp",
+      profile: { locale: "en-GB" },
+      roles: ["viewer"],
     },
     scopes: ["profile:read", "session:refresh"],
   });
 
   claims.email = "changed@example.test";
+  claims.profile.locale = "fr-FR";
+  claims.roles.push("admin");
   scopes.push("changed:scope");
   equal(actor.claims.email, "person@example.test");
+  deepEqual(actor.claims.profile, { locale: "en-GB" });
+  deepEqual(actor.claims.roles, ["viewer"]);
   deepEqual(actor.scopes, ["profile:read", "session:refresh"]);
 
   const service = principal({

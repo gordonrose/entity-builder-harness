@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 1
+  version: 2
   status: active
   layer: 01.harness
   domain: architecture
@@ -46,12 +46,28 @@ The initial package surface may include these contract modules:
 - `audit`: audit event and recorder contracts.
 - `events`: event envelope and event bus contracts.
 
+## Shared Primitive Boundary
+
+The `shared` module should define the lowest-level provider-neutral primitives
+that other core modules depend on. Shared branded identifiers, result/error
+shapes, message descriptors, clocks, and request context values should stay
+small, stable, and JSON-safe.
+
+`ISODateTime` values should represent explicit ISO date-time strings with
+timezone information. Date-only strings, localized prose dates, and implicit
+local-time strings should not be accepted as core timestamp values. Locale or
+region-specific display belongs in localization/presentation code, not in the
+shared timestamp primitive.
+
 ## Config Contract Boundary
 
 The `config` module should define provider-neutral contracts and pure helpers
 for reading primitive runtime settings. It may define a `ConfigSource` port,
 in-memory record-backed sources, required/optional lookup helpers, primitive
 type readers, schemas, and config error shapes.
+
+Record-backed config sources should snapshot their input values when created
+so later mutation of the caller's object does not change the source contract.
 
 Config errors should use validation issues and translation-ready descriptors so
 apps can translate missing or invalid configuration messages at their own
@@ -111,6 +127,11 @@ role assignment, preference record, or onboarding state. The same human or
 service may authenticate as one global principal and still have different
 tenant profiles or memberships in different tenants.
 
+Principal claims should be normalized into plain serializable values before
+they enter the core principal contract. Raw provider objects, dates, sessions,
+credentials, access tokens, refresh tokens, or other rich runtime values should
+not be carried as principal claims.
+
 When a principal carries a tenant id, that tenant id represents the current
 tenant context for the request or job, not the actor's exhaustive tenant
 membership list.
@@ -127,15 +148,19 @@ permissions, resource references, lightweight relationship facts,
 attribute/fact bags, authorization requests, authorization decisions,
 authorizer ports, and small pure helpers for constructing those values.
 
+Permission helpers should create non-empty `resource:action` strings without
+whitespace or nested colon separators, so malformed permission vocabulary is
+caught at the boundary.
+
 Authorization requests should be able to ask role/permission, relationship to
 resource, and attribute-based questions. They may include principal identity,
 current tenant context, action/permission, resource reference, parent resource,
 relationship facts, principal attributes, tenant attributes, resource
 attributes, environment attributes, and additional plain facts.
 
-Authorization decisions should be explicit allow/deny answers. Denials should
-carry translation-ready reasons when surfaced to consumers, and decisions may
-carry evidence for audit, debugging, and policy traceability.
+Authorization decisions should be explicit allow/deny answers. Denials must
+carry translation-ready reasons, and decisions may carry plain serializable
+evidence for audit, debugging, and policy traceability.
 
 The `authz` module must not authenticate credentials, define product-specific
 roles, own relationship inheritance rules, implement ABAC policy language, read

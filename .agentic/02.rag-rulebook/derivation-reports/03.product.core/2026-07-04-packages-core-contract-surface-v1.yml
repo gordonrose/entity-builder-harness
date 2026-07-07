@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -25,13 +25,14 @@ report_id: derivation.03.product-core.2026-07-04.packages-core-contract-surface-
 status: accepted
 
 source_change:
-  change_type: created
+  change_type: updated
   approved_source_state: approved
   changed_paths:
     - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   summary: >
-    Approved source material records the narrow bootstrap exception and contract
-    module surface for the initial packages/core slice.
+    Approved source material records the narrow bootstrap exception, contract
+    module surface, and hardening requirements for the initial packages/core
+    slice.
 
 target:
   corpus_id: corpus.03.product.core
@@ -59,6 +60,12 @@ semantic_review:
     - claim_id: core.config.provider.neutral
       summary: The config module may define provider-neutral config sources, primitive readers, schemas, and validation errors, but must not read directly from process.env, files, AWS SSM, Secrets Manager, databases, or deployment manifests.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.config.record-source.snapshot
+      summary: Record-backed config sources should snapshot their input values when created so later caller mutation does not change the source contract.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.shared.iso-date-time.strict
+      summary: ISODateTime values should be explicit ISO date-time strings with timezone information, not date-only strings, localized prose dates, or implicit local-time strings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.logging.provider.neutral
       summary: The logging module may define operational log records, logger ports, default sensitive-field vocabulary, redactors, redaction helpers, and no-op or wrapping loggers, but must not write directly to console, CloudWatch, OpenTelemetry, files, Datadog, or other runtime sinks.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -71,8 +78,17 @@ semantic_review:
     - claim_id: core.authn.principal.global-actor
       summary: The authn module may define global principal identity, principal type, authentication result, authenticator ports, and helpers, but must not treat the principal as a tenant-specific user profile, tenant account, or exhaustive tenant membership list.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authn.claims.serializable
+      summary: Principal claims should be normalized into plain serializable provider-neutral values and must not carry raw provider objects, dates, sessions, credentials, or tokens.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.authz.policy.question-shape
       summary: The authz module may define permission, resource, relationship, ABAC attribute, authorization request, decision, authorizer, and helper contracts, but must not own credential authentication, product-specific roles, relationship inheritance rules, ABAC policy language, team membership storage, or tenant-specific permission meanings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authz.permission.validated
+      summary: Permission helpers should create non-empty resource:action strings without whitespace or nested colon separators.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authz.denials.reason-required
+      summary: Authorization denials must carry translation-ready reasons, and authorization attributes, facts, and evidence should stay plain and serializable.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
@@ -105,8 +121,9 @@ proposed_updates:
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
   notes:
-    - Existing packages/core rules already define the general ownership boundary.
-    - This source material pins the approved initial contract surface and RAG disposition expectation.
+    - Existing packages/core rules define the general ownership boundary.
+    - This update tightens shared timestamp, config snapshot, authn claim, and authz decision/permission guidance.
+    - The selector fixture now asks for authn/authz contract hardening guidance directly.
 
 downstream_effects:
   index_required: false
@@ -142,7 +159,7 @@ review:
   required: true
   decision: approved
   reviewer: codex-agentic-review-loop
-  reviewed_at_utc: "2026-07-04T00:00:00Z"
+  reviewed_at_utc: "2026-07-07T00:00:00Z"
   notes:
-    - Source and projection were reviewed as part of the packages/core slice recovery.
+    - Source and projection were reviewed as part of the packages/core hardening slice.
     - Future core modules should add narrower source material when their contracts materially change.

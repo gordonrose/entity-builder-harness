@@ -19,8 +19,10 @@ export interface ConfigError {
 }
 
 export function recordConfigSource(values: ConfigRecord): ConfigSource {
+  const snapshot = { ...values };
+
   return {
-    get: (key) => values[key],
+    get: (key) => snapshot[key],
   };
 }
 

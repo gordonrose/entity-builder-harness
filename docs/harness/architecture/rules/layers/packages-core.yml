@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 1
+version: 2
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-04T00:00:00Z"
+  generated_at_utc: "2026-07-07T00:00:00Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: d1bbdc0d7224e954ee054a9deacfac0b12024ca9a792e3b55fb62ce982eeda9d
+      sha256: 57a91945110e1df6fa40590b1b5091104b3fc99d145db90f3b57963955d2938c
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -292,6 +292,26 @@ rules:
       that names the Kanbien concept clearly and leaves implementation details
       to apps, platform, or infrastructure.
 
+  - id: core.shared-primitives-stay-strict-and-portable
+    title: Shared primitives stay strict and portable
+    severity: error
+    summary: >
+      packages/core shared primitives should carry stable provider-neutral
+      meaning and reject ambiguous runtime-specific or locale-specific shapes.
+    must:
+      - Keep shared identifiers, result/error shapes, message descriptors, clocks, and request context values dependency-free and JSON-safe.
+      - Treat ISODateTime values as explicit ISO date-time strings with timezone information.
+      - Normalize valid ISODateTime input to a stable JSON-safe ISO string.
+      - Keep message descriptor params primitive and translation/localization friendly.
+    must_not:
+      - Do not accept date-only strings, localized prose dates, or implicit local-time strings as ISODateTime values.
+      - Do not pass provider objects, Date instances, money objects, or other rich runtime values as shared message params.
+      - Do not put translation catalogs, locale negotiation, or region-specific formatting inside shared primitives.
+    agent_guidance: >
+      Shared primitives are the bottom of the contract stack. When a value can
+      vary by locale, runtime, provider, or presentation boundary, convert it to
+      a stable primitive fact before it enters shared core contracts.
+
   - id: core.logging-sensitive-fields-owned-by-logging
     title: Common sensitive log fields are maintained in core logging
     severity: error
@@ -347,6 +367,7 @@ rules:
       - Keep PrincipalId, PrincipalType, Principal, AuthenticationResult, and Authenticator provider-neutral.
       - Treat Principal as the global authenticated actor identity.
       - Use current tenant context only for the active request or job when known.
+      - Normalize claims into plain serializable provider-neutral values before constructing a Principal.
       - Leave tenant-specific profiles, memberships, roles, preferences, and account lifecycle to app or product modules.
       - Test principal identity, current tenant context, and authenticator helper behavior without runtime providers.
     must_not:
@@ -354,6 +375,7 @@ rules:
       - Do not put authorization decisions inside authentication contracts.
       - Do not model the Principal as a tenant-specific user profile or account.
       - Do not treat a current tenant id on a principal as the actor's exhaustive tenant membership list.
+      - Do not carry raw provider objects, Date instances, sessions, credentials, access tokens, refresh tokens, or other rich runtime values as principal claims.
     agent_guidance: >
       Keep three ideas separate: authentication identifies the global actor,
       tenancy identifies the current tenant context, and app/product modules
@@ -370,7 +392,9 @@ rules:
     must:
       - Model authorization requests with principal, permission, tenant context where relevant, resource references, relationship facts, attributes, and plain facts.
       - Support RBAC-friendly permission strings, ReBAC-friendly resource and relation facts, and ABAC-friendly principal/tenant/resource/environment attributes.
-      - Return explicit allow or deny decisions with optional translation-ready reasons and decision evidence.
+      - Keep permission helper output to non-empty resource:action strings without whitespace or nested colon separators.
+      - Return explicit allow or deny decisions; denied decisions must include translation-ready reasons.
+      - Keep authorization attributes, facts, and evidence plain and serializable.
       - Keep authorization separate from authentication.
       - Test request, decision, resource, relation, and attribute helper behavior without runtime providers or product policy engines.
     must_not:

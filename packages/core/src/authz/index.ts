@@ -42,17 +42,25 @@ export interface AuthorizationRequest {
   readonly facts?: AuthorizationFacts;
 }
 
-export interface AuthorizationDecision {
-  readonly allowed: boolean;
-  readonly reason?: MessageDescriptor;
-  readonly evidence?: AuthorizationEvidence;
-}
+export type AuthorizationDecision =
+  | {
+      readonly allowed: true;
+      readonly reason?: MessageDescriptor;
+      readonly evidence?: AuthorizationEvidence;
+    }
+  | {
+      readonly allowed: false;
+      readonly reason: MessageDescriptor;
+      readonly evidence?: AuthorizationEvidence;
+    };
 
 export interface Authorizer {
   decide(request: AuthorizationRequest): Promise<AuthorizationDecision>;
 }
 
 export function permission(resource: string, action: string): Permission {
+  assertPermissionPart("resource", resource);
+  assertPermissionPart("action", action);
   return `${resource}:${action}` as Permission;
 }
 
@@ -96,7 +104,7 @@ export function authorizationRequest(input: {
     ...(input.resource === undefined ? {} : { resource: copyResourceRef(input.resource) }),
     ...(input.relations === undefined ? {} : { relations: input.relations.map(copyAuthorizationRelation) }),
     ...(input.attributes === undefined ? {} : { attributes: copyAuthorizationAttributes(input.attributes) }),
-    ...(input.facts === undefined ? {} : { facts: { ...input.facts } }),
+    ...(input.facts === undefined ? {} : { facts: copyAuthorizationFacts(input.facts) }),
   };
 }
 
@@ -107,7 +115,7 @@ export function allow(input: {
   return {
     allowed: true,
     ...(input.reason === undefined ? {} : { reason: input.reason }),
-    ...(input.evidence === undefined ? {} : { evidence: { ...input.evidence } }),
+    ...(input.evidence === undefined ? {} : { evidence: copyAuthorizationFacts(input.evidence) }),
   };
 }
 
@@ -118,7 +126,7 @@ export function deny(input: {
   return {
     allowed: false,
     reason: input.reason,
-    ...(input.evidence === undefined ? {} : { evidence: { ...input.evidence } }),
+    ...(input.evidence === undefined ? {} : { evidence: copyAuthorizationFacts(input.evidence) }),
   };
 }
 
@@ -146,9 +154,35 @@ function copyAuthorizationRelation(relation: AuthorizationRelation): Authorizati
 
 function copyAuthorizationAttributes(attributes: AuthorizationAttributes): AuthorizationAttributes {
   return {
-    ...(attributes.principal === undefined ? {} : { principal: { ...attributes.principal } }),
-    ...(attributes.tenant === undefined ? {} : { tenant: { ...attributes.tenant } }),
-    ...(attributes.resource === undefined ? {} : { resource: { ...attributes.resource } }),
-    ...(attributes.environment === undefined ? {} : { environment: { ...attributes.environment } }),
+    ...(attributes.principal === undefined ? {} : { principal: copyAuthorizationFacts(attributes.principal) }),
+    ...(attributes.tenant === undefined ? {} : { tenant: copyAuthorizationFacts(attributes.tenant) }),
+    ...(attributes.resource === undefined ? {} : { resource: copyAuthorizationFacts(attributes.resource) }),
+    ...(attributes.environment === undefined ? {} : { environment: copyAuthorizationFacts(attributes.environment) }),
   };
+}
+
+function assertPermissionPart(name: "resource" | "action", value: string): void {
+  if (value.length === 0 || value.trim() !== value || value.includes(":") || /\s/.test(value)) {
+    throw new TypeError(`Permission ${name} must be a non-empty string without whitespace or colon separators.`);
+  }
+}
+
+function copyAuthorizationFacts<TFacts extends AuthorizationFacts | AuthorizationEvidence>(facts: TFacts): TFacts {
+  return Object.fromEntries(
+    Object.entries(facts).map(([key, value]) => [key, copyAuthorizationValue(value)]),
+  ) as TFacts;
+}
+
+function copyAuthorizationValue(value: AuthorizationValue): AuthorizationValue {
+  if (Array.isArray(value)) {
+    return value.map(copyAuthorizationValue);
+  }
+
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, copyAuthorizationValue(nestedValue)]),
+    );
+  }
+
+  return value;
 }

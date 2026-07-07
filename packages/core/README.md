@@ -25,7 +25,8 @@ Provider implementations and app runtimes are intentionally out of scope.
 
 - `Brand` and `EntityId` distinguish important string identifiers at type level.
 - `CorrelationId` connects logs, audit records, events, and errors from one request.
-- `ISODateTime` stores timestamps in a JSON-safe text form.
+- `ISODateTime` stores strict ISO date-time values with explicit timezone
+  information in a JSON-safe text form.
 - `MessageDescriptor` carries stable meaning plus optional translation hooks.
 - `Result`, `ok`, `err`, `isOk`, and `isErr` make expected success/failure explicit.
 - `CoreError` gives failures a stable `code`, `defaultMessage`, optional translation metadata, and optional debugging metadata.
@@ -66,7 +67,7 @@ responses should use translation-ready descriptors.
 settings without binding core to a provider:
 
 - `ConfigSource` is the small port for looking up a value by key.
-- `recordConfigSource` is a pure in-memory source for tests and simple composed
+- `recordConfigSource` is a pure snapshot source for tests and simple composed
   configs.
 - `requiredConfigValue` distinguishes missing values from present `null` values.
 - `stringConfigValue`, `numberConfigValue`, and `booleanConfigValue` add typed
@@ -126,7 +127,9 @@ code can translate those inputs into `TenantContext`.
 - `PrincipalId` is a branded id for a global actor identity.
 - `PrincipalType` distinguishes user and service identities.
 - `Principal` carries the actor id, type, stable subject, optional current
-  tenant context, normalized claims, and optional scopes.
+  tenant context, normalized provider-neutral claims, and optional scopes.
+- `PrincipalClaimValue` and `PrincipalClaims` keep claims plain,
+  serializable, and safe to pass across app/platform boundaries.
 - `principalId` and `principal` create those values consistently.
 - `AuthenticationResult` is either a `Principal` or `null`.
 - `Authenticator` is the small async port for turning provider-specific
@@ -143,13 +146,15 @@ model.
 Core does not parse JWTs, verify sessions, check API keys, call identity
 providers, decide permissions, or model tenant-specific account workflows.
 Platform and app code translate real credentials and account data into the
-core `Principal` contract.
+core `Principal` contract. Raw provider objects, rich runtime values, sessions,
+credentials, and tokens should not be carried as principal claims.
 
 ## Authorization Contracts
 
 `authz` defines the shared shape for asking and answering permission questions:
 
-- `Permission` and `permission` provide a simple `resource:action` vocabulary.
+- `Permission` and `permission` provide a simple validated `resource:action`
+  vocabulary.
 - `ResourceRef` and `resourceRef` identify a target resource and optional
   parent resource for relationship-style authorization.
 - `AuthorizationRelation` records lightweight relationship facts such as a
@@ -159,7 +164,8 @@ core `Principal` contract.
 - `AuthorizationRequest` combines the principal, permission, optional tenant,
   resource, relations, attributes, and additional facts.
 - `AuthorizationDecision`, `allow`, and `deny` return explicit allow/deny
-  answers with optional translation-ready reasons and decision evidence.
+  answers. Denied decisions require translation-ready reasons; decisions may
+  carry plain serializable evidence.
 - `Authorizer` and `fixedAuthorizer` define the async port and a pure test
   helper.
 

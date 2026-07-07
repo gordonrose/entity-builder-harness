@@ -18,6 +18,11 @@ const source = recordConfigSource({
   EMPTY_VALUE: null,
 });
 
+const mutableValues: Record<string, string | undefined> = { MODE: "initial" };
+const snapshotSource = recordConfigSource(mutableValues);
+mutableValues.MODE = "changed";
+equal(snapshotSource.get("MODE"), "initial");
+
 const required = requiredConfigValue(source, "API_URL");
 equal(isOk(required), true);
 if (!isOk(required)) {
