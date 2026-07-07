@@ -68,6 +68,12 @@ semantic_review:
     - claim_id: core.tenancy.provider.neutral
       summary: The tenancy module may define tenant identifiers, tenant context packets, resolver ports, and pure helpers, but must not decide tenant discovery from hostnames, JWT claims, headers, database rows, AWS account mappings, product workflows, or deployment topology.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authn.principal.global-actor
+      summary: The authn module may define global principal identity, principal type, authentication result, authenticator ports, and helpers, but must not treat the principal as a tenant-specific user profile, tenant account, or exhaustive tenant membership list.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authz.policy.question-shape
+      summary: The authz module may define permission, resource, relationship, ABAC attribute, authorization request, decision, authorizer, and helper contracts, but must not own credential authentication, product-specific roles, relationship inheritance rules, ABAC policy language, team membership storage, or tenant-specific permission meanings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md

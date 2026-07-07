@@ -98,6 +98,51 @@ JWT claims, headers, database rows, AWS account mappings, product workflows, or
 deployment topology. Apps and platform adapters own those inputs and should
 translate them into the core tenant context contract.
 
+## Authentication Contract Boundary
+
+The `authn` module should define provider-neutral authentication contracts:
+principal identifiers, principal types, principal records, authentication
+results, authenticator ports, and small pure helpers for constructing those
+values.
+
+A principal represents the authenticated global actor identity. It must not be
+treated as the tenant-specific user profile, tenant account, membership record,
+role assignment, preference record, or onboarding state. The same human or
+service may authenticate as one global principal and still have different
+tenant profiles or memberships in different tenants.
+
+When a principal carries a tenant id, that tenant id represents the current
+tenant context for the request or job, not the actor's exhaustive tenant
+membership list.
+
+The `authn` module must not parse JWTs, verify sessions, check API keys, call
+identity providers, make authorization decisions, or model tenant-specific
+account workflows. Apps and platform adapters own those concerns and should
+translate verified credentials into the core principal contract.
+
+## Authorization Contract Boundary
+
+The `authz` module should define provider-neutral authorization contracts:
+permissions, resource references, lightweight relationship facts,
+attribute/fact bags, authorization requests, authorization decisions,
+authorizer ports, and small pure helpers for constructing those values.
+
+Authorization requests should be able to ask role/permission, relationship to
+resource, and attribute-based questions. They may include principal identity,
+current tenant context, action/permission, resource reference, parent resource,
+relationship facts, principal attributes, tenant attributes, resource
+attributes, environment attributes, and additional plain facts.
+
+Authorization decisions should be explicit allow/deny answers. Denials should
+carry translation-ready reasons when surfaced to consumers, and decisions may
+carry evidence for audit, debugging, and policy traceability.
+
+The `authz` module must not authenticate credentials, define product-specific
+roles, own relationship inheritance rules, implement ABAC policy language, read
+team membership storage, or hardcode tenant-specific permission meanings. Apps
+and product modules own those policies; platform adapters may bind the core
+authorizer port to a policy engine or provider.
+
 ## Message, i18n, and Localization Boundary
 
 Core, platform, and app-facing contracts should pass stable meaning rather than

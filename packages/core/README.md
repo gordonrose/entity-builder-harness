@@ -119,6 +119,56 @@ Core does not decide whether tenants come from hostnames, JWT claims, headers,
 database rows, AWS account mappings, or product workflows. Platform and app
 code can translate those inputs into `TenantContext`.
 
+## Authentication Contracts
+
+`authn` defines the shared identity shape after credentials have been checked:
+
+- `PrincipalId` is a branded id for a global actor identity.
+- `PrincipalType` distinguishes user and service identities.
+- `Principal` carries the actor id, type, stable subject, optional current
+  tenant context, normalized claims, and optional scopes.
+- `principalId` and `principal` create those values consistently.
+- `AuthenticationResult` is either a `Principal` or `null`.
+- `Authenticator` is the small async port for turning provider-specific
+  credentials into an authentication result.
+- `fixedAuthenticator` is a pure helper for tests and composed local flows.
+
+A `Principal` is not the tenant-specific user profile or account. The same
+human or service may authenticate as one global principal and still have
+different tenant profiles, memberships, roles, names, preferences, or account
+state in different tenants. `currentTenantId`, when present, means the current
+tenant context for this request or job; it is not the full tenant membership
+model.
+
+Core does not parse JWTs, verify sessions, check API keys, call identity
+providers, decide permissions, or model tenant-specific account workflows.
+Platform and app code translate real credentials and account data into the
+core `Principal` contract.
+
+## Authorization Contracts
+
+`authz` defines the shared shape for asking and answering permission questions:
+
+- `Permission` and `permission` provide a simple `resource:action` vocabulary.
+- `ResourceRef` and `resourceRef` identify a target resource and optional
+  parent resource for relationship-style authorization.
+- `AuthorizationRelation` records lightweight relationship facts such as a
+  principal belonging to a team or a team being assigned to a deal.
+- `AuthorizationAttributes` carries ABAC facts about the principal, tenant,
+  resource, and environment.
+- `AuthorizationRequest` combines the principal, permission, optional tenant,
+  resource, relations, attributes, and additional facts.
+- `AuthorizationDecision`, `allow`, and `deny` return explicit allow/deny
+  answers with optional translation-ready reasons and decision evidence.
+- `Authorizer` and `fixedAuthorizer` define the async port and a pure test
+  helper.
+
+The contract supports role/permission, relationship/resource, and
+attribute-based authorization questions. Core does not define product roles,
+relationship inheritance rules, ABAC policy language, team membership storage,
+or tenant-specific permission meanings. Apps and product modules own those
+policies; platform can bind the port to a policy engine or provider.
+
 ## Validation Contracts
 
 `validation` defines the shared shape for explaining why unknown input is or is

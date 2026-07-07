@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 06700aa116d1aa6dcd76171037e750969ffe0a54782a28e59b10fd0c6799422d
+      sha256: d1bbdc0d7224e954ee054a9deacfac0b12024ca9a792e3b55fb62ce982eeda9d
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -61,10 +61,10 @@ recommended_modules:
     purpose: "Defensive primitives and security contracts."
     consumed_by: "apps and platform security adapters"
   - id: authn
-    purpose: "Principal and authentication contracts."
+    purpose: "Global principal identity, principal type, authentication result, and authenticator contracts."
     consumed_by: "apps and platform identity integrations"
   - id: authz
-    purpose: "Permission and policy decision contracts."
+    purpose: "Permission, resource, relationship, ABAC attribute, authorization request, and decision contracts."
     consumed_by: "apps and feature packages"
   - id: tenancy
     purpose: "Tenant identifiers, context packets, resolver ports, and isolation primitives."
@@ -335,6 +335,53 @@ rules:
       core defines the tenant context shape; apps and platform decide how the
       current tenant is discovered and then pass that context into core-facing
       contracts.
+
+  - id: core.authn-principal-is-global-actor
+    title: Authentication principal is the global actor, not a tenant profile
+    severity: error
+    summary: >
+      packages/core authn contracts should model the authenticated global
+      actor identity and authenticator port without owning provider checks,
+      authorization decisions, or tenant-specific profile/account workflows.
+    must:
+      - Keep PrincipalId, PrincipalType, Principal, AuthenticationResult, and Authenticator provider-neutral.
+      - Treat Principal as the global authenticated actor identity.
+      - Use current tenant context only for the active request or job when known.
+      - Leave tenant-specific profiles, memberships, roles, preferences, and account lifecycle to app or product modules.
+      - Test principal identity, current tenant context, and authenticator helper behavior without runtime providers.
+    must_not:
+      - Do not make packages/core parse JWTs, verify sessions, check API keys, or call identity provider SDKs.
+      - Do not put authorization decisions inside authentication contracts.
+      - Do not model the Principal as a tenant-specific user profile or account.
+      - Do not treat a current tenant id on a principal as the actor's exhaustive tenant membership list.
+    agent_guidance: >
+      Keep three ideas separate: authentication identifies the global actor,
+      tenancy identifies the current tenant context, and app/product modules
+      model tenant-specific accounts or memberships when the product needs them.
+
+  - id: core.authz-asks-permission-questions-without-owning-policy
+    title: Authorization contracts ask permission questions without owning product policy
+    severity: error
+    summary: >
+      packages/core authz contracts should support role/permission,
+      relationship/resource, and attribute-based authorization questions while
+      leaving concrete product policy, relationship inheritance, and policy
+      engines outside core.
+    must:
+      - Model authorization requests with principal, permission, tenant context where relevant, resource references, relationship facts, attributes, and plain facts.
+      - Support RBAC-friendly permission strings, ReBAC-friendly resource and relation facts, and ABAC-friendly principal/tenant/resource/environment attributes.
+      - Return explicit allow or deny decisions with optional translation-ready reasons and decision evidence.
+      - Keep authorization separate from authentication.
+      - Test request, decision, resource, relation, and attribute helper behavior without runtime providers or product policy engines.
+    must_not:
+      - Do not authenticate credentials inside authz contracts.
+      - Do not hardcode product-specific roles, team membership rules, deal access inheritance, or tenant-specific permission meanings in packages/core.
+      - Do not implement a full ABAC/ReBAC policy language or provider adapter in packages/core.
+      - Do not accept provider-specific objects or rich runtime values as default authorization attributes.
+    agent_guidance: >
+      Core should make the authorization question precise. Apps and product
+      modules answer it with product policy, and platform may delegate the
+      Authorizer port to a policy engine when needed.
 
   - id: core.translation-ready-meaning-not-prose
     title: Core contracts pass meaning, not final localized prose

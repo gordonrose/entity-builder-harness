@@ -89,6 +89,22 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Added provider-neutral tenancy helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for tenant context and discovery boundaries.
 
+
+- Decision: Add provider-neutral packages/core authentication helpers.
+  Rationale: The authn module now exposes global PrincipalId construction, PrincipalType, Principal construction, AuthenticationResult, and fixedAuthenticator while keeping tenant-specific profiles, memberships, provider verification, and authorization outside authn.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral authn helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals versus tenant-specific profiles and memberships.
+
+
+- Decision: Add provider-neutral packages/core authorization helpers.
+  Rationale: The authz module now supports RBAC-friendly permissions, ReBAC-friendly resource and relation facts, ABAC-friendly attributes, explicit allow/deny decisions, decision evidence, and a fixedAuthorizer helper without owning product policies or provider engines.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -243,6 +259,34 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Added provider-neutral tenancy helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for tenant context and discovery boundaries.
 
+
+### 2026-07-07T01:28:45Z - Decision
+
+Decision: Add provider-neutral packages/core authentication helpers.
+
+Rationale: The authn module now exposes global PrincipalId construction, PrincipalType, Principal construction, AuthenticationResult, and fixedAuthenticator while keeping tenant-specific profiles, memberships, provider verification, and authorization outside authn.
+
+
+### 2026-07-07T01:28:48Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral authn helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals versus tenant-specific profiles and memberships.
+
+
+### 2026-07-07T01:49:50Z - Decision
+
+Decision: Add provider-neutral packages/core authorization helpers.
+
+Rationale: The authz module now supports RBAC-friendly permissions, ReBAC-friendly resource and relation facts, ABAC-friendly attributes, explicit allow/deny decisions, decision evidence, and a fixedAuthorizer helper without owning product policies or provider engines.
+
+
+### 2026-07-07T01:49:50Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
+
 ## Commits
 
 
@@ -308,14 +352,18 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Added default sensitive log field policy, normalized nested redaction, tests, README guidance, and packages/core source/rule projection updates for logging redaction maintenance.
+Reason: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
 Evidence:
-- packages/core/src/logging/index.ts
-- packages/core/tests/logging-runtime.test.ts
-- packages/core/tests/logging-types.test.ts
+- packages/core/src/authn/index.ts
+- packages/core/tests/authn-runtime.test.ts
+- packages/core/tests/authn-types.test.ts
+- packages/core/src/authz/index.ts
+- packages/core/tests/authz-runtime.test.ts
+- packages/core/tests/authz-types.test.ts
 - packages/core/README.md
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
 - .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
+- package.json
 Corpus gaps:
 - None.

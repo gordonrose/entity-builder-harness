@@ -24,7 +24,7 @@
     "rag:image:build": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-service-image/script.sh",
     "rag:image:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
     "core:check": "npm run core:typecheck && npm run core:test && node packages/core/tests/core-boundaries.test.mjs",
-    "core:test": "tsc -p packages/core/tsconfig.runtime-test.json && node .cache/packages-core-runtime/tests/shared-runtime.test.js && node .cache/packages-core-runtime/tests/validation-runtime.test.js && node .cache/packages-core-runtime/tests/config-runtime.test.js && node .cache/packages-core-runtime/tests/logging-runtime.test.js && node .cache/packages-core-runtime/tests/tenancy-runtime.test.js",
+    "core:test": "tsc -p packages/core/tsconfig.runtime-test.json && node .cache/packages-core-runtime/tests/shared-runtime.test.js && node .cache/packages-core-runtime/tests/validation-runtime.test.js && node .cache/packages-core-runtime/tests/config-runtime.test.js && node .cache/packages-core-runtime/tests/logging-runtime.test.js && node .cache/packages-core-runtime/tests/tenancy-runtime.test.js && node .cache/packages-core-runtime/tests/authn-runtime.test.js && node .cache/packages-core-runtime/tests/authz-runtime.test.js",
     "core:typecheck": "tsc -p packages/core/tsconfig.check.json"
   },
   "devDependencies": {
