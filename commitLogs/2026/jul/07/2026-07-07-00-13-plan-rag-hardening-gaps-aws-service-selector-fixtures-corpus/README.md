@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-06T23:13:23Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-07T01:54:15Z
+latest_commit_sha: 407a7c2
+chat_duration: 9652s (00:02:40:52)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -79,9 +79,26 @@ Decision: 02.rag-rulebook owns hosted context provider selection
 
 Rationale: Hosted/local provider selection, bearer auth loading, redaction, fail-closed behavior, and local fallback policy belong behind the RAG rulebook query-context interface; chat/workbench consumes context packets only.
 
+
+### 2026-07-07T01:54:15Z - Commit recorded
+
+Commit: `407a7c2`
+
+Message: Add RAG-owned hosted context provider boundary
+
+Summary: Adds the RAG-owned query-context provider boundary, hosted auth/redaction/fallback contract, selector proof, corpus gap, projection records, and commit-gate smoke coverage.
+
+ADR impact: No ADR needed; existing RAG rulebook layering principle applied.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `407a7c2`
+  Time UTC: 2026-07-07T01:54:15Z
+  Message: Add RAG-owned hosted context provider boundary
+  Summary: Adds the RAG-owned query-context provider boundary, hosted auth/redaction/fallback contract, selector proof, corpus gap, projection records, and commit-gate smoke coverage.
+  ADR impact: No ADR needed; existing RAG rulebook layering principle applied.
 
 ## Main Refresh Conflicts
 
@@ -96,12 +113,12 @@ Reason: The change applies an existing RAG rulebook layering principle by adding
 ## Session Metrics
 
 Raised at UTC: 2026-07-06T23:13:23Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-07T01:54:15Z
+Latest commit SHA: 407a7c2
+Chat duration: 9652s (00:02:40:52)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
