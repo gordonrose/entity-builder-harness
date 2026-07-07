@@ -61,6 +61,11 @@ expected:
     min_count: 1
   citations:
     min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.00.chat
 source_refs:
   - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml

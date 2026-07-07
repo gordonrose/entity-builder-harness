@@ -186,7 +186,10 @@ async function main(): Promise<void> {
       });
       throw new Error("operation failed");
     }),
-    /operation failed/,
+    (error: unknown) =>
+      isPersistenceTransactionError(error) &&
+      error.cause instanceof Error &&
+      error.cause.message === "operation failed",
   );
   deepEqual(rolledBackEvents, []);
 
@@ -199,6 +202,18 @@ async function main(): Promise<void> {
   }
   const closedTransaction = capturedTransaction;
   throws(() => closedTransaction.afterCommit(() => undefined), /transaction is closed/);
+}
+
+function isPersistenceTransactionError(error: unknown): error is {
+  readonly code: "PERSISTENCE_TRANSACTION_FAILED";
+  readonly cause?: unknown;
+} {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "PERSISTENCE_TRANSACTION_FAILED"
+  );
 }
 
 main()

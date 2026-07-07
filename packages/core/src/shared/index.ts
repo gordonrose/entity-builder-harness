@@ -6,6 +6,13 @@ export type ISODateTime = Brand<string, "ISODateTime">;
 export type MessageKey = Brand<string, "MessageKey">;
 export type MessageParamValue = string | number | boolean | null;
 export type MessageParams = Readonly<Record<string, MessageParamValue>>;
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
 
 export interface MessageDescriptor {
   readonly code: string;
@@ -51,6 +58,10 @@ export function messageDescriptor(input: {
     ...(input.messageKey === undefined ? {} : { messageKey: messageKey(input.messageKey) }),
     ...(input.params === undefined ? {} : { params: input.params }),
   };
+}
+
+export function copyJsonValue<TValue extends JsonValue>(value: TValue, label = "JSON value"): TValue {
+  return copyJsonValueInternal(value, label) as TValue;
 }
 
 const isoDateTimePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
@@ -121,4 +132,26 @@ export function requestContext(input: { readonly correlationId: CorrelationId; r
     correlationId: input.correlationId,
     now: input.now instanceof Date ? isoDateTimeFromDate(input.now) : input.now,
   };
+}
+
+function copyJsonValueInternal(value: JsonValue, label: string): JsonValue {
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    throw new TypeError(`${label} must contain only finite numbers.`);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => copyJsonValueInternal(item, label));
+  }
+
+  if (value !== null && typeof value === "object") {
+    if (Object.getPrototypeOf(value) !== Object.prototype) {
+      throw new TypeError(`${label} must contain only plain objects.`);
+    }
+
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, copyJsonValueInternal(nestedValue, label)]),
+    );
+  }
+
+  return value;
 }

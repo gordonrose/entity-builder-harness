@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 3
+#   version: 6
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 3
+version: 6
 status: active
 
 source_derivation:
@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 0f4d490225e0b5da5fa760f066f2d47b3cd5bed29f4829d09c569ce4296f201d
+      sha256: f4b4846306a8a472bba681d814580fc4acdf5d483ee23a6dab996fe0c2f1b607
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -76,7 +76,7 @@ recommended_modules:
     purpose: "Transaction, pagination, repository, and outbox contracts."
     consumed_by: "apps and platform persistence implementations"
   - id: events
-    purpose: "Event envelopes, buses, and versioning contracts."
+    purpose: "Provider-neutral event envelope, payload, versioning, publisher, bus, and handler contracts."
     consumed_by: "apps, workers, platform messaging"
   - id: queues
     purpose: "Queue messages, consumers, retry, and dead-letter concepts."
@@ -91,7 +91,7 @@ recommended_modules:
     purpose: "File storage and metadata contracts."
     consumed_by: "apps and platform storage adapters"
   - id: audit
-    purpose: "Audit event model and recorder interface."
+    purpose: "Provider-neutral accountability event, actor, target, outcome, metadata, recorder, and recorder-error contracts."
     consumed_by: "apps and platform audit storage"
   - id: reporting
     purpose: "Report request, generation, and export contracts."
@@ -303,9 +303,11 @@ rules:
       - Treat ISODateTime values as explicit ISO date-time strings with timezone information.
       - Normalize valid ISODateTime input to a stable JSON-safe ISO string.
       - Keep message descriptor params primitive and translation/localization friendly.
+      - Use shared JSON-value helpers for cross-boundary facts that must remain plain, serializable, and finite-number safe.
     must_not:
       - Do not accept date-only strings, localized prose dates, or implicit local-time strings as ISODateTime values.
       - Do not pass provider objects, Date instances, money objects, or other rich runtime values as shared message params.
+      - Do not let NaN, Infinity, class instances, provider objects, or runtime-only values pass as core JSON-like contract facts.
       - Do not put translation catalogs, locale negotiation, or region-specific formatting inside shared primitives.
     agent_guidance: >
       Shared primitives are the bottom of the contract stack. When a value can
@@ -421,6 +423,7 @@ rules:
       - Use stable persistence error codes for common storage outcomes such as conflict, duplicate, timeout, unavailable storage, invalid page request, not found, and transaction failure.
       - Support optimistic concurrency through an expected concurrency token when stale writes must be rejected.
       - Keep after-commit hooks for side effects that should only run after successful transaction commit.
+      - Normalize transaction failures into stable persistence error vocabulary before app code handles them.
       - Include in-memory helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
       - Test pagination, conflict, transaction, after-commit, and helper behavior without concrete runtime providers.
     must_not:
@@ -428,12 +431,73 @@ rules:
       - Do not put product-specific repositories, product query methods, or workflow decisions in packages/core.
       - Do not require total counts for every page response or invent product-specific total-count fields outside the shared page-total contract.
       - Do not expose provider-specific lock, deadlock, network, timeout, or conditional-write error shapes directly to app code.
+      - Do not leak raw transaction implementation errors from core helpers or platform adapters when a persistence error meaning exists.
       - Do not publish events or run side effects before a transaction is known to have committed.
     agent_guidance: >
       Core persistence names the contract and stable failure meanings. Platform
       translates real storage behavior into that contract, infra provisions the
       storage topology and resilience resources, and apps decide product-specific
       query and workflow behavior.
+
+  - id: core.events-contracts-name-publishable-facts
+    title: Events contracts name publishable facts, not broker infrastructure
+    severity: error
+    summary: >
+      packages/core events contracts should define provider-neutral event
+      envelopes, payloads, publish errors, publishers, buses, handlers, and
+      testing helpers while leaving event catalogs, brokers, subscribers, and
+      runtime delivery outside core.
+    must:
+      - Define provider-neutral event id, event type, event version, payload, envelope, publisher or bus, handler, and publish error contracts.
+      - Keep event payload values plain, serializable, and portable across app, platform, worker, broker, log, outbox, and test boundaries.
+      - Reject non-finite numeric values and non-plain runtime objects from event payloads before they cross app/platform boundaries.
+      - Treat event type names as domain facts rather than concrete broker topic, queue, stream, or subscription names.
+      - Keep publish failures mapped to stable event error codes before app code receives them.
+      - Publish events that depend on successful state changes through a post-commit path, such as persistence after-commit hooks or an outbox relay.
+      - Make in-memory event helper state names reflect whether events were attempted, accepted, or successfully handled.
+      - Include in-memory or no-op event helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test event type, version, payload, envelope, publish error, handler, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define product event catalogs, product-specific event meanings, or workflow emission decisions in packages/core.
+      - Do not define concrete broker topics, queue names, stream names, subscribers, retry policies, dead-letter queues, ordering guarantees, schema registries, cloud SDK clients, or worker runtimes in packages/core.
+      - Do not expose provider-specific broker, queue, stream, outbox, network, timeout, or delivery error shapes directly to app code.
+      - Do not report failed in-memory handler delivery as a successfully published event unless the helper explicitly names attempted delivery.
+      - Do not publish events that describe committed state before the corresponding transaction is known to have committed.
+    agent_guidance: >
+      Core events name the portable fact and the contract for publishing it.
+      Apps decide which product facts matter and when to emit them, platform
+      translates the event bus contract into a runtime delivery mechanism, and
+      infra provisions broker resources and delivery topology.
+
+  - id: core.audit-contracts-record-accountability
+    title: Audit contracts record accountability facts
+    severity: error
+    summary: >
+      packages/core audit contracts should define provider-neutral audit event,
+      actor, target, outcome, metadata, recorder, and recorder-error shapes
+      while leaving product audit catalogs, durable storage, retention, and
+      infrastructure outside core.
+    must:
+      - Define provider-neutral audit event id, audit event type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, and recorder error contracts.
+      - Use audit records for accountability facts: who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
+      - Require an explicit actor and target on audit events; represent anonymous/system actors and global/system targets deliberately instead of omitting those fields.
+      - Distinguish succeeded, denied, and failed outcomes without requiring consumers to parse operational logs.
+      - Keep audit metadata plain, serializable, and portable across storage, review, export, compliance, and test boundaries.
+      - Reject non-finite numeric values and non-plain runtime objects from audit metadata before it crosses storage, export, or compliance boundaries.
+      - Keep audit explanations translation-ready when they may be displayed to people.
+      - Include in-memory or no-op audit helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test audit type, target, actor, outcome, metadata, recorder error, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not use audit as a replacement for operational logging, event buses, analytics events, monitoring metrics, or reporting exports.
+      - Do not put product-specific audit catalogs, workflow emission decisions, storage tables, object-storage buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or provider adapters in packages/core.
+      - Do not carry secrets, tokens, raw credentials, raw request bodies by default, rich provider objects, or runtime-only values as audit metadata.
+      - Do not use missing actor or missing target as shorthand for anonymous, system, global, or background work.
+      - Do not expose provider-specific storage, network, timeout, retention, or delivery error shapes directly to app code.
+    agent_guidance: >
+      Core audit names the durable accountability record and recording port.
+      Apps decide which product actions require audit records, platform makes
+      recording durable, and infra provisions storage, retention, and compliance
+      resources.
 
   - id: core.translation-ready-meaning-not-prose
     title: Core contracts pass meaning, not final localized prose

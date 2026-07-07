@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 3
+  version: 6
   status: active
   layer: 01.harness
   domain: architecture
@@ -58,6 +58,11 @@ timezone information. Date-only strings, localized prose dates, and implicit
 local-time strings should not be accepted as core timestamp values. Locale or
 region-specific display belongs in localization/presentation code, not in the
 shared timestamp primitive.
+
+Provider-neutral JSON-like contract values should stay plain and serializable.
+Shared helpers should reject non-finite numeric values and non-plain runtime
+objects when copying cross-boundary facts for claims, policy facts, event
+payloads, or audit metadata.
 
 ## Config Contract Boundary
 
@@ -198,11 +203,87 @@ storage work. After-commit hooks should be reserved for side effects that must
 only run after a successful commit, such as publishing events or scheduling
 post-commit work.
 
+Transaction failures should surface through stable persistence vocabulary
+rather than leaking raw database, runtime, or test-helper error shapes.
+
 The `persistence` module must not define SQL, ORM models, database clients,
 tables, indexes, shards, backups, object-storage clients, product-specific
 repositories, or product workflow decisions. Platform owns concrete storage
 adapters. Infra owns storage topology, backup resources, indexes, and scaling.
 Apps and product modules own product-specific queries and workflow behavior.
+
+## Events Contract Boundary
+
+The `events` module should define provider-neutral contracts for facts that
+happened and may be published across app, platform, worker, and broker
+boundaries: event identifiers, event type names, event schema versions,
+JSON-safe payload values, event envelopes, publish error meanings, publisher
+or bus ports, handler ports, and small in-memory or no-op helpers for tests.
+
+Event envelopes should carry stable metadata such as id, type, version,
+occurred-at timestamp, optional tenant id, optional correlation id, and payload.
+Payloads should stay plain and serializable so platform adapters can move them
+through brokers, outboxes, logs, tests, and workers without provider-specific
+objects.
+Event payloads should reject non-finite numeric values and non-plain runtime
+objects before they cross app/platform boundaries.
+
+Event type names are portable domain facts. They should not be treated as
+concrete broker topics, queue names, stream names, or subscription resources.
+Platform adapters may translate event types into provider-specific routing
+later.
+
+Publishing failures should use stable error vocabulary rather than exposing
+provider-specific broker errors directly to app code.
+
+Events that depend on successful state changes should be published through a
+post-commit path, such as a persistence `afterCommit` hook or an outbox relay,
+so subscribers do not react to facts from rolled-back transactions.
+In-memory event helpers should define whether recorded events mean attempted,
+accepted, or successfully handled publish operations, and tests should preserve
+that meaning.
+
+The `events` module must not define product event catalogs, broker topics,
+queue names, subscriber deployment, retries, dead-letter queues, ordering
+guarantees, schema registries, cloud SDK clients, worker runtimes, or product
+workflow decisions. Apps own product event meanings and emission decisions.
+Platform owns concrete delivery adapters. Infra owns broker resources and
+deployment topology.
+
+## Audit Contract Boundary
+
+The `audit` module should define provider-neutral contracts for accountability
+records: audit event identifiers, audit event type names, actor references,
+target references, outcomes, timestamps, tenant context, correlation ids,
+translation-ready reasons, JSON-safe metadata, recorder error meanings,
+recorder ports, and small in-memory or no-op helpers for tests.
+
+Audit records should answer who did what, to which target, in which tenant or
+context, when, from which correlated request or job, and with which outcome.
+Outcomes should distinguish successful, denied, and failed actions so security
+review and product history do not depend on parsing operational logs.
+Audit events should carry an explicit actor and target. Anonymous and system
+actors should be represented explicitly instead of omitting actor data; global
+or system-scoped actions should use a deliberate target instead of omitting the
+target.
+
+Audit metadata should stay plain and serializable. It may include evidence
+needed for review, compliance, debugging, or product history, but it must not
+carry secrets, tokens, raw credentials, rich provider objects, raw request
+bodies by default, or runtime-only values.
+Audit metadata should reject non-finite numeric values and non-plain runtime
+objects before it crosses storage, export, or compliance boundaries.
+
+Audit records are not operational logs, analytics events, monitoring metrics,
+or event-bus messages. Logging explains what the system is doing. Events let
+other runtime components react. Audit records preserve accountability facts.
+
+The `audit` module must not define product-specific audit catalogs, audit
+storage tables, object-storage buckets, retention policy, legal hold,
+redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud
+SDK clients, or product workflow decisions. Apps own which product actions
+must be audited. Platform owns durable audit recorder implementations. Infra
+owns storage resources, retention topology, and deployment resources.
 
 ## Message, i18n, and Localization Boundary
 

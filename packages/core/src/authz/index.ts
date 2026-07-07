@@ -1,15 +1,9 @@
 import type { Principal } from "../authn/index";
-import type { MessageDescriptor } from "../shared/index";
+import { copyJsonValue, type JsonValue, type MessageDescriptor } from "../shared/index";
 import type { TenantId } from "../tenancy/index";
 
 export type Permission = `${string}:${string}`;
-export type AuthorizationValue =
-  | string
-  | number
-  | boolean
-  | null
-  | readonly AuthorizationValue[]
-  | { readonly [key: string]: AuthorizationValue };
+export type AuthorizationValue = JsonValue;
 export type AuthorizationFacts = Readonly<Record<string, AuthorizationValue>>;
 export type AuthorizationEvidence = Readonly<Record<string, AuthorizationValue>>;
 
@@ -174,15 +168,5 @@ function copyAuthorizationFacts<TFacts extends AuthorizationFacts | Authorizatio
 }
 
 function copyAuthorizationValue(value: AuthorizationValue): AuthorizationValue {
-  if (Array.isArray(value)) {
-    return value.map(copyAuthorizationValue);
-  }
-
-  if (value !== null && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [key, copyAuthorizationValue(nestedValue)]),
-    );
-  }
-
-  return value;
+  return copyJsonValue(value, "authorization facts");
 }

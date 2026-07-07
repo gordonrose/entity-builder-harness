@@ -1,15 +1,9 @@
-import { entityId, type EntityId } from "../shared/index";
+import { copyJsonValue, entityId, type EntityId, type JsonValue } from "../shared/index";
 import type { TenantId } from "../tenancy/index";
 
 export type PrincipalId = EntityId<"PrincipalId">;
 export type PrincipalType = "user" | "service";
-export type PrincipalClaimValue =
-  | string
-  | number
-  | boolean
-  | null
-  | readonly PrincipalClaimValue[]
-  | { readonly [key: string]: PrincipalClaimValue };
+export type PrincipalClaimValue = JsonValue;
 export type PrincipalClaims = Readonly<Record<string, PrincipalClaimValue>>;
 export type AuthenticationResult = Principal | null;
 
@@ -61,15 +55,5 @@ function copyPrincipalClaims(claims: PrincipalClaims): PrincipalClaims {
 }
 
 function copyPrincipalClaimValue(value: PrincipalClaimValue): PrincipalClaimValue {
-  if (Array.isArray(value)) {
-    return value.map(copyPrincipalClaimValue);
-  }
-
-  if (value !== null && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, nestedValue]) => [key, copyPrincipalClaimValue(nestedValue)]),
-    );
-  }
-
-  return value;
+  return copyJsonValue(value, "principal claims");
 }

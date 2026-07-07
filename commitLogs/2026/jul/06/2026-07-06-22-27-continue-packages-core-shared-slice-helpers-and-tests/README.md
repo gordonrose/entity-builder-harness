@@ -105,6 +105,14 @@ continue packages/core shared slice helpers and tests
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Updated packages/core events and audit contract guidance after agent review, including explicit audit actor/target accountability, finite/plain JSON value hardening, event helper success semantics, standardized transaction failure vocabulary, selector fixtures, and source/rule projection evidence.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
+
 ## Activity Log
 
 ### 2026-07-06T21:27:36Z - Session started
@@ -309,6 +317,20 @@ Summary: Added provider-neutral packages/core persistence contracts for paginati
 
 ADR impact: Covered by updated packages/core source material, projected rules, derivation report, and persistence selector fixture; no new ADR required.
 
+
+### 2026-07-07T11:53:29Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Updated packages/core events and audit contract guidance after agent review, including explicit audit actor/target accountability, finite/plain JSON value hardening, event helper success semantics, standardized transaction failure vocabulary, selector fixtures, and source/rule projection evidence.
+
+
+### 2026-07-07T19:41:36Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
+
 ## Commits
 
 
@@ -388,18 +410,14 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Added provider-neutral authn and authz helpers, runtime/type tests, README guidance, and packages/core source/rule projection updates for global principals, tenant context, RBAC/ReBAC/ABAC authorization request shape, explicit decisions, and policy ownership boundaries.
+Reason: Recorded deferred platform and infra runtime obligations for logging normalization, durable outbox event delivery, audit retention/legal-hold/export/SIEM handling, and payload/metadata size budgets in source material, platform rules, derivation evidence, selector fixture, and source projection wiring.
 Evidence:
-- packages/core/src/authn/index.ts
-- packages/core/tests/authn-runtime.test.ts
-- packages/core/tests/authn-types.test.ts
-- packages/core/src/authz/index.ts
-- packages/core/tests/authz-runtime.test.ts
-- packages/core/tests/authz-types.test.ts
-- packages/core/README.md
-- docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-- docs/harness/architecture/rules/layers/packages-core.yml
-- .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
-- package.json
+- docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+- docs/harness/architecture/rules/layers/platform.yml
+- .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+- .agentic/02.rag-rulebook/source-projections/v1.yml
+- .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+- .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 Corpus gaps:
 - None.

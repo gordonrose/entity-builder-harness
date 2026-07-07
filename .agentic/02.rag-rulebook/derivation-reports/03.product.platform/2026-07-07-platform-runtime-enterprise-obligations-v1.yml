@@ -1,0 +1,142 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.03-product-platform.2026-07-07-platform-runtime-enterprise-obligations-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   - security
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for platform runtime enterprise obligations.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.rules.layers.platform
+#     path: docs/harness/architecture/rules/layers/platform.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.03.product-platform.2026-07-07.platform-runtime-enterprise-obligations-v1
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  summary: >
+    Approved source material records deferred platform and infra runtime
+    obligations for logging normalization, durable outbox/event delivery, audit
+    retention/export/SIEM handling, and payload/metadata size budgets.
+
+target:
+  corpus_id: corpus.03.product.platform
+  owner_layer: 03.product
+  expected_rule_paths:
+    - docs/harness/architecture/rules/layers/platform.yml
+  affected_rule_paths:
+    - docs/harness/architecture/rules/layers/platform.yml
+  affected_rulesets:
+    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: platform.logging.normalizes-rich-runtime-values
+      summary: Platform logging adapters should normalize errors, provider failures, framework objects, dates, maps, sets, buffers, streams, circular values, and oversized fields into redacted bounded plain log fields.
+      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: platform.events.use-durable-outbox-when-publication-matters
+      summary: Platform event delivery should record outbox messages in the same transaction as important state changes and publish them through a retryable observable platform relay.
+      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: platform.audit.requires-durable-runtime-and-lifecycle
+      summary: Platform audit runtime should provide durable recorders with retention, legal hold, export, SIEM integration, access controls, and explicit audit-failure behavior where required.
+      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: platform.payload-metadata-size-budgets-required
+      summary: Platform adapters should define size, depth, key-count, truncation, rejection, summary, pointer, checksum, and storage-reference policies for logs, events, audit, prompts, and diagnostics.
+      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: infra.provisions-runtime-obligation-resources
+      summary: Infra should provision log sinks, brokers, queues, DLQs, stores, encryption, backups, retention, alarms, dashboards, IAM permissions, and deployment topology that platform adapters need.
+      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/harness/architecture/rules/layers/platform.yml
+      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/harness/architecture/rules/layers/infra.yml
+      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+      - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - Core remains contract-only and provider-neutral.
+      - Platform owns runtime adapters, normalization, durable delivery, audit recorders, and enforcement.
+      - Infra owns cloud resources, retention topology, alarms, permissions, and deployment resources.
+
+proposed_updates:
+  rules:
+    - docs/harness/architecture/rules/layers/platform.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+  notes:
+    - Existing concern rules already cover outbox, persistence/storage, logging, audit, observability, and retention concepts.
+    - This update adds a platform-layer rule that makes deferred enterprise runtime obligations explicit for future implementation slices.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+    - git diff --check
+  checks_run: []
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: codex
+  reviewed_at_utc: "2026-07-07T00:00:00Z"
+  notes:
+    - This record captures deferred platform/runtime obligations identified while hardening packages/core event and audit contracts.
+    - Future platform implementation slices should replace pending check entries with actual validation evidence.

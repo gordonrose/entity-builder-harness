@@ -249,7 +249,12 @@ export function inMemoryUnitOfWork(): UnitOfWork {
         return value;
       } catch (error) {
         open = false;
-        throw error;
+        throw persistenceError({
+          code: "PERSISTENCE_TRANSACTION_FAILED",
+          defaultMessage: "Transaction failed before it could complete.",
+          messageKey: "persistence.transaction.failed",
+          cause: error,
+        });
       }
     },
   };

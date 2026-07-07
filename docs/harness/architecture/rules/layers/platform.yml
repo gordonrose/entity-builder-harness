@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -21,8 +21,20 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 1
+version: 2
 status: active
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-07-07T00:00:00Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+  source_material:
+    - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      sha256: cf195244f4a0587e7236e7f83b2fc97e295553006e90ec0bcf54bc4c41d8e674
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -37,6 +49,9 @@ applies_to:
 related_rulesets:
   - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
 
 runtime_modules:
   - id: contracts
@@ -289,6 +304,30 @@ rules:
       Keep infra creation in infra/. Keep resource lifecycle and runtime use in
       platform/. Keep product behavior in apps.
 
+  - id: platform.enterprise-runtime-obligations-are-explicit
+    title: Enterprise runtime obligations are explicit
+    severity: error
+    summary: >
+      Platform implementations must turn core contracts into durable,
+      observable, secure, and cost-controlled runtime behavior. Deferred
+      platform obligations for logging, events, audit, and payload handling
+      should be recorded and tested before production use.
+    must:
+      - "Normalize rich runtime log values such as errors, provider failures, request objects, response objects, headers, dates, maps, sets, buffers, streams, and circular objects into redacted bounded plain fields before exporting logs."
+      - "Use an outbox-shaped delivery path when a committed state change must publish an event, or record the accepted consistency tradeoff explicitly."
+      - "Implement durable audit recorders with retention, legal hold, export, SIEM/security-tool integration, access control, and audit-failure behavior where the product or compliance context requires them."
+      - "Define payload and metadata size budgets for logs, events, audit records, request/response summaries, prompt excerpts, and provider diagnostics."
+      - "Coordinate with infra for log sinks, brokers, queues, DLQs, storage, encryption, backup, retention, alarms, dashboards, IAM permissions, and deployment topology."
+    must_not:
+      - "Do not let provider SDK objects, framework request objects, raw credentials, tokens, full request bodies, or large binary/runtime values cross app/platform boundaries as log fields, event payloads, or audit metadata."
+      - "Do not rely on best-effort immediate broker publication as the only record for a state change that other subscribers must observe."
+      - "Do not treat core in-memory helpers as durable logging, event, audit, or outbox implementations."
+      - "Do not silently truncate audit, compliance, or event payloads without an explicit marker, rejection, summary, checksum, or durable reference policy."
+    agent_guidance: >
+      If platform work touches logging, event delivery, audit, provider
+      diagnostics, or payload movement, check the enterprise obligations source
+      material and either implement the obligation or record a visible gap.
+
   - id: platform.testing-proves-the-contract
     title: Platform tests prove app/runtime contracts
     severity: error
@@ -331,6 +370,13 @@ source_refs:
       - "Minimal v1 platform architecture"
       - "The simple v1 runtime flow"
       - "The most important design rule"
+  - doc: "platform-runtime-enterprise-obligations-v1.md"
+    sections:
+      - "Logging Normalization"
+      - "Durable Outbox and Event Delivery"
+      - "Audit Runtime, Retention, and Export"
+      - "Payload and Metadata Size Budgets"
+      - "Implementation Acceptance"
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/layers/platform.yml."
@@ -341,3 +387,4 @@ success_criteria:
   - "It keeps infrastructure provisioning outside platform/."
   - "It references dependency-direction for cross-layer import rules."
   - "It includes manually verified source_refs back to the platform layer guide."
+  - "It records enterprise runtime obligations for logging normalization, durable event delivery, audit retention/export/SIEM, and payload/metadata size budgets."

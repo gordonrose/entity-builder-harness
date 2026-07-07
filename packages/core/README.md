@@ -29,6 +29,8 @@ Provider implementations and app runtimes are intentionally out of scope.
   information in a JSON-safe text form.
 - `MessageDescriptor` carries stable meaning plus optional translation hooks.
 - `Result`, `ok`, `err`, `isOk`, and `isErr` make expected success/failure explicit.
+- `JsonValue` and `copyJsonValue` keep cross-boundary facts plain,
+  serializable, and finite-number safe.
 - `CoreError` gives failures a stable `code`, `defaultMessage`, optional translation metadata, and optional debugging metadata.
 - `Clock`, `systemClock`, and `fixedClock` keep time-dependent code testable.
 - `RequestContext` carries only the minimum shared request metadata.
@@ -208,6 +210,79 @@ effects that should only happen after a transaction has successfully committed,
 such as publishing events or scheduling work. Use `expectedConcurrencyToken`
 when a caller needs to prevent stale updates from overwriting newer stored
 state.
+
+Unexpected in-memory transaction or after-commit failures are wrapped as
+`PERSISTENCE_TRANSACTION_FAILED` so test helpers do not leak raw transaction
+failure shapes. Platform adapters should translate provider-specific
+transaction failures into the same stable persistence vocabulary.
+
+## Events Contracts
+
+`events` defines provider-neutral contracts for facts that happened and may be
+published to other parts of the system:
+
+- `EventId`, `EventType`, and `EventVersion` provide explicit identifiers,
+  type names, and schema versions.
+- `EventPayloadValue` and `EventPayload` keep event payloads plain,
+  JSON-safe, finite-number safe, and portable across app, platform, worker,
+  and broker boundaries.
+- `EventEnvelope` and `eventEnvelope` wrap an event with id, type, version,
+  timestamp, optional tenant id, optional correlation id, and copied payload.
+- `EventPublishErrorCode`, `EventPublishError`, and `eventPublishError` give
+  publish failures stable translation-ready meanings.
+- `EventPublisher`, `EventBus`, and `EventHandler` define the small async
+  publishing and handling contracts.
+- `inMemoryEventBus` and `noopEventBus` are helpers for tests and composed
+  local flows.
+
+Event type names are portable domain facts, not concrete broker topics. Apps
+decide which product events to emit and when. Platform adapters decide whether
+events are delivered through EventBridge, SNS/SQS, Kafka, an outbox relay, or
+another runtime. Use persistence `afterCommit` hooks when an event should only
+be published after storage has successfully committed.
+
+`inMemoryEventBus.publishedEvents()` returns events accepted by the helper
+after all registered handlers have succeeded. A failed handler returns
+`EVENT_HANDLER_FAILED` and does not add the event to the successful published
+events list.
+
+Core does not define product event catalogs, broker topics, queue names,
+subscriber deployment, retries, dead-letter queues, ordering guarantees,
+schema registries, or cloud SDK clients.
+
+## Audit Contracts
+
+`audit` defines provider-neutral contracts for accountability records:
+
+- `AuditEventId` and `AuditEventType` identify durable audit records and stable
+  action names.
+- `AuditActor` captures the explicit user, service, system, or anonymous actor
+  that caused the audited action.
+- `AuditTarget` identifies the resource acted on, with an optional parent
+  target for tenant/account/resource hierarchy.
+- `AuditOutcome` distinguishes succeeded, denied, and failed actions.
+- `AuditMetadataValue` and `AuditMetadata` keep audit evidence plain,
+  JSON-safe, finite-number safe, and portable across storage, review, export,
+  and compliance boundaries.
+- `AuditEvent` and `auditEvent` combine actor, tenant, timestamp,
+  correlation id, target, outcome, optional reason, and copied metadata.
+- `AuditRecordErrorCode`, `AuditRecordError`, and `auditRecordError` give
+  recorder failures stable translation-ready meanings.
+- `AuditRecorder`, `inMemoryAuditRecorder`, and `noopAuditRecorder` define the
+  async recording port and test helpers.
+
+Audit records are accountability facts, not operational logs and not event-bus
+messages. Use audit for actions that need a durable explanation of who did
+what, to which target, under which tenant/context, and with which outcome.
+Every audit event must carry an explicit actor and target. Use an `anonymous`
+or `system` actor when no authenticated principal exists, and use a deliberate
+target such as an account, session, export, or system resource rather than
+omitting the target.
+
+Core does not define audit database tables, object storage, retention policy,
+legal hold, export workflows, SIEM integrations, CloudWatch sinks, or product
+audit catalogs. Platform owns durable recorder implementations, and infra owns
+storage resources and retention topology.
 
 ## Validation Contracts
 

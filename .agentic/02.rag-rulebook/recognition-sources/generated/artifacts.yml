@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 580
-  term_count: 1172
+  indexed_artifacts: 585
+  term_count: 1182
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3516,6 +3516,18 @@ terms:
   canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
   evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   confidence_weight: 1
+- term: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+  evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  confidence_weight: 1
+- term: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+  evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  confidence_weight: 1
 - term: harness.script.agents.validate-harness-agents.readme
   category: artifact-id
   match_type: exact
@@ -3888,6 +3900,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product-platform.2026-07-07-platform-runtime-enterprise-obligations-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-07-platform-runtime-enterprise-obligations-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-07-platform-runtime-enterprise-obligations-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   category: artifact-id
   match_type: exact
@@ -4056,6 +4080,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-audit-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-audit-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-audit-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-surface
   category: artifact-id
   match_type: exact
@@ -4068,6 +4104,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-surface
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-events-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-events-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-events-contract
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-persistence-contract
   category: artifact-id
   match_type: exact
@@ -4079,6 +4127,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-persistence-contract
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
   category: artifact-id

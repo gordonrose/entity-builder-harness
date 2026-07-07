@@ -1,5 +1,6 @@
-import { equal, notEqual } from "node:assert/strict";
+import { deepEqual, equal, notEqual, throws } from "node:assert/strict";
 import {
+  copyJsonValue,
   correlationId,
   err,
   fixedClock,
@@ -54,6 +55,22 @@ const descriptor = messageDescriptor({
 });
 equal(descriptor.messageKey, messageKey("validation.required"));
 equal(descriptor.params?.field, "email");
+
+const copiedJson = copyJsonValue({
+  id: "deal-123",
+  score: 12,
+  flags: [true, false],
+  nested: { value: null },
+});
+deepEqual(copiedJson, {
+  id: "deal-123",
+  score: 12,
+  flags: [true, false],
+  nested: { value: null },
+});
+throws(() => copyJsonValue(Number.NaN, "test JSON value"), /finite numbers/);
+throws(() => copyJsonValue(Number.POSITIVE_INFINITY, "test JSON value"), /finite numbers/);
+throws(() => copyJsonValue(new Date() as never, "test JSON value"), /plain objects/);
 
 const success = ok({ enabled: true });
 equal(isOk(success), true);

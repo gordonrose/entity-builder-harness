@@ -4,6 +4,7 @@ import {
   err,
   isErr,
   isOk,
+  copyJsonValue,
   messageDescriptor,
   messageKey,
   ok,
@@ -11,6 +12,7 @@ import {
   type CorrelationId,
   type EntityId,
   type ISODateTime,
+  type JsonValue,
   type MessageDescriptor,
   type MessageKey,
   type Result,
@@ -33,12 +35,22 @@ const acceptedMessageDescriptor: MessageDescriptor = messageDescriptor({
   messageKey: acceptedMessageKey,
   params: { field: "email", minimum: 1, required: true, optional: null },
 });
+const acceptedJsonValue: JsonValue = {
+  id: "deal-123",
+  flags: [true, false],
+  nested: { value: null },
+};
 
 void acceptedTenantId;
 void acceptedPrincipalId;
 void acceptedCorrelationId;
 void acceptedMessageKey;
 void acceptedMessageDescriptor;
+void copyJsonValue(acceptedJsonValue);
+
+// @ts-expect-error JSON values must stay plain and serializable.
+const rejectedJsonValue: JsonValue = new Date();
+void rejectedJsonValue;
 
 // @ts-expect-error message descriptors must keep params JSON-primitive and localization-friendly.
 messageDescriptor({ code: "BAD_PARAM", defaultMessage: "Bad param.", params: { nested: { value: "nope" } } });
