@@ -174,6 +174,7 @@ projection_sets:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
     required_checks:
       - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
@@ -188,11 +189,12 @@ projection_sets:
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
     notes:
       - The source records the approved bootstrap exception for the first packages/core contract slice.
       - The projection keeps core contract guidance available to prompt-level RAG selection while implementations remain in platform and product workflows remain in apps.
       - Compatibility fixtures keep additive-evolution, deprecation, migration, durable payload versioning, and old public TypeScript usage guidance retrievable as the core contract surface matures.
-      - Persistence, files, events, audit, security, monitoring, queues, and diagnostics fixtures cover storage, high-risk file storage with access/idempotency hardening, event-delivery, accountability-record, defensive-policy, operational-signal, retryable-work, and self-healing boundary prompts.
+      - Persistence, files, events, audit, security, monitoring, queues, diagnostics, and i18n/localization fixtures cover storage, high-risk file storage with access/idempotency hardening, event-delivery, accountability-record, defensive-policy, operational-signal, retryable-work, self-healing, translation, and locale-sensitive formatting boundary prompts.
 
   - id: projection.03.product.platform.platform-runtime-enterprise-obligations-v1
     status: active

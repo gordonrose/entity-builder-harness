@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 14
+  version: 15
   status: active
   layer: 01.harness
   domain: architecture
@@ -49,6 +49,8 @@ The initial package surface may include these contract modules:
 - `audit`: audit event, audit event version, and recorder contracts.
 - `events`: event envelope and event bus contracts.
 - `queues`: queue message, queue message version, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
+- `i18n`: locale tag, message template, translation catalog, translator, fallback behavior, and i18n error contracts.
+- `localization`: currency, region, time-zone, localizable value, localizer, formatted output, and localization error contracts.
 
 ## Core Contract Evolution and Compatibility Policy
 
@@ -557,6 +559,31 @@ fallback behavior, and translation params. The `localization` contract layer
 owns locale-sensitive formatting for dates, times, numbers, currency, and
 regional display conventions. Validation and other core capability modules
 should emit facts that those layers can translate or format later.
+
+The `i18n` module may define locale tags, message templates, translation
+catalog records, translation requests, translated-message records, translator
+ports, default-message fallback behavior, and stable i18n errors. In-memory or
+record-backed translators may exist for tests and local composed flows when
+they preserve the same public contracts.
+
+The `i18n` module must not own final product copy, load catalog files, negotiate
+browser or user locale, choose ICU, i18next, FormatJS, or any other translation
+runtime, perform pluralization policy, call external translation services, or
+store tenant/user language preferences. Apps decide product copy and display
+requirements; platform/runtime wires concrete catalog loading and translator
+implementations; presentation boundaries decide locale negotiation.
+
+The `localization` module may define currency, region, and time-zone value
+contracts, localizable date-time, number, currency, and region value shapes,
+format requests, formatted output records, localizer ports, test helpers, and
+stable localization errors. Values should stay finite, branded where useful,
+and provider-neutral before they cross app/platform boundaries.
+
+The `localization` module must not call concrete formatting engines, choose
+presentation copy, infer user locale, decide product time-zone policy, perform
+currency conversion, choose exchange rates, load CLDR data, or define app
+display rules. Platform/runtime and presentation adapters own concrete
+formatting behavior.
 
 Operational logs may keep direct operational messages when they are not
 user-facing display contracts.

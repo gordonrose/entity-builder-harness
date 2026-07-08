@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 14
+#   version: 15
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 14
+version: 15
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-08T12:11:12Z"
+  generated_at_utc: "2026-07-08T12:58:13Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 6e614f979a860509705667db951a48d4615a02cbc69bb4fed3897c42d646b269
+      sha256: 417fc9c6eeb63b66f1700b2b65a80fa2d9d88dcb5ce74d5313560e1cb4228f54
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -698,6 +698,48 @@ rules:
       What happened? What stable code identifies it? Which translation key can
       render it? Which primitive params does the renderer need? Keep final words
       and regional formatting in i18n/localization or the presentation boundary.
+
+  - id: core.i18n-contracts-translate-meaning-without-owning-copy-or-runtime
+    title: Core i18n owns translation contracts, not translation runtime
+    severity: error
+    summary: >
+      packages/core i18n contracts may name locale tags, message templates,
+      catalogs, translator ports, fallback behavior, and stable i18n errors
+      without owning product copy or runtime translation implementation.
+    must:
+      - Define provider-neutral locale tag, message template, translation catalog, translation request, translated-message, translator port, fallback, and i18n error contracts when needed.
+      - Keep translation params primitive and compatible with shared message descriptors.
+      - Include pure record-backed or default-message helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Preserve fallback/default-message behavior so untranslated contexts remain understandable without becoming canonical localized copy.
+    must_not:
+      - Do not put final product copy, tenant/user language preference storage, browser locale negotiation, catalog file loading, pluralization policy, external translation services, or concrete translation libraries in packages/core.
+      - Do not make i18n format dates, numbers, currencies, regions, or time zones.
+      - Do not pass rich objects, provider-specific objects, dates, money objects, request objects, or runtime values as translation params.
+    agent_guidance: >
+      Core i18n names the portable translation boundary. Apps own product copy
+      and display requirements. Platform/runtime wires catalog loading and
+      concrete translators. Presentation boundaries decide locale negotiation.
+
+  - id: core.localization-contracts-format-intent-without-display-policy
+    title: Core localization owns formatting intent, not display policy
+    severity: error
+    summary: >
+      packages/core localization contracts may name locale-sensitive formatting
+      intents for dates, numbers, currencies, regions, and time zones without
+      choosing a concrete formatting engine or product display policy.
+    must:
+      - Define provider-neutral currency, region, time-zone, localizable value, localization request, formatted output, localizer port, and localization error contracts when needed.
+      - Keep numeric values finite and represent regional facts with stable branded values before crossing app/platform boundaries.
+      - Include pure localizer helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Keep localization separate from translation so message copy and regional value formatting can evolve independently.
+    must_not:
+      - Do not call concrete formatting engines, load CLDR data, infer user locale, choose product time-zone policy, perform currency conversion, choose exchange rates, or define app display rules in packages/core.
+      - Do not put final localized prose, UI layout decisions, notification copy, reporting copy, or design-system rendering behavior in localization contracts.
+      - Do not allow non-finite numbers, provider objects, dates, money objects, request objects, or runtime-only values to cross localization contracts.
+    agent_guidance: >
+      Core localization names what needs locale-sensitive formatting. Platform
+      runtime or presentation adapters own how formatting happens, and apps own
+      product-specific display decisions.
 
 source_refs:
   - doc: "kanbien-core-architecture-guide.md"

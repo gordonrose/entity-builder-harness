@@ -107,13 +107,55 @@ messages, and primitive params:
 ```
 
 The `defaultMessage` is fallback/debug text. It is not the final user-facing
-copy for every locale. The future `i18n` layer should translate `messageKey`
-and `params`; the future `localization` layer should format locale-sensitive
-dates, numbers, currencies, and regions.
+copy for every locale. The `i18n` layer translates `messageKey` and `params`;
+the `localization` layer formats locale-sensitive dates, numbers, currencies,
+and regions.
 
 Operational logs may still use direct log messages. User-facing errors,
 validation issues, policy denials, notifications, reports, and API/display
 responses should use translation-ready descriptors.
+
+## i18n Contracts
+
+`i18n` defines translation contracts without choosing a translation library,
+catalog file format, locale negotiation strategy, or copywriting workflow:
+
+- `LocaleTag` stores normalized language tags such as `en-GB`.
+- `MessageTemplate` names simple message templates for catalog/test use.
+- `TranslationCatalog` maps message keys to templates for one locale.
+- `TranslationRequest` carries the requested locale and optional fallback
+  locales.
+- `TranslatedMessage` records the locale, rendered text, source, optional
+  message key, and params used for a translation.
+- `MessageTranslator` is the small port that apps and platform runtime code can
+  depend on.
+- `catalogMessageTranslator` and `defaultMessageTranslator` are pure helpers
+  for tests, local flows, and composed contract examples.
+- `I18nError` provides stable translation error vocabulary.
+
+Core i18n may describe translation keys, catalogs, translator ports, fallback
+behavior, and primitive interpolation params. It does not own final product
+copy, load message files, negotiate browser/user locale, choose ICU, i18next,
+FormatJS, or any other library, or format dates, numbers, money, or regions.
+
+## Localization Contracts
+
+`localization` defines locale-sensitive formatting contracts without choosing a
+formatter implementation:
+
+- `CurrencyCode`, `RegionCode`, and `TimeZoneId` brand common regional facts.
+- `LocalizableDateTime`, `LocalizableNumber`, `LocalizableCurrency`, and
+  `LocalizableRegion` describe values that need locale-sensitive formatting.
+- `LocalizationRequest` combines a locale and localizable value.
+- `LocalizedFormat` records formatted text plus the locale and value kind.
+- `Localizer` is the formatting port consumed by apps and platform runtime.
+- `fixedLocalizer` and `unsupportedLocalizer` are pure test/local helpers.
+- `LocalizationError` provides stable formatting error vocabulary.
+
+Core localization names the formatting intent and keeps values finite,
+branded, and provider-neutral. It does not call `Intl`, format display copy,
+infer user locale, choose time-zone policy, perform currency conversion,
+choose exchange rates, load CLDR data, or decide product presentation rules.
 
 ## Config Contracts
 

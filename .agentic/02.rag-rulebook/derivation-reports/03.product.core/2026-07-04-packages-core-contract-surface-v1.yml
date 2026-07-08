@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 14
+#   version: 15
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -38,8 +38,8 @@ source_change:
     compatibility and deprecation policy, plus queue and audit schema-version
     contracts, plus provider-neutral diagnostics and self-healing vocabulary,
     plus high-risk file storage contracts and review-driven file access,
-    duplicate/idempotent put, diagnostic consistency, and queue disposition
-    hardening
+    duplicate/idempotent put, diagnostic consistency, queue disposition
+    hardening, and provider-neutral i18n/localization contract boundaries
     for the initial packages/core slice.
 
 target:
@@ -61,6 +61,7 @@ target:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
   affected_corpus_gaps: []
 
 semantic_review:
@@ -290,6 +291,18 @@ semantic_review:
     - claim_id: core.audit.no-storage-topology
       summary: Core audit must not define product audit catalogs, storage tables, buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or product workflow decisions.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.provider-neutral-boundary
+      summary: The i18n module may define locale tags, message templates, catalogs, translation requests, translated-message records, translator ports, fallback behavior, and stable i18n errors without choosing a translation runtime.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.no-copy-or-runtime
+      summary: Core i18n must not own final product copy, catalog file loading, browser or user locale negotiation, translation libraries, external translation services, or tenant/user language preference storage.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.localization.provider-neutral-boundary
+      summary: The localization module may define currency, region, time-zone, localizable value, localization request, formatted output, localizer port, test helper, and stable localization error contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.localization.no-display-policy-or-formatting-engine
+      summary: Core localization must not call concrete formatting engines, load CLDR data, infer user locale, choose product time-zone policy, perform currency conversion, choose exchange rates, or define app display rules.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -329,6 +342,7 @@ proposed_updates:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
   notes:
     - Existing packages/core rules define the general ownership boundary.
     - >
@@ -347,7 +361,11 @@ proposed_updates:
       Files now provide provider-neutral high-risk storage contracts while
       leaving storage adapters, scanning, direct access, retention, legal hold,
       parsing, and resource topology outside core.
-    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, diagnostics/self-healing boundary guidance, and files high-risk-storage guidance directly.
+      i18n and localization now provide provider-neutral translation and
+      locale-sensitive formatting contracts while leaving final copy, catalog
+      loading, locale negotiation, concrete formatters, currency conversion, and
+      presentation rules outside core.
+    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, diagnostics/self-healing boundary guidance, files high-risk-storage guidance, and i18n/localization translation-formatting guidance directly.
     - The compatibility selector fixture asks for deprecation, backwards compatibility, schema-version, and old public usage fixture guidance directly.
 
 downstream_effects:
@@ -372,6 +390,7 @@ validation:
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
     - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
     - npm run core:check
     - git diff --check
@@ -402,6 +421,8 @@ validation:
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
       result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
+      result: passed
     - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
       result: passed
     - command: npm run core:check
@@ -416,5 +437,5 @@ review:
   reviewer: codex-agentic-review-loop
   reviewed_at_utc: "2026-07-07T00:00:00Z"
   notes:
-    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings, the self-healing diagnostics discussion, and the files high-risk-storage slice.
+    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings, the self-healing diagnostics discussion, the files high-risk-storage slice, and the i18n/localization contract slice.
     - Future core modules should add narrower source material when their contracts materially change.

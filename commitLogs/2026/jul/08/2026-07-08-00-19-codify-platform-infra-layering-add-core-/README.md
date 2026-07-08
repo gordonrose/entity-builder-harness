@@ -57,6 +57,10 @@ update repo documentation and RAG service to codify platform infra capability la
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Packages/core files contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Packages/core i18n/localization contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
+
 ## Activity Log
 
 ### 2026-07-07T23:19:35Z - Session started
@@ -123,6 +127,13 @@ Rationale: Packages/core files contract slice captured in source material, packa
 Decision: Record RAG knowledge disposition: covered
 
 Rationale: Agentic review blockers for packages/core files, diagnostics, and queues were addressed by hardening file access intent usage, duplicate/idempotent put behavior, file metadata error mapping, diagnostic passthrough/consistency, and queue delivery disposition, with source material, rules, derivation report, selector fixture, README, and tests updated.
+
+
+### 2026-07-08T12:58:13Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Packages/core i18n/localization contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
 
 
 ### 2026-07-08T12:48:03Z - Commit recorded
@@ -193,15 +204,14 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Packages/core files contract slice and agentic review hardening captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
+Reason: Packages/core i18n/localization contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
 Evidence:
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
 - .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
-- packages/core/src/files/index.ts
-- packages/core/src/diagnostics/index.ts
-- packages/core/src/queues/index.ts
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
+- packages/core/src/i18n/index.ts
+- packages/core/src/localization/index.ts
 - packages/core/README.md
 Corpus gaps:
 - None.
