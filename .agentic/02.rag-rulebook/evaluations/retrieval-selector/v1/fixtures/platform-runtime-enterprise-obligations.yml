@@ -1,0 +1,77 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   - security
+#   kind: evaluation-fixture
+#   purpose: Prove platform runtime obligation prompts retrieve logging, outbox, audit, and payload-budget guidance.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.platform-runtime-enterprise-obligations
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove prompts about deferred platform/runtime enterprise obligations retrieve platform rule guidance and related concern rules.
+input:
+  request_text: When we implement the platform runtime, what enterprise obligations must we remember from docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md and docs/harness/architecture/rules/layers/platform.yml for logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
+  session:
+    trust_routing: true
+    layer: 03.product
+    mode: discovery
+    workflow: .agentic/product/workflows/default.md
+  max_chunks: 10
+expected:
+  routing:
+    layer: 03.product
+    mode: implementation
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.03.product.platform
+  selected_corpora:
+    required:
+      - corpus.03.product.platform
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_artifact_ids:
+      - artifact.layer.platform
+    required_rule_ids:
+      - platform.enterprise-runtime-obligations-are-explicit
+      - async.outbox-protects-state-and-publication
+      - reporting-analytics-audit.audit-is-accountability-evidence
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.00.chat
+source_refs:
+  - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+update_triggers:
+  - Platform runtime enterprise-obligation rules change.
+  - Logging, event delivery, audit, or payload budget concern rules change.
+  - Selector policy changes corpus ownership or evidence bundle behavior.

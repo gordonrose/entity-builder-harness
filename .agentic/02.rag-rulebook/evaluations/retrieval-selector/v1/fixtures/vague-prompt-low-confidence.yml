@@ -24,7 +24,7 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.vague-prompt-low-confidence
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove broad prompt language becomes a visible gap when no governed prompt or path terms match.
+purpose: Prove broad prompt language becomes a visible gap when no governed prompt or prompt terms match.
 input:
   request_text: Improve the thing.
   session:
@@ -32,7 +32,6 @@ input:
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  no_focused_paths: true
   max_chunks: 3
 expected:
   routing:
@@ -46,7 +45,6 @@ expected:
       - session-metadata
     banned_matched_inputs:
       - prompt
-      - focused-paths
   gaps:
     required:
       - gap.selector-fixture.low-confidence-prompt

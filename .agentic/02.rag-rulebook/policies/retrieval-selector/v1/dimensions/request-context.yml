@@ -27,18 +27,18 @@ dimension_id: request-context
 version: 1
 status: active
 applies_to_policy_pack: retrieval-selector.v1
-purpose: Build a fresh per-prompt retrieval request from explicit user intent, recognized concepts, focused paths, and safety constraints before any chat/session lifecycle defaults are considered.
+purpose: Build a fresh per-prompt retrieval request from explicit user intent, recognized concepts, exact prompt paths, and safety constraints before any chat/session lifecycle defaults are considered.
 required_inputs:
   - Raw user prompt text.
   - Prompt-dimension recognition outputs.
-  - Focused paths, changed paths, and user-named paths when available.
+  - Exact paths and artifact identifiers named in the prompt.
   - Session metadata for provenance, branch/worktree ownership, and safety comparison.
   - Side-effect classification for write, git, deploy, destructive, or read-only requests.
 expected_actions:
   - Build a request context record for every retrieval attempt instead of reusing session metadata as the retrieval target.
-  - Treat explicit user intent, exact corpus IDs, exact artifact IDs, exact paths, and focused paths as primary retrieval signals.
+  - Treat explicit user intent, exact corpus IDs, exact artifact IDs, and exact prompt paths as primary retrieval signals.
   - Resolve layer, mode, workflow, and corpus candidates for the current prompt as retrieval-routing features.
-  - Select the current prompt's layer, mode, and workflow from prompt and focused-path recognition before considering trusted local session routing.
+  - Select the current prompt's layer, mode, and workflow from prompt recognition before considering trusted local session routing.
   - Use chat/session metadata as provenance and safety context, not as the identity of the current prompt.
   - Use the previous prompt's context packet only as conversational continuity evidence; never reuse it as the current prompt's routing without fresh resolution.
   - Preserve execution safety by keeping side-effecting actions bound to their governed workflow even when retrieval pulls cross-layer evidence.
@@ -48,7 +48,7 @@ banned_actions:
   - Do not classify a whole chat as one stable layer, mode, or workflow.
   - Do not treat the previous context packet as a cache hit for a new prompt.
   - Do not treat a cross-layer retrieval target as permission to edit, commit, deploy, delete, or mutate infrastructure.
-  - Do not promote a single broad noun such as product, app, deploy, or platform into a target corpus without exact terms, paths, focused files, or supporting evidence.
+  - Do not promote a single broad noun such as product, app, deploy, or platform into a target corpus without exact terms, prompt paths, or supporting evidence.
   - Do not drop session metadata from provenance or execution-safety checks.
 output_obligations:
   - request_context_id
@@ -80,7 +80,7 @@ validation_examples:
     given: Session metadata says `02.rag-rulebook`, but the user asks to deploy to AWS.
     expect: Retrieval may include deploy evidence, but execution authorization is blocked unless the deploy workflow is active and approved.
   - name: broad noun stays weak
-    given: The prompt contains only a broad word such as product without exact corpus, artifact, path, or focused-path support.
+    given: The prompt contains only a broad word such as product without exact corpus, artifact, path, or supporting evidence.
     expect: The selector does not admit product corpora solely from that noun and reports low confidence if no stronger target exists.
   - name: same chat can change retrieval routing
     given: One chat moves from architecture planning to implementation and then to commit.
@@ -91,3 +91,4 @@ can_change_by:
   - Add evidence-bundle requirements by question category.
   - Add exact target-term rules.
   - Add confidence penalties for missing expected evidence.
+  - Add a future typed request-anchor dimension when clients can provide governed provenance, freshness, and trust levels.

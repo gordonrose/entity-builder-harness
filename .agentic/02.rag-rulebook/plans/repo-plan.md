@@ -149,7 +149,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
 
 7b. Define the retrieval selector policy system.
    - Make retrieval behavior policy-driven, not hard-coded.
-   - Cover prompt, session metadata, layer/mode/workflow, focused paths,
+   - Cover prompt, session metadata, layer/mode/workflow, exact identifiers,
      corpus ownership, graph expansion, required checks, stop conditions,
      token budget, confidence thresholds, validation handoff, and future
      semantic recall.
@@ -218,7 +218,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
 
 7i. Add a read-only retrieval selector fixture.
    - Consume the validated policy pack, generated chunks, recognition-source
-     matches, request text, session-like metadata, and focused paths.
+     matches, request text, and session-like metadata.
    - Emit a validated `rag-rulebook/context-packet/v1` packet.
    - Keep this as deterministic fixture behavior, not a production retrieval
      runtime or semantic recall engine.
@@ -419,7 +419,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      `scripts/02.rag-rulebook/build-local-runtime/`.
 
 7z. Add a local context-query command.
-   - Query the local runtime with request text, session metadata, focused
+   - Query the local runtime with request text, session metadata, exact prompt
      paths, and token budget.
    - Return a validated `rag-rulebook/context-packet/v1` packet.
    - Reuse retrieval-selector fixture behavior until production retrieval
@@ -658,7 +658,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
    - Keep session metadata for chat/worktree provenance, continuity,
      branch/worktree ownership, and execution safety.
    - Build a fresh request context for each retrieval attempt from prompt
-     intent, focused paths, exact corpus/artifact/path terms, and side-effect
+     intent, exact corpus/artifact/path terms, and side-effect
      classification.
    - Let explicit request context beat session continuity for retrieval target
      selection while preserving lifecycle and workflow gates for edits, commits,
@@ -1044,7 +1044,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      config at the hosted service, authenticates, and retrieves validated
      context packets.
    - Local client responsibilities: identify repo, commit, branch, task,
-     session layer/mode/workflow, focused paths, token budget, and fallback
+     session layer/mode/workflow, token budget, and fallback
      policy; call the service; validate the returned packet; fail safely.
    - Hosted service responsibilities: own corpora, rulebooks, chunks,
      retrieval policy, evaluations, freshness, account/repo/project settings,

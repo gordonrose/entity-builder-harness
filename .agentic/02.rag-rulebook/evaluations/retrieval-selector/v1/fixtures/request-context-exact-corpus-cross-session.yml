@@ -26,13 +26,11 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove explicit request context beats session continuity for retrieval while preserving session provenance.
 input:
-  request_text: Explain the corpus.03.product.platform rules using the exact product platform corpus.
+  request_text: Explain the corpus.03.product.platform rules in docs/harness/architecture/rules/layers/platform.yml using the exact product platform corpus.
   session:
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  focused_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
   max_chunks: 6
 expected:
   routing:
@@ -61,7 +59,7 @@ expected:
         category: corpus-id
         canonical_id: corpus.03.product.platform
       - source_id: recognition.generated.artifacts
-        matched_input: focused-paths
+        matched_input: prompt
         category: file-path
         canonical_id: harness.architecture.rules.layers.platform
   gaps:

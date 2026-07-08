@@ -82,6 +82,10 @@ validation, and standalone service adapters.
   `rag-rulebook/context-packet-compact/v1` view, for request text plus request
   context and session safety metadata, refusing stale runtime caches and
   including selector trace diagnostics.
+- `query-context/script.sh` is the RAG-owned provider boundary for callers. It
+  selects hosted, local, or auto provider mode, loads local hosted auth from
+  `~/.config/rag-rulebook/rag.env`, redacts secrets, fails closed on hosted auth
+  errors, and delegates local mode to `query-local-context/script.sh`.
 - `run-local-service/script.sh` starts the thin local HTTP service for the MSP
   API surface: `GET /health`, `GET /version`, and `POST /context/query`.
 - `build-service-image/script.sh` builds the governed local container image for
@@ -103,7 +107,7 @@ validation, and standalone service adapters.
 - `generate-retrieval-selector-fixture/script.sh` emits a validated
   `rag-rulebook/context-packet/v1` selector fixture from the active policy
   pack, recognition-source matches, recognition-candidate coverage gaps,
-  session-like metadata, focused paths, generated or saved chunks, and compiled
+  session-like metadata, generated or saved chunks, and compiled
   retrieval strategy.
 - `evaluate-retrieval-selector-fixtures/script.sh` runs machine-readable
   retrieval selector evaluation fixtures against generated selector packets,

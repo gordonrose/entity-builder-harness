@@ -11,6 +11,7 @@
     "./config": "./src/config/index.ts",
     "./events": "./src/events/index.ts",
     "./logging": "./src/logging/index.ts",
+    "./monitoring": "./src/monitoring/index.ts",
     "./persistence": "./src/persistence/index.ts",
     "./security": "./src/security/index.ts",
     "./shared": "./src/shared/index.ts",

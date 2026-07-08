@@ -1,0 +1,148 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.corpus-gap.02-rag-rulebook.hosted-context-provider-contract
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: runtime
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: corpus-gap
+#   purpose: Track remaining RAG rulebook coverage for hosted context provider auth, fallback, and runtime identity hardening.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+#     - id: rag-rulebook.script.check-source-material-coverage
+#       path: scripts/02.rag-rulebook/check-source-material-coverage/script.sh
+schema: rag-rulebook/corpus-gap/v1
+gap_id: gap.corpus.02.rag-rulebook.hosted-context-provider-contract
+status: in-progress
+target_corpus_id: corpus.02.rag-rulebook
+owner_layer: 02.rag-rulebook
+owner_path: .agentic/02.rag-rulebook/
+summary: >
+  The hosted AWS RAG/rulebook service is deployed and a RAG-owned provider
+  contract now exists, but the full hardening set still needs runtime identity
+  comparison, stale remote corpus fixtures, unpublished local source handling,
+  and production-grade provider observability before hosted context can be
+  treated as completely hardened.
+observed_prompt: >
+  Should our workbench call the hosted AWS RAG service instead of building local
+  RAG context?
+match_terms:
+  - hosted AWS RAG service
+  - hosted RAG service
+  - remote RAG
+  - local RAG context
+  - RAG provider
+  - context provider
+  - hosted context provider
+  - stale corpus
+target_question: >
+  What RAG rulebook provider contract, runtime identity, auth, stale-corpus,
+  redaction, and fallback proof are required before hosted RAG is the default
+  context provider boundary for agents?
+source_material:
+  status: present
+  evidence_paths:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - .agentic/02.rag-rulebook/service/README.md
+    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+    - docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml
+    - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  expectation: >
+    RAG-owned provider selection, auth, redaction, and fallback rules are now
+    covered. Remaining gaps are boundary/evaluation depth and runtime identity
+    hardening, not 00.chat ownership.
+scope:
+  included:
+    - RAG-owned hosted/local/auto provider selection.
+    - RAG-owned local config at ~/.config/rag-rulebook/rag.env.
+    - Bearer-token and AWS secret-reference handling without exposing secret values.
+    - Comparing local source state with remote corpus package identity.
+    - Showing stale-corpus or unpublished-local-change gaps.
+    - Falling back to local RAG only under a governed dev/offline policy.
+  excluded:
+    - Requiring chat/workbench callers to know AWS, bearer tokens, Secrets Manager, or rag.env.
+    - Mutating AWS deployment resources.
+    - Embedding secret token values in repo source, fixtures, logs, or packets.
+required_coverage:
+  source_material:
+    status: present
+    evidence_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    expectation: >
+      Source material defines RAG-owned provider selection, config, auth,
+      redaction, and fallback behavior.
+  structured_rulebook:
+    status: present
+    evidence_paths:
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+    expectation: >
+      Structured rules keep hosted-provider behavior in corpus.02.rag-rulebook.
+  indexed_chunks:
+    status: present
+    evidence_paths:
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+    expectation: >
+      Generated index and chunks should include the RAG provider contract.
+  selector_evaluation:
+    status: partial
+    evidence_paths:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+    expectation: >
+      Current selector proof covers hosted-provider evidence and prevents
+      unrelated product chunks. Additional boundary fixtures are still needed
+      for stale remote corpus, unpublished local source, auth missing, auth
+      rejected, and fallback blocked cases.
+needed_outputs:
+  - selector fixtures for stale remote corpus, unpublished local source changes, auth missing, auth rejected, and local fallback blocked
+  - runtime identity fields for service version, image digest, commit SHA, corpus package hash, index/chunk hash, compiled policy hash, and recognition-source hash
+  - provider observability records that redact Authorization and token values
+local_query_behavior:
+  should_emit_gap: true
+  blocking: false
+  blocking_by_intent:
+    intent.planning.guidance: false
+    intent.planning.decision-support: false
+    intent.explanation.tutor: false
+    intent.discovery.explanation: false
+    intent.no-action.explanation: false
+    intent.context.retrieve: false
+    intent.implementation.request: false
+    intent.deploy.execution: true
+execution_blocking_gaps:
+  - id: gap.rag-rulebook.hosted-context-provider-runtime-identity-partial
+    type: missing-runtime-identity
+    description: >
+      Hosted context packets and service metadata do not yet expose the full
+      immutable runtime identity needed to compare local source state with the
+      remote corpus package.
+    suggested_resolution: >
+      Add and validate runtime identity fields before treating hosted-provider
+      execution or deployment hardening as complete.
+  - id: gap.rag-rulebook.hosted-context-provider-boundary-fixtures-partial
+    type: missing-evaluation
+    description: >
+      The initial selector fixture proves hosted-provider evidence retrieval,
+      but stale-corpus, unpublished-local-change, auth-missing, auth-rejected,
+      and local-fallback-blocked fixtures are still missing.
+    suggested_resolution: >
+      Add negative and boundary fixtures before treating provider selection as
+      fully hardened.
+suggested_resolution: >
+  Add stale-corpus, unpublished-local-change, auth-missing, auth-rejected, and
+  local-fallback selector fixtures, then add runtime identity comparison proof.
+review:
+  required: true
+  owner: 02.rag-rulebook
+  cadence: Review when hosted RAG auth, provider selection, stale corpus behavior,
+    local fallback, runtime identity, or context-packet storage changes.

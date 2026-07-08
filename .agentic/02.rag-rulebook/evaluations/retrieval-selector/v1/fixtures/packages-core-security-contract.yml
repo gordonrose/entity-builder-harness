@@ -1,0 +1,69 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-security-contract
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   kind: evaluation-fixture
+#   purpose: Prove packages/core security prompts retrieve defensive-policy and provider-boundary guidance.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.packages-core-security-contract
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove prompts about packages/core security contracts retrieve secret, hash, data classification, policy decision, and runtime/provider-boundary rules.
+input:
+  request_text: Explain how product and platform code should use packages/core/src/security/index.ts contracts for SecretString, Hash, Hasher, data sensitivity, sensitive value classification, security policy violations, policy decisions, policy evaluators, and what should stay out of core; use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
+  session:
+    trust_routing: true
+    layer: 03.product
+    mode: discovery
+    workflow: .agentic/product/workflows/default.md
+  max_chunks: 8
+expected:
+  routing:
+    layer: 03.product
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.03.product.core
+  selected_corpora:
+    required:
+      - corpus.03.product.core
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_rule_ids:
+      - core.security-contracts-name-defensive-policy
+      - core.capability-modules-stay-contract-shaped
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.00.chat
+source_refs:
+  - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+update_triggers:
+  - packages/core security ownership rules change.
+  - Selector policy changes corpus ownership or evidence bundle behavior.

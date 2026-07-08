@@ -79,11 +79,7 @@ MAX_ROUTING_SUMMARY_CHARS = 500
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9._:@/-]*$")
 SAFE_BRANCH_RE = re.compile(r"^[A-Za-z0-9._/@-]*$")
 SAFE_PACKET_ID_RE = re.compile(r"^[A-Za-z0-9._:-]*$")
-DEFAULT_FOCUSED_PATHS = [
-    ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml",
-    ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml",
-    "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
-]
+PATH_LIKE_SPAN_RE = re.compile(r"(?<![A-Za-z0-9._/@-])(?:[A-Za-z0-9._@-]+/)+[A-Za-z0-9._@-]+(?![A-Za-z0-9._/@-])")
 ALLOWED_CITATION_SOURCE_TYPES = {"source", "rule", "rule-pack", "workflow", "standard", "schema", "plan"}
 SESSION_LAYER_TO_CORPUS = {
     "00.chat": "corpus.00.chat",
@@ -104,7 +100,7 @@ DEFAULT_WORKFLOW_BY_LAYER = {
     "06.shared": ".agentic/shared/workflows/change-shared-process.md",
 }
 DEPLOY_EXECUTION_WORKFLOW = ".agentic/aws/workflows/execute-approved-aws-change.md"
-PROMPT_ROUTE_INPUTS = {"prompt", "focused-paths"}
+PROMPT_ROUTE_INPUTS = {"prompt"}
 STOP_WORDS = {
     "a",
     "an",
@@ -197,8 +193,6 @@ Options:
   --trust-session-routing     Treat supplied session layer/mode/workflow as
                               trusted routing hints. Use only after governed
                               session resolution verifies ownership.
-  --focused-path <path>       Focused path signal. Repeatable.
-  --no-focused-paths          Use no focused path signals.
   --max-chunks <n>            Maximum selected chunks. Default: 6. Range: 3-12.
   --compiled-policy <path>    Compiled retrieval policy JSON. If omitted, a
                               temporary current compiled policy is generated.
@@ -222,8 +216,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--previous-packet-id", default="")
     parser.add_argument("--previous-routing-summary", default="")
     parser.add_argument("--trust-session-routing", action="store_true")
-    parser.add_argument("--focused-path", action="append", dest="focused_paths")
-    parser.add_argument("--no-focused-paths", action="store_true")
     parser.add_argument("--max-chunks", type=int, default=6)
     parser.add_argument("--compiled-policy")
     parser.add_argument("--pretty", action="store_true")
@@ -243,13 +235,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     if not args.request_text.strip():
         print("ERROR: --request-text must not be empty.", file=sys.stderr)
         sys.exit(2)
-    if args.no_focused_paths and args.focused_paths:
-        print("ERROR: --no-focused-paths cannot be combined with --focused-path.", file=sys.stderr)
-        sys.exit(2)
-    if args.no_focused_paths:
-        args.focused_paths = []
-    elif not args.focused_paths:
-        args.focused_paths = list(DEFAULT_FOCUSED_PATHS)
     validate_session_context_args(args)
     return args
 
@@ -496,6 +481,39 @@ def simple_exact_match(term: str, text: str) -> bool:
     return bool(re.search(rf"(?<![a-z0-9]){re.escape(term_lower)}(?![a-z0-9])", text_lower))
 
 
+def exact_match_spans(term: str, text: str) -> list[tuple[int, int]]:
+    term_lower = term.lower()
+    text_lower = text.lower()
+    if not term_lower:
+        return []
+    if "/" in term_lower or "." in term_lower or "-" in term_lower:
+        spans: list[tuple[int, int]] = []
+        start = 0
+        while True:
+            index = text_lower.find(term_lower, start)
+            if index < 0:
+                return spans
+            spans.append((index, index + len(term_lower)))
+            start = index + 1
+    return [
+        match.span()
+        for match in re.finditer(rf"(?<![a-z0-9]){re.escape(term_lower)}(?![a-z0-9])", text_lower)
+    ]
+
+
+def term_matches_only_inside_path_spans(term: str, text: str) -> bool:
+    match_spans = exact_match_spans(term, text)
+    if not match_spans:
+        return False
+    path_spans = [match.span() for match in PATH_LIKE_SPAN_RE.finditer(text)]
+    if not path_spans:
+        return False
+    return all(
+        any(path_start <= match_start and match_end <= path_end for path_start, path_end in path_spans)
+        for match_start, match_end in match_spans
+    )
+
+
 def coverage_stage_summary(coverage: dict[str, Any]) -> str:
     stages = coverage.get("stages")
     if not isinstance(stages, dict):
@@ -643,6 +661,8 @@ def layer_from_path(path: str) -> str:
         return "01.harness"
     if path.startswith(".agentic/02.rag-rulebook/") or path.startswith("docs/02.rag-rulebook/"):
         return "02.rag-rulebook"
+    if path.startswith("docs/harness/architecture/"):
+        return "03.product"
     if path.startswith(".agentic/product/") or path.startswith("docs/03.product/") or "/03.product/" in path:
         return "03.product"
     if path.startswith(".agentic/aws/") or path.startswith("docs/04.deploy/") or "/04.deploy/" in path:
@@ -676,12 +696,27 @@ def workflow_from_prompt_match(matches: list[dict[str, Any]], selected_layer: st
         for match in matches
         if match.get("matched_input") == "prompt"
     ]
-    focused_paths = [
-        compatible_path(match)
-        for match in matches
-        if match.get("matched_input") == "focused-paths"
-    ]
-    return first_known(prompt_paths + focused_paths)
+    return first_known(prompt_paths)
+
+
+def prompt_exact_path_layers(recognition_matches: list[dict[str, Any]]) -> list[str]:
+    exact_path_categories = {
+        "artifact-id",
+        "file-path",
+        "rule-id",
+        "rule-pack-id",
+        "source-material-id",
+    }
+    layers = []
+    for match in recognition_matches:
+        if match.get("matched_input") not in PROMPT_ROUTE_INPUTS:
+            continue
+        if match.get("category") not in exact_path_categories:
+            continue
+        layer = layer_from_path(str(match.get("evidence_path") or ""))
+        if layer != "unknown":
+            layers.append(layer)
+    return layers
 
 
 def resolve_prompt_route(recognition_matches: list[dict[str, Any]], resolved_intent_id: str, request_text: str) -> dict[str, str]:
@@ -696,43 +731,31 @@ def resolve_prompt_route(recognition_matches: list[dict[str, Any]], resolved_int
         if isinstance(match.get("canonical_id"), str)
         and match.get("matched_input") == "prompt"
     ]
-    focused_layer_values = [
-        str(match.get("canonical_id"))
-        for match in prompt_route_matches(recognition_matches, "layer-name")
-        if isinstance(match.get("canonical_id"), str)
-        and match.get("matched_input") == "focused-paths"
-    ]
+    exact_path_layers = prompt_exact_path_layers(recognition_matches)
     workflow_matches = prompt_route_matches(recognition_matches, "workflow-name")
     workflow_layers = []
     for match in workflow_matches:
         path_layer = layer_from_path(str(match.get("evidence_path") or ""))
         if path_layer != "unknown":
             workflow_layers.append(path_layer)
-    focused_file_layers = []
-    for category in ["file-path", "artifact-id"]:
-        for match in prompt_route_matches(recognition_matches, category):
-            if match.get("matched_input") != "focused-paths":
-                continue
-            path_layer = layer_from_path(str(match.get("evidence_path") or match.get("canonical_id") or ""))
-            if path_layer != "unknown":
-                focused_file_layers.append(path_layer)
-    layer = first_known(corpus_layers) or "unknown"
+    deploy_intent_present = any(
+        intent_id.startswith("intent.deploy.")
+        for intent_id in matched_intent_ids(recognition_matches, prompt_only=False)
+    )
+    deploy_word_present = re.search(r"\bdeploy(?:ment)?\b", request_text, flags=re.IGNORECASE) is not None
+    layer = "unknown"
+    if (deploy_intent_present or deploy_word_present) and "04.deploy" in prompt_layer_values:
+        layer = "04.deploy"
     if layer == "unknown":
-        layer = most_common(focused_file_layers)
+        layer = first_known(corpus_layers) or "unknown"
     if layer == "unknown":
-        deploy_intent_present = any(
-            intent_id.startswith("intent.deploy.")
-            for intent_id in matched_intent_ids(recognition_matches, prompt_only=False)
-        )
-        deploy_word_present = re.search(r"\bdeploy(?:ment)?\b", request_text, flags=re.IGNORECASE) is not None
-        if (deploy_intent_present or deploy_word_present) and "04.deploy" in prompt_layer_values:
-            layer = "04.deploy"
-        else:
-            layer = most_common(prompt_layer_values)
+        layer = most_common(exact_path_layers)
+    if layer == "unknown":
+        layer = most_common(prompt_layer_values)
     if layer == "02.rag-rulebook" and re.search(r"\bdeploy(?:ment)?\b", request_text, flags=re.IGNORECASE):
         layer = "04.deploy"
     if layer == "unknown":
-        layer = most_common(focused_layer_values + workflow_layers)
+        layer = most_common(workflow_layers)
 
     mode_values = []
     for match in prompt_route_matches(recognition_matches, "mode-name"):
@@ -1016,22 +1039,10 @@ def evidence_bundle_gaps(
     return gaps
 
 
-def focused_path_match(term: str, paths: list[str]) -> bool:
-    term_lower = term.lower()
-    if not term_lower:
-        return False
-    for path in paths:
-        path_lower = path.lower()
-        if term_lower in path_lower or path_lower in term_lower:
-            return True
-    return False
-
-
 def match_recognition_terms(
     sources: list[dict[str, Any]],
     request_text: str,
     session_text: str,
-    focused_paths: list[str],
 ) -> list[dict[str, Any]]:
     matches: list[dict[str, Any]] = []
     seen: set[tuple[str, str, str, str]] = set()
@@ -1041,17 +1052,18 @@ def match_recognition_terms(
             raw_term = str(term.get("term") or "").strip()
             if not raw_term:
                 continue
+            category = str(term.get("category") or "")
             lookup_terms = [raw_term] + list_of_strings(term.get("aliases"))
             for lookup_term in lookup_terms:
                 matched_inputs: list[str] = []
                 if simple_exact_match(lookup_term, request_text):
-                    matched_inputs.append("prompt")
+                    if not (category == "layer-name" and term_matches_only_inside_path_spans(lookup_term, request_text)):
+                        matched_inputs.append("prompt")
                 if simple_exact_match(lookup_term, session_text):
-                    matched_inputs.append("session-metadata")
-                if focused_path_match(lookup_term, focused_paths):
-                    matched_inputs.append("focused-paths")
+                    if not (category == "layer-name" and term_matches_only_inside_path_spans(lookup_term, session_text)):
+                        matched_inputs.append("session-metadata")
                 for matched_input in matched_inputs:
-                    key = (source_id, lookup_term.lower(), str(term.get("category")), matched_input)
+                    key = (source_id, lookup_term.lower(), category, matched_input)
                     if key in seen:
                         continue
                     seen.add(key)
@@ -1204,7 +1216,6 @@ def score_chunk(
     chunk: dict[str, Any],
     prompt_terms: list[str],
     recognition_matches: list[dict[str, Any]],
-    focused_paths: list[str],
     session_corpus: str,
 ) -> float:
     haystack = chunk_haystack(chunk)
@@ -1219,10 +1230,6 @@ def score_chunk(
 
     source_path = str(chunk.get("source_path") or "")
     artifact_id = str(chunk.get("artifact_id") or "")
-    for focused_path in focused_paths:
-        focused_lower = focused_path.lower()
-        if focused_lower and (focused_lower in source_path.lower() or source_path.lower() in focused_lower):
-            score += 18
 
     for match in recognition_matches:
         category = match.get("category")
@@ -1269,7 +1276,6 @@ def ranked_chunks(
     chunks: list[dict[str, Any]],
     prompt_terms: list[str],
     recognition_matches: list[dict[str, Any]],
-    focused_paths: list[str],
     session_corpus: str,
 ) -> list[tuple[float, int, str, dict[str, Any]]]:
     ranked = []
@@ -1279,7 +1285,7 @@ def ranked_chunks(
             continue
         ranked.append(
             (
-                score_chunk(chunk, prompt_terms, recognition_matches, focused_paths, session_corpus),
+                score_chunk(chunk, prompt_terms, recognition_matches, session_corpus),
                 source_rank(chunk),
                 chunk_id,
                 chunk,
@@ -1341,6 +1347,22 @@ def category_summary(matches: list[dict[str, Any]]) -> dict[str, int]:
         category = str(match.get("category") or "unknown")
         counts[category] = counts.get(category, 0) + 1
     return dict(sorted(counts.items()))
+
+
+def prompt_target_paths(matches: list[dict[str, Any]]) -> list[str]:
+    paths: list[str] = []
+    seen: set[str] = set()
+    for match in matches:
+        if match.get("matched_input") != "prompt":
+            continue
+        if match.get("category") not in {"file-path", "artifact-id", "workflow-name"}:
+            continue
+        path = str(match.get("evidence_path") or "").strip()
+        if not path or path in seen:
+            continue
+        seen.add(path)
+        paths.append(path)
+    return paths
 
 
 def source_id_summary(matches: list[dict[str, Any]]) -> dict[str, int]:
@@ -1549,11 +1571,59 @@ def build_selector_trace(
     }
 
 
-def matched_corpus_ids(matches: list[dict[str, Any]], session_corpus: str) -> list[str]:
+def layer_match_can_seed_corpus(match: dict[str, Any]) -> bool:
+    matched_input = str(match.get("matched_input") or "")
+    if matched_input == "session-metadata":
+        return True
+    if matched_input != "prompt":
+        return False
+    canonical = str(match.get("canonical_id") or "")
+    term = str(match.get("term") or "").strip().lower()
+    if term == canonical.lower() and re.fullmatch(r"[0-9]{2}\.[a-z0-9-]+", canonical):
+        return True
+    return canonical == "04.deploy" and term == "aws"
+
+
+def corpus_ids_by_evidence_path(chunks: list[dict[str, Any]]) -> dict[str, list[str]]:
+    corpus_ids_by_path: dict[str, list[str]] = {}
+
+    def add(path: str, corpus_id: str) -> None:
+        if not path or not corpus_id:
+            return
+        corpus_ids_by_path.setdefault(path, [])
+        if corpus_id not in corpus_ids_by_path[path]:
+            corpus_ids_by_path[path].append(corpus_id)
+
+    for chunk in chunks:
+        corpus_id = str(chunk.get("corpus_id") or "")
+        add(str(chunk.get("source_path") or ""), corpus_id)
+        source_derivation = dict_value(chunk.get("source_derivation"))
+        for source_material in list_of_dicts(source_derivation.get("source_material")):
+            add(str(source_material.get("path") or ""), corpus_id)
+
+    return corpus_ids_by_path
+
+
+def matched_corpus_ids(matches: list[dict[str, Any]], session_corpus: str, chunks: list[dict[str, Any]]) -> list[str]:
     corpus_ids = [] if session_corpus in {"", "corpus.unknown"} else [session_corpus]
+    exact_path_categories = {
+        "artifact-id",
+        "file-path",
+        "rule-id",
+        "rule-pack-id",
+        "source-material-id",
+    }
+    corpus_ids_by_path = corpus_ids_by_evidence_path(chunks)
     for match in matches:
         if match.get("category") == "corpus-id":
             corpus_ids.append(str(match.get("canonical_id")))
+        elif match.get("category") == "layer-name" and layer_match_can_seed_corpus(match):
+            layer_corpus = SESSION_LAYER_TO_CORPUS.get(str(match.get("canonical_id") or ""))
+            if layer_corpus:
+                corpus_ids.append(layer_corpus)
+        elif match.get("category") in exact_path_categories and match.get("matched_input") in PROMPT_ROUTE_INPUTS:
+            evidence_path = str(match.get("evidence_path") or "")
+            corpus_ids.extend(corpus_ids_by_path.get(evidence_path, []))
     seen: set[str] = set()
     result: list[str] = []
     for corpus_id in corpus_ids:
@@ -1692,6 +1762,8 @@ def select_chunks(
 
     for kind in ["required-check", "rule", "artifact-summary"]:
         preferred = next((item for item in ranked if item[3].get("content_kind") == kind and item[0] > 0), None)
+        if kind == "required-check" and preferred is None:
+            continue
         fallback = next((item for item in ranked if item[3].get("content_kind") == kind), None)
         add(preferred or fallback)
 
@@ -1778,19 +1850,19 @@ def build_packet(
         else "corpus.unknown"
     )
     allowed_corpus_ids = (
-        matched_corpus_ids(recognition_matches, session_corpus)
+        matched_corpus_ids(recognition_matches, session_corpus, chunks)
         + matched_corpus_gap_target_ids(corpus_gaps, recognition_candidates, args.request_text)
         + (prototype_bridge_corpora(args.session_layer) if use_trusted_session_route else [])
     )
     candidate_evidence_paths = matched_candidate_evidence_paths(recognition_candidates, args.request_text)
     evidence_bundle_source_paths = matched_evidence_bundle_source_paths(recognition_matches, compiled_policy)
     evidence_source_paths = candidate_evidence_paths + evidence_bundle_source_paths
-    ranking_paths = list(args.focused_paths) + evidence_source_paths
-    ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, ranking_paths, session_corpus)
+    ranking_paths = evidence_source_paths
+    ranked = ranked_chunks(chunks, prompt_terms, recognition_matches, session_corpus)
     candidate_ranked, used_candidate_filter = candidate_ranked_chunks(
         ranked,
         allowed_corpus_ids,
-        evidence_source_paths,
+        ranking_paths,
     )
     required_chunk_ids = matched_corpus_gap_required_chunk_ids(
         corpus_gaps,
@@ -1822,7 +1894,7 @@ def build_packet(
         chunk["retrieval_score"] = round(score / max_score, 4) if max_score else 0
         chunk["selection_reason"] = (
             "Selected by deterministic retrieval-selector fixture using request context, "
-            "focused paths, recognition-source matches, and session safety context."
+            "recognition-source matches, and session safety context."
         )
         selected_chunks.append(chunk)
 
@@ -1919,17 +1991,17 @@ def build_packet(
                 "blocking": False,
             }
         )
-    prompt_or_path_matches = [
+    prompt_matches = [
         match
         for match in recognition_matches
-        if match.get("matched_input") in {"prompt", "focused-paths"}
+        if match.get("matched_input") == "prompt"
     ]
-    if not prompt_or_path_matches and prompt_terms:
+    if not prompt_matches and prompt_terms:
         gaps.append(
             {
                 "id": "gap.selector-fixture.low-confidence-prompt",
                 "type": "ambiguous-intent",
-                "description": "The prompt produced no governed prompt or focused-path recognition matches, so current-prompt routing confidence is low.",
+                "description": "The prompt produced no governed prompt recognition matches, so current-prompt routing confidence is low.",
                 "blocking": False,
             }
         )
@@ -1994,7 +2066,6 @@ def build_packet(
                 "session_worktree": args.session_worktree,
                 "previous_packet_id": args.previous_packet_id,
                 "previous_routing_summary": args.previous_routing_summary,
-                "focused_paths": args.focused_paths,
                 "chunk_ids": [chunk.get("chunk_id") for chunk in selected_chunks],
                 "recognition_matches": [
                     [match.get("source_id"), match.get("term"), match.get("matched_input")]
@@ -2015,7 +2086,7 @@ def build_packet(
         retrieval_confidence = min(retrieval_confidence, 0.82)
     if any(gap.get("type") == "missing-evidence" for gap in gaps):
         retrieval_confidence = min(retrieval_confidence, 0.69)
-    if not prompt_or_path_matches and prompt_terms:
+    if not prompt_matches and prompt_terms:
         recognition_confidence = min(recognition_confidence, 0.69)
         retrieval_confidence = min(retrieval_confidence, 0.69)
     routing_status = "blocked" if any(gap.get("blocking") is True for gap in gaps) else "ready"
@@ -2062,7 +2133,6 @@ def build_packet(
         "request": {
             "raw_text": args.request_text,
             "normalized_summary": "Generate a deterministic retrieval selector fixture from governed policy, request context, recognition sources, session safety metadata, and chunks.",
-            "focused_paths": args.focused_paths,
             "open_artifact_ids": selected_artifact_ids,
             "previous_packet_id": args.previous_packet_id,
             "recognition_source_matches": recognition_matches[:80],
@@ -2085,7 +2155,7 @@ def build_packet(
             "workflow": routing_workflow,
             "status": routing_status,
             "task_type": "generate_retrieval_selector_fixture",
-            "target_paths": args.focused_paths,
+            "target_paths": prompt_target_paths(recognition_matches),
             "classification_source": "request-context-plus-recognition-sources",
             "scope": "prompt",
             "previous_packet_id": args.previous_packet_id,
@@ -2238,9 +2308,9 @@ def build_packet(
                 "load compiled retrieval policy",
                 "validate compiled policy provenance",
                 "load generated chunks",
-                "match prompt, session continuity metadata, and focused paths against recognition sources",
+                "match prompt and session continuity metadata against recognition sources",
                 "resolve intent forms with governed precedence before deciding blocking behavior",
-                "restrict candidate chunks by prompt recognition, focused paths, and trusted local routing hints when enough candidates exist",
+                "restrict candidate chunks by prompt recognition and trusted local routing hints when enough candidates exist",
                 "score chunks with deterministic recognition, path, corpus, trusted routing, and token signals",
                 "preserve required evidence chunks for blocking gaps",
                 "require required-check, rule, and artifact-summary coverage where available",
@@ -2305,7 +2375,6 @@ def main(argv: list[str]) -> int:
             sources,
             args.request_text,
             session_text,
-            args.focused_paths,
         )
         packet = build_packet(
             args,

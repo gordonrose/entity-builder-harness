@@ -34,7 +34,6 @@ input:
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md
-  no_focused_paths: true
   max_chunks: 10
 expected:
   routing:

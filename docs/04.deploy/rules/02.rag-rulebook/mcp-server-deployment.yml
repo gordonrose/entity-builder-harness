@@ -119,7 +119,7 @@ rules:
       The deployed RAG/rulebook service should be a context provider that
       returns small, cited, validated context packets.
     must:
-      - "Accept request text, repo id, commit SHA, session layer, mode, workflow, focused paths, token budget, and corpus expectations."
+      - "Accept request text, repo id, commit SHA, session layer, mode, workflow, token budget, corpus expectations, and exact paths named in the request text."
       - "Return selected chunks, citations, required checks, stop conditions, confidence, budgets, provenance, and gaps."
       - "Validate packet schema before returning the response to a client or agent."
       - "Prefer explicit missing-corpus, stale-corpus, or unsupported-action gaps over broad context dumps."

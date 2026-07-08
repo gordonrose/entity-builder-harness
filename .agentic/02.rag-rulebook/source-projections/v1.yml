@@ -52,6 +52,34 @@ projection_sets:
       - RAG/rulebook MCP architecture source projects to one 02.rag-rulebook concern rule.
       - Deploy execution remains blocked by deploy-owned rules and readiness checks.
 
+  - id: projection.02.rag-rulebook.hosted-context-provider-contract
+    status: active
+    projection_mode: manual-reviewed
+    source_material:
+      - path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+        role: primary
+    target:
+      corpus_id: corpus.02.rag-rulebook
+      owner_layer: 02.rag-rulebook
+    expected_rule_paths:
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
+    corpus_gap_paths:
+      - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
+    expected_selector_evaluations:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml --json
+      - bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+    notes:
+      - RAG/rulebook owns provider selection, local config, hosted auth, redaction, fail-closed behavior, and governed local fallback.
+      - Callers consume context packets through the RAG interface and do not own AWS, bearer-token, Secrets Manager, or rag.env details.
+      - Runtime identity comparison and additional stale-corpus/auth boundary fixtures remain tracked by the corpus gap.
+
   - id: projection.04.deploy.02-rag-rulebook.mcp-server-deployment
     status: active
     projection_mode: manual-reviewed
@@ -165,11 +193,48 @@ projection_sets:
     corpus_gap_paths: []
     expected_selector_evaluations:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
     required_checks:
       - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
       - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
     notes:
       - The source records the approved bootstrap exception for the first packages/core contract slice.
       - The projection keeps core contract guidance available to prompt-level RAG selection while implementations remain in platform and product workflows remain in apps.
+      - Persistence, events, audit, security, and monitoring fixtures cover storage, event-delivery, accountability-record, defensive-policy, and operational-signal boundary prompts as the core contract surface matures.
+
+  - id: projection.03.product.platform.platform-runtime-enterprise-obligations-v1
+    status: active
+    projection_mode: manual-reviewed
+    source_material:
+      - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+        role: primary
+    target:
+      corpus_id: corpus.03.product.platform
+      owner_layer: 03.product
+    expected_rule_paths:
+      - docs/harness/architecture/rules/layers/platform.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+    corpus_gap_paths: []
+    expected_selector_evaluations:
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+    notes:
+      - The source records deferred platform and infra runtime obligations identified while hardening packages/core contract modules.
+      - The projection keeps enterprise runtime guidance available before platform adapters, outbox relays, audit recorders, and infra resources are implemented.
+      - Deferrals should be recorded as explicit gaps rather than disappearing into chat history.

@@ -32,8 +32,6 @@ input:
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  focused_paths:
-    - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
   max_chunks: 6
 expected:
   routing:
@@ -57,7 +55,6 @@ expected:
     required_matched_inputs:
       - prompt
       - session-metadata
-      - focused-paths
     required_matches:
       - source_id: recognition.curated.actions
         term: evaluate

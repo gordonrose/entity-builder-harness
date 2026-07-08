@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 1
+#   version: 8
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 1
+version: 8
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-04T00:00:00Z"
+  generated_at_utc: "2026-07-07T00:00:00Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: a3fb9fedb0c8265f26f2e26dffeab52607b28482d4bd3ff211abcee178118593
+      sha256: 92a1eee7ed6d58918e77bbf4894507903287911cb3fe6a19a5fee55aecb2d583
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -46,28 +46,28 @@ related_rulesets:
 
 recommended_modules:
   - id: shared
-    purpose: "Common primitives such as IDs, results, errors, clocks, context, and lifecycle."
+    purpose: "Common primitives such as IDs, results, errors, message descriptors, clocks, context, and lifecycle."
     consumed_by: "apps, platform, tests"
   - id: config
-    purpose: "Configuration access and validation contracts."
+    purpose: "Provider-neutral configuration source, primitive reader, schema, and validation-error contracts."
     consumed_by: "runtime apps and platform services"
   - id: logging
-    purpose: "Structured log, redaction, and logger contracts."
+    purpose: "Provider-neutral operational log record, logger, default sensitive-field redactor, and redacting-wrapper contracts."
     consumed_by: "apps, workers, platform"
   - id: monitoring
-    purpose: "Health check and metrics contracts."
+    purpose: "Provider-neutral health check, metrics, signal definition, SLI-intent, and metric-label safety contracts."
     consumed_by: "apps, workers, platform"
   - id: security
     purpose: "Defensive primitives and security contracts."
     consumed_by: "apps and platform security adapters"
   - id: authn
-    purpose: "Principal and authentication contracts."
+    purpose: "Global principal identity, principal type, authentication result, and authenticator contracts."
     consumed_by: "apps and platform identity integrations"
   - id: authz
-    purpose: "Permission and policy decision contracts."
+    purpose: "Permission, resource, relationship, ABAC attribute, authorization request, and decision contracts."
     consumed_by: "apps and feature packages"
   - id: tenancy
-    purpose: "Tenant context and isolation primitives."
+    purpose: "Tenant identifiers, context packets, resolver ports, and isolation primitives."
     consumed_by: "apps, platform, and most runtime modules"
   - id: validation
     purpose: "Standard validation and error models."
@@ -76,7 +76,7 @@ recommended_modules:
     purpose: "Transaction, pagination, repository, and outbox contracts."
     consumed_by: "apps and platform persistence implementations"
   - id: events
-    purpose: "Event envelopes, buses, and versioning contracts."
+    purpose: "Provider-neutral event envelope, payload, versioning, publisher, bus, and handler contracts."
     consumed_by: "apps, workers, platform messaging"
   - id: queues
     purpose: "Queue messages, consumers, retry, and dead-letter concepts."
@@ -91,7 +91,7 @@ recommended_modules:
     purpose: "File storage and metadata contracts."
     consumed_by: "apps and platform storage adapters"
   - id: audit
-    purpose: "Audit event model and recorder interface."
+    purpose: "Provider-neutral accountability event, actor, target, outcome, metadata, recorder, and recorder-error contracts."
     consumed_by: "apps and platform audit storage"
   - id: reporting
     purpose: "Report request, generation, and export contracts."
@@ -113,7 +113,7 @@ test_taxonomy:
   - type: unit
     role: primary
     minimum_evidence:
-      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, security/tenancy helpers, and result/error shapes without runtime dependencies."
+      - "Exercise accepted, rejected, boundary, and failure cases for core primitives, validation contracts, monitoring signals, security/tenancy helpers, and result/error shapes without runtime dependencies."
     must_not:
       - "Do not count downstream app or platform tests as proof of core-owned primitive, validation, security, tenancy, or failure behavior."
     categories:
@@ -125,7 +125,7 @@ test_taxonomy:
           - "Validation contracts, error models, config contracts, IDs, and defensive primitives accept and reject expected values."
       - id: edge_cases
         should_prove:
-          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, retry limits, and optional metadata behave intentionally."
+          - "Empty values, boundary identifiers, locale/currency/date variants, pagination boundaries, metric label limits, retry limits, and optional metadata behave intentionally."
       - id: security_permissions
         should_prove:
           - "Authn, authz, tenancy, security, redaction, and audit primitives preserve isolation and defensive defaults."
@@ -163,7 +163,7 @@ test_taxonomy:
           - "Auth, tenancy, permission, audit, and security contracts preserve the required policy facts across consumers."
       - id: failure_modes
         should_prove:
-          - "Contract-defined errors, retries, and lifecycle states are explicit enough for platform implementations and app consumers."
+          - "Contract-defined errors, retries, health statuses, monitoring signals, and lifecycle states are explicit enough for platform implementations and app consumers."
   - type: integration
     role: conditional
     minimum_evidence:
@@ -291,6 +291,288 @@ rules:
       When adding a core module, choose the smallest contract-shaped surface
       that names the Kanbien concept clearly and leaves implementation details
       to apps, platform, or infrastructure.
+
+  - id: core.shared-primitives-stay-strict-and-portable
+    title: Shared primitives stay strict and portable
+    severity: error
+    summary: >
+      packages/core shared primitives should carry stable provider-neutral
+      meaning and reject ambiguous runtime-specific or locale-specific shapes.
+    must:
+      - Keep shared identifiers, result/error shapes, message descriptors, clocks, and request context values dependency-free and JSON-safe.
+      - Treat ISODateTime values as explicit ISO date-time strings with timezone information.
+      - Normalize valid ISODateTime input to a stable JSON-safe ISO string.
+      - Keep message descriptor params primitive and translation/localization friendly.
+      - Use shared JSON-value helpers for cross-boundary facts that must remain plain, serializable, and finite-number safe.
+    must_not:
+      - Do not accept date-only strings, localized prose dates, or implicit local-time strings as ISODateTime values.
+      - Do not pass provider objects, Date instances, money objects, or other rich runtime values as shared message params.
+      - Do not let NaN, Infinity, class instances, provider objects, or runtime-only values pass as core JSON-like contract facts.
+      - Do not put translation catalogs, locale negotiation, or region-specific formatting inside shared primitives.
+    agent_guidance: >
+      Shared primitives are the bottom of the contract stack. When a value can
+      vary by locale, runtime, provider, or presentation boundary, convert it to
+      a stable primitive fact before it enters shared core contracts.
+
+  - id: core.logging-sensitive-fields-owned-by-logging
+    title: Common sensitive log fields are maintained in core logging
+    severity: error
+    summary: >
+      Common default sensitive-field names for operational log redaction belong
+      in the provider-neutral logging contract so apps and platform adapters
+      inherit consistent defensive behavior.
+    must:
+      - Maintain common provider-neutral sensitive field names in the packages/core logging module.
+      - Redact sensitive diagnostic fields before records reach concrete runtime sinks.
+      - Provide an extension point for app-specific, platform-specific, or provider-specific sensitive fields.
+      - Keep redaction behavior deterministic and testable with unit and type-level evidence.
+    must_not:
+      - Do not bury common default sensitive-field names only in app or platform adapters.
+      - Do not require concrete log sinks, observability providers, cloud SDKs, or runtime hosts to use core redaction contracts.
+      - Do not rely only on free-text value scanning as the default redaction policy.
+    agent_guidance: >
+      When a new category of sensitive operational log field appears, decide
+      whether it is common enough for the core logging defaults. If yes, add it
+      to the core logging module and tests. If it is product-specific or
+      provider-specific, extend the default redactor at the consuming boundary.
+
+  - id: core.monitoring-contracts-name-operational-signals
+    title: Monitoring contracts name operational signals, not provider backends
+    severity: error
+    summary: >
+      packages/core monitoring contracts should define provider-neutral health
+      checks, metrics, signal definitions, ownership, SLI intent, and
+      metric-label safety while leaving runtime health wiring, exporters,
+      alerting, dashboards, and infrastructure outside core.
+    must:
+      - Define monitored component references, health check names, health check types, health statuses, health check results, metric names, metric kinds, metric units, metric points, metrics ports, monitoring signal categories, monitoring signal intents, signal ownership, and small pure helpers.
+      - Support liveness, readiness, dependency, and capability probe contracts without choosing an HTTP endpoint, runtime host, or provider backend.
+      - Keep health check metadata plain, serializable, and finite-number safe.
+      - Use stable metric names, explicit metric kinds, explicit units, finite numeric values, timestamps, and safe labels.
+      - Keep metric labels primitive, bounded, and low-cardinality.
+      - Treat signal definitions as the place to record why a signal exists, who owns it, which component it describes, and whether it supports health detection, alerting, capacity planning, debugging, service-level-indicator use, or cost control.
+      - Include no-op metrics and fixed health-check helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test health check, metric, label-safety, signal-definition, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define CloudWatch, Datadog, Prometheus, OpenTelemetry exporters, concrete health endpoints, dashboards, alert thresholds, PagerDuty or incident routes, production SLO targets, runtime wiring, cloud SDK clients, provider adapters, infrastructure alarms, or product-specific uptime commitments in packages/core.
+      - Do not use metric labels for secrets, raw credentials, tokens, emails, phone numbers, raw user ids, principal ids, request ids, correlation ids, trace ids, session ids, IP addresses, raw URLs, raw paths, provider objects, class instances, non-finite numeric values, or runtime-only values.
+      - Do not use monitoring metrics as audit records, analytics events, product reports, or durable event-bus messages.
+      - Do not make core monitoring import platform observability adapters, cloud SDKs, runtime frameworks, or infra resources.
+    agent_guidance: >
+      Core monitoring is the dictionary for operational signals. Apps decide
+      which product paths matter, platform emits and aggregates signals through
+      concrete adapters, and infra provisions monitoring backends, alarms,
+      dashboards, and notification routes.
+
+  - id: core.security-contracts-name-defensive-policy
+    title: Security contracts name defensive policy, not runtime enforcement
+    severity: error
+    summary: >
+      packages/core security contracts should define provider-neutral sensitive
+      value, hash, classification, policy violation, policy decision, and
+      evaluator shapes while leaving product policy, runtime enforcement,
+      provider adapters, and cloud security resources outside core.
+    must:
+      - Define provider-neutral secret string markers, hash algorithm and hash value shapes, hasher ports, security policy ids, security policy violations, policy decisions, policy evaluators, data sensitivity labels, and sensitive value classifications.
+      - Use security policy decisions to represent allowed or denied defensive policy outcomes with stable translation-ready violation reasons.
+      - Keep security policy evidence plain, serializable, and finite-number safe.
+      - Use sensitive value classification as shared vocabulary for defensive handling across logs, audit, events, exports, provider diagnostics, and runtime adapters.
+      - Keep security policy contracts separate from authorization decisions; authz answers permission questions, security answers defensive handling and policy-safety questions.
+      - Test secret, hash, classification, policy violation, policy decision, evidence-copying, and evaluator helper behavior without runtime providers.
+    must_not:
+      - Do not define product password rules, tenant-specific security policies, MFA workflows, JWT/session parsing, API key checking, rate-limit algorithms, secret storage, encryption providers, IAM policies, KMS keys, middleware, or concrete hashing algorithms in packages/core.
+      - Do not implement a security policy engine in packages/core.
+      - Do not carry secrets, raw credentials, tokens, provider objects, request objects, class instances, non-finite numeric values, or runtime-only values as security policy evidence.
+      - Do not treat data classification labels as a complete data-governance engine or compliance workflow.
+      - Do not make core security import platform security adapters, cloud SDKs, hashing libraries, web middleware, or infra resources.
+    agent_guidance: >
+      Core security is the dictionary for sensitive values and defensive policy
+      outcomes. Apps decide product security rules, platform enforces runtime
+      security behavior, and infra provisions cloud security resources.
+
+  - id: core.tenancy-context-provider-neutral
+    title: Tenancy contracts define tenant context, not tenant discovery
+    severity: error
+    summary: >
+      packages/core may define tenant identifiers, tenant context packets,
+      resolver ports, and small pure helpers, but runtime tenant discovery
+      belongs in apps or platform adapters.
+    must:
+      - Keep TenantId, TenantContext, TenantResolver, and tenant isolation primitives provider-neutral.
+      - Use tenant context as the shared contract for authorization, audit, logging, events, and persistence scopes.
+      - Keep tenant lookup inputs translated at the app or platform boundary before they enter core contracts.
+      - Test tenant identity, resolver, and isolation helper behavior without runtime providers.
+    must_not:
+      - Do not make packages/core parse hostnames, JWTs, request headers, database rows, AWS accounts, or deployment manifests to discover tenants.
+      - Do not put product-specific tenant lifecycle, billing, onboarding, or workspace behavior in packages/core.
+      - Do not accept unbranded strings where a TenantId is required by a core contract.
+    agent_guidance: >
+      When adding tenant-aware behavior, keep the question split in two:
+      core defines the tenant context shape; apps and platform decide how the
+      current tenant is discovered and then pass that context into core-facing
+      contracts.
+
+  - id: core.authn-principal-is-global-actor
+    title: Authentication principal is the global actor, not a tenant profile
+    severity: error
+    summary: >
+      packages/core authn contracts should model the authenticated global
+      actor identity and authenticator port without owning provider checks,
+      authorization decisions, or tenant-specific profile/account workflows.
+    must:
+      - Keep PrincipalId, PrincipalType, Principal, AuthenticationResult, and Authenticator provider-neutral.
+      - Treat Principal as the global authenticated actor identity.
+      - Use current tenant context only for the active request or job when known.
+      - Normalize claims into plain serializable provider-neutral values before constructing a Principal.
+      - Leave tenant-specific profiles, memberships, roles, preferences, and account lifecycle to app or product modules.
+      - Test principal identity, current tenant context, and authenticator helper behavior without runtime providers.
+    must_not:
+      - Do not make packages/core parse JWTs, verify sessions, check API keys, or call identity provider SDKs.
+      - Do not put authorization decisions inside authentication contracts.
+      - Do not model the Principal as a tenant-specific user profile or account.
+      - Do not treat a current tenant id on a principal as the actor's exhaustive tenant membership list.
+      - Do not carry raw provider objects, Date instances, sessions, credentials, access tokens, refresh tokens, or other rich runtime values as principal claims.
+    agent_guidance: >
+      Keep three ideas separate: authentication identifies the global actor,
+      tenancy identifies the current tenant context, and app/product modules
+      model tenant-specific accounts or memberships when the product needs them.
+
+  - id: core.authz-asks-permission-questions-without-owning-policy
+    title: Authorization contracts ask permission questions without owning product policy
+    severity: error
+    summary: >
+      packages/core authz contracts should support role/permission,
+      relationship/resource, and attribute-based authorization questions while
+      leaving concrete product policy, relationship inheritance, and policy
+      engines outside core.
+    must:
+      - Model authorization requests with principal, permission, tenant context where relevant, resource references, relationship facts, attributes, and plain facts.
+      - Support RBAC-friendly permission strings, ReBAC-friendly resource and relation facts, and ABAC-friendly principal/tenant/resource/environment attributes.
+      - Keep permission helper output to non-empty resource:action strings without whitespace or nested colon separators.
+      - Return explicit allow or deny decisions; denied decisions must include translation-ready reasons.
+      - Keep authorization attributes, facts, and evidence plain and serializable.
+      - Keep authorization separate from authentication.
+      - Test request, decision, resource, relation, and attribute helper behavior without runtime providers or product policy engines.
+    must_not:
+      - Do not authenticate credentials inside authz contracts.
+      - Do not hardcode product-specific roles, team membership rules, deal access inheritance, or tenant-specific permission meanings in packages/core.
+      - Do not implement a full ABAC/ReBAC policy language or provider adapter in packages/core.
+      - Do not accept provider-specific objects or rich runtime values as default authorization attributes.
+    agent_guidance: >
+      Core should make the authorization question precise. Apps and product
+      modules answer it with product policy, and platform may delegate the
+      Authorizer port to a policy engine when needed.
+
+  - id: core.persistence-contracts-name-storage-boundaries
+    title: Persistence contracts name storage boundaries
+    severity: error
+    summary: >
+      packages/core persistence contracts should define provider-neutral
+      repository, pagination, error, concurrency, transaction, and after-commit
+      shapes while leaving database implementation, topology, and product
+      queries outside core.
+    must:
+      - Define provider-neutral page request, page, repository, save option, unit-of-work, transaction, and after-commit contracts.
+      - Keep page total counts optional, but require shared non-negative integer page-total contracts when total records or total matching records are included.
+      - Use stable persistence error codes for common storage outcomes such as conflict, duplicate, timeout, unavailable storage, invalid page request, not found, and transaction failure.
+      - Support optimistic concurrency through an expected concurrency token when stale writes must be rejected.
+      - Keep after-commit hooks for side effects that should only run after successful transaction commit.
+      - Normalize transaction failures into stable persistence error vocabulary before app code handles them.
+      - Include in-memory helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test pagination, conflict, transaction, after-commit, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define SQL, ORM models, database clients, database tables, indexes, shards, backups, object-storage clients, or cloud SDK behavior in packages/core.
+      - Do not put product-specific repositories, product query methods, or workflow decisions in packages/core.
+      - Do not require total counts for every page response or invent product-specific total-count fields outside the shared page-total contract.
+      - Do not expose provider-specific lock, deadlock, network, timeout, or conditional-write error shapes directly to app code.
+      - Do not leak raw transaction implementation errors from core helpers or platform adapters when a persistence error meaning exists.
+      - Do not publish events or run side effects before a transaction is known to have committed.
+    agent_guidance: >
+      Core persistence names the contract and stable failure meanings. Platform
+      translates real storage behavior into that contract, infra provisions the
+      storage topology and resilience resources, and apps decide product-specific
+      query and workflow behavior.
+
+  - id: core.events-contracts-name-publishable-facts
+    title: Events contracts name publishable facts, not broker infrastructure
+    severity: error
+    summary: >
+      packages/core events contracts should define provider-neutral event
+      envelopes, payloads, publish errors, publishers, buses, handlers, and
+      testing helpers while leaving event catalogs, brokers, subscribers, and
+      runtime delivery outside core.
+    must:
+      - Define provider-neutral event id, event type, event version, payload, envelope, publisher or bus, handler, and publish error contracts.
+      - Keep event payload values plain, serializable, and portable across app, platform, worker, broker, log, outbox, and test boundaries.
+      - Reject non-finite numeric values and non-plain runtime objects from event payloads before they cross app/platform boundaries.
+      - Treat event type names as domain facts rather than concrete broker topic, queue, stream, or subscription names.
+      - Keep publish failures mapped to stable event error codes before app code receives them.
+      - Publish events that depend on successful state changes through a post-commit path, such as persistence after-commit hooks or an outbox relay.
+      - Make in-memory event helper state names reflect whether events were attempted, accepted, or successfully handled.
+      - Include in-memory or no-op event helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test event type, version, payload, envelope, publish error, handler, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define product event catalogs, product-specific event meanings, or workflow emission decisions in packages/core.
+      - Do not define concrete broker topics, queue names, stream names, subscribers, retry policies, dead-letter queues, ordering guarantees, schema registries, cloud SDK clients, or worker runtimes in packages/core.
+      - Do not expose provider-specific broker, queue, stream, outbox, network, timeout, or delivery error shapes directly to app code.
+      - Do not report failed in-memory handler delivery as a successfully published event unless the helper explicitly names attempted delivery.
+      - Do not publish events that describe committed state before the corresponding transaction is known to have committed.
+    agent_guidance: >
+      Core events name the portable fact and the contract for publishing it.
+      Apps decide which product facts matter and when to emit them, platform
+      translates the event bus contract into a runtime delivery mechanism, and
+      infra provisions broker resources and delivery topology.
+
+  - id: core.audit-contracts-record-accountability
+    title: Audit contracts record accountability facts
+    severity: error
+    summary: >
+      packages/core audit contracts should define provider-neutral audit event,
+      actor, target, outcome, metadata, recorder, and recorder-error shapes
+      while leaving product audit catalogs, durable storage, retention, and
+      infrastructure outside core.
+    must:
+      - Define provider-neutral audit event id, audit event type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, and recorder error contracts.
+      - Use audit records for accountability facts: who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
+      - Require an explicit actor and target on audit events; represent anonymous/system actors and global/system targets deliberately instead of omitting those fields.
+      - Distinguish succeeded, denied, and failed outcomes without requiring consumers to parse operational logs.
+      - Keep audit metadata plain, serializable, and portable across storage, review, export, compliance, and test boundaries.
+      - Reject non-finite numeric values and non-plain runtime objects from audit metadata before it crosses storage, export, or compliance boundaries.
+      - Keep audit explanations translation-ready when they may be displayed to people.
+      - Include in-memory or no-op audit helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test audit type, target, actor, outcome, metadata, recorder error, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not use audit as a replacement for operational logging, event buses, analytics events, monitoring metrics, or reporting exports.
+      - Do not put product-specific audit catalogs, workflow emission decisions, storage tables, object-storage buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or provider adapters in packages/core.
+      - Do not carry secrets, tokens, raw credentials, raw request bodies by default, rich provider objects, or runtime-only values as audit metadata.
+      - Do not use missing actor or missing target as shorthand for anonymous, system, global, or background work.
+      - Do not expose provider-specific storage, network, timeout, retention, or delivery error shapes directly to app code.
+    agent_guidance: >
+      Core audit names the durable accountability record and recording port.
+      Apps decide which product actions require audit records, platform makes
+      recording durable, and infra provisions storage, retention, and compliance
+      resources.
+
+  - id: core.translation-ready-meaning-not-prose
+    title: Core contracts pass meaning, not final localized prose
+    severity: error
+    summary: >
+      Core, platform, and app-facing contracts should pass stable machine meaning
+      plus translation/localization hooks instead of final user-facing strings.
+    must:
+      - Use translation-ready descriptors for user-facing or consumer-facing explanations.
+      - Prefer stable codes, optional message keys, fallback/default messages, and primitive interpolation params.
+      - Keep validation, errors, policy denials, notifications, reports, and API/display responses compatible with future i18n and localization layers.
+      - Treat fallback/default messages as debugging, testing, log, or untranslated-context text, not canonical localized copy.
+    must_not:
+      - Do not make validation, platform adapters, app services, or core errors own final localized prose.
+      - Do not put message catalogs, translator implementations, locale negotiation, or regional formatting behavior into unrelated core modules.
+      - Do not pass rich objects, dates, money values, or provider-specific objects as translation params; pass stable primitive facts and let localization format them.
+    agent_guidance: >
+      When a contract may eventually be displayed to a person, ask:
+      What happened? What stable code identifies it? Which translation key can
+      render it? Which primitive params does the renderer need? Keep final words
+      and regional formatting in i18n/localization or the presentation boundary.
 
 source_refs:
   - doc: "kanbien-core-architecture-guide.md"
