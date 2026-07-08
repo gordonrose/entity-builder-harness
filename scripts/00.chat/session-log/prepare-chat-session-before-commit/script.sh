@@ -32,7 +32,7 @@ bash scripts/01.harness/check-deterministic-process-drift.sh --staged
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
 bash scripts/01.harness/check-governed-script-command-drift.sh
 
-REPO_COMMIT_GATES_SCRIPT="${CHAT_REPO_COMMIT_GATES_SCRIPT:-scripts/repo/commit-gates/script.sh}"
+REPO_COMMIT_GATES_SCRIPT="${CHAT_REPO_COMMIT_GATES_SCRIPT:-${LLM_WORKBENCH_OPTIONAL_COMMIT_GATE:-scripts/repo/commit-gates/script.sh}}"
 
 if [ -n "${REPO_COMMIT_GATES_SCRIPT//[[:space:]]/}" ] && [ -e "$REPO_COMMIT_GATES_SCRIPT" ]; then
   case "$REPO_COMMIT_GATES_SCRIPT" in

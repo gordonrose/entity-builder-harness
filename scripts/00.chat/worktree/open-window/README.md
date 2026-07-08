@@ -29,8 +29,8 @@ worktree path or a session-log `README.md` path.
 
 The script refuses to open a root/main worktree or any path whose checked-out
 branch, session log `branch`, and session log `worktree` metadata do not agree.
-This makes the public open-window command the deterministic boundary for
-editor launches during chat work.
+This makes the public open-window command the deterministic boundary for editor
+launches during chat work.
 
 The command is best-effort. If the `code` CLI is unavailable or cannot open the
 window, the script prints a warning and exits successfully so chat startup does

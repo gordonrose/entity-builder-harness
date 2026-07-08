@@ -27,13 +27,29 @@ Chat commands are small named shortcuts for governed chat lifecycle actions.
 They make repeated actions easy to trigger without moving process rules into
 `AGENTS.md`.
 
-## Entry Point
+## Public CLI Entry Point
 
-Run commands through:
+The public user-facing CLI is:
 
 ```bash
-npm run chat -- <command> [args...]
+llm-wb <command> [args...]
 ```
+
+Use `npx llm-wb ...` when the package is not installed globally or linked into
+the current shell.
+
+Current public CLI shortcuts include:
+
+- `init` - installs the workbench into the current or specified Git repo.
+- `new <prompt>` - starts a new chat session from an explicit prompt.
+- `list` - lists installed workbench command names.
+- `sessions list` - lists active chat sessions and branches.
+- `commit -m <message>` - runs commit gates, commits task work, records the
+  commit, and checkpoints session evidence.
+- `merge-main` - verifies readiness and merges the chat branch into local
+  `main` without pushing.
+
+## Dispatcher Entry Point
 
 The canonical dispatcher is:
 
@@ -47,16 +63,9 @@ Its capability README is:
 scripts/00.chat/command/dispatcher/README.md
 ```
 
-List available commands with:
-
-```bash
-npm run chat:list
-```
-
 ## Commands
 
-- `new <task summary>` - starts a new chat session from an explicit task
-  summary.
+- `new <prompt>` - starts a new chat session from an explicit prompt.
 - `open window [worktree-path|session-log]` - opens a new VS Code window for the
   current or specified chat-owned worktree.
 - `download repo [worktree-path|session-log]` - exports the selected chat

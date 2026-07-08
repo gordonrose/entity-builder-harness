@@ -15,7 +15,6 @@
     - llm-workbench
   used_by:
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
   - id: chat.script.command.dispatcher
     path: scripts/00.chat/command/dispatcher/script.sh
 -->

@@ -73,6 +73,19 @@ collect_script_refs() {
   grep -Eo "scripts/[^ \`\"']+\.sh" "$file" || true
 }
 
+is_optional_script_ref() {
+  local path="$1"
+
+  case "$path" in
+    scripts/repo/commit-gates/script.sh)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 if [ ! -f "$LOG_FILE" ]; then
   fail "missing chat log: $LOG_FILE"
 else
@@ -108,6 +121,10 @@ fi
 
 while IFS= read -r script_path; do
   if [ -z "${script_path// }" ]; then
+    continue
+  fi
+  if is_optional_script_ref "$script_path" && [ ! -f "$script_path" ]; then
+    ok "optional referenced gate script is absent: $script_path"
     continue
   fi
   check_file "$script_path" "referenced gate script"

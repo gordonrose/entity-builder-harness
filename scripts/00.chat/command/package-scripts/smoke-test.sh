@@ -29,6 +29,23 @@ fail() {
   exit 1
 }
 
+normalize_shell_path() {
+  local path_value="$1"
+
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -u "$path_value" 2>/dev/null && return 0
+  fi
+
+  printf '%s\n' "${path_value//\\//}"
+}
+
+canonical_dir() {
+  local dir="$1"
+
+  dir="$(normalize_shell_path "$dir")"
+  cd "$dir" && pwd -P
+}
+
 SOURCE_ROOT="$(git rev-parse --show-toplevel)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/chat-package-scripts-smoke.XXXXXX")"
 
@@ -114,6 +131,7 @@ CHAT_SESSION_ID="${CHAT_BRANCH#chat/}"
 CHAT_WORKTREE="$TMP_ROOT/chat-worktree"
 git -C "$REPO" branch "$CHAT_BRANCH"
 git -C "$REPO" worktree add --quiet "$CHAT_WORKTREE" "$CHAT_BRANCH"
+CHAT_WORKTREE_CANONICAL="$(canonical_dir "$CHAT_WORKTREE")"
 mkdir -p "$CHAT_WORKTREE/commitLogs/2026/jun/19/$CHAT_SESSION_ID"
 cat > "$CHAT_WORKTREE/commitLogs/2026/jun/19/$CHAT_SESSION_ID/README.md" <<EOF
 # Chat Session: test-open-window
@@ -150,7 +168,7 @@ grep -q '^  download-repo-diff$' "$TMP_ROOT/list.out" || fail "chat:list did not
 grep -q '| Total | USD 0.0006 |' "$TMP_ROOT/summary.out" || fail "chat:commit-log-summary did not delegate"
 grep -q 'Mode: dry-run' "$TMP_ROOT/cleanup.out" || fail "chat:cleanup-empty-branches did not delegate"
 grep -q 'ERROR: refusing to open non-chat worktree branch: main' "$TMP_ROOT/open-window-root.out" || fail "chat:open-window did not reject root/main"
-grep -q "Skipping VS Code window open: $CHAT_WORKTREE" "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
+grep -q "Skipping VS Code window open: $CHAT_WORKTREE_CANONICAL" "$TMP_ROOT/open-window.out" || fail "chat:open-window did not delegate"
 test -f "$TMP_ROOT/package-full.zip" || fail "chat:download-repo did not create a zip"
 test -f "$TMP_ROOT/package-diff.zip" || fail "chat:download-repo-diff did not create a zip"
 grep -q '^Export kind: worktree$' "$TMP_ROOT/download-repo.out" || fail "chat:download-repo did not delegate"

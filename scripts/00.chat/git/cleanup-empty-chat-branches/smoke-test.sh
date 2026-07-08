@@ -20,7 +20,6 @@ set -euo pipefail
 #   - id: chat.workflows.chat-cleanup
 #     path: .agentic/00.chat/workflows/chat-cleanup.md
 #   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-#     path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 #   effects:
 #   - branches
 #   - commits
