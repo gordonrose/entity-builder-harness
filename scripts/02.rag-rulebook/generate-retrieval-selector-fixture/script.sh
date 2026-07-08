@@ -79,6 +79,7 @@ MAX_ROUTING_SUMMARY_CHARS = 500
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9._:@/-]*$")
 SAFE_BRANCH_RE = re.compile(r"^[A-Za-z0-9._/@-]*$")
 SAFE_PACKET_ID_RE = re.compile(r"^[A-Za-z0-9._:-]*$")
+PATH_LIKE_SPAN_RE = re.compile(r"(?<![A-Za-z0-9._/@-])(?:[A-Za-z0-9._@-]+/)+[A-Za-z0-9._@-]+(?![A-Za-z0-9._/@-])")
 ALLOWED_CITATION_SOURCE_TYPES = {"source", "rule", "rule-pack", "workflow", "standard", "schema", "plan"}
 SESSION_LAYER_TO_CORPUS = {
     "00.chat": "corpus.00.chat",
@@ -478,6 +479,39 @@ def simple_exact_match(term: str, text: str) -> bool:
     if "/" in term_lower or "." in term_lower or "-" in term_lower:
         return term_lower in text_lower
     return bool(re.search(rf"(?<![a-z0-9]){re.escape(term_lower)}(?![a-z0-9])", text_lower))
+
+
+def exact_match_spans(term: str, text: str) -> list[tuple[int, int]]:
+    term_lower = term.lower()
+    text_lower = text.lower()
+    if not term_lower:
+        return []
+    if "/" in term_lower or "." in term_lower or "-" in term_lower:
+        spans: list[tuple[int, int]] = []
+        start = 0
+        while True:
+            index = text_lower.find(term_lower, start)
+            if index < 0:
+                return spans
+            spans.append((index, index + len(term_lower)))
+            start = index + 1
+    return [
+        match.span()
+        for match in re.finditer(rf"(?<![a-z0-9]){re.escape(term_lower)}(?![a-z0-9])", text_lower)
+    ]
+
+
+def term_matches_only_inside_path_spans(term: str, text: str) -> bool:
+    match_spans = exact_match_spans(term, text)
+    if not match_spans:
+        return False
+    path_spans = [match.span() for match in PATH_LIKE_SPAN_RE.finditer(text)]
+    if not path_spans:
+        return False
+    return all(
+        any(path_start <= match_start and match_end <= path_end for path_start, path_end in path_spans)
+        for match_start, match_end in match_spans
+    )
 
 
 def coverage_stage_summary(coverage: dict[str, Any]) -> str:
@@ -1018,15 +1052,18 @@ def match_recognition_terms(
             raw_term = str(term.get("term") or "").strip()
             if not raw_term:
                 continue
+            category = str(term.get("category") or "")
             lookup_terms = [raw_term] + list_of_strings(term.get("aliases"))
             for lookup_term in lookup_terms:
                 matched_inputs: list[str] = []
                 if simple_exact_match(lookup_term, request_text):
-                    matched_inputs.append("prompt")
+                    if not (category == "layer-name" and term_matches_only_inside_path_spans(lookup_term, request_text)):
+                        matched_inputs.append("prompt")
                 if simple_exact_match(lookup_term, session_text):
-                    matched_inputs.append("session-metadata")
+                    if not (category == "layer-name" and term_matches_only_inside_path_spans(lookup_term, session_text)):
+                        matched_inputs.append("session-metadata")
                 for matched_input in matched_inputs:
-                    key = (source_id, lookup_term.lower(), str(term.get("category")), matched_input)
+                    key = (source_id, lookup_term.lower(), category, matched_input)
                     if key in seen:
                         continue
                     seen.add(key)

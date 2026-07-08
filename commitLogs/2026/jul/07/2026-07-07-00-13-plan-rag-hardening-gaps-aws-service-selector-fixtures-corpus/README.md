@@ -101,6 +101,28 @@ Summary: Retires focused-path request context from the RAG selector and provider
 
 ADR impact: No ADR needed; this removes an ungoverned request-context hint and preserves the existing RAG rulebook ownership model.
 
+
+### 2026-07-08T00:01:03Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept main's newer packages/core authn/authz fixture intent and expected rules, removed focused_paths, moved exact paths into request_text, and added dependency/adapter evidence paths needed for the expected boundary rules.
+
+
+### 2026-07-08T00:01:09Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Regenerated recognition sources from the resolved tree so main's package-core entries and the focused-path retirement entries are both present.
+
 ## Commits
 
 
@@ -120,7 +142,28 @@ ADR impact: No ADR needed; this removes an ungoverned request-context hint and p
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored repository content has no more specific governed conflict type
+  Action: Kept main's newer packages/core authn/authz fixture intent and expected rules, removed focused_paths, moved exact paths into request_text, and added dependency/adapter evidence paths needed for the expected boundary rules.
+  Preflight branch: `agentic/preflight/chat-2026-07-07-00-13-plan-rag-hardening-gaps-aw-ad610e867e0a/20260707233423`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-07-00-13-plan-rag-hardening-gaps-aw-ad610e867e0a-20260707233423`
+  Files changed by resolution: Resolved package-core selector fixture conflict and converted incoming main fixtures from focused_paths to exact request_text path anchors.
+  Checks: generate-recognition-sources --check; validate-retirement-records --current; validate-retrieval-policy-pack --current; evaluate-retrieval-selector-fixtures --current --json passed 29/29.
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: authored repository content has no more specific governed conflict type
+  Action: Regenerated recognition sources from the resolved tree so main's package-core entries and the focused-path retirement entries are both present.
+  Preflight branch: `agentic/preflight/chat-2026-07-07-00-13-plan-rag-hardening-gaps-aw-ad610e867e0a/20260707233423`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-07-00-13-plan-rag-hardening-gaps-aw-ad610e867e0a-20260707233423`
+  Files changed by resolution: Resolved generated artifact recognition source after package-core fixture and focused-path retirement merge.
+  Checks: generate-recognition-sources --check; validate-retirement-records --current; validate-retrieval-policy-pack --current; evaluate-retrieval-selector-fixtures --current --json passed 29/29.
 
 ## ADR Disposition
 

@@ -1,0 +1,69 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-events-contract
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove packages/core events prompts retrieve event contract and broker-boundary guidance.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.packages-core-events-contract
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove prompts about packages/core event contracts retrieve event envelope, payload, publish, and broker-boundary rules.
+input:
+  request_text: Explain how product code should use packages/core/src/events/index.ts contracts for event envelopes, JSON-safe payloads, event type versions, event buses, handlers, after-commit publishing, and broker topics or subscribers; compare packages/core/src/persistence/index.ts for transaction and after-commit boundaries, and use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
+  session:
+    trust_routing: true
+    layer: 03.product
+    mode: discovery
+    workflow: .agentic/product/workflows/default.md
+  max_chunks: 8
+expected:
+  routing:
+    layer: 03.product
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.03.product.core
+  selected_corpora:
+    required:
+      - corpus.03.product.core
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_rule_ids:
+      - core.events-contracts-name-publishable-facts
+      - core.persistence-contracts-name-storage-boundaries
+      - core.capability-modules-stay-contract-shaped
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.00.chat
+source_refs:
+  - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+update_triggers:
+  - packages/core events ownership rules change.
+  - Selector policy changes corpus ownership or evidence bundle behavior.

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 1
+#   version: 8
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -25,13 +25,17 @@ report_id: derivation.03.product-core.2026-07-04.packages-core-contract-surface-
 status: accepted
 
 source_change:
-  change_type: created
+  change_type: updated
   approved_source_state: approved
   changed_paths:
     - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   summary: >
-    Approved source material records the narrow bootstrap exception and contract
-    module surface for the initial packages/core slice.
+    Approved source material records the narrow bootstrap exception, contract
+    module surface, hardening requirements, monitoring contract boundary,
+    security contract boundary,
+    persistence contract boundary, events and audit contract boundaries, and
+    review-driven JSON/accountability hardening
+    for the initial packages/core slice.
 
 target:
   corpus_id: corpus.03.product.core
@@ -43,6 +47,11 @@ target:
   affected_rulesets: []
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
   affected_corpus_gaps: []
 
 semantic_review:
@@ -55,6 +64,138 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.provider.implementations.outside
       summary: Provider adapters, runtime hosts, infrastructure, and product workflows must remain outside packages/core.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.config.provider.neutral
+      summary: The config module may define provider-neutral config sources, primitive readers, schemas, and validation errors, but must not read directly from process.env, files, AWS SSM, Secrets Manager, databases, or deployment manifests.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.config.record-source.snapshot
+      summary: Record-backed config sources should snapshot their input values when created so later caller mutation does not change the source contract.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.shared.iso-date-time.strict
+      summary: ISODateTime values should be explicit ISO date-time strings with timezone information, not date-only strings, localized prose dates, or implicit local-time strings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.shared.json-values.finite-plain
+      summary: Provider-neutral JSON-like contract values should reject non-finite numbers and non-plain runtime objects when copying claims, policy facts, event payloads, or audit metadata.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.logging.provider.neutral
+      summary: The logging module may define operational log records, logger ports, default sensitive-field vocabulary, redactors, redaction helpers, and no-op or wrapping loggers, but must not write directly to console, CloudWatch, OpenTelemetry, files, Datadog, or other runtime sinks.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.logging.sensitive-fields.maintained
+      summary: Common sensitive log field names discovered later should be maintained in the packages/core logging layer, while app-specific, platform-specific, or provider-specific fields extend the default redactor at the consuming boundary.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.monitoring.provider-neutral-boundary
+      summary: The monitoring module may define provider-neutral monitored components, health checks, metrics, signal categories, signal intents, ownership, safe labels, metrics ports, and small pure test helpers.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.monitoring.health-check-contracts
+      summary: Monitoring contracts should support liveness, readiness, dependency, and capability probes with component, status, timestamp, optional duration, explanation, and plain metadata.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.monitoring.metric-label-safety
+      summary: Metric labels should stay primitive, bounded, low-cardinality, and free of secrets, raw credentials, tokens, emails, phone numbers, raw user ids, request ids, correlation ids, trace ids, session ids, IP addresses, raw URLs, raw paths, provider objects, non-finite numbers, and runtime-only values.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.monitoring.signal-ownership-sli-intent
+      summary: Monitoring signal definitions should record why a signal exists, who owns it, which component it describes, and whether it supports health detection, alerting, capacity planning, debugging, SLI use, or cost control.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.monitoring.no-provider-backends
+      summary: Core monitoring must not define concrete providers, exporters, health endpoints, dashboards, alert thresholds, incident routes, production SLO targets, runtime wiring, cloud SDK clients, infrastructure alarms, or product-specific uptime commitments.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.security.provider-neutral-boundary
+      summary: The security module may define provider-neutral secret string markers, hash contracts, hasher ports, data sensitivity labels, sensitive value classification, security policy ids, policy violations, policy decisions, policy evaluators, and pure helpers.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.security.policy-decisions-contract-only
+      summary: Security policy contracts in core may represent allowed or denied defensive policy outcomes with stable translation-ready violation reasons, but must not implement a policy engine or decide product security settings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.security.evidence.serializable
+      summary: Security policy evidence should stay plain and serializable and must not carry secrets, raw credentials, tokens, provider objects, request objects, class instances, non-finite numeric values, or runtime-only values.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.security.no-runtime-policy-implementation
+      summary: Core security must not define product password rules, tenant-specific security policies, MFA workflows, JWT/session parsing, API key checking, rate-limit algorithms, secret storage, encryption providers, IAM policies, KMS keys, middleware, or concrete hashing algorithms.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.tenancy.provider.neutral
+      summary: The tenancy module may define tenant identifiers, tenant context packets, resolver ports, and pure helpers, but must not decide tenant discovery from hostnames, JWT claims, headers, database rows, AWS account mappings, product workflows, or deployment topology.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authn.principal.global-actor
+      summary: The authn module may define global principal identity, principal type, authentication result, authenticator ports, and helpers, but must not treat the principal as a tenant-specific user profile, tenant account, or exhaustive tenant membership list.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authn.claims.serializable
+      summary: Principal claims should be normalized into plain serializable provider-neutral values and must not carry raw provider objects, dates, sessions, credentials, or tokens.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authz.policy.question-shape
+      summary: The authz module may define permission, resource, relationship, ABAC attribute, authorization request, decision, authorizer, and helper contracts, but must not own credential authentication, product-specific roles, relationship inheritance rules, ABAC policy language, team membership storage, or tenant-specific permission meanings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authz.permission.validated
+      summary: Permission helpers should create non-empty resource:action strings without whitespace or nested colon separators.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.authz.denials.reason-required
+      summary: Authorization denials must carry translation-ready reasons, and authorization attributes, facts, and evidence should stay plain and serializable.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.provider-neutral-boundary
+      summary: The persistence module may define provider-neutral page, optional page total, repository, save option, persistence error, unit-of-work, transaction, after-commit, concurrency-token, and in-memory test-helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.page-totals.optional-standard
+      summary: Total counts should be optional, but total records or total matching records should use shared non-negative integer page-total contracts when a product use case includes them.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.provider-errors-normalized
+      summary: Platform adapters should translate provider-specific lock, deadlock, timeout, conditional-write, and network failures into stable persistence error meanings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.concurrency-token
+      summary: Repository save contracts may use an expected concurrency token to reject stale writes without requiring core to choose a locking strategy or database implementation.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.after-commit
+      summary: After-commit hooks should be reserved for side effects that must only run after successful transaction commit, such as event publishing or scheduled work.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.transaction-failures-normalized
+      summary: Transaction failures should surface through stable persistence vocabulary rather than leaking raw database, runtime, or test-helper error shapes.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.persistence.no-db-topology
+      summary: Core persistence must not define SQL, ORM models, database clients, tables, indexes, shards, backups, object-storage clients, product-specific repositories, or product workflow decisions.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.provider-neutral-boundary
+      summary: The events module may define provider-neutral event id, type, version, payload, envelope, publish error, publisher or bus, handler, and in-memory/no-op helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.payloads.serializable
+      summary: Event payloads should stay plain and serializable so platform adapters can move them through brokers, outboxes, logs, tests, and workers without provider-specific objects.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.payloads.finite-plain
+      summary: Event payloads should reject non-finite numeric values and non-plain runtime objects before they cross app/platform boundaries.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.types.not-broker-topics
+      summary: Event type names are portable domain facts and should not be treated as concrete broker topics, queue names, stream names, or subscription resources.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.provider-errors-normalized
+      summary: Publishing failures should use stable error vocabulary rather than exposing provider-specific broker errors directly to app code.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.post-commit-publishing
+      summary: Events that depend on successful state changes should be published through a post-commit path such as persistence afterCommit or an outbox relay.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.helper-state-semantics
+      summary: In-memory event helpers should define whether recorded events mean attempted, accepted, or successfully handled publish operations.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.no-broker-topology
+      summary: Core events must not define product event catalogs, broker topics, subscriber deployment, retries, dead-letter queues, ordering guarantees, schema registries, cloud SDK clients, worker runtimes, or product workflow decisions.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.provider-neutral-boundary
+      summary: The audit module may define provider-neutral audit event id, type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, recorder error, and in-memory/no-op helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.accountability-record
+      summary: Audit records should answer who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.actor-target-required
+      summary: Audit events should carry an explicit actor and target, representing anonymous/system actors and global/system-scoped targets deliberately instead of omitting those fields.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.outcomes-explicit
+      summary: Audit outcomes should distinguish successful, denied, and failed actions so security review and product history do not depend on parsing operational logs.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.metadata.serializable
+      summary: Audit metadata should stay plain and serializable and must not carry secrets, tokens, raw credentials, rich provider objects, raw request bodies by default, or runtime-only values.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.metadata.finite-plain
+      summary: Audit metadata should reject non-finite numeric values and non-plain runtime objects before it crosses storage, export, or compliance boundaries.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.not-logs-events-or-metrics
+      summary: Audit records are not operational logs, analytics events, monitoring metrics, or event-bus messages.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.no-storage-topology
+      summary: Core audit must not define product audit catalogs, storage tables, buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or product workflow decisions.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
@@ -86,9 +227,19 @@ proposed_updates:
   corpus_gaps: []
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
   notes:
-    - Existing packages/core rules already define the general ownership boundary.
-    - This source material pins the approved initial contract surface and RAG disposition expectation.
+    - Existing packages/core rules define the general ownership boundary.
+    - >
+      This update tightens event and audit contract guidance after agent review:
+      explicit audit actor/target, finite/plain JSON values, in-memory event
+      helper success semantics, standardized transaction failure vocabulary,
+      security defensive-policy contract boundaries, and monitoring operational-signal contract boundaries.
+    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, and monitoring health/metrics/signal guidance directly.
 
 downstream_effects:
   index_required: false
@@ -103,6 +254,12 @@ validation:
     - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
     - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
     - npm run core:check
     - git diff --check
   checks_run:
@@ -114,6 +271,18 @@ validation:
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
       result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
     - command: npm run core:check
       result: passed
     - command: git diff --check
@@ -124,7 +293,7 @@ review:
   required: true
   decision: approved
   reviewer: codex-agentic-review-loop
-  reviewed_at_utc: "2026-07-04T00:00:00Z"
+  reviewed_at_utc: "2026-07-07T00:00:00Z"
   notes:
-    - Source and projection were reviewed as part of the packages/core slice recovery.
+    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings.
     - Future core modules should add narrower source material when their contracts materially change.
