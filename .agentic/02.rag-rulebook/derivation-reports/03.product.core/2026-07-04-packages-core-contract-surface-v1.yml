@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 10
+#   version: 11
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -35,7 +35,8 @@ source_change:
     security contract boundary,
     persistence contract boundary, events, queues, and audit contract boundaries, and
     review-driven JSON/accountability hardening, plus public contract
-    compatibility and deprecation policy
+    compatibility and deprecation policy, plus queue and audit schema-version
+    contracts
     for the initial packages/core slice.
 
 target:
@@ -189,7 +190,10 @@ semantic_review:
       summary: Core events must not define product event catalogs, broker topics, subscriber deployment, retries, dead-letter queues, ordering guarantees, schema registries, cloud SDK clients, worker runtimes, or product workflow decisions.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.queues.provider-neutral-boundary
-      summary: The queues module may define provider-neutral queue message id, message type, payload, message envelope, send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and in-memory/no-op helper contracts.
+      summary: The queues module may define provider-neutral queue message id, message type, message version, payload, message envelope, send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and in-memory/no-op helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.schema-version
+      summary: Queue messages should carry explicit positive integer schema versions, and durable platform adapters must preserve those versions when messages are serialized, retried, replayed, or moved to dead-letter paths.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.queues.payloads.serializable
       summary: Queue payloads should stay plain and serializable so platform adapters can move them through queues, retries, logs, tests, workers, and dead-letter paths without provider-specific objects.
@@ -210,7 +214,10 @@ semantic_review:
       summary: Core queues must not define product job catalogs, product handlers, worker runtimes, broker queue resources, queue URLs, receipt handles, visibility timeouts, concrete retry algorithms, scheduler loops, DLQ resources, cloud SDK clients, or deployment topology.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.audit.provider-neutral-boundary
-      summary: The audit module may define provider-neutral audit event id, type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, recorder error, and in-memory/no-op helper contracts.
+      summary: The audit module may define provider-neutral audit event id, type, version, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, recorder error, and in-memory/no-op helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.schema-version
+      summary: Audit events should carry explicit positive integer schema versions, and durable audit recorders, exporters, retention workflows, and SIEM adapters must preserve those versions across storage, export, and compliance boundaries.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.audit.accountability-record
       summary: Audit records should answer who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
@@ -280,7 +287,8 @@ proposed_updates:
       contract boundaries, and queue retryable-work contract boundaries.
       This update also adds additive-first public contract evolution,
       deprecation/migration, durable payload schema-version, and compatibility
-      fixture requirements.
+      fixture requirements. Queue message and audit event contracts now include
+      explicit schema-version claims before durable platform adapters exist.
     - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, and queue worker/provider-boundary guidance directly.
     - The compatibility selector fixture asks for deprecation, backwards compatibility, schema-version, and old public usage fixture guidance directly.
 

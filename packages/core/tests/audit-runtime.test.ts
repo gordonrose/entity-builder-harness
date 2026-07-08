@@ -5,6 +5,7 @@ import {
   auditEvent,
   auditEventId,
   auditEventType,
+  auditEventVersion,
   auditRecordError,
   auditTarget,
   inMemoryAuditRecorder,
@@ -30,6 +31,21 @@ async function main(): Promise<void> {
   }
   equal(invalidType.error.code, "AUDIT_INVALID_TYPE");
   equal(invalidType.error.messageKey, "audit.type.invalid");
+
+  const validVersion = auditEventVersion(1);
+  equal(isOk(validVersion), true);
+  if (!isOk(validVersion)) {
+    throw new Error("Expected audit event version to be valid.");
+  }
+  equal(validVersion.value, 1);
+
+  const invalidVersion = auditEventVersion(0);
+  equal(isErr(invalidVersion), true);
+  if (!isErr(invalidVersion)) {
+    throw new Error("Expected audit event version to be invalid.");
+  }
+  equal(invalidVersion.error.code, "AUDIT_INVALID_VERSION");
+  equal(invalidVersion.error.messageKey, "audit.version.invalid");
 
   const parentTarget = auditTarget({ type: "account", id: "account-123" });
   equal(isOk(parentTarget), true);
@@ -76,6 +92,7 @@ async function main(): Promise<void> {
   const event = auditEvent({
     id: auditEventId("audit-123"),
     type: validType.value,
+    version: validVersion.value,
     outcome: "succeeded",
     actor: auditActor({
       type: "user",
@@ -97,6 +114,7 @@ async function main(): Promise<void> {
   deepEqual(event, {
     id: "audit-123",
     type: "deal.deleted",
+    version: 1,
     outcome: "succeeded",
     actor: {
       type: "user",

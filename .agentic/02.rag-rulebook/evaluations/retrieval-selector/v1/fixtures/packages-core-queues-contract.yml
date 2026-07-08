@@ -24,9 +24,9 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.packages-core-queues-contract
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompts about packages/core queue contracts retrieve queue message, payload, retry/dead-letter, worker, adapter, and infra boundary rules.
+purpose: Prove prompts about packages/core queue contracts retrieve queue message, message-version, payload, retry/dead-letter, worker, adapter, and infra boundary rules.
 input:
-  request_text: Explain how product code should use packages/core queue contracts for queue messages, JSON-safe payloads, send options, delivery metadata, handlers, retry and dead-letter facts, and idempotency.
+  request_text: Explain how product code should use packages/core queue contracts for queue messages, schema versions, JSON-safe payloads, send options, delivery metadata, handlers, retry and dead-letter facts, and idempotency.
   session:
     trust_routing: true
     layer: 03.product

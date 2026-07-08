@@ -21,12 +21,14 @@ import type { TenantId } from "../tenancy/index";
 
 export type AuditEventId = EntityId<"AuditEventId">;
 export type AuditEventType = Brand<string, "AuditEventType">;
+export type AuditEventVersion = Brand<number, "AuditEventVersion">;
 export type AuditActorType = PrincipalType | "anonymous" | "system";
 export type AuditOutcome = "succeeded" | "denied" | "failed";
 export type AuditMetadataValue = JsonValue;
 export type AuditMetadata = Readonly<Record<string, AuditMetadataValue>>;
 
 export type AuditRecordErrorCode =
+  | "AUDIT_INVALID_VERSION"
   | "AUDIT_INVALID_TARGET"
   | "AUDIT_INVALID_TYPE"
   | "AUDIT_RECORD_FAILED"
@@ -51,6 +53,7 @@ export interface AuditTarget {
 export interface AuditEvent<TMetadata extends AuditMetadata = AuditMetadata> {
   readonly id: AuditEventId;
   readonly type: AuditEventType;
+  readonly version: AuditEventVersion;
   readonly outcome: AuditOutcome;
   readonly actor: AuditActor;
   readonly tenantId?: TenantId;
@@ -69,6 +72,8 @@ export interface InMemoryAuditRecorder extends AuditRecorder {
   recordedEvents(): readonly AuditEvent[];
 }
 
+export const currentAuditEventVersion: AuditEventVersion = brand<number, "AuditEventVersion">(1);
+
 export function auditEventId(value: string): AuditEventId {
   return entityId<"AuditEventId">(value);
 }
@@ -86,6 +91,21 @@ export function auditEventType(value: string): Result<AuditEventType, AuditRecor
   }
 
   return ok(brand<string, "AuditEventType">(value));
+}
+
+export function auditEventVersion(value: number): Result<AuditEventVersion, AuditRecordError> {
+  if (!Number.isInteger(value) || value <= 0) {
+    return err(
+      auditRecordError({
+        code: "AUDIT_INVALID_VERSION",
+        defaultMessage: "Audit event version must be a positive integer.",
+        messageKey: "audit.version.invalid",
+        params: { version: String(value) },
+      }),
+    );
+  }
+
+  return ok(brand<number, "AuditEventVersion">(value));
 }
 
 export function auditActor(input: {
@@ -136,6 +156,7 @@ export function auditTarget(input: {
 export function auditEvent<TMetadata extends AuditMetadata>(input: {
   readonly id: AuditEventId;
   readonly type: AuditEventType;
+  readonly version?: AuditEventVersion;
   readonly outcome: AuditOutcome;
   readonly actor: AuditActor;
   readonly tenantId?: TenantId;
@@ -148,6 +169,7 @@ export function auditEvent<TMetadata extends AuditMetadata>(input: {
   return {
     id: input.id,
     type: input.type,
+    version: input.version ?? currentAuditEventVersion,
     outcome: input.outcome,
     actor: copyAuditActor(input.actor),
     ...(input.tenantId === undefined ? {} : { tenantId: input.tenantId }),

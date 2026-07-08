@@ -24,9 +24,9 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.packages-core-audit-contract
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompts about packages/core audit contracts retrieve audit accountability, metadata, logging/event distinction, and storage-boundary rules.
+purpose: Prove prompts about packages/core audit contracts retrieve audit accountability, schema-version, metadata, logging/event distinction, and storage-boundary rules.
 input:
-  request_text: Explain how product code should use packages/core audit contracts for actor, tenant, target, outcome, metadata, correlation id, recorder errors, storage adapters, and the difference between audit records, logs, and events.
+  request_text: Explain how product code should use packages/core audit contracts for actor, tenant, target, outcome, schema version, metadata, correlation id, recorder errors, storage adapters, and the difference between audit records, logs, and events.
   session:
     trust_routing: true
     layer: 03.product

@@ -338,14 +338,15 @@ schema registries, or cloud SDK clients.
 
 `queues` defines provider-neutral contracts for retryable background work:
 
-- `QueueMessageId` and `QueueMessageType` identify a work item and its stable
-  work-kind name.
+- `QueueMessageId`, `QueueMessageType`, and `QueueMessageVersion` identify a
+  work item, its stable work-kind name, and its payload schema version.
 - `QueuePayloadValue` and `QueuePayload` keep message payloads plain,
   JSON-safe, finite-number safe, and portable across app, platform, worker,
   broker, retry, dead-letter, and test boundaries.
-- `QueueMessage` and `queueMessage` wrap a message with id, type, timestamp,
-  optional tenant id, optional correlation id, optional idempotency key,
-  optional message group key, and copied payload.
+- `QueueMessage` and `queueMessage` wrap a message with id, type, version,
+  timestamp, optional tenant id, optional correlation id, optional idempotency
+  key, optional message group key, and copied payload. `queueMessage` defaults
+  the version to the current v1 contract when a caller does not supply one.
 - `QueueSendOptions`, `QueueDelaySeconds`, and `queueSendOptions` define
   provider-neutral send metadata without choosing a broker delay mechanism.
 - `QueueDelivery`, `QueueAttempt`, `QueueRetryMetadata`, and
@@ -364,6 +365,11 @@ observability, and shutdown. Platform adapters translate to providers such as
 AWS SQS. Infra provisions queues, DLQs, alarms, permissions, encryption,
 retention, and worker deployment resources.
 
+Queue message versions are positive integer schema facts. Durable queue
+adapters, retry paths, replay tools, and dead-letter paths should preserve the
+version so workers can safely handle old and new payload shapes during
+deployment transitions.
+
 `inMemoryQueue.acceptedSends()` and `acceptedMessages()` return messages
 accepted by the helper. They are useful for tests, but they are not durable
 queue, retry, worker, or dead-letter implementations.
@@ -377,8 +383,8 @@ deployment topology.
 
 `audit` defines provider-neutral contracts for accountability records:
 
-- `AuditEventId` and `AuditEventType` identify durable audit records and stable
-  action names.
+- `AuditEventId`, `AuditEventType`, and `AuditEventVersion` identify durable
+  audit records, stable action names, and audit payload schema versions.
 - `AuditActor` captures the explicit user, service, system, or anonymous actor
   that caused the audited action.
 - `AuditTarget` identifies the resource acted on, with an optional parent
@@ -387,8 +393,10 @@ deployment topology.
 - `AuditMetadataValue` and `AuditMetadata` keep audit evidence plain,
   JSON-safe, finite-number safe, and portable across storage, review, export,
   and compliance boundaries.
-- `AuditEvent` and `auditEvent` combine actor, tenant, timestamp,
+- `AuditEvent` and `auditEvent` combine actor, tenant, version, timestamp,
   correlation id, target, outcome, optional reason, and copied metadata.
+  `auditEvent` defaults the version to the current v1 contract when a caller
+  does not supply one.
 - `AuditRecordErrorCode`, `AuditRecordError`, and `auditRecordError` give
   recorder failures stable translation-ready meanings.
 - `AuditRecorder`, `inMemoryAuditRecorder`, and `noopAuditRecorder` define the
@@ -401,6 +409,11 @@ Every audit event must carry an explicit actor and target. Use an `anonymous`
 or `system` actor when no authenticated principal exists, and use a deliberate
 target such as an account, session, export, or system resource rather than
 omitting the target.
+
+Audit event versions are positive integer schema facts. Durable audit
+recorders, exporters, retention workflows, and SIEM adapters should preserve
+the version so old accountability records remain interpretable after contract
+changes.
 
 Core does not define audit database tables, object storage, retention policy,
 legal hold, export workflows, SIEM integrations, CloudWatch sinks, or product

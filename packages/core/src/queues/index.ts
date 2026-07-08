@@ -19,6 +19,7 @@ import type { TenantId } from "../tenancy/index";
 
 export type QueueMessageId = EntityId<"QueueMessageId">;
 export type QueueMessageType = Brand<string, "QueueMessageType">;
+export type QueueMessageVersion = Brand<number, "QueueMessageVersion">;
 export type QueueDelaySeconds = Brand<number, "QueueDelaySeconds">;
 export type QueueAttempt = Brand<number, "QueueAttempt">;
 export type QueueIdempotencyKey = Brand<string, "QueueIdempotencyKey">;
@@ -34,6 +35,7 @@ export type QueueErrorCode =
   | "QUEUE_INVALID_DEAD_LETTER_REASON"
   | "QUEUE_INVALID_DELAY"
   | "QUEUE_INVALID_TYPE"
+  | "QUEUE_INVALID_VERSION"
   | "QUEUE_SEND_FAILED"
   | "QUEUE_UNAVAILABLE";
 
@@ -44,6 +46,7 @@ export interface QueueError extends CoreError {
 export interface QueueMessage<TPayload extends QueuePayloadValue = QueuePayload> {
   readonly id: QueueMessageId;
   readonly type: QueueMessageType;
+  readonly version: QueueMessageVersion;
   readonly enqueuedAt: ISODateTime;
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
@@ -94,6 +97,8 @@ export interface InMemoryQueue<TPayload extends QueuePayloadValue = QueuePayload
   acceptedMessages(): readonly QueueMessage<TPayload>[];
 }
 
+export const currentQueueMessageVersion: QueueMessageVersion = brand<number, "QueueMessageVersion">(1);
+
 export function queueMessageId(value: string): QueueMessageId {
   return entityId<"QueueMessageId">(value);
 }
@@ -111,6 +116,21 @@ export function queueMessageType(value: string): Result<QueueMessageType, QueueE
   }
 
   return ok(brand<string, "QueueMessageType">(value));
+}
+
+export function queueMessageVersion(value: number): Result<QueueMessageVersion, QueueError> {
+  if (!Number.isInteger(value) || value <= 0) {
+    return err(
+      queueError({
+        code: "QUEUE_INVALID_VERSION",
+        defaultMessage: "Queue message version must be a positive integer.",
+        messageKey: "queues.version.invalid",
+        params: { version: String(value) },
+      }),
+    );
+  }
+
+  return ok(brand<number, "QueueMessageVersion">(value));
 }
 
 export function queueDelaySeconds(value: number): Result<QueueDelaySeconds, QueueError> {
@@ -187,6 +207,7 @@ export function queueError(input: {
 export function queueMessage<TPayload extends QueuePayloadValue>(input: {
   readonly id: QueueMessageId;
   readonly type: QueueMessageType;
+  readonly version?: QueueMessageVersion;
   readonly enqueuedAt: ISODateTime;
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
@@ -197,6 +218,7 @@ export function queueMessage<TPayload extends QueuePayloadValue>(input: {
   return {
     id: input.id,
     type: input.type,
+    version: input.version ?? currentQueueMessageVersion,
     enqueuedAt: input.enqueuedAt,
     ...(input.tenantId === undefined ? {} : { tenantId: input.tenantId }),
     ...(input.correlationId === undefined ? {} : { correlationId: input.correlationId }),

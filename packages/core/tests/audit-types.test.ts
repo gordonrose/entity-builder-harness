@@ -4,6 +4,7 @@ import {
   auditEvent,
   auditEventId,
   auditEventType,
+  auditEventVersion,
   auditRecordError,
   auditTarget,
   inMemoryAuditRecorder,
@@ -12,6 +13,7 @@ import {
   type AuditEvent,
   type AuditEventId,
   type AuditEventType,
+  type AuditEventVersion,
   type AuditMetadata,
   type AuditMetadataValue,
   type AuditOutcome,
@@ -24,6 +26,7 @@ import { correlationId, isOk, isoDateTime, type Result } from "../src/shared/ind
 import { tenantId } from "../src/tenancy/index";
 
 const typeResult: Result<AuditEventType, AuditRecordError> = auditEventType("deal.deleted");
+const versionResult: Result<AuditEventVersion, AuditRecordError> = auditEventVersion(1);
 const targetResult: Result<AuditTarget, AuditRecordError> = auditTarget({ type: "deal", id: "deal-123" });
 const timestamp = isoDateTime("2026-07-07T12:00:00.000Z");
 const acceptedCode: AuditRecordErrorCode = "AUDIT_RECORD_FAILED";
@@ -50,13 +53,14 @@ const metadata: AuditMetadata = {
   after: "won",
 };
 
-if (!isOk(typeResult) || !isOk(targetResult) || !isOk(timestamp)) {
+if (!isOk(typeResult) || !isOk(versionResult) || !isOk(targetResult) || !isOk(timestamp)) {
   throw new Error("Expected valid test primitives.");
 }
 
 const event: AuditEvent<AuditMetadata> = auditEvent({
   id: auditEventId("audit-123"),
   type: typeResult.value,
+  version: versionResult.value,
   outcome,
   actor,
   tenantId: tenantId("tenant-123"),
@@ -86,6 +90,10 @@ void invalidAuditId;
 const invalidAuditType: AuditEventType = "deal.deleted";
 void invalidAuditType;
 
+// @ts-expect-error audit event versions must be explicitly created and branded.
+const invalidAuditVersion: AuditEventVersion = 1;
+void invalidAuditVersion;
+
 // @ts-expect-error audit outcomes are intentionally constrained.
 const invalidOutcome: AuditOutcome = "unknown";
 void invalidOutcome;
@@ -109,6 +117,15 @@ auditEvent({
   id: auditEventId("audit-123"),
   // @ts-expect-error audit events require a branded audit type.
   type: "deal.deleted",
+  outcome,
+  occurredAt: timestamp.value,
+});
+
+auditEvent({
+  id: auditEventId("audit-123"),
+  type: typeResult.value,
+  // @ts-expect-error audit event versions must be explicitly created and branded when supplied.
+  version: 1,
   outcome,
   occurredAt: timestamp.value,
 });

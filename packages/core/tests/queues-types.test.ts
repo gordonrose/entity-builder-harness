@@ -12,6 +12,7 @@ import {
   queueMessageGroupKey,
   queueMessageId,
   queueMessageType,
+  queueMessageVersion,
   queueRetryMetadata,
   queueSendOptions,
   type Queue,
@@ -24,6 +25,7 @@ import {
   type QueueHandler,
   type QueueMessage,
   type QueueMessageType,
+  type QueueMessageVersion,
   type QueuePayload,
   type QueuePayloadValue,
   type QueueRetryMetadata,
@@ -33,6 +35,7 @@ import { correlationId, isOk, isoDateTime, type Result } from "../src/shared/ind
 import { tenantId } from "../src/tenancy/index";
 
 const typeResult: Result<QueueMessageType, QueueError> = queueMessageType("notifications.send-welcome-email");
+const versionResult: Result<QueueMessageVersion, QueueError> = queueMessageVersion(1);
 const delayResult: Result<QueueDelaySeconds, QueueError> = queueDelaySeconds(30);
 const attemptResult: Result<QueueAttempt, QueueError> = queueAttempt(1);
 const maxAttemptResult: Result<QueueAttempt, QueueError> = queueAttempt(3);
@@ -57,6 +60,7 @@ const payload: QueuePayload = {
 
 if (
   !isOk(typeResult) ||
+  !isOk(versionResult) ||
   !isOk(delayResult) ||
   !isOk(attemptResult) ||
   !isOk(maxAttemptResult) ||
@@ -86,6 +90,7 @@ const deadLetter: QueueDeadLetterMetadata = queueDeadLetterMetadata({
 const message: QueueMessage<QueuePayload> = queueMessage({
   id: queueMessageId("queue-message-123"),
   type: typeResult.value,
+  version: versionResult.value,
   enqueuedAt: timestamp.value,
   tenantId: tenantId("tenant-123"),
   correlationId: correlationId("request-123"),
@@ -122,6 +127,10 @@ handler.handle(delivery);
 const invalidType: QueueMessageType = "notifications.send-welcome-email";
 void invalidType;
 
+// @ts-expect-error queue message versions must be explicitly created and branded.
+const invalidVersion: QueueMessageVersion = 1;
+void invalidVersion;
+
 // @ts-expect-error queue delays must be explicitly created and branded.
 const invalidDelay: QueueDelaySeconds = 30;
 void invalidDelay;
@@ -146,6 +155,15 @@ queueMessage({
   id: queueMessageId("queue-message-123"),
   // @ts-expect-error queue messages require a branded message type.
   type: "notifications.send-welcome-email",
+  enqueuedAt: timestamp.value,
+  payload,
+});
+
+queueMessage({
+  id: queueMessageId("queue-message-123"),
+  type: typeResult.value,
+  // @ts-expect-error queue message versions must be explicitly created and branded when supplied.
+  version: 1,
   enqueuedAt: timestamp.value,
   payload,
 });

@@ -47,7 +47,7 @@ update repo documentation and RAG service to codify platform infra capability la
 
 
 - Decision: Record RAG knowledge disposition: covered
-  Rationale: Codified platform/infra capability layering, packages/core queue contracts, and core contract compatibility policy with source material, rules, derivation reports, selector fixtures, and generated recognition sources.
+  Rationale: Codified platform/infra capability layering, packages/core queue contracts, core contract compatibility policy, and queue/audit schema-version contracts with source material, rules, derivation reports, selector fixtures, and generated recognition sources.
 
 ## Activity Log
 
@@ -110,7 +110,7 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Codified platform/infra capability layering, packages/core queue contracts, and core contract compatibility policy with source material, rules, derivation reports, selector fixtures, compatibility fixtures, and generated recognition sources.
+Reason: Codified platform/infra capability layering, packages/core queue contracts, core contract compatibility policy, and queue/audit schema-version contracts with source material, rules, derivation reports, selector fixtures, compatibility fixtures, and generated recognition sources.
 Evidence:
 - docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
 - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
@@ -120,7 +120,10 @@ Evidence:
 - .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
 - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml
 - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
 - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml
 - packages/core/tests/compatibility/v0-public-contracts.test.ts
+- packages/core/src/queues/index.ts
+- packages/core/src/audit/index.ts
 Corpus gaps:
 - None.

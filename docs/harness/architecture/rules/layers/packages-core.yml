@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 10
+#   version: 11
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 10
+version: 11
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-08T00:00:00Z"
+  generated_at_utc: "2026-07-08T10:00:00Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 603e264b1c465d84a52e8bc2064b61d7e8dfa3838459db538ad086bf72cc6db3
+      sha256: 8ac494c1e1dd63783a7f1e1e04771217635f79a416b704322db94ec934f83eeb
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -79,7 +79,7 @@ recommended_modules:
     purpose: "Provider-neutral event envelope, payload, versioning, publisher, bus, and handler contracts."
     consumed_by: "apps, workers, platform messaging"
   - id: queues
-    purpose: "Provider-neutral queue message, send, delivery, handler, retry/dead-letter metadata, queue error, and testing-helper contracts."
+    purpose: "Provider-neutral queue message, message-version, send, delivery, handler, retry/dead-letter metadata, queue error, and testing-helper contracts."
     consumed_by: "workers and platform queue adapters"
   - id: async-jobs
     purpose: "Background job contracts and lifecycle."
@@ -91,7 +91,7 @@ recommended_modules:
     purpose: "File storage and metadata contracts."
     consumed_by: "apps and platform storage adapters"
   - id: audit
-    purpose: "Provider-neutral accountability event, actor, target, outcome, metadata, recorder, and recorder-error contracts."
+    purpose: "Provider-neutral accountability event, event-version, actor, target, outcome, metadata, recorder, and recorder-error contracts."
     consumed_by: "apps and platform audit storage"
   - id: reporting
     purpose: "Report request, generation, and export contracts."
@@ -560,14 +560,15 @@ rules:
       leaving product handlers, worker runtime, providers, and queue resources
       outside core.
     must:
-      - Define provider-neutral queue message id, message type, payload, message envelope, queue send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and helper contracts.
+      - Define provider-neutral queue message id, message type, message version, payload, message envelope, queue send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and helper contracts.
+      - Carry explicit positive integer queue message schema versions on queue messages before platform adapters serialize, retry, replay, or dead-letter them.
       - Keep queue payload values plain, serializable, and portable across app, platform, worker, broker, log, retry, dead-letter, and test boundaries.
       - Reject non-finite numeric values and non-plain runtime objects from queue payloads before they cross app/platform boundaries.
       - Treat message type names as portable work-kind facts rather than concrete broker queue names, SQS queue URLs, Kafka topics, routing keys, or worker deployment names.
       - Keep queue send and handler failures mapped to stable queue error codes before app code receives them.
       - Carry tenant id, correlation id, idempotency key, delay, message group, attempt count, and retry/dead-letter metadata where a product or runtime needs those facts.
       - Include in-memory or no-op queue helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
-      - Test message type, payload, message envelope, send options, delivery metadata, queue errors, handlers, and helper behavior without concrete runtime providers.
+      - Test message type, message version, payload, message envelope, send options, delivery metadata, queue errors, handlers, and helper behavior without concrete runtime providers.
     must_not:
       - Do not define product job catalogs, product handler behavior, or workflow enqueue decisions in packages/core.
       - Do not define concrete broker queue resources, queue URLs, receipt handles, visibility timeouts, retry algorithms, worker loops, scheduler loops, dead-letter queue resources, ordering guarantees, cloud SDK clients, or deployment topology in packages/core.
@@ -588,7 +589,8 @@ rules:
       while leaving product audit catalogs, durable storage, retention, and
       infrastructure outside core.
     must:
-      - Define provider-neutral audit event id, audit event type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, and recorder error contracts.
+      - Define provider-neutral audit event id, audit event type, audit event version, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, and recorder error contracts.
+      - Carry explicit positive integer audit event schema versions before audit events cross storage, export, compliance, retention, or SIEM boundaries.
       - Use audit records for accountability facts: who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
       - Require an explicit actor and target on audit events; represent anonymous/system actors and global/system targets deliberately instead of omitting those fields.
       - Distinguish succeeded, denied, and failed outcomes without requiring consumers to parse operational logs.
@@ -596,7 +598,7 @@ rules:
       - Reject non-finite numeric values and non-plain runtime objects from audit metadata before it crosses storage, export, or compliance boundaries.
       - Keep audit explanations translation-ready when they may be displayed to people.
       - Include in-memory or no-op audit helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
-      - Test audit type, target, actor, outcome, metadata, recorder error, and helper behavior without concrete runtime providers.
+      - Test audit type, audit event version, target, actor, outcome, metadata, recorder error, and helper behavior without concrete runtime providers.
     must_not:
       - Do not use audit as a replacement for operational logging, event buses, analytics events, monitoring metrics, or reporting exports.
       - Do not put product-specific audit catalogs, workflow emission decisions, storage tables, object-storage buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or provider adapters in packages/core.

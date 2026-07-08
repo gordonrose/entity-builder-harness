@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 10
+  version: 11
   status: active
   layer: 01.harness
   domain: architecture
@@ -44,9 +44,9 @@ The initial package surface may include these contract modules:
 - `tenancy`: tenant identifiers and tenant-resolution contracts.
 - `persistence`: repository, unit-of-work, transaction, and pagination contracts.
 - `security`: defensive policy and secret/hash contracts.
-- `audit`: audit event and recorder contracts.
+- `audit`: audit event, audit event version, and recorder contracts.
 - `events`: event envelope and event bus contracts.
-- `queues`: queue message, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
+- `queues`: queue message, queue message version, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
 
 ## Core Contract Evolution and Compatibility Policy
 
@@ -361,14 +361,19 @@ message envelopes, send options, delivery metadata, retry and dead-letter
 metadata shapes, queue error meanings, queue ports, handler ports, and small
 in-memory or no-op helpers for tests.
 
-Queue messages should carry stable metadata such as id, type, payload,
-enqueued-at timestamp, optional tenant id, optional correlation id, optional
-idempotency key, optional delay, and optional message group key where a product
-or runtime needs ordered work. Payloads should stay plain and serializable so
-platform adapters can move them through queues, retries, logs, tests, workers,
-and dead-letter paths without provider-specific objects.
+Queue messages should carry stable metadata such as id, type, schema version,
+payload, enqueued-at timestamp, optional tenant id, optional correlation id,
+optional idempotency key, optional delay, and optional message group key where
+a product or runtime needs ordered work. Payloads should stay plain and
+serializable so platform adapters can move them through queues, retries, logs,
+tests, workers, and dead-letter paths without provider-specific objects.
 Queue payloads should reject non-finite numeric values and non-plain runtime
 objects before they cross app/platform boundaries.
+
+Queue message versions should be explicit positive integers. Core helpers may
+default new queue messages to the current version to preserve additive
+compatibility, but durable platform adapters must preserve the version when a
+message is serialized, retried, replayed, or moved to a dead-letter path.
 
 Queue message type names are portable work-kind facts. They should not be
 treated as concrete broker queue names, SQS queue URLs, Kafka topics, routing
@@ -396,9 +401,10 @@ resources, dead-letter resources, alarms, permissions, and deployment topology.
 
 The `audit` module should define provider-neutral contracts for accountability
 records: audit event identifiers, audit event type names, actor references,
-target references, outcomes, timestamps, tenant context, correlation ids,
-translation-ready reasons, JSON-safe metadata, recorder error meanings,
-recorder ports, and small in-memory or no-op helpers for tests.
+audit event schema versions, target references, outcomes, timestamps, tenant
+context, correlation ids, translation-ready reasons, JSON-safe metadata,
+recorder error meanings, recorder ports, and small in-memory or no-op helpers
+for tests.
 
 Audit records should answer who did what, to which target, in which tenant or
 context, when, from which correlated request or job, and with which outcome.
@@ -408,6 +414,12 @@ Audit events should carry an explicit actor and target. Anonymous and system
 actors should be represented explicitly instead of omitting actor data; global
 or system-scoped actions should use a deliberate target instead of omitting the
 target.
+
+Audit event versions should be explicit positive integers. Core helpers may
+default new audit events to the current version to preserve additive
+compatibility, but durable audit recorders, exporters, retention workflows, and
+SIEM adapters must preserve the version when an audit event crosses storage,
+export, or compliance boundaries.
 
 Audit metadata should stay plain and serializable. It may include evidence
 needed for review, compliance, debugging, or product history, but it must not

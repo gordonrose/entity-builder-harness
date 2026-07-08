@@ -13,6 +13,7 @@ import {
   queueMessageGroupKey,
   queueMessageId,
   queueMessageType,
+  queueMessageVersion,
   queueRetryMetadata,
   queueSendOptions,
   type QueueMessage,
@@ -35,6 +36,21 @@ async function main(): Promise<void> {
   }
   equal(invalidType.error.code, "QUEUE_INVALID_TYPE");
   equal(invalidType.error.messageKey, "queues.type.invalid");
+
+  const validVersion = queueMessageVersion(1);
+  equal(isOk(validVersion), true);
+  if (!isOk(validVersion)) {
+    throw new Error("Expected queue message version to be valid.");
+  }
+  equal(validVersion.value, 1);
+
+  const invalidVersion = queueMessageVersion(0);
+  equal(isErr(invalidVersion), true);
+  if (!isErr(invalidVersion)) {
+    throw new Error("Expected queue message version to be invalid.");
+  }
+  equal(invalidVersion.error.code, "QUEUE_INVALID_VERSION");
+  equal(invalidVersion.error.messageKey, "queues.version.invalid");
 
   const validDelay = queueDelaySeconds(30);
   equal(isOk(validDelay), true);
@@ -84,6 +100,7 @@ async function main(): Promise<void> {
   const message = queueMessage({
     id: queueMessageId("queue-message-123"),
     type: validType.value,
+    version: validVersion.value,
     enqueuedAt: enqueuedAt.value,
     tenantId: tenantId("tenant-123"),
     correlationId: correlationId("request-123"),
@@ -95,6 +112,7 @@ async function main(): Promise<void> {
   deepEqual(message, {
     id: "queue-message-123",
     type: "notifications.send-welcome-email",
+    version: 1,
     enqueuedAt: "2026-07-07T12:00:00.000Z",
     tenantId: "tenant-123",
     correlationId: "request-123",
