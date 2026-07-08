@@ -27,15 +27,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core security contracts retrieve secret, hash, data classification, policy decision, and runtime/provider-boundary rules.
 input:
-  request_text: Explain how product and platform code should use packages/core security contracts for SecretString, Hash, Hasher, data sensitivity, sensitive value classification, security policy violations, policy decisions, policy evaluators, and what should stay out of core.
+  request_text: Explain how product and platform code should use packages/core/src/security/index.ts contracts for SecretString, Hash, Hasher, data sensitivity, sensitive value classification, security policy violations, policy decisions, policy evaluators, and what should stay out of core; use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/security/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
   max_chunks: 8
 expected:
   routing:

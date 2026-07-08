@@ -89,7 +89,6 @@ packet = {
     "request": {
         "raw_text": "Smoke validate a context packet.",
         "normalized_summary": "Validate a small cited packet from generated chunks.",
-        "focused_paths": ["scripts/02.rag-rulebook/**"],
         "open_artifact_ids": selected_artifact_ids,
     },
     "intent": {

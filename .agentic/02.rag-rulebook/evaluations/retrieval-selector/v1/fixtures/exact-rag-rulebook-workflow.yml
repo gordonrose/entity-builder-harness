@@ -26,14 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove an explicit RAG/rulebook workflow request routes through governed RAG/rulebook signals.
 input:
-  request_text: Update the RAG rulebook workflow for context packets.
+  request_text: Update the RAG rulebook workflow .agentic/02.rag-rulebook/workflows/default.md for context packets.
   session:
     trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  focused_paths:
-    - .agentic/02.rag-rulebook/workflows/default.md
   max_chunks: 6
 expected:
   routing:
@@ -51,7 +49,6 @@ expected:
     required_matched_inputs:
       - prompt
       - session-metadata
-      - focused-paths
   gaps:
     allowed:
       - gap.selector-fixture.prototype-corpus-bridge

@@ -1,0 +1,136 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.02-rag-rulebook.2026-07-07-hosted-context-provider-contract
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for the RAG-owned hosted context provider contract.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+#       path: docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.02.rag-rulebook.2026-07-07.hosted-context-provider-contract
+status: needs-review
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  summary: >
+    Added RAG/rulebook source material for the hosted context provider boundary,
+    including provider ownership, local config path, bearer auth behavior,
+    secret redaction, fail-closed rules, and governed local fallback semantics.
+
+target:
+  corpus_id: corpus.02.rag-rulebook
+  owner_layer: 02.rag-rulebook
+  expected_rule_paths:
+    - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  affected_rule_paths:
+    - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  affected_rulesets: []
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+  affected_corpus_gaps:
+    - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
+
+semantic_review:
+  source_claims:
+    - claim_id: rag-rulebook-owns-provider-selection
+      summary: >
+        The RAG rulebook layer owns hosted/local provider selection, auth, fallback,
+        redaction, and packet validation; callers only request context packets.
+      evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - claim_id: local-config-is-rag-owned
+      summary: >
+        The local hosted-provider config path is ~/.config/rag-rulebook/rag.env,
+        not an llm-workbench or chat-owned path.
+      evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - claim_id: hosted-auth-fails-closed
+      summary: >
+        Explicit hosted mode must fail closed for missing or rejected bearer auth
+        instead of silently falling back to local RAG.
+      evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - claim_id: local-fallback-is-governed
+      summary: >
+        Local fallback is allowed only when explicitly governed, and rejected hosted
+        credentials remain blocking.
+      evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/02.rag-rulebook/rules/
+      - docs/04.deploy/rules/
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - Provider configuration and runtime auth belong to corpus.02.rag-rulebook.
+      - Hosted service deployment topology still belongs to corpus.04.deploy.
+      - Chat lifecycle remains a consumer of context packets, not the owner of provider secrets.
+
+proposed_updates:
+  rules:
+    - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps:
+    - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+  notes:
+    - The selector fixture should retrieve this RAG-owned provider contract plus deploy/runtime boundary evidence.
+    - Runtime proof is covered by scripts/02.rag-rulebook/query-context/smoke-test.sh.
+
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml --json
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current --json
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml --json
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current --json
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: pending
+  notes:
+    - Review after query-context, selector fixture, and corpus-gap changes land in the same slice.

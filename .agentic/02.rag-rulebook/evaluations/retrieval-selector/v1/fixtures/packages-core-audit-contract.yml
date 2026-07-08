@@ -26,17 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core audit contracts retrieve audit accountability, metadata, logging/event distinction, and storage-boundary rules.
 input:
-  request_text: Explain how product code should use packages/core audit contracts for actor, tenant, target, outcome, metadata, correlation id, recorder errors, storage adapters, and the difference between audit records, logs, and events.
+  request_text: Explain how product code should use packages/core/src/audit/index.ts contracts for actor, tenant, target, outcome, metadata, correlation id, recorder errors, storage adapters, and the difference between audit records, logs, and events; compare packages/core/src/logging/index.ts and packages/core/src/events/index.ts, and use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/audit/index.ts
-    - packages/core/src/logging/index.ts
-    - packages/core/src/events/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
   max_chunks: 8
 expected:
   routing:

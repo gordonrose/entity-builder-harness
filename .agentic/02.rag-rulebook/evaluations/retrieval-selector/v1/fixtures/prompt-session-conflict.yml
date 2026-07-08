@@ -26,14 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompt terms cannot authorize side effects even when request context differs from complete session metadata.
 input:
-  request_text: Deploy this RAG rulebook workflow now.
+  request_text: Deploy this RAG rulebook workflow .agentic/02.rag-rulebook/workflows/default.md now.
   session:
     trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  focused_paths:
-    - .agentic/02.rag-rulebook/workflows/default.md
   max_chunks: 6
 expected:
   routing:

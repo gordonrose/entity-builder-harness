@@ -27,16 +27,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core monitoring contracts retrieve health-check, metric, signal-definition, label-safety, and provider-boundary guidance.
 input:
-  request_text: Explain how product and platform code should use packages/core monitoring contracts for liveness, readiness, dependency health checks, MetricPoint, Metrics, safe metric labels, MonitoringSignalDefinition, SLI intent, and what should stay out of core.
+  request_text: Explain how product and platform code should use packages/core/src/monitoring/index.ts contracts for liveness, readiness, dependency health checks, MetricPoint, Metrics, safe metric labels, MonitoringSignalDefinition, SLI intent, and what should stay out of core; use docs/harness/architecture/rules/layers/packages-core.yml and docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml for the package-core and monitoring-alert boundaries.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/monitoring/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
   max_chunks: 8
 expected:
   routing:

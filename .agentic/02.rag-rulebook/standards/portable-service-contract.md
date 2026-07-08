@@ -82,7 +82,7 @@ The service should accept structured inputs when available:
 - normalized intent candidate
 - layer, mode, and workflow metadata
 - changed or proposed paths
-- open files or focused artifacts
+- typed request anchors such as open files or selected artifacts
 - corpus package manifests
 - existing artifact metadata indexes
 
@@ -169,8 +169,8 @@ The local service may:
 - expose `/health`, `/version`, and `/context/query`
 - delegate retrieval to the validated local runtime and context-query command
 - fail closed when the runtime cache is missing or stale
-- validate request size, content type, `maxChunks`, focused paths, and output
-  format before invoking the query command
+- validate request size, content type, `maxChunks`, retired request-context
+  fields, and output format before invoking the query command
 
 The local service must not:
 

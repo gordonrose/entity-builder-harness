@@ -32,7 +32,6 @@ input:
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  no_focused_paths: true
   max_chunks: 8
 expected:
   routing:

@@ -46,7 +46,7 @@ bash scripts/02.rag-rulebook/compile-retrieval-policy/script.sh \
 bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --chunks "$CHUNKS_FILE" \
   --compiled-policy "$COMPILED_POLICY_FILE" \
-  --request-text "Build the RAG rulebook retrieval selector fixture using routing recognition sources." \
+  --request-text "Build the RAG rulebook retrieval selector fixture using .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml and .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml." \
   --session-id retrieval-selector-smoke \
   --session-branch chat/retrieval-selector-smoke \
   --session-worktree /tmp/retrieval-selector-smoke \
@@ -54,8 +54,6 @@ bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --session-mode implementation \
   --session-workflow .agentic/02.rag-rulebook/workflows/default.md \
   --trust-session-routing \
-  --focused-path .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml \
-  --focused-path .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml \
   --pretty > "$PACKET_FILE"
 
 bash scripts/02.rag-rulebook/validate-context-packet/script.sh \

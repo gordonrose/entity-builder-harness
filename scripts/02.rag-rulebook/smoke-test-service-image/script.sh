@@ -186,7 +186,7 @@ async function main() {
   const unauthorized = await fetch(`${base}/context/query`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ requestText: "Check authorization.", noFocusedPaths: true }),
+    body: JSON.stringify({ requestText: "Check authorization." }),
   });
   if (unauthorized.status !== 401) {
     throw new Error(`expected unauthorized query to return 401, got ${unauthorized.status}`);
@@ -205,7 +205,6 @@ async function main() {
         mode: "discovery",
         workflow: ".agentic/02.rag-rulebook/workflows/default.md",
       },
-      noFocusedPaths: true,
       maxChunks: 6,
       format: "compact",
     }),

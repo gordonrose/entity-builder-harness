@@ -52,7 +52,7 @@ compiled = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert compiled["schema"] == "rag-rulebook/compiled-retrieval-policy/v1"
 assert compiled["compiled_policy_id"].startswith("compiled.retrieval-policy.retrieval-selector.v1.")
 assert compiled["policy_pack"]["policy_pack_id"] == "retrieval-selector.v1"
-assert len(compiled["dimensions"]) == 15
+assert len(compiled["dimensions"]) == 14
 assert len(compiled["recognition_sources"]["sources"]) == 7
 assert compiled["recognition_sources"]["counts"]["terms"] > 0
 assert compiled["intent_resolution"]["default_intent_id"] == "intent.context.retrieve"

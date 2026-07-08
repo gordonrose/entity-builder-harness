@@ -107,7 +107,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"compact\",\n  \"maxChunks\": {{maxChunks}},\n  \"session\": {\n    \"layer\": \"02.rag-rulebook\",\n    \"mode\": \"discovery\",\n    \"workflow\": \".agentic/02.rag-rulebook/workflows/default.md\"\n  },\n  \"noFocusedPaths\": true\n}"
+          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"compact\",\n  \"maxChunks\": {{maxChunks}},\n  \"session\": {\n    \"layer\": \"02.rag-rulebook\",\n    \"mode\": \"discovery\",\n    \"workflow\": \".agentic/02.rag-rulebook/workflows/default.md\"\n  }\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/context/query",
@@ -164,7 +164,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"full\",\n  \"maxChunks\": {{maxChunks}},\n  \"focusedPaths\": [\n    \"docs/02.rag-rulebook\",\n    \"docs/04.deploy\"\n  ],\n  \"session\": {\n    \"layer\": \"02.rag-rulebook\",\n    \"mode\": \"discovery\",\n    \"workflow\": \".agentic/02.rag-rulebook/workflows/default.md\"\n  }\n}"
+          "raw": "{\n  \"requestText\": \"{{requestText}}\",\n  \"format\": \"full\",\n  \"maxChunks\": {{maxChunks}},\n  \"session\": {\n    \"layer\": \"02.rag-rulebook\",\n    \"mode\": \"discovery\",\n    \"workflow\": \".agentic/02.rag-rulebook/workflows/default.md\"\n  }\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/context/query",

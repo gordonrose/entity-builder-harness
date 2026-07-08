@@ -26,16 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core event contracts retrieve event envelope, payload, publish, and broker-boundary rules.
 input:
-  request_text: Explain how product code should use packages/core events contracts for event envelopes, JSON-safe payloads, event type versions, event buses, handlers, after-commit publishing, and broker topics or subscribers.
+  request_text: Explain how product code should use packages/core/src/events/index.ts contracts for event envelopes, JSON-safe payloads, event type versions, event buses, handlers, after-commit publishing, and broker topics or subscribers; compare packages/core/src/persistence/index.ts for transaction and after-commit boundaries, and use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/events/index.ts
-    - packages/core/src/persistence/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
   max_chunks: 8
 expected:
   routing:

@@ -456,7 +456,6 @@ def build_packet(args: argparse.Namespace, chunk_set: dict[str, Any]) -> dict[st
         "request": {
             "raw_text": args.request_text,
             "normalized_summary": "Generate a deterministic validated context-packet fixture from rulebook chunks.",
-            "focused_paths": args.target_paths,
             "open_artifact_ids": selected_artifact_ids,
         },
         "intent": {

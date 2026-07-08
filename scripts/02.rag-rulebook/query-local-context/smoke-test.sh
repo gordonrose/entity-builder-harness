@@ -42,7 +42,7 @@ bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "How do I update my harness so we can deploy it behind an MCP server?" \
+  --request-text "How do I update my harness through .agentic/01.harness/workflows/change-harness.md so we can deploy it behind an MCP server?" \
   --session-id chat-trusted-session \
   --session-branch chat/trusted-session \
   --session-worktree /tmp/chat-trusted-session \
@@ -50,12 +50,11 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --session-mode planning \
   --session-workflow .agentic/01.harness/workflows/change-harness.md \
   --trust-session-routing \
-  --focused-path .agentic/01.harness/workflows/change-harness.md \
   --pretty > "$PACKET_FILE"
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "How do I update my harness so we can deploy it behind an MCP server?" \
+  --request-text "How do I update my harness through .agentic/01.harness/workflows/change-harness.md so we can deploy it behind an MCP server?" \
   --session-id chat-trusted-session \
   --session-branch chat/trusted-session \
   --session-worktree /tmp/chat-trusted-session \
@@ -63,43 +62,38 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --session-mode planning \
   --session-workflow .agentic/01.harness/workflows/change-harness.md \
   --trust-session-routing \
-  --focused-path .agentic/01.harness/workflows/change-harness.md \
   --format compact \
   --pretty > "$COMPACT_PACKET_FILE"
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "Explain the corpus.03.product.platform rules using the exact product platform corpus." \
+  --request-text "Explain the corpus.03.product.platform rules in docs/harness/architecture/rules/layers/platform.yml using the exact product platform corpus." \
   --session-id chat-test-session \
   --session-branch chat/test-session \
   --session-worktree /tmp/chat-test-session \
   --previous-packet-id packet.selector-fixture.previous \
   --previous-routing-summary "previous prompt used 02.rag-rulebook planning context" \
-  --focused-path docs/harness/architecture/rules/layers/platform.yml \
   --pretty > "$PROMPT_FIRST_PACKET_FILE"
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "Explain the product platform rules for this prompt." \
+  --request-text "Explain the product platform rules in docs/harness/architecture/rules/layers/platform.yml for this prompt." \
   --session-id chat-test-session \
   --session-branch chat/test-session \
   --session-worktree /tmp/chat-test-session \
   --session-layer 04.deploy \
   --session-mode execution \
   --session-workflow .agentic/aws/workflows/execute-approved-aws-change.md \
-  --focused-path docs/harness/architecture/rules/layers/platform.yml \
   --pretty > "$MALICIOUS_HINT_PACKET_FILE"
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
   --request-text "Explain corpus.03.product.platform for this prompt." \
-  --focused-path .agentic/02.rag-rulebook/workflows/default.md \
   --pretty > "$ROUTE_COHERENCE_PACKET_FILE"
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
   --request-text "Commit this" \
-  --no-focused-paths \
   --pretty > "$SIDE_EFFECT_PACKET_FILE"
 
 python3 - "$PACKET_FILE" <<'PY'
@@ -111,11 +105,12 @@ from pathlib import Path
 
 packet = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert packet["schema"] == "rag-rulebook/context-packet/v1"
-assert packet["routing"]["layer"] == "01.harness"
-assert packet["routing"]["mode"] == "discovery"
-assert packet["routing"]["workflow"] == ".agentic/01.harness/workflows/change-harness.md"
+assert packet["routing"]["layer"] == "04.deploy"
+assert packet["routing"]["mode"] == "planning"
+assert packet["routing"]["workflow"] == ".agentic/aws/workflows/plan-aws-change.md"
 assert packet["routing"]["status"] == "ready"
 assert any(corpus["corpus_id"] == "corpus.02.rag-rulebook" for corpus in packet["matched_corpora"])
+assert any(corpus["corpus_id"] == "corpus.04.deploy" for corpus in packet["matched_corpora"])
 assert any("mcp.server.deployment.architecture" in chunk["chunk_id"] for chunk in packet["selected_chunks"])
 assert packet["selector_trace"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
 assert packet["selector_trace"]["candidate_counts"]["selected"] == len(packet["selected_chunks"])
@@ -229,7 +224,6 @@ if bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
   --request-text "Explain prompt context" \
   --session-worktree relative/worktree \
-  --no-focused-paths \
   --pretty > "$TMP_DIR/invalid-worktree.json" 2> "$TMP_DIR/invalid-worktree.err"; then
   echo "ERROR: invalid relative worktree unexpectedly succeeded." >&2
   exit 1
@@ -248,7 +242,6 @@ if bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --session-mode planning \
   --session-workflow .agentic/01.harness/workflows/change-harness.md \
   --trust-session-routing \
-  --no-focused-paths \
   --pretty > "$TMP_DIR/trust-without-proof.json" 2> "$TMP_DIR/trust-without-proof.err"; then
   echo "ERROR: trusted routing without lifecycle proof unexpectedly succeeded." >&2
   exit 1
@@ -275,11 +268,10 @@ PY
 
 if bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "How do I update my harness so we can deploy it behind an MCP server?" \
+  --request-text "How do I update my harness through .agentic/01.harness/workflows/change-harness.md so we can deploy it behind an MCP server?" \
   --session-layer 01.harness \
   --session-mode planning \
   --session-workflow .agentic/01.harness/workflows/change-harness.md \
-  --focused-path .agentic/01.harness/workflows/change-harness.md \
   --pretty > "$TMP_DIR/stale-packet.json" 2> "$TMP_DIR/stale-query.err"; then
   echo "ERROR: stale local runtime unexpectedly queried successfully." >&2
   exit 1
