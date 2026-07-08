@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-08T09:59:22Z
-latest_commit_sha: ef5c679
-chat_duration: 38387s (00:10:39:47)
+latest_commit_at_utc: 2026-07-08T11:03:22Z
+latest_commit_sha: 3ae39ac
+chat_duration: 42227s (00:11:43:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -95,6 +95,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Diagnostics and self-healing direction captured in packages/core contracts, source material, rules, derivation report, and selector fixture.
 
+
+### 2026-07-08T11:03:22Z - Commit recorded
+
+Commit: `3ae39ac`
+
+Message: Add core diagnostics self-healing contracts
+
+Summary: Added provider-neutral packages/core diagnostics contracts, optional CoreError diagnostic metadata, tests, and RAG/source guidance for the self-healing failure-classification loop.
+
+ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, recognition sources, and recorded RAG disposition cover this slice.
+
 ## Commits
 
 
@@ -112,6 +123,13 @@ Rationale: Diagnostics and self-healing direction captured in packages/core cont
   Summary: Added explicit schema-version contracts for queue messages and audit events, defaulted new envelopes to v1, and updated tests, docs, rules, derivation reports, and selector fixtures.
   ADR impact: No standalone ADR required; existing core contract source material and RAG evidence cover this schema-version hardening slice.
 
+
+- Commit: `3ae39ac`
+  Time UTC: 2026-07-08T11:03:22Z
+  Message: Add core diagnostics self-healing contracts
+  Summary: Added provider-neutral packages/core diagnostics contracts, optional CoreError diagnostic metadata, tests, and RAG/source guidance for the self-healing failure-classification loop.
+  ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, recognition sources, and recorded RAG disposition cover this slice.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -125,9 +143,9 @@ Reason: Source material, architecture rules, derivation reports, selector fixtur
 ## Session Metrics
 
 Raised at UTC: 2026-07-07T23:19:35Z
-Latest commit at UTC: 2026-07-08T09:59:22Z
-Latest commit SHA: ef5c679
-Chat duration: 38387s (00:10:39:47)
+Latest commit at UTC: 2026-07-08T11:03:22Z
+Latest commit SHA: 3ae39ac
+Chat duration: 42227s (00:11:43:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
