@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-08T09:43:28Z
-latest_commit_sha: 4f4bb18
-chat_duration: 37433s (00:10:23:53)
+latest_commit_at_utc: 2026-07-08T09:59:22Z
+latest_commit_sha: ef5c679
+chat_duration: 38387s (00:10:39:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -73,6 +73,17 @@ Summary: Codified provider-agnostic platform/infra layering, added packages/core
 
 ADR impact: No standalone ADR required; source material, rules, derivation reports, selector fixtures, compatibility fixtures, and RAG disposition cover this slice.
 
+
+### 2026-07-08T09:59:22Z - Commit recorded
+
+Commit: `ef5c679`
+
+Message: Add queue and audit schema versions
+
+Summary: Added explicit schema-version contracts for queue messages and audit events, defaulted new envelopes to v1, and updated tests, docs, rules, derivation reports, and selector fixtures.
+
+ADR impact: No standalone ADR required; existing core contract source material and RAG evidence cover this schema-version hardening slice.
+
 ## Commits
 
 
@@ -82,6 +93,13 @@ ADR impact: No standalone ADR required; source material, rules, derivation repor
   Message: Codify platform layering and core queue contracts
   Summary: Codified provider-agnostic platform/infra layering, added packages/core queue contracts, and added core public-contract compatibility policy plus compile-only compatibility fixtures.
   ADR impact: No standalone ADR required; source material, rules, derivation reports, selector fixtures, compatibility fixtures, and RAG disposition cover this slice.
+
+
+- Commit: `ef5c679`
+  Time UTC: 2026-07-08T09:59:22Z
+  Message: Add queue and audit schema versions
+  Summary: Added explicit schema-version contracts for queue messages and audit events, defaulted new envelopes to v1, and updated tests, docs, rules, derivation reports, and selector fixtures.
+  ADR impact: No standalone ADR required; existing core contract source material and RAG evidence cover this schema-version hardening slice.
 
 ## Main Refresh Conflicts
 
@@ -96,9 +114,9 @@ Reason: Source material, architecture rules, derivation reports, selector fixtur
 ## Session Metrics
 
 Raised at UTC: 2026-07-07T23:19:35Z
-Latest commit at UTC: 2026-07-08T09:43:28Z
-Latest commit SHA: 4f4bb18
-Chat duration: 37433s (00:10:23:53)
+Latest commit at UTC: 2026-07-08T09:59:22Z
+Latest commit SHA: ef5c679
+Chat duration: 38387s (00:10:39:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
