@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-07T23:19:35Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-08T09:43:28Z
+latest_commit_sha: 4f4bb18
+chat_duration: 37433s (00:10:23:53)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -62,9 +62,26 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Codified platform/infra capability layering and packages/core queue contracts with source material, rules, derivation reports, selector fixtures, and generated recognition sources.
 
+
+### 2026-07-08T09:43:28Z - Commit recorded
+
+Commit: `4f4bb18`
+
+Message: Codify platform layering and core queue contracts
+
+Summary: Codified provider-agnostic platform/infra layering, added packages/core queue contracts, and added core public-contract compatibility policy plus compile-only compatibility fixtures.
+
+ADR impact: No standalone ADR required; source material, rules, derivation reports, selector fixtures, compatibility fixtures, and RAG disposition cover this slice.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `4f4bb18`
+  Time UTC: 2026-07-08T09:43:28Z
+  Message: Codify platform layering and core queue contracts
+  Summary: Codified provider-agnostic platform/infra layering, added packages/core queue contracts, and added core public-contract compatibility policy plus compile-only compatibility fixtures.
+  ADR impact: No standalone ADR required; source material, rules, derivation reports, selector fixtures, compatibility fixtures, and RAG disposition cover this slice.
 
 ## Main Refresh Conflicts
 
@@ -79,12 +96,12 @@ Reason: Source material, architecture rules, derivation reports, selector fixtur
 ## Session Metrics
 
 Raised at UTC: 2026-07-07T23:19:35Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-08T09:43:28Z
+Latest commit SHA: 4f4bb18
+Chat duration: 37433s (00:10:23:53)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
