@@ -168,6 +168,39 @@ Summary: Hardened packages/core i18n and localization contracts by blocking unsa
 
 ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, compatibility canary, and recorded RAG disposition cover this review-hardening slice.
 
+
+### 2026-07-08T17:14:34Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept main's explicit path request_text style while preserving this branch's schema-version wording in purpose and request_text.
+
+
+### 2026-07-08T17:14:41Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept main's explicit path request_text style and no focused_paths block while preserving this branch's max_chunks: 10.
+
+
+### 2026-07-08T17:14:49Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: deterministic
+
+Action: Did not hand-merge; regenerated recognition sources from merged preflight content with bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all.
+
 ## Commits
 
 
@@ -215,7 +248,39 @@ ADR impact: No standalone ADR required; source material, packages-core rules, de
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Main and chat branch both updated the packages/core audit selector fixture while main retired focused_paths into explicit request_text paths.
+  Action: Kept main's explicit path request_text style while preserving this branch's schema-version wording in purpose and request_text.
+  Preflight branch: `agentic/preflight/chat-2026-07-08-00-19-update-repo-documentation-fc1b02370f10/20260708165134`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-08-00-19-update-repo-documentation-fc1b02370f10-20260708165134`
+  Files changed by resolution: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
+  Checks: npm run core:check; generate-recognition-sources --check --source all; audit/persistence/i18n selector fixtures; git diff --check passed
+
+
+- Path: `.agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Main and chat branch both updated the packages/core persistence selector fixture while main retired focused_paths into explicit request_text paths.
+  Action: Kept main's explicit path request_text style and no focused_paths block while preserving this branch's max_chunks: 10.
+  Preflight branch: `agentic/preflight/chat-2026-07-08-00-19-update-repo-documentation-fc1b02370f10/20260708165134`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-08-00-19-update-repo-documentation-fc1b02370f10-20260708165134`
+  Files changed by resolution: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
+  Checks: npm run core:check; generate-recognition-sources --check --source all; audit/persistence/i18n selector fixtures; git diff --check passed
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `normal-repo-conflict`
+  Mode: deterministic
+  Reason: Generated recognition sources changed on both main and the chat branch during the main refresh.
+  Action: Did not hand-merge; regenerated recognition sources from merged preflight content with bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all.
+  Preflight branch: `agentic/preflight/chat-2026-07-08-00-19-update-repo-documentation-fc1b02370f10/20260708165134`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-08-00-19-update-repo-documentation-fc1b02370f10-20260708165134`
+  Files changed by resolution: .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+  Checks: npm run core:check; generate-recognition-sources --check --source all; audit/persistence/i18n selector fixtures; git diff --check passed
 
 ## ADR Disposition
 

@@ -26,17 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about translation-ready messages and locale-sensitive formatting retrieve i18n/localization contract boundaries.
 input:
-  request_text: Explain how packages/core should model i18n and localization contracts for translating validation errors, policy denials, and API display messages with locale tags, message catalogs, translator ports, fallback default messages, currency codes, region codes, time zones, localizable date/number/currency values, and localizer ports without putting final product copy, locale negotiation, catalog loading, Intl/FormatJS/i18next implementation, CLDR loading, currency conversion, or UI display rules in core.
+  request_text: Explain how product and platform code should use packages/core/src/i18n/index.ts and packages/core/src/localization/index.ts contracts for translating validation errors, policy denials, and API display messages with locale tags, message catalogs, translator ports, fallback default messages, currency codes, region codes, time zones, localizable date/number/currency values, and localizer ports without putting final product copy, locale negotiation, catalog loading, Intl/FormatJS/i18next implementation, CLDR loading, currency conversion, or UI display rules in core; use docs/harness/architecture/rules/layers/packages-core.yml and docs/harness/architecture/rules/concerns/i18n-localization.yml for the package-core and i18n/localization boundaries.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/i18n/index.ts
-    - packages/core/src/localization/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/concerns/i18n-localization.yml
   max_chunks: 10
 expected:
   routing:
