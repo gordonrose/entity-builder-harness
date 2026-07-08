@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 8
+  version: 16
   status: active
   layer: 01.harness
   domain: architecture
@@ -36,6 +36,7 @@ The initial package surface may include these contract modules:
 
 - `shared`: branded identifiers, result/error shapes, translation-ready message descriptors, request context, clocks.
 - `config`: config source and schema contracts.
+- `diagnostics`: provider-neutral failure classification, recovery disposition, and self-healing vocabulary.
 - `logging`: logger, log record, and redaction contracts.
 - `monitoring`: health check, metric, signal definition, and label-safety contracts.
 - `validation`: validation issue and validator contracts.
@@ -43,16 +44,55 @@ The initial package surface may include these contract modules:
 - `authz`: permission and authorizer contracts.
 - `tenancy`: tenant identifiers and tenant-resolution contracts.
 - `persistence`: repository, unit-of-work, transaction, and pagination contracts.
+- `files`: file metadata, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, and storage port contracts.
 - `security`: defensive policy and secret/hash contracts.
-- `audit`: audit event and recorder contracts.
+- `audit`: audit event, audit event version, and recorder contracts.
 - `events`: event envelope and event bus contracts.
+- `queues`: queue message, queue message version, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
+- `i18n`: locale tag, message template, translation catalog, translator, fallback behavior, and i18n error contracts.
+- `localization`: currency, region, time-zone, localizable value, localizer, formatted output, and localization error contracts.
+
+## Core Contract Evolution and Compatibility Policy
+
+Core contracts are compatibility-sensitive even when they are not durable
+payload schemas. Apps, platform runtime code, provider adapters, tests, and
+future generated code may compile against exported core types, helper names,
+stable error codes, message keys, metric names, config keys, permission
+strings, event types, queue message types, and port interfaces.
+
+Core contract changes should therefore be additive by default. Adding an
+optional field, adding a new helper, adding a new stable error code, or adding
+a new module is usually safer than renaming, removing, narrowing, or changing
+the meaning of an existing export.
+
+Non-additive changes require an explicit compatibility decision. A breaking
+change must record what changed, why additive evolution was not enough, which
+consumers are affected, how existing consumers migrate, and when any deprecated
+surface may be removed. Renames and removals should normally keep an adapter,
+alias, shim, or compatibility window before the old surface disappears.
+
+Durable or asynchronous payloads need explicit schema/version facts because
+they may outlive the deployment that created them. Events already carry event
+schema versions. Queue messages, audit records, persistence snapshots, or other
+serialized cross-runtime payloads should add schema/version contracts before
+they become durable, replayable, retried, exported, or shared across deployed
+versions.
+
+Public TypeScript contracts need compatibility fixtures in addition to module
+unit and type tests. Compatibility fixtures should model old public usages from
+apps and platform code and should compile as part of the core check. Future
+changes may update those fixtures only when the breaking change is intentional,
+documented, and paired with migration guidance.
 
 ## Shared Primitive Boundary
 
 The `shared` module should define the lowest-level provider-neutral primitives
 that other core modules depend on. Shared branded identifiers, result/error
 shapes, message descriptors, clocks, and request context values should stay
-small, stable, and JSON-safe.
+small, stable, and JSON-safe. Core errors may carry an optional diagnostic
+descriptor when a failure needs structured recovery, retryability, or
+user-correctability metadata, and module error helpers should preserve that
+descriptor when callers provide it.
 
 `ISODateTime` values should represent explicit ISO date-time strings with
 timezone information. Date-only strings, localized prose dates, and implicit
@@ -64,6 +104,55 @@ Provider-neutral JSON-like contract values should stay plain and serializable.
 Shared helpers should reject non-finite numeric values and non-plain runtime
 objects when copying cross-boundary facts for claims, policy facts, event
 payloads, or audit metadata.
+
+## Diagnostics and Self-Healing Boundary
+
+The `diagnostics` module should define provider-neutral contracts for
+classifying failures and giving runtime layers enough structured meaning to
+decide safe follow-up actions. It may define failure kinds, failure sources,
+failure severity, recovery disposition, recovery action vocabulary, retryable
+and user-correctable indicators, primitive diagnostic facts, and small pure
+helpers.
+
+Diagnostics should support the self-healing loop:
+
+1. detect the failure through logs, monitoring, queues, events, audits, or
+   validation results;
+2. classify the failure as user-correctable, retryable, repairable,
+   investigation-needed, escalated, or not recoverable;
+3. correlate the failure through request, tenant, job, event, queue, resource,
+   or audit identifiers;
+4. decide the safest next action;
+5. act through a platform/runtime workflow when automation is allowed;
+6. verify the result through monitoring, audit, events, or follow-up checks;
+7. escalate to a person or product workflow when automation is unsafe or
+   exhausted.
+
+The diagnostics contract should help distinguish user/input errors from
+genuine bugs and runtime/provider failures without parsing free-text logs.
+Examples include an invalid CSV row that is user-correctable, a temporary
+provider outage that is retryable, a data-integrity conflict that needs manual
+investigation, or a code bug that should be escalated.
+
+Diagnostic descriptors should not contradict themselves. For example,
+`automation_retryable` recovery must not be paired with `retryable: false`, and
+`user_correctable` recovery must not be paired with `userCorrectable: false`.
+Runtime automation should be able to trust the explicit boolean flags without
+re-interpreting free-text recovery labels.
+
+Diagnostic facts must stay primitive, bounded, and safe to copy into logs,
+monitoring, queue metadata, events, audit records, or incident workflows. They
+must not carry secrets, tokens, raw credentials, raw request bodies, provider
+objects, class instances, non-finite numbers, or runtime-only values.
+
+The `diagnostics` module must not implement retries, repair workflows, AI
+debugging, log queries, incident routing, runbook orchestration, worker loops,
+provider actions, product policy, or infrastructure alarms. Apps decide which
+failures are safe to automate for a product use case. Platform runtime owns
+the remediation workflow, correlation lookups, retry execution, verification,
+and escalation. Provider adapters translate concrete provider errors into the
+core diagnostic vocabulary. Infra provisions alarms, queues, dead-letter
+resources, log backends, and runbook hooks.
 
 ## Config Contract Boundary
 
@@ -281,6 +370,48 @@ repositories, or product workflow decisions. Platform owns concrete storage
 adapters. Infra owns storage topology, backup resources, indexes, and scaling.
 Apps and product modules own product-specific queries and workflow behavior.
 
+## Files Contract Boundary
+
+The `files` module should define provider-neutral contracts for uploaded and
+stored file metadata: file identifiers, file names, content types, byte sizes,
+checksums, storage references, scan status, access intent, duplicate/idempotent
+put policy, retention/legal-hold facts, file metadata, file error meanings,
+storage ports, and small in-memory helpers for tests.
+
+Files are high-risk storage because they are large, user-controlled, and often
+sensitive. File contracts should make content-type validation, size policy,
+tenant isolation, scan status, checksum, storage reference, access intent,
+retention or legal-hold needs, and audit/log correlation visible before files
+become durable or directly accessible. Storage read and delete ports should
+receive provider-neutral access intent rather than raw file ids so tenant,
+correlation, operation, and access-purpose facts are present at the boundary.
+
+File put contracts should define duplicate behavior instead of leaving retries
+and accidental overwrites adapter-specific. A core test helper may default to a
+conflict on duplicate file id and support an explicit idempotent duplicate mode
+for retry scenarios where the stored metadata still matches the attempted put.
+
+File metadata should stay plain and serializable. It may include product facts
+such as import source, row count, or processing hints, but it must not carry
+secrets, raw credentials, provider objects, request objects, parser instances,
+large file bodies, non-finite numeric values, or runtime-only values. Metadata
+validation should map invalid metadata to stable file error vocabulary rather
+than leaking raw runtime exceptions to app or platform consumers.
+
+File body handling should stay generic in core. Apps may decide that a file is
+a CSV import, contract attachment, profile image, report export, or evidence
+artifact. Platform runtime owns request parsing, stream handling, content
+validation, scanner invocation, direct access grants, and adapter lifecycle.
+Provider adapters translate concrete storage or scanner errors into stable
+file error meanings. Infra provisions buckets or stores, encryption, network
+access, retention, legal hold, malware scanning resources, alarms, and
+permissions.
+
+The `files` module must not define object-storage buckets, public URLs, signed
+URL generation, scanner integrations, image processing, CSV parsing,
+spreadsheet parsing, product document workflows, retention jobs, legal-hold
+jobs, cloud SDK clients, provider resource names, or deployment topology.
+
 ## Events Contract Boundary
 
 The `events` module should define provider-neutral contracts for facts that
@@ -319,13 +450,63 @@ workflow decisions. Apps own product event meanings and emission decisions.
 Platform owns concrete delivery adapters. Infra owns broker resources and
 deployment topology.
 
+## Queues Contract Boundary
+
+The `queues` module should define provider-neutral contracts for retryable
+background work that crosses app, platform, worker, and broker boundaries:
+queue message identifiers, message type names, JSON-safe payload values,
+message envelopes, send options, delivery metadata, retry and dead-letter
+metadata shapes, queue error meanings, queue ports, handler ports, and small
+in-memory or no-op helpers for tests.
+
+Queue messages should carry stable metadata such as id, type, schema version,
+payload, enqueued-at timestamp, optional tenant id, optional correlation id,
+optional idempotency key, optional delay, and optional message group key where
+a product or runtime needs ordered work. Payloads should stay plain and
+serializable so platform adapters can move them through queues, retries, logs,
+tests, workers, and dead-letter paths without provider-specific objects.
+Queue payloads should reject non-finite numeric values and non-plain runtime
+objects before they cross app/platform boundaries.
+
+Queue message versions should be explicit positive integers. Core helpers may
+default new queue messages to the current version to preserve additive
+compatibility, but durable platform adapters must preserve the version when a
+message is serialized, retried, replayed, or moved to a dead-letter path.
+
+Queue delivery metadata should keep retry and dead-letter disposition
+unambiguous. A delivery may be marked for retry or marked as dead-lettered, but
+it should not carry both states at the same time.
+
+Queue message type names are portable work-kind facts. They should not be
+treated as concrete broker queue names, SQS queue URLs, Kafka topics, routing
+keys, or worker deployment names. Platform adapters may translate message
+types into provider-specific routing later.
+
+Sending failures and handling failures should use stable queue error
+vocabulary rather than exposing provider-specific broker errors directly to app
+code.
+
+Queue contracts may name retry and dead-letter metadata so apps and platform
+can reason about attempts, max attempts, next retry time, dead-letter reason,
+and idempotency without forcing core to implement worker loops, provider
+receive/delete semantics, or broker-specific retry policies.
+
+The `queues` module must not define product job catalogs, product handlers,
+worker runtimes, broker queue resources, queue URLs, receipt handles,
+visibility timeouts, concrete retry algorithms, scheduler loops,
+dead-letter queue resources, ordering guarantees, cloud SDK clients, or
+deployment topology. Apps own product work meaning and handlers. Platform owns
+worker runtime mechanics and concrete delivery adapters. Infra owns broker
+resources, dead-letter resources, alarms, permissions, and deployment topology.
+
 ## Audit Contract Boundary
 
 The `audit` module should define provider-neutral contracts for accountability
 records: audit event identifiers, audit event type names, actor references,
-target references, outcomes, timestamps, tenant context, correlation ids,
-translation-ready reasons, JSON-safe metadata, recorder error meanings,
-recorder ports, and small in-memory or no-op helpers for tests.
+audit event schema versions, target references, outcomes, timestamps, tenant
+context, correlation ids, translation-ready reasons, JSON-safe metadata,
+recorder error meanings, recorder ports, and small in-memory or no-op helpers
+for tests.
 
 Audit records should answer who did what, to which target, in which tenant or
 context, when, from which correlated request or job, and with which outcome.
@@ -335,6 +516,12 @@ Audit events should carry an explicit actor and target. Anonymous and system
 actors should be represented explicitly instead of omitting actor data; global
 or system-scoped actions should use a deliberate target instead of omitting the
 target.
+
+Audit event versions should be explicit positive integers. Core helpers may
+default new audit events to the current version to preserve additive
+compatibility, but durable audit recorders, exporters, retention workflows, and
+SIEM adapters must preserve the version when an audit event crosses storage,
+export, or compliance boundaries.
 
 Audit metadata should stay plain and serializable. It may include evidence
 needed for review, compliance, debugging, or product history, but it must not
@@ -372,6 +559,45 @@ fallback behavior, and translation params. The `localization` contract layer
 owns locale-sensitive formatting for dates, times, numbers, currency, and
 regional display conventions. Validation and other core capability modules
 should emit facts that those layers can translate or format later.
+
+The `i18n` module may define locale tags, message templates, translation
+catalog records, translation requests, translated-message records, translator
+ports, default-message fallback behavior, safe translation-param helpers, and
+stable i18n errors. In-memory or record-backed translators may exist for tests
+and local composed flows when they preserve the same public contracts.
+
+Translation params must stay primitive and safe to display. Translation
+helpers should reject common sensitive param names such as secrets, tokens,
+credentials, authorization values, cookies, raw request values, sensitive
+validation input, raw user identifiers, and correlation/session/request ids
+before interpolation. Translated output records should not preserve raw param
+values. Translated text is plain text, not trusted HTML or safe markup; escaping
+and rendering-context safety belong to presentation boundaries.
+
+The `i18n` module must not own final product copy, load catalog files, negotiate
+browser or user locale, choose ICU, i18next, FormatJS, or any other translation
+runtime, perform pluralization policy, call external translation services, or
+store tenant/user language preferences. Apps decide product copy and display
+requirements; platform/runtime wires concrete catalog loading and translator
+implementations; presentation boundaries decide locale negotiation.
+
+The `localization` module may define currency, region, and time-zone value
+contracts, localizable date-time, number, currency, and region value shapes,
+format requests, formatted output records, localizer ports, test helpers, and
+stable localization errors. Values should stay finite, branded where useful,
+and provider-neutral before they cross app/platform boundaries.
+
+Time-zone identifiers in core should be syntax-level portable contracts such as
+`UTC` or IANA-style slash-separated identifiers. Core may reject malformed,
+path-like, markup-like, empty, or whitespace-containing values, but concrete
+runtime support validation belongs to platform/runtime or presentation
+adapters.
+
+The `localization` module must not call concrete formatting engines, choose
+presentation copy, infer user locale, decide product time-zone policy, perform
+currency conversion, choose exchange rates, load CLDR data, or define app
+display rules. Platform/runtime and presentation adapters own concrete
+formatting behavior.
 
 Operational logs may keep direct operational messages when they are not
 user-facing display contracts.

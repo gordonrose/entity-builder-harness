@@ -9,6 +9,7 @@ import {
   type MessageParams,
   type Result,
 } from "../shared/index";
+import type { DiagnosticDescriptor } from "../diagnostics/index";
 
 export type ConcurrencyToken = Brand<string, "ConcurrencyToken">;
 export type PageTotal = Brand<number, "PageTotal">;
@@ -127,6 +128,7 @@ export function persistenceError(input: {
   readonly messageKey?: string | MessageKey;
   readonly params?: MessageParams;
   readonly cause?: unknown;
+  readonly diagnostic?: DiagnosticDescriptor;
   readonly details?: Readonly<Record<string, unknown>>;
 }): PersistenceError {
   return {
@@ -135,6 +137,7 @@ export function persistenceError(input: {
     ...(input.messageKey === undefined ? {} : { messageKey: messageKey(input.messageKey) }),
     ...(input.params === undefined ? {} : { params: input.params }),
     ...(input.cause === undefined ? {} : { cause: input.cause }),
+    ...(input.diagnostic === undefined ? {} : { diagnostic: input.diagnostic }),
     ...(input.details === undefined ? {} : { details: input.details }),
   };
 }

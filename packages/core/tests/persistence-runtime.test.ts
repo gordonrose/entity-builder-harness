@@ -11,6 +11,7 @@ import {
   type ConcurrencyToken,
   type Transaction,
 } from "../src/persistence/index";
+import { diagnosticDescriptor } from "../src/diagnostics/index";
 import { entityId, isErr, isOk, type EntityId } from "../src/shared/index";
 
 type DealId = EntityId<"DealId">;
@@ -97,9 +98,17 @@ async function main(): Promise<void> {
     code: "PERSISTENCE_TIMEOUT",
     defaultMessage: "Storage operation timed out.",
     messageKey: "persistence.timeout",
+    diagnostic: diagnosticDescriptor({
+      failureKind: "timeout",
+      failureSource: "provider",
+      severity: "error",
+      recovery: "automation_retryable",
+      action: "retry",
+    }),
   });
   equal(explicitError.code, "PERSISTENCE_TIMEOUT");
   equal(explicitError.messageKey, "persistence.timeout");
+  equal(explicitError.diagnostic?.retryable, true);
 
   const repository = inMemoryRepository<DealRecord, DealId>({
     getId: (deal) => deal.id,

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 8
+#   version: 16
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -33,8 +33,15 @@ source_change:
     Approved source material records the narrow bootstrap exception, contract
     module surface, hardening requirements, monitoring contract boundary,
     security contract boundary,
-    persistence contract boundary, events and audit contract boundaries, and
-    review-driven JSON/accountability hardening
+    persistence contract boundary, files, events, queues, diagnostics, and audit contract boundaries, and
+    review-driven JSON/accountability hardening, plus public contract
+    compatibility and deprecation policy, plus queue and audit schema-version
+    contracts, plus provider-neutral diagnostics and self-healing vocabulary,
+    plus high-risk file storage contracts and review-driven file access,
+    duplicate/idempotent put, diagnostic consistency, queue disposition
+    hardening, provider-neutral i18n/localization contract boundaries, and
+    review-driven sensitive translation-param, translated-output, time-zone,
+    selector-fixture, compatibility-canary, and session-log hardening
     for the initial packages/core slice.
 
 target:
@@ -47,11 +54,16 @@ target:
   affected_rulesets: []
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
   affected_corpus_gaps: []
 
 semantic_review:
@@ -61,6 +73,18 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.contracts.only
       summary: Core may define stable contract shapes, ports, types, errors, policies, and pure primitives.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.contracts.compatibility.additive-first
+      summary: Public core contract changes should be additive by default because apps, platform runtime, adapters, tests, and future generated code may compile against exported names and meanings.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.contracts.breaking-changes.require-migration
+      summary: Renames, removals, narrowing, or meaning changes require an explicit compatibility decision, affected-consumer analysis, migration guidance, and normally a deprecation window or shim.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.contracts.durable-payloads.need-schema-version
+      summary: Durable, replayed, retried, exported, or cross-deployment payloads need explicit schema/version facts before they become runtime obligations.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.contracts.old-usages.need-compatibility-fixtures
+      summary: Public TypeScript contracts need compile-only compatibility fixtures that model old app and platform usages and fail when compatibility is broken unintentionally.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.provider.implementations.outside
       summary: Provider adapters, runtime hosts, infrastructure, and product workflows must remain outside packages/core.
@@ -76,6 +100,27 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.shared.json-values.finite-plain
       summary: Provider-neutral JSON-like contract values should reject non-finite numbers and non-plain runtime objects when copying claims, policy facts, event payloads, or audit metadata.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.shared.core-error.optional-diagnostic
+      summary: CoreError may carry an optional diagnostic descriptor when a failure needs structured recovery, retryability, or user-correctability metadata, and module error helpers should preserve it when supplied.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.provider-neutral-boundary
+      summary: The diagnostics module may define failure kinds, failure sources, severity, recovery disposition, recovery action vocabulary, retryable and user-correctable indicators, primitive diagnostic facts, and small pure helpers.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.self-healing-loop-vocabulary
+      summary: Diagnostics should support the detect, classify, correlate, decide, act, verify, and escalate loop as shared vocabulary without implementing the workflow in core.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.user-vs-bug-classification
+      summary: Diagnostics should help distinguish user/input errors, retryable provider outages, data-integrity conflicts, and code bugs without parsing free-text logs.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.no-contradictory-recovery-flags
+      summary: Diagnostic descriptors should reject contradictory recovery flags such as automation_retryable recovery with retryable false or user_correctable recovery with userCorrectable false.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.facts.primitive-safe
+      summary: Diagnostic facts must stay primitive, bounded, finite-number safe, and free of secrets, raw request bodies, provider objects, class instances, and runtime-only values.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.no-runtime-remediation
+      summary: Core diagnostics must not implement retries, repair workflows, AI debugging, log queries, incident routing, runbook orchestration, provider actions, product policy, or infrastructure alarms.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.logging.provider.neutral
       summary: The logging module may define operational log records, logger ports, default sensitive-field vocabulary, redactors, redaction helpers, and no-op or wrapping loggers, but must not write directly to console, CloudWatch, OpenTelemetry, files, Datadog, or other runtime sinks.
@@ -149,6 +194,27 @@ semantic_review:
     - claim_id: core.persistence.no-db-topology
       summary: Core persistence must not define SQL, ORM models, database clients, tables, indexes, shards, backups, object-storage clients, product-specific repositories, or product workflow decisions.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.provider-neutral-boundary
+      summary: The files module may define provider-neutral file id, file name, content type, byte size, checksum, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, metadata, file error, storage port, and in-memory helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.high-risk-storage
+      summary: Files are high-risk storage because they are large, user-controlled, often sensitive, and require visible content-type validation, size policy, tenant isolation, scan status, checksum, storage reference, access intent, retention/legal-hold needs, and audit/log correlation.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.access-intent-for-read-delete
+      summary: File storage read and delete ports should receive provider-neutral access intent rather than raw file ids so tenant, correlation, operation, and access-purpose facts are present at the boundary.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.duplicate-put-behavior-explicit
+      summary: File put contracts should define duplicate behavior, including default duplicate conflict and explicit idempotent duplicate handling for safe retry paths where attempted metadata still matches the stored file.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.metadata.serializable
+      summary: File metadata should stay plain and serializable, map invalid metadata to stable file error vocabulary, and must not carry secrets, raw credentials, provider objects, request objects, parser instances, large file bodies, non-finite numeric values, or runtime-only values.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.body-generic
+      summary: File body handling should stay generic in core so platform runtime owns request parsing, stream handling, content validation, scanner invocation, direct access grants, and adapter lifecycle.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.no-provider-storage
+      summary: Core files must not define object-storage buckets, public URLs, signed URL generation, scanner integrations, image processing, CSV/spreadsheet parsing, product document workflows, retention jobs, legal-hold jobs, cloud SDK clients, provider resource names, or deployment topology.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.events.provider-neutral-boundary
       summary: The events module may define provider-neutral event id, type, version, payload, envelope, publish error, publisher or bus, handler, and in-memory/no-op helper contracts.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -173,8 +239,38 @@ semantic_review:
     - claim_id: core.events.no-broker-topology
       summary: Core events must not define product event catalogs, broker topics, subscriber deployment, retries, dead-letter queues, ordering guarantees, schema registries, cloud SDK clients, worker runtimes, or product workflow decisions.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.provider-neutral-boundary
+      summary: The queues module may define provider-neutral queue message id, message type, message version, payload, message envelope, send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and in-memory/no-op helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.schema-version
+      summary: Queue messages should carry explicit positive integer schema versions, and durable platform adapters must preserve those versions when messages are serialized, retried, replayed, or moved to dead-letter paths.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.delivery-disposition-unambiguous
+      summary: Queue delivery metadata should keep retry and dead-letter disposition unambiguous; one delivery may be retryable or dead-lettered, but not both.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.payloads.serializable
+      summary: Queue payloads should stay plain and serializable so platform adapters can move them through queues, retries, logs, tests, workers, and dead-letter paths without provider-specific objects.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.payloads.finite-plain
+      summary: Queue payloads should reject non-finite numeric values and non-plain runtime objects before they cross app/platform boundaries.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.types.not-provider-routes
+      summary: Queue message type names are portable work-kind facts and should not be treated as concrete broker queue names, SQS queue URLs, Kafka topics, routing keys, or worker deployment names.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.provider-errors-normalized
+      summary: Sending failures and handling failures should use stable queue error vocabulary rather than exposing provider-specific broker errors directly to app code.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.retry-dlq-metadata-contract-only
+      summary: Queue contracts may name retry and dead-letter metadata without forcing core to implement worker loops, provider receive/delete semantics, or broker-specific retry policies.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.no-worker-or-broker-topology
+      summary: Core queues must not define product job catalogs, product handlers, worker runtimes, broker queue resources, queue URLs, receipt handles, visibility timeouts, concrete retry algorithms, scheduler loops, DLQ resources, cloud SDK clients, or deployment topology.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.audit.provider-neutral-boundary
-      summary: The audit module may define provider-neutral audit event id, type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, recorder error, and in-memory/no-op helper contracts.
+      summary: The audit module may define provider-neutral audit event id, type, version, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, recorder error, and in-memory/no-op helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.audit.schema-version
+      summary: Audit events should carry explicit positive integer schema versions, and durable audit recorders, exporters, retention workflows, and SIEM adapters must preserve those versions across storage, export, and compliance boundaries.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.audit.accountability-record
       summary: Audit records should answer who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
@@ -196,6 +292,27 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.audit.no-storage-topology
       summary: Core audit must not define product audit catalogs, storage tables, buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or product workflow decisions.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.provider-neutral-boundary
+      summary: The i18n module may define locale tags, message templates, catalogs, translation requests, translated-message records, translator ports, fallback behavior, and stable i18n errors without choosing a translation runtime.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.no-copy-or-runtime
+      summary: Core i18n must not own final product copy, catalog file loading, browser or user locale negotiation, translation libraries, external translation services, or tenant/user language preference storage.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.params.no-sensitive-values
+      summary: Translation params should reject common sensitive param names such as secrets, tokens, credentials, raw request values, sensitive validation input, raw user identifiers, and correlation/session/request ids before interpolation.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.outputs.no-raw-param-values
+      summary: Translated output records should not preserve raw param values; translated text is plain text and presentation boundaries own escaping and rendering-context safety.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.localization.provider-neutral-boundary
+      summary: The localization module may define currency, region, time-zone, localizable value, localization request, formatted output, localizer port, test helper, and stable localization error contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.localization.time-zone.syntax-contract
+      summary: Core time-zone identifiers should be syntax-level portable contracts such as UTC or IANA-style slash-separated identifiers, while concrete runtime support validation belongs to platform/runtime or presentation adapters.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.localization.no-display-policy-or-formatting-engine
+      summary: Core localization must not call concrete formatting engines, load CLDR data, infer user locale, choose product time-zone policy, perform currency conversion, choose exchange rates, or define app display rules.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: rag.disposition.required
       summary: Knowledge-bearing packages/core changes require a RAG knowledge disposition at commit time.
@@ -227,19 +344,44 @@ proposed_updates:
   corpus_gaps: []
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
   notes:
     - Existing packages/core rules define the general ownership boundary.
     - >
       This update tightens event and audit contract guidance after agent review:
       explicit audit actor/target, finite/plain JSON values, in-memory event
       helper success semantics, standardized transaction failure vocabulary,
-      security defensive-policy contract boundaries, and monitoring operational-signal contract boundaries.
-    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, and monitoring health/metrics/signal guidance directly.
+      security defensive-policy contract boundaries, monitoring operational-signal
+      contract boundaries, and queue retryable-work contract boundaries.
+      This update also adds additive-first public contract evolution,
+      deprecation/migration, durable payload schema-version, and compatibility
+      fixture requirements. Queue message and audit event contracts now include
+      explicit schema-version claims before durable platform adapters exist.
+      Diagnostics now provide a provider-neutral failure classification and
+      self-healing vocabulary while leaving remediation workflows to
+      platform/runtime, provider adapters, infra, and product policy.
+      Files now provide provider-neutral high-risk storage contracts while
+      leaving storage adapters, scanning, direct access, retention, legal hold,
+      parsing, and resource topology outside core.
+      i18n and localization now provide provider-neutral translation and
+      locale-sensitive formatting contracts while leaving final copy, catalog
+      loading, locale negotiation, concrete formatters, currency conversion, and
+      presentation rules outside core. Review-driven hardening now prevents
+      common sensitive translation params from being interpolated, keeps raw
+      param values out of translated outputs, tightens time-zone syntax, adds
+      root public-contract compatibility canaries, and proves the cross-cutting
+      i18n/localization concern rule in the selector fixture.
+    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, diagnostics/self-healing boundary guidance, files high-risk-storage guidance, and i18n/localization translation-formatting guidance directly.
+    - The compatibility selector fixture asks for deprecation, backwards compatibility, schema-version, and old public usage fixture guidance directly.
 
 downstream_effects:
   index_required: false
@@ -254,11 +396,16 @@ validation:
     - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
     - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
     - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
     - npm run core:check
     - git diff --check
@@ -271,6 +418,8 @@ validation:
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
       result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml
+      result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
@@ -280,6 +429,14 @@ validation:
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
       result: passed
     - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
       result: passed
@@ -295,5 +452,5 @@ review:
   reviewer: codex-agentic-review-loop
   reviewed_at_utc: "2026-07-07T00:00:00Z"
   notes:
-    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings.
+    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings, the self-healing diagnostics discussion, the files high-risk-storage slice, and the i18n/localization contract slice.
     - Future core modules should add narrower source material when their contracts materially change.

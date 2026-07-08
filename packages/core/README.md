@@ -19,6 +19,30 @@ pulling in runtime providers.
 This initial slice establishes the package surface and core capability modules.
 Provider implementations and app runtimes are intentionally out of scope.
 
+## Changing Core Contracts Safely
+
+Core is a shared contract layer, so exported names and meanings should be
+treated as compatibility-sensitive. Prefer additive changes: new optional
+fields, new helpers, new stable error codes, or new modules are usually safer
+than changing an existing contract.
+
+Before renaming, removing, narrowing, or changing the meaning of an exported
+type, helper, error code, message key, metric name, config key, event type,
+queue message type, or port interface, record the compatibility decision in
+the architecture source material and rule projection. Include what changed,
+why an additive path was not enough, which consumers are affected, and how
+existing consumers should migrate.
+
+Durable or asynchronous payloads need explicit schema/version facts before
+they become persisted, replayed, retried, exported, or shared across deployed
+versions. Events already carry `EventVersion`. Queues, audit records,
+persistence snapshots, and similar cross-runtime payloads should add versioned
+contracts before platform/runtime adapters make them durable.
+
+`tests/compatibility` contains compile-only canary usages for older public
+contracts. Keep those fixtures passing unless a breaking change is deliberate,
+documented, and paired with migration guidance.
+
 ## Shared Primitives
 
 `shared` contains the lowest-level vocabulary used by the rest of core:
@@ -31,13 +55,41 @@ Provider implementations and app runtimes are intentionally out of scope.
 - `Result`, `ok`, `err`, `isOk`, and `isErr` make expected success/failure explicit.
 - `JsonValue` and `copyJsonValue` keep cross-boundary facts plain,
   serializable, and finite-number safe.
-- `CoreError` gives failures a stable `code`, `defaultMessage`, optional translation metadata, and optional debugging metadata.
+- `CoreError` gives failures a stable `code`, `defaultMessage`, optional translation metadata, optional diagnostic metadata, and optional debugging metadata.
 - `Clock`, `systemClock`, and `fixedClock` keep time-dependent code testable.
 - `RequestContext` carries only the minimum shared request metadata.
 
 Keep this module small. Tenant, principal, permission, persistence, audit, and
 event-specific concepts should live in their own modules and import shared
 primitives when needed.
+
+## Diagnostics Contracts
+
+`diagnostics` defines the small shared vocabulary for classifying failures so
+logs, monitoring, queues, events, audit, and platform workflows can agree on
+what happened:
+
+- `FailureKind` names the broad kind of failure, such as user input,
+  validation, dependency outage, timeout, conflict, data integrity, bug, or
+  unknown.
+- `FailureSource` names where the failure appears to come from: user, app,
+  platform, provider, infra, external system, or unknown.
+- `FailureSeverity`, `RecoveryDisposition`, and `RecoveryAction` describe how
+  serious the failure is and what kind of follow-up is safe.
+- `DiagnosticFacts` keeps extra correlation and classification facts primitive
+  and finite-number safe.
+- `DiagnosticDescriptor`, `diagnosticDescriptor`,
+  `isRetryableDiagnostic`, and `isUserCorrectableDiagnostic` give apps and
+  platform code a common way to attach recovery meaning to failures.
+
+Diagnostics is the vocabulary for self-healing, not the self-healing engine.
+The intended loop is: detect, classify, correlate, decide, act, verify, then
+escalate if automation is unsafe or exhausted. Core names those facts;
+platform/runtime workflows perform retries, repairs, log lookups, runbook
+actions, and escalation when a product has allowed that behavior.
+
+Do not put secrets, tokens, raw request bodies, provider objects, class
+instances, or rich runtime values into diagnostic facts.
 
 ## Translation-Ready Meaning
 
@@ -55,13 +107,64 @@ messages, and primitive params:
 ```
 
 The `defaultMessage` is fallback/debug text. It is not the final user-facing
-copy for every locale. The future `i18n` layer should translate `messageKey`
-and `params`; the future `localization` layer should format locale-sensitive
-dates, numbers, currencies, and regions.
+copy for every locale. The `i18n` layer translates `messageKey` and `params`;
+the `localization` layer formats locale-sensitive dates, numbers, currencies,
+and regions.
 
 Operational logs may still use direct log messages. User-facing errors,
 validation issues, policy denials, notifications, reports, and API/display
 responses should use translation-ready descriptors.
+
+## i18n Contracts
+
+`i18n` defines translation contracts without choosing a translation library,
+catalog file format, locale negotiation strategy, or copywriting workflow:
+
+- `LocaleTag` stores normalized language tags such as `en-GB`.
+- `MessageTemplate` names simple message templates for catalog/test use.
+- `TranslationCatalog` maps message keys to templates for one locale.
+- `TranslationRequest` carries the requested locale and optional fallback
+  locales.
+- `TranslatedMessage` records the locale, rendered text, source, optional
+  message key, and param keys used for a translation. It does not preserve raw
+  param values.
+- `MessageTranslator` is the small port that apps and platform runtime code can
+  depend on.
+- `catalogMessageTranslator` and `defaultMessageTranslator` are pure helpers
+  for tests, local flows, and composed contract examples.
+- `safeTranslationParams` and `defaultUnsafeTranslationParamNames` reject common
+  sensitive param names before interpolation.
+- `I18nError` provides stable translation error vocabulary.
+
+Core i18n may describe translation keys, catalogs, translator ports, fallback
+behavior, and primitive interpolation params. It does not own final product
+copy, load message files, negotiate browser/user locale, choose ICU, i18next,
+FormatJS, or any other library, or format dates, numbers, money, or regions.
+Do not pass secrets, tokens, credentials, raw request values, sensitive
+validation input, raw user identifiers, or other sensitive facts as translation
+params. Translated text is plain text, not trusted HTML or safe markup.
+
+## Localization Contracts
+
+`localization` defines locale-sensitive formatting contracts without choosing a
+formatter implementation:
+
+- `CurrencyCode`, `RegionCode`, and `TimeZoneId` brand common regional facts.
+- `LocalizableDateTime`, `LocalizableNumber`, `LocalizableCurrency`, and
+  `LocalizableRegion` describe values that need locale-sensitive formatting.
+- `LocalizationRequest` combines a locale and localizable value.
+- `LocalizedFormat` records formatted text plus the locale and value kind.
+- `Localizer` is the formatting port consumed by apps and platform runtime.
+- `fixedLocalizer` and `unsupportedLocalizer` are pure test/local helpers.
+- `LocalizationError` provides stable formatting error vocabulary.
+
+Core localization names the formatting intent and keeps values finite,
+branded, and provider-neutral. `TimeZoneId` performs syntax-level validation
+for `UTC` or IANA-style slash-separated identifiers; concrete runtime support
+validation belongs to platform or presentation adapters. Core localization does
+not call `Intl`, format display copy, infer user locale, choose time-zone
+policy, perform currency conversion, choose exchange rates, load CLDR data, or
+decide product presentation rules.
 
 ## Config Contracts
 
@@ -276,6 +379,49 @@ Unexpected in-memory transaction or after-commit failures are wrapped as
 failure shapes. Platform adapters should translate provider-specific
 transaction failures into the same stable persistence vocabulary.
 
+## Files Contracts
+
+`files` defines provider-neutral contracts for uploaded and stored file
+metadata without choosing object storage, local disk, request parsing, virus
+scanner, or signed URL machinery:
+
+- `FileId`, `FileName`, `FileContentType`, `FileSizeBytes`,
+  `FileChecksum`, and `FileStorageRef` name the core file identity and storage
+  facts.
+- `FileMetadata` keeps product metadata plain, JSON-safe, and finite-number
+  safe.
+- `FileScanStatus` and `FileScanResult` record provider-neutral scan outcomes
+  such as pending, passed, failed, quarantined, or not required.
+- `FileObject` and `StoredFile` describe stored file metadata, including
+  tenant context where relevant, correlation id, checksum, scan result, created
+  timestamp, storage reference, and retention/legal-hold facts.
+- `PutFileInput` keeps the file body generic so platform/runtime adapters can
+  choose streams, buffers, browser file objects, or provider-specific upload
+  mechanisms outside core.
+- `FilePutOptions` names duplicate handling so retries and accidental overwrites
+  are not adapter-specific.
+- `FileAccessIntent` names read, write, or delete access intent without
+  granting public URLs or choosing a signed-access implementation.
+- `FileStorage` is the async port for putting, loading metadata for, and
+  deleting files. Reads and deletes use `FileAccessIntent`, not raw file ids.
+- `FileError` can carry diagnostic metadata so runtime/platform code can
+  classify storage, policy, scan, or metadata failures consistently.
+- `inMemoryFileStorage` is a pure helper for tests and composed local flows.
+
+Files are high-risk storage because they are large, user-controlled, and often
+sensitive. Validate content type and size before accepting uploads. Keep
+tenant isolation, access intent, retention/legal-hold needs, scan outcomes,
+and audit/log correlation visible at the app or platform boundary.
+Use duplicate conflicts by default and opt into idempotent duplicate handling
+only when the attempted put still matches the stored metadata.
+
+Core does not define object-storage buckets, public URLs, signed URL
+generation, virus scanner integrations, image processing, file parser
+implementations, storage SDK clients, retention resources, legal-hold jobs, or
+product document workflows. Apps decide product meaning and retention needs,
+platform implements storage/scanning/access adapters, and infra provisions
+storage resources, permissions, encryption, retention, and alarms.
+
 ## Events Contracts
 
 `events` defines provider-neutral contracts for facts that happened and may be
@@ -310,12 +456,58 @@ Core does not define product event catalogs, broker topics, queue names,
 subscriber deployment, retries, dead-letter queues, ordering guarantees,
 schema registries, or cloud SDK clients.
 
+## Queues Contracts
+
+`queues` defines provider-neutral contracts for retryable background work:
+
+- `QueueMessageId`, `QueueMessageType`, and `QueueMessageVersion` identify a
+  work item, its stable work-kind name, and its payload schema version.
+- `QueuePayloadValue` and `QueuePayload` keep message payloads plain,
+  JSON-safe, finite-number safe, and portable across app, platform, worker,
+  broker, retry, dead-letter, and test boundaries.
+- `QueueMessage` and `queueMessage` wrap a message with id, type, version,
+  timestamp, optional tenant id, optional correlation id, optional idempotency
+  key, optional message group key, and copied payload. `queueMessage` defaults
+  the version to the current v1 contract when a caller does not supply one.
+- `QueueSendOptions`, `QueueDelaySeconds`, and `queueSendOptions` define
+  provider-neutral send metadata without choosing a broker delay mechanism.
+- `QueueDelivery`, `QueueAttempt`, `QueueRetryMetadata`, and
+  `QueueDeadLetterMetadata` name delivery, retry, and dead-letter facts
+  without implementing a worker loop. Retry and dead-letter states are mutually
+  exclusive for a single delivery.
+- `QueueErrorCode`, `QueueError`, and `queueError` give queue failures stable
+  translation-ready meanings.
+- `Queue`, `QueueHandler`, `inMemoryQueue`, and `noopQueue` define the async
+  send/handle ports and test helpers.
+
+Queue message type names are portable work-kind facts, not concrete broker
+queue names or SQS queue URLs. Apps decide when product work should be
+enqueued and which handler owns it. Platform runtime owns worker mechanics,
+payload validation, idempotency, retry/backoff, dead-letter handling,
+observability, and shutdown. Platform adapters translate to providers such as
+AWS SQS. Infra provisions queues, DLQs, alarms, permissions, encryption,
+retention, and worker deployment resources.
+
+Queue message versions are positive integer schema facts. Durable queue
+adapters, retry paths, replay tools, and dead-letter paths should preserve the
+version so workers can safely handle old and new payload shapes during
+deployment transitions.
+
+`inMemoryQueue.acceptedSends()` and `acceptedMessages()` return messages
+accepted by the helper. They are useful for tests, but they are not durable
+queue, retry, worker, or dead-letter implementations.
+
+Core does not define product job catalogs, product handlers, worker runtimes,
+queue resources, queue URLs, receipt handles, visibility timeouts, concrete
+retry algorithms, scheduler loops, DLQ resources, cloud SDK clients, or
+deployment topology.
+
 ## Audit Contracts
 
 `audit` defines provider-neutral contracts for accountability records:
 
-- `AuditEventId` and `AuditEventType` identify durable audit records and stable
-  action names.
+- `AuditEventId`, `AuditEventType`, and `AuditEventVersion` identify durable
+  audit records, stable action names, and audit payload schema versions.
 - `AuditActor` captures the explicit user, service, system, or anonymous actor
   that caused the audited action.
 - `AuditTarget` identifies the resource acted on, with an optional parent
@@ -324,8 +516,10 @@ schema registries, or cloud SDK clients.
 - `AuditMetadataValue` and `AuditMetadata` keep audit evidence plain,
   JSON-safe, finite-number safe, and portable across storage, review, export,
   and compliance boundaries.
-- `AuditEvent` and `auditEvent` combine actor, tenant, timestamp,
+- `AuditEvent` and `auditEvent` combine actor, tenant, version, timestamp,
   correlation id, target, outcome, optional reason, and copied metadata.
+  `auditEvent` defaults the version to the current v1 contract when a caller
+  does not supply one.
 - `AuditRecordErrorCode`, `AuditRecordError`, and `auditRecordError` give
   recorder failures stable translation-ready meanings.
 - `AuditRecorder`, `inMemoryAuditRecorder`, and `noopAuditRecorder` define the
@@ -338,6 +532,11 @@ Every audit event must carry an explicit actor and target. Use an `anonymous`
 or `system` actor when no authenticated principal exists, and use a deliberate
 target such as an account, session, export, or system resource rather than
 omitting the target.
+
+Audit event versions are positive integer schema facts. Durable audit
+recorders, exporters, retention workflows, and SIEM adapters should preserve
+the version so old accountability records remain interpretable after contract
+changes.
 
 Core does not define audit database tables, object storage, retention policy,
 legal hold, export workflows, SIEM integrations, CloudWatch sinks, or product

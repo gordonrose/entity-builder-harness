@@ -1,6 +1,6 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
-#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-persistence-contract
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-diagnostics-self-healing
 #   version: 1
 #   status: active
 #   layer: 02.rag-rulebook
@@ -8,8 +8,9 @@
 #   disciplines:
 #   - agentic
 #   - architecture
+#   - sre
 #   kind: evaluation-fixture
-#   purpose: Prove packages/core persistence prompts retrieve storage-boundary contract guidance.
+#   purpose: Prove packages/core diagnostics prompts retrieve failure-classification and self-healing boundary guidance.
 #   portability:
 #     class: reusable
 #     targets:
@@ -21,21 +22,28 @@
 #     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 
 schema: rag-rulebook/retrieval-selector-evaluation/v1
-fixture_id: retrieval-selector.v1.packages-core-persistence-contract
+fixture_id: retrieval-selector.v1.packages-core-diagnostics-self-healing
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompts about packages/core persistence contracts retrieve storage boundary and adapter placement rules.
+purpose: Prove prompts about self-healing failure classification retrieve diagnostics vocabulary plus the core/platform/runtime/adapter/infra boundary.
 input:
-  request_text: Explain how product code should use packages/core/src/persistence/index.ts contracts for page totals, repository saves, optimistic concurrency, transactions, after-commit events, and database adapters; use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
+  request_text: Explain how packages/core should classify CSV import row failures so monitoring can trigger a safe self-healing workflow using logs, queues, events, audit, retries, and escalation without putting the remediation engine in core.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
+  focused_paths:
+    - packages/core/src/diagnostics/index.ts
+    - packages/core/src/shared/index.ts
+    - packages/core/src/queues/index.ts
+    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
   max_chunks: 10
 expected:
   routing:
-    layer: 03.product
+    layer: 01.harness
     status: ready
   matched_corpora:
     required:
@@ -48,7 +56,7 @@ expected:
       - rule
   selected_chunks:
     required_rule_ids:
-      - core.persistence-contracts-name-storage-boundaries
+      - core.diagnostics-classify-failures-for-recovery
       - core.capability-modules-stay-contract-shaped
   required_checks:
     min_count: 1
@@ -62,7 +70,10 @@ banned:
 source_refs:
   - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
-  - packages/core persistence ownership rules change.
+  - packages/core diagnostics ownership or self-healing vocabulary changes.
+  - Platform/runtime, adapter, infra, or app ownership boundaries change.
   - Selector policy changes corpus ownership or evidence bundle behavior.

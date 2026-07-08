@@ -1,3 +1,5 @@
+import type { DiagnosticDescriptor } from "../diagnostics/index";
+
 export type Brand<Value, Name extends string> = Value & { readonly __brand: Name };
 
 export type EntityId<Name extends string = "EntityId"> = Brand<string, Name>;
@@ -27,6 +29,7 @@ export type Result<Value, Failure = CoreError> =
 
 export interface CoreError extends MessageDescriptor {
   readonly cause?: unknown;
+  readonly diagnostic?: DiagnosticDescriptor;
   readonly details?: Readonly<Record<string, unknown>>;
 }
 

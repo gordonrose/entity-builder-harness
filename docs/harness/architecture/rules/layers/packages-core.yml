@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 8
+#   version: 16
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 8
+version: 16
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-07T00:00:00Z"
+  generated_at_utc: "2026-07-08T13:31:51Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 92a1eee7ed6d58918e77bbf4894507903287911cb3fe6a19a5fee55aecb2d583
+      sha256: 4e27d651fc6b06cee9c9abee57386822b8de6ff4a61181ffe2d4856940b859e8
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -51,6 +51,9 @@ recommended_modules:
   - id: config
     purpose: "Provider-neutral configuration source, primitive reader, schema, and validation-error contracts."
     consumed_by: "runtime apps and platform services"
+  - id: diagnostics
+    purpose: "Provider-neutral failure classification, recovery disposition, retryability, user-correctability, and self-healing vocabulary."
+    consumed_by: "apps, platform runtime, workers, logging, monitoring, events, queues, and audit"
   - id: logging
     purpose: "Provider-neutral operational log record, logger, default sensitive-field redactor, and redacting-wrapper contracts."
     consumed_by: "apps, workers, platform"
@@ -79,7 +82,7 @@ recommended_modules:
     purpose: "Provider-neutral event envelope, payload, versioning, publisher, bus, and handler contracts."
     consumed_by: "apps, workers, platform messaging"
   - id: queues
-    purpose: "Queue messages, consumers, retry, and dead-letter concepts."
+    purpose: "Provider-neutral queue message, message-version, send, delivery, handler, retry/dead-letter metadata, queue error, and testing-helper contracts."
     consumed_by: "workers and platform queue adapters"
   - id: async-jobs
     purpose: "Background job contracts and lifecycle."
@@ -88,10 +91,10 @@ recommended_modules:
     purpose: "Notification contracts and delivery model."
     consumed_by: "apps, workers, and provider adapters"
   - id: files
-    purpose: "File storage and metadata contracts."
-    consumed_by: "apps and platform storage adapters"
+    purpose: "Provider-neutral uploaded/stored file metadata, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, file error, storage port, and testing-helper contracts."
+    consumed_by: "apps, workers, platform storage adapters, audit, queues, and file-processing flows"
   - id: audit
-    purpose: "Provider-neutral accountability event, actor, target, outcome, metadata, recorder, and recorder-error contracts."
+    purpose: "Provider-neutral accountability event, event-version, actor, target, outcome, metadata, recorder, and recorder-error contracts."
     consumed_by: "apps and platform audit storage"
   - id: reporting
     purpose: "Report request, generation, and export contracts."
@@ -272,6 +275,33 @@ rules:
       The contract goes in core. The implementation goes in platform. The business
       decision goes in apps.
 
+  - id: core.public-contracts-evolve-compatibly
+    title: Public core contracts evolve compatibly
+    severity: error
+    summary: >
+      packages/core exports are shared contracts for apps, platform runtime,
+      provider adapters, tests, and future generated code, so they should change
+      additively unless a breaking change is explicitly approved and migrated.
+    must:
+      - Prefer additive changes such as optional fields, new helpers, new stable error codes, new schema versions, or new modules.
+      - Treat exported type names, helper names, port interfaces, stable error codes, message keys, metric names, config keys, permission strings, event types, queue message types, and contract meanings as compatibility-sensitive.
+      - Keep old public usages compiling through compatibility fixtures unless a breaking change is deliberate and documented.
+      - Record breaking changes with affected consumers, migration guidance, compatibility-window or shim decisions, and RAG/source-material updates.
+      - Deprecate before removing or renaming public contracts unless there is an explicit emergency or pre-release exception.
+      - Add explicit schema/version contracts before durable, replayed, retried, exported, or cross-deployment payloads become runtime obligations.
+      - Run core type checks and compatibility fixtures when changing public contracts.
+    must_not:
+      - Do not silently rename, remove, narrow, or change the meaning of public core exports.
+      - Do not update compatibility fixtures merely to make a breaking change pass without migration documentation.
+      - Do not rely on TypeScript module tests alone as proof that old app or platform usage remains compatible.
+      - Do not treat package-private version 0 status as permission to break shared contracts casually.
+      - Do not add durable queue, audit, persistence, event, or export payloads without a schema/version compatibility story.
+    agent_guidance: >
+      Before changing a core export, ask whether existing app or platform code
+      could compile against it today. If yes, choose an additive path first. If
+      not possible, update source material, rules, compatibility fixtures, and
+      migration notes together so future agents can see the intentional break.
+
   - id: core.capability-modules-stay-contract-shaped
     title: Core capability modules stay contract-shaped
     severity: error
@@ -279,7 +309,7 @@ rules:
       Core modules should expose clear capability contracts and small primitives,
       not empty ceremony, product workflow engines, or concrete runtime hosts.
     must:
-      - Organize core around capability modules such as authn, authz, tenancy, validation, persistence, files, events, queues, logging, monitoring, audit, config, security, reporting, analytics, i18n, and localization.
+      - Organize core around capability modules such as authn, authz, tenancy, validation, persistence, files, events, queues, logging, monitoring, diagnostics, audit, config, security, reporting, analytics, i18n, and localization.
       - Prefer module files such as index.ts, types.ts, errors.ts, ports.ts, policy.ts, and testing.ts when those files clarify ownership.
       - Include in-memory or no-op test implementations only when they support tests, local development, harness work, or CI.
       - Keep concepts visible in types, especially tenant, principal, permission, audit event, event envelope, locale, currency, and correlation identifiers.
@@ -313,6 +343,35 @@ rules:
       Shared primitives are the bottom of the contract stack. When a value can
       vary by locale, runtime, provider, or presentation boundary, convert it to
       a stable primitive fact before it enters shared core contracts.
+
+  - id: core.diagnostics-classify-failures-for-recovery
+    title: Diagnostics classify failures for safe recovery decisions
+    severity: error
+    summary: >
+      packages/core diagnostics contracts should define provider-neutral failure
+      classification, recovery disposition, retryability, user-correctability,
+      and self-healing vocabulary while leaving remediation workflows, log
+      queries, provider actions, and product policy outside core.
+    must:
+      - Define provider-neutral failure kinds, failure sources, failure severity, recovery dispositions, recovery actions, retryable indicators, user-correctable indicators, diagnostic descriptors, and primitive diagnostic facts.
+      - Support the self-healing loop as vocabulary: detect, classify, correlate, decide, act, verify, and escalate.
+      - Let CoreError carry optional diagnostic descriptors when a failure needs structured recovery metadata.
+      - Preserve diagnostic descriptors through module-specific error helper functions when callers provide them.
+      - Reject contradictory diagnostic descriptors such as automation_retryable recovery with retryable false or user_correctable recovery with userCorrectable false.
+      - Use diagnostic facts to distinguish user/input errors, validation failures, provider/runtime failures, data-integrity problems, and genuine bugs without parsing free-text logs.
+      - Keep diagnostic facts primitive, bounded, finite-number safe, and suitable for correlation across logs, monitoring, queues, events, audit, and incident workflows.
+      - Test failure classification, recovery defaults, retryability, user-correctability, and fact safety without concrete runtime providers.
+    must_not:
+      - Do not implement retries, repair workflows, AI debugging, log queries, incident routing, runbook orchestration, worker loops, provider actions, product policy, or infrastructure alarms in packages/core.
+      - Do not carry secrets, tokens, raw credentials, raw request bodies, provider objects, class instances, non-finite numbers, or runtime-only values as diagnostic facts.
+      - Do not treat diagnostic recovery actions as permission for automation without app/product policy and platform/runtime safeguards.
+      - Do not make core diagnostics import logging, monitoring, queues, events, audit, platform adapters, cloud SDKs, worker runtimes, or infra resources.
+    agent_guidance: >
+      Core diagnostics should answer "what kind of failure is this and what
+      class of follow-up is safe to consider?" Apps decide product safety,
+      platform runtime performs and verifies remediation workflows, provider
+      adapters translate concrete errors, and infra provisions alarms, queues,
+      log backends, dead-letter resources, and runbook hooks.
 
   - id: core.logging-sensitive-fields-owned-by-logging
     title: Common sensitive log fields are maintained in core logging
@@ -493,6 +552,40 @@ rules:
       storage topology and resilience resources, and apps decide product-specific
       query and workflow behavior.
 
+  - id: core.files-contracts-name-high-risk-file-storage
+    title: File contracts name high-risk storage without choosing providers
+    severity: error
+    summary: >
+      packages/core files contracts should define provider-neutral uploaded and
+      stored file metadata, content validation facts, scan status, access
+      intent, duplicate/idempotent put policy, retention/legal-hold facts,
+      storage references, file errors, storage ports, and testing helpers while
+      leaving object storage, scanner integrations, parsers, public access,
+      retention jobs, and deployment topology outside core.
+    must:
+      - Define provider-neutral file id, file name, content type, byte size, checksum, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, metadata, file error, storage port, and helper contracts.
+      - Treat files as high-risk storage because they are large, user-controlled, and often sensitive.
+      - Make content-type validation, size policy, tenant isolation, checksum, scan status, access intent, retention or legal-hold needs, and audit/log correlation visible before files become durable or directly accessible.
+      - Require file read and delete ports to receive provider-neutral access intent instead of raw file ids.
+      - Define duplicate file put behavior, such as default duplicate conflict and explicit idempotent duplicate handling for safe retry paths.
+      - Map invalid file metadata to stable file error vocabulary rather than raw runtime exceptions.
+      - Keep file metadata plain, serializable, finite-number safe, and portable across app, platform, worker, queue, audit, scan, and test boundaries.
+      - Keep file body handling generic so platform/runtime adapters can choose streams, buffers, browser file objects, upload protocols, or provider-specific mechanics outside core.
+      - Include in-memory file storage helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test file names, content types, sizes, checksums, storage keys, metadata copying, scan status, access intent, file errors, storage ports, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define object-storage buckets, public URLs, signed URL generation, scanner integrations, image processing, CSV parsing, spreadsheet parsing, product document workflows, retention jobs, legal-hold jobs, cloud SDK clients, provider resource names, or deployment topology in packages/core.
+      - Do not store or model large file bodies as ordinary repository entities or durable database rows by default.
+      - Do not skip content-type, size, tenant isolation, access intent, scan, retention, legal-hold, audit, or metadata concerns for sensitive files.
+      - Do not carry secrets, raw credentials, provider objects, request objects, parser instances, large file bodies, non-finite numeric values, or runtime-only values as file metadata.
+      - Do not treat core storage keys as public URLs or provider resource identifiers.
+    agent_guidance: >
+      Core files name the portable file contract and storage port. Apps decide
+      product file meaning, platform handles request parsing, scanning, direct
+      access grants, and storage adapters, provider adapters translate concrete
+      storage/scanner behavior, and infra provisions storage resources,
+      encryption, retention, legal hold, alarms, and permissions.
+
   - id: core.events-contracts-name-publishable-facts
     title: Events contracts name publishable facts, not broker infrastructure
     severity: error
@@ -523,6 +616,37 @@ rules:
       translates the event bus contract into a runtime delivery mechanism, and
       infra provisions broker resources and delivery topology.
 
+  - id: core.queues-contracts-name-retryable-work
+    title: Queue contracts name retryable work, not broker infrastructure
+    severity: error
+    summary: >
+      packages/core queues contracts should define provider-neutral queue
+      messages, payloads, send options, delivery metadata, retry/dead-letter
+      metadata, queue errors, queue ports, handlers, and testing helpers while
+      leaving product handlers, worker runtime, providers, and queue resources
+      outside core.
+    must:
+      - Define provider-neutral queue message id, message type, message version, payload, message envelope, queue send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and helper contracts.
+      - Carry explicit positive integer queue message schema versions on queue messages before platform adapters serialize, retry, replay, or dead-letter them.
+      - Keep queue payload values plain, serializable, and portable across app, platform, worker, broker, log, retry, dead-letter, and test boundaries.
+      - Reject non-finite numeric values and non-plain runtime objects from queue payloads before they cross app/platform boundaries.
+      - Treat message type names as portable work-kind facts rather than concrete broker queue names, SQS queue URLs, Kafka topics, routing keys, or worker deployment names.
+      - Keep queue send and handler failures mapped to stable queue error codes before app code receives them.
+      - Carry tenant id, correlation id, idempotency key, delay, message group, attempt count, and retry/dead-letter metadata where a product or runtime needs those facts.
+      - Keep retry and dead-letter disposition unambiguous; a single delivery must not be both retryable and dead-lettered.
+      - Include in-memory or no-op queue helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test message type, message version, payload, message envelope, send options, delivery metadata, queue errors, handlers, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define product job catalogs, product handler behavior, or workflow enqueue decisions in packages/core.
+      - Do not define concrete broker queue resources, queue URLs, receipt handles, visibility timeouts, retry algorithms, worker loops, scheduler loops, dead-letter queue resources, ordering guarantees, cloud SDK clients, or deployment topology in packages/core.
+      - Do not expose provider-specific broker, queue, stream, receipt-handle, visibility-timeout, network, timeout, or delivery error shapes directly to app code.
+      - Do not treat core in-memory queue helpers as durable queue, retry, worker, or dead-letter implementations.
+    agent_guidance: >
+      Core queues name the portable work item and queue-facing contract. Apps
+      decide which product work to enqueue and handle, platform runs worker and
+      adapter mechanics, and infra provisions queue resources, DLQs, alarms,
+      permissions, and deployment topology.
+
   - id: core.audit-contracts-record-accountability
     title: Audit contracts record accountability facts
     severity: error
@@ -532,7 +656,8 @@ rules:
       while leaving product audit catalogs, durable storage, retention, and
       infrastructure outside core.
     must:
-      - Define provider-neutral audit event id, audit event type, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, and recorder error contracts.
+      - Define provider-neutral audit event id, audit event type, audit event version, actor, target, outcome, timestamp, tenant context, correlation id, reason, metadata, recorder, and recorder error contracts.
+      - Carry explicit positive integer audit event schema versions before audit events cross storage, export, compliance, retention, or SIEM boundaries.
       - Use audit records for accountability facts: who did what, to which target, in which tenant or context, when, from which correlated request or job, and with which outcome.
       - Require an explicit actor and target on audit events; represent anonymous/system actors and global/system targets deliberately instead of omitting those fields.
       - Distinguish succeeded, denied, and failed outcomes without requiring consumers to parse operational logs.
@@ -540,7 +665,7 @@ rules:
       - Reject non-finite numeric values and non-plain runtime objects from audit metadata before it crosses storage, export, or compliance boundaries.
       - Keep audit explanations translation-ready when they may be displayed to people.
       - Include in-memory or no-op audit helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
-      - Test audit type, target, actor, outcome, metadata, recorder error, and helper behavior without concrete runtime providers.
+      - Test audit type, audit event version, target, actor, outcome, metadata, recorder error, and helper behavior without concrete runtime providers.
     must_not:
       - Do not use audit as a replacement for operational logging, event buses, analytics events, monitoring metrics, or reporting exports.
       - Do not put product-specific audit catalogs, workflow emission decisions, storage tables, object-storage buckets, retention policy, legal hold, redaction jobs, export workflows, SIEM integrations, CloudWatch sinks, cloud SDK clients, or provider adapters in packages/core.
@@ -574,6 +699,53 @@ rules:
       render it? Which primitive params does the renderer need? Keep final words
       and regional formatting in i18n/localization or the presentation boundary.
 
+  - id: core.i18n-contracts-translate-meaning-without-owning-copy-or-runtime
+    title: Core i18n owns translation contracts, not translation runtime
+    severity: error
+    summary: >
+      packages/core i18n contracts may name locale tags, message templates,
+      catalogs, translator ports, fallback behavior, and stable i18n errors
+      without owning product copy or runtime translation implementation.
+    must:
+      - Define provider-neutral locale tag, message template, translation catalog, translation request, translated-message, translator port, fallback, and i18n error contracts when needed.
+      - Keep translation params primitive and compatible with shared message descriptors.
+      - Reject common sensitive translation param names such as secrets, tokens, credentials, authorization values, cookies, raw request values, sensitive validation input, raw user identifiers, correlation ids, request ids, trace ids, and session ids before interpolation.
+      - Keep translated output records from preserving raw param values; carry param keys or rendered text instead.
+      - Include pure record-backed or default-message helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Preserve fallback/default-message behavior so untranslated contexts remain understandable without becoming canonical localized copy.
+    must_not:
+      - Do not put final product copy, tenant/user language preference storage, browser locale negotiation, catalog file loading, pluralization policy, external translation services, or concrete translation libraries in packages/core.
+      - Do not make i18n format dates, numbers, currencies, regions, or time zones.
+      - Do not pass secrets, tokens, credentials, raw request values, sensitive validation input, raw user identifiers, rich objects, provider-specific objects, dates, money objects, request objects, or runtime values as translation params.
+      - Do not treat translated text as trusted HTML or safe markup; escaping and rendering-context safety belong to presentation boundaries.
+    agent_guidance: >
+      Core i18n names the portable translation boundary. Apps own product copy
+      and display requirements. Platform/runtime wires catalog loading and
+      concrete translators. Presentation boundaries decide locale negotiation.
+
+  - id: core.localization-contracts-format-intent-without-display-policy
+    title: Core localization owns formatting intent, not display policy
+    severity: error
+    summary: >
+      packages/core localization contracts may name locale-sensitive formatting
+      intents for dates, numbers, currencies, regions, and time zones without
+      choosing a concrete formatting engine or product display policy.
+    must:
+      - Define provider-neutral currency, region, time-zone, localizable value, localization request, formatted output, localizer port, and localization error contracts when needed.
+      - Keep numeric values finite and represent regional facts with stable branded values before crossing app/platform boundaries.
+      - Treat core time-zone validation as a syntax-level portable contract, such as UTC or IANA-style slash-separated identifiers, unless a platform adapter verifies concrete runtime support.
+      - Reject malformed, path-like, markup-like, empty, or whitespace-containing time-zone values before branding them.
+      - Include pure localizer helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Keep localization separate from translation so message copy and regional value formatting can evolve independently.
+    must_not:
+      - Do not call concrete formatting engines, load CLDR data, infer user locale, choose product time-zone policy, perform currency conversion, choose exchange rates, or define app display rules in packages/core.
+      - Do not put final localized prose, UI layout decisions, notification copy, reporting copy, or design-system rendering behavior in localization contracts.
+      - Do not allow non-finite numbers, provider objects, dates, money objects, request objects, or runtime-only values to cross localization contracts.
+    agent_guidance: >
+      Core localization names what needs locale-sensitive formatting. Platform
+      runtime or presentation adapters own how formatting happens, and apps own
+      product-specific display decisions.
+
 source_refs:
   - doc: "kanbien-core-architecture-guide.md"
     sections:
@@ -599,4 +771,5 @@ success_criteria:
   - "It distinguishes core contracts from platform implementations and app product workflows."
   - "It records the recommended core capability module families and their intended consumers."
   - "It maps core test types to contract compatibility, validation, edge case, security, failure-mode, and test-helper scenarios."
+  - "It requires public core contracts to evolve additively by default and to use compatibility fixtures for old public usages."
   - "It includes manually verified source_refs back to the core architecture guide."

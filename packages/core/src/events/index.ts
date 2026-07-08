@@ -15,6 +15,7 @@ import {
   type MessageParams,
   type Result,
 } from "../shared/index";
+import type { DiagnosticDescriptor } from "../diagnostics/index";
 import type { TenantId } from "../tenancy/index";
 
 export type EventId = EntityId<"EventId">;
@@ -97,6 +98,7 @@ export function eventPublishError(input: {
   readonly messageKey?: string | MessageKey;
   readonly params?: MessageParams;
   readonly cause?: unknown;
+  readonly diagnostic?: DiagnosticDescriptor;
   readonly details?: Readonly<Record<string, unknown>>;
 }): EventPublishError {
   return {
@@ -105,6 +107,7 @@ export function eventPublishError(input: {
     ...(input.messageKey === undefined ? {} : { messageKey: messageKey(input.messageKey) }),
     ...(input.params === undefined ? {} : { params: input.params }),
     ...(input.cause === undefined ? {} : { cause: input.cause }),
+    ...(input.diagnostic === undefined ? {} : { diagnostic: input.diagnostic }),
     ...(input.details === undefined ? {} : { details: input.details }),
   };
 }
