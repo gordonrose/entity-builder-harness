@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-08T13:27:20Z
-latest_commit_sha: 38480fc
-chat_duration: 50865s (00:14:07:45)
+latest_commit_at_utc: 2026-07-08T13:56:16Z
+latest_commit_sha: 1c2f9fc
+chat_duration: 52601s (00:14:36:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -157,6 +157,17 @@ Summary: Added provider-neutral packages/core i18n and localization contracts, t
 
 ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, and recorded RAG disposition cover this i18n/localization contract slice.
 
+
+### 2026-07-08T13:56:16Z - Commit recorded
+
+Commit: `1c2f9fc`
+
+Message: Harden core i18n localization contracts
+
+Summary: Hardened packages/core i18n and localization contracts by blocking unsafe translation params, avoiding raw translated param retention, tightening time-zone syntax validation, adding root public compatibility canaries, and updating RAG/source evidence for review findings.
+
+ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, compatibility canary, and recorded RAG disposition cover this review-hardening slice.
+
 ## Commits
 
 
@@ -195,6 +206,13 @@ ADR impact: No standalone ADR required; source material, packages-core rules, de
   Summary: Added provider-neutral packages/core i18n and localization contracts, tests, package exports, docs, and RAG/source guidance for translation and locale-sensitive formatting boundaries.
   ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, and recorded RAG disposition cover this i18n/localization contract slice.
 
+
+- Commit: `1c2f9fc`
+  Time UTC: 2026-07-08T13:56:16Z
+  Message: Harden core i18n localization contracts
+  Summary: Hardened packages/core i18n and localization contracts by blocking unsafe translation params, avoiding raw translated param retention, tightening time-zone syntax validation, adding root public compatibility canaries, and updating RAG/source evidence for review findings.
+  ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, compatibility canary, and recorded RAG disposition cover this review-hardening slice.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -208,9 +226,9 @@ Reason: Source material, architecture rules, derivation reports, selector fixtur
 ## Session Metrics
 
 Raised at UTC: 2026-07-07T23:19:35Z
-Latest commit at UTC: 2026-07-08T13:27:20Z
-Latest commit SHA: 38480fc
-Chat duration: 50865s (00:14:07:45)
+Latest commit at UTC: 2026-07-08T13:56:16Z
+Latest commit SHA: 1c2f9fc
+Chat duration: 52601s (00:14:36:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
