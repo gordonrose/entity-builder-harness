@@ -17,7 +17,6 @@
   - id: chat.script.session-log.prepare-chat-session-before-commit
     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # Prepare Chat Session Before Commit
 
@@ -80,7 +79,14 @@ Then it validates the current chat session:
 
 ## Repository Extensions
 
-`00.chat` does not own repository-specific, harness-specific, product,
-deployment, or RAG/rulebook commit checks. A repository may provide a neutral
-extension hook at `scripts/repo/commit-gates/script.sh`. If present, this helper
-runs it after portable chat and harness drift checks.
+`00.chat` does not own repository-specific, domain-specific, product, or
+deployment commit checks. A repository may provide a neutral extension hook at:
+
+```bash
+scripts/repo/commit-gates/script.sh
+```
+
+If present, this helper runs it after portable chat and harness drift checks.
+Set `CHAT_REPO_COMMIT_GATES_SCRIPT` to a different repository-relative path
+when a consumer repo needs to override the default hook. The older
+`LLM_WORKBENCH_OPTIONAL_COMMIT_GATE` variable remains a compatibility alias.

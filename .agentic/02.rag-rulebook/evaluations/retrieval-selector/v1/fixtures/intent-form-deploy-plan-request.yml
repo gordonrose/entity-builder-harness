@@ -32,8 +32,6 @@ input:
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md
-  focused_paths:
-    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
   max_chunks: 8
 expected:
   routing:

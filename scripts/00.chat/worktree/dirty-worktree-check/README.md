@@ -17,7 +17,6 @@
   - id: chat.script.worktree.dirty-worktree-check
     path: scripts/00.chat/worktree/dirty-worktree-check/script.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # Dirty Worktree Check
 

@@ -81,7 +81,6 @@ REQUIRED_DIMENSIONS = [
     "retrieval-strategy",
     "session-metadata",
     "layer-mode-workflow",
-    "focused-paths",
     "corpus-ownership",
     "rule-graph",
     "required-checks",

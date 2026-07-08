@@ -82,9 +82,6 @@ dimensions:
   - id: layer-mode-workflow
     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/layer-mode-workflow.yml
 
-  - id: focused-paths
-    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-
   - id: corpus-ownership
     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/corpus-ownership.yml
 
@@ -114,8 +111,8 @@ precedence:
     rule: Stop conditions beat retrieval scores.
     reason: Retrieval must not make blocked work look safe.
   - rank: 2
-    rule: Explicit request context beats session continuity for retrieval target selection.
-    reason: The user prompt, focused paths, and exact named artifacts say what evidence the current answer needs.
+    rule: Explicit request context and exact prompt paths beat session continuity for retrieval target selection.
+    reason: The user prompt and exact named artifacts say what evidence the current answer needs.
   - rank: 3
     rule: Evidence bundles define required evidence families for recognized question categories.
     reason: Some questions need canonical layer, concern, workflow, or plan evidence rather than only top-scoring chunks.
@@ -123,24 +120,21 @@ precedence:
     rule: Session metadata governs provenance, continuity, branch/worktree ownership, and execution safety.
     reason: Current chat state remains required for audit and side-effect safety without classifying the prompt or chat.
   - rank: 5
-    rule: Focused paths and artifact ownership beat semantic similarity.
-    reason: Path ownership provides deterministic scope.
-  - rank: 6
     rule: Corpus ownership beats cross-corpus convenience.
     reason: Modular corpora must remain separately governed.
-  - rank: 7
+  - rank: 6
     rule: Required checks and mandatory rulesets survive trimming.
     reason: Smaller context must not remove required process.
-  - rank: 8
+  - rank: 7
     rule: Graph expansion is bounded before ranking.
     reason: Expansion should add required context, not flood the packet.
-  - rank: 9
+  - rank: 8
     rule: Deterministic matches precede semantic recall.
     reason: Semantic recall is supplemental and disabled in v1.
-  - rank: 10
+  - rank: 9
     rule: Low confidence becomes a gap.
     reason: The selector must expose uncertainty.
-  - rank: 11
+  - rank: 10
     rule: Validation failure makes the packet unusable.
     reason: Consumers should only receive validated context.
 

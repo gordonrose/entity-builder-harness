@@ -26,17 +26,13 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core contract modules retrieve core rules and placement boundaries.
 input:
-  request_text: Explain how product code should use packages/core authn and authz contracts for principal claims, permission strings, and denied authorization decisions while leaving credential checks and policy engines outside core.
+  request_text: Explain how product code should use packages/core/src/authn/index.ts and packages/core/src/authz/index.ts contracts for principal claims, permission strings, and denied authorization decisions while leaving credential checks and policy engines outside core; use docs/harness/architecture/rules/layers/packages-core.yml, docs/harness/architecture/rules/concerns/dependency-direction.yml, and docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml for package-core, dependency, and adapter-consumption boundaries.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/authn/index.ts
-    - packages/core/src/authz/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
-  max_chunks: 10
+  max_chunks: 12
 expected:
   routing:
     layer: 03.product
@@ -70,6 +66,7 @@ source_refs:
   - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - packages/core ownership rules change.

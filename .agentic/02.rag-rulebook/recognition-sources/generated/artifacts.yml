@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 596
-  term_count: 1204
+  indexed_artifacts: 604
+  term_count: 1220
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3864,6 +3864,18 @@ terms:
   canonical_id: rag-rulebook.readme
   evidence_path: .agentic/02.rag-rulebook/README.md
   confidence_weight: 1
+- term: rag-rulebook.corpus-gap.02-rag-rulebook.hosted-context-provider-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gap.02-rag-rulebook.hosted-context-provider-contract
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gap.02-rag-rulebook.hosted-context-provider-contract
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
+  confidence_weight: 1
 - term: rag-rulebook.corpus-gap.04-deploy.github-actions-to-ecs-fargate
   category: artifact-id
   match_type: exact
@@ -3911,6 +3923,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.derivation-report.02-rag-rulebook.2026-06-27-mcp-server-deployment-architecture
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml
+  confidence_weight: 1
+- term: rag-rulebook.derivation-report.02-rag-rulebook.2026-07-07-hosted-context-provider-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.02-rag-rulebook.2026-07-07-hosted-context-provider-contract
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.02-rag-rulebook.2026-07-07-hosted-context-provider-contract
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
   confidence_weight: 1
 - term: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
   category: artifact-id
@@ -4055,6 +4079,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.exact-rag-rulebook-workflow
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.hosted-rag-provider-over-local-runtime
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.hosted-rag-provider-over-local-runtime
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.hosted-rag-provider-over-local-runtime
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-deploy-explanation-question
   category: artifact-id
@@ -4536,18 +4572,6 @@ terms:
   canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.evidence-bundles
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   confidence_weight: 1
-- term: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
-  category: artifact-id
-  match_type: exact
-  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
-  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-  confidence_weight: 1
-- term: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-  category: file-path
-  match_type: exact
-  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.focused-paths
-  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
-  confidence_weight: 1
 - term: rag-rulebook.policy.retrieval-selector.v1.dimension.layer-mode-workflow
   category: artifact-id
   match_type: exact
@@ -4703,6 +4727,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
   evidence_path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+  evidence_path: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+  evidence_path: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
   confidence_weight: 1
 - term: rag-rulebook.retirements.readme
   category: artifact-id
@@ -5226,6 +5262,18 @@ terms:
   canonical_id: rag-rulebook.rules.readme
   evidence_path: docs/02.rag-rulebook/rules/README.md
   confidence_weight: 1
+- term: rag-rulebook.rules.concerns.hosted-context-provider-contract
+  category: rule-id
+  match_type: exact
+  canonical_id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+  evidence_path: docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+  evidence_path: docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  confidence_weight: 1
 - term: rag-rulebook.rules.concerns.mcp-server-deployment-architecture
   category: rule-id
   match_type: exact
@@ -5249,6 +5297,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.source-material.readme
   evidence_path: docs/02.rag-rulebook/source-material/README.md
+  confidence_weight: 1
+- term: rag-rulebook.source-material.hosted-context-provider-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material.hosted-context-provider-contract
+  evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material.hosted-context-provider-contract
+  evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
   confidence_weight: 1
 - term: rag-rulebook.source-material.mcp-server-deployment-architecture
   category: artifact-id
@@ -5909,6 +5969,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.script.generate-source-to-rule-work-order.smoke-test
   evidence_path: scripts/02.rag-rulebook/generate-source-to-rule-work-order/smoke-test.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.query-context.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-context.readme
+  evidence_path: scripts/02.rag-rulebook/query-context/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/query-context/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-context.readme
+  evidence_path: scripts/02.rag-rulebook/query-context/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.query-context
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-context
+  evidence_path: scripts/02.rag-rulebook/query-context/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/query-context/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-context
+  evidence_path: scripts/02.rag-rulebook/query-context/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.query-context.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-context.smoke-test
+  evidence_path: scripts/02.rag-rulebook/query-context/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/query-context/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.query-context.smoke-test
+  evidence_path: scripts/02.rag-rulebook/query-context/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.query-local-context.readme
   category: artifact-id

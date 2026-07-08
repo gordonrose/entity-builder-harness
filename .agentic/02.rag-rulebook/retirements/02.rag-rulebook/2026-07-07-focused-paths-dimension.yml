@@ -1,0 +1,68 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: retirement-record
+#   purpose: Retire the focused-paths selector dimension until typed request anchors are governed.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+
+schema: rag-rulebook/retirement-record/v1
+retirement_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
+status: accepted
+owner_layer: 02.rag-rulebook
+corpus_id: corpus.02.rag-rulebook
+retired_at_utc: "2026-07-07T22:15:04Z"
+retired_artifacts:
+  - path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml
+    kind: other
+    path_state: removed
+    previous_sha256: b995b89ecbe75bdbc331e6bc1b3cc6d829adb05e199f08092ba7ca57d382bfa3
+    replacement_paths:
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+reason:
+  - Focused paths were a path-specific caller hint without governed provenance, freshness, or trust semantics.
+  - Exact path intelligence remains available through prompt text and generated recognition sources.
+  - A future typed request-anchor dimension should replace this only after clients can supply governed context metadata.
+reference_checks:
+  checked_roots:
+    - .agentic/02.rag-rulebook
+    - .agentic/aws
+    - docs/02.rag-rulebook
+    - docs/04.deploy
+    - scripts/02.rag-rulebook
+  remaining_references: []
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh --current
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current --json
+    - bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current --json
+      result: passed
+    - command: bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+      result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: accept
+  reviewer: Gordon Rose

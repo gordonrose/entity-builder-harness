@@ -20,7 +20,6 @@ set -euo pipefail
 #   - id: chat.workflows.chat-start
 #     path: .agentic/00.chat/workflows/chat-start.md
 #   - id: harness.standards.governed-script-permissions
-#     path: .agentic/01.harness/standards/governed-script-permissions.md
 #   - id: harness.script.run-governed-script
 #     path: scripts/01.harness/run-governed-script.sh
 #   effects:

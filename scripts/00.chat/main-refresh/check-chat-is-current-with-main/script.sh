@@ -18,7 +18,6 @@ set -euo pipefail
 #     - llm-workbench
 #   used_by:
 #   - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
-#     path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
 #   - id: harness.script.run-governed-script
 #     path: scripts/01.harness/run-governed-script.sh
 #   effects:

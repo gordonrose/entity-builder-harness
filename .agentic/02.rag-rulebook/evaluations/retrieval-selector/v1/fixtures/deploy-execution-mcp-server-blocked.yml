@@ -26,15 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove a deploy-execution prompt selects precise MCP deployment evidence but blocks execution on missing AWS, GitHub, transport/auth, executable-check, and cost/capacity proof.
 input:
-  request_text: Deploy the RAG rulebook MCP server to AWS from main.
+  request_text: Deploy the RAG rulebook MCP server to AWS from main using docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml and docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml.
   session:
     trust_routing: true
     layer: 04.deploy
     mode: implementation
     workflow: .agentic/aws/workflows/plan-aws-change.md
-  focused_paths:
-    - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
-    - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   max_chunks: 12
 expected:
   routing:
@@ -94,7 +91,6 @@ expected:
     required_matched_inputs:
       - prompt
       - session-metadata
-      - focused-paths
     required_matches:
       - source_id: recognition.curated.intent-forms
         term: Deploy the

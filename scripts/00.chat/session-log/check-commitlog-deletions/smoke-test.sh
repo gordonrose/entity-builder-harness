@@ -18,7 +18,6 @@ set -euo pipefail
 #     - llm-workbench
 #   used_by:
 #   - id: harness.architecture.adr.0010-protect-commit-logs-with-recorded-work
-#     path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
 #   - id: chat.script.session-log.check-commitlog-deletions.readme
 #     path: scripts/00.chat/session-log/check-commitlog-deletions/README.md
 #   - id: chat.script.session-log.check-commitlog-deletions

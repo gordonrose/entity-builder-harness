@@ -34,7 +34,6 @@ It consumes:
 - validated recognition candidates, used only for coverage-gap reporting
 - request text
 - session-like layer, mode, and workflow metadata
-- focused path signals
 - generated or saved rulebook chunks
 - a compiled retrieval policy when supplied by the local runtime
 
@@ -66,9 +65,9 @@ Generate a fixture from a saved chunk set:
 bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \
   --chunks /tmp/rulebook-chunks.json \
   --compiled-policy /tmp/compiled-retrieval-policy.json \
+  --request-text "Build a selector packet for .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml." \
   --session-layer 02.rag-rulebook \
   --session-mode implementation \
-  --focused-path .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml \
   --pretty
 ```
 

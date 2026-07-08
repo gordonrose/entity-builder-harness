@@ -26,15 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core persistence contracts retrieve storage boundary and adapter placement rules.
 input:
-  request_text: Explain how product code should use packages/core persistence contracts for page totals, repository saves, optimistic concurrency, transactions, after-commit events, and database adapters.
+  request_text: Explain how product code should use packages/core/src/persistence/index.ts contracts for page totals, repository saves, optimistic concurrency, transactions, after-commit events, and database adapters; use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - packages/core/src/persistence/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
   max_chunks: 10
 expected:
   routing:

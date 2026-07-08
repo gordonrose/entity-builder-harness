@@ -44,8 +44,7 @@ Then query it:
 
 ```bash
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
-  --request-text "How do I update my harness so we can deploy it behind an MCP server?" \
-  --focused-path .agentic/01.harness/workflows/change-harness.md \
+  --request-text "How do I update my harness through .agentic/01.harness/workflows/change-harness.md so we can deploy it behind an MCP server?" \
   --pretty
 ```
 
@@ -66,8 +65,6 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
   not expose this trust path.
 - `--previous-packet-id` and `--previous-routing-summary` provide continuity
   from the previous context packet without making it current routing.
-- `--focused-path <path>` may be repeated.
-- `--no-focused-paths` clears focused path signals.
 - `--max-chunks <n>` controls packet size.
 - `--format <full|compact>` chooses the output shape. `full` is the default
   debug/provenance packet. `compact` keeps selected chunk content, concise

@@ -43,10 +43,10 @@ Each dimension should answer six plain questions:
 A good dimension is specific enough for deterministic selector code to execute
 without inventing policy.
 
-For example, the focused-paths dimension should not merely say "use paths." It
-should say that exact path ownership beats prompt similarity, that ambiguous
-ownership creates a blocking gap, and that selected chunks must preserve path
-citations.
+For example, a future typed request-anchor dimension should not merely say
+"use context." It should say which anchor kinds are governed, how provenance
+and freshness affect trust, when exact prompt paths beat broad similarity, and
+when ambiguous ownership creates a blocking gap.
 
 ## Bad Shape
 
@@ -63,11 +63,11 @@ A stronger version is:
 
 ```yml
 expected_actions:
-  - Rank exact focused-path matches above prompt-only matches.
+  - Rank exact prompt-path matches above broad concept matches.
 banned_actions:
   - Do not infer ownership when multiple corpora claim the same path.
 gap_or_stop_conditions:
-  - Stop when focused-path ownership is ambiguous.
+  - Stop when exact path ownership is ambiguous.
 ```
 
 ## Authoring Rules

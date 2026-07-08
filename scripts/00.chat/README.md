@@ -17,7 +17,6 @@
   - id: chat.readme
     path: .agentic/00.chat/README.md
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # 00.chat Scripts
 

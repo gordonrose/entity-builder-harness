@@ -17,7 +17,6 @@
   - id: chat.script.migration.audit-chat-layer-migration
     path: scripts/00.chat/migration/audit-chat-layer-migration/script.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # 00.chat Migration Plan
 

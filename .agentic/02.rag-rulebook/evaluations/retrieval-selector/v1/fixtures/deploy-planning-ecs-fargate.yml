@@ -35,7 +35,6 @@ input:
     layer: 04.deploy
     mode: planning
     workflow: .agentic/aws/workflows/plan-aws-change.md
-  no_focused_paths: true
   max_chunks: 12
 expected:
   routing:
@@ -127,4 +126,4 @@ update_triggers:
   - ECS Fargate deploy rule changes.
   - Supply-chain provenance rule changes.
   - Context-provider data-boundary rule changes.
-  - Selector ranking, focused-path behavior, or deploy planning intent changes.
+  - Selector ranking, or deploy planning intent changes.

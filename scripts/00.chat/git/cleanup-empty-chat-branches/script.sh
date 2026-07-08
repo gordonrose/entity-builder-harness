@@ -21,7 +21,6 @@ set -euo pipefail
 #   - id: chat.workflows.chat-cleanup
 #     path: .agentic/00.chat/workflows/chat-cleanup.md
 #   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-#     path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 #   - id: chat.script.startup.start-chat-session
 #     path: scripts/00.chat/startup/start-chat-session/script.sh
 #   effects:

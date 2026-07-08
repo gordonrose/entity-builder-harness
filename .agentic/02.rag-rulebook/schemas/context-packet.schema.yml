@@ -68,7 +68,7 @@ compact_output_contract:
     - packet_summary
   field_rules:
     request:
-      - "Keep raw text, normalized summary, focused paths, and open artifact IDs."
+      - "Keep raw text, normalized summary, and open artifact IDs."
       - "Do not include full recognition-source matches in compact output."
     selected_chunks:
       - "Include selected chunk content because this is the primary agent context."
@@ -131,10 +131,6 @@ fields:
         type: string
       normalized_summary:
         type: string
-      focused_paths:
-        type: array
-        items:
-          type: string
       open_artifact_ids:
         type: array
         items:
@@ -731,7 +727,7 @@ field_guide:
     what_it_does: "Preserves the original user signal and the normalized task summary."
     rules:
       - "Must include raw text and a normalized summary."
-      - "Should include focused paths and open artifacts when available."
+      - "Should include open artifacts when available."
 
   - path: request.raw_text
     what_it_is: "The user's original request text."
@@ -745,12 +741,6 @@ field_guide:
     rules:
       - "Should preserve the user's actual intent."
       - "Should not add inferred scope that is not supported by evidence."
-
-  - path: request.focused_paths
-    what_it_is: "Paths the user or workbench is focused on."
-    what_it_does: "Improves path ownership and artifact matching."
-    rules:
-      - "Only include paths available to the current request context."
 
   - path: request.open_artifact_ids
     what_it_is: "Stable artifact IDs visible in the current work context."
@@ -1403,8 +1393,6 @@ minimal_example:
   request:
     raw_text: "Create a context-packet schema."
     normalized_summary: "Design the RAG/Rulebook context-packet contract."
-    focused_paths:
-      - .agentic/02.rag-rulebook/plans/repo-plan.md
     open_artifact_ids:
       - rag-rulebook.plan.repo
   intent:

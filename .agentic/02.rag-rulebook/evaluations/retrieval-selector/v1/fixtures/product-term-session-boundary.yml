@@ -26,14 +26,12 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove request context requires exact terms, paths, or ownership evidence before crossing corpus boundaries.
 input:
-  request_text: For this RAG rulebook task, update the product wording in the selector evaluation notes.
+  request_text: For this RAG rulebook task, update the product wording in .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md.
   session:
     trust_routing: true
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  focused_paths:
-    - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
   max_chunks: 6
 expected:
   routing:

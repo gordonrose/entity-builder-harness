@@ -51,7 +51,6 @@ prompt
 + evidence bundles
 + chat/session metadata
 + prompt-level layer/mode/workflow candidates
-+ focused paths
 + corpus ownership
 + rule graph
 + required checks
@@ -79,7 +78,7 @@ Prompt interpretation should run for each prompt and be grounded in governed rec
 selector should not invent nouns, actions, risk words, aliases, or targets from
 raw language alone. It should match prompt text against generated and curated
 lookup sources, then combine those matches into request context before comparing
-them with session, path, corpus, and graph signals.
+them with session, corpus, and graph signals.
 
 Do not classify the chat as one stable layer, mode, or workflow. A chat is the
 lifecycle container for branch, worktree, commit-log, metrics, and transcript
@@ -94,11 +93,10 @@ Every active selector policy pack must address these dimensions.
 | Dimension | Controls | Evolves By |
 | --- | --- | --- |
 | prompt | How raw user language becomes intent signals and task terms. | Adding task vocabulary, synonyms, disambiguation rules, or prompt red flags. |
-| request context | How the current prompt, focused paths, recognized concepts, and side-effect class become the retrieval target for this request. | Adding request forms, side-effect classes, expected evidence bundles, or confidence penalties. |
+| request context | How the current prompt, exact identifiers, recognized concepts, and side-effect class become the retrieval target for this request. | Adding request forms, side-effect classes, expected evidence bundles, or confidence penalties. |
 | evidence bundles | Which canonical evidence families are required for recognized question categories. | Adding question categories, evidence-family terms, canonical source paths, or missing-evidence confidence penalties. |
 | chat/session metadata | How current session, branch, worktree, context-packet references, and recorded metadata preserve provenance, continuity, and execution safety. | Updating trust rules for session fields, context-packet continuity, and continuation state. |
 | layer/mode/workflow | Which prompt-level layer and workflow boundaries constrain retrieval. | Adding new layers, modes, or workflow ownership rules. |
-| focused paths | How open files, changed files, and user-named paths narrow retrieval. | Adding path ownership maps and path-to-corpus rules. |
 | corpus ownership | Which numbered corpora and subcorpora may provide context. | Adding corpus manifests, subcorpus relationships, or cross-corpus permission rules. |
 | rule graph | Which graph edges may expand retrieval beyond the first match. | Adding edge types, hop limits, and expansion priority. |
 | required checks | Which checks must survive ranking and trimming. | Adding task-specific or risk-specific checks. |
@@ -109,6 +107,12 @@ Every active selector policy pack must address these dimensions.
 
 Future dimensions may be added when they are versioned and validated. They must
 not silently change existing dimension meaning.
+
+Typed request anchors, such as active editor files, web UI routes, selected
+entities, user/org context, or journey state, are intentionally deferred until
+clients can provide governed provenance, freshness, and trust levels. Until
+then, exact paths should appear in the prompt text and flow through generated
+recognition sources.
 
 Every imported dimension file must define:
 

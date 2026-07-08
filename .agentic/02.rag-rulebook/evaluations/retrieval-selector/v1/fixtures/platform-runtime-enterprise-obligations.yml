@@ -28,19 +28,16 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about deferred platform/runtime enterprise obligations retrieve platform rule guidance and related concern rules.
 input:
-  request_text: When we implement the platform runtime, what enterprise obligations must we remember for logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
+  request_text: When we implement the platform runtime, what enterprise obligations must we remember from docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md and docs/harness/architecture/rules/layers/platform.yml for logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  focused_paths:
-    - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-    - docs/harness/architecture/rules/layers/platform.yml
   max_chunks: 10
 expected:
   routing:
-    layer: 01.harness
+    layer: 03.product
     mode: implementation
     status: ready
   matched_corpora:

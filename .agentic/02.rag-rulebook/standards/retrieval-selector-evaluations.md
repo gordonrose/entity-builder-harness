@@ -129,13 +129,11 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove a RAG/rulebook workflow prompt routes to the RAG/rulebook corpus.
 input:
-  request_text: "Update the RAG rulebook workflow for context packets."
+  request_text: "Update the RAG rulebook workflow .agentic/02.rag-rulebook/workflows/default.md for context packets."
   session:
     layer: 02.rag-rulebook
     mode: implementation
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  focused_paths:
-    - .agentic/02.rag-rulebook/workflows/default.md
 expected:
   routing:
     layer: 02.rag-rulebook

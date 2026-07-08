@@ -73,31 +73,46 @@ resolve_current_worktree() {
   printf '%s\n' "$worktree"
 }
 
+normalize_shell_path() {
+  local path_value="$1"
+
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -u "$path_value" 2>/dev/null && return 0
+  fi
+
+  printf '%s\n' "${path_value//\\//}"
+}
+
+canonical_dir() {
+  local dir="$1"
+
+  dir="$(normalize_shell_path "$dir")"
+  cd "$dir" && pwd -P
+}
+
 resolve_target() {
   local candidate="$1"
+  local candidate_path
 
   if [ -z "${candidate// }" ]; then
     resolve_current_worktree
     return
   fi
 
-  if [ -f "$candidate" ]; then
-    chat_log_metadata_value "$candidate" "worktree"
+  candidate_path="$(normalize_shell_path "$candidate")"
+  if [ -f "$candidate_path" ]; then
+    chat_log_metadata_value "$candidate_path" "worktree"
     return
   fi
 
   printf '%s\n' "$candidate"
 }
 
-canonical_dir() {
-  local dir="$1"
-
-  cd "$dir" && pwd -P
-}
-
 verify_chat_owned_worktree() {
   local candidate_path="$1"
-  local target_root target_branch target_session_id log_file declared_branch declared_worktree declared_root
+  local target_root target_branch target_session_id log_file declared_branch declared_worktree declared_path declared_root
+
+  candidate_path="$(normalize_shell_path "$candidate_path")"
 
   if [ ! -d "$candidate_path" ]; then
     echo "ERROR: chat worktree path does not exist: $candidate_path" >&2
@@ -138,12 +153,14 @@ verify_chat_owned_worktree() {
     echo "ERROR: session log is missing worktree metadata: $log_file" >&2
     return 1
   fi
-  if [ ! -d "$declared_worktree" ]; then
-    echo "ERROR: declared chat worktree does not exist: $declared_worktree" >&2
+
+  declared_path="$(normalize_shell_path "$declared_worktree")"
+  if [ ! -d "$declared_path" ]; then
+    echo "ERROR: declared chat worktree does not exist: $declared_path" >&2
     return 1
   fi
 
-  declared_root="$(canonical_dir "$declared_worktree")"
+  declared_root="$(canonical_dir "$declared_path")"
   if [ "$declared_root" != "$target_root" ]; then
     echo "ERROR: refusing to open path that is not the declared chat-owned worktree." >&2
     echo "  requested: $target_root" >&2

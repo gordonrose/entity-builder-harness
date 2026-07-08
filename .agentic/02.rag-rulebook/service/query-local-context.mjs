@@ -53,14 +53,6 @@ function commandArgs(input) {
   addStringArg("--previous-packet-id", input.previousPacketId);
   addStringArg("--previous-routing-summary", input.previousRoutingSummary);
 
-  if (input.noFocusedPaths) {
-    args.push("--no-focused-paths");
-  } else {
-    for (const focusedPath of input.focusedPaths) {
-      args.push("--focused-path", focusedPath);
-    }
-  }
-
   return args;
 }
 

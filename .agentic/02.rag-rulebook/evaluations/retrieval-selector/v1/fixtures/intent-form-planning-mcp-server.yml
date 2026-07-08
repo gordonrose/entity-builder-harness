@@ -24,22 +24,23 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.intent-form-planning-mcp-server
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove request form recognition separates planning guidance from implementation or deploy execution while selecting MCP server rulebook chunks from both RAG/rulebook and deploy corpora.
+purpose: >
+  Prove request form recognition separates deploy planning guidance from deploy
+  execution while selecting MCP server rulebook chunks from both RAG/rulebook
+  and deploy corpora.
 input:
-  request_text: How do I update my harness so we can deploy it behind an MCP server?
+  request_text: How do I update my harness through .agentic/01.harness/workflows/change-harness.md so we can deploy it behind an MCP server?
   session:
     trust_routing: true
     layer: 01.harness
     mode: planning
     workflow: .agentic/01.harness/workflows/change-harness.md
-  focused_paths:
-    - .agentic/01.harness/workflows/change-harness.md
   max_chunks: 6
 expected:
   routing:
-    layer: 01.harness
-    mode: discovery
-    workflow: .agentic/01.harness/workflows/change-harness.md
+    layer: 04.deploy
+    mode: planning
+    workflow: .agentic/aws/workflows/plan-aws-change.md
     status: ready
   matched_corpora:
     required:
@@ -78,7 +79,6 @@ expected:
     required_matched_inputs:
       - prompt
       - session-metadata
-      - focused-paths
     required_matches:
       - source_id: recognition.curated.intent-forms
         term: How do I

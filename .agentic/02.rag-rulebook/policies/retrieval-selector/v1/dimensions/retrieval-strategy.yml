@@ -33,7 +33,6 @@ purpose: Define the selector's reusable staged retrieval shape so misses can be 
 required_inputs:
   - Compiled policy pack.
   - Prompt recognition matches.
-  - Focused path signals.
   - Generated chunks.
   - Rule graph metadata.
   - Evidence bundle policy.
@@ -63,7 +62,7 @@ gap_or_stop_conditions:
   - Lower confidence when question-category evidence bundles do not produce selected canonical evidence.
   - Keep side-effect execution blocked when strategy retrieval crosses layers without matching execution governance.
 ranking_effects:
-  - Exact identifiers and focused paths outrank broad concepts.
+  - Exact identifiers outrank broad concepts.
   - Generated concept matches outrank curated broad vocabulary.
   - Evidence bundle source paths survive trimming before optional ranked chunks.
   - Within required evidence sources, rule title and summary matches outrank broad file-level matches.
@@ -73,7 +72,7 @@ retrieval_strategy:
   stages:
     - stage_id: exact-identifiers
       rank: 1
-      purpose: Match exact corpus IDs, artifact IDs, file paths, rule IDs, and rule-pack IDs from prompt or focused paths.
+      purpose: Match exact corpus IDs, artifact IDs, file paths, rule IDs, and rule-pack IDs from prompt text.
       primary_inputs:
         - recognition.generated.artifacts
         - recognition.generated.routing

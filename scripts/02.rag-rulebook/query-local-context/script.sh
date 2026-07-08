@@ -58,8 +58,6 @@ TRUST_SESSION_ROUTING=false
 MAX_CHUNKS=""
 PRETTY=false
 FORMAT="full"
-NO_FOCUSED_PATHS=false
-FOCUSED_PATHS=()
 
 usage() {
   cat <<'EOF'
@@ -79,8 +77,6 @@ Options:
                               Previous packet routing summary
   --trust-session-routing     Trust supplied session layer/mode/workflow after
                               governed session ownership verification
-  --focused-path <path>      Focused path signal. Repeatable
-  --no-focused-paths         Use no focused path signals
   --max-chunks <n>           Maximum selected chunks. Range: 3-12
   --format <full|compact>    Output format. Default: full
   --pretty                   Pretty-print JSON
@@ -177,18 +173,6 @@ while [ "$#" -gt 0 ]; do
       TRUST_SESSION_ROUTING=true
       shift
       ;;
-    --focused-path)
-      if [ "$#" -lt 2 ]; then
-        echo "ERROR: --focused-path requires a path." >&2
-        exit 2
-      fi
-      FOCUSED_PATHS+=("$2")
-      shift 2
-      ;;
-    --no-focused-paths)
-      NO_FOCUSED_PATHS=true
-      shift
-      ;;
     --max-chunks)
       if [ "$#" -lt 2 ]; then
         echo "ERROR: --max-chunks requires a number." >&2
@@ -269,14 +253,6 @@ if [ "$TRUST_SESSION_ROUTING" = true ]; then
   COMMAND+=(--trust-session-routing)
 fi
 
-if [ "$NO_FOCUSED_PATHS" = true ]; then
-  COMMAND+=(--no-focused-paths)
-else
-  for focused_path in "${FOCUSED_PATHS[@]}"; do
-    COMMAND+=(--focused-path "$focused_path")
-  done
-fi
-
 if [ -n "$MAX_CHUNKS" ]; then
   COMMAND+=(--max-chunks "$MAX_CHUNKS")
 fi
@@ -332,7 +308,6 @@ request = packet.get("request") or {}
 compact_request = {
     "raw_text": request.get("raw_text"),
     "normalized_summary": request.get("normalized_summary"),
-    "focused_paths": request.get("focused_paths", []),
     "open_artifact_ids": request.get("open_artifact_ids", []),
     "previous_packet_id": request.get("previous_packet_id"),
 }

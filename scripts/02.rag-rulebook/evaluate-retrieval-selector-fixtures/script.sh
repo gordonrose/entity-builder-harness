@@ -172,11 +172,6 @@ def run_selector_fixture(fixture: dict[str, Any], chunks_path: Path) -> dict[str
     ]
     if session.get("trust_routing") is True:
         command.append("--trust-session-routing")
-    if input_data.get("no_focused_paths") is True:
-        command.append("--no-focused-paths")
-    else:
-        for path in list_of_strings(input_data.get("focused_paths")):
-            command.extend(["--focused-path", path])
     result = subprocess.run(command, check=True, text=True, stdout=subprocess.PIPE)
     packet = json.loads(result.stdout)
     if not isinstance(packet, dict):

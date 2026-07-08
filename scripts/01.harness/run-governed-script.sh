@@ -18,7 +18,6 @@ set -euo pipefail
 #     - llm-workbench
 #   used_by:
 #   - id: harness.standards.governed-script-permissions
-#     path: .agentic/01.harness/standards/governed-script-permissions.md
 #   - id: chat.workflows.chat-start
 #     path: .agentic/00.chat/workflows/chat-start.md
 #   effects:

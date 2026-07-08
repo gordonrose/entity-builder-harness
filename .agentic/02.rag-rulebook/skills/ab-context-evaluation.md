@@ -58,7 +58,7 @@ current authority until the hosted service and evaluations are mature.
 
 - User request text.
 - Current session layer, mode, and workflow when known.
-- Focused paths from the user or IDE when relevant.
+- Exact paths named in the user request or trusted session context when relevant.
 - Local runtime path, defaulting to `.cache/02.rag-rulebook`.
 
 ## RAG Path
@@ -66,16 +66,15 @@ current authority until the hosted service and evaluations are mature.
 Build or refresh the local runtime if required by the current workflow before
 querying.
 
-Use `query-local-context` with the request text, session metadata, focused
-paths, and a small chunk budget:
+Use `query-local-context` with the request text, trusted session metadata, and
+a small chunk budget:
 
 ```bash
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
-  --request-text "<user request>" \
+  --request-text "<user request, including any exact paths>" \
   --session-layer "<layer>" \
   --session-mode "<mode>" \
   --session-workflow "<workflow>" \
-  --focused-path "<path>" \
   --max-chunks 8 \
   --format compact \
   --pretty

@@ -18,7 +18,6 @@
   - id: chat.script.session-log.checkpoint-chat-session-log
     path: scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # Checkpoint Chat Session Log
 
