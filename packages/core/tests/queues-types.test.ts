@@ -31,7 +31,7 @@ import {
   type QueueRetryMetadata,
   type QueueSendOptions,
 } from "../src/queues/index";
-import { correlationId, isOk, isoDateTime, type Result } from "../src/shared/index";
+import { causationId, correlationId, isOk, isoDateTime, type Result } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
 const typeResult: Result<QueueMessageType, QueueError> = queueMessageType("notifications.send-welcome-email");
@@ -94,6 +94,7 @@ const message: QueueMessage<QueuePayload> = queueMessage({
   enqueuedAt: timestamp.value,
   tenantId: tenantId("tenant-123"),
   correlationId: correlationId("request-123"),
+  causationId: causationId("event-123"),
   idempotencyKey: queueIdempotencyKey("welcome-email:principal-123"),
   messageGroupKey: queueMessageGroupKey("tenant-123"),
   payload,

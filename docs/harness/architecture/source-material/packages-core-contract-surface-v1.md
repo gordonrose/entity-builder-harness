@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 16
+  version: 17
   status: active
   layer: 01.harness
   domain: architecture
@@ -34,8 +34,8 @@ runtime hosts, or cloud SDK integrations.
 
 The initial package surface may include these contract modules:
 
-- `shared`: branded identifiers, result/error shapes, translation-ready message descriptors, request context, clocks.
-- `config`: config source and schema contracts.
+- `shared`: branded identifiers, correlation and causation identifiers, result/error shapes, translation-ready message descriptors, primitive request context, clocks.
+- `config`: config source, schema, environment-name, and secret-reference contracts.
 - `diagnostics`: provider-neutral failure classification, recovery disposition, and self-healing vocabulary.
 - `logging`: logger, log record, and redaction contracts.
 - `monitoring`: health check, metric, signal definition, and label-safety contracts.
@@ -47,8 +47,8 @@ The initial package surface may include these contract modules:
 - `files`: file metadata, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, and storage port contracts.
 - `security`: defensive policy and secret/hash contracts.
 - `audit`: audit event, audit event version, and recorder contracts.
-- `events`: event envelope and event bus contracts.
-- `queues`: queue message, queue message version, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
+- `events`: event envelope, optional causation lineage, and event bus contracts.
+- `queues`: queue message, queue message version, optional causation lineage, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
 - `i18n`: locale tag, message template, translation catalog, translator, fallback behavior, and i18n error contracts.
 - `localization`: currency, region, time-zone, localizable value, localizer, formatted output, and localization error contracts.
 
@@ -93,6 +93,21 @@ small, stable, and JSON-safe. Core errors may carry an optional diagnostic
 descriptor when a failure needs structured recovery, retryability, or
 user-correctability metadata, and module error helpers should preserve that
 descriptor when callers provide it.
+
+`CorrelationId` identifies the request, job, workflow, or operation family that
+ties related runtime facts together. `CausationId` identifies the immediate
+upstream cause of an event, queue message, job, or follow-up action. Core may
+define both as primitive branded identifiers so modules can preserve lineage
+without choosing a tracing backend, broker, worker runtime, or platform
+context implementation.
+
+The shared `RequestContext` is intentionally primitive: correlation id plus
+timestamp. It must not become the composed runtime context for authenticated
+requests or jobs. Contexts that combine tenant, principal, locale, config,
+logger, metrics, feature flags, deadlines, cancellation, route metadata, or
+queue delivery facts belong first in `platform/contracts` or another approved
+platform contract entry point. A composed context should move down into core
+only after multiple consumers agree on a stable provider-neutral shape.
 
 `ISODateTime` values should represent explicit ISO date-time strings with
 timezone information. Date-only strings, localized prose dates, and implicit
@@ -172,6 +187,14 @@ The `config` module must not read directly from `process.env`, local files, AWS
 SSM, Secrets Manager, databases, or deployment manifests. Those are platform,
 infra, or runtime adapter concerns that should be translated into the core
 `ConfigSource` contract.
+
+Core may define provider-neutral environment names and secret references so
+apps, platform contracts, and adapters can agree on stable configuration
+facts. `EnvironmentName` should remain a small deploy-environment label such as
+`local`, `staging`, or `production`. `SecretReference` should name or point to
+a secret through a trimmed provider-neutral key/path shape, not expose secret
+values or choose a concrete provider such as AWS Secrets Manager, SSM, Vault,
+Kubernetes secrets, or local files.
 
 ## Logging Contract Boundary
 
@@ -421,10 +444,10 @@ JSON-safe payload values, event envelopes, publish error meanings, publisher
 or bus ports, handler ports, and small in-memory or no-op helpers for tests.
 
 Event envelopes should carry stable metadata such as id, type, version,
-occurred-at timestamp, optional tenant id, optional correlation id, and payload.
-Payloads should stay plain and serializable so platform adapters can move them
-through brokers, outboxes, logs, tests, and workers without provider-specific
-objects.
+occurred-at timestamp, optional tenant id, optional correlation id, optional
+causation id, and payload. Payloads should stay plain and serializable so
+platform adapters can move them through brokers, outboxes, logs, tests, and
+workers without provider-specific objects.
 Event payloads should reject non-finite numeric values and non-plain runtime
 objects before they cross app/platform boundaries.
 
@@ -461,8 +484,9 @@ in-memory or no-op helpers for tests.
 
 Queue messages should carry stable metadata such as id, type, schema version,
 payload, enqueued-at timestamp, optional tenant id, optional correlation id,
-optional idempotency key, optional delay, and optional message group key where
-a product or runtime needs ordered work. Payloads should stay plain and
+optional causation id, optional idempotency key, optional delay, and optional
+message group key where a product or runtime needs ordered work. Payloads
+should stay plain and
 serializable so platform adapters can move them through queues, retries, logs,
 tests, workers, and dead-letter paths without provider-specific objects.
 Queue payloads should reject non-finite numeric values and non-plain runtime

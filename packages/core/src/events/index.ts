@@ -6,6 +6,7 @@ import {
   messageKey,
   ok,
   type Brand,
+  type CausationId,
   type CoreError,
   type CorrelationId,
   type EntityId,
@@ -41,6 +42,7 @@ export interface EventEnvelope<TPayload extends EventPayloadValue = EventPayload
   readonly occurredAt: ISODateTime;
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
+  readonly causationId?: CausationId;
   readonly payload: TPayload;
 }
 
@@ -119,6 +121,7 @@ export function eventEnvelope<TPayload extends EventPayloadValue>(input: {
   readonly occurredAt: ISODateTime;
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
+  readonly causationId?: CausationId;
   readonly payload: TPayload;
 }): EventEnvelope<TPayload> {
   return {
@@ -128,6 +131,7 @@ export function eventEnvelope<TPayload extends EventPayloadValue>(input: {
     occurredAt: input.occurredAt,
     ...(input.tenantId === undefined ? {} : { tenantId: input.tenantId }),
     ...(input.correlationId === undefined ? {} : { correlationId: input.correlationId }),
+    ...(input.causationId === undefined ? {} : { causationId: input.causationId }),
     payload: copyEventPayloadValue(input.payload) as TPayload,
   };
 }

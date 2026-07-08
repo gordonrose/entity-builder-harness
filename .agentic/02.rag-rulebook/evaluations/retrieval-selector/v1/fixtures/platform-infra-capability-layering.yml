@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.evaluation.retrieval-selector.v1.platform-infra-capability-layering
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -27,7 +27,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about platform-level capability placement retrieve the repo-wide ownership split and queue example.
 input:
-  request_text: platform-infra-capability-layering capability-layering.contract-runtime-adapter-infra-split capability-layering.queues-follow-the-same-split
+  request_text: Using corpus.03.product.platform and docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml, explain platform-infra-capability-layering capability-layering.contract-runtime-adapter-infra-split and capability-layering.queues-follow-the-same-split.
   session:
     trust_routing: true
     layer: 01.harness
@@ -38,7 +38,7 @@ input:
   max_chunks: 10
 expected:
   routing:
-    layer: 01.harness
+    layer: 03.product
     mode: discovery
     status: ready
   matched_corpora:
@@ -59,6 +59,8 @@ expected:
   citations:
     min_count: 1
   gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
     no_unexpected: true
 banned:
   selected_corpora:

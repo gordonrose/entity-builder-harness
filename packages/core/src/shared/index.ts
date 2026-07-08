@@ -4,6 +4,7 @@ export type Brand<Value, Name extends string> = Value & { readonly __brand: Name
 
 export type EntityId<Name extends string = "EntityId"> = Brand<string, Name>;
 export type CorrelationId = Brand<string, "CorrelationId">;
+export type CausationId = Brand<string, "CausationId">;
 export type ISODateTime = Brand<string, "ISODateTime">;
 export type MessageKey = Brand<string, "MessageKey">;
 export type MessageParamValue = string | number | boolean | null;
@@ -43,6 +44,10 @@ export function entityId<Name extends string>(value: string): EntityId<Name> {
 
 export function correlationId(value: string): CorrelationId {
   return brand<string, "CorrelationId">(value);
+}
+
+export function causationId(value: string): CausationId {
+  return brand<string, "CausationId">(value);
 }
 
 export function messageKey(value: string): MessageKey {

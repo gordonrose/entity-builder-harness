@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 16
+#   version: 17
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -41,7 +41,10 @@ source_change:
     duplicate/idempotent put, diagnostic consistency, queue disposition
     hardening, provider-neutral i18n/localization contract boundaries, and
     review-driven sensitive translation-param, translated-output, time-zone,
-    selector-fixture, compatibility-canary, and session-log hardening
+    selector-fixture, compatibility-canary, session-log hardening,
+    provider-neutral environment names and secret references, causation
+    lineage identifiers on events and queue messages, and composed-context
+    placement guidance
     for the initial packages/core slice.
 
 target:
@@ -95,6 +98,9 @@ semantic_review:
     - claim_id: core.config.record-source.snapshot
       summary: Record-backed config sources should snapshot their input values when created so later caller mutation does not change the source contract.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.config.environment-secret-references
+      summary: Core config may define provider-neutral EnvironmentName and SecretReference contracts, but platform adapters own environment loading, secret resolution, provider clients, and deployment manifests.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.shared.iso-date-time.strict
       summary: ISODateTime values should be explicit ISO date-time strings with timezone information, not date-only strings, localized prose dates, or implicit local-time strings.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -103,6 +109,12 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.shared.core-error.optional-diagnostic
       summary: CoreError may carry an optional diagnostic descriptor when a failure needs structured recovery, retryability, or user-correctability metadata, and module error helpers should preserve it when supplied.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.shared.causation-lineage-id
+      summary: CausationId is a primitive branded identifier for preserving immediate upstream lineage without choosing tracing, broker, worker, or platform context implementations.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.shared.composed-contexts.not-shared
+      summary: The shared RequestContext remains primitive correlation and time only; composed request/job contexts that combine tenant, principal, locale, config, flags, logging, monitoring, queues, or cancellation start in platform/contracts.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.diagnostics.provider-neutral-boundary
       summary: The diagnostics module may define failure kinds, failure sources, severity, recovery disposition, recovery action vocabulary, retryable and user-correctable indicators, primitive diagnostic facts, and small pure helpers.
@@ -221,6 +233,9 @@ semantic_review:
     - claim_id: core.events.payloads.serializable
       summary: Event payloads should stay plain and serializable so platform adapters can move them through brokers, outboxes, logs, tests, and workers without provider-specific objects.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.events.causation-lineage
+      summary: Event envelopes may carry optional causation ids so downstream consumers can preserve immediate upstream lineage alongside tenant and correlation metadata.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.events.payloads.finite-plain
       summary: Event payloads should reject non-finite numeric values and non-plain runtime objects before they cross app/platform boundaries.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -244,6 +259,9 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.queues.schema-version
       summary: Queue messages should carry explicit positive integer schema versions, and durable platform adapters must preserve those versions when messages are serialized, retried, replayed, or moved to dead-letter paths.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.causation-lineage
+      summary: Queue messages may carry optional causation ids so workers can preserve the immediate upstream cause of scheduled or retried work.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.queues.delivery-disposition-unambiguous
       summary: Queue delivery metadata should keep retry and dead-letter disposition unambiguous; one delivery may be retryable or dead-lettered, but not both.
@@ -379,7 +397,11 @@ proposed_updates:
       common sensitive translation params from being interpolated, keeps raw
       param values out of translated outputs, tightens time-zone syntax, adds
       root public-contract compatibility canaries, and proves the cross-cutting
-      i18n/localization concern rule in the selector fixture.
+      i18n/localization concern rule in the selector fixture. The pre-runtime
+      contract pass adds provider-neutral EnvironmentName and SecretReference
+      contracts, primitive CausationId lineage for events and queue messages,
+      and explicit guidance that composed request/job contexts start in
+      platform/contracts rather than packages/core/shared.
     - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, diagnostics/self-healing boundary guidance, files high-risk-storage guidance, and i18n/localization translation-formatting guidance directly.
     - The compatibility selector fixture asks for deprecation, backwards compatibility, schema-version, and old public usage fixture guidance directly.
 

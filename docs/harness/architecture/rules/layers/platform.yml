@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 2
+version: 3
 status: active
 
 source_derivation:
@@ -29,12 +29,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-07T00:00:00Z"
+  generated_at_utc: "2026-07-08T18:25:48Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-      sha256: cf195244f4a0587e7236e7f83b2fc97e295553006e90ec0bcf54bc4c41d8e674
+      sha256: 565b11afd4ab722284671005db53c7abc753271e8b91d7e86b9502b89e06ae1d
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -55,7 +55,7 @@ related_rulesets:
 
 runtime_modules:
   - id: contracts
-    purpose: "Stable public TypeScript contract between business apps and the platform."
+    purpose: "Stable public TypeScript contract between business apps and the platform, including app mounts, registries, composed contexts, and provider-neutral flags."
     public_to_apps: true
   - id: config
     purpose: "Typed global and namespaced app configuration loading and validation."
@@ -188,11 +188,16 @@ rules:
       - "Expose stable app-facing contracts from platform/contracts/** or another explicitly approved public contract entry point."
       - "Let apps mount through app.mount.ts files that register routes, permissions, jobs, health checks, optional config schemas, and optional lifecycle hooks."
       - "Give apps registries and mount dependencies, not raw HTTP server instances."
+      - "Keep composed request and job runtime contexts in platform/contracts until multiple consumers justify a provider-neutral core promotion."
+      - "Compose request/job context from core primitives such as correlation id, causation id, tenant context, principal, locale, config, logger, metrics, clock, queue message, delivery metadata, feature flags, and cancellation."
+      - "Expose feature flags to apps through a provider-neutral reader contract."
       - "Validate app identity, route namespacing, duplicate routes, duplicate permissions, duplicate jobs, duplicate health checks, and unknown permission references before serving traffic."
     must_not:
       - "Do not pass Fastify, Express, Hono, or another raw server object into business apps as their integration surface."
       - "Do not let apps install global middleware, start servers, configure CORS, parse JWTs, or install process signal handlers."
       - "Do not let apps mount at root or steal reserved platform paths such as health, metrics, or admin paths unless explicitly allowed."
+      - "Do not move composed contexts that depend on authn, tenancy, localization, logging, monitoring, queues, config, flags, deadlines, or cancellation into packages/core/shared."
+      - "Do not pass concrete feature-flag provider clients or SDKs through app mount dependencies."
     agent_guidance: >
       Preserve the contract boundary. Apps register intent; platform translates
       it into concrete server, worker, health, and operational behavior.
@@ -372,11 +377,16 @@ source_refs:
       - "The most important design rule"
   - doc: "platform-runtime-enterprise-obligations-v1.md"
     sections:
+      - "App-Facing Contracts and Composed Context Placement"
       - "Logging Normalization"
       - "Durable Outbox and Event Delivery"
       - "Audit Runtime, Retention, and Export"
       - "Payload and Metadata Size Budgets"
       - "Implementation Acceptance"
+  - doc: "0025-place-composed-runtime-contexts-in-platform-contracts.md"
+    sections:
+      - "Decision"
+      - "Consequences"
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/layers/platform.yml."
@@ -388,3 +398,4 @@ success_criteria:
   - "It references dependency-direction for cross-layer import rules."
   - "It includes manually verified source_refs back to the platform layer guide."
   - "It records enterprise runtime obligations for logging normalization, durable event delivery, audit retention/export/SIEM, and payload/metadata size budgets."
+  - "It places composed request/job contexts, app mount contracts, registries, and feature-flag reader contracts in platform/contracts before server and worker runtime implementation."

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-diagnostics-self-healing
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -27,7 +27,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about self-healing failure classification retrieve diagnostics vocabulary plus the core/platform/runtime/adapter/infra boundary.
 input:
-  request_text: Explain how packages/core should classify CSV import row failures so monitoring can trigger a safe self-healing workflow using logs, queues, events, audit, retries, and escalation without putting the remediation engine in core.
+  request_text: Using corpus.03.product.core and docs/harness/architecture/rules/layers/packages-core.yml, explain how packages/core should classify CSV import row failures so monitoring can trigger a safe self-healing workflow using logs, queues, events, audit, retries, and escalation without putting the remediation engine in core. Include core.diagnostics-classify-failures-for-recovery and core.capability-modules-stay-contract-shaped.
   session:
     trust_routing: true
     layer: 03.product
@@ -43,7 +43,7 @@ input:
   max_chunks: 10
 expected:
   routing:
-    layer: 01.harness
+    layer: 03.product
     status: ready
   matched_corpora:
     required:
@@ -63,6 +63,8 @@ expected:
   citations:
     min_count: 1
   gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
     no_unexpected: true
 banned:
   selected_corpora:

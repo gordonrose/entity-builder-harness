@@ -1,5 +1,6 @@
 import {
   correlationId,
+  causationId,
   entityId,
   err,
   isErr,
@@ -10,6 +11,7 @@ import {
   ok,
   requestContext,
   type CorrelationId,
+  type CausationId,
   type EntityId,
   type ISODateTime,
   type JsonValue,
@@ -26,10 +28,12 @@ type PrincipalId = EntityId<"PrincipalId">;
 const tenantId = entityId<"TenantId">("tenant-123");
 const principalId = entityId<"PrincipalId">("principal-456");
 const requestId = correlationId("request-789");
+const triggerId = causationId("event-456");
 
 const acceptedTenantId: TenantId = tenantId;
 const acceptedPrincipalId: PrincipalId = principalId;
 const acceptedCorrelationId: CorrelationId = requestId;
+const acceptedCausationId: CausationId = triggerId;
 const acceptedMessageKey: MessageKey = messageKey("validation.required");
 const acceptedMessageDescriptor: MessageDescriptor = messageDescriptor({
   code: "VALIDATION_REQUIRED",
@@ -46,6 +50,7 @@ const acceptedJsonValue: JsonValue = {
 void acceptedTenantId;
 void acceptedPrincipalId;
 void acceptedCorrelationId;
+void acceptedCausationId;
 void acceptedMessageKey;
 void acceptedMessageDescriptor;
 void copyJsonValue(acceptedJsonValue);

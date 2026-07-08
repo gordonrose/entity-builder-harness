@@ -17,7 +17,7 @@ import {
   type EventType,
   type EventVersion,
 } from "../src/events/index";
-import { correlationId, isOk, isoDateTime, type Result } from "../src/shared/index";
+import { causationId, correlationId, isOk, isoDateTime, type Result } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
 const typeResult: Result<EventType, EventPublishError> = eventType("deal.updated");
@@ -51,6 +51,7 @@ const event: EventEnvelope<EventPayload> = eventEnvelope({
   occurredAt: timestamp.value,
   tenantId: tenantId("tenant-123"),
   correlationId: correlationId("request-123"),
+  causationId: causationId("queue-message-123"),
   payload,
 });
 const handler: EventHandler = {

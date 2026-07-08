@@ -6,6 +6,7 @@ import {
   messageKey,
   ok,
   type Brand,
+  type CausationId,
   type CoreError,
   type CorrelationId,
   type EntityId,
@@ -51,6 +52,7 @@ export interface QueueMessage<TPayload extends QueuePayloadValue = QueuePayload>
   readonly enqueuedAt: ISODateTime;
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
+  readonly causationId?: CausationId;
   readonly idempotencyKey?: QueueIdempotencyKey;
   readonly messageGroupKey?: QueueMessageGroupKey;
   readonly payload: TPayload;
@@ -226,6 +228,7 @@ export function queueMessage<TPayload extends QueuePayloadValue>(input: {
   readonly enqueuedAt: ISODateTime;
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
+  readonly causationId?: CausationId;
   readonly idempotencyKey?: QueueIdempotencyKey;
   readonly messageGroupKey?: QueueMessageGroupKey;
   readonly payload: TPayload;
@@ -237,6 +240,7 @@ export function queueMessage<TPayload extends QueuePayloadValue>(input: {
     enqueuedAt: input.enqueuedAt,
     ...(input.tenantId === undefined ? {} : { tenantId: input.tenantId }),
     ...(input.correlationId === undefined ? {} : { correlationId: input.correlationId }),
+    ...(input.causationId === undefined ? {} : { causationId: input.causationId }),
     ...(input.idempotencyKey === undefined ? {} : { idempotencyKey: input.idempotencyKey }),
     ...(input.messageGroupKey === undefined ? {} : { messageGroupKey: input.messageGroupKey }),
     payload: copyQueuePayloadValue(input.payload) as TPayload,

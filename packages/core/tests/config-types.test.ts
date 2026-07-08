@@ -1,13 +1,17 @@
 import {
   booleanConfigValue,
   configError,
+  environmentName,
   recordConfigSource,
+  secretReference,
   stringConfigValue,
   type ConfigError,
   type ConfigRecord,
   type ConfigSchema,
   type ConfigSource,
   type ConfigValue,
+  type EnvironmentName,
+  type SecretReference,
 } from "../src/config/index";
 import { isOk, type Result } from "../src/shared/index";
 import { validationIssue } from "../src/validation/index";
@@ -23,6 +27,11 @@ const values: ConfigRecord = {
 const source: ConfigSource = recordConfigSource(values);
 const optionalValue: ConfigValue | undefined = source.get("API_URL");
 void optionalValue;
+
+const environmentResult: Result<EnvironmentName, ConfigError> = environmentName("staging");
+const secretReferenceResult: Result<SecretReference, ConfigError> = secretReference("kanbien/staging/api-token");
+void environmentResult;
+void secretReferenceResult;
 
 const parsedString: Result<string, ConfigError> = stringConfigValue(source, "API_URL");
 if (isOk(parsedString)) {
@@ -63,3 +72,11 @@ configError("CONFIG_INVALID", []);
 // @ts-expect-error config values must not carry provider-specific objects.
 const rejectedValue: ConfigValue = new Date();
 void rejectedValue;
+
+// @ts-expect-error environment names must be explicitly created and branded.
+const rejectedEnvironmentName: EnvironmentName = "staging";
+void rejectedEnvironmentName;
+
+// @ts-expect-error secret references must be explicitly created and branded.
+const rejectedSecretReference: SecretReference = "kanbien/staging/api-token";
+void rejectedSecretReference;
