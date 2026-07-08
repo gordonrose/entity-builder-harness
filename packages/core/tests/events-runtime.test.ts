@@ -11,7 +11,7 @@ import {
   type EventHandler,
 } from "../src/events/index";
 import { diagnosticDescriptor } from "../src/diagnostics/index";
-import { correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
+import { causationId, correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
 async function main(): Promise<void> {
@@ -63,6 +63,7 @@ async function main(): Promise<void> {
     occurredAt: occurredAt.value,
     tenantId: tenantId("tenant-123"),
     correlationId: correlationId("request-123"),
+    causationId: causationId("queue-message-123"),
     payload,
   });
 
@@ -73,6 +74,7 @@ async function main(): Promise<void> {
     occurredAt: "2026-07-07T12:00:00.000Z",
     tenantId: "tenant-123",
     correlationId: "request-123",
+    causationId: "queue-message-123",
     payload: {
       dealId: "deal-123",
       participants: ["principal-123"],

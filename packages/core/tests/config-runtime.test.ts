@@ -3,10 +3,12 @@ import { isErr, isOk } from "../src/shared/index";
 import {
   booleanConfigValue,
   configError,
+  environmentName,
   numberConfigValue,
   optionalConfigValue,
   recordConfigSource,
   requiredConfigValue,
+  secretReference,
   stringConfigValue,
 } from "../src/config/index";
 import { validationIssue } from "../src/validation/index";
@@ -22,6 +24,34 @@ const mutableValues: Record<string, string | undefined> = { MODE: "initial" };
 const snapshotSource = recordConfigSource(mutableValues);
 mutableValues.MODE = "changed";
 equal(snapshotSource.get("MODE"), "initial");
+
+const validEnvironment = environmentName("staging");
+equal(isOk(validEnvironment), true);
+if (!isOk(validEnvironment)) {
+  throw new Error("Expected staging environment name to be valid.");
+}
+equal(validEnvironment.value, "staging");
+
+const invalidEnvironment = environmentName("Staging");
+equal(isErr(invalidEnvironment), true);
+if (!isErr(invalidEnvironment)) {
+  throw new Error("Expected uppercase environment name to be invalid.");
+}
+equal(invalidEnvironment.error.issues[0].messageKey, "config.environment.invalid");
+
+const validSecretReference = secretReference("kanbien/staging/api-token");
+equal(isOk(validSecretReference), true);
+if (!isOk(validSecretReference)) {
+  throw new Error("Expected secret reference to be valid.");
+}
+equal(validSecretReference.value, "kanbien/staging/api-token");
+
+const invalidSecretReference = secretReference(" kanbien/staging/api-token");
+equal(isErr(invalidSecretReference), true);
+if (!isErr(invalidSecretReference)) {
+  throw new Error("Expected untrimmed secret reference to be invalid.");
+}
+equal(invalidSecretReference.error.issues[0].messageKey, "config.secret_reference.invalid");
 
 const required = requiredConfigValue(source, "API_URL");
 equal(isOk(required), true);

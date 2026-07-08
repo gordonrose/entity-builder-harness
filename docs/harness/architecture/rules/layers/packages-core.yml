@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 16
+#   version: 17
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 16
+version: 17
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-08T13:31:51Z"
+  generated_at_utc: "2026-07-08T18:25:48Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 4e27d651fc6b06cee9c9abee57386822b8de6ff4a61181ffe2d4856940b859e8
+      sha256: 4654a5897730faa0cd2bcc2b7a6e2216ea9f94793955bf8f50c496432b4f2448
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -46,10 +46,10 @@ related_rulesets:
 
 recommended_modules:
   - id: shared
-    purpose: "Common primitives such as IDs, results, errors, message descriptors, clocks, context, and lifecycle."
+    purpose: "Common primitives such as IDs, correlation and causation identifiers, results, errors, message descriptors, clocks, primitive context, and lifecycle."
     consumed_by: "apps, platform, tests"
   - id: config
-    purpose: "Provider-neutral configuration source, primitive reader, schema, and validation-error contracts."
+    purpose: "Provider-neutral configuration source, primitive reader, schema, environment-name, secret-reference, and validation-error contracts."
     consumed_by: "runtime apps and platform services"
   - id: diagnostics
     purpose: "Provider-neutral failure classification, recovery disposition, retryability, user-correctability, and self-healing vocabulary."
@@ -329,20 +329,45 @@ rules:
       packages/core shared primitives should carry stable provider-neutral
       meaning and reject ambiguous runtime-specific or locale-specific shapes.
     must:
-      - Keep shared identifiers, result/error shapes, message descriptors, clocks, and request context values dependency-free and JSON-safe.
+      - Keep shared identifiers, correlation and causation identifiers, result/error shapes, message descriptors, clocks, and primitive request context values dependency-free and JSON-safe.
       - Treat ISODateTime values as explicit ISO date-time strings with timezone information.
       - Normalize valid ISODateTime input to a stable JSON-safe ISO string.
       - Keep message descriptor params primitive and translation/localization friendly.
       - Use shared JSON-value helpers for cross-boundary facts that must remain plain, serializable, and finite-number safe.
+      - Keep the shared RequestContext limited to primitive correlation and timestamp facts.
     must_not:
       - Do not accept date-only strings, localized prose dates, or implicit local-time strings as ISODateTime values.
       - Do not pass provider objects, Date instances, money objects, or other rich runtime values as shared message params.
       - Do not let NaN, Infinity, class instances, provider objects, or runtime-only values pass as core JSON-like contract facts.
       - Do not put translation catalogs, locale negotiation, or region-specific formatting inside shared primitives.
+      - Do not compose tenant, principal, locale, config, logging, metrics, feature flags, queue delivery, cancellation, or deadline concepts into packages/core/shared request or job contexts.
     agent_guidance: >
       Shared primitives are the bottom of the contract stack. When a value can
       vary by locale, runtime, provider, or presentation boundary, convert it to
       a stable primitive fact before it enters shared core contracts.
+
+  - id: core.config-contracts-name-runtime-settings
+    title: Config contracts name runtime settings without loading providers
+    severity: error
+    summary: >
+      packages/core config contracts should define provider-neutral runtime
+      setting shapes and validation vocabulary while leaving environment
+      loading, secret resolution, provider clients, and deployment manifests to
+      platform, infra, or runtime adapters.
+    must:
+      - Define provider-neutral config sources, primitive readers, schemas, environment names, secret references, validation issues, and stable config error meanings.
+      - Treat EnvironmentName as a deploy-environment label, not a deployment manifest or cloud account model.
+      - Treat SecretReference as a provider-neutral key or path, not the secret value and not a concrete secret-provider client.
+      - Snapshot record-backed config source inputs so caller mutation does not change the source contract.
+      - Test config lookup, primitive readers, environment-name validation, secret-reference validation, schema parsing, and error shapes without concrete runtime providers.
+    must_not:
+      - Do not read directly from process.env, local files, AWS SSM, Secrets Manager, databases, deployment manifests, or cloud SDKs in packages/core config.
+      - Do not store secret values, raw credentials, provider clients, deployment resources, or environment-specific behavior in config contracts.
+      - Do not make core config choose how secrets are resolved, cached, rotated, encrypted, or injected.
+    agent_guidance: >
+      Core config names the shape of runtime settings. Platform adapters load
+      sources and resolve secret references. Infra provisions secret stores,
+      permissions, deployment manifests, and environment topology.
 
   - id: core.diagnostics-classify-failures-for-recovery
     title: Diagnostics classify failures for safe recovery decisions
@@ -595,7 +620,7 @@ rules:
       testing helpers while leaving event catalogs, brokers, subscribers, and
       runtime delivery outside core.
     must:
-      - Define provider-neutral event id, event type, event version, payload, envelope, publisher or bus, handler, and publish error contracts.
+      - Define provider-neutral event id, event type, event version, payload, envelope, optional causation id, publisher or bus, handler, and publish error contracts.
       - Keep event payload values plain, serializable, and portable across app, platform, worker, broker, log, outbox, and test boundaries.
       - Reject non-finite numeric values and non-plain runtime objects from event payloads before they cross app/platform boundaries.
       - Treat event type names as domain facts rather than concrete broker topic, queue, stream, or subscription names.
@@ -626,13 +651,13 @@ rules:
       leaving product handlers, worker runtime, providers, and queue resources
       outside core.
     must:
-      - Define provider-neutral queue message id, message type, message version, payload, message envelope, queue send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and helper contracts.
+      - Define provider-neutral queue message id, message type, message version, payload, message envelope, optional causation id, queue send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and helper contracts.
       - Carry explicit positive integer queue message schema versions on queue messages before platform adapters serialize, retry, replay, or dead-letter them.
       - Keep queue payload values plain, serializable, and portable across app, platform, worker, broker, log, retry, dead-letter, and test boundaries.
       - Reject non-finite numeric values and non-plain runtime objects from queue payloads before they cross app/platform boundaries.
       - Treat message type names as portable work-kind facts rather than concrete broker queue names, SQS queue URLs, Kafka topics, routing keys, or worker deployment names.
       - Keep queue send and handler failures mapped to stable queue error codes before app code receives them.
-      - Carry tenant id, correlation id, idempotency key, delay, message group, attempt count, and retry/dead-letter metadata where a product or runtime needs those facts.
+      - Carry tenant id, correlation id, causation id, idempotency key, delay, message group, attempt count, and retry/dead-letter metadata where a product or runtime needs those facts.
       - Keep retry and dead-letter disposition unambiguous; a single delivery must not be both retryable and dead-lettered.
       - Include in-memory or no-op queue helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
       - Test message type, message version, payload, message envelope, send options, delivery metadata, queue errors, handlers, and helper behavior without concrete runtime providers.
@@ -772,4 +797,6 @@ success_criteria:
   - "It records the recommended core capability module families and their intended consumers."
   - "It maps core test types to contract compatibility, validation, edge case, security, failure-mode, and test-helper scenarios."
   - "It requires public core contracts to evolve additively by default and to use compatibility fixtures for old public usages."
+  - "It keeps composed request/job runtime contexts in platform/contracts until multiple consumers justify a core contract."
+  - "It records provider-neutral environment-name, secret-reference, and causation-lineage contracts."
   - "It includes manually verified source_refs back to the core architecture guide."

@@ -184,7 +184,7 @@ async function main(): Promise<void> {
   equal(isOk(recordResult), true);
   deepEqual(recorder.recordedEvents(), [event]);
 
-  const recordedEvents = recorder.recordedEvents() as AuditEvent<typeof event.metadata>[];
+  const recordedEvents = recorder.recordedEvents() as AuditEvent<NonNullable<typeof event.metadata>>[];
   const recordedMetadata = recordedEvents[0]?.metadata;
   if (recordedMetadata === undefined) {
     throw new Error("Expected recorded event metadata.");

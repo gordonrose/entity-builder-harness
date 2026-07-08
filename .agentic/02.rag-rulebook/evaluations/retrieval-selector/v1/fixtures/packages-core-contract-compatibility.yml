@@ -24,9 +24,9 @@ schema: rag-rulebook/retrieval-selector-evaluation/v1
 fixture_id: retrieval-selector.v1.packages-core-contract-compatibility
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompts about changing public packages/core contracts retrieve additive evolution, deprecation, migration, schema-version, and compatibility-fixture guidance.
+purpose: Prove prompts about changing public packages/core contracts retrieve additive evolution, deprecation, migration, schema-version, lineage, config, and compatibility-fixture guidance.
 input:
-  request_text: I need to rename a packages/core authorization type and change a queue message payload shape. Explain the deprecation and backwards compatibility policy, when schema versions are needed, and what tests or fixtures must change.
+  request_text: Using corpus.03.product.core, docs/harness/architecture/rules/layers/packages-core.yml, core.public-contracts-evolve-compatibly, and core.shared-primitives-stay-strict-and-portable, explain how packages/core public contracts should evolve when I rename an authorization type, add causation lineage to event and queue messages, and add environment names or secret references before platform runtime exists. Include the deprecation and backwards compatibility policy, when schema versions are needed, why composed request/job runtime contexts should stay in platform/contracts instead of the lowest-level core primitives, and what tests or fixtures must change.
   session:
     trust_routing: true
     layer: 03.product
@@ -34,13 +34,15 @@ input:
     workflow: .agentic/product/workflows/default.md
   focused_paths:
     - packages/core/src/authz/index.ts
+    - packages/core/src/config/index.ts
+    - packages/core/src/events/index.ts
     - packages/core/src/queues/index.ts
     - packages/core/tests/compatibility/v0-public-contracts.test.ts
     - docs/harness/architecture/rules/layers/packages-core.yml
-  max_chunks: 10
+  max_chunks: 12
 expected:
   routing:
-    layer: 01.harness
+    layer: 03.product
     status: ready
   matched_corpora:
     required:
@@ -54,6 +56,8 @@ expected:
   selected_chunks:
     required_rule_ids:
       - core.public-contracts-evolve-compatibly
+      - core.shared-primitives-stay-strict-and-portable
+      - core.config-contracts-name-runtime-settings
       - core.queues-contracts-name-retryable-work
       - core.capability-modules-stay-contract-shaped
   required_checks:
@@ -61,6 +65,8 @@ expected:
   citations:
     min_count: 1
   gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
     no_unexpected: true
 banned:
   selected_corpora:
@@ -74,4 +80,6 @@ update_triggers:
   - packages/core public contract compatibility policy changes.
   - Compatibility fixture suite location or semantics change.
   - Durable payload schema/version guidance changes.
+  - Causation lineage or provider-neutral config reference guidance changes.
+  - Composed request/job context placement guidance changes.
   - Selector policy changes corpus ownership or evidence bundle behavior.

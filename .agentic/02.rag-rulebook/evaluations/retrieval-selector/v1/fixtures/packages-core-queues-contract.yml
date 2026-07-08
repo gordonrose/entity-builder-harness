@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-queues-contract
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -26,7 +26,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core queue contracts retrieve queue message, message-version, payload, retry/dead-letter, worker, adapter, and infra boundary rules.
 input:
-  request_text: Explain how product code should use packages/core queue contracts for queue messages, schema versions, JSON-safe payloads, send options, delivery metadata, handlers, retry and dead-letter facts, and idempotency.
+  request_text: Using corpus.03.product.core, docs/harness/architecture/rules/layers/packages-core.yml, docs/harness/architecture/rules/concerns/events-messaging-async.yml, and docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml, explain how product code should use packages/core queue contracts for queue messages, schema versions, JSON-safe payloads, send options, delivery metadata, handlers, retry and dead-letter facts, idempotency, and the split between core contracts, platform runtime, apps, adapters, and infra.
   session:
     trust_routing: true
     layer: 03.product
@@ -36,6 +36,7 @@ input:
     - packages/core/src/queues/index.ts
     - docs/harness/architecture/rules/layers/packages-core.yml
     - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
   max_chunks: 10
 expected:
   routing:
@@ -61,6 +62,8 @@ expected:
   citations:
     min_count: 1
   gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
     no_unexpected: true
 banned:
   selected_corpora:

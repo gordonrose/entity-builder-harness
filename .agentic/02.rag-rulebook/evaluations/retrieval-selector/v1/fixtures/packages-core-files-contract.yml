@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-files-contract
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -27,7 +27,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about CSV uploads and stored file contracts retrieve file metadata, validation, scan, access intent, duplicate/idempotent put behavior, storage-port, app/platform/infra boundary guidance.
 input:
-  request_text: Explain how packages/core should model a CSV upload file contract with file id, name, content type, size, checksum, scan status, metadata, storage reference, access intent for reads/deletes, duplicate/idempotent put behavior, retention/legal-hold facts, and FileStorage without putting object storage, signed URLs, virus scanning, CSV parsing, retention jobs, or cloud resources in core.
+  request_text: Using corpus.03.product.core, docs/harness/architecture/rules/layers/packages-core.yml, and docs/harness/architecture/rules/concerns/persistence-files-storage.yml, explain how packages/core should model a CSV upload file contract with file id, name, content type, size, checksum, scan status, metadata, storage reference, access intent for reads/deletes, duplicate/idempotent put behavior, retention/legal-hold facts, and FileStorage without putting object storage, signed URLs, virus scanning, CSV parsing, retention jobs, or cloud resources in core.
   session:
     trust_routing: true
     layer: 03.product
@@ -41,7 +41,7 @@ input:
   max_chunks: 10
 expected:
   routing:
-    layer: 01.harness
+    layer: 03.product
     status: ready
   matched_corpora:
     required:
@@ -61,6 +61,8 @@ expected:
   citations:
     min_count: 1
   gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
     no_unexpected: true
 banned:
   selected_corpora:

@@ -49,6 +49,8 @@ documented, and paired with migration guidance.
 
 - `Brand` and `EntityId` distinguish important string identifiers at type level.
 - `CorrelationId` connects logs, audit records, events, and errors from one request.
+- `CausationId` links downstream events, queue messages, audit records, and
+  jobs to the upstream fact or message that caused them.
 - `ISODateTime` stores strict ISO date-time values with explicit timezone
   information in a JSON-safe text form.
 - `MessageDescriptor` carries stable meaning plus optional translation hooks.
@@ -171,6 +173,10 @@ decide product presentation rules.
 `config` defines how apps and platform code can read product-neutral runtime
 settings without binding core to a provider:
 
+- `EnvironmentName` names deploy/runtime environments such as `development`,
+  `test`, `staging`, or `production` without choosing deployment machinery.
+- `SecretReference` names a required secret key or path without carrying the
+  secret value.
 - `ConfigSource` is the small port for looking up a value by key.
 - `recordConfigSource` is a pure snapshot source for tests and simple composed
   configs.
@@ -180,9 +186,10 @@ settings without binding core to a provider:
 - `ConfigError` reports missing or invalid config through validation issues, so
   config failures stay translation-ready.
 
-Core does not read `process.env`, AWS SSM, Secrets Manager, files, or databases.
-Platform adapters can translate those provider-specific sources into
-`ConfigSource`.
+Core does not read `process.env`, AWS SSM, Secrets Manager, files, databases,
+or feature flag providers. Platform adapters can translate those
+provider-specific sources into `ConfigSource`, `SecretReference`, and
+environment-aware runtime contracts.
 
 ## Logging Contracts
 
@@ -433,7 +440,8 @@ published to other parts of the system:
   JSON-safe, finite-number safe, and portable across app, platform, worker,
   and broker boundaries.
 - `EventEnvelope` and `eventEnvelope` wrap an event with id, type, version,
-  timestamp, optional tenant id, optional correlation id, and copied payload.
+  timestamp, optional tenant id, optional correlation id, optional causation id,
+  and copied payload.
 - `EventPublishErrorCode`, `EventPublishError`, and `eventPublishError` give
   publish failures stable translation-ready meanings.
 - `EventPublisher`, `EventBus`, and `EventHandler` define the small async
@@ -466,9 +474,10 @@ schema registries, or cloud SDK clients.
   JSON-safe, finite-number safe, and portable across app, platform, worker,
   broker, retry, dead-letter, and test boundaries.
 - `QueueMessage` and `queueMessage` wrap a message with id, type, version,
-  timestamp, optional tenant id, optional correlation id, optional idempotency
-  key, optional message group key, and copied payload. `queueMessage` defaults
-  the version to the current v1 contract when a caller does not supply one.
+  timestamp, optional tenant id, optional correlation id, optional causation id,
+  optional idempotency key, optional message group key, and copied payload.
+  `queueMessage` defaults the version to the current v1 contract when a caller
+  does not supply one.
 - `QueueSendOptions`, `QueueDelaySeconds`, and `queueSendOptions` define
   provider-neutral send metadata without choosing a broker delay mechanism.
 - `QueueDelivery`, `QueueAttempt`, `QueueRetryMetadata`, and

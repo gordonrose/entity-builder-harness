@@ -2,7 +2,8 @@
   "name": "entity-builder-harness",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "platform/*"
   ],
   "scripts": {
     "chat": "bash scripts/00.chat/command/dispatcher/script.sh",
@@ -25,10 +26,15 @@
     "rag:image:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
     "core:check": "npm run core:typecheck && npm run core:test && node packages/core/tests/core-boundaries.test.mjs",
     "core:test": "tsc -p packages/core/tsconfig.runtime-test.json && node packages/core/tests/run-runtime-tests.mjs",
-    "core:typecheck": "tsc -p packages/core/tsconfig.check.json"
+    "core:typecheck": "tsc -p packages/core/tsconfig.check.json",
+    "platform:contracts:boundary": "node platform/contracts/tests/platform-contracts-boundaries.test.mjs",
+    "platform:contracts:build": "tsc -p platform/contracts/tsconfig.json",
+    "platform:contracts:check": "npm run platform:contracts:typecheck && npm run platform:contracts:build && npm run platform:contracts:test && npm run platform:contracts:boundary",
+    "platform:contracts:test": "tsc -p platform/contracts/tsconfig.runtime-test.json && node platform/contracts/tests/run-runtime-tests.mjs",
+    "platform:contracts:typecheck": "tsc -p platform/contracts/tsconfig.check.json"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.8.0"
+    "typescript": "5.9.3"
   }
 }

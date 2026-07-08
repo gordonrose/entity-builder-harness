@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -11,7 +11,7 @@
 #   - sre
 #   - security
 #   kind: evaluation-fixture
-#   purpose: Prove platform runtime obligation prompts retrieve logging, outbox, audit, and payload-budget guidance.
+#   purpose: Prove platform runtime obligation prompts retrieve app-facing contract, context-placement, logging, outbox, audit, and payload-budget guidance.
 #   portability:
 #     class: reusable
 #     targets:
@@ -28,13 +28,13 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about deferred platform/runtime enterprise obligations retrieve platform rule guidance and related concern rules.
 input:
-  request_text: When we implement the platform runtime, what enterprise obligations must we remember from docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md and docs/harness/architecture/rules/layers/platform.yml for logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
+  request_text: When we implement the platform runtime, what enterprise obligations must we remember from docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md, docs/harness/architecture/rules/layers/platform.yml, and docs/harness/architecture/rules/concerns/events-messaging-async.yml for platform/contracts app-facing mount contracts, composed request and job context placement, provider-neutral feature flags, logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
   session:
     trust_routing: true
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  max_chunks: 10
+  max_chunks: 12
 expected:
   routing:
     layer: 03.product
@@ -53,6 +53,7 @@ expected:
     required_artifact_ids:
       - artifact.layer.platform
     required_rule_ids:
+      - platform.contracts-are-the-app-boundary
       - platform.enterprise-runtime-obligations-are-explicit
       - async.outbox-protects-state-and-publication
       - reporting-analytics-audit.audit-is-accountability-evidence
@@ -68,10 +69,12 @@ banned:
 source_refs:
   - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
   - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   - docs/harness/architecture/rules/concerns/events-messaging-async.yml
   - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - Platform runtime enterprise-obligation rules change.
+  - Platform/contracts app-facing contract or composed context placement guidance changes.
   - Logging, event delivery, audit, or payload budget concern rules change.
   - Selector policy changes corpus ownership or evidence bundle behavior.

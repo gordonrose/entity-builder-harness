@@ -19,7 +19,7 @@ import {
   type QueueMessage,
 } from "../src/queues/index";
 import { diagnosticDescriptor } from "../src/diagnostics/index";
-import { correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
+import { causationId, correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
 async function main(): Promise<void> {
@@ -105,6 +105,7 @@ async function main(): Promise<void> {
     enqueuedAt: enqueuedAt.value,
     tenantId: tenantId("tenant-123"),
     correlationId: correlationId("request-123"),
+    causationId: causationId("event-123"),
     idempotencyKey: queueIdempotencyKey("welcome-email:principal-123"),
     messageGroupKey: queueMessageGroupKey("tenant-123"),
     payload,
@@ -117,6 +118,7 @@ async function main(): Promise<void> {
     enqueuedAt: "2026-07-07T12:00:00.000Z",
     tenantId: "tenant-123",
     correlationId: "request-123",
+    causationId: "event-123",
     idempotencyKey: "welcome-email:principal-123",
     messageGroupKey: "tenant-123",
     payload: {

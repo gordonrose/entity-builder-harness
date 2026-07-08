@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  version: 1
+  version: 2
   status: active
   layer: 01.harness
   domain: architecture
@@ -42,6 +42,36 @@ relays, log exporters, SIEM exporters, and related infra resources.
 
 They do not require `packages/core` to import cloud SDKs, database clients,
 queue clients, observability clients, ORM models, or deployment resources.
+
+## App-Facing Contracts and Composed Context Placement
+
+Before implementing concrete server or worker runtime modules, platform should
+define the stable app-facing contract surface that apps will mount against.
+That contract surface starts in `platform/contracts` unless another public
+platform contract entry point is explicitly approved.
+
+`platform/contracts` should define provider-neutral app registration and
+mounting contracts for routes, jobs, health checks, config schemas, lifecycle
+hooks, mount dependencies, feature-flag access, request context, and job
+context. Apps should register intent and handlers through those contracts;
+platform/server and platform/workers should translate the registrations into
+HTTP routes, middleware, queue consumers, health aggregation, and process
+lifecycle behavior.
+
+Composed request and job contexts belong in the platform contract layer first.
+They may combine core primitives such as correlation id, causation id,
+timestamp, tenant context, principal, locale, config source, logger, metrics,
+clock, queue message, delivery metadata, feature flags, and cancellation
+signals. They must not be added to `packages/core/shared` while they depend on
+authn, tenancy, i18n/localization, logging, monitoring, config, queues, or
+runtime cancellation concepts. A composed context should move into
+`packages/core` only after at least two independent consumers need the same
+provider-neutral shape and the dependency direction can remain acyclic.
+
+Feature flag access should start as a provider-neutral reader contract.
+Platform adapters may bind that reader to environment, config, database, or
+third-party flag providers later, but apps should not receive concrete flag
+clients or provider SDKs through their mount dependencies.
 
 ## Logging Normalization
 

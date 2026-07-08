@@ -7,12 +7,14 @@ import {
   auditTarget,
   booleanConfigValue,
   catalogMessageTranslator,
+  causationId,
   concurrencyToken,
   correlationId,
   createLogRedactor,
   currencyCode,
   dataClassification,
   diagnosticDescriptor,
+  environmentName,
   eventEnvelope,
   eventId,
   eventType,
@@ -77,6 +79,7 @@ import {
   redactingLogger,
   requestContext,
   resourceRef,
+  secretReference,
   secretString,
   securityPolicyAllowed,
   securityPolicyId,
@@ -124,6 +127,7 @@ interface DealRecord {
 const tenant = tenantId("tenant-123");
 const tenantScope = tenantContext({ tenantId: tenant, isolationKey: "tenant-123" });
 const currentCorrelationId = correlationId("request-123");
+const currentCausationId = causationId("request-123");
 const timestampResult = isoDateTime("2026-07-08T00:00:00.000Z");
 
 if (!isOk(timestampResult)) {
@@ -193,8 +197,12 @@ const configSource: ConfigSource = recordConfigSource({
 });
 const apiUrl = stringConfigValue(configSource, "API_URL");
 const featureEnabled = booleanConfigValue(configSource, "FEATURE_ENABLED");
+const runtimeEnvironment = environmentName("staging");
+const apiSecretReference = secretReference("kanbien/staging/api-token");
 void apiUrl;
 void featureEnabled;
+void runtimeEnvironment;
+void apiSecretReference;
 
 const logger: Logger = redactingLogger(noopLogger, createLogRedactor({ additionalKeys: ["tenantSecret"] }));
 logger.write(
@@ -340,6 +348,7 @@ const dealViewedEvent: EventEnvelope = eventEnvelope({
   occurredAt: now,
   tenantId: tenant,
   correlationId: currentCorrelationId,
+  causationId: currentCausationId,
   payload: { dealId: "deal-123" },
 });
 const eventBus: EventBus = inMemoryEventBus();
@@ -357,6 +366,7 @@ const queueWork: QueueMessage = queueMessage({
   enqueuedAt: now,
   tenantId: tenant,
   correlationId: currentCorrelationId,
+  causationId: currentCausationId,
   idempotencyKey: queueIdempotencyKey("deal-123:score"),
   payload: { dealId: "deal-123" },
 });
