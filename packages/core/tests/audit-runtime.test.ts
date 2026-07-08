@@ -13,6 +13,7 @@ import {
   type AuditEvent,
   type AuditMetadata,
 } from "../src/audit/index";
+import { diagnosticDescriptor } from "../src/diagnostics/index";
 import { correlationId, isErr, isOk, isoDateTime, messageDescriptor } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
@@ -166,9 +167,17 @@ async function main(): Promise<void> {
     code: "AUDIT_RECORD_FAILED",
     defaultMessage: "Audit record failed.",
     messageKey: "audit.record.failed",
+    diagnostic: diagnosticDescriptor({
+      failureKind: "dependency_unavailable",
+      failureSource: "platform",
+      severity: "error",
+      recovery: "manual_investigation",
+      action: "escalate",
+    }),
   });
   equal(explicitError.code, "AUDIT_RECORD_FAILED");
   equal(explicitError.messageKey, "audit.record.failed");
+  equal(explicitError.diagnostic?.recovery, "manual_investigation");
 
   const recorder = inMemoryAuditRecorder();
   const recordResult = await recorder.record(event);

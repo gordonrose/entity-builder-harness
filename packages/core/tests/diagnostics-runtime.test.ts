@@ -69,6 +69,28 @@ throws(
     }),
   /messageKey/,
 );
+throws(
+  () =>
+    diagnosticDescriptor({
+      failureKind: "dependency_unavailable",
+      failureSource: "provider",
+      severity: "error",
+      recovery: "automation_retryable",
+      retryable: false,
+    }),
+  /must be retryable/,
+);
+throws(
+  () =>
+    diagnosticDescriptor({
+      failureKind: "user_input",
+      failureSource: "user",
+      severity: "warning",
+      recovery: "user_correctable",
+      userCorrectable: false,
+    }),
+  /must be user-correctable/,
+);
 throws(() => copyDiagnosticFacts({ rowNumber: Number.POSITIVE_INFINITY }), /finite number/);
 throws(() => copyDiagnosticFacts({ fieldName: "email" }, { maxFactCount: 0 }), /positive integer/);
 throws(() => copyDiagnosticFacts({ fieldName: "email" }, { maxStringLength: 4 }), /4 characters or fewer/);

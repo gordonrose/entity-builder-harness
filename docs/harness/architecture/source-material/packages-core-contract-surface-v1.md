@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 12
+  version: 14
   status: active
   layer: 01.harness
   domain: architecture
@@ -44,6 +44,7 @@ The initial package surface may include these contract modules:
 - `authz`: permission and authorizer contracts.
 - `tenancy`: tenant identifiers and tenant-resolution contracts.
 - `persistence`: repository, unit-of-work, transaction, and pagination contracts.
+- `files`: file metadata, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, and storage port contracts.
 - `security`: defensive policy and secret/hash contracts.
 - `audit`: audit event, audit event version, and recorder contracts.
 - `events`: event envelope and event bus contracts.
@@ -88,7 +89,8 @@ that other core modules depend on. Shared branded identifiers, result/error
 shapes, message descriptors, clocks, and request context values should stay
 small, stable, and JSON-safe. Core errors may carry an optional diagnostic
 descriptor when a failure needs structured recovery, retryability, or
-user-correctability metadata.
+user-correctability metadata, and module error helpers should preserve that
+descriptor when callers provide it.
 
 `ISODateTime` values should represent explicit ISO date-time strings with
 timezone information. Date-only strings, localized prose dates, and implicit
@@ -129,6 +131,12 @@ genuine bugs and runtime/provider failures without parsing free-text logs.
 Examples include an invalid CSV row that is user-correctable, a temporary
 provider outage that is retryable, a data-integrity conflict that needs manual
 investigation, or a code bug that should be escalated.
+
+Diagnostic descriptors should not contradict themselves. For example,
+`automation_retryable` recovery must not be paired with `retryable: false`, and
+`user_correctable` recovery must not be paired with `userCorrectable: false`.
+Runtime automation should be able to trust the explicit boolean flags without
+re-interpreting free-text recovery labels.
 
 Diagnostic facts must stay primitive, bounded, and safe to copy into logs,
 monitoring, queue metadata, events, audit records, or incident workflows. They
@@ -360,6 +368,48 @@ repositories, or product workflow decisions. Platform owns concrete storage
 adapters. Infra owns storage topology, backup resources, indexes, and scaling.
 Apps and product modules own product-specific queries and workflow behavior.
 
+## Files Contract Boundary
+
+The `files` module should define provider-neutral contracts for uploaded and
+stored file metadata: file identifiers, file names, content types, byte sizes,
+checksums, storage references, scan status, access intent, duplicate/idempotent
+put policy, retention/legal-hold facts, file metadata, file error meanings,
+storage ports, and small in-memory helpers for tests.
+
+Files are high-risk storage because they are large, user-controlled, and often
+sensitive. File contracts should make content-type validation, size policy,
+tenant isolation, scan status, checksum, storage reference, access intent,
+retention or legal-hold needs, and audit/log correlation visible before files
+become durable or directly accessible. Storage read and delete ports should
+receive provider-neutral access intent rather than raw file ids so tenant,
+correlation, operation, and access-purpose facts are present at the boundary.
+
+File put contracts should define duplicate behavior instead of leaving retries
+and accidental overwrites adapter-specific. A core test helper may default to a
+conflict on duplicate file id and support an explicit idempotent duplicate mode
+for retry scenarios where the stored metadata still matches the attempted put.
+
+File metadata should stay plain and serializable. It may include product facts
+such as import source, row count, or processing hints, but it must not carry
+secrets, raw credentials, provider objects, request objects, parser instances,
+large file bodies, non-finite numeric values, or runtime-only values. Metadata
+validation should map invalid metadata to stable file error vocabulary rather
+than leaking raw runtime exceptions to app or platform consumers.
+
+File body handling should stay generic in core. Apps may decide that a file is
+a CSV import, contract attachment, profile image, report export, or evidence
+artifact. Platform runtime owns request parsing, stream handling, content
+validation, scanner invocation, direct access grants, and adapter lifecycle.
+Provider adapters translate concrete storage or scanner errors into stable
+file error meanings. Infra provisions buckets or stores, encryption, network
+access, retention, legal hold, malware scanning resources, alarms, and
+permissions.
+
+The `files` module must not define object-storage buckets, public URLs, signed
+URL generation, scanner integrations, image processing, CSV parsing,
+spreadsheet parsing, product document workflows, retention jobs, legal-hold
+jobs, cloud SDK clients, provider resource names, or deployment topology.
+
 ## Events Contract Boundary
 
 The `events` module should define provider-neutral contracts for facts that
@@ -420,6 +470,10 @@ Queue message versions should be explicit positive integers. Core helpers may
 default new queue messages to the current version to preserve additive
 compatibility, but durable platform adapters must preserve the version when a
 message is serialized, retried, replayed, or moved to a dead-letter path.
+
+Queue delivery metadata should keep retry and dead-letter disposition
+unambiguous. A delivery may be marked for retry or marked as dead-lettered, but
+it should not carry both states at the same time.
 
 Queue message type names are portable work-kind facts. They should not be
 treated as concrete broker queue names, SQS queue URLs, Kafka topics, routing

@@ -53,6 +53,10 @@ update repo documentation and RAG service to codify platform infra capability la
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Diagnostics and self-healing direction captured in packages/core contracts, source material, rules, derivation report, and selector fixture.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Packages/core files contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
+
 ## Activity Log
 
 ### 2026-07-07T23:19:35Z - Session started
@@ -106,6 +110,20 @@ Summary: Added provider-neutral packages/core diagnostics contracts, optional Co
 
 ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, recognition sources, and recorded RAG disposition cover this slice.
 
+
+### 2026-07-08T11:40:27Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Packages/core files contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
+
+
+### 2026-07-08T12:13:22Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Agentic review blockers for packages/core files, diagnostics, and queues were addressed by hardening file access intent usage, duplicate/idempotent put behavior, file metadata error mapping, diagnostic passthrough/consistency, and queue delivery disposition, with source material, rules, derivation report, selector fixture, README, and tests updated.
+
 ## Commits
 
 
@@ -157,13 +175,15 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Diagnostics and self-healing direction captured in packages/core contracts, source material, rules, derivation report, and selector fixture.
+Reason: Packages/core files contract slice and agentic review hardening captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
 Evidence:
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
 - .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+- packages/core/src/files/index.ts
 - packages/core/src/diagnostics/index.ts
-- packages/core/src/shared/index.ts
+- packages/core/src/queues/index.ts
+- packages/core/README.md
 Corpus gaps:
 - None.

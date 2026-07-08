@@ -20,6 +20,18 @@ import {
   fixedHealthCheck,
   fixedSecurityPolicyEvaluator,
   fixedTenantResolver,
+  fileAccessIntent,
+  fileChecksum,
+  fileContentType,
+  fileId,
+  fileMetadata,
+  fileName,
+  fileScanResult,
+  fileSizeBytes,
+  fileStorageKey,
+  fileStorageRef,
+  inMemoryFileStorage,
+  putFileInput,
   hash,
   healthCheckName,
   healthCheckResult,
@@ -74,6 +86,7 @@ import {
   type DiagnosticDescriptor,
   type EventBus,
   type EventEnvelope,
+  type FileStorage,
   type HealthCheck,
   type Logger,
   type Metrics,
@@ -208,6 +221,55 @@ void unitOfWork.run((transaction) => {
   transaction.afterCommit(() => undefined);
   return "committed";
 });
+
+const fileNameResult = fileName("contacts.csv");
+const fileContentTypeResult = fileContentType("text/csv");
+const fileSizeResult = fileSizeBytes(128);
+const fileStorageKeyResult = fileStorageKey("tenant-123/imports/contacts.csv");
+const fileChecksumResult = fileChecksum({ algorithm: "sha256", value: "abc123" });
+const fileScanResultValue = fileScanResult({
+  status: "passed",
+  scannedAt: now,
+  scanner: "compatibility-scanner",
+});
+const fileMetadataResult = fileMetadata({ source: "csv-import", rowCount: 42 });
+if (
+  !isOk(fileNameResult) ||
+  !isOk(fileContentTypeResult) ||
+  !isOk(fileSizeResult) ||
+  !isOk(fileStorageKeyResult) ||
+  !isOk(fileChecksumResult) ||
+  !isOk(fileScanResultValue) ||
+  !isOk(fileMetadataResult)
+) {
+  throw new Error("Expected compatibility fixture file values to be valid.");
+}
+const fileStorage: FileStorage<string> = inMemoryFileStorage({ now });
+const fileAccess = fileAccessIntent({
+  fileId: fileId("file-123"),
+  operation: "read",
+  tenantId: tenant,
+  correlationId: currentCorrelationId,
+});
+if (!isOk(fileAccess)) {
+  throw new Error("Expected compatibility fixture file access intent to be valid.");
+}
+void fileStorage.put(
+  putFileInput({
+    id: fileAccess.value.fileId,
+    fileName: fileNameResult.value,
+    contentType: fileContentTypeResult.value,
+    sizeBytes: fileSizeResult.value,
+    tenantId: tenant,
+    correlationId: currentCorrelationId,
+    checksum: fileChecksumResult.value,
+    metadata: fileMetadataResult.value,
+    scan: fileScanResultValue.value,
+    body: "email,name\nuser@example.test,Test User\n",
+  }),
+);
+void fileStorage.get(fileAccess.value);
+void fileStorageRef({ key: fileStorageKeyResult.value });
 
 const eventTypeResult = eventType("deal.viewed");
 const eventVersionResult = eventVersion(1);

@@ -104,6 +104,11 @@ const delivery: QueueDelivery<QueuePayload> = queueDelivery({
   receivedAt: timestamp.value,
   attempt: attemptResult.value,
   retry,
+});
+const deadLetterDelivery: QueueDelivery<QueuePayload> = queueDelivery({
+  message,
+  receivedAt: timestamp.value,
+  attempt: maxAttemptResult.value,
   deadLetter,
 });
 const handler: QueueHandler<QueueDelivery<QueuePayload>> = {
@@ -115,6 +120,7 @@ const noQueue: Queue = noopQueue;
 void acceptedError;
 void payloadValue;
 void delivery;
+void deadLetterDelivery;
 void handler;
 void queue;
 void noQueue;
@@ -187,6 +193,15 @@ queueDelivery({
   receivedAt: timestamp.value,
   // @ts-expect-error queue delivery attempts must be explicitly branded.
   attempt: 1,
+});
+
+// @ts-expect-error queue delivery cannot be both retryable and dead-lettered.
+queueDelivery({
+  message,
+  receivedAt: timestamp.value,
+  attempt: attemptResult.value,
+  retry,
+  deadLetter,
 });
 
 // @ts-expect-error queue error codes are constrained.

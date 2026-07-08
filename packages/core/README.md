@@ -328,6 +328,49 @@ Unexpected in-memory transaction or after-commit failures are wrapped as
 failure shapes. Platform adapters should translate provider-specific
 transaction failures into the same stable persistence vocabulary.
 
+## Files Contracts
+
+`files` defines provider-neutral contracts for uploaded and stored file
+metadata without choosing object storage, local disk, request parsing, virus
+scanner, or signed URL machinery:
+
+- `FileId`, `FileName`, `FileContentType`, `FileSizeBytes`,
+  `FileChecksum`, and `FileStorageRef` name the core file identity and storage
+  facts.
+- `FileMetadata` keeps product metadata plain, JSON-safe, and finite-number
+  safe.
+- `FileScanStatus` and `FileScanResult` record provider-neutral scan outcomes
+  such as pending, passed, failed, quarantined, or not required.
+- `FileObject` and `StoredFile` describe stored file metadata, including
+  tenant context where relevant, correlation id, checksum, scan result, created
+  timestamp, storage reference, and retention/legal-hold facts.
+- `PutFileInput` keeps the file body generic so platform/runtime adapters can
+  choose streams, buffers, browser file objects, or provider-specific upload
+  mechanisms outside core.
+- `FilePutOptions` names duplicate handling so retries and accidental overwrites
+  are not adapter-specific.
+- `FileAccessIntent` names read, write, or delete access intent without
+  granting public URLs or choosing a signed-access implementation.
+- `FileStorage` is the async port for putting, loading metadata for, and
+  deleting files. Reads and deletes use `FileAccessIntent`, not raw file ids.
+- `FileError` can carry diagnostic metadata so runtime/platform code can
+  classify storage, policy, scan, or metadata failures consistently.
+- `inMemoryFileStorage` is a pure helper for tests and composed local flows.
+
+Files are high-risk storage because they are large, user-controlled, and often
+sensitive. Validate content type and size before accepting uploads. Keep
+tenant isolation, access intent, retention/legal-hold needs, scan outcomes,
+and audit/log correlation visible at the app or platform boundary.
+Use duplicate conflicts by default and opt into idempotent duplicate handling
+only when the attempted put still matches the stored metadata.
+
+Core does not define object-storage buckets, public URLs, signed URL
+generation, virus scanner integrations, image processing, file parser
+implementations, storage SDK clients, retention resources, legal-hold jobs, or
+product document workflows. Apps decide product meaning and retention needs,
+platform implements storage/scanning/access adapters, and infra provisions
+storage resources, permissions, encryption, retention, and alarms.
+
 ## Events Contracts
 
 `events` defines provider-neutral contracts for facts that happened and may be
@@ -379,7 +422,8 @@ schema registries, or cloud SDK clients.
   provider-neutral send metadata without choosing a broker delay mechanism.
 - `QueueDelivery`, `QueueAttempt`, `QueueRetryMetadata`, and
   `QueueDeadLetterMetadata` name delivery, retry, and dead-letter facts
-  without implementing a worker loop.
+  without implementing a worker loop. Retry and dead-letter states are mutually
+  exclusive for a single delivery.
 - `QueueErrorCode`, `QueueError`, and `queueError` give queue failures stable
   translation-ready meanings.
 - `Queue`, `QueueHandler`, `inMemoryQueue`, and `noopQueue` define the async

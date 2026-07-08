@@ -11,6 +11,7 @@
     "./config": "./src/config/index.ts",
     "./diagnostics": "./src/diagnostics/index.ts",
     "./events": "./src/events/index.ts",
+    "./files": "./src/files/index.ts",
     "./logging": "./src/logging/index.ts",
     "./monitoring": "./src/monitoring/index.ts",
     "./persistence": "./src/persistence/index.ts",

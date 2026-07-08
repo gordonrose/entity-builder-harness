@@ -4,6 +4,7 @@ export * from "./authz/index";
 export * from "./config/index";
 export * from "./diagnostics/index";
 export * from "./events/index";
+export * from "./files/index";
 export * from "./logging/index";
 export * from "./monitoring/index";
 export * from "./persistence/index";

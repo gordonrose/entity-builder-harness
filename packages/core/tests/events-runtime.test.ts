@@ -10,6 +10,7 @@ import {
   type EventEnvelope,
   type EventHandler,
 } from "../src/events/index";
+import { diagnosticDescriptor } from "../src/diagnostics/index";
 import { correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
@@ -91,9 +92,17 @@ async function main(): Promise<void> {
     code: "EVENT_PUBLISH_FAILED",
     defaultMessage: "Event publish failed.",
     messageKey: "events.publish.failed",
+    diagnostic: diagnosticDescriptor({
+      failureKind: "dependency_unavailable",
+      failureSource: "platform",
+      severity: "error",
+      recovery: "automation_retryable",
+      action: "retry",
+    }),
   });
   equal(explicitError.code, "EVENT_PUBLISH_FAILED");
   equal(explicitError.messageKey, "events.publish.failed");
+  equal(explicitError.diagnostic?.retryable, true);
 
   const handledTypes: string[] = [];
   const handler: EventHandler = {

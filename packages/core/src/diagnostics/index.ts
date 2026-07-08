@@ -77,6 +77,14 @@ export function diagnosticDescriptor(input: {
     assertKnownValue("recovery action", input.action, recoveryActions);
   }
 
+  if (input.recovery === "automation_retryable" && input.retryable === false) {
+    throw new TypeError("automation_retryable diagnostics must be retryable.");
+  }
+
+  if (input.recovery === "user_correctable" && input.userCorrectable === false) {
+    throw new TypeError("user_correctable diagnostics must be user-correctable.");
+  }
+
   return {
     failureKind: input.failureKind,
     failureSource: input.failureSource,
@@ -91,11 +99,11 @@ export function diagnosticDescriptor(input: {
 }
 
 export function isRetryableDiagnostic(descriptor: DiagnosticDescriptor): boolean {
-  return descriptor.retryable || descriptor.recovery === "automation_retryable";
+  return descriptor.retryable;
 }
 
 export function isUserCorrectableDiagnostic(descriptor: DiagnosticDescriptor): boolean {
-  return descriptor.userCorrectable || descriptor.recovery === "user_correctable";
+  return descriptor.userCorrectable;
 }
 
 export function copyDiagnosticFacts<TFacts extends DiagnosticFacts>(

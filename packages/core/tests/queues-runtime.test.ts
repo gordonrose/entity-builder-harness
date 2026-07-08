@@ -18,6 +18,7 @@ import {
   queueSendOptions,
   type QueueMessage,
 } from "../src/queues/index";
+import { diagnosticDescriptor } from "../src/diagnostics/index";
 import { correlationId, isErr, isOk, isoDateTime } from "../src/shared/index";
 import { tenantId } from "../src/tenancy/index";
 
@@ -177,19 +178,47 @@ async function main(): Promise<void> {
     receivedAt: receivedAt.value,
     attempt: firstAttempt.value,
     retry: retry.value,
-    deadLetter,
   });
   deepEqual(delivery.message, message);
   deepEqual(delivery.retry, retry.value);
-  deepEqual(delivery.deadLetter, deadLetter);
+  equal(delivery.deadLetter, undefined);
+
+  const deadLetterDelivery = queueDelivery({
+    message,
+    receivedAt: receivedAt.value,
+    attempt: maxAttempts.value,
+    deadLetter,
+  });
+  deepEqual(deadLetterDelivery.deadLetter, deadLetter);
+  equal(deadLetterDelivery.retry, undefined);
+
+  throws(
+    () =>
+      queueDelivery({
+        message,
+        receivedAt: receivedAt.value,
+        attempt: firstAttempt.value,
+        retry: retry.value,
+        deadLetter,
+      } as never),
+    /cannot be both retryable and dead-lettered/,
+  );
 
   const explicitError = queueError({
     code: "QUEUE_SEND_FAILED",
     defaultMessage: "Queue send failed.",
     messageKey: "queues.send.failed",
+    diagnostic: diagnosticDescriptor({
+      failureKind: "dependency_unavailable",
+      failureSource: "provider",
+      severity: "error",
+      recovery: "automation_retryable",
+      action: "retry",
+    }),
   });
   equal(explicitError.code, "QUEUE_SEND_FAILED");
   equal(explicitError.messageKey, "queues.send.failed");
+  equal(explicitError.diagnostic?.retryable, true);
 
   const queue = inMemoryQueue<typeof message.payload>();
   const options = queueSendOptions({ delaySeconds: validDelay.value });

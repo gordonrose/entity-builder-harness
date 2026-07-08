@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 12
+#   version: 14
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 12
+version: 14
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-08T10:39:33Z"
+  generated_at_utc: "2026-07-08T12:11:12Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 2451d7c468caed21eef6aaca2e1a1f0ec1e056de8515b90414da7858252af1ec
+      sha256: 6e614f979a860509705667db951a48d4615a02cbc69bb4fed3897c42d646b269
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -91,8 +91,8 @@ recommended_modules:
     purpose: "Notification contracts and delivery model."
     consumed_by: "apps, workers, and provider adapters"
   - id: files
-    purpose: "File storage and metadata contracts."
-    consumed_by: "apps and platform storage adapters"
+    purpose: "Provider-neutral uploaded/stored file metadata, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, file error, storage port, and testing-helper contracts."
+    consumed_by: "apps, workers, platform storage adapters, audit, queues, and file-processing flows"
   - id: audit
     purpose: "Provider-neutral accountability event, event-version, actor, target, outcome, metadata, recorder, and recorder-error contracts."
     consumed_by: "apps and platform audit storage"
@@ -356,6 +356,8 @@ rules:
       - Define provider-neutral failure kinds, failure sources, failure severity, recovery dispositions, recovery actions, retryable indicators, user-correctable indicators, diagnostic descriptors, and primitive diagnostic facts.
       - Support the self-healing loop as vocabulary: detect, classify, correlate, decide, act, verify, and escalate.
       - Let CoreError carry optional diagnostic descriptors when a failure needs structured recovery metadata.
+      - Preserve diagnostic descriptors through module-specific error helper functions when callers provide them.
+      - Reject contradictory diagnostic descriptors such as automation_retryable recovery with retryable false or user_correctable recovery with userCorrectable false.
       - Use diagnostic facts to distinguish user/input errors, validation failures, provider/runtime failures, data-integrity problems, and genuine bugs without parsing free-text logs.
       - Keep diagnostic facts primitive, bounded, finite-number safe, and suitable for correlation across logs, monitoring, queues, events, audit, and incident workflows.
       - Test failure classification, recovery defaults, retryability, user-correctability, and fact safety without concrete runtime providers.
@@ -550,6 +552,40 @@ rules:
       storage topology and resilience resources, and apps decide product-specific
       query and workflow behavior.
 
+  - id: core.files-contracts-name-high-risk-file-storage
+    title: File contracts name high-risk storage without choosing providers
+    severity: error
+    summary: >
+      packages/core files contracts should define provider-neutral uploaded and
+      stored file metadata, content validation facts, scan status, access
+      intent, duplicate/idempotent put policy, retention/legal-hold facts,
+      storage references, file errors, storage ports, and testing helpers while
+      leaving object storage, scanner integrations, parsers, public access,
+      retention jobs, and deployment topology outside core.
+    must:
+      - Define provider-neutral file id, file name, content type, byte size, checksum, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, metadata, file error, storage port, and helper contracts.
+      - Treat files as high-risk storage because they are large, user-controlled, and often sensitive.
+      - Make content-type validation, size policy, tenant isolation, checksum, scan status, access intent, retention or legal-hold needs, and audit/log correlation visible before files become durable or directly accessible.
+      - Require file read and delete ports to receive provider-neutral access intent instead of raw file ids.
+      - Define duplicate file put behavior, such as default duplicate conflict and explicit idempotent duplicate handling for safe retry paths.
+      - Map invalid file metadata to stable file error vocabulary rather than raw runtime exceptions.
+      - Keep file metadata plain, serializable, finite-number safe, and portable across app, platform, worker, queue, audit, scan, and test boundaries.
+      - Keep file body handling generic so platform/runtime adapters can choose streams, buffers, browser file objects, upload protocols, or provider-specific mechanics outside core.
+      - Include in-memory file storage helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test file names, content types, sizes, checksums, storage keys, metadata copying, scan status, access intent, file errors, storage ports, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define object-storage buckets, public URLs, signed URL generation, scanner integrations, image processing, CSV parsing, spreadsheet parsing, product document workflows, retention jobs, legal-hold jobs, cloud SDK clients, provider resource names, or deployment topology in packages/core.
+      - Do not store or model large file bodies as ordinary repository entities or durable database rows by default.
+      - Do not skip content-type, size, tenant isolation, access intent, scan, retention, legal-hold, audit, or metadata concerns for sensitive files.
+      - Do not carry secrets, raw credentials, provider objects, request objects, parser instances, large file bodies, non-finite numeric values, or runtime-only values as file metadata.
+      - Do not treat core storage keys as public URLs or provider resource identifiers.
+    agent_guidance: >
+      Core files name the portable file contract and storage port. Apps decide
+      product file meaning, platform handles request parsing, scanning, direct
+      access grants, and storage adapters, provider adapters translate concrete
+      storage/scanner behavior, and infra provisions storage resources,
+      encryption, retention, legal hold, alarms, and permissions.
+
   - id: core.events-contracts-name-publishable-facts
     title: Events contracts name publishable facts, not broker infrastructure
     severity: error
@@ -597,6 +633,7 @@ rules:
       - Treat message type names as portable work-kind facts rather than concrete broker queue names, SQS queue URLs, Kafka topics, routing keys, or worker deployment names.
       - Keep queue send and handler failures mapped to stable queue error codes before app code receives them.
       - Carry tenant id, correlation id, idempotency key, delay, message group, attempt count, and retry/dead-letter metadata where a product or runtime needs those facts.
+      - Keep retry and dead-letter disposition unambiguous; a single delivery must not be both retryable and dead-lettered.
       - Include in-memory or no-op queue helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
       - Test message type, message version, payload, message envelope, send options, delivery metadata, queue errors, handlers, and helper behavior without concrete runtime providers.
     must_not:

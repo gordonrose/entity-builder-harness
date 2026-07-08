@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 12
+#   version: 14
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -33,10 +33,13 @@ source_change:
     Approved source material records the narrow bootstrap exception, contract
     module surface, hardening requirements, monitoring contract boundary,
     security contract boundary,
-    persistence contract boundary, events, queues, diagnostics, and audit contract boundaries, and
+    persistence contract boundary, files, events, queues, diagnostics, and audit contract boundaries, and
     review-driven JSON/accountability hardening, plus public contract
     compatibility and deprecation policy, plus queue and audit schema-version
-    contracts, plus provider-neutral diagnostics and self-healing vocabulary
+    contracts, plus provider-neutral diagnostics and self-healing vocabulary,
+    plus high-risk file storage contracts and review-driven file access,
+    duplicate/idempotent put, diagnostic consistency, and queue disposition
+    hardening
     for the initial packages/core slice.
 
 target:
@@ -57,6 +60,7 @@ target:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
   affected_corpus_gaps: []
 
 semantic_review:
@@ -95,7 +99,7 @@ semantic_review:
       summary: Provider-neutral JSON-like contract values should reject non-finite numbers and non-plain runtime objects when copying claims, policy facts, event payloads, or audit metadata.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.shared.core-error.optional-diagnostic
-      summary: CoreError may carry an optional diagnostic descriptor when a failure needs structured recovery, retryability, or user-correctability metadata.
+      summary: CoreError may carry an optional diagnostic descriptor when a failure needs structured recovery, retryability, or user-correctability metadata, and module error helpers should preserve it when supplied.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.diagnostics.provider-neutral-boundary
       summary: The diagnostics module may define failure kinds, failure sources, severity, recovery disposition, recovery action vocabulary, retryable and user-correctable indicators, primitive diagnostic facts, and small pure helpers.
@@ -105,6 +109,9 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.diagnostics.user-vs-bug-classification
       summary: Diagnostics should help distinguish user/input errors, retryable provider outages, data-integrity conflicts, and code bugs without parsing free-text logs.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.diagnostics.no-contradictory-recovery-flags
+      summary: Diagnostic descriptors should reject contradictory recovery flags such as automation_retryable recovery with retryable false or user_correctable recovery with userCorrectable false.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.diagnostics.facts.primitive-safe
       summary: Diagnostic facts must stay primitive, bounded, finite-number safe, and free of secrets, raw request bodies, provider objects, class instances, and runtime-only values.
@@ -184,6 +191,27 @@ semantic_review:
     - claim_id: core.persistence.no-db-topology
       summary: Core persistence must not define SQL, ORM models, database clients, tables, indexes, shards, backups, object-storage clients, product-specific repositories, or product workflow decisions.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.provider-neutral-boundary
+      summary: The files module may define provider-neutral file id, file name, content type, byte size, checksum, storage reference, scan result, access intent, duplicate/idempotent put policy, retention/legal-hold facts, metadata, file error, storage port, and in-memory helper contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.high-risk-storage
+      summary: Files are high-risk storage because they are large, user-controlled, often sensitive, and require visible content-type validation, size policy, tenant isolation, scan status, checksum, storage reference, access intent, retention/legal-hold needs, and audit/log correlation.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.access-intent-for-read-delete
+      summary: File storage read and delete ports should receive provider-neutral access intent rather than raw file ids so tenant, correlation, operation, and access-purpose facts are present at the boundary.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.duplicate-put-behavior-explicit
+      summary: File put contracts should define duplicate behavior, including default duplicate conflict and explicit idempotent duplicate handling for safe retry paths where attempted metadata still matches the stored file.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.metadata.serializable
+      summary: File metadata should stay plain and serializable, map invalid metadata to stable file error vocabulary, and must not carry secrets, raw credentials, provider objects, request objects, parser instances, large file bodies, non-finite numeric values, or runtime-only values.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.body-generic
+      summary: File body handling should stay generic in core so platform runtime owns request parsing, stream handling, content validation, scanner invocation, direct access grants, and adapter lifecycle.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.files.no-provider-storage
+      summary: Core files must not define object-storage buckets, public URLs, signed URL generation, scanner integrations, image processing, CSV/spreadsheet parsing, product document workflows, retention jobs, legal-hold jobs, cloud SDK clients, provider resource names, or deployment topology.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.events.provider-neutral-boundary
       summary: The events module may define provider-neutral event id, type, version, payload, envelope, publish error, publisher or bus, handler, and in-memory/no-op helper contracts.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
@@ -213,6 +241,9 @@ semantic_review:
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.queues.schema-version
       summary: Queue messages should carry explicit positive integer schema versions, and durable platform adapters must preserve those versions when messages are serialized, retried, replayed, or moved to dead-letter paths.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.queues.delivery-disposition-unambiguous
+      summary: Queue delivery metadata should keep retry and dead-letter disposition unambiguous; one delivery may be retryable or dead-lettered, but not both.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.queues.payloads.serializable
       summary: Queue payloads should stay plain and serializable so platform adapters can move them through queues, retries, logs, tests, workers, and dead-letter paths without provider-specific objects.
@@ -297,6 +328,7 @@ proposed_updates:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
   notes:
     - Existing packages/core rules define the general ownership boundary.
     - >
@@ -312,7 +344,10 @@ proposed_updates:
       Diagnostics now provide a provider-neutral failure classification and
       self-healing vocabulary while leaving remediation workflows to
       platform/runtime, provider adapters, infra, and product policy.
-    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, and diagnostics/self-healing boundary guidance directly.
+      Files now provide provider-neutral high-risk storage contracts while
+      leaving storage adapters, scanning, direct access, retention, legal hold,
+      parsing, and resource topology outside core.
+    - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, diagnostics/self-healing boundary guidance, and files high-risk-storage guidance directly.
     - The compatibility selector fixture asks for deprecation, backwards compatibility, schema-version, and old public usage fixture guidance directly.
 
 downstream_effects:
@@ -336,6 +371,7 @@ validation:
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
     - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
     - npm run core:check
     - git diff --check
@@ -364,6 +400,8 @@ validation:
       result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
       result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+      result: passed
     - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
       result: passed
     - command: npm run core:check
@@ -378,5 +416,5 @@ review:
   reviewer: codex-agentic-review-loop
   reviewed_at_utc: "2026-07-07T00:00:00Z"
   notes:
-    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings and the self-healing diagnostics discussion.
+    - Source and projection were reviewed after the packages/core events/audit/security/monitoring review findings, the self-healing diagnostics discussion, and the files high-risk-storage slice.
     - Future core modules should add narrower source material when their contracts materially change.

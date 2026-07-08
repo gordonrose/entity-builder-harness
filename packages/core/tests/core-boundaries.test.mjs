@@ -13,6 +13,7 @@ const expectedModules = [
   "config",
   "diagnostics",
   "events",
+  "files",
   "logging",
   "monitoring",
   "persistence",

@@ -15,6 +15,7 @@ import {
   type MessageParams,
   type Result,
 } from "../shared/index";
+import type { DiagnosticDescriptor } from "../diagnostics/index";
 import type { TenantId } from "../tenancy/index";
 
 export type QueueMessageId = EntityId<"QueueMessageId">;
@@ -71,13 +72,25 @@ export interface QueueDeadLetterMetadata {
   readonly attempts: QueueAttempt;
 }
 
-export interface QueueDelivery<TPayload extends QueuePayloadValue = QueuePayload> {
+export type QueueDeliveryDisposition =
+  | {
+      readonly retry?: QueueRetryMetadata;
+      readonly deadLetter?: never;
+    }
+  | {
+      readonly retry?: never;
+      readonly deadLetter?: QueueDeadLetterMetadata;
+    }
+  | {
+      readonly retry?: undefined;
+      readonly deadLetter?: undefined;
+    };
+
+export type QueueDelivery<TPayload extends QueuePayloadValue = QueuePayload> = QueueDeliveryDisposition & {
   readonly message: QueueMessage<TPayload>;
   readonly receivedAt: ISODateTime;
   readonly attempt: QueueAttempt;
-  readonly retry?: QueueRetryMetadata;
-  readonly deadLetter?: QueueDeadLetterMetadata;
-}
+};
 
 export interface QueueHandler<TDelivery extends QueueDelivery = QueueDelivery> {
   handle(delivery: TDelivery): Promise<void> | void;
@@ -192,6 +205,7 @@ export function queueError(input: {
   readonly messageKey?: string | MessageKey;
   readonly params?: MessageParams;
   readonly cause?: unknown;
+  readonly diagnostic?: DiagnosticDescriptor;
   readonly details?: Readonly<Record<string, unknown>>;
 }): QueueError {
   return {
@@ -200,6 +214,7 @@ export function queueError(input: {
     ...(input.messageKey === undefined ? {} : { messageKey: messageKey(input.messageKey) }),
     ...(input.params === undefined ? {} : { params: input.params }),
     ...(input.cause === undefined ? {} : { cause: input.cause }),
+    ...(input.diagnostic === undefined ? {} : { diagnostic: input.diagnostic }),
     ...(input.details === undefined ? {} : { details: input.details }),
   };
 }
@@ -279,15 +294,39 @@ export function queueDelivery<TPayload extends QueuePayloadValue>(input: {
   readonly receivedAt: ISODateTime;
   readonly attempt: QueueAttempt;
   readonly retry?: QueueRetryMetadata;
+  readonly deadLetter?: never;
+} | {
+  readonly message: QueueMessage<TPayload>;
+  readonly receivedAt: ISODateTime;
+  readonly attempt: QueueAttempt;
+  readonly retry?: never;
   readonly deadLetter?: QueueDeadLetterMetadata;
 }): QueueDelivery<TPayload> {
-  return {
+  if (input.retry !== undefined && input.deadLetter !== undefined) {
+    throw new TypeError("Queue delivery cannot be both retryable and dead-lettered.");
+  }
+
+  const base = {
     message: copyQueueMessage(input.message),
     receivedAt: input.receivedAt,
     attempt: input.attempt,
-    ...(input.retry === undefined ? {} : { retry: { ...input.retry } }),
-    ...(input.deadLetter === undefined ? {} : { deadLetter: { ...input.deadLetter } }),
   };
+
+  if (input.retry !== undefined) {
+    return {
+      ...base,
+      retry: { ...input.retry },
+    };
+  }
+
+  if (input.deadLetter !== undefined) {
+    return {
+      ...base,
+      deadLetter: { ...input.deadLetter },
+    };
+  }
+
+  return base;
 }
 
 export function inMemoryQueue<TPayload extends QueuePayloadValue = QueuePayload>(): InMemoryQueue<TPayload> {
