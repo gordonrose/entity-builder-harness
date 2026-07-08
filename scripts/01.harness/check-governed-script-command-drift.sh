@@ -21,7 +21,6 @@ set -euo pipefail
 #   - id: chat.script.session-log.prepare-chat-session-before-commit
 #     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 #   - id: harness.standards.governed-script-permissions
-#     path: .agentic/01.harness/standards/governed-script-permissions.md
 #   effects:
 #   - read-only
 
@@ -149,11 +148,6 @@ scan_file() {
             *)
               case "$path:$text" in
                 scripts/shared/*:*"exec bash $script"*)
-                  continue
-                  ;;
-              esac
-              case "$path:$script" in
-                .agentic/00.chat/*:scripts/00.chat/*)
                   continue
                   ;;
               esac

@@ -41,12 +41,23 @@ chat_worktree_safe_name() {
   printf '%s' "$1" | sed 's#[^A-Za-z0-9._-]#_#g'
 }
 
+chat_worktree_shell_path() {
+  local path_value="$1"
+
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "$path_value" 2>/dev/null && return 0
+  fi
+
+  printf '%s\n' "${path_value//\\//}"
+}
+
 chat_worktree_root_for_repo() {
   local repo_root="$1"
-  local repo_slug
+  local repo_slug root_path
 
   repo_slug="$(chat_worktree_safe_name "$(basename "$repo_root")")"
-  printf '%s\n' "${AGENTIC_CHAT_WORKTREE_ROOT:-${TMPDIR:-/tmp}/agentic-chat-worktrees/${repo_slug}-$(chat_worktree_repo_key "$repo_root")}"
+  root_path="${AGENTIC_CHAT_WORKTREE_ROOT:-${TMPDIR:-/tmp}/agentic-chat-worktrees/${repo_slug}-$(chat_worktree_repo_key "$repo_root")}"
+  chat_worktree_shell_path "$root_path"
 }
 
 chat_worktree_path_for_branch() {

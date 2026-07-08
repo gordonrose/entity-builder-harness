@@ -22,7 +22,6 @@ set -euo pipefail
 #     - read-only
 #   used_by:
 #     - id: harness.standard.artifact-metadata
-#       path: .agentic/01.harness/artifact-metadata/standard.md
 #     - id: harness.checklist.before-commit
 #       path: .agentic/00.chat/checklists/before-commit.md
 

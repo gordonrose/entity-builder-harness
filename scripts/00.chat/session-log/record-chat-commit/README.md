@@ -19,7 +19,6 @@
   - id: chat.script.session-log.record-chat-commit.smoke-test
     path: scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # Record Chat Commit
 

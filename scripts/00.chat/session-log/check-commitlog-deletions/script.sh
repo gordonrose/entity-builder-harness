@@ -22,7 +22,6 @@ set -euo pipefail
 #   - id: chat.script.session-log.check-commitlog-deletions.smoke-test
 #     path: scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh
 #   - id: harness.architecture.adr.0010-protect-commit-logs-with-recorded-work
-#     path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
 #   effects:
 #   - read-only
 usage() {

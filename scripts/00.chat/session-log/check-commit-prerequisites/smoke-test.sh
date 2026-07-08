@@ -64,6 +64,9 @@ Run:
 ```bash
 bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 ```
+
+Repositories may provide an optional extension hook at
+`scripts/repo/commit-gates/script.sh`.
 EOF
 
 cat > "$REPO/.agentic/00.chat/workflows/chat-start.md" <<'EOF'
@@ -111,6 +114,9 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 
 grep -q 'Commit prerequisites are present.' "$TMP_ROOT/out" \
   || fail "commit prerequisites did not pass with prose directory reference"
+
+grep -q 'optional referenced gate script is absent: scripts/repo/commit-gates/script.sh' "$TMP_ROOT/out" \
+  || fail "optional repository extension hook was not treated as optional"
 
 if grep -q 'scripts/00.chat/ is missing' "$TMP_ROOT/out"; then
   fail "directory prose reference was treated as a missing script"

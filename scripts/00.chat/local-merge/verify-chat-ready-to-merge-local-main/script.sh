@@ -20,7 +20,6 @@ set -euo pipefail
 #   - id: chat.workflows.chat-promote-to-main
 #     path: .agentic/00.chat/workflows/chat-promote-to-main.md
 #   - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
-#     path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
 #   effects:
 #   - read-only
 

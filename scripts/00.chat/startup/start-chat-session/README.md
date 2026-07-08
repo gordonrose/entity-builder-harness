@@ -18,7 +18,6 @@
   - id: chat.script.startup.start-chat-session
     path: scripts/00.chat/startup/start-chat-session/script.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # Start Chat Session
 

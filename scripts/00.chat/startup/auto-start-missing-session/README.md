@@ -20,7 +20,6 @@
   - id: chat.script.command.dispatcher.smoke-test
     path: scripts/00.chat/command/dispatcher/smoke-test.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
 -->
 # Auto-Start Missing Session
 

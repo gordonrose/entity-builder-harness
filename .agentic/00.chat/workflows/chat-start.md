@@ -51,13 +51,13 @@ Do not load unrelated workflows, skills, standards, or documentation.
 If the metadata includes a `worktree` value, use that chat-owned worktree for
 task writes. The root worktree is the local integration console.
 
-For editor windows during chat work, use the governed open-window command:
+For editor windows during chat work, use the workbench open-window command:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/worktree/open-window/script.sh
+npm run chat -- open-window
 ```
 
-Do not call `code -n` or `code --new-window` directly. The governed opener
+Do not call `code -n` or `code --new-window` directly. The workbench opener
 verifies that the target is the declared chat-owned worktree before launching
 VS Code.
 

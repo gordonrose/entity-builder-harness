@@ -1,0 +1,747 @@
+{
+  "schema_version": 1,
+  "package": "llm-wb",
+  "version": "0.1.0-beta.3",
+  "managed_files": [
+    {
+      "path": ".agentic/00.chat/checklists/before-commit.md",
+      "sha256": "06c3a0125ac7f69cccd63351f6eb3456be5461e41998cca9f7253bf50d785868"
+    },
+    {
+      "path": ".agentic/00.chat/checklists/llm-workbench-public-beta.md",
+      "sha256": "f896889eff8a3f7d206c80d8663251141c43f08010a24ecd161ef31c56a75fa1"
+    },
+    {
+      "path": ".agentic/00.chat/commands/README.md",
+      "sha256": "234b2d4715496d96708454d7ac9cf022460db5909a7b2f2f0eb778d2eecd8f46"
+    },
+    {
+      "path": ".agentic/00.chat/migration-plan.md",
+      "sha256": "24760a837fc6193f03e3767c2fbf880f92db6b7a15ce5a19dc365518cb57f2a4"
+    },
+    {
+      "path": ".agentic/00.chat/README.md",
+      "sha256": "47285e41c4a5f6c2271b4acf7e9a5d51ba928fd8f774adf075f436a5738a77d3"
+    },
+    {
+      "path": ".agentic/00.chat/skills/session-summary.md",
+      "sha256": "3950b91c3b94a78f098c9d0e8a4923d52672c1e6621eeda7cea2627272c4a7e0"
+    },
+    {
+      "path": ".agentic/00.chat/standards/llm-workbench-public-beta-contract.md",
+      "sha256": "0c041701361f12913903058efcc1fd0edae85b5a63a0f77f2993dc4b3db0164c"
+    },
+    {
+      "path": ".agentic/00.chat/standards/main-refresh-conflict-types.md",
+      "sha256": "0289bd44f7f060c85d1f8f74065715feb11c4e846162a3a23c054136c8e5b84d"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/bootstrap-chat-workbench-repo.md",
+      "sha256": "e2161e46737f9b5414d1328fc2e3d43f735a3f02f4af6da217da8d1cb33a3d6a"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-cleanup.md",
+      "sha256": "9c3746e8045be1487427e36f4056a79c442f04f36684df66a87053ee0406d4f8"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-commit.md",
+      "sha256": "cedd2982809a3dc86ac1011abc2e44bb7e4ad294f6abbb632a6282ffe6a4613e"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-promote-to-main.md",
+      "sha256": "6bfd9ce431df022ea4a43b4d1b6d513e4b2ad0e16a9d66576a8d95bd1261faed"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-refresh-from-main.md",
+      "sha256": "0870cf48c9b633242b20604d7fa8a6f51fe96a12c85b19af84e873b47cd2916c"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-reporting.md",
+      "sha256": "dca004661310a423316fef067355fb28496fbc643d5acc7fddbf40b6f2359afa"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-start.md",
+      "sha256": "2e964d9abb19475aa721c7229f30a9b65196bb5c502e52d5789dd45614e31b7b"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/chat-upstream-reusable-lesson.md",
+      "sha256": "e9372002eb01987d004a783014c05a3ce79819436d19c06d7ba52c1c086b0b9c"
+    },
+    {
+      "path": ".agentic/00.chat/workflows/README.md",
+      "sha256": "6673afbed7a2b2b027618bd86e830b52bde8c58761ea9ef17277529b18825162"
+    },
+    {
+      "path": ".agentic/shared/standards/README.md",
+      "sha256": "52df8ac6feaad8a112043a8f423acc239fff1bb78db39daac13590ba79571f58"
+    },
+    {
+      "path": ".agentic/shared/standards/upstream-repo-bootstrap.md",
+      "sha256": "5e311d2c27ee84b9d6cfa47b203370cdc7105417ac5e322ef490261a0bf011c2"
+    },
+    {
+      "path": ".agentic/shared/workflows/capability-resolution-workflow.md",
+      "sha256": "b983c5899dd443593f7860cfa8b879c7463b6faef5eff8ecaa4b08596e766b32"
+    },
+    {
+      "path": ".agentic/shared/workflows/change-shared-process.md",
+      "sha256": "619a595bb5824de7aebc3b7a58a26aaa268e99f2292e6df28910d723f3df4ebd"
+    },
+    {
+      "path": ".agentic/shared/workflows/README.md",
+      "sha256": "cae6a1ab27b8c9fdd32375e23861d29c1b6117f5bf52cea665e356ef90de0948"
+    },
+    {
+      "path": ".cursor/rules/llm-workbench.mdc",
+      "sha256": "82753c862fe03d6759a260c016b00c8a7cafb1541dcb1525b3488c2f28aaa993"
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "sha256": "2aa2785f05ea94e26053bc13f95bbb1eb964aba8625e820d233f4a34832d6a91"
+    },
+    {
+      "path": "bin/llm-workbench-ownership.js",
+      "sha256": "438ac0bd0543e1059b9d75ec82efac68edccf376f8d38b8b6c6caec5afedc660"
+    },
+    {
+      "path": "bin/llm-workbench.js",
+      "sha256": "704235ecc41794ebd57915b59dcd9f5b206ffe1f75ab59bdd2c8d5c9c1d888c7"
+    },
+    {
+      "path": "LLM_WORKBENCH.md",
+      "sha256": "ca045d19d7d9bc171e4e4c3a7e28174d6d7f7cd5b2c244abf5ad9af37122aace"
+    },
+    {
+      "path": "scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/README.md",
+      "sha256": "c2e1503053539865085979411a2162e58b9d4b64abfe754d25116d248d536d6d"
+    },
+    {
+      "path": "scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh",
+      "sha256": "580ea7dbd8c4b9b0e87b18b68c5be0ca77b584436e47feb83fdedc8d75133be6"
+    },
+    {
+      "path": "scripts/00.chat/bootstrap/README.md",
+      "sha256": "85f225ae2bc97fb6313ba2af56bac661a4c4e68b62f36a7938335d88fa788289"
+    },
+    {
+      "path": "scripts/00.chat/closeout/build-closeout-prompt/README.md",
+      "sha256": "7228d049a1f4e0c76ce7bec27c8e008dc25b3face8d4b860f0b203d7919d8cb7"
+    },
+    {
+      "path": "scripts/00.chat/closeout/build-closeout-prompt/script.sh",
+      "sha256": "37fcef5390531427b0a02dfc84687b234f84fec45dc851f574e91452919ee07a"
+    },
+    {
+      "path": "scripts/00.chat/closeout/README.md",
+      "sha256": "7e17cdf441062db90c06d7e27407d0f01482205128d45a8fc83a62a776e13ecf"
+    },
+    {
+      "path": "scripts/00.chat/command/close/README.md",
+      "sha256": "ae8b8c480a24f4f8c4385d0385ece4c5566d228cf0c21c8221e01e483993a02f"
+    },
+    {
+      "path": "scripts/00.chat/command/close/script.sh",
+      "sha256": "374342aa172b9ede8f232ce818fca744628856257aeddd7c78cb20665f5a751b"
+    },
+    {
+      "path": "scripts/00.chat/command/dispatcher/README.md",
+      "sha256": "bce9741b1c29e09f634d1e7f73c73fc296467ca4a8a86e55d2e6cdc77fc5dc23"
+    },
+    {
+      "path": "scripts/00.chat/command/dispatcher/script.sh",
+      "sha256": "3397e252c1771aea2f71f3c723e86e4ce7f10490b2156015dc1ea70044ed2ce9"
+    },
+    {
+      "path": "scripts/00.chat/command/dispatcher/smoke-test.sh",
+      "sha256": "fa57eaca2f2662bf6a95d1068e421e027caa3c9ee77b81c19dd01f49f5b41843"
+    },
+    {
+      "path": "scripts/00.chat/command/download-repo-diff/README.md",
+      "sha256": "80d6f614d7545e71ab3de20a4f4849274adc905784dc5f3a934dfec1199b505b"
+    },
+    {
+      "path": "scripts/00.chat/command/download-repo-diff/script.sh",
+      "sha256": "9b7251d53dae261ebc989a6388e01a943ff98c9d6b57d7380dfd9f3dfb1bf440"
+    },
+    {
+      "path": "scripts/00.chat/command/download-repo/README.md",
+      "sha256": "13855dfbea35934e3081975a91cb068bcd76ad3dfc885d6f35c3d207b6609887"
+    },
+    {
+      "path": "scripts/00.chat/command/download-repo/script.sh",
+      "sha256": "2a4f8a0c1a3e7eb209dab46c75b45cfdccc8d2b2527e3dbe63fae939ed3409bd"
+    },
+    {
+      "path": "scripts/00.chat/command/new/README.md",
+      "sha256": "adf215d56dab5bc93c4d61a500e2b66e0c327c06e47ae000e4f4aeeb7050fdef"
+    },
+    {
+      "path": "scripts/00.chat/command/new/script.sh",
+      "sha256": "18b780ccf9e5f06d12addd304e3876892d25b321a1675521b9c5b656cf8972b5"
+    },
+    {
+      "path": "scripts/00.chat/command/open-window/README.md",
+      "sha256": "fd11d42aa7801851362343031abfffc246c9d455cdaa04dd17980ba25c421d7d"
+    },
+    {
+      "path": "scripts/00.chat/command/open-window/script.sh",
+      "sha256": "9a8de321be8c7f368ab768769a16ca465f5df841491d4f004258b78514c8929f"
+    },
+    {
+      "path": "scripts/00.chat/command/package-scripts/README.md",
+      "sha256": "13e22ab37b5ca2378503776e92270fc5f83e503e60b7c0e10264b20c39217a75"
+    },
+    {
+      "path": "scripts/00.chat/command/package-scripts/smoke-test.sh",
+      "sha256": "d20ecec373361a36eee05037b83a2a114b580233b40d80c3a7076ad5b498ad56"
+    },
+    {
+      "path": "scripts/00.chat/command/README.md",
+      "sha256": "77bebc52b02b7da630ccc7d87b91f05f2d9e7d1974a3222a018d326dec8fe8ee"
+    },
+    {
+      "path": "scripts/00.chat/export/create-worktree-bundle/README.md",
+      "sha256": "6d638b5abe14e811c0abd84ba0105b448572f8ec965767a190c13029c984e5d4"
+    },
+    {
+      "path": "scripts/00.chat/export/create-worktree-bundle/script.js",
+      "sha256": "e64c88d8f479a70d17ba771fc14f6d823de67b59daff339f8040b48673eef5d9"
+    },
+    {
+      "path": "scripts/00.chat/export/README.md",
+      "sha256": "8342b84cc1c5073c97f40adcc7dbe90d897557dd2f71dae62de473226f867bf0"
+    },
+    {
+      "path": "scripts/00.chat/export/smoke-test.sh",
+      "sha256": "6f93350a9ddaa40b91fa37f414ccdc0c9247694792969f1b06cfad98cb94a6c3"
+    },
+    {
+      "path": "scripts/00.chat/export/worktree-diff/README.md",
+      "sha256": "40a3769d6ea5edcb27841f5c9a52c028c996d7bbc5d4445291719a92ce602f6d"
+    },
+    {
+      "path": "scripts/00.chat/export/worktree-diff/script.sh",
+      "sha256": "816ea50b5856e63f5c03342bee3045a748497df3b90a59a732864a7e733ab1f3"
+    },
+    {
+      "path": "scripts/00.chat/export/worktree/README.md",
+      "sha256": "fa4e49c2d46431789e480dd06a532bf8a93b64b37e2bbb28d76874db14c124c4"
+    },
+    {
+      "path": "scripts/00.chat/export/worktree/script.sh",
+      "sha256": "fea13891caa7017c58175b181e886d794b1015dc973e9e04d10697251c1b0ab5"
+    },
+    {
+      "path": "scripts/00.chat/git/cleanup-empty-chat-branches/README.md",
+      "sha256": "a222451d9af21d5da1685d422ac42cca533427203a6fcbd730686fc21c18e19c"
+    },
+    {
+      "path": "scripts/00.chat/git/cleanup-empty-chat-branches/script.sh",
+      "sha256": "2bcc10e6acb93c033fb37559606bd369436fcba6456f29bee494149c8a737e1c"
+    },
+    {
+      "path": "scripts/00.chat/git/cleanup-empty-chat-branches/smoke-test.sh",
+      "sha256": "cbba78e218a9703def1f587804d274157e24d6fccae17ba9e7a41770ed69dae1"
+    },
+    {
+      "path": "scripts/00.chat/git/README.md",
+      "sha256": "30b2d84db86b1e7b20a13737dbfb56c797223a357770b95a7fd1520120104916"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/list-active-chat-branches/README.md",
+      "sha256": "e402bb2982295392311d76556265d1bc2ddca12ff2292e046b3628342c88fe54"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/list-active-chat-branches/script.sh",
+      "sha256": "b97075d94af929a72e4ac3e7c0b91879b9afafdeb99f4d85b0b55e9a2f1728c7"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/README.md",
+      "sha256": "98bfcdaacc98196a1fb81e21d639f62d780b30f4f3a72dad31105c44a755b15d"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/report-chat-branch-overlaps/README.md",
+      "sha256": "fc36c832efbe07c6703ffc9c35d8b208568f0b8f51aa1c732ee23f78bd1c55c1"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh",
+      "sha256": "800d5675e96cfdc0dbff48078d42a95c7b54d2d8d03f7175306e1f23657ee53c"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/README.md",
+      "sha256": "3b6c72d9ae8f1eb408bd376e693348cde0601866c6bc83846da92a98fee9def6"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh",
+      "sha256": "074ded522689457a750067ae451dd2b99ea08a068b9ea5de5afb5ea3a5be5c4d"
+    },
+    {
+      "path": "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/smoke-test.sh",
+      "sha256": "a08c586f568722806df44e416b303593d4cfbe8c613d9bcd377e02fed05de093"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/apply-rehearsed-refresh/README.md",
+      "sha256": "5e566540683cf80c11f67f646d54657b165edf5f5886d488e91f08690ebac4fa"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh",
+      "sha256": "d3104667b3455f938ba69ea85f67a20f8c1800bab23541a06bc3de5fe55498ff"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/check-chat-is-current-with-main/README.md",
+      "sha256": "f8ce2690a0aa3f18c350d751d34b8c7e18bfac72ab18eca46f25aa363f4f6d1f"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/check-chat-is-current-with-main/script.sh",
+      "sha256": "91c654e93abbdcc99991e5ca28b0f06fbd36581257bafbf3d2cfc2c48ceae481"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/classify-conflict/README.md",
+      "sha256": "e1510f5472e6ad41992f502dc33df29e3b04dd712815a1db1117ced9798b5408"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/classify-conflict/script.sh",
+      "sha256": "c106b8e969fe01ce468bf45f151b993b196e282d3d7f0aa42f5521aa404f970f"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/classify-conflict/smoke-test.sh",
+      "sha256": "214054c22afad9d109269c66df9ca4da8a4dac0c264b954dd45638f4d5e40cf3"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/classify-refresh-readiness/README.md",
+      "sha256": "f285cf6d13f7075d216f7d3f9e776b1d4e9731bc160d862465cb954e460809b6"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh",
+      "sha256": "7ae950a30836aa17564897872d735a00b1e6627d7ff35728bd1cf7489807315f"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/classify-refresh-readiness/smoke-test.sh",
+      "sha256": "2da6e51e582b31a9bb45560e28726847c29af5af9a986b1a7f3b9e8c3dacf537"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/README.md",
+      "sha256": "249a2e18344695d62eb46c3b93a2e18a653646c98ed488e54a8d38260f42d4b6"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/rehearse-refresh-from-main/README.md",
+      "sha256": "a8b8252c7af1e7cc549f6bfe5361dc89f6701773beedcc658dcfcd33966b787a"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh",
+      "sha256": "bebb88961bcd7d06aafcd7f106bbfb9af5f33dd698dafc717aa9c2decaaabc4a"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh",
+      "sha256": "833d2cde36505e657c400302e18a4c6e1f94a850af66fc744c442cc7dc1c8e03"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/show-main-update-status/README.md",
+      "sha256": "8c588751d4a386a62c0e1ba78e7ce259751e5b6a12146eb893c1119da093280c"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/show-main-update-status/script.sh",
+      "sha256": "69a3eee8a4f63d072ed41e1c4f7787d2b7316350ceab9691a3f4855030371abb"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/verify-conflict-audit/README.md",
+      "sha256": "f67dc6056df3de68e40ab230c30e6cbca62777cb26b162c60bdef1bb321dd742"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/verify-conflict-audit/script.sh",
+      "sha256": "6cc25447d1805822602c9a9832ae3c3844ece067079b6edbe5499f0f86338748"
+    },
+    {
+      "path": "scripts/00.chat/main-refresh/verify-conflict-audit/smoke-test.sh",
+      "sha256": "f818234c25adb6e7bcad6c9bef24c055fc867601d5491dbc0f58b512a997d712"
+    },
+    {
+      "path": "scripts/00.chat/metrics/data/chat-pricing.json",
+      "sha256": "f38d73e45308b09ee25ca8f89bdc8cdeaf1c97a9df304f8a4f795f71d74b94a8"
+    },
+    {
+      "path": "scripts/00.chat/metrics/data/chat-pricing.schema.json",
+      "sha256": "8d108ed69728560320daf367349358998cfdc4e68b1e926db81d22dd0de34678"
+    },
+    {
+      "path": "scripts/00.chat/metrics/estimate-chat-cost/README.md",
+      "sha256": "1e5e7c7c5437aac68ef1fb77ea3f2bb688fdf728156ea37a22ae39cd61755eb4"
+    },
+    {
+      "path": "scripts/00.chat/metrics/estimate-chat-cost/script.js",
+      "sha256": "b5b4d06260b0ec85700972025eb60d07e6ae2eba1e320fd16655e3d9f52019fa"
+    },
+    {
+      "path": "scripts/00.chat/metrics/README.md",
+      "sha256": "dfb5d55e3c7135b97501d691339275d29baed72742723eefecbaddaeda711efe"
+    },
+    {
+      "path": "scripts/00.chat/migration/audit-chat-layer-migration/README.md",
+      "sha256": "b6a08a71d056398e65d1b72fefc7bdabefe4ff1e50eafc43a0ef955d1c5de5c8"
+    },
+    {
+      "path": "scripts/00.chat/migration/audit-chat-layer-migration/script.sh",
+      "sha256": "f21fba55d12b0f3477dad88cf4664710635ab501077298ac135df87a9278cc40"
+    },
+    {
+      "path": "scripts/00.chat/migration/README.md",
+      "sha256": "bea95d539f5c989e15655888c13cfeb8ebde70307f60578e3c052dcc4167ed1e"
+    },
+    {
+      "path": "scripts/00.chat/README.md",
+      "sha256": "907d244e48d355d92705ff8eb4787bdd711093a6a634d49ed99beeb6bc4e981a"
+    },
+    {
+      "path": "scripts/00.chat/recovery/import-active-paths-to-chat-worktree/README.md",
+      "sha256": "f76d3e5c9173f38194a9ab58c55c43d39d32fdbcf074a3bbaeaca800483f0de0"
+    },
+    {
+      "path": "scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh",
+      "sha256": "e78fdbbd95a95a0bdbb673388e07bd1182219681f2b0e09519e2f19e964f5d2a"
+    },
+    {
+      "path": "scripts/00.chat/recovery/import-active-paths-to-chat-worktree/smoke-test.sh",
+      "sha256": "a60b0b6efacc25157265d1aa1af4cf1d67de542eed734494b98ecf026782e64b"
+    },
+    {
+      "path": "scripts/00.chat/recovery/README.md",
+      "sha256": "e8c558e9d5722ae8b7da255c67bd0057c59efd421ec8caa9b86b25d0bd4a3fc9"
+    },
+    {
+      "path": "scripts/00.chat/reporting/generate-commit-log-summary/README.md",
+      "sha256": "97edf384ed9617a4c2c2370c3d256fde9bb7d6564a0fdca95009271a3a6400b0"
+    },
+    {
+      "path": "scripts/00.chat/reporting/generate-commit-log-summary/script.sh",
+      "sha256": "853b6f25eca2bf187b3ee6f7eaf4e04d4d76c9b74c3f88c368b719e67149f524"
+    },
+    {
+      "path": "scripts/00.chat/reporting/generate-commit-log-summary/smoke-test.sh",
+      "sha256": "2763d11f7d3ab0d8ba86d2812968f0863b61011e275ca93209de236256ccca84"
+    },
+    {
+      "path": "scripts/00.chat/reporting/README.md",
+      "sha256": "f37b1218da4ba76149de1febe5d0b207c1a2f2ac277aa05165a8815fe57a869d"
+    },
+    {
+      "path": "scripts/00.chat/reporting/report-chat-workspaces/README.md",
+      "sha256": "409c653d519bfb10d70b91a163e1cb41d4cd1f929fa030de76de9664ae494071"
+    },
+    {
+      "path": "scripts/00.chat/reporting/report-chat-workspaces/script.sh",
+      "sha256": "268adf82b3e4ea9cb5d8f783b8d69d24659e9fa1ba3fd88e0d3ed73b407f0002"
+    },
+    {
+      "path": "scripts/00.chat/session-log/check-commit-prerequisites/README.md",
+      "sha256": "9bf91e167272f8c08bfd30166d0b7f3a78fde84957d38b4fd40f1c0a8d896e18"
+    },
+    {
+      "path": "scripts/00.chat/session-log/check-commit-prerequisites/script.sh",
+      "sha256": "218fb8aa48d1d347f392cb6638335ac00890fc682dc13e00064fbd0a88585a93"
+    },
+    {
+      "path": "scripts/00.chat/session-log/check-commit-prerequisites/smoke-test.sh",
+      "sha256": "12fa8f8d3f5f30690cdb6d15f209ec42d89b3e49fc3ddcf706963a4936313977"
+    },
+    {
+      "path": "scripts/00.chat/session-log/check-commitlog-deletions/README.md",
+      "sha256": "8f9b718251e961ddb01fd425d00902fcafb32a46b2548370a58179258a40ac15"
+    },
+    {
+      "path": "scripts/00.chat/session-log/check-commitlog-deletions/script.sh",
+      "sha256": "51cba2f7700300864fc1819a98fedb5c499ce2fbaa2c338edfccb8bad8fa3a10"
+    },
+    {
+      "path": "scripts/00.chat/session-log/check-commitlog-deletions/smoke-test.sh",
+      "sha256": "df1edd8bad68a278b10935078948bc4316dd71f7aa34458ce80ffb5186d0c27e"
+    },
+    {
+      "path": "scripts/00.chat/session-log/checkpoint-chat-session-log/README.md",
+      "sha256": "4cf13b7a7c2a2b9d2f54e749e21ebed9d384c196132c6365c0177beff1b45194"
+    },
+    {
+      "path": "scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh",
+      "sha256": "357b89742a437642fd9c889f99908a62359512047c9eb220d427305cc7b7ba75"
+    },
+    {
+      "path": "scripts/00.chat/session-log/paths/lib.sh",
+      "sha256": "acc60745a423cd105c183a55add95030bcc71d468ebe24dcd13602bc534336ea"
+    },
+    {
+      "path": "scripts/00.chat/session-log/paths/README.md",
+      "sha256": "b2ddba340224aa4f9bb0d1d5dcae9d791db132eba5e0a879d994681389ad9951"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md",
+      "sha256": "be81d542f47d791a75e978aad4e2321c983d4a2d61ee128ca3a79f1f347f1278"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
+      "sha256": "a92c65379877d9c96ae79443b8474782f32feea7f0654e2fad3a8ca55c9dd7ef"
+    },
+    {
+      "path": "scripts/00.chat/session-log/read-current-chat-log/README.md",
+      "sha256": "0711c8d6f9b49af96fb7d4d207b821155de892a33851ecce8b8c1c68a0db38e2"
+    },
+    {
+      "path": "scripts/00.chat/session-log/read-current-chat-log/script.sh",
+      "sha256": "e48afb5ccf2287d90f2dd2e807f99758d1c6d62b37435a32b3189f98d929ddd3"
+    },
+    {
+      "path": "scripts/00.chat/session-log/read-current-chat-log/smoke-test.sh",
+      "sha256": "be3c02452e2145b7d236e3bbd051ac396be70bc8443f0db2ea56edbdfb27bcbc"
+    },
+    {
+      "path": "scripts/00.chat/session-log/README.md",
+      "sha256": "6549d954137963e58abc959948a30927551c6bd483af53d73e222ddc17e17b2a"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-chat-commit/README.md",
+      "sha256": "6a88f950fbf72986fec5e98c579368e29ae186fe30fad4328a253c8a23d8e9fc"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-chat-commit/script.sh",
+      "sha256": "0c17a2e6474f9158b16a06d90afd88650c26405cd25a825f9c2f308225fd018a"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-chat-commit/smoke-test.sh",
+      "sha256": "fb466aedc13a66baf6d6e5de2fca4086846bf82631af0e3027f46f230955bafa"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-main-refresh-conflict/README.md",
+      "sha256": "a9137d141d86875a2affa335aa00261b00fc596a0d6afeb22010631d24088d42"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-main-refresh-conflict/script.sh",
+      "sha256": "cadc39dcb986d6e8bab0b047632703b64432a1df45bcac5a21d34189820f25d5"
+    },
+    {
+      "path": "scripts/00.chat/session-log/rename-current-chat-log-folder/README.md",
+      "sha256": "b4bb95da6dd161ba06d92aeb8e138fcdf512d7e8466cc0306a20bb4f63f05959"
+    },
+    {
+      "path": "scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh",
+      "sha256": "76c48fa301c735daf48bfed3a989f34e27b0b722f13b5fdb1c741144ebaf7243"
+    },
+    {
+      "path": "scripts/00.chat/session-log/update-chat-log/README.md",
+      "sha256": "6449583ef9145e694683016b291172b2bcbfc9547a66927e39ba01ce87ebe112"
+    },
+    {
+      "path": "scripts/00.chat/session-log/update-chat-log/script.sh",
+      "sha256": "71096809de5217dd491f50b7c04a75f07096a24edd3dfac14edf1119e5eabca0"
+    },
+    {
+      "path": "scripts/00.chat/startup/auto-start-missing-session/README.md",
+      "sha256": "f2eec2b9880c4a1ba9f0f09a93ca6d61375b164837a7acc93e04b727efe3f8ad"
+    },
+    {
+      "path": "scripts/00.chat/startup/auto-start-missing-session/script.sh",
+      "sha256": "d8bcbd29242f5d599f0033dc948e118c9d68612f4c078c6498b6ba1abfefac3c"
+    },
+    {
+      "path": "scripts/00.chat/startup/README.md",
+      "sha256": "075f49fb075c06f587bbfe76355c89588cf3d5fed5b9bd0d4aeb54a6850d3520"
+    },
+    {
+      "path": "scripts/00.chat/startup/resolve-current-chat-session/README.md",
+      "sha256": "6e078f3a0d079ca489251f0dabfe0623da0a4e4e79f10b8af3b0a37d8f9f4c4f"
+    },
+    {
+      "path": "scripts/00.chat/startup/resolve-current-chat-session/script.sh",
+      "sha256": "f9338e71ccca079d2b8a5cc9f066f7bd9e8d85161706f5416fc62550e592e780"
+    },
+    {
+      "path": "scripts/00.chat/startup/resolve-current-chat-session/smoke-test.sh",
+      "sha256": "3189e273c52ad3893f17f23d0d407e0ba3b22145ba705bc47f059620aa9f9083"
+    },
+    {
+      "path": "scripts/00.chat/startup/start-chat-session/README.md",
+      "sha256": "2f858329f071f072a9bee8089370b333136c06e2a47c3c674e398a2535b7b989"
+    },
+    {
+      "path": "scripts/00.chat/startup/start-chat-session/script.sh",
+      "sha256": "4a23df3cf4e56e28ee17a992ea152e4e6cc902c4ffc7d250bd07c7fb01613e68"
+    },
+    {
+      "path": "scripts/00.chat/startup/start-chat-session/smoke-test.sh",
+      "sha256": "dac2768f0a23f423038fca47af2878d8f572b38586337884cbb35316a04566ad"
+    },
+    {
+      "path": "scripts/00.chat/startup/start-new-chat/README.md",
+      "sha256": "7efb3640dfcb6493d110e9e321a4f9b75a1bd0f0c74bbb73fb746dab4bb9a735"
+    },
+    {
+      "path": "scripts/00.chat/startup/start-new-chat/script.sh",
+      "sha256": "50c9f78e72c99953c9b48f9ca6c606c2a753a09d6013d671835128009f43a3be"
+    },
+    {
+      "path": "scripts/00.chat/transcript/discover-codex-session-log/README.md",
+      "sha256": "08e2b218467a4dd14190f266ad60f2c9443c0cc1bdd8bf987fed24f0ec0e0c10"
+    },
+    {
+      "path": "scripts/00.chat/transcript/discover-codex-session-log/script.sh",
+      "sha256": "f6d0a8b7f12ea70de4ee502defc3d375a2ef4120a6f17cfcfde3a9cd349214ef"
+    },
+    {
+      "path": "scripts/00.chat/transcript/README.md",
+      "sha256": "bd2d5faaa0584ef11fb47a7026efe9777f36bdc6f4e902bcea043d2cf05291ca"
+    },
+    {
+      "path": "scripts/00.chat/transcript/register-codex-session-log/README.md",
+      "sha256": "a39450e04328f902305d8078af116e327e4ff39cea23d6d0a1c30dc7733c5787"
+    },
+    {
+      "path": "scripts/00.chat/transcript/register-codex-session-log/script.sh",
+      "sha256": "8ea8a20c2a047ccaf9519cb329641aac9375b9f1e4a7b687c4be99cdada2abfe"
+    },
+    {
+      "path": "scripts/00.chat/worktree/check-write-location/README.md",
+      "sha256": "d24aa0220a9a6f56098a714cd4b4d8eb3a52be8f65a3a9ae0fba37d647f8f990"
+    },
+    {
+      "path": "scripts/00.chat/worktree/check-write-location/script.sh",
+      "sha256": "71bf96d8133c4c800b73752ad903f55825699132b59230c0b0c8d28a890c778f"
+    },
+    {
+      "path": "scripts/00.chat/worktree/dirty-worktree-check/README.md",
+      "sha256": "ba2b11232f3065d85cd13e774927001af16bd1e225f7fafe19e7bfc085bba6d8"
+    },
+    {
+      "path": "scripts/00.chat/worktree/dirty-worktree-check/script.sh",
+      "sha256": "618f05ff3f105d07376572bf85c28e4aa2ff97cd9cc44d248aa2f4c512a03c87"
+    },
+    {
+      "path": "scripts/00.chat/worktree/ensure-chat-worktree/README.md",
+      "sha256": "82f518b0b95999ac737e9afa7350c884927b0d91c127bcfd92b4bcbe9c180606"
+    },
+    {
+      "path": "scripts/00.chat/worktree/ensure-chat-worktree/script.sh",
+      "sha256": "f862d43e3c14ae33a0a8399d6a2d5fe5ecde8c25780d6b8ceaaf89e1b505cb62"
+    },
+    {
+      "path": "scripts/00.chat/worktree/open-window/README.md",
+      "sha256": "3dd4e8c20508900dc92028ebd76d82e756b3f87a3cffe75e9020f5557bc0f515"
+    },
+    {
+      "path": "scripts/00.chat/worktree/open-window/script.sh",
+      "sha256": "cfb9ce0f9503ddd8d9ab666c2b275a2300080457e87f4723b95cb79be281cd85"
+    },
+    {
+      "path": "scripts/00.chat/worktree/paths/lib.sh",
+      "sha256": "d0dacec548a8d4d60d249828be4eb3ffc2b76ba0c2eb8a9f3afe7d03d876bae1"
+    },
+    {
+      "path": "scripts/00.chat/worktree/paths/README.md",
+      "sha256": "4b369f7be5454dd25269b64032321299e7bf23534be36f211fdaf25bf85cc0ba"
+    },
+    {
+      "path": "scripts/00.chat/worktree/README.md",
+      "sha256": "3003b495966911219e453a0f286d1bc20fc5221a9f2d9fbbed0a7119ef22c32f"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "sha256": "c2aed6eba6445366ed1e1ba38a052c7531d4c5dc425ce13531bfbadf299fdd0c"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh",
+      "sha256": "8a3ae89de1c9bf452cc916be15279f114bbb40425178f16736edcd210f836925"
+    },
+    {
+      "path": "scripts/01.harness/check-deterministic-process-drift.sh",
+      "sha256": "ba3a9486444f359798022dfc588134ba8302113bd57e8eef8070f5614c024f50"
+    },
+    {
+      "path": "scripts/01.harness/check-governed-script-command-drift.sh",
+      "sha256": "c6bc9226b5b5b1b1da1e7ddcccd1f1e297d625bb355eb00cc7ba079b6c563caf"
+    },
+    {
+      "path": "scripts/01.harness/run-governed-script.sh",
+      "sha256": "82cb2883170c3c56f95c5fe4b7c9f78084e11cb0e9d4d69cb54468ca810faf5b"
+    }
+  ],
+  "managed_blocks": [
+    {
+      "path": "AGENTS.md",
+      "block": "llm-workbench",
+      "sha256": "23bdd5bb9a5f8ffef5a36db46f03f6ca6114ea6da413ecce799fecaffb06c971"
+    },
+    {
+      "path": "CLAUDE.md",
+      "block": "llm-workbench",
+      "sha256": "23bdd5bb9a5f8ffef5a36db46f03f6ca6114ea6da413ecce799fecaffb06c971"
+    }
+  ],
+  "managed_package_scripts": [
+    {
+      "name": "chat",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh",
+      "sha256": "3d3f02b20285eaf4ea141c5a43999a065b883685380e46e38b5ec6e7dc55fbe2"
+    },
+    {
+      "name": "chat:audit-bootstrap",
+      "value": "bash scripts/00.chat/bootstrap/audit-chat-bootstrap-file-set/script.sh",
+      "sha256": "2beda114989e21aa1a5f1d9df861b746e579e2ffc3462fe4bc81743ad1615cb5"
+    },
+    {
+      "name": "chat:audit-layer-migration",
+      "value": "bash scripts/00.chat/migration/audit-chat-layer-migration/script.sh",
+      "sha256": "5b19953af871728d2823e2dabd169cef9c68633c3c153dbdef8cff1e4bd750dd"
+    },
+    {
+      "name": "chat:cleanup-empty-branches",
+      "value": "bash scripts/00.chat/git/cleanup-empty-chat-branches/script.sh",
+      "sha256": "bd1690035aae13a809687dac018106febed1c582488ac92b0adc3cdedc5de2ef"
+    },
+    {
+      "name": "chat:close",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh close",
+      "sha256": "07c6bb37a213f2dceced66011a10a64a00a336dd8ec66c4bb5496e1080361e31"
+    },
+    {
+      "name": "chat:commit-log-summary",
+      "value": "bash scripts/00.chat/reporting/generate-commit-log-summary/script.sh",
+      "sha256": "d469615b9e89961c63c7bac96ac1a67a946d9bac0a1199f0b150608fb8a14618"
+    },
+    {
+      "name": "chat:download-repo",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh download-repo",
+      "sha256": "8cca0b65591af90f4e3a7e30a312b9d7070b483bac6f0f5ee3c79cdd46dd17cc"
+    },
+    {
+      "name": "chat:download-repo-diff",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh download-repo-diff",
+      "sha256": "bb9d4bddfd02b98ecc434ffd7bdae857cb0e72e6cb8eb5ba1802076a57df227d"
+    },
+    {
+      "name": "chat:list",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh list",
+      "sha256": "91602ca0c83d99bf5a6bb415cec981c62c16d96f7dc6e7bd67df6eb56bc0242e"
+    },
+    {
+      "name": "chat:new",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh new",
+      "sha256": "71eb4f0bf325b65354be77d62ee85e57a042a8c9d1014abe6c03b180722a45d9"
+    },
+    {
+      "name": "chat:open-window",
+      "value": "bash scripts/00.chat/command/dispatcher/script.sh open-window",
+      "sha256": "2a10d3bebda4629d01900cc28000436dc7e6d9993df9426ab9f70951437f08ac"
+    },
+    {
+      "name": "chat:record-main-refresh-conflict",
+      "value": "bash scripts/00.chat/session-log/record-main-refresh-conflict/script.sh",
+      "sha256": "89a73447cacd6184816951618f32ca01562f4a0a7949fd9e37490689f82353cd"
+    },
+    {
+      "name": "chat:report-workspaces",
+      "value": "bash scripts/00.chat/reporting/report-chat-workspaces/script.sh",
+      "sha256": "7fb9788ceb78aac7b4d9d9bef810474025924d0511db2703c7f4adbf4a8a915d"
+    },
+    {
+      "name": "chat:smoke-package-scripts",
+      "value": "bash scripts/00.chat/command/package-scripts/smoke-test.sh",
+      "sha256": "590fcc6690eaf0264fb2f6b7b276d9f24c875b391734469f69679c99cf431caa"
+    }
+  ]
+}

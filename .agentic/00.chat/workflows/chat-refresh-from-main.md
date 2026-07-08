@@ -18,7 +18,6 @@
   - id: shared.workflows.change-shared-process
     path: .agentic/shared/workflows/change-shared-process.md
   - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
-    path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
 -->
 # Chat Refresh From Main Workflow
 
