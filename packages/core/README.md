@@ -19,6 +19,30 @@ pulling in runtime providers.
 This initial slice establishes the package surface and core capability modules.
 Provider implementations and app runtimes are intentionally out of scope.
 
+## Changing Core Contracts Safely
+
+Core is a shared contract layer, so exported names and meanings should be
+treated as compatibility-sensitive. Prefer additive changes: new optional
+fields, new helpers, new stable error codes, or new modules are usually safer
+than changing an existing contract.
+
+Before renaming, removing, narrowing, or changing the meaning of an exported
+type, helper, error code, message key, metric name, config key, event type,
+queue message type, or port interface, record the compatibility decision in
+the architecture source material and rule projection. Include what changed,
+why an additive path was not enough, which consumers are affected, and how
+existing consumers should migrate.
+
+Durable or asynchronous payloads need explicit schema/version facts before
+they become persisted, replayed, retried, exported, or shared across deployed
+versions. Events already carry `EventVersion`. Queues, audit records,
+persistence snapshots, and similar cross-runtime payloads should add versioned
+contracts before platform/runtime adapters make them durable.
+
+`tests/compatibility` contains compile-only canary usages for older public
+contracts. Keep those fixtures passing unless a breaking change is deliberate,
+documented, and paired with migration guidance.
+
 ## Shared Primitives
 
 `shared` contains the lowest-level vocabulary used by the rest of core:
@@ -309,6 +333,45 @@ events list.
 Core does not define product event catalogs, broker topics, queue names,
 subscriber deployment, retries, dead-letter queues, ordering guarantees,
 schema registries, or cloud SDK clients.
+
+## Queues Contracts
+
+`queues` defines provider-neutral contracts for retryable background work:
+
+- `QueueMessageId` and `QueueMessageType` identify a work item and its stable
+  work-kind name.
+- `QueuePayloadValue` and `QueuePayload` keep message payloads plain,
+  JSON-safe, finite-number safe, and portable across app, platform, worker,
+  broker, retry, dead-letter, and test boundaries.
+- `QueueMessage` and `queueMessage` wrap a message with id, type, timestamp,
+  optional tenant id, optional correlation id, optional idempotency key,
+  optional message group key, and copied payload.
+- `QueueSendOptions`, `QueueDelaySeconds`, and `queueSendOptions` define
+  provider-neutral send metadata without choosing a broker delay mechanism.
+- `QueueDelivery`, `QueueAttempt`, `QueueRetryMetadata`, and
+  `QueueDeadLetterMetadata` name delivery, retry, and dead-letter facts
+  without implementing a worker loop.
+- `QueueErrorCode`, `QueueError`, and `queueError` give queue failures stable
+  translation-ready meanings.
+- `Queue`, `QueueHandler`, `inMemoryQueue`, and `noopQueue` define the async
+  send/handle ports and test helpers.
+
+Queue message type names are portable work-kind facts, not concrete broker
+queue names or SQS queue URLs. Apps decide when product work should be
+enqueued and which handler owns it. Platform runtime owns worker mechanics,
+payload validation, idempotency, retry/backoff, dead-letter handling,
+observability, and shutdown. Platform adapters translate to providers such as
+AWS SQS. Infra provisions queues, DLQs, alarms, permissions, encryption,
+retention, and worker deployment resources.
+
+`inMemoryQueue.acceptedSends()` and `acceptedMessages()` return messages
+accepted by the helper. They are useful for tests, but they are not durable
+queue, retry, worker, or dead-letter implementations.
+
+Core does not define product job catalogs, product handlers, worker runtimes,
+queue resources, queue URLs, receipt handles, visibility timeouts, concrete
+retry algorithms, scheduler loops, DLQ resources, cloud SDK clients, or
+deployment topology.
 
 ## Audit Contracts
 

@@ -1,0 +1,149 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.03-product-platform.2026-07-08-platform-infra-capability-layering-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for repo-wide platform and infra capability layering.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.rules.concerns.platform-infra-capability-layering
+#     path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.03.product-platform.2026-07-08.platform-infra-capability-layering-v1
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+  summary: >
+    Approved source material records the repo-wide ownership split for
+    provider-neutral core contracts, provider-neutral platform runtime,
+    provider-specific platform adapters, provider-neutral infra blueprints,
+    provider-specific infra resources, environment values, and app-owned
+    product meaning.
+
+target:
+  corpus_id: corpus.03.product.platform
+  owner_layer: 03.product
+  expected_rule_paths:
+    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  affected_rule_paths:
+    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  affected_rulesets:
+    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: capability-layering.core-names-contracts
+      summary: packages/core should define stable provider-neutral contracts and vocabulary without choosing providers, SDK clients, runtime hosts, resources, or topology.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - claim_id: capability-layering.platform-runtime-provider-neutral
+      summary: platform runtime should own provider-neutral mechanics such as worker loops, registries, retry decisions, idempotency, observability hooks, resource lifecycle, and shutdown.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - claim_id: capability-layering.platform-adapters-provider-specific
+      summary: platform adapters should translate provider-neutral runtime contracts into provider-specific SDK or library behavior and return core or platform contracts rather than raw provider clients as the app-facing API.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - claim_id: capability-layering.infra-blueprints-provider-neutral
+      summary: infra blueprints or contracts should describe provider-neutral resource requirements such as queues, DLQs, encryption, retention, alarms, and access boundaries.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - claim_id: capability-layering.infra-providers-and-environments
+      summary: infra providers translate blueprints into concrete provider resources, while infra environments hold target-specific values and deployment choices.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - claim_id: capability-layering.queues-example
+      summary: Queue capabilities split across packages/core queues, app-owned handlers, platform runtime worker mechanics, provider-specific queue adapters, infra queue blueprints, provider resources, and environment values.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - claim_id: capability-layering.acceptance-by-owner
+      summary: Acceptance evidence should come from the layer that owns the risk rather than using one layer's happy path as proof for the whole capability.
+      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/harness/architecture/rules/layers/platform.yml
+      - docs/harness/architecture/rules/layers/infra.yml
+      - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - The new concern rule is cross-cutting because the placement rule affects core, platform, infra, and apps.
+      - Existing platform and infra layer rules remain the owner-specific rules for runtime and provisioning details.
+      - Existing async rules remain the concern-specific rules for queues, events, jobs, workers, retries, and DLQs.
+
+proposed_updates:
+  rules:
+    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml
+  notes:
+    - The rule intentionally stays as a concern ruleset rather than editing each layer-specific rule file.
+    - Future capability implementations should retrieve this concern with the relevant core, platform, infra, and async rules.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: codex
+  reviewed_at_utc: "2026-07-07T23:21:51Z"
+  notes:
+    - This rule records the repo-wide placement decision discussed before adding packages/core queue contracts.
+    - The queue example is included so future RAG retrieval can answer concrete queue placement prompts without relying on chat history.

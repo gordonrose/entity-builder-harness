@@ -57,7 +57,7 @@ inventory_summary:
   source_guides_original_pdf: 7
   harness_adrs: 22
   layer_rulesets: 7
-  concern_rulesets: 15
+  concern_rulesets: 16
   rule_packs: 4
 
 source_material:
@@ -254,6 +254,14 @@ yaml_artifacts:
       proposed_target_path: corpus.03.product.platform/rules/concerns/platform-adapter-consumption.yml
       migration_status: target-candidate
       reason: Governs platform adapter boundaries and app consumption.
+    - current_path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+      metadata_id: harness.architecture.rules.concerns.platform-infra-capability-layering
+      rulebook_id: concern.platform-infra-capability-layering
+      title: Platform and infra capability layering rules
+      proposed_corpus_id: corpus.03.product.platform
+      proposed_target_path: corpus.03.product.platform/rules/concerns/platform-infra-capability-layering.yml
+      migration_status: split-review-required
+      reason: Governs capability placement across product core contracts, platform runtime, provider adapters, infra blueprints, provider resources, and environment values.
     - current_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
       metadata_id: harness.architecture.rules.concerns.reporting-analytics-audit
       rulebook_id: concern.reporting-analytics-audit

@@ -1,0 +1,165 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.concerns.platform-infra-capability-layering
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: architecture
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: rule
+#   purpose: Define repo-wide capability layering rules for core contracts, platform runtime, provider adapters, infra blueprints, provider resources, and environments.
+#   portability:
+#     class: required
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.workflows.change-harness
+#     path: .agentic/01.harness/workflows/change-harness.md
+id: concern.platform-infra-capability-layering
+title: Platform and infra capability layering rules
+version: 1
+status: active
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-07-07T23:21:51Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
+  source_material:
+    - path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      sha256: 4905d4c35578f7e61c2d787558525517002a32c5b18132de1f397f07c51f3bad
+
+description: >
+  Cross-cutting placement rules for capabilities that span provider-neutral
+  contracts, provider-neutral runtime behavior, provider-specific runtime
+  adapters, provider-neutral infrastructure blueprints, concrete provider
+  resources, and environment-specific deployment values.
+
+related_rulesets:
+  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/layers/infra.yml
+  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+applies_to:
+  paths:
+    - "apps/**"
+    - "packages/core/**"
+    - "platform/**"
+    - "infra/**"
+
+rules:
+  - id: capability-layering.contract-runtime-adapter-infra-split
+    title: Capabilities keep contract, runtime, adapter, infra, and environment ownership separate
+    severity: error
+    summary: >
+      Platform-level capabilities should be split by ownership: core names the
+      provider-neutral contract, platform runtime owns provider-neutral
+      mechanics, platform adapters translate providers, infra blueprints name
+      resource requirements, infra providers create resources, environments
+      supply target values, and apps own product meaning.
+    must:
+      - "Put stable provider-neutral public contracts and shared vocabulary in packages/core."
+      - "Put provider-neutral runtime mechanics, orchestration, lifecycle, registries, retry decisions, observability hooks, and shutdown behavior in platform/runtime or approved platform runtime modules."
+      - "Put provider-specific runtime translation and SDK/client integration in platform/adapters or approved adapter packages."
+      - "Put provider-neutral infrastructure requirements in infra/blueprints or infra/contracts."
+      - "Put provider-specific resource definitions in infra/providers."
+      - "Put target-specific values, environment selections, thresholds, and deployment choices in infra/environments."
+      - "Keep apps responsible for product meaning, product workflows, business handlers, and business decisions to use a capability."
+    must_not:
+      - "Do not put provider SDK clients, cloud-provider fields, runtime hosts, infrastructure resources, or deployment topology in packages/core."
+      - "Do not put Terraform, CDK, Pulumi, Kubernetes manifests, IAM, networking, or cloud resource topology in platform runtime or platform adapters."
+      - "Do not put runtime client lifecycle, worker loops, application handlers, or product workflow decisions in infra."
+      - "Do not let apps import provider adapters except at approved bootstrap or composition-root boundaries."
+      - "Do not hide environment-specific provider settings inside generic core or platform runtime contracts."
+    agent_guidance: >
+      Before implementing a capability, name the owner of its contract,
+      provider-neutral runtime mechanics, provider adapter, infra blueprint,
+      concrete resources, environment values, and app-owned business meaning.
+
+  - id: capability-layering.queues-follow-the-same-split
+    title: Queues follow the core, runtime, adapter, infra, and app split
+    severity: error
+    summary: >
+      Queue work should not collapse queue contracts, worker runtime, provider
+      translation, queue resources, and product job handlers into one layer.
+    must:
+      - "Use packages/core/queues for QueueMessage, Queue, QueueHandler, send options, delivery metadata, retry or dead-letter metadata shapes, stable queue errors, and test helpers."
+      - "Use apps for product decisions to enqueue work and product-owned handlers such as email, report generation, file processing, or integration sync."
+      - "Use platform runtime for worker loops, handler registration, payload validation, idempotency, retry/backoff decisions, dead-letter handling, logs, metrics, health, and graceful shutdown."
+      - "Use platform adapters for provider translation such as AWS SQS queue URL, receipt handle, message attributes, delay, visibility timeout, receive/delete semantics, and provider error mapping."
+      - "Use infra blueprints for provider-neutral queue, DLQ, encryption, retention, alarm, access-boundary, worker-deployment, and autoscaling requirements."
+      - "Use infra providers and environments for concrete queue resources and target-specific values."
+    must_not:
+      - "Do not put SQS, RabbitMQ, Kafka, NATS, Redis, cloud SDK clients, worker processes, provider-specific receipt handles, or queue resource definitions in packages/core."
+      - "Do not put product job handlers or business workflow meaning in platform runtime."
+      - "Do not provision queues, DLQs, alarms, IAM permissions, or worker deployments from platform runtime code."
+    agent_guidance: >
+      For queues, think in layers: contract, product meaning, runtime mechanics,
+      provider translation, resource blueprint, concrete provider resources,
+      and environment values.
+
+  - id: capability-layering.provider-neutral-blueprints-precede-provider-resources
+    title: Provider-neutral infra blueprints precede provider resources
+    severity: error
+    summary: >
+      Infrastructure resources should be justified by provider-neutral
+      requirements before a provider-specific implementation chooses concrete
+      resources and values.
+    must:
+      - "Describe required resources, security properties, retention, backup, alarms, access boundaries, and lifecycle needs in provider-neutral infra blueprints or contracts when a capability needs external resources."
+      - "Translate those requirements into provider-specific resources under infra/providers."
+      - "Keep environment-specific values under infra/environments."
+      - "Connect platform adapter configuration to provisioned resource outputs without making platform own resource creation."
+    must_not:
+      - "Do not make AWS, Azure, Kubernetes, Terraform, CDK, or Pulumi definitions the only place a capability's infrastructure requirements are described."
+      - "Do not hardcode provider-specific resource names, retention values, alarm thresholds, or account choices in core or provider-neutral platform runtime code."
+      - "Do not let infra blueprints import application internals to discover requirements."
+    agent_guidance: >
+      If a capability needs cloud resources, write down the provider-neutral
+      requirement first, then translate it into the provider implementation and
+      environment values.
+
+  - id: capability-layering.acceptance-evidence-follows-owner
+    title: Capability acceptance evidence follows the owning layer
+    severity: error
+    summary: >
+      Tests and checks should prove the part each layer owns rather than using
+      one layer's happy path as proof for the whole capability.
+    must:
+      - "Use core unit and type tests for provider-neutral contracts and helpers."
+      - "Use platform runtime tests for registries, worker loops, retry/dead-letter behavior, idempotency, health, logs, metrics, and shutdown."
+      - "Use adapter contract tests for provider translation, provider error mapping, configuration validation, and lifecycle behavior."
+      - "Use infra static validation, policy checks, synthesized output checks, and smoke checks for provider resources and environment values."
+      - "Use app tests for product workflows and product-owned handlers."
+    must_not:
+      - "Do not treat core in-memory helpers as proof of durable runtime behavior."
+      - "Do not treat platform unit tests as proof that provider resources, IAM, alarms, retention, or deployment topology are valid."
+      - "Do not treat infra plan output as proof that app product handlers or platform worker mechanics are correct."
+    agent_guidance: >
+      When reviewing a capability, ask which layer owns the risk and require
+      evidence from that layer.
+
+source_refs:
+  - doc: "platform-infra-capability-layering-v1.md"
+    sections:
+      - "Purpose"
+      - "Decision"
+      - "Queue Example"
+      - "Acceptance Guidance"
+
+success_criteria:
+  - "The file exists at docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml."
+  - "It defines the core, platform runtime, platform adapter, infra blueprint, infra provider, infra environment, and app ownership split."
+  - "It uses queues as the worked example for the ownership split."
+  - "It requires provider-neutral infra blueprints before provider-specific resource definitions."
+  - "It maps acceptance evidence to the layer that owns the risk."

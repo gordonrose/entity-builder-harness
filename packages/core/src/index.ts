@@ -6,6 +6,7 @@ export * from "./events/index";
 export * from "./logging/index";
 export * from "./monitoring/index";
 export * from "./persistence/index";
+export * from "./queues/index";
 export * from "./security/index";
 export * from "./shared/index";
 export * from "./tenancy/index";

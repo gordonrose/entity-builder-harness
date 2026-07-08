@@ -1,6 +1,6 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
-#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-persistence-contract
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-contract-compatibility
 #   version: 1
 #   status: active
 #   layer: 02.rag-rulebook
@@ -9,7 +9,7 @@
 #   - agentic
 #   - architecture
 #   kind: evaluation-fixture
-#   purpose: Prove packages/core persistence prompts retrieve storage-boundary contract guidance.
+#   purpose: Prove packages/core compatibility and deprecation prompts retrieve public contract evolution guidance.
 #   portability:
 #     class: reusable
 #     targets:
@@ -21,24 +21,26 @@
 #     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 
 schema: rag-rulebook/retrieval-selector-evaluation/v1
-fixture_id: retrieval-selector.v1.packages-core-persistence-contract
+fixture_id: retrieval-selector.v1.packages-core-contract-compatibility
 status: active
 owner_layer: 02.rag-rulebook
-purpose: Prove prompts about packages/core persistence contracts retrieve storage boundary and adapter placement rules.
+purpose: Prove prompts about changing public packages/core contracts retrieve additive evolution, deprecation, migration, schema-version, and compatibility-fixture guidance.
 input:
-  request_text: Explain how product code should use packages/core persistence contracts for page totals, repository saves, optimistic concurrency, transactions, after-commit events, and database adapters.
+  request_text: I need to rename a packages/core authorization type and change a queue message payload shape. Explain the deprecation and backwards compatibility policy, when schema versions are needed, and what tests or fixtures must change.
   session:
     trust_routing: true
     layer: 03.product
-    mode: discovery
+    mode: planning
     workflow: .agentic/product/workflows/default.md
   focused_paths:
-    - packages/core/src/persistence/index.ts
+    - packages/core/src/authz/index.ts
+    - packages/core/src/queues/index.ts
+    - packages/core/tests/compatibility/v0-public-contracts.test.ts
     - docs/harness/architecture/rules/layers/packages-core.yml
   max_chunks: 10
 expected:
   routing:
-    layer: 03.product
+    layer: 01.harness
     status: ready
   matched_corpora:
     required:
@@ -51,7 +53,8 @@ expected:
       - rule
   selected_chunks:
     required_rule_ids:
-      - core.persistence-contracts-name-storage-boundaries
+      - core.public-contracts-evolve-compatibly
+      - core.queues-contracts-name-retryable-work
       - core.capability-modules-stay-contract-shaped
   required_checks:
     min_count: 1
@@ -65,7 +68,10 @@ banned:
 source_refs:
   - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
+  - packages/core/tests/compatibility/v0-public-contracts.test.ts
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
-  - packages/core persistence ownership rules change.
+  - packages/core public contract compatibility policy changes.
+  - Compatibility fixture suite location or semantics change.
+  - Durable payload schema/version guidance changes.
   - Selector policy changes corpus ownership or evidence bundle behavior.

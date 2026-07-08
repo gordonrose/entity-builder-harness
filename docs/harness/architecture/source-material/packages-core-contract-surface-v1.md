@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 8
+  version: 10
   status: active
   layer: 01.harness
   domain: architecture
@@ -46,6 +46,39 @@ The initial package surface may include these contract modules:
 - `security`: defensive policy and secret/hash contracts.
 - `audit`: audit event and recorder contracts.
 - `events`: event envelope and event bus contracts.
+- `queues`: queue message, queue port, handler, delivery, retry/dead-letter metadata, and queue error contracts.
+
+## Core Contract Evolution and Compatibility Policy
+
+Core contracts are compatibility-sensitive even when they are not durable
+payload schemas. Apps, platform runtime code, provider adapters, tests, and
+future generated code may compile against exported core types, helper names,
+stable error codes, message keys, metric names, config keys, permission
+strings, event types, queue message types, and port interfaces.
+
+Core contract changes should therefore be additive by default. Adding an
+optional field, adding a new helper, adding a new stable error code, or adding
+a new module is usually safer than renaming, removing, narrowing, or changing
+the meaning of an existing export.
+
+Non-additive changes require an explicit compatibility decision. A breaking
+change must record what changed, why additive evolution was not enough, which
+consumers are affected, how existing consumers migrate, and when any deprecated
+surface may be removed. Renames and removals should normally keep an adapter,
+alias, shim, or compatibility window before the old surface disappears.
+
+Durable or asynchronous payloads need explicit schema/version facts because
+they may outlive the deployment that created them. Events already carry event
+schema versions. Queue messages, audit records, persistence snapshots, or other
+serialized cross-runtime payloads should add schema/version contracts before
+they become durable, replayable, retried, exported, or shared across deployed
+versions.
+
+Public TypeScript contracts need compatibility fixtures in addition to module
+unit and type tests. Compatibility fixtures should model old public usages from
+apps and platform code and should compile as part of the core check. Future
+changes may update those fixtures only when the breaking change is intentional,
+documented, and paired with migration guidance.
 
 ## Shared Primitive Boundary
 
@@ -318,6 +351,46 @@ guarantees, schema registries, cloud SDK clients, worker runtimes, or product
 workflow decisions. Apps own product event meanings and emission decisions.
 Platform owns concrete delivery adapters. Infra owns broker resources and
 deployment topology.
+
+## Queues Contract Boundary
+
+The `queues` module should define provider-neutral contracts for retryable
+background work that crosses app, platform, worker, and broker boundaries:
+queue message identifiers, message type names, JSON-safe payload values,
+message envelopes, send options, delivery metadata, retry and dead-letter
+metadata shapes, queue error meanings, queue ports, handler ports, and small
+in-memory or no-op helpers for tests.
+
+Queue messages should carry stable metadata such as id, type, payload,
+enqueued-at timestamp, optional tenant id, optional correlation id, optional
+idempotency key, optional delay, and optional message group key where a product
+or runtime needs ordered work. Payloads should stay plain and serializable so
+platform adapters can move them through queues, retries, logs, tests, workers,
+and dead-letter paths without provider-specific objects.
+Queue payloads should reject non-finite numeric values and non-plain runtime
+objects before they cross app/platform boundaries.
+
+Queue message type names are portable work-kind facts. They should not be
+treated as concrete broker queue names, SQS queue URLs, Kafka topics, routing
+keys, or worker deployment names. Platform adapters may translate message
+types into provider-specific routing later.
+
+Sending failures and handling failures should use stable queue error
+vocabulary rather than exposing provider-specific broker errors directly to app
+code.
+
+Queue contracts may name retry and dead-letter metadata so apps and platform
+can reason about attempts, max attempts, next retry time, dead-letter reason,
+and idempotency without forcing core to implement worker loops, provider
+receive/delete semantics, or broker-specific retry policies.
+
+The `queues` module must not define product job catalogs, product handlers,
+worker runtimes, broker queue resources, queue URLs, receipt handles,
+visibility timeouts, concrete retry algorithms, scheduler loops,
+dead-letter queue resources, ordering guarantees, cloud SDK clients, or
+deployment topology. Apps own product work meaning and handlers. Platform owns
+worker runtime mechanics and concrete delivery adapters. Infra owns broker
+resources, dead-letter resources, alarms, permissions, and deployment topology.
 
 ## Audit Contract Boundary
 

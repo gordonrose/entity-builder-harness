@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 8
+#   version: 10
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 8
+version: 10
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-07T00:00:00Z"
+  generated_at_utc: "2026-07-08T00:00:00Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 92a1eee7ed6d58918e77bbf4894507903287911cb3fe6a19a5fee55aecb2d583
+      sha256: 603e264b1c465d84a52e8bc2064b61d7e8dfa3838459db538ad086bf72cc6db3
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -79,7 +79,7 @@ recommended_modules:
     purpose: "Provider-neutral event envelope, payload, versioning, publisher, bus, and handler contracts."
     consumed_by: "apps, workers, platform messaging"
   - id: queues
-    purpose: "Queue messages, consumers, retry, and dead-letter concepts."
+    purpose: "Provider-neutral queue message, send, delivery, handler, retry/dead-letter metadata, queue error, and testing-helper contracts."
     consumed_by: "workers and platform queue adapters"
   - id: async-jobs
     purpose: "Background job contracts and lifecycle."
@@ -271,6 +271,33 @@ rules:
       Use core for the shape of the dependency, not the concrete runtime behavior.
       The contract goes in core. The implementation goes in platform. The business
       decision goes in apps.
+
+  - id: core.public-contracts-evolve-compatibly
+    title: Public core contracts evolve compatibly
+    severity: error
+    summary: >
+      packages/core exports are shared contracts for apps, platform runtime,
+      provider adapters, tests, and future generated code, so they should change
+      additively unless a breaking change is explicitly approved and migrated.
+    must:
+      - Prefer additive changes such as optional fields, new helpers, new stable error codes, new schema versions, or new modules.
+      - Treat exported type names, helper names, port interfaces, stable error codes, message keys, metric names, config keys, permission strings, event types, queue message types, and contract meanings as compatibility-sensitive.
+      - Keep old public usages compiling through compatibility fixtures unless a breaking change is deliberate and documented.
+      - Record breaking changes with affected consumers, migration guidance, compatibility-window or shim decisions, and RAG/source-material updates.
+      - Deprecate before removing or renaming public contracts unless there is an explicit emergency or pre-release exception.
+      - Add explicit schema/version contracts before durable, replayed, retried, exported, or cross-deployment payloads become runtime obligations.
+      - Run core type checks and compatibility fixtures when changing public contracts.
+    must_not:
+      - Do not silently rename, remove, narrow, or change the meaning of public core exports.
+      - Do not update compatibility fixtures merely to make a breaking change pass without migration documentation.
+      - Do not rely on TypeScript module tests alone as proof that old app or platform usage remains compatible.
+      - Do not treat package-private version 0 status as permission to break shared contracts casually.
+      - Do not add durable queue, audit, persistence, event, or export payloads without a schema/version compatibility story.
+    agent_guidance: >
+      Before changing a core export, ask whether existing app or platform code
+      could compile against it today. If yes, choose an additive path first. If
+      not possible, update source material, rules, compatibility fixtures, and
+      migration notes together so future agents can see the intentional break.
 
   - id: core.capability-modules-stay-contract-shaped
     title: Core capability modules stay contract-shaped
@@ -523,6 +550,35 @@ rules:
       translates the event bus contract into a runtime delivery mechanism, and
       infra provisions broker resources and delivery topology.
 
+  - id: core.queues-contracts-name-retryable-work
+    title: Queue contracts name retryable work, not broker infrastructure
+    severity: error
+    summary: >
+      packages/core queues contracts should define provider-neutral queue
+      messages, payloads, send options, delivery metadata, retry/dead-letter
+      metadata, queue errors, queue ports, handlers, and testing helpers while
+      leaving product handlers, worker runtime, providers, and queue resources
+      outside core.
+    must:
+      - Define provider-neutral queue message id, message type, payload, message envelope, queue send options, delivery metadata, retry/dead-letter metadata, queue error, queue port, handler, and helper contracts.
+      - Keep queue payload values plain, serializable, and portable across app, platform, worker, broker, log, retry, dead-letter, and test boundaries.
+      - Reject non-finite numeric values and non-plain runtime objects from queue payloads before they cross app/platform boundaries.
+      - Treat message type names as portable work-kind facts rather than concrete broker queue names, SQS queue URLs, Kafka topics, routing keys, or worker deployment names.
+      - Keep queue send and handler failures mapped to stable queue error codes before app code receives them.
+      - Carry tenant id, correlation id, idempotency key, delay, message group, attempt count, and retry/dead-letter metadata where a product or runtime needs those facts.
+      - Include in-memory or no-op queue helpers only when they preserve the same public contracts for tests, local development, harness work, or CI.
+      - Test message type, payload, message envelope, send options, delivery metadata, queue errors, handlers, and helper behavior without concrete runtime providers.
+    must_not:
+      - Do not define product job catalogs, product handler behavior, or workflow enqueue decisions in packages/core.
+      - Do not define concrete broker queue resources, queue URLs, receipt handles, visibility timeouts, retry algorithms, worker loops, scheduler loops, dead-letter queue resources, ordering guarantees, cloud SDK clients, or deployment topology in packages/core.
+      - Do not expose provider-specific broker, queue, stream, receipt-handle, visibility-timeout, network, timeout, or delivery error shapes directly to app code.
+      - Do not treat core in-memory queue helpers as durable queue, retry, worker, or dead-letter implementations.
+    agent_guidance: >
+      Core queues name the portable work item and queue-facing contract. Apps
+      decide which product work to enqueue and handle, platform runs worker and
+      adapter mechanics, and infra provisions queue resources, DLQs, alarms,
+      permissions, and deployment topology.
+
   - id: core.audit-contracts-record-accountability
     title: Audit contracts record accountability facts
     severity: error
@@ -599,4 +655,5 @@ success_criteria:
   - "It distinguishes core contracts from platform implementations and app product workflows."
   - "It records the recommended core capability module families and their intended consumers."
   - "It maps core test types to contract compatibility, validation, edge case, security, failure-mode, and test-helper scenarios."
+  - "It requires public core contracts to evolve additively by default and to use compatibility fixtures for old public usages."
   - "It includes manually verified source_refs back to the core architecture guide."
