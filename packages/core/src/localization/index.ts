@@ -116,11 +116,11 @@ export function regionCode(value: string): Result<RegionCode, LocalizationError>
 }
 
 export function timeZoneId(value: string): Result<TimeZoneId, LocalizationError> {
-  if (value.length === 0 || /\s/.test(value)) {
+  if (!timeZoneIdPattern.test(value) || value.includes("..")) {
     return err(
       localizationError({
         code: "LOCALIZATION_INVALID_TIME_ZONE",
-        defaultMessage: "Time zone id must be non-empty and must not contain whitespace.",
+        defaultMessage: "Time zone id must be UTC or an IANA-style slash-separated identifier.",
         messageKey: "localization.time_zone.invalid",
         params: { timeZone: value },
       }),
@@ -306,3 +306,5 @@ function invalidNumberError(field: string, value: number): LocalizationError {
 function isNonNegativeInteger(value: number): boolean {
   return Number.isInteger(value) && value >= 0;
 }
+
+const timeZoneIdPattern = /^(?:UTC|[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)+)$/;

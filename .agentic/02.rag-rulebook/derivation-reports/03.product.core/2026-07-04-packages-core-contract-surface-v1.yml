@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-core.2026-07-04-packages-core-contract-surface-v1
-#   version: 15
+#   version: 16
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -39,7 +39,9 @@ source_change:
     contracts, plus provider-neutral diagnostics and self-healing vocabulary,
     plus high-risk file storage contracts and review-driven file access,
     duplicate/idempotent put, diagnostic consistency, queue disposition
-    hardening, and provider-neutral i18n/localization contract boundaries
+    hardening, provider-neutral i18n/localization contract boundaries, and
+    review-driven sensitive translation-param, translated-output, time-zone,
+    selector-fixture, compatibility-canary, and session-log hardening
     for the initial packages/core slice.
 
 target:
@@ -297,8 +299,17 @@ semantic_review:
     - claim_id: core.i18n.no-copy-or-runtime
       summary: Core i18n must not own final product copy, catalog file loading, browser or user locale negotiation, translation libraries, external translation services, or tenant/user language preference storage.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.params.no-sensitive-values
+      summary: Translation params should reject common sensitive param names such as secrets, tokens, credentials, raw request values, sensitive validation input, raw user identifiers, and correlation/session/request ids before interpolation.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.i18n.outputs.no-raw-param-values
+      summary: Translated output records should not preserve raw param values; translated text is plain text and presentation boundaries own escaping and rendering-context safety.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.localization.provider-neutral-boundary
       summary: The localization module may define currency, region, time-zone, localizable value, localization request, formatted output, localizer port, test helper, and stable localization error contracts.
+      evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    - claim_id: core.localization.time-zone.syntax-contract
+      summary: Core time-zone identifiers should be syntax-level portable contracts such as UTC or IANA-style slash-separated identifiers, while concrete runtime support validation belongs to platform/runtime or presentation adapters.
       evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
     - claim_id: core.localization.no-display-policy-or-formatting-engine
       summary: Core localization must not call concrete formatting engines, load CLDR data, infer user locale, choose product time-zone policy, perform currency conversion, choose exchange rates, or define app display rules.
@@ -364,7 +375,11 @@ proposed_updates:
       i18n and localization now provide provider-neutral translation and
       locale-sensitive formatting contracts while leaving final copy, catalog
       loading, locale negotiation, concrete formatters, currency conversion, and
-      presentation rules outside core.
+      presentation rules outside core. Review-driven hardening now prevents
+      common sensitive translation params from being interpolated, keeps raw
+      param values out of translated outputs, tightens time-zone syntax, adds
+      root public-contract compatibility canaries, and proves the cross-cutting
+      i18n/localization concern rule in the selector fixture.
     - The selector fixtures ask for events broker-boundary guidance, audit accountability/storage-boundary guidance, security defensive-policy guidance, monitoring health/metrics/signal guidance, queue worker/provider-boundary guidance, diagnostics/self-healing boundary guidance, files high-risk-storage guidance, and i18n/localization translation-formatting guidance directly.
     - The compatibility selector fixture asks for deprecation, backwards compatibility, schema-version, and old public usage fixture guidance directly.
 

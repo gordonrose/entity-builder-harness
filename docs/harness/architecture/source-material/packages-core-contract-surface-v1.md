@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 15
+  version: 16
   status: active
   layer: 01.harness
   domain: architecture
@@ -562,9 +562,17 @@ should emit facts that those layers can translate or format later.
 
 The `i18n` module may define locale tags, message templates, translation
 catalog records, translation requests, translated-message records, translator
-ports, default-message fallback behavior, and stable i18n errors. In-memory or
-record-backed translators may exist for tests and local composed flows when
-they preserve the same public contracts.
+ports, default-message fallback behavior, safe translation-param helpers, and
+stable i18n errors. In-memory or record-backed translators may exist for tests
+and local composed flows when they preserve the same public contracts.
+
+Translation params must stay primitive and safe to display. Translation
+helpers should reject common sensitive param names such as secrets, tokens,
+credentials, authorization values, cookies, raw request values, sensitive
+validation input, raw user identifiers, and correlation/session/request ids
+before interpolation. Translated output records should not preserve raw param
+values. Translated text is plain text, not trusted HTML or safe markup; escaping
+and rendering-context safety belong to presentation boundaries.
 
 The `i18n` module must not own final product copy, load catalog files, negotiate
 browser or user locale, choose ICU, i18next, FormatJS, or any other translation
@@ -578,6 +586,12 @@ contracts, localizable date-time, number, currency, and region value shapes,
 format requests, formatted output records, localizer ports, test helpers, and
 stable localization errors. Values should stay finite, branded where useful,
 and provider-neutral before they cross app/platform boundaries.
+
+Time-zone identifiers in core should be syntax-level portable contracts such as
+`UTC` or IANA-style slash-separated identifiers. Core may reject malformed,
+path-like, markup-like, empty, or whitespace-containing values, but concrete
+runtime support validation belongs to platform/runtime or presentation
+adapters.
 
 The `localization` module must not call concrete formatting engines, choose
 presentation copy, infer user locale, decide product time-zone policy, perform

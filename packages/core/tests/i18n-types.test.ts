@@ -4,12 +4,14 @@ import {
   i18nError,
   localeTag,
   messageTemplate,
+  safeTranslationParams,
   translationCatalog,
   type I18nError,
   type I18nErrorCode,
   type LocaleTag,
   type MessageTemplate,
   type MessageTranslator,
+  type TranslationParamOptions,
   type TranslatedMessage,
   type TranslationCatalog,
   type TranslationRequest,
@@ -42,6 +44,12 @@ const request: TranslationRequest = {
   locale,
   fallbackLocales: [locale],
 };
+const paramOptions: TranslationParamOptions = {
+  additionalUnsafeParamNames: ["customerId"],
+};
+const safeParams = safeTranslationParams({ name: "Ada" }, paramOptions);
+void safeParams;
+
 const translator: MessageTranslator = catalogMessageTranslator([catalogResult.value]);
 const translated: Result<TranslatedMessage, I18nError> = translator.translate(
   messageDescriptor({

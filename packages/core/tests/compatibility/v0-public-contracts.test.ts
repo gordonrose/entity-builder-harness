@@ -6,9 +6,11 @@ import {
   auditEventType,
   auditTarget,
   booleanConfigValue,
+  catalogMessageTranslator,
   concurrencyToken,
   correlationId,
   createLogRedactor,
+  currencyCode,
   dataClassification,
   diagnosticDescriptor,
   eventEnvelope,
@@ -18,6 +20,7 @@ import {
   fixedAuthenticator,
   fixedAuthorizer,
   fixedHealthCheck,
+  fixedLocalizer,
   fixedSecurityPolicyEvaluator,
   fixedTenantResolver,
   fileAccessIntent,
@@ -43,6 +46,9 @@ import {
   invalidResult,
   isOk,
   isoDateTime,
+  localeTag,
+  localizableCurrency,
+  localizableDateTime,
   logRecord,
   messageDescriptor,
   metricLabels,
@@ -77,6 +83,7 @@ import {
   stringConfigValue,
   tenantContext,
   tenantId,
+  translationCatalog,
   validResult,
   validationIssue,
   type AuditRecorder,
@@ -88,7 +95,12 @@ import {
   type EventEnvelope,
   type FileStorage,
   type HealthCheck,
+  type I18nError,
+  type LocalizedFormat,
+  type Localizer,
+  type LocalizationError,
   type Logger,
+  type MessageTranslator,
   type Metrics,
   type Queue,
   type QueueMessage,
@@ -97,6 +109,8 @@ import {
   type Result,
   type SecurityPolicyEvaluator,
   type TenantResolver,
+  type TranslatedMessage,
+  type TranslationCatalog,
   type UnitOfWork,
   type Validator,
 } from "../../src/index";
@@ -128,6 +142,49 @@ const displayReason = messageDescriptor({
   defaultMessage: "Deal view allowed.",
   messageKey: "deals.view.allowed",
   params: { resource: "deal" },
+});
+
+const localeResult = localeTag("en-GB");
+if (!isOk(localeResult)) {
+  throw new Error("Expected compatibility fixture locale to be valid.");
+}
+const displayLocale = localeResult.value;
+
+const catalogResult: Result<TranslationCatalog, I18nError> = translationCatalog({
+  locale: displayLocale,
+  messages: {
+    "deals.view.allowed": "Allowed to view {resource}.",
+  },
+});
+if (!isOk(catalogResult)) {
+  throw new Error("Expected compatibility fixture translation catalog to be valid.");
+}
+const translator: MessageTranslator = catalogMessageTranslator([catalogResult.value]);
+const translatedDisplayReason: Result<TranslatedMessage, I18nError> = translator.translate(displayReason, {
+  locale: displayLocale,
+});
+void translatedDisplayReason;
+
+const currencyResult = currencyCode("GBP");
+if (!isOk(currencyResult)) {
+  throw new Error("Expected compatibility fixture currency code to be valid.");
+}
+const localizableDealValue = localizableCurrency({
+  amount: 1250,
+  currency: currencyResult.value,
+});
+if (!isOk(localizableDealValue)) {
+  throw new Error("Expected compatibility fixture localizable currency to be valid.");
+}
+const localizer: Localizer = fixedLocalizer("GBP 1,250.00");
+const localizedDealValue: Result<LocalizedFormat, LocalizationError> = localizer.format({
+  locale: displayLocale,
+  value: localizableDealValue.value,
+});
+void localizedDealValue;
+void localizer.format({
+  locale: displayLocale,
+  value: localizableDateTime({ value: now }),
 });
 
 const configSource: ConfigSource = recordConfigSource({

@@ -19,7 +19,8 @@ export type MessageTemplate = Brand<string, "MessageTemplate">;
 export type I18nErrorCode =
   | "I18N_INVALID_LOCALE"
   | "I18N_INVALID_TEMPLATE"
-  | "I18N_MISSING_TEMPLATE_PARAM";
+  | "I18N_MISSING_TEMPLATE_PARAM"
+  | "I18N_UNSAFE_TEMPLATE_PARAM";
 
 export interface I18nError extends CoreError {
   readonly code: I18nErrorCode;
@@ -42,12 +43,48 @@ export interface TranslatedMessage {
   readonly text: string;
   readonly source: TranslationSource;
   readonly messageKey?: MessageKey;
-  readonly params?: MessageParams;
+  readonly paramKeys?: readonly string[];
 }
 
 export interface MessageTranslator {
   translate(message: MessageDescriptor, request: TranslationRequest): Result<TranslatedMessage, I18nError>;
 }
+
+export interface TranslationParamOptions {
+  readonly additionalUnsafeParamNames?: readonly string[];
+}
+
+export const defaultUnsafeTranslationParamNames = [
+  "password",
+  "passphrase",
+  "passwd",
+  "pwd",
+  "secret",
+  "clientSecret",
+  "token",
+  "accessToken",
+  "refreshToken",
+  "idToken",
+  "sessionToken",
+  "apiKey",
+  "authorization",
+  "cookie",
+  "setCookie",
+  "privateKey",
+  "credential",
+  "credentials",
+  "email",
+  "phone",
+  "userId",
+  "principalId",
+  "requestId",
+  "correlationId",
+  "traceId",
+  "sessionId",
+  "ipAddress",
+  "rawRequest",
+  "requestBody",
+] as const;
 
 export function localeTag(value: string): Result<LocaleTag, I18nError> {
   if (!localeTagPattern.test(value)) {
@@ -111,6 +148,23 @@ export function translationCatalog(input: {
   });
 }
 
+export function safeTranslationParams(
+  params: MessageParams,
+  options: TranslationParamOptions = {},
+): Result<MessageParams, I18nError> {
+  const unsafeParamNames = new Set(
+    [...defaultUnsafeTranslationParamNames, ...(options.additionalUnsafeParamNames ?? [])].map(normalizeParamName),
+  );
+
+  for (const key of Object.keys(params)) {
+    if (unsafeParamNames.has(normalizeParamName(key))) {
+      return err(unsafeTemplateParamError(key));
+    }
+  }
+
+  return ok({ ...params });
+}
+
 export const defaultMessageTranslator: MessageTranslator = {
   translate: (message, request) => translateDefaultMessage(message, request.locale),
 };
@@ -147,7 +201,7 @@ export function catalogMessageTranslator(catalogs: readonly TranslationCatalog[]
               text: rendered.value,
               source: "catalog",
               messageKey: message.messageKey,
-              ...(message.params === undefined ? {} : { params: message.params }),
+              ...translatedParamKeys(message.params),
             });
           }
         }
@@ -162,14 +216,20 @@ export function interpolateMessageTemplate(
   template: string | MessageTemplate,
   params: MessageParams = {},
 ): Result<string, I18nError> {
+  const safeParams = safeTranslationParams(params);
+
+  if (!safeParams.ok) {
+    return safeParams;
+  }
+
   let missingParam: string | undefined;
   const rendered = template.replace(templateParamPattern, (match, rawParamName: string) => {
-    if (!Object.prototype.hasOwnProperty.call(params, rawParamName)) {
+    if (!Object.prototype.hasOwnProperty.call(safeParams.value, rawParamName)) {
       missingParam = rawParamName;
       return match;
     }
 
-    return String(params[rawParamName] as MessageParamValue);
+    return String(safeParams.value[rawParamName] as MessageParamValue);
   });
 
   if (missingParam !== undefined) {
@@ -233,7 +293,7 @@ function translateDefaultMessage(message: MessageDescriptor, locale: LocaleTag):
     text: rendered.value,
     source: "default-message",
     ...(message.messageKey === undefined ? {} : { messageKey: message.messageKey }),
-    ...(message.params === undefined ? {} : { params: message.params }),
+    ...translatedParamKeys(message.params),
   });
 }
 
@@ -244,4 +304,27 @@ function missingTemplateParamError(param: string): I18nError {
     messageKey: "i18n.template_param.missing",
     params: { param },
   });
+}
+
+function unsafeTemplateParamError(param: string): I18nError {
+  return i18nError({
+    code: "I18N_UNSAFE_TEMPLATE_PARAM",
+    defaultMessage: "Message template parameter is not safe for translation output.",
+    messageKey: "i18n.template_param.unsafe",
+    params: { param },
+  });
+}
+
+function translatedParamKeys(params: MessageParams | undefined): { readonly paramKeys?: readonly string[] } {
+  if (params === undefined) {
+    return {};
+  }
+
+  return {
+    paramKeys: Object.keys(params),
+  };
+}
+
+function normalizeParamName(value: string): string {
+  return value.replace(/[^A-Za-z0-9]/g, "").toLowerCase();
 }

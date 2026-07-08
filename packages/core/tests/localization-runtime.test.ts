@@ -55,12 +55,32 @@ if (!isOk(timeZone)) {
   throw new Error("Expected Europe/London to be a valid time zone id.");
 }
 
+const utcTimeZone = timeZoneId("UTC");
+equal(isOk(utcTimeZone), true);
+if (!isOk(utcTimeZone)) {
+  throw new Error("Expected UTC to be a valid time zone id.");
+}
+
 const invalidTimeZone = timeZoneId("Europe London");
 equal(isErr(invalidTimeZone), true);
 if (!isErr(invalidTimeZone)) {
   throw new Error("Expected invalid time zone to fail.");
 }
 equal(invalidTimeZone.error.code, "LOCALIZATION_INVALID_TIME_ZONE");
+
+const pathLikeTimeZone = timeZoneId("../Europe/London");
+equal(isErr(pathLikeTimeZone), true);
+if (!isErr(pathLikeTimeZone)) {
+  throw new Error("Expected path-like time zone to fail.");
+}
+equal(pathLikeTimeZone.error.code, "LOCALIZATION_INVALID_TIME_ZONE");
+
+const markupLikeTimeZone = timeZoneId("<Europe/London>");
+equal(isErr(markupLikeTimeZone), true);
+if (!isErr(markupLikeTimeZone)) {
+  throw new Error("Expected markup-like time zone to fail.");
+}
+equal(markupLikeTimeZone.error.code, "LOCALIZATION_INVALID_TIME_ZONE");
 
 const now = isoDateTime("2026-07-08T12:34:56Z");
 equal(isOk(now), true);

@@ -126,17 +126,23 @@ catalog file format, locale negotiation strategy, or copywriting workflow:
 - `TranslationRequest` carries the requested locale and optional fallback
   locales.
 - `TranslatedMessage` records the locale, rendered text, source, optional
-  message key, and params used for a translation.
+  message key, and param keys used for a translation. It does not preserve raw
+  param values.
 - `MessageTranslator` is the small port that apps and platform runtime code can
   depend on.
 - `catalogMessageTranslator` and `defaultMessageTranslator` are pure helpers
   for tests, local flows, and composed contract examples.
+- `safeTranslationParams` and `defaultUnsafeTranslationParamNames` reject common
+  sensitive param names before interpolation.
 - `I18nError` provides stable translation error vocabulary.
 
 Core i18n may describe translation keys, catalogs, translator ports, fallback
 behavior, and primitive interpolation params. It does not own final product
 copy, load message files, negotiate browser/user locale, choose ICU, i18next,
 FormatJS, or any other library, or format dates, numbers, money, or regions.
+Do not pass secrets, tokens, credentials, raw request values, sensitive
+validation input, raw user identifiers, or other sensitive facts as translation
+params. Translated text is plain text, not trusted HTML or safe markup.
 
 ## Localization Contracts
 
@@ -153,9 +159,12 @@ formatter implementation:
 - `LocalizationError` provides stable formatting error vocabulary.
 
 Core localization names the formatting intent and keeps values finite,
-branded, and provider-neutral. It does not call `Intl`, format display copy,
-infer user locale, choose time-zone policy, perform currency conversion,
-choose exchange rates, load CLDR data, or decide product presentation rules.
+branded, and provider-neutral. `TimeZoneId` performs syntax-level validation
+for `UTC` or IANA-style slash-separated identifiers; concrete runtime support
+validation belongs to platform or presentation adapters. Core localization does
+not call `Intl`, format display copy, infer user locale, choose time-zone
+policy, perform currency conversion, choose exchange rates, load CLDR data, or
+decide product presentation rules.
 
 ## Config Contracts
 

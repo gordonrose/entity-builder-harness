@@ -7,8 +7,10 @@ import {
   interpolateMessageTemplate,
   localeTag,
   messageTemplate,
+  safeTranslationParams,
   translationCatalog,
 } from "../src/i18n/index";
+import { secretString } from "../src/security/index";
 import { isErr, isOk, messageDescriptor } from "../src/shared/index";
 
 const english = localeTag("en-us");
@@ -68,7 +70,7 @@ deepEqual(translated.value, {
   text: "Email is required.",
   source: "catalog",
   messageKey: "validation.required",
-  params: { field: "Email" },
+  paramKeys: ["field"],
 });
 
 const fallbackMessage = messageDescriptor({
@@ -103,7 +105,7 @@ deepEqual(missingTranslation.value, {
   text: "Password is too short.",
   source: "default-message",
   messageKey: "validation.min_length",
-  params: { field: "Password" },
+  paramKeys: ["field"],
 });
 
 const defaultOnly = defaultMessageTranslator.translate(requiredMessage, { locale: english.value });
@@ -120,6 +122,25 @@ if (!isErr(missingParam)) {
 }
 equal(missingParam.error.code, "I18N_MISSING_TEMPLATE_PARAM");
 deepEqual(missingParam.error.params, { param: "field" });
+
+const unsafeParam = interpolateMessageTemplate("Token {token}", {
+  token: secretString("super-secret-token"),
+});
+equal(isErr(unsafeParam), true);
+if (!isErr(unsafeParam)) {
+  throw new Error("Expected unsafe template param to fail.");
+}
+equal(unsafeParam.error.code, "I18N_UNSAFE_TEMPLATE_PARAM");
+deepEqual(unsafeParam.error.params, { param: "token" });
+
+const unsafeRawIdentifier = safeTranslationParams({
+  userId: "user-123",
+});
+equal(isErr(unsafeRawIdentifier), true);
+if (!isErr(unsafeRawIdentifier)) {
+  throw new Error("Expected raw identifier param to fail.");
+}
+equal(unsafeRawIdentifier.error.code, "I18N_UNSAFE_TEMPLATE_PARAM");
 
 const diagnostic = diagnosticDescriptor({
   failureKind: "validation",

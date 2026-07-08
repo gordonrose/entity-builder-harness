@@ -36,6 +36,7 @@ input:
     - packages/core/src/i18n/index.ts
     - packages/core/src/localization/index.ts
     - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/harness/architecture/rules/concerns/i18n-localization.yml
   max_chunks: 10
 expected:
   routing:
@@ -55,7 +56,7 @@ expected:
       - core.translation-ready-meaning-not-prose
       - core.i18n-contracts-translate-meaning-without-owning-copy-or-runtime
       - core.localization-contracts-format-intent-without-display-policy
-      - dependency.package-runtime-boundaries
+      - i18n-localization.layer-ownership-is-explicit
   required_checks:
     min_count: 1
   citations:
@@ -68,6 +69,7 @@ banned:
 source_refs:
   - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/harness/architecture/rules/concerns/i18n-localization.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:

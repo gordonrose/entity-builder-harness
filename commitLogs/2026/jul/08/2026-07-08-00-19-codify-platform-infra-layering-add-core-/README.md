@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-08T12:48:03Z
-latest_commit_sha: 23bf588
-chat_duration: 48508s (00:13:28:28)
+latest_commit_at_utc: 2026-07-08T13:27:20Z
+latest_commit_sha: 38480fc
+chat_duration: 50865s (00:14:07:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -146,6 +146,17 @@ Summary: Hardened packages/core files access intent, duplicate/idempotent put be
 
 ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, and recorded RAG disposition cover this review-hardening slice.
 
+
+### 2026-07-08T13:27:20Z - Commit recorded
+
+Commit: `38480fc`
+
+Message: Add core i18n localization contracts
+
+Summary: Added provider-neutral packages/core i18n and localization contracts, tests, package exports, docs, and RAG/source guidance for translation and locale-sensitive formatting boundaries.
+
+ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, and recorded RAG disposition cover this i18n/localization contract slice.
+
 ## Commits
 
 
@@ -177,6 +188,13 @@ ADR impact: No standalone ADR required; source material, packages-core rules, de
   Summary: Hardened packages/core files access intent, duplicate/idempotent put behavior, file metadata errors, diagnostic passthrough and consistency, and queue delivery disposition contracts.
   ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, and recorded RAG disposition cover this review-hardening slice.
 
+
+- Commit: `38480fc`
+  Time UTC: 2026-07-08T13:27:20Z
+  Message: Add core i18n localization contracts
+  Summary: Added provider-neutral packages/core i18n and localization contracts, tests, package exports, docs, and RAG/source guidance for translation and locale-sensitive formatting boundaries.
+  ADR impact: No standalone ADR required; source material, packages-core rules, derivation report, selector fixture, README, tests, and recorded RAG disposition cover this i18n/localization contract slice.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -190,9 +208,9 @@ Reason: Source material, architecture rules, derivation reports, selector fixtur
 ## Session Metrics
 
 Raised at UTC: 2026-07-07T23:19:35Z
-Latest commit at UTC: 2026-07-08T12:48:03Z
-Latest commit SHA: 23bf588
-Chat duration: 48508s (00:13:28:28)
+Latest commit at UTC: 2026-07-08T13:27:20Z
+Latest commit SHA: 38480fc
+Chat duration: 50865s (00:14:07:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -204,7 +222,7 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Packages/core i18n/localization contract slice captured in source material, packages-core rules, derivation report, selector fixture, README, and tests.
+Reason: Packages/core i18n/localization contract slice and agentic review hardening are captured in source material, packages-core rules, derivation report, selector fixture, README, compatibility canary, and tests.
 Evidence:
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
@@ -212,6 +230,9 @@ Evidence:
 - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml
 - packages/core/src/i18n/index.ts
 - packages/core/src/localization/index.ts
+- packages/core/tests/compatibility/v0-public-contracts.test.ts
+- packages/core/tests/i18n-runtime.test.ts
+- packages/core/tests/localization-runtime.test.ts
 - packages/core/README.md
 Corpus gaps:
 - None.
