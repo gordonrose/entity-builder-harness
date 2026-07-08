@@ -49,6 +49,10 @@ update repo documentation and RAG service to codify platform infra capability la
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Codified platform/infra capability layering, packages/core queue contracts, core contract compatibility policy, and queue/audit schema-version contracts with source material, rules, derivation reports, selector fixtures, and generated recognition sources.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Diagnostics and self-healing direction captured in packages/core contracts, source material, rules, derivation report, and selector fixture.
+
 ## Activity Log
 
 ### 2026-07-07T23:19:35Z - Session started
@@ -83,6 +87,13 @@ Message: Add queue and audit schema versions
 Summary: Added explicit schema-version contracts for queue messages and audit events, defaulted new envelopes to v1, and updated tests, docs, rules, derivation reports, and selector fixtures.
 
 ADR impact: No standalone ADR required; existing core contract source material and RAG evidence cover this schema-version hardening slice.
+
+
+### 2026-07-08T10:42:18Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Diagnostics and self-healing direction captured in packages/core contracts, source material, rules, derivation report, and selector fixture.
 
 ## Commits
 
@@ -128,20 +139,13 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Codified platform/infra capability layering, packages/core queue contracts, core contract compatibility policy, and queue/audit schema-version contracts with source material, rules, derivation reports, selector fixtures, compatibility fixtures, and generated recognition sources.
+Reason: Diagnostics and self-healing direction captured in packages/core contracts, source material, rules, derivation report, and selector fixture.
 Evidence:
-- docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-- docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
 - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
 - docs/harness/architecture/rules/layers/packages-core.yml
-- .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
 - .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml
-- packages/core/tests/compatibility/v0-public-contracts.test.ts
-- packages/core/src/queues/index.ts
-- packages/core/src/audit/index.ts
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+- packages/core/src/diagnostics/index.ts
+- packages/core/src/shared/index.ts
 Corpus gaps:
 - None.

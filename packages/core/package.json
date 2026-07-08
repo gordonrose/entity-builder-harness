@@ -9,6 +9,7 @@
     "./authn": "./src/authn/index.ts",
     "./authz": "./src/authz/index.ts",
     "./config": "./src/config/index.ts",
+    "./diagnostics": "./src/diagnostics/index.ts",
     "./events": "./src/events/index.ts",
     "./logging": "./src/logging/index.ts",
     "./monitoring": "./src/monitoring/index.ts",

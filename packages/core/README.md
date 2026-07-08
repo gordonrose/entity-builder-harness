@@ -55,13 +55,41 @@ documented, and paired with migration guidance.
 - `Result`, `ok`, `err`, `isOk`, and `isErr` make expected success/failure explicit.
 - `JsonValue` and `copyJsonValue` keep cross-boundary facts plain,
   serializable, and finite-number safe.
-- `CoreError` gives failures a stable `code`, `defaultMessage`, optional translation metadata, and optional debugging metadata.
+- `CoreError` gives failures a stable `code`, `defaultMessage`, optional translation metadata, optional diagnostic metadata, and optional debugging metadata.
 - `Clock`, `systemClock`, and `fixedClock` keep time-dependent code testable.
 - `RequestContext` carries only the minimum shared request metadata.
 
 Keep this module small. Tenant, principal, permission, persistence, audit, and
 event-specific concepts should live in their own modules and import shared
 primitives when needed.
+
+## Diagnostics Contracts
+
+`diagnostics` defines the small shared vocabulary for classifying failures so
+logs, monitoring, queues, events, audit, and platform workflows can agree on
+what happened:
+
+- `FailureKind` names the broad kind of failure, such as user input,
+  validation, dependency outage, timeout, conflict, data integrity, bug, or
+  unknown.
+- `FailureSource` names where the failure appears to come from: user, app,
+  platform, provider, infra, external system, or unknown.
+- `FailureSeverity`, `RecoveryDisposition`, and `RecoveryAction` describe how
+  serious the failure is and what kind of follow-up is safe.
+- `DiagnosticFacts` keeps extra correlation and classification facts primitive
+  and finite-number safe.
+- `DiagnosticDescriptor`, `diagnosticDescriptor`,
+  `isRetryableDiagnostic`, and `isUserCorrectableDiagnostic` give apps and
+  platform code a common way to attach recovery meaning to failures.
+
+Diagnostics is the vocabulary for self-healing, not the self-healing engine.
+The intended loop is: detect, classify, correlate, decide, act, verify, then
+escalate if automation is unsafe or exhausted. Core names those facts;
+platform/runtime workflows perform retries, repairs, log lookups, runbook
+actions, and escalation when a product has allowed that behavior.
+
+Do not put secrets, tokens, raw request bodies, provider objects, class
+instances, or rich runtime values into diagnostic facts.
 
 ## Translation-Ready Meaning
 

@@ -172,6 +172,7 @@ projection_sets:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
     required_checks:
       - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
@@ -184,11 +185,12 @@ projection_sets:
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
     notes:
       - The source records the approved bootstrap exception for the first packages/core contract slice.
       - The projection keeps core contract guidance available to prompt-level RAG selection while implementations remain in platform and product workflows remain in apps.
       - Compatibility fixtures keep additive-evolution, deprecation, migration, durable payload versioning, and old public TypeScript usage guidance retrievable as the core contract surface matures.
-      - Persistence, events, audit, security, monitoring, and queues fixtures cover storage, event-delivery, accountability-record, defensive-policy, operational-signal, and retryable-work boundary prompts.
+      - Persistence, events, audit, security, monitoring, queues, and diagnostics fixtures cover storage, event-delivery, accountability-record, defensive-policy, operational-signal, retryable-work, and self-healing boundary prompts.
 
   - id: projection.03.product.platform.platform-runtime-enterprise-obligations-v1
     status: active

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 11
+#   version: 12
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 11
+version: 12
 status: active
 
 source_derivation:
@@ -25,12 +25,12 @@ source_derivation:
   mode: direct-source-material
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-08T10:00:00Z"
+  generated_at_utc: "2026-07-08T10:39:33Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 8ac494c1e1dd63783a7f1e1e04771217635f79a416b704322db94ec934f83eeb
+      sha256: 2451d7c468caed21eef6aaca2e1a1f0ec1e056de8515b90414da7858252af1ec
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -51,6 +51,9 @@ recommended_modules:
   - id: config
     purpose: "Provider-neutral configuration source, primitive reader, schema, and validation-error contracts."
     consumed_by: "runtime apps and platform services"
+  - id: diagnostics
+    purpose: "Provider-neutral failure classification, recovery disposition, retryability, user-correctability, and self-healing vocabulary."
+    consumed_by: "apps, platform runtime, workers, logging, monitoring, events, queues, and audit"
   - id: logging
     purpose: "Provider-neutral operational log record, logger, default sensitive-field redactor, and redacting-wrapper contracts."
     consumed_by: "apps, workers, platform"
@@ -306,7 +309,7 @@ rules:
       Core modules should expose clear capability contracts and small primitives,
       not empty ceremony, product workflow engines, or concrete runtime hosts.
     must:
-      - Organize core around capability modules such as authn, authz, tenancy, validation, persistence, files, events, queues, logging, monitoring, audit, config, security, reporting, analytics, i18n, and localization.
+      - Organize core around capability modules such as authn, authz, tenancy, validation, persistence, files, events, queues, logging, monitoring, diagnostics, audit, config, security, reporting, analytics, i18n, and localization.
       - Prefer module files such as index.ts, types.ts, errors.ts, ports.ts, policy.ts, and testing.ts when those files clarify ownership.
       - Include in-memory or no-op test implementations only when they support tests, local development, harness work, or CI.
       - Keep concepts visible in types, especially tenant, principal, permission, audit event, event envelope, locale, currency, and correlation identifiers.
@@ -340,6 +343,33 @@ rules:
       Shared primitives are the bottom of the contract stack. When a value can
       vary by locale, runtime, provider, or presentation boundary, convert it to
       a stable primitive fact before it enters shared core contracts.
+
+  - id: core.diagnostics-classify-failures-for-recovery
+    title: Diagnostics classify failures for safe recovery decisions
+    severity: error
+    summary: >
+      packages/core diagnostics contracts should define provider-neutral failure
+      classification, recovery disposition, retryability, user-correctability,
+      and self-healing vocabulary while leaving remediation workflows, log
+      queries, provider actions, and product policy outside core.
+    must:
+      - Define provider-neutral failure kinds, failure sources, failure severity, recovery dispositions, recovery actions, retryable indicators, user-correctable indicators, diagnostic descriptors, and primitive diagnostic facts.
+      - Support the self-healing loop as vocabulary: detect, classify, correlate, decide, act, verify, and escalate.
+      - Let CoreError carry optional diagnostic descriptors when a failure needs structured recovery metadata.
+      - Use diagnostic facts to distinguish user/input errors, validation failures, provider/runtime failures, data-integrity problems, and genuine bugs without parsing free-text logs.
+      - Keep diagnostic facts primitive, bounded, finite-number safe, and suitable for correlation across logs, monitoring, queues, events, audit, and incident workflows.
+      - Test failure classification, recovery defaults, retryability, user-correctability, and fact safety without concrete runtime providers.
+    must_not:
+      - Do not implement retries, repair workflows, AI debugging, log queries, incident routing, runbook orchestration, worker loops, provider actions, product policy, or infrastructure alarms in packages/core.
+      - Do not carry secrets, tokens, raw credentials, raw request bodies, provider objects, class instances, non-finite numbers, or runtime-only values as diagnostic facts.
+      - Do not treat diagnostic recovery actions as permission for automation without app/product policy and platform/runtime safeguards.
+      - Do not make core diagnostics import logging, monitoring, queues, events, audit, platform adapters, cloud SDKs, worker runtimes, or infra resources.
+    agent_guidance: >
+      Core diagnostics should answer "what kind of failure is this and what
+      class of follow-up is safe to consider?" Apps decide product safety,
+      platform runtime performs and verifies remediation workflows, provider
+      adapters translate concrete errors, and infra provisions alarms, queues,
+      log backends, dead-letter resources, and runbook hooks.
 
   - id: core.logging-sensitive-fields-owned-by-logging
     title: Common sensitive log fields are maintained in core logging

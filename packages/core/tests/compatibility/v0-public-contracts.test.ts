@@ -10,6 +10,7 @@ import {
   correlationId,
   createLogRedactor,
   dataClassification,
+  diagnosticDescriptor,
   eventEnvelope,
   eventId,
   eventType,
@@ -70,6 +71,7 @@ import {
   type Authenticator,
   type Authorizer,
   type ConfigSource,
+  type DiagnosticDescriptor,
   type EventBus,
   type EventEnvelope,
   type HealthCheck,
@@ -283,6 +285,17 @@ const securityEvaluator: SecurityPolicyEvaluator<unknown> = fixedSecurityPolicyE
 void secret;
 void storedHash;
 void securityEvaluator;
+
+const diagnostic: DiagnosticDescriptor = diagnosticDescriptor({
+  failureKind: "user_input",
+  failureSource: "user",
+  severity: "warning",
+  recovery: "user_correctable",
+  action: "ask_user",
+  messageKey: "diagnostics.csv.invalid_row",
+  facts: { importId: "csv-import-123", rowNumber: 42 },
+});
+void diagnostic;
 
 const component = monitoringComponent({ type: "api", name: "deals.api" });
 const health = healthCheckResult({

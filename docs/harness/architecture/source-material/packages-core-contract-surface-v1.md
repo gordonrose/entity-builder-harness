@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.packages-core-contract-surface-v1
-  version: 11
+  version: 12
   status: active
   layer: 01.harness
   domain: architecture
@@ -36,6 +36,7 @@ The initial package surface may include these contract modules:
 
 - `shared`: branded identifiers, result/error shapes, translation-ready message descriptors, request context, clocks.
 - `config`: config source and schema contracts.
+- `diagnostics`: provider-neutral failure classification, recovery disposition, and self-healing vocabulary.
 - `logging`: logger, log record, and redaction contracts.
 - `monitoring`: health check, metric, signal definition, and label-safety contracts.
 - `validation`: validation issue and validator contracts.
@@ -85,7 +86,9 @@ documented, and paired with migration guidance.
 The `shared` module should define the lowest-level provider-neutral primitives
 that other core modules depend on. Shared branded identifiers, result/error
 shapes, message descriptors, clocks, and request context values should stay
-small, stable, and JSON-safe.
+small, stable, and JSON-safe. Core errors may carry an optional diagnostic
+descriptor when a failure needs structured recovery, retryability, or
+user-correctability metadata.
 
 `ISODateTime` values should represent explicit ISO date-time strings with
 timezone information. Date-only strings, localized prose dates, and implicit
@@ -97,6 +100,49 @@ Provider-neutral JSON-like contract values should stay plain and serializable.
 Shared helpers should reject non-finite numeric values and non-plain runtime
 objects when copying cross-boundary facts for claims, policy facts, event
 payloads, or audit metadata.
+
+## Diagnostics and Self-Healing Boundary
+
+The `diagnostics` module should define provider-neutral contracts for
+classifying failures and giving runtime layers enough structured meaning to
+decide safe follow-up actions. It may define failure kinds, failure sources,
+failure severity, recovery disposition, recovery action vocabulary, retryable
+and user-correctable indicators, primitive diagnostic facts, and small pure
+helpers.
+
+Diagnostics should support the self-healing loop:
+
+1. detect the failure through logs, monitoring, queues, events, audits, or
+   validation results;
+2. classify the failure as user-correctable, retryable, repairable,
+   investigation-needed, escalated, or not recoverable;
+3. correlate the failure through request, tenant, job, event, queue, resource,
+   or audit identifiers;
+4. decide the safest next action;
+5. act through a platform/runtime workflow when automation is allowed;
+6. verify the result through monitoring, audit, events, or follow-up checks;
+7. escalate to a person or product workflow when automation is unsafe or
+   exhausted.
+
+The diagnostics contract should help distinguish user/input errors from
+genuine bugs and runtime/provider failures without parsing free-text logs.
+Examples include an invalid CSV row that is user-correctable, a temporary
+provider outage that is retryable, a data-integrity conflict that needs manual
+investigation, or a code bug that should be escalated.
+
+Diagnostic facts must stay primitive, bounded, and safe to copy into logs,
+monitoring, queue metadata, events, audit records, or incident workflows. They
+must not carry secrets, tokens, raw credentials, raw request bodies, provider
+objects, class instances, non-finite numbers, or runtime-only values.
+
+The `diagnostics` module must not implement retries, repair workflows, AI
+debugging, log queries, incident routing, runbook orchestration, worker loops,
+provider actions, product policy, or infrastructure alarms. Apps decide which
+failures are safe to automate for a product use case. Platform runtime owns
+the remediation workflow, correlation lookups, retry execution, verification,
+and escalation. Provider adapters translate concrete provider errors into the
+core diagnostic vocabulary. Infra provisions alarms, queues, dead-letter
+resources, log backends, and runbook hooks.
 
 ## Config Contract Boundary
 
