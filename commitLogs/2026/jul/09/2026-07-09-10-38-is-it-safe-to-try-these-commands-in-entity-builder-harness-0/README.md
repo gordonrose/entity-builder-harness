@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-09T09:38:35Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-09T09:57:45Z
+latest_commit_sha: b4fe1ff6a64312eb920aa9f814254aa3b94def83
+chat_duration: 1150s (00:00:19:10)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -99,9 +99,26 @@ Fallback used: yes
 
 Scope: llm-wb beta.4 adoption closeout
 
+
+### 2026-07-09T09:57:45Z - Commit recorded
+
+Commit: `b4fe1ff6a64312eb920aa9f814254aa3b94def83`
+
+Message: Adopt llm-wb beta.4 chat updates
+
+Summary: Adopted llm-wb 0.1.0-beta.4, added the newly managed session-log smoke/sub-agent activity files, refreshed generated recognition sources, and passed the public-beta plus repo commit gates.
+
+ADR impact: ADR not needed; consumer adoption of published llm-wb beta.4.
+
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b4fe1ff6a64312eb920aa9f814254aa3b94def83`
+  Time UTC: 2026-07-09T09:57:45Z
+  Message: Adopt llm-wb beta.4 chat updates
+  Summary: Adopted llm-wb 0.1.0-beta.4, added the newly managed session-log smoke/sub-agent activity files, refreshed generated recognition sources, and passed the public-beta plus repo commit gates.
+  ADR impact: ADR not needed; consumer adoption of published llm-wb beta.4.
 
 ## Main Refresh Conflicts
 
@@ -116,12 +133,12 @@ Reason: Consumer adoption of published llm-wb 0.1.0-beta.4 only; no new local ha
 ## Session Metrics
 
 Raised at UTC: 2026-07-09T09:38:35Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-09T09:57:45Z
+Latest commit SHA: b4fe1ff6a64312eb920aa9f814254aa3b94def83
+Chat duration: 1150s (00:00:19:10)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
