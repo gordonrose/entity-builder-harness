@@ -163,11 +163,19 @@ ${QUESTION}
 
 - None recorded yet.
 
+## Context Hygiene
+
+- None recorded yet.
+
 ## Activity Log
 
 ### ${RAISED_AT_UTC} - Session started
 
 Initial intent: ${QUESTION}
+
+## Sub-Agent Activity
+
+- None recorded yet.
 
 ## Commits
 
@@ -225,6 +233,11 @@ Before that response, do not read workflows or run git status/dirty checks.
 Governed startup bootstrap has already created this chat branch, worktree, and session log.
 Default mode after startup bootstrap: read-only until I grant write permission in this chat.
 For task writes or commit-boundary work, use the chat worktree above and follow the current workflow gates.
+For implementation, file-edit, test, or git-action work, delegate to a sub-agent when the assistant runtime supports it. If no sub-agent capability is available, continue directly as direct-fallback and say that fallback was used.
+The supervising agent keeps responsibility for approval boundaries, write location, final review, and the final response.
+After delegated or direct-fallback work, record it with:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-sub-agent-activity/script.sh --mode <sub-agent|direct-fallback> --status <completed|blocked|failed> --agent <label> --scope <scope> --summary <summary> --files <files> --checks <checks> --git-actions <git-actions> --blockers <blockers> --next-step <next-step>
+Return a summary covering delegation mode, fallback use, files changed, checks run, git actions, blockers, and next step.
 For prompt-level routing, use the current user request, this repo's assistant instructions, and any repo-provided context router if one exists. Do not assign the whole chat a durable layer, mode, or workflow.
 Do not commit without my explicit approval."
 

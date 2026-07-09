@@ -95,6 +95,10 @@ The script updates:
 It also upgrades older `estimated_tokens` and `Final commit` fields to the newer
 chat-specific names when encountered.
 
+After recording, the script reminds the user to run `/compact` after the narrow
+session-log bookkeeping checkpoint when they plan to continue the same chat into
+another implementation phase.
+
 ## What This Does Not Do
 
 - It does not create the task commit.

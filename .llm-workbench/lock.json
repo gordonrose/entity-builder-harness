@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "package": "llm-wb",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "source": "npm",
-  "updated_at_utc": "2026-07-08T12:30:19Z"
+  "updated_at_utc": "2026-07-09T09:50:25Z"
 }

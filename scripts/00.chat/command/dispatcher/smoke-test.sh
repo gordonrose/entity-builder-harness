@@ -197,5 +197,13 @@ grep -q 'Ask for explicit approval before creating any task commit.' "$TMP_ROOT/
   || fail "close command did not preserve commit approval boundary"
 grep -q 'Do not push to origin unless I explicitly approve a separate push.' "$TMP_ROOT/close.out" \
   || fail "close command did not preserve push approval boundary"
+grep -q 'delegate to a sub-agent when the assistant runtime supports it' "$TMP_ROOT/close.out" \
+  || fail "close command did not request sub-agent delegation when available"
+grep -q 'continue directly as direct-fallback' "$TMP_ROOT/close.out" \
+  || fail "close command did not explain direct fallback behavior"
+grep -q 'record-sub-agent-activity/script.sh' "$TMP_ROOT/close.out" \
+  || fail "close command did not name the sub-agent activity recorder"
+grep -q 'Return a summary covering delegation mode, fallback use, files changed, checks run, git actions, blockers, and next step.' "$TMP_ROOT/close.out" \
+  || fail "close command did not require a delegation summary"
 
 echo "chat command smoke test passed."

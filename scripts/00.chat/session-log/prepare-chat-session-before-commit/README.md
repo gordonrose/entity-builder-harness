@@ -16,6 +16,8 @@
   used_by:
   - id: chat.script.session-log.prepare-chat-session-before-commit
     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+  - id: chat.script.session-log.prepare-chat-session-before-commit.smoke-test
+    path: scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
 -->
 # Prepare Chat Session Before Commit
@@ -56,6 +58,7 @@ Then it validates the current chat session:
 - matching session log must exist
 - `## Initial Intent` must be recorded
 - `## Decisions Made` must have a real entry
+- `## Context Hygiene` must have a real entry
 - `## ADR Disposition` must have a real entry
 - `ADR needed` must be `yes` or `no`
 - when `ADR needed: yes`, the ADR path must point to an existing file under
@@ -76,6 +79,9 @@ Then it validates the current chat session:
 2. Commit the task changes.
 3. Run `record-chat-commit` with the task commit SHA and summary.
 4. If only the session log is dirty, run `checkpoint-chat-session-log`.
+5. If continuing the same chat into a new phase, run `/compact` so Codex keeps
+   the commit summary, decisions, unresolved issues, and context hygiene instead
+   of raw intermediate output.
 
 ## Repository Extensions
 

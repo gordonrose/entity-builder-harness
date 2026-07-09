@@ -107,6 +107,7 @@ require_section_entry() {
 
 require_section_entry "## Initial Intent" "Initial intent"
 require_section_entry "## Decisions Made" "Decisions made summary"
+require_section_entry "## Context Hygiene" "Context hygiene summary"
 require_section_entry "## ADR Disposition" "ADR disposition"
 
 ADR_NEEDED="$(field_value "ADR needed")"

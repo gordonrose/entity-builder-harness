@@ -30,6 +30,7 @@ Usage:
   update-chat-log.sh question <asked-summary> <response-summary>
   update-chat-log.sh issue <issue-summary> <resolution-summary>
   update-chat-log.sh decision <decision-summary> <rationale-summary>
+  update-chat-log.sh context-hygiene <summary> <durable-evidence>
   update-chat-log.sh commit-summary <commit-or-message> <summary> [adr-impact]
   update-chat-log.sh adr-disposition needed <adr-path> <reason>
   update-chat-log.sh adr-disposition not-needed <reason>
@@ -248,6 +249,19 @@ Commit: $1
 Summary: $2
 
 ADR impact: ${ADR_IMPACT}"
+    ;;
+  context-hygiene)
+    if [ $# -ne 2 ]; then
+      usage >&2
+      exit 2
+    fi
+    insert_section_entry "## Context Hygiene" "- Summary: $1
+  Durable evidence: $2"
+    insert_section_entry "## Activity Log" "### ${TIMESTAMP} - Context hygiene
+
+Summary: $1
+
+Durable evidence: $2"
     ;;
   adr-disposition)
     if [ $# -lt 1 ]; then

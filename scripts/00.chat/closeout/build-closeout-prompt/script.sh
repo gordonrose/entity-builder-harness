@@ -91,15 +91,23 @@ Workflow: .agentic/00.chat/workflows/chat-promote-to-main.md
 Default mode: read-only until I grant each required approval.
 
 Use the current session log as the first source of truth.
+For implementation, file-edit, test, or git-action work, delegate to a sub-agent when the assistant runtime supports it. If no sub-agent capability is available, continue directly as direct-fallback and say that fallback was used.
+The supervising agent keeps responsibility for approval boundaries, write location, final review, and the final response.
+After delegated or direct-fallback work, record it with:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-sub-agent-activity/script.sh --mode <sub-agent|direct-fallback> --status <completed|blocked|failed> --agent <label> --scope <scope> --summary <summary> --files <files> --checks <checks> --git-actions <git-actions> --blockers <blockers> --next-step <next-step>
 If there is uncommitted task work, follow .agentic/00.chat/workflows/chat-commit.md and .agentic/00.chat/checklists/before-commit.md.
 Ask for explicit approval before creating any task commit.
 After any task commit, record it with:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/script.sh <sha> <message> <summary> [adr-impact]
+Before committing task work, record context hygiene with:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/update-chat-log/script.sh context-hygiene <summary> <durable-evidence>
+After task commit recording and any narrow session-log checkpoint, run /compact before continuing the same chat into another implementation phase.
 
 Then follow .agentic/00.chat/workflows/chat-promote-to-main.md for local convergence.
 Run the required gates and verification before merging.
 Ask for explicit approval before merging into local main.
 Do not push to origin unless I explicitly approve a separate push.
+Return a summary covering delegation mode, fallback use, files changed, checks run, git actions, blockers, and next step.
 
 If governance is missing or state is ambiguous, stop and explain the gap."
 

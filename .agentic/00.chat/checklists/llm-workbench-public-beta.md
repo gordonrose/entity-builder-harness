@@ -56,6 +56,9 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/startup/start-chat-session/smoke-test.sh
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-chat-commit/smoke-test.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/update-chat-log/smoke-test.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/command/package-scripts/smoke-test.sh
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/command/dispatcher/smoke-test.sh
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/export/smoke-test.sh

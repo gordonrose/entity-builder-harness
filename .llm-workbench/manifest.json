@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "package": "llm-wb",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "managed_files": [
     {
       "path": ".agentic/00.chat/checklists/before-commit.md",
-      "sha256": "06c3a0125ac7f69cccd63351f6eb3456be5461e41998cca9f7253bf50d785868"
+      "sha256": "664fc76dc21e116e24cbc684a88a034986978db3ee4d636f5b1f3964fd894ffa"
     },
     {
       "path": ".agentic/00.chat/checklists/llm-workbench-public-beta.md",
-      "sha256": "f896889eff8a3f7d206c80d8663251141c43f08010a24ecd161ef31c56a75fa1"
+      "sha256": "d2bb2b28567627a8de8f5efea1e7919d8af6cb32245be89cc9333e7cacd2ab3c"
     },
     {
       "path": ".agentic/00.chat/commands/README.md",
@@ -29,7 +29,7 @@
     },
     {
       "path": ".agentic/00.chat/standards/llm-workbench-public-beta-contract.md",
-      "sha256": "0c041701361f12913903058efcc1fd0edae85b5a63a0f77f2993dc4b3db0164c"
+      "sha256": "550ac8528240eb041466b4780d67a02d272be34e91e9c10163c26e9dedd72f61"
     },
     {
       "path": ".agentic/00.chat/standards/main-refresh-conflict-types.md",
@@ -129,7 +129,7 @@
     },
     {
       "path": "scripts/00.chat/closeout/build-closeout-prompt/script.sh",
-      "sha256": "37fcef5390531427b0a02dfc84687b234f84fec45dc851f574e91452919ee07a"
+      "sha256": "c5e18fd162607fb86d3b1090f8115b7e822b0c228e1804bbdaa7c722bbb11d3c"
     },
     {
       "path": "scripts/00.chat/closeout/README.md",
@@ -153,7 +153,7 @@
     },
     {
       "path": "scripts/00.chat/command/dispatcher/smoke-test.sh",
-      "sha256": "fa57eaca2f2662bf6a95d1068e421e027caa3c9ee77b81c19dd01f49f5b41843"
+      "sha256": "983f648940225c11ee6a2f81f86b41403ea10ee79428dc8551554176cc075008"
     },
     {
       "path": "scripts/00.chat/command/download-repo-diff/README.md",
@@ -473,11 +473,15 @@
     },
     {
       "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md",
-      "sha256": "be81d542f47d791a75e978aad4e2321c983d4a2d61ee128ca3a79f1f347f1278"
+      "sha256": "0d6218190c348498a0fb2324e84c299d7054b5968333855a7cfb0fde34acc82e"
     },
     {
       "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
-      "sha256": "a92c65379877d9c96ae79443b8474782f32feea7f0654e2fad3a8ca55c9dd7ef"
+      "sha256": "948c1231eb1f1bf50f82af5fc92ff6b635b276386098b96f1911a51335ae4a1e"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh",
+      "sha256": "84d27220233fdd8a27f6ab6fcc94fd316b0aeec0d4821265d31bfc81b41bd6e2"
     },
     {
       "path": "scripts/00.chat/session-log/read-current-chat-log/README.md",
@@ -493,15 +497,15 @@
     },
     {
       "path": "scripts/00.chat/session-log/README.md",
-      "sha256": "6549d954137963e58abc959948a30927551c6bd483af53d73e222ddc17e17b2a"
+      "sha256": "235efbff8a87fff2f9d91251015e00fca52f5955cd1869092ed4e908253b39f6"
     },
     {
       "path": "scripts/00.chat/session-log/record-chat-commit/README.md",
-      "sha256": "6a88f950fbf72986fec5e98c579368e29ae186fe30fad4328a253c8a23d8e9fc"
+      "sha256": "f28310d51850e5a4069de292eac3148e28c85a9d8acce6b13ff0f697e244e3df"
     },
     {
       "path": "scripts/00.chat/session-log/record-chat-commit/script.sh",
-      "sha256": "0c17a2e6474f9158b16a06d90afd88650c26405cd25a825f9c2f308225fd018a"
+      "sha256": "54216e6931bcb737e43b2b7a6b63913136c7b3f164a98ba2c6abbc587f79b93c"
     },
     {
       "path": "scripts/00.chat/session-log/record-chat-commit/smoke-test.sh",
@@ -516,6 +520,18 @@
       "sha256": "cadc39dcb986d6e8bab0b047632703b64432a1df45bcac5a21d34189820f25d5"
     },
     {
+      "path": "scripts/00.chat/session-log/record-sub-agent-activity/README.md",
+      "sha256": "7763cd706453daf7942838b8bac02603bfa52c82ae472c75872cdb4dd885311d"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-sub-agent-activity/script.sh",
+      "sha256": "327d39d4fce5b0b8d2674e95dbbebcb8b301f485f40b642cfd94e40e75db8861"
+    },
+    {
+      "path": "scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh",
+      "sha256": "b3b1148e8c4fda980fdfa4b18f81a1c75868e92bdb0fa6d0db2b690d3c7cf7bb"
+    },
+    {
       "path": "scripts/00.chat/session-log/rename-current-chat-log-folder/README.md",
       "sha256": "b4bb95da6dd161ba06d92aeb8e138fcdf512d7e8466cc0306a20bb4f63f05959"
     },
@@ -525,11 +541,15 @@
     },
     {
       "path": "scripts/00.chat/session-log/update-chat-log/README.md",
-      "sha256": "6449583ef9145e694683016b291172b2bcbfc9547a66927e39ba01ce87ebe112"
+      "sha256": "e1ba0e8510e823e5c27a8f79781a006cbb00069fa3605fde569931718f28a8e9"
     },
     {
       "path": "scripts/00.chat/session-log/update-chat-log/script.sh",
-      "sha256": "71096809de5217dd491f50b7c04a75f07096a24edd3dfac14edf1119e5eabca0"
+      "sha256": "671cdc0f548bce2f10f421dd84fdcca47f980f8b9602284b3fc176808859c4e9"
+    },
+    {
+      "path": "scripts/00.chat/session-log/update-chat-log/smoke-test.sh",
+      "sha256": "73efca57b51afc4901110a8c5621080b1d97afe349d3c2cbffae7b7a26dd4a06"
     },
     {
       "path": "scripts/00.chat/startup/auto-start-missing-session/README.md",
@@ -561,11 +581,11 @@
     },
     {
       "path": "scripts/00.chat/startup/start-chat-session/script.sh",
-      "sha256": "4a23df3cf4e56e28ee17a992ea152e4e6cc902c4ffc7d250bd07c7fb01613e68"
+      "sha256": "879a0ce3f45b449034806e34dc64d15ac289f944e0b7026f9338e08efc34db20"
     },
     {
       "path": "scripts/00.chat/startup/start-chat-session/smoke-test.sh",
-      "sha256": "dac2768f0a23f423038fca47af2878d8f572b38586337884cbb35316a04566ad"
+      "sha256": "b5cc59656bbb095484176a947fc6870e32cdcf66bc300ebf389ebd7f6637190c"
     },
     {
       "path": "scripts/00.chat/startup/start-new-chat/README.md",
