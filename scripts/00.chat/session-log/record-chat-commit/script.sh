@@ -392,3 +392,4 @@ awk \
 mv "$tmp" "$LOG_FILE"
 
 echo "Recorded chat commit: $COMMIT_SHA"
+echo "If continuing this chat into another phase after checkpointing session-log bookkeeping, run /compact."

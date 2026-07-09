@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 605
-  term_count: 1222
+  indexed_artifacts: 610
+  term_count: 1232
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -1470,6 +1470,18 @@ terms:
   canonical_id: chat.script.session-log.prepare-chat-session-before-commit
   evidence_path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
   confidence_weight: 1
+- term: chat.script.session-log.prepare-chat-session-before-commit.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.session-log.prepare-chat-session-before-commit.smoke-test
+  evidence_path: scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.session-log.prepare-chat-session-before-commit.smoke-test
+  evidence_path: scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh
+  confidence_weight: 1
 - term: chat.script.session-log.read-current-chat-log.readme
   category: artifact-id
   match_type: exact
@@ -1566,6 +1578,42 @@ terms:
   canonical_id: chat.script.session-log.record-main-refresh-conflict
   evidence_path: scripts/00.chat/session-log/record-main-refresh-conflict/script.sh
   confidence_weight: 1
+- term: chat.script.session-log.record-sub-agent-activity.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.session-log.record-sub-agent-activity.readme
+  evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/README.md
+  confidence_weight: 1
+- term: scripts/00.chat/session-log/record-sub-agent-activity/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.session-log.record-sub-agent-activity.readme
+  evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/README.md
+  confidence_weight: 1
+- term: chat.script.session-log.record-sub-agent-activity
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.session-log.record-sub-agent-activity
+  evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.session-log.record-sub-agent-activity
+  evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+  confidence_weight: 1
+- term: chat.script.session-log.record-sub-agent-activity.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.session-log.record-sub-agent-activity.smoke-test
+  evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.session-log.record-sub-agent-activity.smoke-test
+  evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh
+  confidence_weight: 1
 - term: chat.script.session-log.rename-current-chat-log-folder.readme
   category: artifact-id
   match_type: exact
@@ -1613,6 +1661,18 @@ terms:
   match_type: exact
   canonical_id: chat.script.session-log.update-chat-log
   evidence_path: scripts/00.chat/session-log/update-chat-log/script.sh
+  confidence_weight: 1
+- term: chat.script.session-log.update-chat-log.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.session-log.update-chat-log.smoke-test
+  evidence_path: scripts/00.chat/session-log/update-chat-log/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/00.chat/session-log/update-chat-log/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.session-log.update-chat-log.smoke-test
+  evidence_path: scripts/00.chat/session-log/update-chat-log/smoke-test.sh
   confidence_weight: 1
 - term: chat.script.startup.readme
   category: artifact-id

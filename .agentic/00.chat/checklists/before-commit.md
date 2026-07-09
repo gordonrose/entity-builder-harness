@@ -107,12 +107,23 @@ commit logs that record commits or are explicitly marked for retention.
 - Issues raised during the chat are summarized with their resolutions, or
   explicitly recorded as none.
 - Decisions made during the chat are summarized, or explicitly recorded as none.
+- Context hygiene is summarized before task commits. Record only the durable
+  carry-forward from noisy file reads, command output, diffs, logs, errors, and
+  tool calls unless raw evidence is needed to prevent repeat mistakes.
 - Commit summary is recorded before or immediately after each commit.
 
 For structured manual session-log entries, use:
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/update-chat-log/script.sh <entry-type> <summary> <detail>
+```
+
+Use `context-hygiene` to record the compact carry-forward before a task commit:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/update-chat-log/script.sh context-hygiene \
+  "<what noisy evidence matters after this commit>" \
+  "<where durable evidence lives>"
 ```
 
 ## ADR Disposition
@@ -165,6 +176,11 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 <!-- deterministic-check: allow reason="checkpoint helper enforces file scope; prose states the human-readable policy" -->
 This commit must contain only the current chat session log and no other paths.
 Stop and ask if any other path is staged, unstaged, or would be committed.
+
+If continuing the same chat into another implementation phase after the
+bookkeeping checkpoint, run `/compact` so Codex carries forward the commit
+summary, decisions, unresolved issues, and context hygiene instead of raw
+intermediate output.
 
 ## Approval
 

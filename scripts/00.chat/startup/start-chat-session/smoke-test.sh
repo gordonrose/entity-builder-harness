@@ -133,6 +133,14 @@ if ! sed -n '/<!-- agentic-session/,/-->/p' "$worktree_path/$session_log" | grep
   fail "chat startup did not initialize latest_context_packet_routing_summary"
 fi
 
+if ! grep -q '^## Sub-Agent Activity$' "$worktree_path/$session_log"; then
+  fail "chat startup did not initialize the sub-agent activity section"
+fi
+
+if ! grep -q '^## Context Hygiene$' "$worktree_path/$session_log"; then
+  fail "chat startup did not initialize the context hygiene section"
+fi
+
 FAKE_BIN="$TMP_ROOT/fake-bin"
 mkdir -p "$FAKE_BIN"
 cat > "$FAKE_BIN/clip.exe" <<'EOF'
@@ -169,6 +177,22 @@ fi
 
 if ! grep -q "For prompt-level routing, use the current user request, this repo's assistant instructions, and any repo-provided context router if one exists." "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
   fail "first prompt did not explain neutral prompt-level routing"
+fi
+
+if ! grep -q 'delegate to a sub-agent when the assistant runtime supports it' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not request sub-agent delegation when available"
+fi
+
+if ! grep -q 'continue directly as direct-fallback' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not explain direct fallback behavior"
+fi
+
+if ! grep -q 'record-sub-agent-activity/script.sh' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not name the sub-agent activity recorder"
+fi
+
+if ! grep -q 'Return a summary covering delegation mode, fallback use, files changed, checks run, git actions, blockers, and next step.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
+  fail "first prompt did not require a delegation summary"
 fi
 
 if ! grep -q 'Do not assign the whole chat a durable layer, mode, or workflow.' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
