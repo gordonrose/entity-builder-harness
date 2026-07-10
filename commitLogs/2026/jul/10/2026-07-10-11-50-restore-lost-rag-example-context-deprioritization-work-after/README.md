@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T21:08:42Z
-latest_commit_sha: ef7f54d
-chat_duration: 37106s (00:10:18:26)
+latest_commit_at_utc: 2026-07-10T22:12:04Z
+latest_commit_sha: cf04f67
+chat_duration: 40908s (00:11:21:48)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -228,6 +228,17 @@ Summary: Added a governed user-intents retrieval-policy dimension, compiled-poli
 
 ADR impact: No ADR needed; extends the existing retrieval-selector policy model with generic evidence-shape signals while preserving separate execution authorization.
 
+
+### 2026-07-10T22:12:04Z - Commit recorded
+
+Commit: `cf04f67`
+
+Message: test(rag): assert user intent policy output
+
+Summary: Updated compiled-policy and local-runtime smoke tests for the new user-intents retrieval-policy dimension and compiled user_intents output.
+
+ADR impact: No ADR needed; test assertion update for the new retrieval policy dimension.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -305,6 +316,13 @@ ADR impact: No ADR needed; extends the existing retrieval-selector policy model 
   Summary: Added a governed user-intents retrieval-policy dimension, compiled-policy/schema support, selector matching for generic ask-shapes, conditional evidence bundles for index-selection and context-packet validation, and eight targeted user-intent selector fixtures.
   ADR impact: No ADR needed; extends the existing retrieval-selector policy model with generic evidence-shape signals while preserving separate execution authorization.
 
+
+- Commit: `cf04f67`
+  Time UTC: 2026-07-10T22:12:04Z
+  Message: test(rag): assert user intent policy output
+  Summary: Updated compiled-policy and local-runtime smoke tests for the new user-intents retrieval-policy dimension and compiled user_intents output.
+  ADR impact: No ADR needed; test assertion update for the new retrieval policy dimension.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -320,9 +338,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T21:08:42Z
-Latest commit SHA: ef7f54d
-Chat duration: 37106s (00:10:18:26)
+Latest commit at UTC: 2026-07-10T22:12:04Z
+Latest commit SHA: cf04f67
+Chat duration: 40908s (00:11:21:48)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
