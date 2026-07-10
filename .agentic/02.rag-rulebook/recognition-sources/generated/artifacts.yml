@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 629
-  term_count: 1270
+  indexed_artifacts: 632
+  term_count: 1276
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7013,6 +7013,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.validate-container-boundaries.smoke-test
   evidence_path: scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deploy-readiness.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deploy-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id

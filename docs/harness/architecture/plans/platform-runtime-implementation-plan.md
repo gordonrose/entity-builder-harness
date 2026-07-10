@@ -283,6 +283,17 @@ Acceptance:
 Turn planning evidence into executable or externally auditable proof before
 production exposure.
 
+Status: implemented as a blocked readiness scaffold. The platform shell staging
+manifest lives at
+`infra/04.deploy/03.product/environments/staging/deploy-readiness.yml`, and the
+read-only verifier is
+`scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh`.
+
+The manifest records what is proven locally today and what remains blocked
+before AWS mutation: GitHub-to-AWS identity, immutable image provenance, ECS
+task/service targets, AWS account/region/network/ingress/secrets/logs/alarms,
+operations ownership, deployment smoke, and rollback proof.
+
 Acceptance:
 
 - Source commit, image digest, build context, base image digest, SBOM/scan or

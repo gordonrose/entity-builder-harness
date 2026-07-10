@@ -1,0 +1,146 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.environments.staging.deploy-readiness
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-manifest
+#   purpose: Record blocked staging deploy-readiness proof for the product platform shell before AWS mutation.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-deploy-readiness
+#     path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+#   - id: infra.04-deploy.03-product.aws-runtime-family-decision
+#     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+schema: deploy/platform-shell-readiness-manifest/v1
+status: blocked
+deployment:
+  service_id: platform-shell
+  environment: staging
+  runtime_target: aws.ecs-fargate.platform-shell-staging
+  source_policy: local-planning
+  mutation_authorized: false
+github:
+  repository: gordonrose/entity-builder-harness
+  source_policy: pending
+  ref: refs/heads/main
+  commit_sha: pending
+  workflow_path: pending
+  workflow_run_id: pending
+  environment:
+    name: staging
+    protection_rules:
+      required_reviewers: pending
+      deployment_branch_policy: pending
+      prevent_self_review: pending
+  oidc:
+    role_arn: pending
+    audience: sts.amazonaws.com
+    subject_condition: pending
+    repository_condition: gordonrose/entity-builder-harness
+    ref_condition: refs/heads/main
+    environment_condition: staging
+    trust_scoped_to_repository: pending
+    trust_scoped_to_ref: pending
+    workflow_has_id_token_permission: pending
+artifacts:
+  source_commit_sha: pending
+  image:
+    dockerfile: infra/04.deploy/03.product/image/Dockerfile
+    build_context: .
+    local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+    local_smoke_passed: true
+    image_digest: pending
+    base_image_digest: pending
+    sbom: pending
+    vulnerability_scan: pending
+    provenance_or_attestation: pending
+runtime:
+  family: ecs-fargate
+  decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+  server:
+    health:
+      liveness: /livez
+      readiness: /readyz
+    container_port: 3000
+    task_definition: pending
+    service: pending
+  worker:
+    status: blocked-until-smoke-app-job-requirements
+    task_definition: pending
+    service: pending
+    queue_adapter: platform/adapters/aws/queue/sqs/
+aws:
+  account_id: pending
+  profile_or_oidc_role: pending
+  region: pending
+  cluster: pending
+  vpc: pending
+  subnets: []
+  security_groups: []
+  alb: pending
+  target_group: pending
+  tls_certificate: pending
+  dns_hostname: pending-or-deferred
+  secret_store: pending
+  log_group: pending
+  alarms: []
+operations:
+  owner: pending
+  escalation_path: pending
+  budget_name: pending
+  cost_limit: pending
+  rollback_target: pending
+  rollback_authority: pending
+  rollback_runbook: pending
+proof:
+  static_validation: passed-local
+  policy_checks: pending
+  generated_output_review: pending
+  image_smoke: passed-local
+  local_runtime_smoke: passed-server-health-only
+  aws_read_only_inspection: blocked
+  deployment_smoke: blocked
+  rollback_proof: blocked
+blockers:
+  - id: platform-shell-readiness.github-source
+    severity: blocking
+    path: github
+    reason: The production-bound source commit and workflow run identity are not selected for this staging proof.
+    resolution: Record the remote-main commit SHA, workflow path, run id, and GitHub environment protections before deployment execution.
+  - id: platform-shell-readiness.github-oidc
+    severity: blocking
+    path: github.oidc
+    reason: GitHub-to-AWS OIDC trust for the product platform shell has not been inspected or recorded.
+    resolution: Select the AWS role and record repository, ref, environment, and workflow permission conditions.
+  - id: platform-shell-readiness.image-provenance
+    severity: blocking
+    path: artifacts
+    reason: The platform shell image has only been proven locally; no immutable deploy image digest, base digest, SBOM, scan, or attestation is recorded.
+    resolution: Build the deploy image in the governed workflow and record immutable image and provenance evidence.
+  - id: platform-shell-readiness.runtime-target
+    severity: blocking
+    path: runtime
+    reason: ECS Fargate task definitions, services, CPU/memory, and server/worker topology are not selected.
+    resolution: Record server and worker task/service targets or an explicit worker deferral accepted by the platform runtime plan.
+  - id: platform-shell-readiness.aws-target
+    severity: blocking
+    path: aws
+    reason: AWS account, role/profile, region, cluster, network, ingress, TLS, DNS, secrets, logs, and alarms are not selected for the product shell.
+    resolution: Run the governed AWS planning/inspection workflow and copy the selected target identity into this manifest.
+  - id: platform-shell-readiness.operations
+    severity: blocking
+    path: operations
+    reason: Owner, escalation path, budget/cost guard, rollback target, rollback authority, and rollback runbook are not recorded.
+    resolution: Record production operations ownership and rollback evidence before deployment exposure.
+  - id: platform-shell-readiness.smoke-proof
+    severity: blocking
+    path: proof
+    reason: Deployment smoke, AWS read-only inspection, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require a selected AWS target.
+    resolution: Complete target inspection, deploy through the governed workflow, verify health and dummy app behavior, and record rollback proof.

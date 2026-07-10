@@ -15,8 +15,8 @@ transcript_source:
 latest_context_packet_id: packet.selector-fixture.fe99e59aeaff1ed2
 latest_context_packet_routing_summary: App mount boundary prompt selected platform, apps, and dependency-direction rules for app.mount.ts integration and app-internal opacity.
 latest_context_packet_at_utc: 2026-07-10T12:53:51Z
-latest_commit_at_utc: 2026-07-10T17:16:44Z
-latest_commit_sha: c05fb06
+latest_commit_at_utc: 2026-07-10T20:30:16Z
+latest_commit_sha: 813264f
 chat_duration: 16056s (00:04:27:36)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
@@ -273,6 +273,13 @@ Summary: Implemented platform runtime Milestone 9 AWS runtime-family planning de
 
 Durable evidence: Selected `ecs-fargate` as the first AWS planning runtime family for the platform shell. Added `docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md` for the provider/type/service adapter layout, `docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md` for the AWS planning decision, `platform/adapters/README.md`, `infra/04.deploy/03.product/aws-runtime-family.decision.yml`, `docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md`, `docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml`, and `.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml`. Updated the source projection manifest, generated recognition sources, platform runtime plan, deploy blueprint, platform source material, capability-layering source material, platform/capability structured rules, product workflow guidance, and product deploy README files. Validation passed: artifact metadata headers, YAML syntax, source projections, source material coverage, derivation report validation, recognition-source freshness, local RAG runtime build, query-local-context selecting the new 03.product runtime-family rule as top chunk, container boundary validation, and git diff --check. AWS live inspection was not run because product-shell account/profile, region, environment, and service target are not selected; no AWS/DNS/IAM/provisioning mutation was performed.
 
+
+### 2026-07-10T20:47:00Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 10 as a blocked deployment-readiness scaffold.
+
+Durable evidence: Added `infra/04.deploy/03.product/environments/staging/deploy-readiness.yml` with explicit blockers for GitHub-to-AWS identity, immutable image provenance, ECS runtime targets, AWS target identity/network/ingress/secrets/logs/alarms, operations ownership, deployment smoke, and rollback proof. Added read-only verifier `scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh`, README, and smoke test; updated deploy indexes and the platform runtime plan. Validation passed: platform shell readiness smoke test, blocked manifest planning verification, and normal-mode blocked exit proof.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -310,8 +317,8 @@ Reason: Durable architecture decisions now cover app mount boundaries, provider/
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T12:49:08Z
-Latest commit at UTC: 2026-07-10T17:16:44Z
-Latest commit SHA: c05fb06
+Latest commit at UTC: 2026-07-10T20:30:16Z
+Latest commit SHA: 813264f
 Chat duration: 16056s (00:04:27:36)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable

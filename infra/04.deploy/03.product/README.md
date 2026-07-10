@@ -30,5 +30,11 @@ The first AWS planning runtime family is recorded in
 and does not authorize AWS mutation, DNS changes, image publishing, or
 production exposure.
 
+Staging deployment readiness is scaffolded in
+`environments/staging/deploy-readiness.yml`. It records the platform shell
+readiness proof as blocked until GitHub-to-AWS identity, immutable image
+provenance, ECS target resources, AWS account/region/network/ingress details,
+operations ownership, deployment smoke, and rollback proof are selected.
+
 This track does not create cloud resources. AWS planning and execution remain
 governed by `.agentic/aws/` workflows.
