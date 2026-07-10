@@ -203,6 +203,11 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             for item in packet.get("selected_chunks", [])
             if isinstance(item, dict) and isinstance(item.get("artifact_id"), str)
         },
+        "selected_source_paths": {
+            item.get("source_path")
+            for item in packet.get("selected_chunks", [])
+            if isinstance(item, dict) and isinstance(item.get("source_path"), str)
+        },
         "selected_chunk_ids": {
             item.get("chunk_id")
             for item in packet.get("selected_chunks", [])
@@ -524,6 +529,21 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
         list_of_strings(selected_chunks.get("required_artifact_ids")),
         errors,
     )
+    first_artifact_id = selected_chunks.get("first_artifact_id")
+    if isinstance(first_artifact_id, str):
+        packet_chunks = [item for item in packet.get("selected_chunks", []) if isinstance(item, dict)]
+        actual_first_artifact_id = str(packet_chunks[0].get("artifact_id") or "") if packet_chunks else ""
+        if actual_first_artifact_id != first_artifact_id:
+            errors.append(
+                "selected_chunks.first_artifact_id expected "
+                f"{first_artifact_id!r}, got {actual_first_artifact_id!r}"
+            )
+    require_contains(
+        "selected_source_paths",
+        sets["selected_source_paths"],
+        list_of_strings(selected_chunks.get("required_source_paths")),
+        errors,
+    )
     require_contains(
         "selected_chunk_ids",
         sets["selected_chunk_ids"],
@@ -582,6 +602,7 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
             errors.append(f"gaps contains unexpected value: {gap_id}")
     require_absent("blocking_gaps", sets["blocking_gap_ids"], list_of_strings(banned.get("blocking_gaps")), errors)
     require_absent("gaps", sets["gap_ids"], list_of_strings(banned.get("gaps")), errors)
+    require_absent("selected_artifact_ids", sets["selected_artifact_ids"], list_of_strings(banned.get("selected_artifact_ids")), errors)
     require_absent("selected_rule_ids", sets["selected_rule_ids"], list_of_strings(banned.get("selected_rule_ids")), errors)
 
     checks = dict_value(expected.get("required_checks"))

@@ -65,6 +65,36 @@ terms:
       - how is it implemented
       - explain the policy
     confidence_weight: 0.78
+  - term: headers are added
+    category: question-category
+    match_type: phrase
+    canonical_id: question.artifact-metadata.headers
+    aliases:
+      - headers are maintained
+      - how headers are added
+      - how headers are maintained
+      - metadata headers
+      - artifact metadata headers
+      - artefact metadata headers
+      - agentic-artifact header
+      - agentic-artifact headers
+      - artifact headers
+      - artefact headers
+    confidence_weight: 0.82
+  - term: artifact metadata
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.artifact-metadata.headers
+    evidence_path: .agentic/01.harness/artifact-metadata/standard.md
+    aliases:
+      - artefact metadata
+      - metadata header
+      - artifact metadata header
+      - artefact metadata header
+      - agentic-artifact
+      - agentic-artifact/v2
+      - header maintenance
+    confidence_weight: 0.74
   - term: platform
     category: evidence-family
     match_type: exact

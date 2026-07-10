@@ -295,6 +295,94 @@ def required_check_content(pack: dict[str, Any], check_body: Any) -> str:
     return "\n".join(lines)
 
 
+def retrieval_profile_content(candidate: dict[str, Any], artifact: dict[str, Any], profile: dict[str, Any]) -> str:
+    def list_lines(label: str, values: Any) -> list[str]:
+        lines = [f"{label}:"]
+        items = list_of_strings(values)
+        if not items:
+            lines.append("- none")
+            return lines
+        lines.extend(f"- {item}" for item in items)
+        return lines
+
+    lines = [
+        f"Retrieval profile: {artifact.get('artifact_ref')}",
+        f"Source path: {candidate.get('source_path') or artifact.get('current_path')}",
+        f"Corpus: {candidate.get('corpus_id') or artifact.get('corpus_id')}",
+        "",
+    ]
+    lines.extend(list_lines("Retrieval roles", profile.get("retrieval_roles")))
+    lines.append("")
+    lines.extend(list_lines("Answers questions about", profile.get("answers_questions_about")))
+    lines.append("")
+    lines.extend(list_lines("Produces", profile.get("produces")))
+    lines.append("")
+    lines.extend(list_lines("Consumes", profile.get("consumes")))
+    lines.append("")
+    lines.extend(list_lines("Validates", profile.get("validates")))
+    return "\n".join(lines)
+
+
+def merge_ranges(ranges: list[tuple[int, int]], max_line: int) -> list[tuple[int, int]]:
+    normalized = sorted(
+        (max(1, start), min(max_line, end))
+        for start, end in ranges
+        if max_line > 0 and start <= end
+    )
+    merged: list[tuple[int, int]] = []
+    for start, end in normalized:
+        if not merged or start > merged[-1][1] + 1:
+            merged.append((start, end))
+            continue
+        previous_start, previous_end = merged[-1]
+        merged[-1] = (previous_start, max(previous_end, end))
+    return merged
+
+
+def source_excerpt_ranges(path: str, lines: list[str]) -> list[tuple[int, int]]:
+    max_line = len(lines)
+    if max_line == 0:
+        return []
+    if path.endswith((".md", ".yml", ".yaml")):
+        return [(1, min(max_line, 260))]
+
+    patterns = [
+        "Usage:",
+        "--status)",
+        "--batch)",
+        "def parse_header",
+        "def validate_v2",
+        "def normalize_v2",
+        "def normalize_v1_artifact",
+        "def normalize_v1_script",
+        "def v2_payload",
+        "def render_comment_header",
+        "def render_html_header",
+        "def replace_header",
+        "bash scripts/01.harness/artifact-metadata/check-headers",
+        "bash scripts/01.harness/artifact-metadata/generate-index",
+        "git add --",
+    ]
+    ranges: list[tuple[int, int]] = [(1, min(max_line, 120))]
+    for line_number, line in enumerate(lines, start=1):
+        if any(pattern in line for pattern in patterns):
+            ranges.append((line_number - 25, line_number + 45))
+    return merge_ranges(ranges, max_line)
+
+
+def source_excerpt_content(path: str) -> str:
+    source = repo_path(path)
+    if not source.is_file():
+        return f"Source excerpt unavailable: {path}"
+    lines = source.read_text(encoding="utf-8").splitlines()
+    output = [f"Source excerpt: {path}"]
+    for start, end in source_excerpt_ranges(path, lines):
+        output.append("")
+        output.append(f"Lines {start}-{end}:")
+        output.extend(lines[start - 1 : end])
+    return "\n".join(output)
+
+
 def estimate_tokens(content: str, fallback: int | None) -> int:
     estimated = max(1, round(len(content.split()) * 1.35))
     if fallback and fallback > 0:
@@ -379,6 +467,11 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             content = rule_pack_step_content(pack, section_body)
         elif content_kind == "required-check" and pack:
             content = required_check_content(pack, section_body)
+        elif content_kind == "source-excerpt" and isinstance(source_path, str):
+            content = source_excerpt_content(source_path)
+        elif content_kind == "retrieval-profile":
+            profile = candidate.get("retrieval_profile") or artifact.get("retrieval_profile")
+            content = retrieval_profile_content(candidate, artifact, profile if isinstance(profile, dict) else {})
         else:
             warnings.append(f"unsupported chunk content kind for {chunk_id}: {content_kind}")
             content = artifact_summary_content(candidate, artifact)
@@ -406,6 +499,7 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             "selection_reason": "Generated from a structured rulebook index chunk candidate.",
             "citation_ids": source_ref_ids,
             "source_ref_ids": source_ref_ids,
+            "retrieval_profile": candidate.get("retrieval_profile") or artifact.get("retrieval_profile") or {},
         }
         if content_kind == "rule" and rule:
             chunk["rule_title"] = str(rule.get("title") or "").strip()

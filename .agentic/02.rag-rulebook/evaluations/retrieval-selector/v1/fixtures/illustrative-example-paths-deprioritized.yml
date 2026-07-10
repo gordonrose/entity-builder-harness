@@ -1,0 +1,115 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.illustrative-example-paths-deprioritized
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove paths and artifact IDs inside illustrative examples are weaker than the actual request.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.illustrative-example-paths-deprioritized
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove example-introduced artifact IDs and paths stay weak while the actual header-maintenance question selects metadata evidence.
+input:
+  request_text: |
+    can you walk me through how headers are added and maintained on my artefacts?
+
+    e.g.:
+
+    # agentic-artifact:
+    #   schema: agentic-artifact/v2
+    #   id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+    #   used_by:
+    #   - id: rag-rulebook.script.query-context
+    #     path: scripts/02.rag-rulebook/query-context/script.sh
+  session:
+    trust_routing: true
+    layer: 02.rag-rulebook
+    mode: discovery
+    workflow: .agentic/02.rag-rulebook/workflows/default.md
+  max_chunks: 8
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    mode: discovery
+    status: ready
+    target_paths: []
+  recognition:
+    required_source_ids:
+      - recognition.curated.intent-forms
+      - recognition.curated.question-categories
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: headers are added
+        category: question-category
+        canonical_id: question.artifact-metadata.headers
+        matched_input: prompt
+      - source_id: recognition.generated.artifacts
+        term: rag-rulebook.rules.concerns.hosted-context-provider-contract
+        category: rule-id
+        canonical_id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+        matched_input: prompt-example
+  gaps:
+    allowed:
+      - gap.selector-fixture.prototype-corpus-bridge
+    no_unexpected: true
+  selected_chunks:
+    first_artifact_id: artifact.harness.script.artifact.metadata.backfill.v2.headers
+    required_artifact_ids:
+      - artifact.path.docs.harness.architecture.adrs.0021.use.versioned.artifact.metadata.for.agent.navigation.md
+    required_source_paths:
+      - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+      - .agentic/01.harness/artifact-metadata/README.md
+      - .agentic/01.harness/artifact-metadata/standard.md
+      - .agentic/01.harness/artifact-metadata/schema.v2.yml
+      - scripts/01.harness/artifact-metadata/check-headers/script.sh
+      - scripts/01.harness/artifact-metadata/generate-index/script.sh
+      - scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - generated-concepts
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.7
+banned:
+  recognition_matches:
+    - canonical_id: rag-rulebook.rules.concerns.hosted-context-provider-contract
+      matched_input: prompt
+    - canonical_id: rag-rulebook.script.query-context
+      matched_input: prompt
+  selected_artifact_ids:
+    - artifact.rag.rulebook.rules.concerns.hosted.context.provider.contract
+source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+  - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+  - .agentic/01.harness/artifact-metadata/README.md
+  - .agentic/01.harness/artifact-metadata/standard.md
+  - .agentic/01.harness/artifact-metadata/schema.v2.yml
+  - scripts/01.harness/artifact-metadata/check-headers/script.sh
+  - scripts/01.harness/artifact-metadata/generate-index/script.sh
+  - scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh
+update_triggers:
+  - Prompt example-span handling changes.
+  - Artifact metadata header recognition terms change.
+  - Versioned artifact metadata ADR path or artifact ID changes.
+  - Harness artifact metadata source excerpt coverage changes.

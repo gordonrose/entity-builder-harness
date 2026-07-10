@@ -68,6 +68,9 @@ validation, and standalone service adapters.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.
+- `report-artifact-retrieval-profile-coverage/script.sh` reports whether
+  indexed artifact metadata has enough deterministic signal to derive useful
+  retrieval profiles, without mutating headers or generated outputs.
 - `check-corpus-root-changes/script.sh` detects changed governed corpus-root
   files, requires retirement records for deleted or renamed old paths, and
   proves changed rule files still reach generated index and chunks.

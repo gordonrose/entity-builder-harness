@@ -41,6 +41,7 @@ required_inputs:
 expected_actions:
   - Identify the request form before interpreting individual verbs as execution intent.
   - Extract task nouns, verbs, target artifacts, risk words, and explicit asks by matching prompt text against governed recognition sources.
+  - Classify paths, IDs, and schemas inside illustrative examples introduced by phrases such as `e.g.`, `i.e.`, `for example`, or `such as` as `prompt-example` matches.
   - Normalize obvious plurals, aliases, and known synonyms only when a recognition source defines the mapping.
   - Prefer exact artifact, path, corpus, rule, and workflow IDs over broad natural-language terms.
   - Pass recognized prompt signals to the request-context dimension before session continuity is considered for retrieval.
@@ -126,6 +127,7 @@ recognition_sources:
 extraction_rules:
   - Preserve the raw prompt before normalization.
   - Match exact file paths and quoted identifiers before splitting text into smaller tokens.
+  - Deprioritize exact paths and IDs that occur only inside illustrative example spans; keep them visible for provenance, but do not let them seed target paths, corpus gaps, or broad-term ranking.
   - Match request forms before treating action verbs as implementation, commit, deploy, or destructive-action requests.
   - Match artifact IDs, schema names, corpus IDs, workflow paths, rule IDs, and rule-pack IDs before matching broad nouns.
   - Match action verbs only when the verb appears in an active action recognition source.
@@ -194,6 +196,9 @@ validation_examples:
   - name: question form controls action interpretation
     given: User asks `How do I update my harness so we can deploy it behind an MCP server?`.
     expect: The prompt dimension recognizes `How do I` as planning guidance before treating `update` or `deploy` as execution requests.
+  - name: illustrative examples stay weaker than the actual request
+    given: User asks how headers are maintained, then includes an `e.g.` metadata block with unrelated artifact IDs and paths.
+    expect: Example-only IDs and paths are recorded as `prompt-example` matches and do not become target paths or corpus gaps.
 can_change_by:
   - Add synonyms.
   - Add request forms.

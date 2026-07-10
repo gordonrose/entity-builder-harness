@@ -87,6 +87,17 @@ evidence_bundles:
       evidence.platform.testing: docs/harness/architecture/rules/layers/platform.yml
       evidence.platform.workers: docs/harness/architecture/rules/layers/platform.yml
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+  - question_category_id: question.artifact-metadata.headers
+    always_source_paths:
+      - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+      - .agentic/01.harness/artifact-metadata/README.md
+      - .agentic/01.harness/artifact-metadata/standard.md
+      - .agentic/01.harness/artifact-metadata/schema.v2.yml
+      - scripts/01.harness/artifact-metadata/check-headers/script.sh
+      - scripts/01.harness/artifact-metadata/generate-index/script.sh
+      - scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh
+    family_source_paths:
+      evidence.artifact-metadata.headers: .agentic/01.harness/artifact-metadata/standard.md
   - question_category_id: question.deploy.container-governance
     always_source_paths:
       - docs/04.deploy/rules/shared/container-image-management.yml

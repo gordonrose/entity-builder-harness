@@ -1,0 +1,81 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.generated-profile-harness-indexed-for-rag
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove generated retrieval profiles proactively answer how harness artifacts become RAG-indexed.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.generated-profile-harness-indexed-for-rag
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove generic indexing questions use generated source capability profiles instead of waiting for curated one-off training terms.
+input:
+  request_text: how is my harness indexed so it can be used by RAG?
+  session:
+    trust_routing: true
+    layer: 02.rag-rulebook
+    mode: discovery
+    workflow: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  max_chunks: 6
+expected:
+  routing:
+    layer: 01.harness
+    mode: discovery
+    status: ready
+    target_paths: []
+  gaps:
+    allowed:
+      - gap.selector-fixture.prompt-session-layer-conflict
+    no_unexpected: true
+  selected_chunks:
+    required_chunk_ids:
+      - chunk.profile.artifact.harness.script.artifact.metadata.generate.index
+      - chunk.profile.artifact.rag.rulebook.script.generate.recognition.sources
+      - chunk.profile.artifact.rag.rulebook.script.generate.rulebook.index
+      - chunk.profile.artifact.rag.rulebook.script.generate.rulebook.chunks
+      - chunk.profile.artifact.rag.rulebook.script.build.local.runtime
+    required_source_paths:
+      - scripts/01.harness/artifact-metadata/generate-index/script.sh
+      - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - generated-concepts
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.8
+banned:
+  selected_artifact_ids:
+    - artifact.concern.hosted.context.provider.contract
+source_refs:
+  - scripts/01.harness/artifact-metadata/generate-index/script.sh
+  - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+  - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+  - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+  - scripts/02.rag-rulebook/build-local-runtime/script.sh
+  - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+update_triggers:
+  - Generated retrieval-profile role names change.
+  - Harness artifact index generation flow changes.
+  - Rulebook index, chunk, recognition-source, or runtime build flow changes.
