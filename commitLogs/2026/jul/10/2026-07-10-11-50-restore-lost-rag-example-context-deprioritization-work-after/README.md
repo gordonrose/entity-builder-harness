@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T17:19:27Z
-latest_commit_sha: f89ef56
-chat_duration: 23351s (00:06:29:11)
+latest_commit_at_utc: 2026-07-10T17:30:24Z
+latest_commit_sha: c57d011
+chat_duration: 24008s (00:06:40:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -173,6 +173,17 @@ Summary: Expanded curated question categories, evidence bundles, and supporting 
 
 ADR impact: No ADR needed; this extends existing deterministic RAG recognition, evidence-bundle, indexing, and chunk-generation behavior without changing the architecture boundary.
 
+
+### 2026-07-10T17:30:24Z - Commit recorded
+
+Commit: `c57d011`
+
+Message: test(rag): add chat operations retrieval fixtures
+
+Summary: Added selector fixtures for chat metrics, worktree recovery, sub-agent activity, local-main promotion, hosted auth, prompt/session conflict, generated recognition repair, and packages/core contract retrieval; tightened container governance fixture source-path proof.
+
+ADR impact: No ADR impact; regression coverage for cycle-2 RAG retrieval hardening.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -215,6 +226,13 @@ ADR impact: No ADR needed; this extends existing deterministic RAG recognition, 
   Summary: Expanded curated question categories, evidence bundles, and supporting rulebook index entries for chat metrics, worktree recovery, local-main promotion, generated-recognition repair, hosted RAG auth, and packages/core contract questions; made chunk generation tolerate malformed YAML metadata while indexing evidence.
   ADR impact: No ADR needed; this extends existing deterministic RAG recognition, evidence-bundle, indexing, and chunk-generation behavior without changing the architecture boundary.
 
+
+- Commit: `c57d011`
+  Time UTC: 2026-07-10T17:30:24Z
+  Message: test(rag): add chat operations retrieval fixtures
+  Summary: Added selector fixtures for chat metrics, worktree recovery, sub-agent activity, local-main promotion, hosted auth, prompt/session conflict, generated recognition repair, and packages/core contract retrieval; tightened container governance fixture source-path proof.
+  ADR impact: No ADR impact; regression coverage for cycle-2 RAG retrieval hardening.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -230,9 +248,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T17:19:27Z
-Latest commit SHA: f89ef56
-Chat duration: 23351s (00:06:29:11)
+Latest commit at UTC: 2026-07-10T17:30:24Z
+Latest commit SHA: c57d011
+Chat duration: 24008s (00:06:40:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
