@@ -30,18 +30,19 @@ planning or explanation mode.
 
 ```bash
 bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
-  --manifest infra/04.deploy/03.product/environments/staging/deploy-readiness.yml
+  --manifest infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
 ```
 
 For planning or human explanation, allow blocked evidence explicitly:
 
 ```bash
 bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
-  --manifest infra/04.deploy/03.product/environments/staging/deploy-readiness.yml \
+  --manifest infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml \
   --allow-blocked \
   --caller-intent planning
 ```
 
-The command is read-only. It checks manifest shape, local file references,
-selected runtime family, local smoke evidence, blocker coverage, and whether the
+The command is read-only. It checks manifest shape, target profile identity,
+source provider, cloud provider, selected runtime family, adapter selection,
+local file references, local smoke evidence, blocker coverage, and whether the
 manifest can be treated as ready or blocked.

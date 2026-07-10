@@ -33,5 +33,5 @@ system being deployed.
 ## Rule Inventory
 
 - `platform-shell-runtime-family.yml` records that ECS Fargate is the first AWS
-  planning runtime family for the platform shell and names the blockers before
-  AWS mutation.
+  planning runtime family for the platform shell, requires client/environment
+  target profiles, and names the blockers before cloud mutation.

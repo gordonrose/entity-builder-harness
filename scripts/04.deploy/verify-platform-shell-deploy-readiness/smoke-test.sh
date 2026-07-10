@@ -36,12 +36,25 @@ BLOCKED_REPORT="$TMP_DIR/blocked.json"
 cat > "$VALID" <<'YAML'
 schema: deploy/platform-shell-readiness-manifest/v1
 status: ready
+client:
+  id: kanbien
+  display_name: Kanbien
+environment:
+  id: staging
+  class: staging
 deployment:
   service_id: platform-shell
   environment: staging
   runtime_target: aws.ecs-fargate.platform-shell-staging
   source_policy: remote-main
   mutation_authorized: false
+source:
+  provider: github
+  repository: owner/entity-builder-harness
+  ref: refs/heads/main
+  commit_sha: 0123456789abcdef0123456789abcdef01234567
+  workflow_path: .github/workflows/deploy-platform-shell-staging.yml
+  workflow_run_id: "1234567890"
 github:
   repository: owner/entity-builder-harness
   source_policy: remote-main
@@ -78,7 +91,9 @@ artifacts:
     vulnerability_scan: scan://platform-shell/0123456789abcdef0123456789abcdef01234567
     provenance_or_attestation: attest://platform-shell/0123456789abcdef0123456789abcdef01234567
 runtime:
+  provider: aws
   family: ecs-fargate
+  adapter: platform/adapters/aws/runtime/ecs-fargate/
   decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
   server:
     health:
@@ -92,6 +107,11 @@ runtime:
     task_definition: arn:aws:ecs:eu-west-1:123456789012:task-definition/platform-shell-worker:1
     service: arn:aws:ecs:eu-west-1:123456789012:service/platform/platform-shell-worker
     queue_adapter: platform/adapters/aws/queue/sqs/
+cloud:
+  provider: aws
+  account_id: "123456789012"
+  profile_or_oidc_role: arn:aws:iam::123456789012:role/github-platform-shell-staging-deploy
+  region: eu-west-1
 aws:
   account_id: "123456789012"
   profile_or_oidc_role: arn:aws:iam::123456789012:role/github-platform-shell-staging-deploy
@@ -155,7 +175,9 @@ artifacts:
     local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
     local_smoke_passed: true
 runtime:
+  provider: aws
   family: ecs-fargate
+  adapter: platform/adapters/aws/runtime/ecs-fargate/
   decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
   server:
     health:
@@ -213,8 +235,14 @@ assert ready["ok"] is True
 assert ready["status"] == "ready"
 assert ready["exit_overridden_for_planning"] is False
 assert ready["blocking_gaps"] == []
+assert ready["summary"]["target"]["client"] == "kanbien"
+assert ready["summary"]["target"]["environment"] == "staging"
+assert ready["summary"]["target"]["source_provider"] == "github"
+assert ready["summary"]["target"]["cloud_provider"] == "aws"
 assert ready["summary"]["deployment"]["service_id"] == "platform-shell"
+assert ready["summary"]["runtime"]["provider"] == "aws"
 assert ready["summary"]["runtime"]["family"] == "ecs-fargate"
+assert ready["summary"]["runtime"]["adapter"] == "platform/adapters/aws/runtime/ecs-fargate/"
 assert ready["summary"]["runtime"]["server_health"]["liveness"] == "/livez"
 
 assert blocked["ok"] is False
@@ -222,6 +250,10 @@ assert blocked["status"] == "blocked"
 assert blocked["caller_intent"] == "planning"
 assert blocked["exit_overridden_for_planning"] is True
 gap_ids = {item["id"] for item in blocked["blocking_gaps"]}
+assert "gap.deploy.platform-shell-readiness.client-id" in gap_ids
+assert "gap.deploy.platform-shell-readiness.environment-id" in gap_ids
+assert "gap.deploy.platform-shell-readiness.source-provider" in gap_ids
+assert "gap.deploy.platform-shell-readiness.cloud-provider" in gap_ids
 assert "gap.deploy.platform-shell-readiness.github-source-policy" in gap_ids
 assert "gap.deploy.platform-shell-readiness.github-commit-sha" in gap_ids
 assert "gap.deploy.platform-shell-readiness-artifacts-source-commit-sha" not in gap_ids

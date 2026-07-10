@@ -199,8 +199,9 @@ projection_sets:
       - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
       - bash scripts/02.rag-rulebook/query-local-context/script.sh --request-text "Where should platform adapters go and what AWS runtime family was selected for the platform shell?" --max-chunks 8 --format compact --pretty
     notes:
-      - Product platform shell runtime-family source projects into one 03.product deploy rule.
+      - Product platform shell runtime-family and target-profile source projects into one 03.product deploy rule.
       - The selected first AWS planning runtime family is ecs-fargate.
+      - Product platform shell deployment targets use infra/04.deploy/03.product/targets/<client>/<environment>/.
       - The decision is planning-only and does not authorize AWS mutation, DNS changes, IAM changes, image publishing, or production exposure.
 
   - id: projection.03.product.core.packages-core-contract-surface-v1

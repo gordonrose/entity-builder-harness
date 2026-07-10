@@ -37,8 +37,8 @@ runtime shell, including:
 - `platform/health/**`
 - `platform/config/**`
 - `apps/platform-smoke/**`
-- deployment-facing manifests or config that prove the platform shell without
-  mutating cloud state
+- deployment-facing target profiles, manifests, or config that prove the
+  platform shell without mutating cloud state
 
 This workflow governs local product/platform runtime code. AWS planning and
 execution remain governed by `.agentic/aws/` workflows.
@@ -56,7 +56,7 @@ execution remain governed by `.agentic/aws/` workflows.
 Before editing runtime code:
 
 1. Read `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`.
-2. Read ADR 0025 and ADR 0026.
+2. Read ADR 0025, ADR 0026, ADR 0027, and ADR 0028.
 3. Read the relevant platform rules under `docs/harness/architecture/rules/`.
 4. State the implementation milestone and bounded file scope.
 5. Stop if the slice requires AWS mutation, production DNS, secrets, account
@@ -77,6 +77,9 @@ Before editing runtime code:
   adaptation.
 - `platform/adapters/**` owns provider-specific runtime translation and uses
   `platform/adapters/<provider>/<adapter-type>/<service-name>/`.
+- Deployment target profiles under `infra/04.deploy/**/targets/<client>/<environment>/`
+  own client, environment, source repo, cloud provider, account/subscription,
+  region, runtime family, adapter, and readiness proof selection.
 - `platform/testing/**` owns fakes and mount-test helpers; it must not become a
   production runtime dependency.
 - `apps/platform-smoke/**` is a deliberately boring dummy app, not the final
@@ -84,6 +87,8 @@ Before editing runtime code:
 - Infrastructure provisioning, cloud topology, DNS, IAM, Terraform, CDK,
   Pulumi, and production deployment mutation do not belong under `platform/**`
   or `apps/**`.
+- Ordinary app feature code must not import deployment target profiles,
+  provider adapters, cloud SDK clients, or account/environment manifests.
 
 ## Required Checks
 
@@ -106,8 +111,9 @@ Minimum expected checks by surface:
 - `apps/platform-smoke/**`: app mount contract tests proving one route, one
   job, one health check, one config schema, one lifecycle hook, and one
   manifest.
-- Deployment-facing manifests/config: schema or static validation plus local
-  runtime smoke that consumes the metadata.
+- Deployment-facing target profiles/manifests/config: schema or static
+  validation, target profile validation, and local runtime smoke that consumes
+  the metadata.
 
 If the required check does not exist yet, add the smallest governed check or
 record an explicit gap before treating the slice as complete.
@@ -124,6 +130,9 @@ Stop before editing or executing if:
 - A check needed to prove the slice is missing and no gap has been recorded.
 - Runtime behavior depends on an unapproved provider, account, region,
   environment, queue, database, or cloud service.
+- Client, source repository, cloud provider, account/subscription, region,
+  runtime family, or adapter selection is being hardcoded into platform or app
+  feature code instead of a deploy target profile.
 - The work would require changing shared `packages/core` contracts without
   using the owning core/product governance.
 

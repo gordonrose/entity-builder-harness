@@ -18,6 +18,8 @@
 #     path: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
 #   - id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
 #     path: infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+#   - id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+#     path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
 schema: platform-shell/aws-runtime-family-decision/v1
 status: planning-only
 deployment_track: 03.product
@@ -53,6 +55,20 @@ adapter_layout:
     - Apps declare provider-neutral needs through platform contracts and app manifests.
     - Platform/deploy composition maps those needs to runtime adapters and deployment profiles.
     - Ordinary app feature code must not import provider adapters directly.
+target_profile_layout:
+  convention: infra/04.deploy/03.product/targets/<client>/<environment>/
+  first_target: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+  profile_owns:
+    - client identity
+    - environment identity
+    - source provider and repository identity
+    - cloud provider and account or subscription identity
+    - runtime family and adapter selection
+    - target-specific readiness proof and blockers
+  app_contract_boundary:
+    - Apps declare provider-neutral needs through platform contracts and app manifests.
+    - Target profiles select the client, repository, cloud provider, account, region, runtime family, and adapter.
+    - Ordinary app feature code must not import target profiles or cloud account/environment manifests.
 current_state_inspection:
   repo_evidence:
     - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml records runtime_family ecs-fargate for an existing RAG/rulebook staging target.
@@ -78,6 +94,16 @@ target_topology:
     source: infra/04.deploy/03.product/image/Dockerfile
     identity_for_deployment: immutable-digest-required
 required_before_mutation:
+  target_profile:
+    - client_id
+    - environment_id
+    - source_provider
+    - source_repository
+    - source_ref
+    - cloud_provider
+    - runtime_provider
+    - runtime_family
+    - runtime_adapter
   aws_target:
     - account_id
     - profile_or_oidc_role

@@ -48,6 +48,10 @@ can work together without depending on product app internals.
   runtime lifecycle and clients. Apps own product meaning.
 - Provider adapters use `platform/adapters/<provider>/<adapter-type>/<service-name>/`
   so the provider boundary, platform concern, and concrete service are explicit.
+- Deployment target selection is profile-driven by client and environment.
+  Client, source repository, cloud provider, account/subscription, region,
+  runtime family, adapter, and readiness proof live in deploy target profiles
+  such as `infra/04.deploy/03.product/targets/<client>/<environment>/`.
 - External URL shape is not locked by the platform runtime plan. The runtime
   should support host-agnostic route registration and deployment-facing
   manifests. DNS choices such as `app.domain.com` belong to infra/environment
@@ -285,14 +289,15 @@ production exposure.
 
 Status: implemented as a blocked readiness scaffold. The platform shell staging
 manifest lives at
-`infra/04.deploy/03.product/environments/staging/deploy-readiness.yml`, and the
+`infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml`, and the
 read-only verifier is
 `scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh`.
 
 The manifest records what is proven locally today and what remains blocked
-before AWS mutation: GitHub-to-AWS identity, immutable image provenance, ECS
-task/service targets, AWS account/region/network/ingress/secrets/logs/alarms,
-operations ownership, deployment smoke, and rollback proof.
+before AWS mutation for the Kanbien staging target: source identity,
+GitHub-to-AWS identity, immutable image provenance, ECS task/service targets,
+AWS account/region/network/ingress/secrets/logs/alarms, operations ownership,
+deployment smoke, and rollback proof.
 
 Acceptance:
 

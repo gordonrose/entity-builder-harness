@@ -23,8 +23,8 @@ set -euo pipefail
 #       path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
 #     - id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
 #       path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
-#     - id: infra.04-deploy.03-product.environments.staging.deploy-readiness
-#       path: infra/04.deploy/03.product/environments/staging/deploy-readiness.yml
+#     - id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
+#       path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
@@ -126,6 +126,9 @@ PENDING_VALUES = {
     "blocked-until-smoke-app-job-requirements",
 }
 REQUIRED_BLOCKED_PATHS = [
+    "source.commit_sha",
+    "source.workflow_path",
+    "source.workflow_run_id",
     "github.source_policy",
     "github.commit_sha",
     "github.workflow_path",
@@ -149,6 +152,9 @@ REQUIRED_BLOCKED_PATHS = [
     "runtime.worker.status",
     "runtime.worker.task_definition",
     "runtime.worker.service",
+    "cloud.account_id",
+    "cloud.profile_or_oidc_role",
+    "cloud.region",
     "aws.account_id",
     "aws.profile_or_oidc_role",
     "aws.region",
@@ -257,6 +263,15 @@ def require_file(data: dict[str, Any], path: str) -> None:
         block(path, f"referenced file does not exist: {value}", f"Create the referenced file or update `{path}`.")
 
 
+def require_matching(data: dict[str, Any], left: str, right: str) -> None:
+    left_value = get(data, left)
+    right_value = get(data, right)
+    if is_pending(left_value) or is_pending(right_value):
+        return
+    if left_value != right_value:
+        block(left, f"value must match `{right}`", f"Keep `{left}` and `{right}` aligned in the target profile.")
+
+
 def blocker_paths(data: dict[str, Any]) -> set[str]:
     blockers = data.get("blockers")
     if not isinstance(blockers, list):
@@ -320,6 +335,9 @@ def validate(data: dict[str, Any]) -> None:
         block("deployment.service_id", "service_id must be platform-shell", "Use the product platform shell service id.")
     require_string(data, "deployment.environment")
     require_string(data, "deployment.runtime_target")
+    require_string(data, "client.id")
+    require_string(data, "environment.id")
+    require_matching(data, "deployment.environment", "environment.id")
     if get(data, "deployment.mutation_authorized") is not False:
         block(
             "deployment.mutation_authorized",
@@ -327,19 +345,46 @@ def validate(data: dict[str, Any]) -> None:
             "Keep mutation authorization in a separate governed execution workflow.",
         )
 
+    require_string(data, "source.provider")
+    if get(data, "source.provider") != "github":
+        block("source.provider", "current source profile provider must be github", "Use `source.provider: github` or add a governed source-provider rule.")
+    require_string(data, "source.repository", pattern=r"[^/\s]+/[^/\s]+")
+    require_string(data, "source.ref")
     require_string(data, "github.repository", pattern=r"[^/\s]+/[^/\s]+")
     require_string(data, "github.ref")
+    require_matching(data, "source.repository", "github.repository")
+    require_matching(data, "source.ref", "github.ref")
+    require_matching(data, "source.commit_sha", "github.commit_sha")
+    require_matching(data, "source.workflow_path", "github.workflow_path")
+    require_matching(data, "source.workflow_run_id", "github.workflow_run_id")
     require_string(data, "github.oidc.audience")
     require_string(data, "github.oidc.repository_condition")
     require_string(data, "github.oidc.ref_condition")
     require_string(data, "github.oidc.environment_condition")
 
+    require_string(data, "cloud.provider")
+    if get(data, "cloud.provider") != "aws":
+        block("cloud.provider", "ecs-fargate target profiles must use cloud.provider aws", "Use `cloud.provider: aws` for ecs-fargate or add a separate governed runtime-family rule.")
+    require_matching(data, "cloud.account_id", "aws.account_id")
+    require_matching(data, "cloud.profile_or_oidc_role", "aws.profile_or_oidc_role")
+    require_matching(data, "cloud.region", "aws.region")
+
+    require_string(data, "runtime.provider")
     require_string(data, "runtime.family")
+    if get(data, "runtime.provider") != get(data, "cloud.provider"):
+        block("runtime.provider", "runtime provider must match cloud provider", "Select a runtime provider that matches the target cloud profile.")
     if get(data, "runtime.family") != "ecs-fargate":
         block(
             "runtime.family",
             "Milestone 9 selected ecs-fargate for the first platform shell planning target",
             "Use `ecs-fargate` or update the governed runtime-family decision first.",
+        )
+    require_string(data, "runtime.adapter")
+    if get(data, "runtime.adapter") != "platform/adapters/aws/runtime/ecs-fargate/":
+        block(
+            "runtime.adapter",
+            "ecs-fargate targets must select the ECS Fargate runtime adapter",
+            "Use `platform/adapters/aws/runtime/ecs-fargate/` for this target profile.",
         )
     require_file(data, "runtime.decision")
     require_file(data, "artifacts.image.dockerfile")
@@ -369,15 +414,20 @@ def validate(data: dict[str, Any]) -> None:
             if is_pending(get(data, path)):
                 block(path, "ready manifest contains unresolved deploy proof", f"Resolve `{path}` before setting status ready.")
         for path in (
+            "source.commit_sha",
             "github.commit_sha",
             "artifacts.source_commit_sha",
         ):
             require_string(data, path, pattern=r"[0-9a-f]{40}")
+        require_string(data, "source.workflow_path", pattern=r"\.github/workflows/[^/]+\.ya?ml")
+        require_string(data, "source.workflow_run_id")
         for path in (
             "artifacts.image.image_digest",
             "artifacts.image.base_image_digest",
         ):
             require_string(data, path, pattern=r"sha256:[0-9a-f]{64}")
+        require_string(data, "cloud.account_id", pattern=r"[0-9]{12}")
+        require_string(data, "cloud.region", pattern=r"[a-z]{2}-[a-z]+-[0-9]")
         require_string(data, "aws.account_id", pattern=r"[0-9]{12}")
         require_string(data, "aws.region", pattern=r"[a-z]{2}-[a-z]+-[0-9]")
         for path in (
@@ -419,6 +469,13 @@ report = {
     "exit_overridden_for_planning": exit_overridden,
     "manifest": manifest_path.as_posix(),
     "summary": {
+        "target": {
+            "client": get(manifest, "client.id"),
+            "environment": get(manifest, "environment.id"),
+            "source_provider": get(manifest, "source.provider"),
+            "source_repository": get(manifest, "source.repository"),
+            "cloud_provider": get(manifest, "cloud.provider"),
+        },
         "deployment": {
             "service_id": get(manifest, "deployment.service_id"),
             "environment": get(manifest, "deployment.environment"),
@@ -426,7 +483,9 @@ report = {
             "mutation_authorized": get(manifest, "deployment.mutation_authorized"),
         },
         "runtime": {
+            "provider": get(manifest, "runtime.provider"),
             "family": get(manifest, "runtime.family"),
+            "adapter": get(manifest, "runtime.adapter"),
             "server_health": get(manifest, "runtime.server.health"),
             "worker_status": get(manifest, "runtime.worker.status"),
         },

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.source-material.03-product.platform-shell-runtime-family
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -9,13 +9,15 @@ disciplines:
 - architecture
 - sre
 kind: source-material
-purpose: Record the platform shell AWS runtime-family planning decision for deploy/RAG retrieval.
+purpose: Record the platform shell runtime-family and target-profile planning decisions for deploy/RAG retrieval.
 portability:
   class: internal
   targets: []
 used_by:
 - id: deploy.rules.03-product.platform-shell-runtime-family
   path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+- id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
 -->
 # Platform Shell Runtime Family
 
@@ -25,8 +27,8 @@ This source material records the deployment planning decision for the first AWS
 runtime family of the product platform shell.
 
 It exists so future deploy planning, RAG retrieval, and human explanations can
-answer which runtime family was selected and what that decision does and does
-not authorize.
+answer which runtime family was selected, how client/environment deployment
+targets are represented, and what those decisions do and do not authorize.
 
 ## Decision
 
@@ -70,12 +72,47 @@ Examples include:
 - `platform/adapters/aws/runtime/app-runner/`
 - `platform/adapters/aws/queue/sqs/`
 
+## Deployment Target Profiles
+
+Deployment target selection is profile-driven. Client, source repository,
+cloud provider, account or subscription, region, runtime family, adapter, and
+readiness proof live in deploy target profiles, not ordinary app feature code
+or provider-neutral platform runtime internals.
+
+Product platform shell targets use this path shape:
+
+```text
+infra/04.deploy/03.product/targets/<client>/<environment>/
+```
+
+The first scaffolded profile is:
+
+```text
+infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+```
+
+A target profile should name:
+
+- `client.id`, such as `kanbien`;
+- `environment.id`, such as `staging` or `production`;
+- source provider, repository, ref, commit, workflow path, and workflow run id;
+- cloud provider and account, subscription, tenant, role/profile, or region;
+- runtime provider, runtime family, and selected adapter path;
+- target-specific blockers, readiness proof, smoke proof, and rollback proof.
+
+Adding a future client, repository, AWS account, Azure subscription, or runtime
+family should require a new target profile and, where necessary, a governed
+provider adapter. It should not require changing ordinary app feature code.
+
 ## Blockers Before AWS Mutation
 
-Before any AWS execution, the product platform shell must record:
+Before any AWS execution for a specific target profile, the product platform
+shell must record:
 
-- AWS account/profile or OIDC role;
-- region and environment;
+- client and environment identity;
+- source provider, repository, ref, commit SHA, workflow path, and workflow run
+  identity;
+- cloud provider, AWS account/profile or OIDC role, and region;
 - ECS cluster and service target;
 - server and worker task topology;
 - VPC, subnet, security group, ALB, target group, TLS, and DNS choices or
@@ -98,3 +135,6 @@ product platform shell target.
 
 Do not put ECS Fargate-specific assumptions into ordinary app feature code or
 provider-neutral platform runtime contracts.
+
+Do not create one global deployment target when client, environment, provider,
+account, subscription, region, and runtime family can vary by client.

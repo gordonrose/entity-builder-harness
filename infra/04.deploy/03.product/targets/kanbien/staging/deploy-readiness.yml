@@ -1,6 +1,6 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
-#   id: infra.04-deploy.03-product.environments.staging.deploy-readiness
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
 #   version: 1
 #   status: draft
 #   layer: 04.deploy
@@ -20,12 +20,25 @@
 #     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
 schema: deploy/platform-shell-readiness-manifest/v1
 status: blocked
+client:
+  id: kanbien
+  display_name: Kanbien
+environment:
+  id: staging
+  class: staging
 deployment:
   service_id: platform-shell
   environment: staging
   runtime_target: aws.ecs-fargate.platform-shell-staging
   source_policy: local-planning
   mutation_authorized: false
+source:
+  provider: github
+  repository: gordonrose/entity-builder-harness
+  ref: refs/heads/main
+  commit_sha: pending
+  workflow_path: pending
+  workflow_run_id: pending
 github:
   repository: gordonrose/entity-builder-harness
   source_policy: pending
@@ -62,7 +75,9 @@ artifacts:
     vulnerability_scan: pending
     provenance_or_attestation: pending
 runtime:
+  provider: aws
   family: ecs-fargate
+  adapter: platform/adapters/aws/runtime/ecs-fargate/
   decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
   server:
     health:
@@ -76,6 +91,11 @@ runtime:
     task_definition: pending
     service: pending
     queue_adapter: platform/adapters/aws/queue/sqs/
+cloud:
+  provider: aws
+  account_id: pending
+  profile_or_oidc_role: pending
+  region: pending
 aws:
   account_id: pending
   profile_or_oidc_role: pending
@@ -111,14 +131,19 @@ proof:
 blockers:
   - id: platform-shell-readiness.github-source
     severity: blocking
-    path: github
-    reason: The production-bound source commit and workflow run identity are not selected for this staging proof.
-    resolution: Record the remote-main commit SHA, workflow path, run id, and GitHub environment protections before deployment execution.
+    path: source
+    reason: The production-bound source commit and workflow run identity are not selected for this Kanbien staging proof.
+    resolution: Record the target repository, remote-main commit SHA, workflow path, run id, and GitHub environment protections before deployment execution.
   - id: platform-shell-readiness.github-oidc
     severity: blocking
     path: github.oidc
     reason: GitHub-to-AWS OIDC trust for the product platform shell has not been inspected or recorded.
     resolution: Select the AWS role and record repository, ref, environment, and workflow permission conditions.
+  - id: platform-shell-readiness.github-detail
+    severity: blocking
+    path: github
+    reason: GitHub workflow and environment protection details remain pending until the Kanbien staging source target is selected.
+    resolution: Record the workflow path, run id, source policy, and environment protection values after target planning.
   - id: platform-shell-readiness.image-provenance
     severity: blocking
     path: artifacts
@@ -131,9 +156,14 @@ blockers:
     resolution: Record server and worker task/service targets or an explicit worker deferral accepted by the platform runtime plan.
   - id: platform-shell-readiness.aws-target
     severity: blocking
-    path: aws
-    reason: AWS account, role/profile, region, cluster, network, ingress, TLS, DNS, secrets, logs, and alarms are not selected for the product shell.
+    path: cloud
+    reason: AWS account, role/profile, region, cluster, network, ingress, TLS, DNS, secrets, logs, and alarms are not selected for the Kanbien staging product shell target.
     resolution: Run the governed AWS planning/inspection workflow and copy the selected target identity into this manifest.
+  - id: platform-shell-readiness.aws-detail
+    severity: blocking
+    path: aws
+    reason: AWS implementation details remain pending until the Kanbien staging cloud target is selected.
+    resolution: Record concrete ECS, network, ingress, secrets, logs, and alarm values after target inspection.
   - id: platform-shell-readiness.operations
     severity: blocking
     path: operations

@@ -112,6 +112,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 9 AWS runtime-family planning decision.
   Durable evidence: Selected ecs-fargate as the first AWS planning runtime family without authorizing AWS mutation. Added ADR 0027 for provider/type/service adapter layout, AWS ADR 0001 for ECS Fargate planning, platform/adapters README, infra/04.deploy/03.product/aws-runtime-family.decision.yml, docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md, docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml, and source projection/derivation evidence. Updated the platform runtime plan, deploy blueprint, source material, structured rules, workflow guidance, and deploy README files. AWS live inspection remains blocked until product-shell account/profile, region, environment, and service target are selected.
 
+
+- Summary: Codified client/environment deployment target profiles for future multi-client and multi-cloud flexibility.
+  Durable evidence: Added ADR 0028 for client/environment deployment target profiles; moved the first platform shell readiness scaffold to infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml; updated the readiness verifier to require client, environment, source provider, cloud provider, runtime provider, and adapter fields; and updated product/deploy source material, rules, workflow guidance, and readiness docs. Validation passed: readiness verifier smoke, blocked Kanbien staging target planning verification, normal-mode blocked exit proof, source projections, source material coverage, derivation report validation, recognition freshness, local RAG runtime freshness, target-profile retrieval query, container boundary validation, and git diff --check.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -280,6 +284,13 @@ Summary: Implemented platform runtime Milestone 10 as a blocked deployment-readi
 
 Durable evidence: Added `infra/04.deploy/03.product/environments/staging/deploy-readiness.yml` with explicit blockers for GitHub-to-AWS identity, immutable image provenance, ECS runtime targets, AWS target identity/network/ingress/secrets/logs/alarms, operations ownership, deployment smoke, and rollback proof. Added read-only verifier `scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh`, README, and smoke test; updated deploy indexes and the platform runtime plan. Validation passed: platform shell readiness smoke test, blocked manifest planning verification, and normal-mode blocked exit proof.
 
+
+### 2026-07-10T22:16:01Z - Context hygiene
+
+Summary: Codified client/environment deployment target profiles for future multi-client and multi-cloud flexibility.
+
+Durable evidence: Added `docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md`; moved the first product platform shell readiness scaffold to `infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml`; updated `scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh` so target profiles must name client, environment, source provider, cloud provider, runtime provider, and adapter fields; updated deploy source material/rules, source derivation evidence, product workflow guidance, runtime plan, and deploy READMEs. Initial validation passed: readiness verifier smoke test and blocked Kanbien staging target planning verification with no hidden gaps.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -311,8 +322,9 @@ ADR needed: yes
 ADR paths:
 - docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
 - docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+- docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
 - docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
-Reason: Durable architecture decisions now cover app mount boundaries, provider/type/service adapter layout, and ECS Fargate as the first AWS planning runtime family.
+Reason: Durable architecture decisions now cover app mount boundaries, provider/type/service adapter layout, client/environment deployment target profiles, and ECS Fargate as the first AWS planning runtime family.
 
 ## Session Metrics
 
