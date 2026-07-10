@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 112
-  workflow_files: 34
+  term_count: 114
+  workflow_files: 35
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -511,6 +511,12 @@ terms:
   canonical_id: product.workflow.default
   evidence_path: .agentic/product/workflows/default.md
   confidence_weight: 1
+- term: .agentic/product/workflows/platform-runtime-implementation.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
 - term: .agentic/shared/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -696,6 +702,12 @@ terms:
   match_type: exact
   canonical_id: aws.workflow.plan-aws-change
   evidence_path: .agentic/aws/workflows/plan-aws-change.md
+  confidence_weight: 1
+- term: platform-runtime-implementation.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
 - term: review-okf-source-material.md
   category: workflow-name

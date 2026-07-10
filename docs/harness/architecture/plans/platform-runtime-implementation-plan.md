@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 1
+version: 2
 status: active
 layer: 01.harness
 domain: architecture
@@ -63,11 +63,10 @@ can work together without depending on product app internals.
 
 ## Governance Precondition
 
-`.agentic/product/workflows/default.md` is a placeholder and says not to use it
-for real implementation work. Before product/platform code implementation
-starts, add a focused workflow or checklist that governs platform runtime
-implementation slices, expected checks, session-log evidence, and stop
-conditions.
+`.agentic/product/workflows/platform-runtime-implementation.md` governs
+platform runtime implementation slices. Use it before editing runtime code,
+dummy-app code, platform testing helpers, or deployment-facing platform shell
+manifests.
 
 AWS deployment work already has planning and execution workflow coverage under
 `.agentic/aws/`. AWS execution remains blocked until a target account/profile,
@@ -129,6 +128,9 @@ Acceptance:
 
 Create a product/platform implementation workflow or checklist before runtime
 code changes begin.
+
+Status: implemented in
+`.agentic/product/workflows/platform-runtime-implementation.md`.
 
 Acceptance:
 
