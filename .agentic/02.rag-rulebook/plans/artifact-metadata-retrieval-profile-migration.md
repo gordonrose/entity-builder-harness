@@ -175,30 +175,33 @@ Failure criteria:
 - report cannot distinguish header weakness from generator weakness
 
 Current report result after LLM-calibrated deterministic reporter updates,
-audit-report addition, and readme/agent/recognition-source derivation:
+audit-report addition, readme/agent/recognition-source derivation, and final
+kind-contract derivation:
 
 - artifacts: `693`
-- `strong`: `666`
-- `partial`: `26`
+- `strong`: `692`
+- `partial`: `0`
 - `weak`: `0`
 - `excluded`: `1`
-- repair sources: `generator-rule=26`, `none=667`
+- repair sources: `none=693`
 
 Interpretation:
 
 - Header identity coverage is healthy.
 - No current artifact requires immediate header repair to become minimally
   retrievable.
-- The next improvement queue is deterministic generator-rule enrichment for the
-  remaining partial artifact shapes such as docs, examples, checklists,
-  corpus gaps, plans, prompts, review records, rulesets, state records, and
-  skill/index records.
+- The deterministic coverage report has no remaining `partial` or `weak`
+  indexed artifacts.
 - The LLM calibration audit converted stable findings into deterministic rules
   for service artifacts, templates, configs, and rubrics without editing
   authored headers.
 - The next deterministic derivation slice converted stable readme-like,
   ADR, agent, recognition-source, and source-material kinds without editing
   authored headers.
+- The final deterministic derivation slice converted the remaining stable
+  kind contracts for docs, examples, checklists, corpus gaps, plans, prompts,
+  review records, rulesets, state records, skill/index records, and related
+  governance records without editing authored headers.
 
 Validation:
 
@@ -280,35 +283,43 @@ Completed deterministic derivations:
   recognition term mapping expectations
 - source material now produces source coverage for rule derivation and
   validates source-to-rule coverage expectations
+- checklists now produce review checklists and validate checklist review
+  expectations
+- corpus gaps now produce corpus coverage gap records and validate gap tracking
+  expectations
+- docs now produce governed documentation artifacts and validate documentation
+  accuracy expectations
+- examples now produce worked example artifacts and validate example
+  conformance expectations
+- indexes now produce artifact family indexes and validate navigation
+  expectations
+- layer rulesets, rulesets, and rule packs now produce governed rule contracts
+  and validate rule expectations
+- migration plans and plans now produce tracking plans and validate progress
+  expectations
+- prompts now produce reusable prompt contracts and validate prompt usage
+  expectations
+- retirement records now produce artifact retirement records and validate
+  retirement decision expectations
+- review records now produce review evidence records and validate review
+  evidence expectations
+- skills now produce reusable model procedures and validate skill execution
+  expectations
+- state artifacts now produce governed state records and validate state
+  tracking expectations
 
 Result:
 
-- `strong`: `580` -> `666`
-- `partial`: `112` -> `26`
+- `strong`: `580` -> `692`
+- `partial`: `112` -> `0`
 - `weak`: `0` -> `0`
 - authored header edits: `0`
 
-Remaining partial kinds:
-
-- `doc`: `3`
-- `example`: `3`
-- `checklist`: `2`
-- `corpus-gap`: `2`
-- `plan`: `2`
-- `prompt`: `2`
-- `review-record`: `2`
-- `ruleset`: `2`
-- `state`: `2`
-- `index`: `1`
-- `layer-ruleset`: `1`
-- `migration-plan`: `1`
-- `retirement-record`: `1`
-- `rule-pack`: `1`
-- `skill`: `1`
+Remaining partial or weak artifacts: `0`.
 
 ### 7. Decide Whether Metadata Schema Needs Capability Fields
 
-Status: pending coverage report and derivation improvements.
+Status: no immediate schema extension indicated by coverage report.
 
 Only extend `agentic-artifact/v2` if deterministic derivation still cannot
 recover important cross-repo facts.
@@ -331,9 +342,9 @@ Success criteria:
 - backfill can apply it in small governed batches
 - generated recognition sources and RAG runtime stay fresh
 
-### 7. Governed Header Backfill, If Needed
+### 8. Governed Header Backfill, If Needed
 
-Status: pending schema decision.
+Status: not currently needed for retrieval-profile coverage.
 
 If schema fields are added, use narrow governed batches. Do not hand-edit a
 large repo-wide set.
@@ -357,9 +368,9 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/query-local-context/smoke-test.sh
 ```
 
-### 8. Expand RAG Evaluations By Question Family
+### 9. Expand RAG Evaluations By Question Family
 
-Status: pending profile coverage report.
+Status: next.
 
 Repeated misses should become fixtures, not ad hoc curated fixes.
 

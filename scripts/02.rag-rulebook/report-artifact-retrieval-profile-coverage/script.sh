@@ -60,6 +60,23 @@ README_KINDS = {
     "source-projection-registry",
     "workflow-index",
 }
+KIND_CONTRACTS = {
+    "checklist": ("review checklist", "checklist review expectations"),
+    "corpus-gap": ("corpus coverage gap record", "corpus gap tracking expectations"),
+    "doc": ("governed documentation artifact", "documentation accuracy expectations"),
+    "example": ("worked example artifact", "example conformance expectations"),
+    "index": ("artifact family index", "index navigation expectations"),
+    "layer-ruleset": ("layer rule contract", "layer rule expectations"),
+    "migration-plan": ("migration tracking plan", "migration progress expectations"),
+    "plan": ("implementation or migration plan", "plan tracking expectations"),
+    "prompt": ("reusable prompt contract", "prompt usage expectations"),
+    "retirement-record": ("artifact retirement record", "retirement decision expectations"),
+    "review-record": ("review evidence record", "review evidence expectations"),
+    "rule-pack": ("governed rule pack", "rule pack expectations"),
+    "ruleset": ("governed ruleset", "ruleset expectations"),
+    "skill": ("reusable model procedure", "skill execution expectations"),
+    "state": ("governed state record", "state tracking expectations"),
+}
 
 
 def repo_root() -> Path:
@@ -306,6 +323,9 @@ def infer_produces(artifact: dict[str, Any], actions: set[str]) -> list[str]:
         add_unique(produces, "recognition vocabulary source")
     if kind == "source-material":
         add_unique(produces, "source coverage for rule derivation")
+    contract = KIND_CONTRACTS.get(kind)
+    if contract:
+        add_unique(produces, contract[0])
     return produces
 
 
@@ -358,6 +378,9 @@ def infer_validates(artifact: dict[str, Any], actions: set[str]) -> list[str]:
         add_unique(validates, "recognition term mapping expectations")
     if kind == "source-material":
         add_unique(validates, "source-to-rule coverage expectations")
+    contract = KIND_CONTRACTS.get(kind)
+    if contract:
+        add_unique(validates, contract[1])
     if kind == "evaluation-fixture":
         add_unique(validates, "retrieval selector behavior")
     return validates

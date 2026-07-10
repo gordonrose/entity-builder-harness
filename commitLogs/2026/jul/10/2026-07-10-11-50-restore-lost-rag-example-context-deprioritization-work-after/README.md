@@ -64,6 +64,11 @@ restore lost RAG example context deprioritization work after crash
 - Use LLM review only as calibration evidence for deterministic rules. Do not
   add LLM judgment to the normal gate until a separate governed review workflow,
   prompt, sample policy, and rubric exist.
+- Treat the final 26 partial coverage records as stable artifact kind contracts
+  that can be derived deterministically without authored header edits.
+- Coverage no longer indicates a need for an `agentic-artifact/v2` schema
+  extension or governed header backfill; future schema work should come from
+  retrieval evaluation misses, not from this coverage report.
 - ADR needed: no. The work extends existing RAG/rulebook retrieval and artifact
   metadata machinery without changing the accepted architecture boundary.
 
@@ -75,10 +80,10 @@ restore lost RAG example context deprioritization work after crash
   `.agentic/02.rag-rulebook/evaluations/retrieval-profile-coverage/2026-07-10-llm-audit.md`.
 - Generated recognition sources were refreshed after adding metadata-bearing
   artifacts.
-- Current retrieval-profile coverage is `693` artifacts: `580` strong, `112`
+- Current retrieval-profile coverage is `693` artifacts: `692` strong, `0`
   partial, `0` weak, and `1` excluded.
-- Remaining partials are a deterministic generator-rule queue, mostly READMEs,
-  agent contracts, recognition sources, ADRs, and source-material records.
+- Remaining profile-coverage work should move to retrieval-evaluation fixtures
+  by question family rather than broad header/schema repair.
 
 ## Activity Log
 
@@ -123,6 +128,17 @@ Message: feat(rag): enrich retrieval profile kind derivation
 Summary: Added deterministic retrieval-profile derivation for readme-like artifacts, ADRs, agent contracts, recognition sources, and source material, reducing partial coverage from 112 to 26 without authored header edits.
 
 ADR impact: No ADR needed; this narrows the existing generated-profile migration with deterministic kind rules.
+
+### 2026-07-10 - Completed remaining retrieval-profile partials
+
+- Added deterministic kind contracts for docs, examples, checklists, corpus
+  gaps, plans, prompts, review records, rulesets, state records, skill/index
+  records, and related governance records.
+- Reduced retrieval-profile coverage from `26` partial artifacts to `0`
+  partial artifacts without authored header edits.
+- Left the deprecated artifact excluded.
+- Updated the migration plan to make question-family retrieval evaluations the
+  next slice.
 
 ## Sub-Agent Activity
 

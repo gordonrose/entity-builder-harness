@@ -53,12 +53,14 @@ assert report["ok"], report
 assert report["schema"] == "rag-rulebook/artifact-retrieval-profile-coverage-report/v1"
 assert report["counts"]["artifacts"] >= 689
 assert report["counts"]["coverage"].get("strong", 0) >= 1
-assert report["counts"]["coverage"].get("partial", 0) >= 1
+assert report["counts"]["coverage"].get("partial", 0) == 0
+assert report["counts"]["coverage"].get("weak", 0) == 0
+assert report["counts"]["repair_sources"].get("generator-rule", 0) == 0
 
 records = {record["artifact_id"]: record for record in report["records"]}
 script = records.get("rag-rulebook.script.report-artifact-retrieval-profile-coverage")
 assert script is not None, records.keys()
-assert script["coverage"] in {"strong", "partial"}
+assert script["coverage"] == "strong"
 assert "artifact.script" in script["specific_roles"]
 assert "script.report" in script["specific_roles"]
 assert script["produces"], script
