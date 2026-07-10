@@ -21,6 +21,11 @@ the runtime integration shape. Provider adapters and runtime modules will later
 translate this contract into concrete server, worker, config, security,
 observability, and lifecycle behavior.
 
+Apps may organize their internals by service, feature, capability, domain,
+use case, or another app-owned structure. Platform contracts do not prescribe
+that structure. The platform consumes the approved public app mount module and
+registered contributions, not app-internal files.
+
 Every public contract change should keep the source, type tests, runtime tests,
 boundary test, README, and RAG evidence in sync when the contract meaning
 changes.

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.concerns.dependency-direction
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: concern.dependency-direction
 title: Dependency direction rules
-version: 1
+version: 2
 status: active
 
 description: >
@@ -68,6 +68,7 @@ rules:
     must:
       - "Keep app-specific business behavior inside apps/*."
       - "Expose app integration through explicit mount files or manifests."
+      - "Keep app-internal service, feature, capability, domain, use-case, route, job, health, config, and workflow structure opaque behind approved public app integration surfaces."
     must_not:
       - "Do not import apps/* internals from packages/**."
       - "Do not import apps/* internals from platform/** except approved composition-root mount files."
@@ -113,6 +114,7 @@ rules:
     must_not:
       - "Do not put CRM, billing, onboarding, invoice, lead, account, subscription, campaign, or other product-specific concepts in platform."
       - "Do not import app-specific services, repositories, routes, jobs, or business logic from platform internals."
+      - "Do not make platform modules depend on app-internal service, feature, capability, domain, use-case, route, job, health, config, or workflow structure."
       - "Do not put Terraform, Pulumi, Kubernetes manifests, cloud provisioning, or IAM resource definitions in platform."
       - "Do not make normal product features require platform changes unless the runtime contract itself is changing."
     agent_guidance: >
@@ -131,6 +133,7 @@ rules:
       - "Keep the rest of platform unaware of business app internals."
     must_not:
       - "Do not import app services, repositories, routes, or business logic directly into platform internals."
+      - "Do not import app-internal service, feature, capability, domain, use-case, route, job, health, config, or workflow modules into platform internals."
       - "Do not let platform modules depend on CRM, billing, onboarding, or other product-specific concepts."
     allowed_exceptions:
       - from: "platform/server/mount.ts"
@@ -233,6 +236,10 @@ source_refs:
       - "The clean mental model"
       - "platform/server/"
       - "The business app mounting contract"
+  - doc: "0026-use-app-mount-as-platform-integration-boundary.md"
+    sections:
+      - "Decision"
+      - "Consequences"
 
   - doc: "kanbien-typescript-architecture-guide.md"
     sections:
@@ -255,6 +262,7 @@ success_criteria:
   - "It defines repo-wide dependency direction rules."
   - "It covers apps, reusable packages, packages/core, platform, design-system, harness, script command surfaces, infra, and generated code."
   - "It includes the platform composition-root exception for importing app mounts."
+  - "It keeps app-internal structure opaque behind approved public mount modules and manifests."
   - "It includes manually verified source_refs back to the relevant markdown guides."
   - "It does not duplicate the full contents of packages-core.yml, but it may reference overlapping core dependency principles."
   - "No unrelated files are changed."

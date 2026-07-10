@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.apps
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -20,7 +20,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.apps
 title: apps layer rules
-version: 1
+version: 2
 status: active
 
 description: >
@@ -43,7 +43,7 @@ related_rulesets:
 
 app_surfaces:
   - id: app_mount
-    purpose: "Public app integration module consumed by approved platform composition roots."
+    purpose: "Public app integration module consumed by approved platform composition roots; app internals remain app-owned behind this boundary."
     typical_paths:
       - "apps/*/app.mount.ts"
   - id: app_manifest
@@ -206,12 +206,14 @@ rules:
     must:
       - "Expose app mounting through app.mount.ts or another approved public mount module."
       - "Register routes, permissions, jobs, health checks, optional app config schemas, and optional lifecycle hooks through platform mount contracts."
+      - "Let the public mount module aggregate app-owned internal structures such as service, feature, capability, domain, use-case, route, job, health, config, or workflow modules."
       - "Expose deployment-facing metadata through app.manifest.ts or generated deployment metadata when infra needs app deployment behavior."
       - "Keep app manifests declarative and free of product implementation imports."
     must_not:
       - "Do not let platform internals import app services, repositories, route handlers, job handlers, domain models, or business rules directly."
       - "Do not let infra import app implementation internals to discover images, routes, config, secrets, or deployment settings."
       - "Do not pass raw server instances to apps as their integration surface."
+      - "Do not require platform changes merely because an app reorganizes its internal service, feature, capability, domain, use-case, route, job, health, config, or workflow structure."
     agent_guidance: >
       When another layer needs app information, expose a public mount,
       manifest, contract, or generated metadata artifact instead of importing
@@ -280,6 +282,11 @@ rules:
       behavior bugs.
 
 source_refs:
+  - doc: "kanbien-platform-layer-architecture.md"
+    sections:
+      - "The business app mounting contract"
+      - "What should remain inside apps/crm"
+      - "The most important design rule"
   - doc: "kanbien-architecture-full-discussion.md"
     sections:
       - "6. Applications"
@@ -295,6 +302,10 @@ source_refs:
       - "apps/"
       - "Purpose"
       - "TypeScript code that should live there"
+  - doc: "0026-use-app-mount-as-platform-integration-boundary.md"
+    sections:
+      - "Decision"
+      - "Consequences"
       - "What should not live there"
       - "Dependency rules"
       - "Testing approach"

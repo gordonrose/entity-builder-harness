@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 3
+#   version: 4
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 3
+version: 4
 status: active
 
 source_derivation:
@@ -186,7 +186,7 @@ rules:
       should not control platform internals directly.
     must:
       - "Expose stable app-facing contracts from platform/contracts/** or another explicitly approved public contract entry point."
-      - "Let apps mount through app.mount.ts files that register routes, permissions, jobs, health checks, optional config schemas, and optional lifecycle hooks."
+      - "Let apps mount through approved public app.mount.ts integration modules that register routes, permissions, jobs, health checks, optional config schemas, and optional lifecycle hooks."
       - "Give apps registries and mount dependencies, not raw HTTP server instances."
       - "Keep composed request and job runtime contexts in platform/contracts until multiple consumers justify a provider-neutral core promotion."
       - "Compose request/job context from core primitives such as correlation id, causation id, tenant context, principal, locale, config, logger, metrics, clock, queue message, delivery metadata, feature flags, and cancellation."
@@ -198,6 +198,7 @@ rules:
       - "Do not let apps mount at root or steal reserved platform paths such as health, metrics, or admin paths unless explicitly allowed."
       - "Do not move composed contexts that depend on authn, tenancy, localization, logging, monitoring, queues, config, flags, deadlines, or cancellation into packages/core/shared."
       - "Do not pass concrete feature-flag provider clients or SDKs through app mount dependencies."
+      - "Do not make platform depend on or prescribe app-internal structure such as service, feature, capability, domain, use-case, route-handler, repository, or workflow folders."
     agent_guidance: >
       Preserve the contract boundary. Apps register intent; platform translates
       it into concrete server, worker, health, and operational behavior.
@@ -215,6 +216,7 @@ rules:
       - "Let platform/server/** and platform/workers/** share the same app registry contract while using separate executable entrypoints."
     must_not:
       - "Do not import app services, repositories, controllers, route handlers, job handlers, health implementations, migrations, domain models, or business rules from platform internals."
+      - "Do not import app-internal service, feature, capability, domain, use-case, route, job, health, config, or workflow modules from platform internals."
       - "Do not make ordinary platform modules depend on CRM, billing, admin, onboarding, or other business app names."
     allowed_exceptions:
       - from: "platform/server/mount.ts"
@@ -387,6 +389,10 @@ source_refs:
     sections:
       - "Decision"
       - "Consequences"
+  - doc: "0026-use-app-mount-as-platform-integration-boundary.md"
+    sections:
+      - "Decision"
+      - "Consequences"
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/layers/platform.yml."
@@ -394,6 +400,7 @@ success_criteria:
   - "It maps platform test types to runtime critical paths, validation, edge cases, security, failure modes, compatibility, and observability/health categories."
   - "It keeps product workflows, business permission meaning, app services, app repositories, product health decisions, business quotas, and domain-specific jobs inside apps or business packages."
   - "It limits app imports to approved platform composition roots and app mount modules."
+  - "It keeps app-internal structure opaque behind approved public app mount modules."
   - "It keeps infrastructure provisioning outside platform/."
   - "It references dependency-direction for cross-layer import rules."
   - "It includes manually verified source_refs back to the platform layer guide."

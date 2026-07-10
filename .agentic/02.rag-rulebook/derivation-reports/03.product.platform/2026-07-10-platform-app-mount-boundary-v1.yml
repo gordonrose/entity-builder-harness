@@ -1,0 +1,144 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for the app mount platform integration boundary.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.rules.layers.platform
+#     path: docs/harness/architecture/rules/layers/platform.yml
+#   - id: harness.architecture.rules.layers.apps
+#     path: docs/harness/architecture/rules/layers/apps.yml
+#   - id: harness.architecture.rules.concerns.dependency-direction
+#     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.03.product-platform.2026-07-10.platform-app-mount-boundary-v1
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  summary: >
+    ADR 0026 records that apps expose one approved public app mount module as
+    the platform integration boundary, while app-internal service, feature,
+    capability, domain, use-case, route, job, health, config, and workflow
+    structure stays app-owned and opaque to platform internals.
+
+target:
+  corpus_id: corpus.03.product.platform
+  owner_layer: 03.product
+  expected_rule_paths:
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  affected_rule_paths:
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  affected_rulesets:
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: platform.app-mount-is-integration-boundary
+      summary: Apps expose platform integration through one approved public mount module, normally apps/<app>/app.mount.ts.
+      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+    - claim_id: platform.composition-roots-import-only-mounts
+      summary: Platform composition roots may import app mount modules, but other platform code must stay unaware of app internals.
+      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+    - claim_id: apps.internal-structure-is-app-owned
+      summary: App mount modules may aggregate service, feature, capability, domain, use-case, route, job, health, config, or workflow modules, but that structure is not part of the platform contract.
+      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+    - claim_id: layers.consume-public-surfaces-not-internals
+      summary: Other layers should consume approved public mounts, manifests, generated deployment metadata, or contracts rather than inspecting app internals.
+      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/harness/architecture/rules/layers/platform.yml
+      - docs/harness/architecture/rules/layers/apps.yml
+      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - Platform owns the runtime mount contract and approved composition-root imports.
+      - Apps own internal decomposition behind the public mount module.
+      - Dependency-direction rules own cross-layer import restrictions.
+
+proposed_updates:
+  rules:
+    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  notes:
+    - The rule update intentionally does not choose a service, feature, capability, or domain folder model for apps.
+    - Runtime implementation slices should test app mounts and registered contributions rather than app internals.
+
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+    - .cache/02.rag-rulebook
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: codex
+  reviewed_at_utc: "2026-07-10T12:50:00Z"
+  notes:
+    - The decision was made before platform runtime implementation to avoid freezing app internals as a platform concern.

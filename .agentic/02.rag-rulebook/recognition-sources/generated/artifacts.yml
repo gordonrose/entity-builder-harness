@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 610
-  term_count: 1232
+  indexed_artifacts: 614
+  term_count: 1240
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3168,6 +3168,18 @@ terms:
   canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
   evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   confidence_weight: 1
+- term: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  confidence_weight: 1
 - term: harness.adr.readme
   category: artifact-id
   match_type: exact
@@ -3263,6 +3275,18 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
   evidence_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+  confidence_weight: 1
+- term: harness.architecture.plan.platform-runtime-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+  confidence_weight: 1
+- term: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
   confidence_weight: 1
 - term: harness.architecture.rule-packs.add-core-module
   category: rule-pack-id
@@ -4044,6 +4068,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-08-platform-infra-capability-layering-v1
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   category: artifact-id
   match_type: exact
@@ -4355,6 +4391,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-security-contract
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.platform-infra-capability-layering
   category: artifact-id
