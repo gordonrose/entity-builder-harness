@@ -1,0 +1,121 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.03-product.platform-shell-runtime-family
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: rule
+#   purpose: Define the platform shell AWS runtime-family planning decision and deployment blockers.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.rules.03-product.readme
+#     path: docs/04.deploy/rules/03.product/README.md
+#   - id: infra.04-deploy.03-product.aws-runtime-family-decision
+#     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+id: deploy.03-product.platform-shell-runtime-family
+title: Platform shell runtime family rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 03.product
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-07-10T20:20:28Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+  source_material:
+    - path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+      sha256: c996bda40b78c33027ca9826af443c602df8967624dfa47985802828f19499a2
+
+description: >
+  Product platform shell deployment planning selects ECS Fargate as the first
+  AWS runtime family while keeping provider-specific decisions out of ordinary
+  app code and provider-neutral platform contracts.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  - .agentic/aws/workflows/plan-aws-change.md
+
+applies_to:
+  paths:
+    - "infra/04.deploy/03.product/**"
+    - "docs/04.deploy/source-material/03.product/**"
+    - "docs/04.deploy/rules/03.product/**"
+    - "docs/aws/architecture/adrs/**"
+    - "platform/adapters/**"
+    - "apps/**"
+
+rules:
+  - id: platform-shell-runtime-family.selects-ecs-fargate-for-planning
+    title: ECS Fargate is the first platform shell planning runtime
+    severity: error
+    summary: >
+      Platform shell deployment planning uses ecs-fargate as the first AWS
+      runtime family, but this does not authorize AWS mutation or make ECS part
+      of the app contract.
+    must:
+      - "Record runtime_family as ecs-fargate for the first product platform shell AWS planning target."
+      - "Treat the ECS Fargate selection as planning-only until account/profile, region, environment, service target, rollback, and exact mutation are approved."
+      - "Keep ECS-specific task, service, ALB, target group, health, scaling, rollback, alarm, and cost assumptions in deploy/AWS planning artifacts, provider adapters, or infra implementation."
+      - "Allow future runtime families through governed provider adapters and deployment profiles without changing app mount contracts."
+    must_not:
+      - "Do not mutate AWS, DNS, IAM, ECR, GitHub deployment settings, or production exposure from this decision alone."
+      - "Do not treat the RAG/rulebook ECS Fargate staging service as the product platform shell target."
+      - "Do not put ECS Fargate-specific assumptions into ordinary app feature code or provider-neutral platform runtime contracts."
+    required_checks:
+      - "Verify infra/04.deploy/03.product/aws-runtime-family.decision.yml records runtime_family ecs-fargate."
+      - "Verify AWS mutation remains blocked until target account/profile, region, environment, service target, rollback path, and exact mutation are approved."
+      - "Verify Milestone 10 readiness checks are ECS Fargate-specific only after this planning decision."
+    agent_guidance: >
+      If asked which runtime family was selected for the platform shell, answer
+      ecs-fargate for planning. Also state that this is not a deployment
+      approval and not an app contract.
+
+  - id: platform-shell-runtime-family.keeps-provider-adapters-out-of-app-code
+    title: Provider adapters satisfy app needs without becoming app internals
+    severity: error
+    summary: >
+      Apps declare provider-neutral needs; platform/deploy composition maps
+      those needs to runtime adapters and deployment profiles.
+    must:
+      - "Use platform/adapters/<provider>/<adapter-type>/<service-name>/ for provider-specific runtime translation."
+      - "Use examples such as platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/runtime/lambda, platform/adapters/aws/runtime/app-runner, and platform/adapters/aws/queue/sqs when those adapters are implemented."
+      - "Have apps declare routes, jobs, health checks, config schemas, permissions, lifecycle hooks, and deployment requirements through app.mount.ts, app.manifest.ts, generated metadata, or platform contracts."
+      - "Let platform/deploy composition choose the runtime adapter and deployment profile."
+    must_not:
+      - "Do not let ordinary app feature code import provider adapters directly."
+      - "Do not expose raw provider clients as the normal app-facing API."
+      - "Do not make platform adapters provision AWS resources, IAM, networking, DNS, queues, storage, secrets, or alarms."
+    required_checks:
+      - "Verify provider adapter paths follow provider/type/service naming before implementation."
+      - "Verify app code consumes provider-neutral platform contracts rather than provider adapters."
+    agent_guidance: >
+      Use the mental model: apps declare needs, platform adapters translate
+      providers, and infra provisions resources.
+
+source_refs:
+  - doc: "platform-shell-runtime-family.md"
+    sections:
+      - "Decision"
+      - "Boundary"
+      - "Blockers Before AWS Mutation"
+      - "Non-Goals"
+
+success_criteria:
+  - "The selected runtime family is retrievable as ecs-fargate for the platform shell."
+  - "The rule distinguishes planning from AWS execution approval."
+  - "The rule keeps ECS Fargate out of ordinary app code and provider-neutral platform runtime contracts."

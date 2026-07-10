@@ -75,6 +75,8 @@ Before editing runtime code:
 - `platform/server/**` owns HTTP process behavior and route adaptation.
 - `platform/workers/**` owns background job process behavior and job
   adaptation.
+- `platform/adapters/**` owns provider-specific runtime translation and uses
+  `platform/adapters/<provider>/<adapter-type>/<service-name>/`.
 - `platform/testing/**` owns fakes and mount-test helpers; it must not become a
   production runtime dependency.
 - `apps/platform-smoke/**` is a deliberately boring dummy app, not the final
@@ -99,6 +101,8 @@ Minimum expected checks by surface:
   middleware order, auth/permission denial, and error response tests.
 - `platform/workers/**`: local worker smoke, job payload validation, retry,
   dead-letter, idempotency, logging, metrics, and shutdown tests.
+- `platform/adapters/**`: adapter contract tests for provider translation,
+  provider error mapping, configuration validation, and lifecycle behavior.
 - `apps/platform-smoke/**`: app mount contract tests proving one route, one
   job, one health check, one config schema, one lifecycle hook, and one
   manifest.

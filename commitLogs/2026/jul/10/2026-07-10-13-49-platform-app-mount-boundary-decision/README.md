@@ -108,6 +108,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 8 container and infra blueprint.
   Durable evidence: Added a platform server process entrypoint, image-build TypeScript config, runtime package shims, provider-neutral deploy blueprint, governed product deploy image boundary, local build and smoke scripts, package scripts, and deploy README updates. Validation passed: artifact metadata header check for new governed files, npm run platform:server:image-build, npm run platform:server:check, bash scripts/04.deploy/validate-container-boundaries/script.sh, bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh, compiled entrypoint startup with PLATFORM_SERVER_EXIT_AFTER_START=1, and git diff --check. Docker engine reachability and image startup are now proven locally; AWS/DNS/IAM/provisioning were not touched.
 
+
+- Summary: Implemented platform runtime Milestone 9 AWS runtime-family planning decision.
+  Durable evidence: Selected ecs-fargate as the first AWS planning runtime family without authorizing AWS mutation. Added ADR 0027 for provider/type/service adapter layout, AWS ADR 0001 for ECS Fargate planning, platform/adapters README, infra/04.deploy/03.product/aws-runtime-family.decision.yml, docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md, docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml, and source projection/derivation evidence. Updated the platform runtime plan, deploy blueprint, source material, structured rules, workflow guidance, and deploy README files. AWS live inspection remains blocked until product-shell account/profile, region, environment, and service target are selected.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -262,6 +266,13 @@ Summary: Proved the platform shell image smoke test with Docker reachable.
 
 Durable evidence: docker info succeeded against Docker Desktop from WSL. The first full smoke attempt exposed Docker Buildx metadata writes to read-only /home/owner/.docker in this sandbox, so the build and smoke scripts now default DOCKER_CONFIG to .cache/04.deploy/docker-config when the caller does not set it. Validation passed: bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh without --allow-skip-without-engine, artifact metadata header check for updated script artifacts, and git diff --check.
 
+
+### 2026-07-10T20:20:28Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 9 AWS runtime-family planning decision.
+
+Durable evidence: Selected `ecs-fargate` as the first AWS planning runtime family for the platform shell. Added `docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md` for the provider/type/service adapter layout, `docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md` for the AWS planning decision, `platform/adapters/README.md`, `infra/04.deploy/03.product/aws-runtime-family.decision.yml`, `docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md`, `docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml`, and `.agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml`. Updated the source projection manifest, generated recognition sources, platform runtime plan, deploy blueprint, platform source material, capability-layering source material, platform/capability structured rules, product workflow guidance, and product deploy README files. Validation passed: artifact metadata headers, YAML syntax, source projections, source material coverage, derivation report validation, recognition-source freshness, local RAG runtime build, query-local-context selecting the new 03.product runtime-family rule as top chunk, container boundary validation, and git diff --check. AWS live inspection was not run because product-shell account/profile, region, environment, and service target are not selected; no AWS/DNS/IAM/provisioning mutation was performed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -290,8 +301,11 @@ Durable evidence: docker info succeeded against Docker Desktop from WSL. The fir
 ## ADR Disposition
 
 ADR needed: yes
-ADR path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
-Reason: Durable architecture decision that platform consumes public app mount modules while app internals remain app-owned and opaque.
+ADR paths:
+- docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+- docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+- docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+Reason: Durable architecture decisions now cover app mount boundaries, provider/type/service adapter layout, and ECS Fargate as the first AWS planning runtime family.
 
 ## Session Metrics
 

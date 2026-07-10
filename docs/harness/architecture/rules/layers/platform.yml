@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 6
+version: 7
 status: active
 
 source_derivation:
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-      sha256: 4ad6629ecaee74eb9ae3f0cff2e303e6c4ce2a654d5e961bda872e414362fa85
+      sha256: 9fbb08dc362af47d4549eb670f997f5fc28fc2e8349a904e0dc79c1b4a441816
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -51,6 +51,7 @@ related_rulesets:
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/events-messaging-async.yml
   - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
   - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
 
 runtime_modules:
@@ -78,6 +79,9 @@ runtime_modules:
   - id: workers
     purpose: "Background job runtime, queue mechanics, scheduling, retries, and worker shutdown."
     public_to_apps: through_registry
+  - id: adapters
+    purpose: "Provider-specific runtime translation organized by provider, adapter type, and service name."
+    public_to_apps: through_approved_composition
   - id: testing
     purpose: "Fakes and helpers for platform/app contract tests."
     public_to_apps: test_only
@@ -190,11 +194,14 @@ rules:
       - "Treat platform/runtime/** as the provider-neutral mechanics layer for registry validation, lifecycle orchestration, resource startup and shutdown, context factories, readiness state, error mapping, cancellation, and graceful shutdown sequencing."
       - "Treat platform/server/** as the HTTP/API process layer for server startup, middleware order, API versioning, health endpoints, request logging, auth hooks, validation, error responses, route adaptation, and shutdown wiring."
       - "Treat platform/workers/** as the background job process layer for job polling or receiving, payload validation, retry and backoff, dead-letter behavior, idempotency hooks, job logging and metrics, and graceful shutdown."
+      - "Treat platform/adapters/** as the provider-specific translation layer, organized as platform/adapters/<provider>/<adapter-type>/<service-name>/."
+      - "Use adapter paths such as platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/runtime/lambda, platform/adapters/aws/queue/sqs, platform/adapters/aws/storage/s3, platform/adapters/aws/secrets/secrets-manager, and platform/adapters/aws/observability/cloudwatch when those adapters are implemented."
       - "Use apps/platform-smoke/** only as a deliberately boring dummy app that proves the shell can mount one route, one job, one health check, one config schema, and one lifecycle hook through app.mount.ts."
       - "Use deployment-facing manifests and config for app name, route base path, required environment variables, health endpoints, worker process names, queue requirements, container port, and deployment smoke-test targets when infra needs those facts."
     must_not:
       - "Do not treat apps/platform-smoke/** as the real product app or the final app architecture template."
       - "Do not put HTTP framework details, cloud SDK clients, or product business decisions in platform/runtime/**."
+      - "Do not let ordinary app feature code import or select provider adapters directly."
       - "Do not let ordinary platform/server/** or platform/workers/** internals import app services, features, repositories, route handlers, or job-handler internals."
       - "Do not make infra or deployment tooling scan arbitrary app source files when a manifest or generated metadata artifact should provide deployment facts."
     agent_guidance: >

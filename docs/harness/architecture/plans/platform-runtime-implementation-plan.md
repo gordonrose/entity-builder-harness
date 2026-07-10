@@ -46,6 +46,8 @@ can work together without depending on product app internals.
 - Composed request and job contexts start in `platform/contracts`.
 - Infra owns resource provisioning and deployment topology. Platform owns
   runtime lifecycle and clients. Apps own product meaning.
+- Provider adapters use `platform/adapters/<provider>/<adapter-type>/<service-name>/`
+  so the provider boundary, platform concern, and concrete service are explicit.
 - External URL shape is not locked by the platform runtime plan. The runtime
   should support host-agnostic route registration and deployment-facing
   manifests. DNS choices such as `app.domain.com` belong to infra/environment
@@ -88,7 +90,7 @@ The first production-shaped shell should include these modules:
 | `platform/observability` | Structured logging, redaction, metrics/tracing hooks, request/job ids | Safe log and metric assertions |
 | `platform/health` | `/livez`, `/readyz`, health aggregation, dependency readiness | Local and container health smoke |
 | `platform/config` | Startup config loading, namespaced app config schemas, environment validation | Invalid config fails before listen |
-| `platform/adapters` | Provider-specific runtime clients where needed | Adapter contract tests before cloud use |
+| `platform/adapters` | Provider-specific runtime clients where needed, organized as provider/type/service | Adapter contract tests before cloud use |
 | `infra/**` | Container image, IaC, environment values, deployment metadata, policy checks | Static, policy, image, and smoke checks |
 
 ## Dummy App Strategy
@@ -254,6 +256,16 @@ worker processes and will likely need ALB, health checks, task definitions,
 service stability, and rollback behavior. This is not a deployment decision
 until an AWS plan records `runtime_family`, account/profile, region,
 environment, cluster/service or equivalent target, and rollback path.
+
+Status: implemented as planning-only. The selected runtime family is
+`ecs-fargate`, recorded in
+`docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md`
+and `infra/04.deploy/03.product/aws-runtime-family.decision.yml`.
+
+This selection does not make ECS part of the app contract. Future runtime
+families may be added through governed adapters such as
+`platform/adapters/aws/runtime/lambda/` or deployment profiles. Apps declare
+provider-neutral needs through public platform contracts and manifests.
 
 Acceptance:
 

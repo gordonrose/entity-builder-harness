@@ -34,3 +34,8 @@ Use one of these statuses:
 - `proposed`
 - `accepted`
 - `superseded`
+
+## Records
+
+- `0001-select-ecs-fargate-for-platform-shell-planning.md` - select ECS
+  Fargate as the first AWS planning runtime family for the platform shell.

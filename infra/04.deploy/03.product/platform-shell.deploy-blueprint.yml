@@ -9,7 +9,7 @@
 #   - architecture
 #   - sre
 #   kind: deployment-manifest
-#   purpose: Name provider-neutral deployment requirements for the platform runtime shell image before AWS runtime selection.
+#   purpose: Name deployment requirements for the platform runtime shell image and selected planning runtime family.
 #   portability:
 #     class: internal
 #     targets: []
@@ -23,6 +23,13 @@ service:
   logical_name: platform-shell
   description: Provider-neutral platform runtime shell proving server startup and health endpoints.
   source_entrypoint: platform/server/src/main.ts
+runtime_family:
+  provider: aws
+  selected: ecs-fargate
+  decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+  adr: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+  scope: first-production-planning-target
+  not_app_contract: true
 image:
   logical_name: entity-builder-harness/03.product/platform-shell
   dockerfile: infra/04.deploy/03.product/image/Dockerfile
@@ -47,7 +54,15 @@ worker:
   status: planned-separate-process
   notes:
     - Worker queue polling is proven locally by platform/workers tests.
-    - Provider-specific queue adapters and worker image/process topology are deferred until runtime-family selection.
+    - ECS Fargate planning expects separate server and worker service topology before deployment readiness.
+    - Provider-specific queue adapters remain deferred until smoke-app job requirements are explicit.
+adapters:
+  layout: platform/adapters/<provider>/<adapter-type>/<service-name>/
+  runtime_candidate: platform/adapters/aws/runtime/ecs-fargate/
+  queue_candidate: platform/adapters/aws/queue/sqs/
+  app_boundary:
+    - Apps declare provider-neutral needs through app.mount.ts and app.manifest.ts.
+    - Ordinary app feature code must not import provider adapters directly.
 observability:
   logs: stdout-json
   metrics: platform-runtime-contracts
@@ -67,22 +82,21 @@ secrets:
     - Secret store and concrete secret references are deferred until AWS deployment planning.
 queues:
   local: in-memory test queue only
-  production: provider queue requirement deferred until runtime-family selection.
+  production: AWS SQS candidate; concrete resources deferred until smoke-app job requirements and AWS target planning.
 storage:
   local: none
   production: product storage requirements deferred until app layer and AWS planning.
 network:
   dns: deferred-to-aws-plan
   tls: deferred-to-aws-plan
-  ingress: deferred-to-runtime-family-selection
+  ingress: ALB candidate for ECS Fargate; exact listener, target group, and hostname deferred to AWS plan.
 operations:
   alarms: deferred-to-aws-plan
   rollback: deferred-to-aws-plan
   cost_limits: deferred-to-aws-plan
 iac_ownership:
-  status: not-selected
+  status: ecs-fargate-planning-selected
   required_before_production_readiness:
-    - runtime_family
     - account_profile
     - region
     - environment

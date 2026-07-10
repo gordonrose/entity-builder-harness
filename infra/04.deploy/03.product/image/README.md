@@ -24,7 +24,7 @@ platform runtime shell.
 
 The image packages `platform/server/src/main.ts`, which starts the platform
 server shell with no product app mounted yet. This proves container startup,
-liveness, and readiness before AWS runtime-family selection.
+liveness, and readiness before AWS deployment readiness.
 
 ## Files
 
@@ -72,8 +72,7 @@ with a read-only root filesystem, all capabilities dropped,
 This image boundary is not enough to deploy to AWS. Deployment remains blocked
 until the repo has:
 
-- selected AWS runtime family
-- target account/profile, region, and environment
+- ECS Fargate target account/profile, region, environment, cluster, and service
 - immutable built image digest
 - digest-pinned production base image
 - SBOM, vulnerability scan, and provenance or attestation policy
@@ -82,4 +81,3 @@ until the repo has:
 - DNS/TLS or equivalent HTTPS boundary
 - rollback target and operational alarms
 - deploy-readiness manifest with real non-secret evidence
-

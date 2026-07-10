@@ -283,6 +283,20 @@ Not allowed:
 Purpose: translate provider-neutral runtime contracts into specific providers
 or libraries when the shell needs real external services.
 
+Path convention:
+
+- organize adapters by provider, adapter type, and service name:
+  `platform/adapters/<provider>/<adapter-type>/<service-name>/`;
+- examples include `platform/adapters/aws/runtime/ecs-fargate/`,
+  `platform/adapters/aws/runtime/lambda/`,
+  `platform/adapters/aws/queue/sqs/`,
+  `platform/adapters/aws/storage/s3/`,
+  `platform/adapters/aws/secrets/secrets-manager/`, and
+  `platform/adapters/aws/observability/cloudwatch/`;
+- the provider segment names the cloud, local, or vendor boundary; the adapter
+  type names the platform concern; the service name names the concrete
+  provider service being translated.
+
 Typical files:
 
 - adapter factories for queues, storage, databases, feature flags,
@@ -301,6 +315,7 @@ Allowed:
 Not allowed:
 
 - exposing raw provider clients as the primary app-facing API;
+- letting ordinary app feature code pick or import provider adapters directly;
 - app business logic or product workflow decisions;
 - infrastructure provisioning, IAM, networking, or cloud resource topology;
 - secret values in source, tests, docs, fixtures, logs, or generated packets.

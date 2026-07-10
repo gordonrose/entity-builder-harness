@@ -23,8 +23,12 @@ This deploy track contains product-layer deployment implementation artifacts.
 
 The first artifact is the provider-neutral platform shell image boundary. It
 packages the local platform server entrypoint so the shell can be built and
-smoke-tested before AWS runtime-family selection.
+smoke-tested before AWS deployment readiness.
+
+The first AWS planning runtime family is recorded in
+`aws-runtime-family.decision.yml`: ECS Fargate. That decision is planning-only
+and does not authorize AWS mutation, DNS changes, image publishing, or
+production exposure.
 
 This track does not create cloud resources. AWS planning and execution remain
 governed by `.agentic/aws/` workflows.
-

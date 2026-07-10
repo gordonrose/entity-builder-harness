@@ -60,6 +60,27 @@ are runtime code. Adapters should expose predictable factories and return core
 or platform runtime contracts rather than raw provider clients as the primary
 app-facing API.
 
+Platform adapters should use the path shape:
+
+```text
+platform/adapters/<provider>/<adapter-type>/<service-name>/
+```
+
+Examples include:
+
+- `platform/adapters/aws/runtime/ecs-fargate/`
+- `platform/adapters/aws/runtime/lambda/`
+- `platform/adapters/aws/queue/sqs/`
+- `platform/adapters/aws/storage/s3/`
+- `platform/adapters/aws/secrets/secrets-manager/`
+- `platform/adapters/aws/observability/cloudwatch/`
+
+The provider segment names the external provider boundary, the adapter type
+names the platform concern, and the service name names the concrete service.
+Apps should declare provider-neutral needs through platform contracts and app
+manifests; platform/deploy composition chooses adapters and deployment
+profiles.
+
 `infra/blueprints` or `infra/contracts` should describe provider-neutral
 resource requirements: queues need a queue, a dead-letter path, encryption,
 retention, alarms, and IAM-like access boundaries; storage needs buckets or
@@ -91,7 +112,7 @@ For queues, the split should look like this:
 - `platform/runtime/queues` owns worker loops, handler registration,
   idempotency enforcement, retry decisions, backoff, dead-letter handling,
   payload validation, metrics, logs, health checks, and graceful shutdown.
-- `platform/adapters/aws/queues` translates the runtime queue contract to AWS
+- `platform/adapters/aws/queue/sqs` translates the runtime queue contract to AWS
   SQS concepts such as queue URL, receipt handle, message attributes, delay,
   visibility timeout, receive/delete semantics, and provider errors.
 - `infra/blueprints/queues` describes required queue resources, dead-letter

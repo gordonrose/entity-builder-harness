@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.concerns.platform-infra-capability-layering
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: concern.platform-infra-capability-layering
 title: Platform and infra capability layering rules
-version: 1
+version: 2
 status: active
 
 source_derivation:
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-      sha256: 4905d4c35578f7e61c2d787558525517002a32c5b18132de1f397f07c51f3bad
+      sha256: f69fa378b3152f90527a0f25a645807627623b8e78460b667fc048576c597e0a
 
 description: >
   Cross-cutting placement rules for capabilities that span provider-neutral
@@ -71,6 +71,7 @@ rules:
       - "Put stable provider-neutral public contracts and shared vocabulary in packages/core."
       - "Put provider-neutral runtime mechanics, orchestration, lifecycle, registries, retry decisions, observability hooks, and shutdown behavior in platform/runtime or approved platform runtime modules."
       - "Put provider-specific runtime translation and SDK/client integration in platform/adapters or approved adapter packages."
+      - "Organize provider adapters as platform/adapters/<provider>/<adapter-type>/<service-name>/ so the provider boundary, platform concern, and concrete service are explicit."
       - "Put provider-neutral infrastructure requirements in infra/blueprints or infra/contracts."
       - "Put provider-specific resource definitions in infra/providers."
       - "Put target-specific values, environment selections, thresholds, and deployment choices in infra/environments."
@@ -96,7 +97,7 @@ rules:
       - "Use packages/core/queues for QueueMessage, Queue, QueueHandler, send options, delivery metadata, retry or dead-letter metadata shapes, stable queue errors, and test helpers."
       - "Use apps for product decisions to enqueue work and product-owned handlers such as email, report generation, file processing, or integration sync."
       - "Use platform runtime for worker loops, handler registration, payload validation, idempotency, retry/backoff decisions, dead-letter handling, logs, metrics, health, and graceful shutdown."
-      - "Use platform adapters for provider translation such as AWS SQS queue URL, receipt handle, message attributes, delay, visibility timeout, receive/delete semantics, and provider error mapping."
+      - "Use platform adapters for provider translation such as platform/adapters/aws/queue/sqs handling AWS SQS queue URL, receipt handle, message attributes, delay, visibility timeout, receive/delete semantics, and provider error mapping."
       - "Use infra blueprints for provider-neutral queue, DLQ, encryption, retention, alarm, access-boundary, worker-deployment, and autoscaling requirements."
       - "Use infra providers and environments for concrete queue resources and target-specific values."
     must_not:
