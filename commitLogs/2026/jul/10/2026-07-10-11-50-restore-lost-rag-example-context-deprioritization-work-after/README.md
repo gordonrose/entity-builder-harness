@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-10T14:58:23Z
+latest_commit_sha: d73ae37
+chat_duration: 14887s (00:04:08:07)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -102,13 +102,30 @@ Initial intent: restore lost RAG example context deprioritization work after cra
   context query, selector fixtures, coverage reporter smoke test, and diff
   hygiene before commit.
 
+
+### 2026-07-10T14:58:23Z - Commit recorded
+
+Commit: `d73ae37`
+
+Message: feat(rag): generate artifact retrieval profiles
+
+Summary: Restored illustrative example-path deprioritization, added generated artifact retrieval profiles, widened metadata indexing scope, added a retrieval-profile coverage reporter, recorded an LLM calibration audit, and refreshed generated recognition sources.
+
+ADR impact: No ADR needed; extends existing RAG/rulebook retrieval and artifact metadata machinery.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `d73ae37`
+  Time UTC: 2026-07-10T14:58:23Z
+  Message: feat(rag): generate artifact retrieval profiles
+  Summary: Restored illustrative example-path deprioritization, added generated artifact retrieval profiles, widened metadata indexing scope, added a retrieval-profile coverage reporter, recorded an LLM calibration audit, and refreshed generated recognition sources.
+  ADR impact: No ADR needed; extends existing RAG/rulebook retrieval and artifact metadata machinery.
 
 ## Main Refresh Conflicts
 
@@ -125,12 +142,12 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-10T14:58:23Z
+Latest commit SHA: d73ae37
+Chat duration: 14887s (00:04:08:07)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
