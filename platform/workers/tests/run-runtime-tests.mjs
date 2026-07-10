@@ -27,6 +27,15 @@ writePackageShim("@kanbien/core", {
 writePackageShim("@kanbien/platform-contracts", {
   ".": join(runtimeRoot, "platform/contracts/src/index.js"),
 });
+writePackageShim("@kanbien/platform-config", {
+  ".": join(runtimeRoot, "platform/config/src/index.js"),
+});
+writePackageShim("@kanbien/platform-health", {
+  ".": join(runtimeRoot, "platform/health/src/index.js"),
+});
+writePackageShim("@kanbien/platform-observability", {
+  ".": join(runtimeRoot, "platform/observability/src/index.js"),
+});
 writePackageShim("@kanbien/platform-runtime", {
   ".": join(runtimeRoot, "platform/runtime/src/index.js"),
 });

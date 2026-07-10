@@ -20,6 +20,15 @@
       "@kanbien/platform-contracts": [
         "platform/contracts/src/index.ts"
       ],
+      "@kanbien/platform-config": [
+        "platform/config/src/index.ts"
+      ],
+      "@kanbien/platform-health": [
+        "platform/health/src/index.ts"
+      ],
+      "@kanbien/platform-observability": [
+        "platform/observability/src/index.ts"
+      ],
       "@kanbien/platform-runtime": [
         "platform/runtime/src/index.ts"
       ],

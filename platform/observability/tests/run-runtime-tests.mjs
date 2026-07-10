@@ -2,48 +2,17 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path, { join } from "node:path";
 
-const runtimeRoot = ".cache/platform-server-runtime";
-const testDirectory = join(runtimeRoot, "platform/server/tests");
+const runtimeRoot = ".cache/platform-observability-runtime";
+const testDirectory = join(runtimeRoot, "platform/observability/tests");
 const coreModules = [
-  "audit",
-  "authn",
-  "authz",
-  "config",
-  "diagnostics",
-  "events",
-  "i18n",
   "logging",
   "monitoring",
-  "queues",
   "shared",
-  "tenancy",
-  "validation",
 ];
 
 writePackageShim("@kanbien/core", {
   ".": join(runtimeRoot, "packages/core/src/index.js"),
   ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
-});
-writePackageShim("@kanbien/platform-contracts", {
-  ".": join(runtimeRoot, "platform/contracts/src/index.js"),
-});
-writePackageShim("@kanbien/platform-config", {
-  ".": join(runtimeRoot, "platform/config/src/index.js"),
-});
-writePackageShim("@kanbien/platform-health", {
-  ".": join(runtimeRoot, "platform/health/src/index.js"),
-});
-writePackageShim("@kanbien/platform-observability", {
-  ".": join(runtimeRoot, "platform/observability/src/index.js"),
-});
-writePackageShim("@kanbien/platform-runtime", {
-  ".": join(runtimeRoot, "platform/runtime/src/index.js"),
-});
-writePackageShim("@kanbien/platform-security", {
-  ".": join(runtimeRoot, "platform/security/src/index.js"),
-});
-writePackageShim("@kanbien/platform-testing", {
-  ".": join(runtimeRoot, "platform/testing/src/index.js"),
 });
 
 const testFiles = readdirSync(testDirectory)
@@ -51,7 +20,7 @@ const testFiles = readdirSync(testDirectory)
   .sort();
 
 if (testFiles.length === 0) {
-  throw new Error(`No platform/server runtime tests found in ${testDirectory}.`);
+  throw new Error(`No platform/observability runtime tests found in ${testDirectory}.`);
 }
 
 for (const testFile of testFiles) {

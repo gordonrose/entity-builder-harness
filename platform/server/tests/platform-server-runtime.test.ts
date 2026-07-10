@@ -1,11 +1,18 @@
 import { deepEqual, equal } from "node:assert/strict";
 import type { Permission } from "@kanbien/core/authz";
+import { configError, type ConfigSchema } from "@kanbien/core/config";
+import { validationIssue } from "@kanbien/core/validation";
 import {
   definePlatformApp,
   platformAppId,
   platformRouteName,
 } from "@kanbien/platform-contracts";
-import { createPlatformTestMountDeps, validatorForTest } from "@kanbien/platform-testing";
+import {
+  createPlatformTestLogger,
+  createPlatformTestMetrics,
+  createPlatformTestMountDeps,
+  validatorForTest,
+} from "@kanbien/platform-testing";
 import { createPlatformServerShell } from "../src/index";
 
 async function main(): Promise<void> {
@@ -16,6 +23,9 @@ async function main(): Promise<void> {
   }
 
   const permission = "smoke:read" as Permission;
+  const logger = createPlatformTestLogger();
+  const metrics = createPlatformTestMetrics();
+  const deps = createPlatformTestMountDeps({ logger, metrics });
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
@@ -43,7 +53,7 @@ async function main(): Promise<void> {
 
   const shell = await createPlatformServerShell({
     apps: [app],
-    deps: createPlatformTestMountDeps(),
+    deps,
     auth: {
       authenticate: (request) => request.headers?.authorization === "Bearer ok"
         ? { authenticated: true, permissions: [permission] }
@@ -59,12 +69,15 @@ async function main(): Promise<void> {
   equal(live.status, 200);
   deepEqual(live.body, { status: "live" });
   equal(live.headers["x-content-type-options"], "nosniff");
+  equal(live.headers["content-security-policy"], "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+  equal(live.headers["access-control-allow-origin"], undefined);
 
   const notReady = await shell.value.handle({ method: "GET", path: "/readyz" });
   equal(notReady.status, 503);
   await shell.value.lifecycle.start();
   const ready = await shell.value.handle({ method: "GET", path: "/readyz" });
   equal(ready.status, 200);
+  equal((ready.body as { readonly status: string }).status, "ready");
 
   const denied = await shell.value.handle({
     method: "POST",
@@ -109,6 +122,52 @@ async function main(): Promise<void> {
   const notFound = await shell.value.handle({ method: "GET", path: "/missing" });
   equal(notFound.status, 404);
   equal((notFound.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_ROUTE_NOT_FOUND");
+
+  equal(metrics.points().some((point) => point.name === "platform.server.request"), true);
+  equal(logger.records().some((record) => record.message === "platform.server.request"), true);
+
+  const rateLimitedShell = await createPlatformServerShell({
+    apps: [app],
+    deps: createPlatformTestMountDeps(),
+    rateLimiter: { check: () => ({ allowed: false, retryAfterMs: 10 }) },
+  });
+  equal(rateLimitedShell.ok, true);
+  if (!rateLimitedShell.ok) {
+    throw new Error("Expected rate-limited shell to mount.");
+  }
+  const limited = await rateLimitedShell.value.handle({ method: "GET", path: "/livez" });
+  equal(limited.status, 429);
+  equal((limited.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_RATE_LIMITED");
+
+  const invalidConfigSchema: ConfigSchema<never> = {
+    parse: () => ({
+      ok: false,
+      error: configError("CONFIG_INVALID", [
+        validationIssue({
+          path: ["config", "SMOKE_SECRET"],
+          code: "CONFIG_INVALID_SECRET",
+          defaultMessage: "Smoke config is invalid.",
+          params: { secret: "do-not-leak" },
+        }),
+      ]),
+    }),
+  };
+  const invalidConfigShell = await createPlatformServerShell({
+    apps: [definePlatformApp({
+      id: appId.value,
+      name: "Invalid Config",
+      mount(registry) {
+        registry.registerConfigSchema(invalidConfigSchema);
+      },
+    })],
+    deps: createPlatformTestMountDeps(),
+  });
+  equal(invalidConfigShell.ok, false);
+  if (!invalidConfigShell.ok) {
+    equal(invalidConfigShell.error.code, "PLATFORM_SERVER_CONFIG_INVALID");
+    const issues = invalidConfigShell.error.details?.["issues"] as readonly unknown[];
+    equal(JSON.stringify(issues).includes("do-not-leak"), false);
+  }
 }
 
 main()

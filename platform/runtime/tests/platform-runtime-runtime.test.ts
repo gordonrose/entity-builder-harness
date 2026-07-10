@@ -1,4 +1,5 @@
 import { deepEqual, equal } from "node:assert/strict";
+import { recordConfigSource, type ConfigSchema } from "@kanbien/core/config";
 import { healthCheckName, healthCheckResult, monitoringComponent } from "@kanbien/core/monitoring";
 import type { QueueMessageType } from "@kanbien/core/queues";
 import type { CorrelationId } from "@kanbien/core/shared";
@@ -28,6 +29,9 @@ async function main(): Promise<void> {
   }
 
   const permission = "smoke:read";
+  const configSchema: ConfigSchema<{ readonly enabled: boolean }> = {
+    parse: () => ({ ok: true, value: { enabled: true } }),
+  };
   const lifecycleOrder: string[] = [];
   const app = definePlatformApp({
     id: appId.value,
@@ -70,9 +74,10 @@ async function main(): Promise<void> {
               component: monitoringComponent({ type: "runtime", name: "smoke" }),
               status: "healthy",
               checkedAt: "2026-07-10T00:00:00.000Z" as never,
-            }),
+          }),
         },
       });
+      registry.registerConfigSchema(configSchema);
     },
   });
 
@@ -87,6 +92,8 @@ async function main(): Promise<void> {
   equal(mounted.value.routes.length, 1);
   equal(mounted.value.jobs.length, 1);
   equal(mounted.value.healthChecks.length, 1);
+  equal(mounted.value.configSchemas.length, 1);
+  equal(mounted.value.configSchemas[0]?.parse(recordConfigSource({})).ok, true);
 
   const invalidMount = await mountPlatformRuntimeApps({
     apps: [

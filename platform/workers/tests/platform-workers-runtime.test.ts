@@ -1,4 +1,7 @@
 import { equal } from "node:assert/strict";
+import { configError, type ConfigSchema } from "@kanbien/core/config";
+import type { QueueIdempotencyKey, QueueMessageType } from "@kanbien/core/queues";
+import { validationIssue } from "@kanbien/core/validation";
 import {
   definePlatformApp,
   platformAppId,
@@ -11,7 +14,6 @@ import {
   createPlatformTestQueueMessage,
   validatorForTest,
 } from "@kanbien/platform-testing";
-import type { QueueIdempotencyKey, QueueMessageType } from "@kanbien/core/queues";
 import {
   createInMemoryPlatformWorkerIdempotencyStore,
   createPlatformWorkerShell,
@@ -76,6 +78,8 @@ async function main(): Promise<void> {
   equal(beforeStart.error.code, "PLATFORM_WORKER_NOT_READY");
 
   equal((await shell.value.start()).ok, true);
+  const ready = await shell.value.health();
+  equal(ready.status, "ready");
 
   const successMessage = {
     ...createPlatformTestQueueMessage({
@@ -151,11 +155,42 @@ async function main(): Promise<void> {
   equal(idle.value.at(-1)?.status, "idle");
 
   equal((await shell.value.shutdown()).ok, true);
+  const notReady = await shell.value.health();
+  equal(notReady.status, "not-ready");
   equal(shell.value.enqueue(createPlatformTestQueueMessage({
     id: "closed-1",
     type: "smoke.rebuild" as QueueMessageType,
     payload: { rebuild: true },
   })).ok, false);
+
+  const invalidConfigSchema: ConfigSchema<never> = {
+    parse: () => ({
+      ok: false,
+      error: configError("CONFIG_INVALID", [
+        validationIssue({
+          path: ["config", "SMOKE_SECRET"],
+          code: "CONFIG_INVALID_SECRET",
+          defaultMessage: "Smoke config is invalid.",
+          params: { secret: "do-not-leak" },
+        }),
+      ]),
+    }),
+  };
+  const invalidConfigShell = await createPlatformWorkerShell({
+    apps: [definePlatformApp({
+      id: appId.value,
+      name: "Invalid Config",
+      mount(registry) {
+        registry.registerConfigSchema(invalidConfigSchema);
+      },
+    })],
+    deps: createPlatformTestMountDeps(),
+  });
+  equal(invalidConfigShell.ok, false);
+  if (!invalidConfigShell.ok) {
+    equal(invalidConfigShell.error.code, "PLATFORM_WORKER_CONFIG_INVALID");
+    equal(JSON.stringify(invalidConfigShell.error.details).includes("do-not-leak"), false);
+  }
 }
 
 main()

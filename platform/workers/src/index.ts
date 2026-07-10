@@ -1,4 +1,3 @@
-import { metricName, metricUnit } from "@kanbien/core/monitoring";
 import type { QueueMessage } from "@kanbien/core/queues";
 import {
   correlationId,
@@ -21,9 +20,13 @@ import {
   type PlatformRuntimeLifecycleController,
   type PlatformRuntimeMountResult,
 } from "@kanbien/platform-runtime";
+import { assertPlatformConfigValid } from "@kanbien/platform-config";
+import { platformReadiness, type PlatformReadinessSummary } from "@kanbien/platform-health";
+import { recordPlatformJobMetric, writePlatformLog } from "@kanbien/platform-observability";
 
 export type PlatformWorkerErrorCode =
   | "PLATFORM_WORKER_MOUNT_FAILED"
+  | "PLATFORM_WORKER_CONFIG_INVALID"
   | "PLATFORM_WORKER_QUEUE_CLOSED"
   | "PLATFORM_WORKER_NOT_READY"
   | "PLATFORM_WORKER_JOB_NOT_FOUND"
@@ -120,6 +123,7 @@ export interface PlatformWorkerShell {
   enqueue(message: QueueMessage): Result<void, PlatformWorkerError>;
   runNext(): Promise<Result<PlatformWorkerRunNextResult, PlatformWorkerError>>;
   runUntilIdle(options?: PlatformWorkerRunUntilIdleOptions): Promise<Result<readonly PlatformWorkerRunNextResult[], PlatformWorkerError>>;
+  health(): Promise<PlatformReadinessSummary>;
   shutdown(): Promise<Result<void, PlatformWorkerError>>;
 }
 
@@ -196,6 +200,14 @@ export async function createPlatformWorkerShell(
     return workerFailure("PLATFORM_WORKER_MOUNT_FAILED", "Platform worker failed to mount apps.", { runtimeCode: mounted.error.code }, mounted.error);
   }
 
+  const config = assertPlatformConfigValid({
+    source: options.deps.config,
+    schemas: mounted.value.configSchemas,
+  });
+  if (!config.ok) {
+    return workerFailure("PLATFORM_WORKER_CONFIG_INVALID", "Platform worker config validation failed before polling.", config.error.details, config.error);
+  }
+
   const queue = options.queue ?? createInMemoryPlatformWorkerQueue({
     now: () => isoDateTimeFromDate(options.deps.clock.now()),
   });
@@ -220,14 +232,16 @@ export async function createPlatformWorkerShell(
         messageType: String(entry.message.type),
       });
       queue.deadLetter(entry, error);
-      recordWorkerAttempt(options, "dead-lettered");
+      recordWorkerAttempt(options, entry, "dead-lettered", undefined, error);
+      writeWorkerLog(options, "warn", "platform.worker.job.dead_lettered", entry, undefined, error);
       return { ok: true, value: deadLettered(entry, error) };
     }
 
     const invalidPayload = validateJobPayload(job, entry.message);
     if (invalidPayload !== undefined) {
       queue.deadLetter(entry, invalidPayload);
-      recordWorkerAttempt(options, "dead-lettered");
+      recordWorkerAttempt(options, entry, "dead-lettered", job.name, invalidPayload);
+      writeWorkerLog(options, "warn", "platform.worker.job.dead_lettered", entry, job.name, invalidPayload);
       return { ok: true, value: deadLettered(entry, invalidPayload, job.name) };
     }
 
@@ -235,7 +249,8 @@ export async function createPlatformWorkerShell(
     if (idempotencyKey !== undefined && options.idempotency !== undefined) {
       try {
         if (await options.idempotency.hasProcessed(idempotencyKey)) {
-          recordWorkerAttempt(options, "succeeded");
+          recordWorkerAttempt(options, entry, "succeeded", job.name);
+          writeWorkerLog(options, "info", "platform.worker.job.skipped", entry, job.name);
           return {
             ok: true,
             value: {
@@ -269,12 +284,12 @@ export async function createPlatformWorkerShell(
         await options.idempotency.recordProcessed(idempotencyKey);
       }
 
-      options.deps.logger.write({
+      writePlatformLog(options.deps.logger, {
         level: "info",
         message: "platform.worker.job.succeeded",
-        fields: { jobName: String(job.name), messageType: String(entry.message.type), attempt: entry.attempt },
+        fields: workerLogFields(entry, job.name),
       });
-      recordWorkerAttempt(options, "succeeded");
+      recordWorkerAttempt(options, entry, "succeeded", job.name);
       return {
         ok: true,
         value: {
@@ -299,12 +314,17 @@ export async function createPlatformWorkerShell(
           return retry;
         }
 
-        options.deps.logger.write({
+        writePlatformLog(options.deps.logger, {
           level: "warn",
           message: "platform.worker.job.retry",
-          fields: { jobName: String(job.name), messageType: String(entry.message.type), attempt: entry.attempt, nextAttempt: entry.attempt + 1, delayMs },
+          fields: {
+            ...workerLogFields(entry, job.name),
+            nextAttempt: entry.attempt + 1,
+            delayMs,
+          },
+          error: workerHandlerError,
         });
-        recordWorkerAttempt(options, "retry");
+        recordWorkerAttempt(options, entry, "retry", job.name, workerHandlerError);
         return {
           ok: true,
           value: {
@@ -320,12 +340,13 @@ export async function createPlatformWorkerShell(
       }
 
       queue.deadLetter(entry, workerHandlerError);
-      options.deps.logger.write({
+      writePlatformLog(options.deps.logger, {
         level: "error",
         message: "platform.worker.job.dead_lettered",
-        fields: { jobName: String(job.name), messageType: String(entry.message.type), attempt: entry.attempt },
+        fields: workerLogFields(entry, job.name),
+        error: workerHandlerError,
       });
-      recordWorkerAttempt(options, "dead-lettered");
+      recordWorkerAttempt(options, entry, "dead-lettered", job.name, workerHandlerError);
       return { ok: true, value: deadLettered(entry, workerHandlerError, job.name) };
     }
   }
@@ -364,6 +385,11 @@ export async function createPlatformWorkerShell(
 
         return { ok: true, value: results };
       },
+      health: () => platformReadiness({
+        lifecycleReady: lifecycle.isReady(),
+        healthChecks: mounted.value.healthChecks,
+        clock: options.deps.clock,
+      }),
       shutdown: async () => {
         queue.close();
         const shutdown = await lifecycle.shutdown();
@@ -402,15 +428,46 @@ function deadLettered(
   };
 }
 
-function recordWorkerAttempt(options: PlatformWorkerShellOptions, status: Exclude<PlatformWorkerRunStatus, "idle">): void {
-  options.deps.metrics.record({
-    name: metricName("platform.worker.job.attempt"),
-    kind: "counter",
-    value: 1,
-    unit: metricUnit("count"),
-    recordedAt: isoDateTimeFromDate(options.deps.clock.now()),
-    labels: { status },
+function recordWorkerAttempt(
+  options: PlatformWorkerShellOptions,
+  entry: PlatformWorkerQueueEntry,
+  status: Exclude<PlatformWorkerRunStatus, "idle">,
+  jobName?: PlatformJobName,
+  error?: PlatformWorkerError,
+): void {
+  recordPlatformJobMetric(options.deps.metrics, options.deps.clock, {
+    job: jobName === undefined ? String(entry.message.type) : String(jobName),
+    status,
+    retryCount: entry.attempt - 1,
+    ...(error === undefined ? {} : { errorClass: error.code }),
   });
+}
+
+function writeWorkerLog(
+  options: PlatformWorkerShellOptions,
+  level: "info" | "warn" | "error",
+  message: string,
+  entry: PlatformWorkerQueueEntry,
+  jobName?: PlatformJobName,
+  error?: PlatformWorkerError,
+): void {
+  writePlatformLog(options.deps.logger, {
+    level,
+    message,
+    fields: workerLogFields(entry, jobName),
+    ...(error === undefined ? {} : { error }),
+  });
+}
+
+function workerLogFields(
+  entry: PlatformWorkerQueueEntry,
+  jobName?: PlatformJobName,
+): Readonly<Record<string, JsonValue>> {
+  return {
+    jobName: jobName === undefined ? String(entry.message.type) : String(jobName),
+    messageType: String(entry.message.type),
+    attempt: entry.attempt,
+  };
 }
 
 function workerSuccess(): Result<void, PlatformWorkerError> {

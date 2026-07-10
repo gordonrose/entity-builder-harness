@@ -237,6 +237,13 @@ Summary: Implemented platform runtime Milestone 6 worker shell.
 
 Durable evidence: Added @kanbien/platform-workers under platform/workers with package config, TypeScript configs, boundary/runtime/type tests, in-memory queue, worker shell, app job adaptation, payload validation, retry/backoff, dead-letter behavior, idempotency store, job context creation through platform/runtime, worker logging/metrics hooks, runUntilIdle, and graceful shutdown. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:workers:check, npm run platform:server:check, npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
+
+### 2026-07-10T19:25:36Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 7 observability, security, config, and health hardening.
+
+Durable evidence: Added @kanbien/platform-observability, @kanbien/platform-security, @kanbien/platform-config, and @kanbien/platform-health under platform/. Updated platform/runtime to retain mounted app config schemas. Updated platform/server and platform/workers to validate config before listen or worker polling, use shared safe logging and metrics helpers, use shared health/readiness aggregation, use defensive security headers and rate-limit/authz mechanisms where applicable, and keep provider/cloud implementation out of platform. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:config:check, npm run platform:health:check, npm run platform:observability:check, npm run platform:security:check, npm run platform:contracts:check, npm run platform:testing:check, npm run platform:runtime:check, npm run platform:server:check, npm run platform:workers:check, and git diff --check.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

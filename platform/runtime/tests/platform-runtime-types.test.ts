@@ -30,6 +30,7 @@ void deps;
 
 const registry = createPlatformRuntimeRegistry();
 void registry.routes();
+void registry.configSchemas();
 
 const requestContext: PlatformRequestContext = createPlatformRuntimeRequestContext({
   requestId: "request-1" as CorrelationId,

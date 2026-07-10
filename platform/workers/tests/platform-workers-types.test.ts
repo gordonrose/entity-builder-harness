@@ -42,6 +42,13 @@ void shell;
 const result: PlatformWorkerRunNextResult = { status: "idle" };
 void result;
 
+const healthResult: ReturnType<PlatformWorkerShell["health"]> = Promise.resolve({
+  status: "ready",
+  checkedAt: "2026-07-10T00:00:00.000Z" as never,
+  checks: [],
+});
+void healthResult;
+
 // @ts-expect-error worker queues accept core QueueMessage values, not arbitrary objects.
 queue.enqueue({ type: "smoke.rebuild" });
 

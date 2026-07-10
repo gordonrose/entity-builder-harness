@@ -17,6 +17,25 @@ import {
   type PlatformRuntimeLifecycleController,
   type PlatformRuntimeMountResult,
 } from "@kanbien/platform-runtime";
+import { assertPlatformConfigValid } from "@kanbien/platform-config";
+import { platformHealthHttpStatus, platformLiveness, platformReadiness } from "@kanbien/platform-health";
+import {
+  elapsedMilliseconds,
+  platformErrorClass,
+  platformTraceFields,
+  recordPlatformHealthMetric,
+  recordPlatformRequestMetric,
+  writePlatformLog,
+} from "@kanbien/platform-observability";
+import {
+  authorizePlatformPermissions,
+  corsPolicyForOrigin,
+  createInMemoryPlatformRateLimiter,
+  createPlatformSecurityHeaders,
+  denyByDefaultAuthenticationResult,
+  platformRateLimitError,
+  type PlatformRateLimiter,
+} from "@kanbien/platform-security";
 
 export type PlatformServerMiddlewareStep =
   | "request-id"
@@ -35,8 +54,10 @@ export type PlatformServerMiddlewareStep =
 
 export type PlatformServerErrorCode =
   | "PLATFORM_SERVER_MOUNT_FAILED"
+  | "PLATFORM_SERVER_CONFIG_INVALID"
   | "PLATFORM_SERVER_ROUTE_NOT_FOUND"
   | "PLATFORM_SERVER_METHOD_NOT_ALLOWED"
+  | "PLATFORM_SERVER_RATE_LIMITED"
   | "PLATFORM_SERVER_UNAUTHENTICATED"
   | "PLATFORM_SERVER_FORBIDDEN"
   | "PLATFORM_SERVER_INVALID_REQUEST"
@@ -79,6 +100,7 @@ export interface PlatformServerOptions {
   readonly auth?: PlatformServerAuthHook;
   readonly logger?: Logger;
   readonly corsOrigin?: string;
+  readonly rateLimiter?: PlatformRateLimiter;
 }
 
 export interface PlatformServerShell {
@@ -123,10 +145,26 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
     };
   }
 
+  const config = assertPlatformConfigValid({
+    source: options.deps.config,
+    schemas: mounted.value.configSchemas,
+  });
+  if (!config.ok) {
+    return {
+      ok: false,
+      error: {
+        code: "PLATFORM_SERVER_CONFIG_INVALID",
+        defaultMessage: "Platform server config validation failed before listen.",
+        status: 500,
+        details: config.error.details,
+      },
+    };
+  }
+
   const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps });
   const routes = mounted.value.routes.map(compileRoute);
   const logger = options.logger ?? options.deps.logger;
-  const corsOrigin = options.corsOrigin ?? "*";
+  const rateLimiter = options.rateLimiter ?? createInMemoryPlatformRateLimiter({ clock: options.deps.clock });
 
   return {
     ok: true,
@@ -138,8 +176,10 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
         routes,
         deps: options.deps,
         logger,
-        corsOrigin,
+        rateLimiter,
         lifecycle,
+        healthChecks: mounted.value.healthChecks,
+        ...(options.corsOrigin === undefined ? {} : { corsOrigin: options.corsOrigin }),
         ...(options.auth === undefined ? {} : { auth: options.auth }),
       }),
       listen: (listenOptions = {}) => listenPlatformServer({
@@ -148,8 +188,10 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
           routes,
           deps: options.deps,
           logger,
-          corsOrigin,
+          rateLimiter,
           lifecycle,
+          healthChecks: mounted.value.healthChecks,
+          ...(options.corsOrigin === undefined ? {} : { corsOrigin: options.corsOrigin }),
           ...(options.auth === undefined ? {} : { auth: options.auth }),
         }),
         options: listenOptions,
@@ -164,48 +206,110 @@ async function handlePlatformServerRequest(input: {
   readonly auth?: PlatformServerAuthHook;
   readonly deps: PlatformMountDeps;
   readonly logger: Logger;
-  readonly corsOrigin: string;
+  readonly corsOrigin?: string;
+  readonly rateLimiter: PlatformRateLimiter;
   readonly lifecycle: PlatformRuntimeLifecycleController;
+  readonly healthChecks: PlatformRuntimeMountResult["healthChecks"];
 }): Promise<PlatformServerResponse> {
   const middleware: PlatformServerMiddlewareStep[] = [];
-  const headers = securityHeaders(input.corsOrigin);
+  const startedAt = input.deps.clock.now();
+  const requestId = requestIdFromHeaders(input.request.headers ?? {});
+  const headers = createPlatformSecurityHeaders({ cors: corsPolicyForOrigin(input.corsOrigin) });
+
+  const finish = (
+    platformResponse: PlatformServerResponse,
+    route: string,
+    error?: unknown,
+  ): PlatformServerResponse => {
+    const latencyMs = elapsedMilliseconds(startedAt, input.deps.clock.now());
+    const errorClass = error === undefined ? undefined : platformErrorClass(error);
+    recordPlatformRequestMetric(input.deps.metrics, input.deps.clock, {
+      method: input.request.method,
+      route,
+      status: platformResponse.status,
+      latencyMs,
+      ...(errorClass === undefined ? {} : { errorClass }),
+    });
+    writePlatformLog(input.logger, {
+      level: platformResponse.status >= 500 ? "error" : platformResponse.status >= 400 ? "warn" : "info",
+      message: "platform.server.request",
+      correlationId: requestId,
+      fields: {
+        ...platformTraceFields({
+          requestId,
+          correlationId: requestId,
+          route,
+          latencyMs,
+          ...(errorClass === undefined ? {} : { errorClass }),
+        }),
+        method: input.request.method,
+        status: platformResponse.status,
+      },
+      ...(error === undefined ? {} : { error }),
+    });
+
+    return platformResponse;
+  };
 
   try {
     middleware.push("request-id", "request-logging", "cors", "security-headers", "rate-limit", "parse");
 
+    const rateLimit = input.rateLimiter.check("global");
+    if (!rateLimit.allowed) {
+      middleware.push("error-mapping", "response-logging");
+      const error = platformRateLimitError(rateLimit.retryAfterMs);
+      return finish(
+        errorResponse(serverError("PLATFORM_SERVER_RATE_LIMITED", 429, error.defaultMessage, error.details), headers, middleware),
+        "platform.rate-limit",
+        error,
+      );
+    }
+
     if (input.request.path === "/livez") {
       middleware.push("handler", "response-logging");
-      return response(200, { status: "live" }, headers, middleware);
+      const live = platformLiveness(input.deps.clock);
+      recordPlatformHealthMetric(input.deps.metrics, input.deps.clock, { healthState: live.status });
+      return finish(response(200, { status: live.status }, headers, middleware), "platform.livez");
     }
 
     if (input.request.path === "/readyz") {
       middleware.push("handler", "response-logging");
-      return response(input.lifecycle.isReady() ? 200 : 503, { status: input.lifecycle.isReady() ? "ready" : "not-ready" }, headers, middleware);
+      const ready = await platformReadiness({
+        lifecycleReady: input.lifecycle.isReady(),
+        healthChecks: input.healthChecks,
+        clock: input.deps.clock,
+      });
+      recordPlatformHealthMetric(input.deps.metrics, input.deps.clock, { healthState: ready.status });
+      return finish(response(platformHealthHttpStatus(ready.status), ready, headers, middleware), "platform.readyz");
     }
 
     const routeMatch = findRoute(input.routes, input.request);
     if (routeMatch === undefined) {
       middleware.push("error-mapping", "response-logging");
-      return errorResponse(serverError("PLATFORM_SERVER_ROUTE_NOT_FOUND", 404, "No platform route matched the request."), headers, middleware);
+      const error = serverError("PLATFORM_SERVER_ROUTE_NOT_FOUND", 404, "No platform route matched the request.");
+      return finish(errorResponse(error, headers, middleware), "unknown", error);
     }
 
     const { route, params } = routeMatch;
+    const routeName = String(route.registration.name);
     middleware.push("auth");
     const auth = await authenticateRequest(input.auth, input.request);
     if (route.registration.auth.kind === "authenticated" && !auth.authenticated) {
       middleware.push("error-mapping", "response-logging");
-      return errorResponse(serverError("PLATFORM_SERVER_UNAUTHENTICATED", 401, "Authentication is required."), headers, middleware);
+      const error = serverError("PLATFORM_SERVER_UNAUTHENTICATED", 401, "Authentication is required.");
+      return finish(errorResponse(error, headers, middleware), routeName, error);
     }
 
     middleware.push("context", "authorization");
     if (route.registration.auth.kind === "authenticated") {
-      const missingPermission = firstMissingPermission(route.registration.auth.permissions ?? [], auth.permissions ?? []);
-      if (missingPermission !== undefined) {
+      const authorized = authorizePlatformPermissions(route.registration.auth.permissions ?? [], auth.permissions ?? []);
+      if (!authorized.ok) {
         middleware.push("error-mapping", "response-logging");
-        return errorResponse(
-          serverError("PLATFORM_SERVER_FORBIDDEN", 403, "A required route permission is missing.", { permission: missingPermission }),
-          headers,
-          middleware,
+        const error = serverError("PLATFORM_SERVER_FORBIDDEN", 403, authorized.error.defaultMessage, authorized.error.details);
+        return finish(
+          errorResponse(error, headers, middleware),
+          routeName,
+          error,
         );
       }
     }
@@ -213,12 +317,13 @@ async function handlePlatformServerRequest(input: {
     middleware.push("validation");
     if (route.registration.validator !== undefined && !route.registration.validator.validate(input.request.body)) {
       middleware.push("error-mapping", "response-logging");
-      return errorResponse(serverError("PLATFORM_SERVER_INVALID_REQUEST", 400, "Request body failed route validation."), headers, middleware);
+      const error = serverError("PLATFORM_SERVER_INVALID_REQUEST", 400, "Request body failed route validation.");
+      return finish(errorResponse(error, headers, middleware), routeName, error);
     }
 
     middleware.push("handler");
     const context = createPlatformRuntimeRequestContext({
-      requestId: requestIdFromHeaders(input.request.headers ?? {}),
+      requestId,
       method: input.request.method,
       path: input.request.path,
       logger: input.deps.logger,
@@ -236,12 +341,14 @@ async function handlePlatformServerRequest(input: {
     const handled = await route.registration.handler.handle(platformRequest, context);
 
     middleware.push("response-logging");
-    input.logger.write({ level: "info", message: "platform.server.request", correlationId: context.correlationId, fields: { path: input.request.path, status: handled.status } });
-    return response(handled.status, handled.body, { ...headers, ...(handled.headers ?? {}) }, middleware);
+    return finish(response(handled.status, handled.body, { ...headers, ...(handled.headers ?? {}) }, middleware), routeName);
   } catch (error) {
     middleware.push("error-mapping", "response-logging");
-    input.logger.write({ level: "error", message: "platform.server.error", fields: { path: input.request.path } });
-    return errorResponse(serverError("PLATFORM_SERVER_HANDLER_FAILED", 500, "Platform route handler failed."), headers, middleware);
+    return finish(
+      errorResponse(serverError("PLATFORM_SERVER_HANDLER_FAILED", 500, "Platform route handler failed."), headers, middleware),
+      "unknown",
+      error,
+    );
   }
 }
 
@@ -309,16 +416,6 @@ function compileRoute(route: PlatformRouteRegistration): CompiledRoute {
   };
 }
 
-function securityHeaders(corsOrigin: string): Readonly<Record<string, string>> {
-  return {
-    "content-type": "application/json; charset=utf-8",
-    "access-control-allow-origin": corsOrigin,
-    "x-content-type-options": "nosniff",
-    "x-frame-options": "DENY",
-    "referrer-policy": "no-referrer",
-  };
-}
-
 function response(
   status: number,
   body: unknown,
@@ -357,14 +454,10 @@ function serverError(
 
 async function authenticateRequest(auth: PlatformServerAuthHook | undefined, request: PlatformServerRequest): Promise<PlatformServerAuthResult> {
   if (auth === undefined) {
-    return { authenticated: false, permissions: [] };
+    return denyByDefaultAuthenticationResult;
   }
 
   return auth.authenticate(request);
-}
-
-function firstMissingPermission(required: readonly Permission[], actual: readonly Permission[]): Permission | undefined {
-  return required.find((permission) => !actual.includes(permission));
 }
 
 function requestIdFromHeaders(headers: Readonly<Record<string, string | readonly string[]>>): CorrelationId {

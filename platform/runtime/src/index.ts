@@ -1,4 +1,4 @@
-import { recordConfigSource, type ConfigSource } from "@kanbien/core/config";
+import { recordConfigSource, type ConfigSchema, type ConfigSource } from "@kanbien/core/config";
 import { noopLogger, type Logger } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics } from "@kanbien/core/monitoring";
 import type { QueueMessage } from "@kanbien/core/queues";
@@ -57,6 +57,7 @@ export interface PlatformRuntimeRegistry extends PlatformAppRegistry {
   routes(): readonly PlatformRouteRegistration[];
   jobs(): readonly PlatformJobRegistration[];
   healthChecks(): readonly PlatformHealthRegistration[];
+  configSchemas(): readonly ConfigSchema<unknown>[];
   errors(): readonly PlatformContractError[];
   validate(): readonly PlatformContractError[];
 }
@@ -78,6 +79,7 @@ export interface PlatformRuntimeMountResult {
   readonly routes: readonly PlatformRouteRegistration[];
   readonly jobs: readonly PlatformJobRegistration[];
   readonly healthChecks: readonly PlatformHealthRegistration[];
+  readonly configSchemas: readonly ConfigSchema<unknown>[];
 }
 
 export interface PlatformRuntimeContextDeps {
@@ -164,6 +166,7 @@ export function createPlatformRuntimeRegistry(options: PlatformRuntimeRegistryOp
   const routes: PlatformRouteRegistration[] = [];
   const jobs: PlatformJobRegistration[] = [];
   const healthChecks: PlatformHealthRegistration[] = [];
+  const configSchemas: ConfigSchema<unknown>[] = [];
   const errors: PlatformContractError[] = [];
 
   function track(error: PlatformContractError): Result<void, PlatformContractError> {
@@ -219,13 +222,15 @@ export function createPlatformRuntimeRegistry(options: PlatformRuntimeRegistryOp
       healthChecks.push(healthCheck);
       return contractSuccess();
     },
-    registerConfigSchema() {
+    registerConfigSchema(schema) {
+      configSchemas.push(schema as ConfigSchema<unknown>);
       return contractSuccess();
     },
     permissions: () => permissions.map((permission) => ({ ...permission })),
     routes: () => [...routes],
     jobs: () => [...jobs],
     healthChecks: () => [...healthChecks],
+    configSchemas: () => [...configSchemas],
     errors: () => [...errors],
     validate() {
       const validationErrors = [...errors];
@@ -292,6 +297,7 @@ export async function mountPlatformRuntimeApps(
       routes: registry.routes(),
       jobs: registry.jobs(),
       healthChecks: registry.healthChecks(),
+      configSchemas: registry.configSchemas(),
     },
   };
 }
