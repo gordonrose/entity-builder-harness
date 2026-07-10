@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 619
-  term_count: 1250
+  indexed_artifacts: 620
+  term_count: 1252
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -6677,6 +6677,18 @@ terms:
   match_type: exact
   canonical_id: product.workflows.default
   evidence_path: .agentic/product/workflows/default.md
+  confidence_weight: 1
+- term: product.workflow.platform-runtime-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
+- term: .agentic/product/workflows/platform-runtime-implementation.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id

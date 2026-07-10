@@ -84,6 +84,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented Step 7 explanation-readiness audit as a read-only RAG/rulebook command.
   Durable evidence: Added scripts/02.rag-rulebook/audit-explanation-readiness with script, README, and smoke test; updated scripts/02.rag-rulebook/README.md and explanation-aware plan status; regenerated generated artifact recognition. Current audit reports 20/20 approved Markdown sources ready, 0 gaps, 878 source-explanation chunks, and 8 sources with execution-authority rule coverage.
 
+
+- Summary: Implemented platform runtime Milestone 1 governance.
+  Durable evidence: Added .agentic/product/workflows/platform-runtime-implementation.md, updated docs/harness/architecture/plans/platform-runtime-implementation-plan.md to point at the workflow, regenerated generated RAG recognition sources, and validated headers, YAML, recognition freshness, local runtime build/freshness, and git diff --check.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -174,6 +178,13 @@ ADR impact: covered by session ADR disposition
 Summary: Implemented Step 7 explanation-readiness audit as a read-only RAG/rulebook command.
 
 Durable evidence: Added scripts/02.rag-rulebook/audit-explanation-readiness with script, README, and smoke test; updated scripts/02.rag-rulebook/README.md and explanation-aware plan status; regenerated generated artifact recognition. Current audit reports 20/20 approved Markdown sources ready, 0 gaps, 878 source-explanation chunks, and 8 sources with execution-authority rule coverage.
+
+
+### 2026-07-10T17:34:55Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 1 governance.
+
+Durable evidence: Added .agentic/product/workflows/platform-runtime-implementation.md, updated docs/harness/architecture/plans/platform-runtime-implementation-plan.md to point at the workflow, regenerated generated RAG recognition sources, and validated headers, YAML, recognition freshness, local runtime build/freshness, and git diff --check.
 
 ## Sub-Agent Activity
 
