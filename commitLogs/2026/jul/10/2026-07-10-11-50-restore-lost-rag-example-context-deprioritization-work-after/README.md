@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T17:01:24Z
-latest_commit_sha: 99f0dd3
-chat_duration: 22268s (00:06:11:08)
+latest_commit_at_utc: 2026-07-10T17:19:27Z
+latest_commit_sha: f89ef56
+chat_duration: 23351s (00:06:29:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -162,6 +162,17 @@ Summary: Added the printable RAG retrieval source-of-truth material with prompt 
 
 ADR impact: No ADR needed; this strengthens existing RAG/rulebook retrieval, source-material, selector, and context-packet machinery without changing the architecture boundary.
 
+
+### 2026-07-10T17:19:27Z - Commit recorded
+
+Commit: `f89ef56`
+
+Message: feat(rag): expand question evidence routing
+
+Summary: Expanded curated question categories, evidence bundles, and supporting rulebook index entries for chat metrics, worktree recovery, local-main promotion, generated-recognition repair, hosted RAG auth, and packages/core contract questions; made chunk generation tolerate malformed YAML metadata while indexing evidence.
+
+ADR impact: No ADR needed; this extends existing deterministic RAG recognition, evidence-bundle, indexing, and chunk-generation behavior without changing the architecture boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -197,6 +208,13 @@ ADR impact: No ADR needed; this strengthens existing RAG/rulebook retrieval, sou
   Summary: Added the printable RAG retrieval source-of-truth material with prompt payload, runtime-cache, chunk, context-packet, assembly, and ranking examples; added related corpus gap/projection wiring, selector question-category fixtures, evidence-bundle coverage, generated recognition updates, and packet gap validation support.
   ADR impact: No ADR needed; this strengthens existing RAG/rulebook retrieval, source-material, selector, and context-packet machinery without changing the architecture boundary.
 
+
+- Commit: `f89ef56`
+  Time UTC: 2026-07-10T17:19:27Z
+  Message: feat(rag): expand question evidence routing
+  Summary: Expanded curated question categories, evidence bundles, and supporting rulebook index entries for chat metrics, worktree recovery, local-main promotion, generated-recognition repair, hosted RAG auth, and packages/core contract questions; made chunk generation tolerate malformed YAML metadata while indexing evidence.
+  ADR impact: No ADR needed; this extends existing deterministic RAG recognition, evidence-bundle, indexing, and chunk-generation behavior without changing the architecture boundary.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -212,9 +230,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T17:01:24Z
-Latest commit SHA: 99f0dd3
-Chat duration: 22268s (00:06:11:08)
+Latest commit at UTC: 2026-07-10T17:19:27Z
+Latest commit SHA: f89ef56
+Chat duration: 23351s (00:06:29:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
