@@ -174,26 +174,30 @@ Failure criteria:
 - report treats body-text guessing as authoritative
 - report cannot distinguish header weakness from generator weakness
 
-Current report result after LLM-calibrated deterministic reporter updates and
-audit-report addition:
+Current report result after LLM-calibrated deterministic reporter updates,
+audit-report addition, and readme/agent/recognition-source derivation:
 
 - artifacts: `693`
-- `strong`: `580`
-- `partial`: `112`
+- `strong`: `666`
+- `partial`: `26`
 - `weak`: `0`
 - `excluded`: `1`
-- repair sources: `generator-rule=112`, `none=581`
+- repair sources: `generator-rule=26`, `none=667`
 
 Interpretation:
 
 - Header identity coverage is healthy.
 - No current artifact requires immediate header repair to become minimally
   retrievable.
-- The next improvement queue is deterministic generator-rule enrichment for
-  partial artifact shapes such as layer READMEs, capability READMEs, agent
-  files, recognition sources, ADRs, and source-material records.
+- The next improvement queue is deterministic generator-rule enrichment for the
+  remaining partial artifact shapes such as docs, examples, checklists,
+  corpus gaps, plans, prompts, review records, rulesets, state records, and
+  skill/index records.
 - The LLM calibration audit converted stable findings into deterministic rules
   for service artifacts, templates, configs, and rubrics without editing
+  authored headers.
+- The next deterministic derivation slice converted stable readme-like,
+  ADR, agent, recognition-source, and source-material kinds without editing
   authored headers.
 
 Validation:
@@ -236,7 +240,7 @@ branch result is `693` artifacts, `580` strong, `112` partial, `0` weak, and
 
 ### 6. Improve Deterministic Profile Derivation
 
-Status: next.
+Status: complete in current branch, pending commit.
 
 Use the coverage report to improve generated profile derivation before changing
 headers.
@@ -263,6 +267,44 @@ Success criteria:
 - fewer `partial` and `weak` artifacts without manual header edits
 - generated profiles remain deterministic
 - selector fixtures continue to pass
+
+Completed deterministic derivations:
+
+- readme-like artifacts now produce governed navigation and ownership guides
+  and validate repository navigation and ownership expectations
+- ADRs now produce architecture decision records and validate architecture
+  decision rationale
+- agent contracts now produce agent role contracts and validate agent
+  responsibility boundaries
+- recognition sources now produce recognition vocabulary sources and validate
+  recognition term mapping expectations
+- source material now produces source coverage for rule derivation and
+  validates source-to-rule coverage expectations
+
+Result:
+
+- `strong`: `580` -> `666`
+- `partial`: `112` -> `26`
+- `weak`: `0` -> `0`
+- authored header edits: `0`
+
+Remaining partial kinds:
+
+- `doc`: `3`
+- `example`: `3`
+- `checklist`: `2`
+- `corpus-gap`: `2`
+- `plan`: `2`
+- `prompt`: `2`
+- `review-record`: `2`
+- `ruleset`: `2`
+- `state`: `2`
+- `index`: `1`
+- `layer-ruleset`: `1`
+- `migration-plan`: `1`
+- `retirement-record`: `1`
+- `rule-pack`: `1`
+- `skill`: `1`
 
 ### 7. Decide Whether Metadata Schema Needs Capability Fields
 

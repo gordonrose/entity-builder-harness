@@ -47,6 +47,19 @@ from typing import Any
 REPORT_SCHEMA = "rag-rulebook/artifact-retrieval-profile-coverage-report/v1"
 INDEX_GENERATOR = "scripts/01.harness/artifact-metadata/generate-index/script.sh"
 REQUIRED_IDENTITY_FIELDS = ["id", "layer", "domain", "kind", "purpose", "disciplines", "portability", "used_by"]
+README_KINDS = {
+    "capability-readme",
+    "corpus-readme",
+    "layer-readme",
+    "readme",
+    "rulebook-readme",
+    "script-domain-readme",
+    "script-layer-readme",
+    "skill-index",
+    "source-material-readme",
+    "source-projection-registry",
+    "workflow-index",
+}
 
 
 def repo_root() -> Path:
@@ -283,6 +296,16 @@ def infer_produces(artifact: dict[str, Any], actions: set[str]) -> list[str]:
         add_unique(produces, "machine-readable configuration contract")
     if kind == "rubric":
         add_unique(produces, "review scoring rubric")
+    if kind in README_KINDS:
+        add_unique(produces, "governed navigation and ownership guide")
+    if kind == "adr":
+        add_unique(produces, "architecture decision record")
+    if kind == "agent":
+        add_unique(produces, "agent role contract")
+    if kind == "recognition-source":
+        add_unique(produces, "recognition vocabulary source")
+    if kind == "source-material":
+        add_unique(produces, "source coverage for rule derivation")
     return produces
 
 
@@ -325,6 +348,16 @@ def infer_validates(artifact: dict[str, Any], actions: set[str]) -> list[str]:
         add_unique(validates, "configuration contract expectations")
     if kind == "rubric":
         add_unique(validates, "review scoring expectations")
+    if kind in README_KINDS:
+        add_unique(validates, "repository navigation and ownership expectations")
+    if kind == "adr":
+        add_unique(validates, "architecture decision rationale")
+    if kind == "agent":
+        add_unique(validates, "agent responsibility boundaries")
+    if kind == "recognition-source":
+        add_unique(validates, "recognition term mapping expectations")
+    if kind == "source-material":
+        add_unique(validates, "source-to-rule coverage expectations")
     if kind == "evaluation-fixture":
         add_unique(validates, "retrieval selector behavior")
     return validates
