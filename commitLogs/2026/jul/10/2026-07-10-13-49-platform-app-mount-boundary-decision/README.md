@@ -100,6 +100,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 4 registry and lifecycle skeleton.
   Durable evidence: Added the @kanbien/platform-runtime workspace under platform/runtime with provider-neutral runtime registry validation, app mounting, request/job context factories, lifecycle controller, readiness state, app hooks, resource start/drain/close, telemetry flush, runtime type tests, runtime behavior tests, and runtime boundary tests. Updated root platform:runtime npm scripts and workspace lockfile entries. Validation passed: npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
+
+- Summary: Implemented platform runtime Milestone 5 minimal HTTP server shell.
+  Durable evidence: Added the @kanbien/platform-server workspace under platform/server with a provider-neutral Node HTTP adapter, in-memory request handler, /livez and /readyz responses, mounted route adaptation, request context creation through platform/runtime, auth and permission denial hooks, validator handling, standard error responses, security/CORS header placeholders, middleware order trace, runtime/type/boundary tests, root platform:server npm scripts, and workspace lockfile entries. Validation passed: npm run platform:server:check, npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -218,6 +222,13 @@ Durable evidence: Added @kanbien/platform-testing under platform/testing with pa
 Summary: Implemented platform runtime Milestone 4 registry and lifecycle skeleton.
 
 Durable evidence: Added @kanbien/platform-runtime under platform/runtime with package config, TypeScript configs, boundary/runtime/type tests, provider-neutral runtime registry validation, app mounting, request/job context factories, lifecycle controller, readiness state, app hooks, resource start/drain/close, telemetry flush, and deterministic shutdown ordering. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
+
+
+### 2026-07-10T18:48:35Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 5 minimal HTTP server shell.
+
+Durable evidence: Added @kanbien/platform-server under platform/server with package config, TypeScript configs, boundary/runtime/type tests, provider-neutral Node HTTP adapter, in-memory request handler, /livez and /readyz responses, mounted route adaptation, request context creation through platform/runtime, auth and permission denial hooks, validator handling, standard error responses, security/CORS header placeholders, and middleware order trace. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:server:check, npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
 ## Sub-Agent Activity
 

@@ -1,0 +1,20 @@
+{
+  "name": "@kanbien/platform-server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@kanbien/core": "0.0.0",
+    "@kanbien/platform-contracts": "0.0.0",
+    "@kanbien/platform-runtime": "0.0.0"
+  },
+  "devDependencies": {
+    "@kanbien/platform-testing": "0.0.0"
+  }
+}
