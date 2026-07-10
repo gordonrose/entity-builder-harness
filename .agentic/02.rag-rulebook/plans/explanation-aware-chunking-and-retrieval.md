@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: retrieval
@@ -150,6 +150,26 @@ Start with existing knowledge rather than rewriting everything:
   - explains retrieval policy dimensions
 
 ## Ordered Plan
+
+## Implementation Status
+
+Current status:
+
+- Steps 1-2 are implemented for the first v1 surface: standards, retrieval
+  policy dimensions, compiled-policy schema, rulebook-index schema, and
+  context-packet schema now distinguish chunk purpose from chunk authority.
+- Steps 3-4 are implemented for governed Markdown source-material and guide
+  headings: the index generator emits deterministic `source-explanation`
+  candidates and the chunk generator renders bounded, cited explanation chunks.
+- Steps 5-6 are implemented for deterministic selector fixtures:
+  explanation/tutor prompts can select exact-source `source-explanation`
+  chunks, side-effecting prompts still require `execution-authority`, and the
+  platform runtime source-explanation fixture is registered in source
+  projections.
+- Step 8 is partially implemented: local runtime freshness fingerprints the
+  source-material and guide roots that can produce `source-explanation` chunks.
+- Step 7 remains open: a read-only explanation-readiness coverage audit has not
+  been added yet.
 
 ### 1. Codify The Distinction In Standards
 

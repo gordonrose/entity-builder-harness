@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.schema.context-packet
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: context-packets
@@ -437,6 +437,18 @@ fields:
             type: string
         section_path:
           type: string
+        heading_title:
+          type: string
+          description: Optional Markdown heading title for source-explanation chunks.
+        heading_path:
+          type: string
+          description: Optional Markdown heading path for source-explanation chunks.
+        line_start:
+          type: integer
+          minimum: 1
+        line_end:
+          type: integer
+          minimum: 1
         rule_ids:
           type: array
           items:

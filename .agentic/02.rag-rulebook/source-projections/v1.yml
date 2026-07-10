@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.source-projections.v1
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -240,14 +240,17 @@ projection_sets:
     corpus_gap_paths: []
     expected_selector_evaluations:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
     required_checks:
       - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
       - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
     notes:
       - The source records deferred platform and infra runtime obligations identified while hardening packages/core contract modules.
       - The projection keeps enterprise runtime guidance available before platform adapters, outbox relays, audit recorders, and infra resources are implemented.
+      - The source-explanation fixture proves the Markdown source itself remains retrievable for human walkthroughs of runtime shell surfaces and boundaries.
       - Deferrals should be recorded as explicit gaps rather than disappearing into chat history.
 
   - id: projection.03.product.platform.platform-infra-capability-layering-v1

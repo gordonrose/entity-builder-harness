@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.schema.rulebook-index
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -100,6 +100,7 @@ fields:
             - corpus-package
             - migration-map
             - generated-index
+            - source-material
         migration_status:
           type: enum
           allowed_values:
@@ -164,6 +165,7 @@ fields:
           type: enum
           allowed_values:
             - source-guide
+            - source-material
             - source-original
             - adr
             - layer-ruleset
@@ -353,6 +355,19 @@ fields:
             - orientation
         section_path:
           type: string
+        heading_title:
+          type: string
+        heading_path:
+          type: string
+        heading_level:
+          type: integer
+          minimum: 1
+        line_start:
+          type: integer
+          minimum: 1
+        line_end:
+          type: integer
+          minimum: 1
         source_path:
           type: string
         token_estimate:
@@ -425,6 +440,7 @@ fields:
           type: enum
           allowed_values:
             - source-guide
+            - source-material
             - source-original
             - adr
             - rule
@@ -438,6 +454,8 @@ fields:
         line_end:
           type: integer
           minimum: 1
+        section:
+          type: string
         section:
           type: string
 
@@ -761,6 +779,12 @@ field_guide:
       - "Use `execution-authority` only for governed rules, checks, stops, workflows, or approved binding material."
       - "Use `explanation-support` for source-material teaching chunks."
       - "Explanation-support candidates must not authorize writes, commits, deploys, destructive actions, or cloud mutation."
+  - path: chunk_candidates[].heading_path
+    what_it_is: "Markdown heading path for source-explanation candidates."
+    what_it_does: "Lets humans and tools see which bounded teaching section produced a chunk."
+    rules:
+      - "Use for Markdown-derived explanation chunks."
+      - "Pair with line_start and line_end so chunks remain citable and bounded."
   - path: graph_edges
     what_it_is: "Relationships between indexed artifacts, rules, chunks, corpora, paths, and sources."
     what_it_does: "Lets retrieval expand from one match to required or related context deterministically."

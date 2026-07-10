@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-chunks
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: chunking
@@ -59,6 +59,7 @@ CHUNK_SET_SCHEMA = "rag-rulebook/chunk-set/v1"
 GENERATOR_VERSION = "prototype-v1"
 INDEX_GENERATOR_SCRIPT = "scripts/02.rag-rulebook/generate-rulebook-index/script.sh"
 INDEX_VALIDATOR_SCRIPT = "scripts/02.rag-rulebook/validate-rulebook-index/script.sh"
+MAX_MARKDOWN_SECTION_WORDS = 420
 
 
 def repo_root() -> Path:
@@ -211,6 +212,39 @@ def render_list(label: str, values: list[str]) -> list[str]:
 
 def render_yaml_block(value: Any) -> str:
     return yaml.safe_dump(value, sort_keys=False, allow_unicode=False, width=88).strip()
+
+
+def bounded_markdown_text(text: str) -> tuple[str, bool]:
+    words = text.split()
+    if len(words) <= MAX_MARKDOWN_SECTION_WORDS:
+        return text.strip(), False
+    return " ".join(words[:MAX_MARKDOWN_SECTION_WORDS]).strip() + "\n\n[section truncated]", True
+
+
+def markdown_section_content(candidate: dict[str, Any], artifact: dict[str, Any]) -> str:
+    source_path = candidate.get("source_path")
+    line_start = candidate.get("line_start")
+    line_end = candidate.get("line_end")
+    section_text = ""
+    if isinstance(source_path, str) and isinstance(line_start, int) and isinstance(line_end, int) and repo_path(source_path).is_file():
+        lines = repo_path(source_path).read_text(encoding="utf-8").splitlines()
+        section_text = "\n".join(lines[line_start - 1 : line_end])
+    bounded_text, truncated = bounded_markdown_text(section_text)
+    lines = [
+        f"Source explanation: {candidate.get('heading_title') or artifact.get('title') or artifact.get('artifact_ref')}",
+        f"Artifact: {artifact.get('title') or artifact.get('artifact_ref')}",
+        f"Artifact ref: {artifact.get('artifact_ref')}",
+        f"Corpus: {candidate.get('corpus_id') or artifact.get('corpus_id')}",
+        f"Source path: {source_path}",
+        f"Heading path: {candidate.get('heading_path')}",
+        f"Source lines: {line_start}-{line_end}",
+        "Authority: explanation-support",
+        "",
+        bounded_text,
+    ]
+    if truncated:
+        lines.insert(8, "Bounded: true")
+    return "\n".join(line for line in lines if line is not None).strip()
 
 
 def artifact_summary_content(candidate: dict[str, Any], artifact: dict[str, Any]) -> str:
@@ -379,6 +413,8 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             content = rule_pack_step_content(pack, section_body)
         elif content_kind == "required-check" and pack:
             content = required_check_content(pack, section_body)
+        elif content_kind == "source-explanation":
+            content = markdown_section_content(candidate, artifact)
         else:
             warnings.append(f"unsupported chunk content kind for {chunk_id}: {content_kind}")
             content = artifact_summary_content(candidate, artifact)
@@ -399,6 +435,10 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             "chunk_purpose": candidate.get("chunk_purpose") or content_kind,
             "authority": candidate.get("authority") or "orientation",
             "section_path": candidate.get("section_path"),
+            "heading_title": candidate.get("heading_title"),
+            "heading_path": candidate.get("heading_path"),
+            "line_start": candidate.get("line_start"),
+            "line_end": candidate.get("line_end"),
             "rule_ids": [rule.get("rule_id")] if rule else [],
             "rule_refs": [rule_ref] if isinstance(rule_ref, str) else [],
             "pack_refs": [pack_ref] if isinstance(pack_ref, str) else [],

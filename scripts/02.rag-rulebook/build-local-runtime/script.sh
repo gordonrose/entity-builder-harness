@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.build-local-runtime
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: runtime
@@ -243,6 +243,7 @@ FINGERPRINT_INPUTS = {
         "docs/harness/architecture/source-material",
         "docs/02.rag-rulebook/source-material",
         "docs/04.deploy/source-material",
+        ".agentic/02.rag-rulebook/guides",
     ],
     "structured_rules": [
         "docs/harness/architecture",

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-index
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: indexing
@@ -58,9 +58,17 @@ DEFAULT_MIGRATION_MAP = ".agentic/02.rag-rulebook/plans/prototype-corpus-migrati
 INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
 GENERATOR_VERSION = "prototype-v1"
 CURRENT_RULEBOOK_CORPUS_ID = "corpus.02.rag-rulebook"
+MIN_MARKDOWN_SECTION_WORDS = 10
 DEFAULT_CORPUS_RULE_ROOTS = (
     (CURRENT_RULEBOOK_CORPUS_ID, DEFAULT_RULEBOOK_RULES_ROOT),
     ("corpus.04.deploy", DEFAULT_DEPLOY_RULES_ROOT),
+)
+DEFAULT_EXPLANATION_MARKDOWN_ROOTS = (
+    "docs/harness/architecture/source-material",
+    "docs/harness/architecture/guides/markdown",
+    "docs/02.rag-rulebook/source-material",
+    "docs/04.deploy/source-material",
+    ".agentic/02.rag-rulebook/guides",
 )
 
 
@@ -226,6 +234,121 @@ def list_of_dicts(value: Any) -> list[dict[str, Any]]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, dict)]
+
+
+def markdown_words(lines: list[str]) -> list[str]:
+    text = "\n".join(lines)
+    return re.findall(r"[A-Za-z0-9_@./:-]+", text)
+
+
+def clean_heading_title(raw: str) -> str:
+    return raw.strip().strip("#").strip()
+
+
+def parse_markdown_sections(path: str) -> list[dict[str, Any]]:
+    lines = repo_path(path).read_text(encoding="utf-8").splitlines()
+    headings: list[dict[str, Any]] = []
+    stack: list[tuple[int, str]] = []
+    heading_re = re.compile(r"^(#{1,4})\s+(.+?)\s*$")
+    for line_number, line in enumerate(lines, start=1):
+        match = heading_re.match(line)
+        if not match:
+            continue
+        level = len(match.group(1))
+        title = clean_heading_title(match.group(2))
+        if not title:
+            continue
+        while stack and stack[-1][0] >= level:
+            stack.pop()
+        stack.append((level, title))
+        headings.append(
+            {
+                "level": level,
+                "title": title,
+                "heading_path": " > ".join(item[1] for item in stack),
+                "line_start": line_number,
+            }
+        )
+
+    sections: list[dict[str, Any]] = []
+    for index, heading in enumerate(headings):
+        line_start = int(heading["line_start"])
+        line_end = headings[index + 1]["line_start"] - 1 if index + 1 < len(headings) else len(lines)
+        section_lines = lines[line_start - 1 : line_end]
+        body_words = markdown_words(section_lines[1:] if len(section_lines) > 1 else section_lines)
+        if len(body_words) < MIN_MARKDOWN_SECTION_WORDS:
+            continue
+        section_index = len(sections) + 1
+        sections.append(
+            {
+                **heading,
+                "section_index": section_index,
+                "section_id": f"section-{section_index}-{safe_id(heading['heading_path'])}",
+                "line_end": line_end,
+                "token_estimate": max(40, min(700, round(len(markdown_words(section_lines)) * 1.35))),
+            }
+        )
+    return sections
+
+
+def markdown_corpus_id(path: str, metadata: dict[str, Any], guide_corpus_by_path: dict[str, str]) -> str:
+    normalized = normalize_path(path)
+    if normalized in guide_corpus_by_path:
+        return guide_corpus_by_path[normalized]
+    if normalized.startswith("docs/02.rag-rulebook/") or normalized.startswith(".agentic/02.rag-rulebook/"):
+        return "corpus.02.rag-rulebook"
+    if normalized.startswith("docs/04.deploy/"):
+        return "corpus.04.deploy"
+    if "packages-core" in normalized:
+        return "corpus.03.product.core"
+    if "platform" in normalized:
+        return "corpus.03.product.platform"
+    for used_by in list_of_dicts(metadata.get("used_by")):
+        used_path = str(used_by.get("path") or "")
+        if used_path.endswith("/rules/layers/platform.yml"):
+            return "corpus.03.product.platform"
+        if used_path.endswith("/rules/layers/packages-core.yml"):
+            return "corpus.03.product.core"
+        if "/rules/02.rag-rulebook/" in used_path or used_path.startswith("docs/02.rag-rulebook/"):
+            return "corpus.02.rag-rulebook"
+        if used_path.startswith("docs/04.deploy/"):
+            return "corpus.04.deploy"
+    return "corpus.03.product"
+
+
+def markdown_artifact_type(metadata: dict[str, Any]) -> str:
+    kind = str(metadata.get("kind") or "")
+    if kind == "source-material":
+        return "source-material"
+    if kind == "guide":
+        return "guide"
+    return "source-guide"
+
+
+def markdown_source_type(metadata: dict[str, Any]) -> str:
+    kind = str(metadata.get("kind") or "")
+    if kind == "source-material":
+        return "source-material"
+    if kind == "guide":
+        return "guide"
+    return "source-guide"
+
+
+def markdown_title(path: str, metadata: dict[str, Any]) -> str:
+    purpose = metadata.get("purpose")
+    if isinstance(purpose, str) and purpose:
+        return purpose
+    return Path(path).stem
+
+
+def collect_explanation_markdown_paths() -> list[str]:
+    paths: list[str] = []
+    for root in DEFAULT_EXPLANATION_MARKDOWN_ROOTS:
+        root_path = repo_path(root)
+        if not root_path.exists():
+            continue
+        paths.extend(normalize_path(path) for path in sorted(root_path.rglob("*.md")))
+    return sorted(set(paths))
 
 
 def artifact_type_for_group(group_name: str) -> str:
@@ -435,6 +558,13 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                 yaml_entries.append((group_name, entry))
     for root in current_corpus_rule_roots:
         yaml_entries.extend(collect_current_rulebook_entries(root["corpus_id"], root["rules_root"]))
+    guide_corpus_by_path = {
+        normalize_path(str(guide.get("current_path"))): str(guide.get("proposed_corpus_id"))
+        for guide in list_of_dicts((migration_map.get("source_material") or {}).get("guides"))
+        if isinstance(guide.get("current_path"), str) and isinstance(guide.get("proposed_corpus_id"), str)
+    }
+    markdown_input_paths: set[str] = set()
+    markdown_artifact_paths: set[str] = set()
 
     path_to_artifact_ref: dict[str, str] = {}
     artifact_refs: set[str] = set()
@@ -545,37 +675,113 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                     "Migration map marks this artifact as mixed concern requiring review before move.",
                 )
 
-    for guide in list_of_dicts((migration_map.get("source_material") or {}).get("guides")):
-        current_path = guide.get("current_path")
-        corpus_id = guide.get("proposed_corpus_id")
-        if not isinstance(current_path, str) or not isinstance(corpus_id, str):
-            continue
-        artifact_ref = artifact_ref_for(None, None, current_path)
-        source_ref_id = make_source_ref_id("guide", current_path)
+    def add_markdown_section_chunks(
+        artifact_ref: str,
+        corpus_id: str,
+        current_path: str,
+        source_type: str,
+    ) -> None:
+        if not repo_path(current_path).is_file():
+            warnings.append(f"missing Markdown explanation source: {current_path}")
+            return
+        markdown_input_paths.add(current_path)
+        for section in parse_markdown_sections(current_path):
+            source_ref_id = make_source_ref_id("markdown-section", f"{current_path}.{section['section_id']}")
+            source_references.append(
+                {
+                    "source_ref_id": source_ref_id,
+                    "corpus_id": corpus_id,
+                    "artifact_ref": artifact_ref,
+                    "source_path": current_path,
+                    "source_type": source_type,
+                    "section": section["heading_path"],
+                    "line_start": section["line_start"],
+                    "line_end": section["line_end"],
+                }
+            )
+            chunk_id = f"chunk.markdown.{safe_id(artifact_ref)}.{safe_id(section['section_id'])}"
+            chunk_candidates.append(
+                {
+                    "chunk_id": chunk_id,
+                    "artifact_ref": artifact_ref,
+                    "corpus_id": corpus_id,
+                    **chunk_candidate_base("source-explanation"),
+                    "section_path": f"markdown[{section['section_index']}]",
+                    "heading_title": section["title"],
+                    "heading_path": section["heading_path"],
+                    "heading_level": section["level"],
+                    "line_start": section["line_start"],
+                    "line_end": section["line_end"],
+                    "source_path": current_path,
+                    "token_estimate": section["token_estimate"],
+                    "source_ref_ids": [source_ref_id],
+                }
+            )
+            add_edge(
+                artifact_ref,
+                chunk_id,
+                "contains-chunk",
+                "Markdown heading section is a source-explanation chunk candidate.",
+                [source_ref_id],
+            )
+
+    def add_markdown_artifact(
+        current_path: str,
+        corpus_id: str,
+        artifact_type: str,
+        source_type: str,
+        proposed_path: str | None = None,
+        migration_status: str = "current",
+        mapping_entry: dict[str, Any] | None = None,
+    ) -> str:
+        metadata = parse_metadata_header(current_path)
+        artifact_ref = artifact_ref_for(None, metadata.get("id"), current_path)
+        source_ref_id = make_source_ref_id("markdown-artifact", current_path)
         source_references.append(
             {
                 "source_ref_id": source_ref_id,
                 "corpus_id": corpus_id,
                 "artifact_ref": artifact_ref,
                 "source_path": current_path,
-                "source_type": "source-guide",
+                "source_type": source_type,
             }
         )
         add_artifact(
             {
                 "artifact_ref": artifact_ref,
-                "artifact_type": "source-guide",
-                "title": Path(current_path).stem,
-                "status": "active",
+                "metadata_id": metadata.get("id"),
+                "artifact_type": artifact_type,
+                "title": markdown_title(current_path, metadata),
+                "status": metadata.get("status") or "active",
+                "version": metadata.get("version") or 1,
                 "corpus_id": corpus_id,
                 "current_path": current_path,
-                "proposed_path": guide.get("proposed_target_path"),
-                "migration_status": guide.get("migration_status", "target-candidate"),
+                "proposed_path": proposed_path,
+                "migration_status": migration_status,
                 "source_ref_ids": [source_ref_id],
                 "diagnostics": [],
             }
         )
-        add_path_mapping(guide, artifact_ref)
+        add_markdown_section_chunks(artifact_ref, corpus_id, current_path, source_type)
+        markdown_artifact_paths.add(current_path)
+        if mapping_entry is not None:
+            add_path_mapping(mapping_entry, artifact_ref)
+        return artifact_ref
+
+    for guide in list_of_dicts((migration_map.get("source_material") or {}).get("guides")):
+        current_path = guide.get("current_path")
+        corpus_id = guide.get("proposed_corpus_id")
+        if not isinstance(current_path, str) or not isinstance(corpus_id, str):
+            continue
+        add_markdown_artifact(
+            current_path,
+            corpus_id,
+            "source-guide",
+            "source-guide",
+            proposed_path=guide.get("proposed_target_path"),
+            migration_status=guide.get("migration_status", "target-candidate"),
+            mapping_entry=guide,
+        )
 
     adrs = (migration_map.get("source_material") or {}).get("adrs") or {}
     if isinstance(adrs, dict):
@@ -627,6 +833,32 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                         },
                         artifact_ref,
                     )
+
+    for current_path in collect_explanation_markdown_paths():
+        if current_path in markdown_artifact_paths:
+            continue
+        metadata = parse_metadata_header(current_path)
+        if metadata.get("schema") != "agentic-artifact/v2":
+            continue
+        if metadata.get("kind") not in {"source-material", "guide"}:
+            continue
+        corpus_id = markdown_corpus_id(current_path, metadata, guide_corpus_by_path)
+        if corpus_id not in known_corpora:
+            add_unresolved(corpus_id, "corpus-manifest", current_path, "error", "Add the corpus to target_corpora.")
+        add_markdown_artifact(
+            current_path,
+            corpus_id,
+            markdown_artifact_type(metadata),
+            markdown_source_type(metadata),
+            proposed_path=current_path,
+            migration_status="current",
+            mapping_entry={
+                "current_path": current_path,
+                "proposed_path": current_path,
+                "proposed_corpus_id": corpus_id,
+                "migration_status": "current",
+            },
+        )
 
     for group_name, entry in yaml_entries:
         current_path = entry.get("current_path")
@@ -855,6 +1087,12 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                 "rule_refs": [rule["rule_ref"] for rule in rules],
                 "pack_refs": [pack["pack_ref"] for pack in rule_packs],
                 "corpus_rule_roots": corpus_rule_roots,
+                "markdown_input_paths": sorted(markdown_input_paths),
+                "markdown_chunk_ids": [
+                    candidate["chunk_id"]
+                    for candidate in chunk_candidates
+                    if candidate.get("content_kind") == "source-explanation"
+                ],
                 "path_mappings": path_mappings,
                 "unresolved_references": unresolved_references,
             },
@@ -864,6 +1102,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
 
     input_paths = [migration_map_path]
     input_paths.extend(entry.get("current_path") for _, entry in yaml_entries if isinstance(entry.get("current_path"), str))
+    input_paths.extend(sorted(markdown_input_paths))
     inputs = []
     for path in sorted(set(input_paths)):
         if repo_path(path).is_file():
@@ -910,6 +1149,16 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                 "corpus_id": root["corpus_id"],
             }
         )
+    for root in DEFAULT_EXPLANATION_MARKDOWN_ROOTS:
+        if repo_path(root).is_dir():
+            source_roots.append(
+                {
+                    "root_id": f"root.{safe_id(root)}",
+                    "path": root,
+                    "role": "source-material",
+                    "migration_status": "current",
+                }
+            )
 
     return {
         "schema": INDEX_SCHEMA,

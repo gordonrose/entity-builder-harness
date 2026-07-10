@@ -76,6 +76,10 @@ let's lock the platform app integration module decision in
 - Summary: Created and implemented the first slice of the separate explanation-aware chunking and retrieval plan.
   Durable evidence: Plan artifact: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md. Updated RAG standards, schemas, retrieval policy, index/chunk/policy/packet validators, generators, compact packet output, and generated artifact recognition source so chunks carry chunk_purpose and authority. Checks passed: artifact header check, validate-retrieval-policy-pack, generate-rulebook-index smoke, generate-rulebook-chunks smoke, compile-retrieval-policy smoke, generate-context-packet-fixture smoke, query-local-context smoke, evaluate-retrieval-selector-fixtures smoke, source projections, source material coverage, recognition-source freshness, local runtime build, runtime freshness, and git diff --check.
 
+
+- Summary: Implemented explanation-aware RAG chunking slice: governed Markdown source-material and guide headings now produce source-explanation candidates/chunks, selector packets expose purpose and authority, and platform runtime source explanation has retrieval proof.
+  Durable evidence: Touched rulebook index/chunk generators, context/index schemas, selector/evaluator/query scripts, runtime freshness fingerprinting, source projection manifest, generated artifact recognition source, and retrieval fixtures. Validation: index/chunk smokes, retrieval targeted fixtures, full retrieval selector smoke, query smoke, build-runtime smoke, runtime freshness, source projection check, recognition freshness, YAML syntax, artifact metadata headers, and git diff --check all passed.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -141,6 +145,13 @@ Rationale: Keeping execution-authority retrieval and human explanation support i
 Summary: Created and implemented the first slice of the separate explanation-aware chunking and retrieval plan.
 
 Durable evidence: Plan artifact: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md. Updated RAG standards, schemas, retrieval policy, index/chunk/policy/packet validators, generators, compact packet output, and generated artifact recognition source so chunks carry chunk_purpose and authority. Checks passed: artifact header check, validate-retrieval-policy-pack, generate-rulebook-index smoke, generate-rulebook-chunks smoke, compile-retrieval-policy smoke, generate-context-packet-fixture smoke, query-local-context smoke, evaluate-retrieval-selector-fixtures smoke, source projections, source material coverage, recognition-source freshness, local runtime build, runtime freshness, and git diff --check.
+
+
+### 2026-07-10T17:07:34Z - Context hygiene
+
+Summary: Implemented explanation-aware RAG chunking slice: governed Markdown source-material and guide headings now produce source-explanation candidates/chunks, selector packets expose purpose and authority, and platform runtime source explanation has retrieval proof.
+
+Durable evidence: Touched rulebook index/chunk generators, context/index schemas, selector/evaluator/query scripts, runtime freshness fingerprinting, source projection manifest, generated artifact recognition source, and retrieval fixtures. Validation: index/chunk smokes, retrieval targeted fixtures, full retrieval selector smoke, query smoke, build-runtime smoke, runtime freshness, source projection check, recognition freshness, YAML syntax, artifact metadata headers, and git diff --check all passed.
 
 ## Sub-Agent Activity
 
