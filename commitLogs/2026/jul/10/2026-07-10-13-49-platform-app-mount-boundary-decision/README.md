@@ -230,6 +230,13 @@ Summary: Implemented platform runtime Milestone 5 minimal HTTP server shell.
 
 Durable evidence: Added @kanbien/platform-server under platform/server with package config, TypeScript configs, boundary/runtime/type tests, provider-neutral Node HTTP adapter, in-memory request handler, /livez and /readyz responses, mounted route adaptation, request context creation through platform/runtime, auth and permission denial hooks, validator handling, standard error responses, security/CORS header placeholders, and middleware order trace. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:server:check, npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
+
+### 2026-07-10T19:01:33Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 6 worker shell.
+
+Durable evidence: Added @kanbien/platform-workers under platform/workers with package config, TypeScript configs, boundary/runtime/type tests, in-memory queue, worker shell, app job adaptation, payload validation, retry/backoff, dead-letter behavior, idempotency store, job context creation through platform/runtime, worker logging/metrics hooks, runUntilIdle, and graceful shutdown. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:workers:check, npm run platform:server:check, npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

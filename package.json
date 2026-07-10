@@ -46,7 +46,12 @@
     "platform:testing:build": "tsc -p platform/testing/tsconfig.json",
     "platform:testing:check": "npm run platform:testing:typecheck && npm run platform:testing:build && npm run platform:testing:test && npm run platform:testing:boundary",
     "platform:testing:test": "tsc -p platform/testing/tsconfig.runtime-test.json && node platform/testing/tests/run-runtime-tests.mjs",
-    "platform:testing:typecheck": "tsc -p platform/testing/tsconfig.check.json"
+    "platform:testing:typecheck": "tsc -p platform/testing/tsconfig.check.json",
+    "platform:workers:boundary": "node platform/workers/tests/platform-workers-boundaries.test.mjs",
+    "platform:workers:build": "tsc -p platform/workers/tsconfig.json",
+    "platform:workers:check": "npm run platform:workers:typecheck && npm run platform:workers:build && npm run platform:workers:test && npm run platform:workers:boundary",
+    "platform:workers:test": "tsc -p platform/workers/tsconfig.runtime-test.json && node platform/workers/tests/run-runtime-tests.mjs",
+    "platform:workers:typecheck": "tsc -p platform/workers/tsconfig.check.json"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
