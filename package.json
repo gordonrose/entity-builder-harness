@@ -31,7 +31,12 @@
     "platform:contracts:build": "tsc -p platform/contracts/tsconfig.json",
     "platform:contracts:check": "npm run platform:contracts:typecheck && npm run platform:contracts:build && npm run platform:contracts:test && npm run platform:contracts:boundary",
     "platform:contracts:test": "tsc -p platform/contracts/tsconfig.runtime-test.json && node platform/contracts/tests/run-runtime-tests.mjs",
-    "platform:contracts:typecheck": "tsc -p platform/contracts/tsconfig.check.json"
+    "platform:contracts:typecheck": "tsc -p platform/contracts/tsconfig.check.json",
+    "platform:testing:boundary": "node platform/testing/tests/platform-testing-boundaries.test.mjs",
+    "platform:testing:build": "tsc -p platform/testing/tsconfig.json",
+    "platform:testing:check": "npm run platform:testing:typecheck && npm run platform:testing:build && npm run platform:testing:test && npm run platform:testing:boundary",
+    "platform:testing:test": "tsc -p platform/testing/tsconfig.runtime-test.json && node platform/testing/tests/run-runtime-tests.mjs",
+    "platform:testing:typecheck": "tsc -p platform/testing/tsconfig.check.json"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

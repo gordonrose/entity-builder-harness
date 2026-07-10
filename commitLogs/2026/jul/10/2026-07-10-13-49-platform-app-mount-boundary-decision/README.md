@@ -92,6 +92,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 2 contracts hardening.
   Durable evidence: Updated platform/contracts/src/index.ts and existing platform/contracts tests so the contract surface includes permission declarations, route/job validation helpers, default reserved platform route paths, and stable errors for duplicate registrations, reserved paths, unknown permissions, malformed permission declarations, malformed routes, and malformed jobs. Validation passed: npm run platform:contracts:check.
 
+
+- Summary: Implemented platform runtime Milestone 3 platform testing helpers.
+  Durable evidence: Added the @kanbien/platform-testing workspace under platform/testing with fake loggers, fake metrics, fake config source, fake registry, request/job context builders, queue message builder, mountPlatformAppForTest, config schema validation, and safe health-output checks. Added platform:testing npm scripts and workspace lockfile entries. Validation passed: npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -196,6 +200,13 @@ Durable evidence: Added .agentic/product/workflows/platform-runtime-implementati
 Summary: Implemented platform runtime Milestone 2 contracts hardening.
 
 Durable evidence: Updated platform/contracts/src/index.ts, platform/contracts/tests/platform-contracts-runtime.test.ts, and platform/contracts/tests/platform-contracts-types.test.ts. The contract surface now includes permission declarations, route/job validation helpers, default reserved platform route paths, and stable error codes for duplicate registrations, reserved paths, unknown permissions, malformed permission declarations, malformed routes, and malformed jobs. Validation passed: npm run platform:contracts:check.
+
+
+### 2026-07-10T18:00:09Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 3 platform testing helpers.
+
+Durable evidence: Added @kanbien/platform-testing under platform/testing with package config, TypeScript configs, boundary/runtime/type tests, fake loggers, fake metrics, fake config source, fake registry, mountPlatformAppForTest, request/job context builders, queue message builder, config schema validation, and safe health-output checks. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
 ## Sub-Agent Activity
 
