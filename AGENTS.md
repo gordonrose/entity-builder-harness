@@ -6,16 +6,26 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 
 ## Before Acting
 
-0. Skip steps 1-7 if i start a chat with 'ignore chat start'
-1. Follow `.agentic/00.chat/workflows/chat-start.md`.
-2. Use the current branch’s `commitLogs/<session>/README.md` session metadata as the first source of truth for chat lifecycle, branch, worktree, latest context packet references, commits, and metrics.
-3. Do not classify the whole chat by layer, mode, or workflow. Use the RAG/rulebook runtime to resolve prompt-level routing when a prompt needs layer, mode, workflow, corpus, or rule context.
-4. Use `chat_lifecycle_workflow` for chat startup/session lifecycle gates; use the latest context packet only as continuity evidence for future prompt-level RAG queries.
-5. Follow the applicable chat lifecycle gate and any prompt-level RAG/rulebook packet checks before editing files.
-6. Stop when repo state, branch state, task ownership, prompt-level routing, chat lifecycle state, or governance coverage is ambiguous or absent.
-7. Missing governance is a stop condition. If a required action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard, stop before acting. Explain the governance gap and ask whether to update the harness instead of improvising.
-8. Follow shared git approval rules before commits or destructive actions; never push, delete branches, rewrite history, discard work, or overwrite work without explicit user approval.
-9. Default mode is read-only after governed chat-start bootstrap. The chat-start workflow may create or verify the chat branch, worktree, and session log from the opening prompt without separate permission unless the prompt starts with `ignore chat start`. Do not create, edit, move, delete, stage, commit, or format task files unless the user explicitly grants write permission for this chat.
+<!-- llm-workbench:start -->
+## llm-workbench
+
+Follow `.agentic/00.chat/workflows/chat-start.md` at the start of each chat.
+Use `commitLogs/<session>/README.md` as the first source of truth for chat
+lifecycle, branch, worktree, context-packet references, commits, and metrics.
+
+<!-- deterministic-check: allow reason="prompt routing may be manual or repo-specific; no universal script can decide whether a context router exists" -->
+Do not assign the whole chat a durable layer, mode, or workflow. When a prompt
+needs layer, mode, workflow, corpus, or rule context, use the current user
+request, this repo's assistant instructions, and any repo-provided context
+router if one exists.
+
+Default mode after governed chat-start bootstrap is read-only until the user
+explicitly grants write permission for task files.
+<!-- llm-workbench:end -->
+
+- Stop when repo state, branch state, task ownership, prompt-level routing, chat lifecycle state, or governance coverage is ambiguous or absent.
+- Missing governance is a stop condition. If a required action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard, stop before acting. Explain the governance gap and ask whether to update the harness instead of improvising.
+- Follow shared git approval rules before commits or destructive actions; never push, delete branches, rewrite history, discard work, or overwrite work without explicit user approval.
 
 ## Operating Layers
 
@@ -46,20 +56,3 @@ This repo is governed by a layered agentic harness. Keep this file small. Do not
 ## Size Rule
 
 Keep `AGENTS.md` under 80 lines unless a harness ADR approves a larger router. If a rule only applies to frontend, auth, migrations, git, deployment, testing, documentation, or chat/session setup, move it into the relevant workflow, skill, gate, or standard.
-
-<!-- llm-workbench:start -->
-## llm-workbench
-
-Follow `.agentic/00.chat/workflows/chat-start.md` at the start of each chat.
-Use `commitLogs/<session>/README.md` as the first source of truth for chat
-lifecycle, branch, worktree, context-packet references, commits, and metrics.
-
-<!-- deterministic-check: allow reason="prompt routing may be manual or repo-specific; no universal script can decide whether a context router exists" -->
-Do not assign the whole chat a durable layer, mode, or workflow. When a prompt
-needs layer, mode, workflow, corpus, or rule context, use the current user
-request, this repo's assistant instructions, and any repo-provided context
-router if one exists.
-
-Default mode after governed chat-start bootstrap is read-only until the user
-explicitly grants write permission for task files.
-<!-- llm-workbench:end -->
