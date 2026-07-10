@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id: packet.selector-fixture.fe99e59aeaff1ed2
 latest_context_packet_routing_summary: App mount boundary prompt selected platform, apps, and dependency-direction rules for app.mount.ts integration and app-internal opacity.
 latest_context_packet_at_utc: 2026-07-10T12:53:51Z
-latest_commit_at_utc: 2026-07-10T14:52:16Z
-latest_commit_sha: 41abb61
-chat_duration: 7388s (00:02:03:08)
+latest_commit_at_utc: 2026-07-10T17:16:44Z
+latest_commit_sha: c05fb06
+chat_duration: 16056s (00:04:27:36)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -79,6 +79,10 @@ let's lock the platform app integration module decision in
 
 - Summary: Implemented explanation-aware RAG chunking slice: governed Markdown source-material and guide headings now produce source-explanation candidates/chunks, selector packets expose purpose and authority, and platform runtime source explanation has retrieval proof.
   Durable evidence: Touched rulebook index/chunk generators, context/index schemas, selector/evaluator/query scripts, runtime freshness fingerprinting, source projection manifest, generated artifact recognition source, and retrieval fixtures. Validation: index/chunk smokes, retrieval targeted fixtures, full retrieval selector smoke, query smoke, build-runtime smoke, runtime freshness, source projection check, recognition freshness, YAML syntax, artifact metadata headers, and git diff --check all passed.
+
+
+- Summary: Implemented Step 7 explanation-readiness audit as a read-only RAG/rulebook command.
+  Durable evidence: Added scripts/02.rag-rulebook/audit-explanation-readiness with script, README, and smoke test; updated scripts/02.rag-rulebook/README.md and explanation-aware plan status; regenerated generated artifact recognition. Current audit reports 20/20 approved Markdown sources ready, 0 gaps, 878 source-explanation chunks, and 8 sources with execution-authority rule coverage.
 
 ## Activity Log
 
@@ -153,6 +157,24 @@ Summary: Implemented explanation-aware RAG chunking slice: governed Markdown sou
 
 Durable evidence: Touched rulebook index/chunk generators, context/index schemas, selector/evaluator/query scripts, runtime freshness fingerprinting, source projection manifest, generated artifact recognition source, and retrieval fixtures. Validation: index/chunk smokes, retrieval targeted fixtures, full retrieval selector smoke, query smoke, build-runtime smoke, runtime freshness, source projection check, recognition freshness, YAML syntax, artifact metadata headers, and git diff --check all passed.
 
+
+### 2026-07-10T17:16:44Z - Commit recorded
+
+Commit: `c05fb06`
+
+Message: Add explanation-aware source chunks
+
+Summary: Implemented source-explanation Markdown chunk candidates/chunks, purpose/authority packet fields, selector fixture proof, projection registration, and runtime freshness coverage for source material and guides.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-07-10T17:22:10Z - Context hygiene
+
+Summary: Implemented Step 7 explanation-readiness audit as a read-only RAG/rulebook command.
+
+Durable evidence: Added scripts/02.rag-rulebook/audit-explanation-readiness with script, README, and smoke test; updated scripts/02.rag-rulebook/README.md and explanation-aware plan status; regenerated generated artifact recognition. Current audit reports 20/20 approved Markdown sources ready, 0 gaps, 878 source-explanation chunks, and 8 sources with execution-authority rule coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -167,6 +189,13 @@ Durable evidence: Touched rulebook index/chunk generators, context/index schemas
   Summary: Recorded ADR 0026 for the app mount boundary, updated platform/apps/dependency-direction guidance and platform/contracts notes, added RAG derivation and selector evidence, refreshed generated recognition sources, and added the platform runtime implementation plan for a dummy app and AWS production readiness.
   ADR impact: ADR 0026 records app mount as the platform integration boundary; the runtime plan relies on ADR 0025 and ADR 0026 before implementation.
 
+
+- Commit: `c05fb06`
+  Time UTC: 2026-07-10T17:16:44Z
+  Message: Add explanation-aware source chunks
+  Summary: Implemented source-explanation Markdown chunk candidates/chunks, purpose/authority packet fields, selector fixture proof, projection registration, and runtime freshness coverage for source material and guides.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -180,9 +209,9 @@ Reason: Durable architecture decision that platform consumes public app mount mo
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T12:49:08Z
-Latest commit at UTC: 2026-07-10T14:52:16Z
-Latest commit SHA: 41abb61
-Chat duration: 7388s (00:02:03:08)
+Latest commit at UTC: 2026-07-10T17:16:44Z
+Latest commit SHA: c05fb06
+Chat duration: 16056s (00:04:27:36)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

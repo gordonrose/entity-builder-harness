@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
-version: 2
+version: 3
 status: active
 layer: 02.rag-rulebook
 domain: retrieval
@@ -166,10 +166,14 @@ Current status:
   chunks, side-effecting prompts still require `execution-authority`, and the
   platform runtime source-explanation fixture is registered in source
   projections.
+- Step 7 is implemented by
+  `scripts/02.rag-rulebook/audit-explanation-readiness/script.sh`. The current
+  audit reports 20/20 approved Markdown sources ready, 0 gaps, 878
+  `source-explanation` chunks, and 8 sources with source-derived
+  `execution-authority` rules. The audit still distinguishes ready
+  explanation-only guides from execution-authority coverage.
 - Step 8 is partially implemented: local runtime freshness fingerprints the
   source-material and guide roots that can produce `source-explanation` chunks.
-- Step 7 remains open: a read-only explanation-readiness coverage audit has not
-  been added yet.
 
 ### 1. Codify The Distinction In Standards
 

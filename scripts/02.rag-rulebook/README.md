@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.scripts.readme
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: scripts
@@ -68,6 +68,9 @@ validation, and standalone service adapters.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.
+- `audit-explanation-readiness/script.sh` reports whether governed Markdown
+  source material and guides are indexed, chunked as `source-explanation`,
+  useful for human explanation, and distinct from execution-authority coverage.
 - `check-corpus-root-changes/script.sh` detects changed governed corpus-root
   files, requires retirement records for deleted or renamed old paths, and
   proves changed rule files still reach generated index and chunks.

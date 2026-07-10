@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 616
-  term_count: 1244
+  indexed_artifacts: 619
+  term_count: 1250
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -5477,6 +5477,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.scripts.readme
   evidence_path: scripts/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.audit-explanation-readiness.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.readme
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/audit-explanation-readiness/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.readme
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.audit-explanation-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/audit-explanation-readiness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.audit-explanation-readiness.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.smoke-test
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/audit-explanation-readiness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.smoke-test
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.build-local-runtime.readme
   category: artifact-id
