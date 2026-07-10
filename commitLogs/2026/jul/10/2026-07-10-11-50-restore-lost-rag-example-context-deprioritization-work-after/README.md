@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T18:18:44Z
-latest_commit_sha: bd59a57
-chat_duration: 26908s (00:07:28:28)
+latest_commit_at_utc: 2026-07-10T19:07:59Z
+latest_commit_sha: a4e55ed
+chat_duration: 29863s (00:08:17:43)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -195,6 +195,17 @@ Summary: Expanded RAG governed-process indexing, curated question categories, ev
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-07-10T19:07:59Z - Commit recorded
+
+Commit: `a4e55ed`
+
+Message: feat(rag): route source family evidence
+
+Summary: Repaired Cycle 4 A/B source-family gaps by indexing GitHub workflow/deploy infra/RAG service/education ADR/package source families, adding reusable categories and evidence bundles, and adding nine selector fixtures. Validation: Cycle 4 realistic A/B prompts 10/10 strong, selector fixtures 71/71, RAG commit gates passed.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -251,6 +262,13 @@ ADR impact: covered by session ADR disposition
   Summary: Expanded RAG governed-process indexing, curated question categories, evidence bundles, and ten selector fixtures after Cycle 3 A/B misses. Validation: realistic A/B repair set 10/10 strong, selector fixtures 62/62, RAG commit gates passed.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `a4e55ed`
+  Time UTC: 2026-07-10T19:07:59Z
+  Message: feat(rag): route source family evidence
+  Summary: Repaired Cycle 4 A/B source-family gaps by indexing GitHub workflow/deploy infra/RAG service/education ADR/package source families, adding reusable categories and evidence bundles, and adding nine selector fixtures. Validation: Cycle 4 realistic A/B prompts 10/10 strong, selector fixtures 71/71, RAG commit gates passed.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -266,9 +284,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T18:18:44Z
-Latest commit SHA: bd59a57
-Chat duration: 26908s (00:07:28:28)
+Latest commit at UTC: 2026-07-10T19:07:59Z
+Latest commit SHA: a4e55ed
+Chat duration: 29863s (00:08:17:43)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
