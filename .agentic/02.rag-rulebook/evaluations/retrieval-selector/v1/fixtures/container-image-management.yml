@@ -59,6 +59,10 @@ expected:
     required:
       - rule
   selected_chunks:
+    required_source_paths:
+      - docs/04.deploy/source-material/shared/container-image-management.md
+      - docs/04.deploy/rules/shared/container-image-management.yml
+      - scripts/04.deploy/validate-container-boundaries/script.sh
     required_artifact_ids:
       - artifact.concern.container.image.management
     required_rule_ids:
