@@ -1,0 +1,97 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-manifest
+#   purpose: Name provider-neutral deployment requirements for the platform runtime shell image before AWS runtime selection.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: harness.architecture.plan.platform-runtime-implementation
+#     path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+schema: platform-shell/deploy-blueprint/v1
+status: planning-only
+deployment_track: 03.product
+service:
+  logical_name: platform-shell
+  description: Provider-neutral platform runtime shell proving server startup and health endpoints.
+  source_entrypoint: platform/server/src/main.ts
+image:
+  logical_name: entity-builder-harness/03.product/platform-shell
+  dockerfile: infra/04.deploy/03.product/image/Dockerfile
+  build_context: .
+  effective_ignore_file: infra/04.deploy/03.product/image/Dockerfile.dockerignore
+  local_tag: entity-builder-harness/03.product/platform-shell:local
+  container_port: 3000
+  runtime_user: node
+  local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+server:
+  process_name: platform-server
+  command: node .cache/platform-shell-image-build/platform/server/src/main.js
+  host_env: HOST
+  port_env: PORT
+  default_host: 0.0.0.0
+  default_port: 3000
+  health:
+    liveness_path: /livez
+    readiness_path: /readyz
+worker:
+  process_name: platform-worker
+  status: planned-separate-process
+  notes:
+    - Worker queue polling is proven locally by platform/workers tests.
+    - Provider-specific queue adapters and worker image/process topology are deferred until runtime-family selection.
+observability:
+  logs: stdout-json
+  metrics: platform-runtime-contracts
+  required_log_safety: redacted-bounded-fields
+config:
+  required_environment:
+    - NODE_ENV
+    - HOST
+    - PORT
+  optional_environment:
+    - PLATFORM_CORS_ORIGIN
+    - PLATFORM_SOURCE_COMMIT_SHA
+secrets:
+  local_required: []
+  production_required: []
+  notes:
+    - Secret store and concrete secret references are deferred until AWS deployment planning.
+queues:
+  local: in-memory test queue only
+  production: provider queue requirement deferred until runtime-family selection.
+storage:
+  local: none
+  production: product storage requirements deferred until app layer and AWS planning.
+network:
+  dns: deferred-to-aws-plan
+  tls: deferred-to-aws-plan
+  ingress: deferred-to-runtime-family-selection
+operations:
+  alarms: deferred-to-aws-plan
+  rollback: deferred-to-aws-plan
+  cost_limits: deferred-to-aws-plan
+iac_ownership:
+  status: not-selected
+  required_before_production_readiness:
+    - runtime_family
+    - account_profile
+    - region
+    - environment
+    - service_target
+    - rollback_path
+    - exact_mutation_plan
+non_goals:
+  - no AWS mutation
+  - no DNS mutation
+  - no IAM provisioning
+  - no Terraform/CDK/Pulumi resources
+  - no real product app behavior

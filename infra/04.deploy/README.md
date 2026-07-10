@@ -28,8 +28,9 @@ Current tracks:
 
 - `02.rag-rulebook/` for the RAG/rulebook context service and future MCP access
   surface.
+- `03.product/` for product-layer deployment artifacts, currently the platform
+  runtime shell image boundary.
 
 Deployment source material and structured RAG-readable deploy rules still live
 under `docs/04.deploy/`. This directory is where those rules become concrete
 container, environment, IaC, and workflow definitions.
-

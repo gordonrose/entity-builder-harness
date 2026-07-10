@@ -104,6 +104,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 5 minimal HTTP server shell.
   Durable evidence: Added the @kanbien/platform-server workspace under platform/server with a provider-neutral Node HTTP adapter, in-memory request handler, /livez and /readyz responses, mounted route adaptation, request context creation through platform/runtime, auth and permission denial hooks, validator handling, standard error responses, security/CORS header placeholders, middleware order trace, runtime/type/boundary tests, root platform:server npm scripts, and workspace lockfile entries. Validation passed: npm run platform:server:check, npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
+
+- Summary: Implemented platform runtime Milestone 8 container and infra blueprint.
+  Durable evidence: Added a platform server process entrypoint, image-build TypeScript config, runtime package shims, provider-neutral deploy blueprint, governed product deploy image boundary, local build and smoke scripts, package scripts, and deploy README updates. Validation passed: artifact metadata header check for new governed files, npm run platform:server:image-build, npm run platform:server:check, bash scripts/04.deploy/validate-container-boundaries/script.sh, bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh, compiled entrypoint startup with PLATFORM_SERVER_EXIT_AFTER_START=1, and git diff --check. Docker engine reachability and image startup are now proven locally; AWS/DNS/IAM/provisioning were not touched.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -243,6 +247,20 @@ Durable evidence: Added @kanbien/platform-workers under platform/workers with pa
 Summary: Implemented platform runtime Milestone 7 observability, security, config, and health hardening.
 
 Durable evidence: Added @kanbien/platform-observability, @kanbien/platform-security, @kanbien/platform-config, and @kanbien/platform-health under platform/. Updated platform/runtime to retain mounted app config schemas. Updated platform/server and platform/workers to validate config before listen or worker polling, use shared safe logging and metrics helpers, use shared health/readiness aggregation, use defensive security headers and rate-limit/authz mechanisms where applicable, and keep provider/cloud implementation out of platform. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:config:check, npm run platform:health:check, npm run platform:observability:check, npm run platform:security:check, npm run platform:contracts:check, npm run platform:testing:check, npm run platform:runtime:check, npm run platform:server:check, npm run platform:workers:check, and git diff --check.
+
+
+### 2026-07-10T19:43:53Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 8 container and infra blueprint.
+
+Durable evidence: Added platform/server/src/main.ts as the executable server process entrypoint; added platform/server/tsconfig.image.json and scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs for the local image runtime payload; added infra/04.deploy/03.product/ with a provider-neutral deploy blueprint, governed Dockerfile, Dockerfile-specific ignore file, and image README; added local-only platform shell image build and smoke scripts; and updated package/deploy README command indexes. Validation passed: artifact metadata header check for new governed files, npm run platform:server:image-build, npm run platform:server:check, bash scripts/04.deploy/validate-container-boundaries/script.sh, bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh, PLATFORM_SERVER_EXIT_AFTER_START=1 PORT=39877 HOST=127.0.0.1 node .cache/platform-shell-image-build/platform/server/src/main.js, and git diff --check. Docker engine reachability and image startup are now proven locally; AWS/DNS/IAM/provisioning were not touched.
+
+
+### 2026-07-10T19:54:33Z - Context hygiene
+
+Summary: Proved the platform shell image smoke test with Docker reachable.
+
+Durable evidence: docker info succeeded against Docker Desktop from WSL. The first full smoke attempt exposed Docker Buildx metadata writes to read-only /home/owner/.docker in this sandbox, so the build and smoke scripts now default DOCKER_CONFIG to .cache/04.deploy/docker-config when the caller does not set it. Validation passed: bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh without --allow-skip-without-engine, artifact metadata header check for updated script artifacts, and git diff --check.
 
 ## Sub-Agent Activity
 

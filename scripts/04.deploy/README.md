@@ -32,6 +32,10 @@ mutating effect and require current-chat approval.
 
 Current commands:
 
+- `build-platform-shell-image/`: local-only Docker image build wrapper for the
+  provider-neutral platform shell.
+- `smoke-test-platform-shell-image/`: local-only image smoke test for platform
+  shell `/livez` and `/readyz`.
 - `validate-container-boundaries/`: read-only Dockerfile and container image
   placement validation so deployable images stay under governed `infra/**`
   image directories.
