@@ -613,6 +613,11 @@ fields:
           type: enum
           allowed_values:
             - missing-corpus
+            - missing-source
+            - missing-rule-projection
+            - missing-structured-rulebook
+            - missing-evaluation
+            - missing-evidence
             - ambiguous-intent
             - ambiguous-ownership
             - missing-reference

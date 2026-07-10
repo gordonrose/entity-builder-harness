@@ -342,6 +342,247 @@ terms:
       - test policy
       - check policy
     confidence_weight: 0.7
+  - term: RAG retrieval source of truth
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag-retrieval.source-of-truth
+    aliases:
+      - retrieval source of truth
+      - source of truth hierarchy
+      - source material over examples
+      - illustrative example paths
+      - example paths are deprioritized
+      - how RAG retrieval works
+      - how context packets are assembled
+    confidence_weight: 0.82
+  - term: RAG retrieval source material
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag-retrieval.source-material
+    evidence_path: docs/02.rag-rulebook/source-material/rag-retrieval.md
+    aliases:
+      - retrieval profiles
+      - context packet assembly
+      - source material first
+      - source-of-truth driven retrieval
+    confidence_weight: 0.76
+  - term: illustrative examples
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag-retrieval.example-deprioritization
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
+    aliases:
+      - illustrative example
+      - e.g. paths
+      - for example paths
+      - example-only paths
+      - examples should not become target paths
+    confidence_weight: 0.74
+  - term: chat RAG boundary
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat-rag.boundary
+    aliases:
+      - 00.chat lifecycle versus RAG routing
+      - chat lifecycle vs RAG routing
+      - per-prompt RAG routing
+      - chat should not classify
+      - classify by mode or layer
+      - session context versus route authority
+    confidence_weight: 0.81
+  - term: chat lifecycle
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.lifecycle
+    evidence_path: .agentic/00.chat/workflows/chat-start.md
+    aliases:
+      - chat start
+      - chat startup
+      - session lifecycle
+      - worktree lifecycle
+      - commit log lifecycle
+    confidence_weight: 0.73
+  - term: request context route authority
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.request-context-boundary
+    evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+    aliases:
+      - route authority
+      - prompt-level routing
+      - session metadata is provenance
+      - previous packet is continuity
+    confidence_weight: 0.74
+  - term: hosted compact context packet
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.hosted-context-packet
+    aliases:
+      - hosted RAG service
+      - compact packet testing
+      - /context/query
+      - context query endpoint
+      - postman collection
+      - query local context
+    confidence_weight: 0.8
+  - term: hosted context provider
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.hosted-context-provider
+    evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    aliases:
+      - hosted provider contract
+      - hosted RAG provider
+      - bearer auth
+      - hosted fallback
+    confidence_weight: 0.74
+  - term: compact context packet
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.compact-context-packet
+    evidence_path: scripts/02.rag-rulebook/query-local-context/README.md
+    aliases:
+      - compact packet
+      - query-local-context
+      - local context query
+      - context packet compact
+    confidence_weight: 0.73
+  - term: Postman collection
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.postman-collection
+    evidence_path: docs/02.rag-rulebook/postman/README.md
+    aliases:
+      - Postman
+      - service collection
+      - HTTP smoke collection
+    confidence_weight: 0.7
+  - term: RAG commit gates
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag-rulebook.commit-gates
+    aliases:
+      - RAG commit gate
+      - rulebook commit gate
+      - which commit gates
+      - selector evaluations should run
+      - recognition source changes
+      - generated recognition source changes
+      - chunk generation changes
+      - retrieval policy changes
+      - after recognition changes
+      - after chunk changes
+      - after retrieval policy changes
+      - commit gates after RAG changes
+    confidence_weight: 0.81
+  - term: RAG rulebook commit gate
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag-rulebook.commit-gates
+    evidence_path: scripts/02.rag-rulebook/commit-gates/script.sh
+    aliases:
+      - rulebook commit gates
+      - retrieval commit gate
+      - RAG gate script
+    confidence_weight: 0.75
+  - term: repo commit gate
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.repo.commit-gates
+    evidence_path: scripts/repo/commit-gates/script.sh
+    aliases:
+      - repository commit gate
+      - root commit gate
+      - repo gate script
+    confidence_weight: 0.72
+  - term: retrieval selector evaluations
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.retrieval-selector-evaluations
+    evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+    aliases:
+      - selector fixtures
+      - retrieval selector fixtures
+      - selector evaluation
+      - retrieval evaluation
+    confidence_weight: 0.74
+  - term: package contract surface
+    category: question-category
+    match_type: phrase
+    canonical_id: question.product.contract-surface
+    aliases:
+      - packages/core contract surface
+      - packages core contract
+      - platform/contracts surface
+      - composed runtime contexts
+      - describe packages/core
+    confidence_weight: 0.8
+  - term: packages core README
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.readme
+    evidence_path: packages/core/README.md
+    aliases:
+      - packages/core README
+      - core package README
+      - packages core overview
+    confidence_weight: 0.72
+  - term: platform contracts README
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-contracts.readme
+    evidence_path: platform/contracts/README.md
+    aliases:
+      - platform/contracts README
+      - platform contract docs
+      - runtime contract docs
+    confidence_weight: 0.72
+  - term: composed runtime contexts ADR
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-contracts.composed-runtime-contexts-adr
+    evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    aliases:
+      - composed runtime context ADR
+      - place composed runtime contexts
+      - runtime contexts in platform contracts
+    confidence_weight: 0.72
+  - term: external adapter boundary
+    category: question-category
+    match_type: phrase
+    canonical_id: question.platform-adapter.external-boundary
+    aliases:
+      - external adapter
+      - adapter like
+      - third-party adapter
+      - provider adapter
+      - vendor adapter
+      - avoid mixing product deploy and RAG authority
+      - mixing product deploy and RAG authority
+    confidence_weight: 0.8
+  - term: platform adapter consumption
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-adapter.consumption
+    evidence_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    aliases:
+      - adapter consumption
+      - provider-specific imports
+      - vendor SDK imports
+      - platform profile imports
+      - feature code consumes core contracts
+    confidence_weight: 0.74
+  - term: add platform adapter
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-adapter.rule-pack
+    evidence_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    aliases:
+      - add-platform-adapter
+      - platform adapter rule pack
+      - adapter rule pack
+      - new platform adapter
+    confidence_weight: 0.74
 validation_rules:
   - Question categories choose expected evidence families; they do not select execution workflows.
   - Evidence-family terms are lower authority than exact corpus IDs, artifact IDs, and paths.

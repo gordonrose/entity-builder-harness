@@ -80,6 +80,28 @@ projection_sets:
       - Callers consume context packets through the RAG interface and do not own AWS, bearer-token, Secrets Manager, or rag.env details.
       - Runtime identity comparison and additional stale-corpus/auth boundary fixtures remain tracked by the corpus gap.
 
+  - id: projection.02.rag-rulebook.rag-retrieval-source-of-truth
+    status: planned
+    projection_mode: planned
+    source_material:
+      - path: docs/02.rag-rulebook/source-material/rag-retrieval.md
+        role: primary
+    target:
+      corpus_id: corpus.02.rag-rulebook
+      owner_layer: 02.rag-rulebook
+    expected_rule_paths: []
+    derivation_reports: []
+    corpus_gap_paths:
+      - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml
+    expected_selector_evaluations: []
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    notes:
+      - The source records the printable RAG retrieval source-of-truth model for prompt payloads, runtime files, repo evidence, retrieval profiles, chunks, context-packet assembly, and intent-aware use.
+      - Structured rule derivation, accepted derivation report, generated chunk proof, and selector fixture coverage remain tracked by the corpus gap.
+      - Keep this entry planned until source review and source-to-rule derivation are complete.
+
   - id: projection.04.deploy.02-rag-rulebook.mcp-server-deployment
     status: active
     projection_mode: manual-reviewed

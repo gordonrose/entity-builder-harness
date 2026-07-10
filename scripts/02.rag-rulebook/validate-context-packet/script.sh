@@ -75,6 +75,11 @@ ALLOWED_STOP_SEVERITY = {"warning", "blocking"}
 ALLOWED_CITATION_SOURCE_TYPES = {"source", "rule", "rule-pack", "workflow", "standard", "schema", "plan"}
 ALLOWED_GAP_TYPES = {
     "missing-corpus",
+    "missing-source",
+    "missing-rule-projection",
+    "missing-structured-rulebook",
+    "missing-evaluation",
+    "missing-evidence",
     "ambiguous-intent",
     "ambiguous-ownership",
     "missing-reference",
