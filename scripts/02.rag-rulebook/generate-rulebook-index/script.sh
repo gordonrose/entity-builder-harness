@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-index
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: indexing
@@ -250,6 +250,44 @@ def make_source_ref_id(prefix: str, value: str) -> str:
     return f"source.{safe_id(prefix)}.{safe_id(value)}"
 
 
+def chunk_purpose_for_content_kind(content_kind: str) -> str:
+    mapping = {
+        "artifact-summary": "artifact-summary",
+        "rule": "rule",
+        "rule-section": "rule",
+        "rule-pack-step": "rule",
+        "required-check": "rule",
+        "source-reference": "source-explanation",
+        "migration-entry": "artifact-summary",
+        "source-explanation": "source-explanation",
+        "adr-decision": "adr-decision",
+        "plan-milestone": "plan-milestone",
+        "guide": "guide",
+        "retrieval-profile": "retrieval-profile",
+    }
+    return mapping.get(content_kind, "artifact-summary")
+
+
+def authority_for_content_kind(content_kind: str) -> str:
+    if content_kind in {"rule", "rule-section", "rule-pack-step", "required-check"}:
+        return "execution-authority"
+    if content_kind == "adr-decision":
+        return "decision-history"
+    if content_kind == "plan-milestone":
+        return "implementation-plan"
+    if content_kind in {"artifact-summary", "migration-entry", "retrieval-profile"}:
+        return "orientation"
+    return "explanation-support"
+
+
+def chunk_candidate_base(content_kind: str) -> dict[str, str]:
+    return {
+        "content_kind": content_kind,
+        "chunk_purpose": chunk_purpose_for_content_kind(content_kind),
+        "authority": authority_for_content_kind(content_kind),
+    }
+
+
 def root_id_for_corpus_rules(corpus_id: str) -> str:
     if corpus_id == CURRENT_RULEBOOK_CORPUS_ID:
         return "root.rulebook-rules"
@@ -466,7 +504,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                 "chunk_id": chunk_id,
                 "artifact_ref": artifact_ref,
                 "corpus_id": artifact["corpus_id"],
-                "content_kind": "artifact-summary",
+                **chunk_candidate_base("artifact-summary"),
                 "section_path": "artifact",
                 "source_path": artifact["current_path"],
                 "token_estimate": max(20, len((artifact.get("title") or artifact_ref).split()) * 8),
@@ -691,7 +729,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                 "artifact_ref": artifact_ref,
                 "rule_ref": rule_ref,
                 "corpus_id": corpus_id,
-                "content_kind": "rule",
+                **chunk_candidate_base("rule"),
                 "section_path": f"rules[{index}]",
                 "source_path": current_path,
                 "token_estimate": max(40, len(str(rule.get("summary") or rule.get("title") or rule_id).split()) * 10),
@@ -737,7 +775,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                         "artifact_ref": artifact_ref,
                         "pack_ref": pack_ref,
                         "corpus_id": corpus_id,
-                        "content_kind": "rule-pack-step",
+                        **chunk_candidate_base("rule-pack-step"),
                         "section_path": f"agent_steps[{index}]",
                         "source_path": current_path,
                         "token_estimate": max(30, len(str(step.get("instruction") or step_id).split()) * 8),
@@ -754,7 +792,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                         "artifact_ref": artifact_ref,
                         "pack_ref": pack_ref,
                         "corpus_id": corpus_id,
-                        "content_kind": "required-check",
+                        **chunk_candidate_base("required-check"),
                         "section_path": f"required_checks[{index}]",
                         "source_path": current_path,
                         "token_estimate": max(20, len(check.split()) * 6),

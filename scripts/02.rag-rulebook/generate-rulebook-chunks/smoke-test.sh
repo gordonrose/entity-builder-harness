@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-chunks.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: chunking
@@ -57,9 +57,14 @@ assert {"artifact-summary", "rule", "rule-pack-step", "required-check"} <= conte
 
 for chunk in chunk_set["chunks"]:
     assert chunk["content"].strip(), chunk["chunk_id"]
+    assert chunk["chunk_purpose"], chunk["chunk_id"]
+    assert chunk["authority"], chunk["chunk_id"]
     assert chunk["token_estimate"] >= 1, chunk["chunk_id"]
     assert chunk["citation_ids"], chunk["chunk_id"]
     assert set(chunk["citation_ids"]) <= citations, chunk["chunk_id"]
+
+assert all(chunk["authority"] == "execution-authority" for chunk in chunk_set["chunks"] if chunk["content_kind"] == "rule")
+assert all(chunk["authority"] == "orientation" for chunk in chunk_set["chunks"] if chunk["content_kind"] == "artifact-summary")
 
 rule_chunks = [chunk for chunk in chunk_set["chunks"] if chunk["content_kind"] == "rule"]
 assert any("core.stable-cross-cutting-only" in chunk["content"] for chunk in rule_chunks)

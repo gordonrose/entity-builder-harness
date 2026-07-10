@@ -50,6 +50,10 @@ let's lock the platform app integration module decision in
   app-internal service, feature, capability, domain, use-case, route, job,
   health, config, or workflow structure.
 
+
+- Decision: Track explanation-aware chunking as a separate RAG-rulebook plan before continuing platform runtime work.
+  Rationale: Keeping execution-authority retrieval and human explanation support in .agentic/02.rag-rulebook avoids muddying docs/harness/architecture/plans/platform-runtime-implementation-plan.md while still making the platform runtime source material retrievable for future teaching prompts.
+
 ## Context Hygiene
 
 - Built local RAG/rulebook runtime cache for this worktree, queried the app
@@ -59,6 +63,18 @@ let's lock the platform app integration module decision in
 
 - Summary: Commit attempt blocked by sandbox .git permissions; platform runtime plan drafted after app mount boundary work.
   Durable evidence: Git staging failed because /home/owner/projects/entity-builder-harness-001/.git/worktrees/.../index.lock is read-only in this sandbox. Plan artifact: docs/harness/architecture/plans/platform-runtime-implementation-plan.md. Validation passed: artifact header check, recognition-source freshness, source projections, source material coverage, git diff --check, and local RAG runtime rebuild.
+
+
+- Summary: Added learner-friendly platform runtime shell surface descriptions to source material and mirrored them into a structured platform rule for RAG retrieval.
+  Durable evidence: Updated docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md and docs/harness/architecture/rules/layers/platform.yml. Checks passed: artifact metadata headers, source projections, source material coverage, recognition-source freshness, git diff --check, local RAG runtime build, and query-local-context selecting platform.runtime-shell-surfaces-are-explicit for the future explanation prompt.
+
+
+- Summary: Expanded platform runtime source material with granular surface boundaries, including purpose, typical files, allowed behavior, and disallowed behavior for each runtime slice.
+  Durable evidence: Updated docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md with Runtime Surface Boundaries for platform/contracts, platform/testing, platform/runtime, platform/server, platform/workers, platform/adapters, apps/platform-smoke, and deployment-facing manifests/config. Updated docs/harness/architecture/rules/layers/platform.yml to version 6 with refreshed source hash. Checks passed: metadata header check, source projections, source material coverage, recognition-source freshness, git diff --check, local RAG runtime build, and query-local-context selecting platform.runtime-shell-surfaces-are-explicit.
+
+
+- Summary: Created and implemented the first slice of the separate explanation-aware chunking and retrieval plan.
+  Durable evidence: Plan artifact: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md. Updated RAG standards, schemas, retrieval policy, index/chunk/policy/packet validators, generators, compact packet output, and generated artifact recognition source so chunks carry chunk_purpose and authority. Checks passed: artifact header check, validate-retrieval-policy-pack, generate-rulebook-index smoke, generate-rulebook-chunks smoke, compile-retrieval-policy smoke, generate-context-packet-fixture smoke, query-local-context smoke, evaluate-retrieval-selector-fixtures smoke, source projections, source material coverage, recognition-source freshness, local runtime build, runtime freshness, and git diff --check.
 
 ## Activity Log
 
@@ -97,6 +113,34 @@ Message: Record platform app mount boundary and runtime plan
 Summary: Recorded ADR 0026 for the app mount boundary, updated platform/apps/dependency-direction guidance and platform/contracts notes, added RAG derivation and selector evidence, refreshed generated recognition sources, and added the platform runtime implementation plan for a dummy app and AWS production readiness.
 
 ADR impact: ADR 0026 records app mount as the platform integration boundary; the runtime plan relies on ADR 0025 and ADR 0026 before implementation.
+
+
+### 2026-07-10T15:19:08Z - Context hygiene
+
+Summary: Added learner-friendly platform runtime shell surface descriptions to source material and mirrored them into a structured platform rule for RAG retrieval.
+
+Durable evidence: Updated docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md and docs/harness/architecture/rules/layers/platform.yml. Checks passed: artifact metadata headers, source projections, source material coverage, recognition-source freshness, git diff --check, local RAG runtime build, and query-local-context selecting platform.runtime-shell-surfaces-are-explicit for the future explanation prompt.
+
+
+### 2026-07-10T15:25:02Z - Context hygiene
+
+Summary: Expanded platform runtime source material with granular surface boundaries, including purpose, typical files, allowed behavior, and disallowed behavior for each runtime slice.
+
+Durable evidence: Updated docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md with Runtime Surface Boundaries for platform/contracts, platform/testing, platform/runtime, platform/server, platform/workers, platform/adapters, apps/platform-smoke, and deployment-facing manifests/config. Updated docs/harness/architecture/rules/layers/platform.yml to version 6 with refreshed source hash. Checks passed: metadata header check, source projections, source material coverage, recognition-source freshness, git diff --check, local RAG runtime build, and query-local-context selecting platform.runtime-shell-surfaces-are-explicit.
+
+
+### 2026-07-10T15:50:57Z - Decision
+
+Decision: Track explanation-aware chunking as a separate RAG-rulebook plan before continuing platform runtime work.
+
+Rationale: Keeping execution-authority retrieval and human explanation support in .agentic/02.rag-rulebook avoids muddying docs/harness/architecture/plans/platform-runtime-implementation-plan.md while still making the platform runtime source material retrievable for future teaching prompts.
+
+
+### 2026-07-10T15:51:09Z - Context hygiene
+
+Summary: Created and implemented the first slice of the separate explanation-aware chunking and retrieval plan.
+
+Durable evidence: Plan artifact: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md. Updated RAG standards, schemas, retrieval policy, index/chunk/policy/packet validators, generators, compact packet output, and generated artifact recognition source so chunks carry chunk_purpose and authority. Checks passed: artifact header check, validate-retrieval-policy-pack, generate-rulebook-index smoke, generate-rulebook-chunks smoke, compile-retrieval-policy smoke, generate-context-packet-fixture smoke, query-local-context smoke, evaluate-retrieval-selector-fixtures smoke, source projections, source material coverage, recognition-source freshness, local runtime build, runtime freshness, and git diff --check.
 
 ## Sub-Agent Activity
 

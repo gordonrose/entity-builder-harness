@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  version: 2
+  version: 4
   status: active
   layer: 01.harness
   domain: architecture
@@ -10,7 +10,7 @@
   - sre
   - security
   kind: source-material
-  purpose: Record deferred platform and infra runtime obligations for enterprise-grade logging, event delivery, audit, and payload handling.
+  purpose: Record platform runtime shell surfaces and deferred platform and infra runtime obligations for enterprise-grade logging, event delivery, audit, and payload handling.
   portability:
     class: required
     targets:
@@ -42,6 +42,333 @@ relays, log exporters, SIEM exporters, and related infra resources.
 
 They do not require `packages/core` to import cloud SDKs, database clients,
 queue clients, observability clients, ORM models, or deployment resources.
+
+## Platform Runtime Shell Surfaces
+
+The platform runtime shell should be easy to explain from the source material,
+not only from implementation files. These surfaces are the first mental model:
+
+- `platform/contracts/**` is the app-facing contract layer. It defines the
+  types and runtime-safe shapes apps use to plug into the platform, including
+  app mounts, route registration, job registration, health registration,
+  request context, job context, feature flags, config access, and lifecycle
+  hooks. This comes before concrete server and worker internals because apps
+  should depend on contracts, not framework objects or process entrypoints.
+- `platform/testing/**` is the test-helper layer for proving app/platform
+  compatibility without real infrastructure. It should provide fake
+  registries, fake request and job contexts, fake loggers, fake queues, fake
+  health checks, and mount-test helpers. This keeps the app mount boundary
+  executable before real servers, workers, cloud queues, or databases exist.
+- `platform/runtime/**` is the provider-neutral runtime mechanics layer. It
+  owns registry validation, lifecycle orchestration, resource startup and
+  shutdown, context factories, readiness state, error mapping, cancellation,
+  and graceful shutdown sequencing. It should not own HTTP framework details,
+  cloud SDK clients, or product app business decisions.
+- `platform/server/**` is the HTTP/API process layer. It turns registered app
+  routes into real HTTP routes and owns server startup, middleware order, API
+  versioning, health endpoints, request logging, auth hooks, validation, error
+  responses, and shutdown wiring. `platform/server/mount.ts` may import public
+  app mount modules, but ordinary server internals should not import app
+  services, features, repositories, or route-handler internals.
+- `platform/workers/**` is the background job process layer. It turns
+  registered app jobs into real worker behavior and owns job polling or
+  receiving, payload validation, retry and backoff, dead-letter behavior,
+  idempotency hooks, job logging and metrics, and graceful shutdown.
+  `platform/workers/mount.ts` may import public app mount modules, but worker
+  internals should not import app job-handler internals directly.
+- `apps/platform-smoke/**` is a deliberately boring dummy app used to prove the
+  platform shell works. It can register one route, one job, one health check,
+  one config schema, and one lifecycle hook through `app.mount.ts`. It is not
+  the real product app and should not become the final app architecture
+  template.
+- Deployment-facing manifests and config are declarative facts that infra and
+  deployment tooling can consume without inspecting app internals. Examples
+  include app name, route base path, required environment variables, health
+  endpoints, worker process names, queue requirements, container port, and
+  deployment smoke-test targets. Infra should consume manifests or generated
+  metadata rather than scanning arbitrary app source files.
+
+In short: contracts define what apps can say to platform; testing proves that
+contract with fakes; runtime owns shared mechanics; server owns HTTP process
+behavior; workers own background process behavior; the smoke app proves the
+mount boundary; manifests/config publish deployment facts without leaking app
+internals.
+
+## Runtime Surface Boundaries
+
+This section gives the more granular file-level expectations for each platform
+runtime slice. These are teaching boundaries first, and rule derivation should
+turn only the stable enforcement points into compact structured rules.
+
+### `platform/contracts/**`
+
+Purpose: define the public app-facing contract surface that platform runtime
+implements and apps mount against.
+
+Typical files:
+
+- `app.ts` for app identity, app mount, mount dependencies, and lifecycle hook
+  contracts;
+- `routes.ts` for route registration, route metadata, auth requirement,
+  permission requirement, handler signatures, and response shape contracts;
+- `jobs.ts` for job registration, payload contracts, delivery metadata, retry
+  states, and job handler signatures;
+- `health.ts` for health check registration, liveness/readiness vocabulary, and
+  safe health output contracts;
+- `context.ts` for composed request and job contexts;
+- `config.ts` for app config schema registration and provider-neutral config
+  access;
+- `flags.ts` for provider-neutral feature flag reader contracts;
+- `errors.ts` for stable platform/app contract error vocabulary.
+
+Allowed:
+
+- provider-neutral TypeScript types, interfaces, small validators, and stable
+  error shapes;
+- imports from public `packages/core` contracts where dependency direction
+  stays acyclic;
+- test helpers only when they are explicitly contract-level and do not pull in
+  runtime providers.
+
+Not allowed:
+
+- raw HTTP framework objects such as Fastify, Express, Hono, request, reply, or
+  server instances as the app integration surface;
+- cloud SDK clients, database clients, queue provider clients, ORM models, or
+  deployment topology;
+- product app services, repositories, feature modules, route handlers, job
+  handlers, business rules, or app-internal folder assumptions;
+- environment loading, secret resolution, process signal handling, server
+  startup, worker loops, or long-lived resource lifecycle.
+
+### `platform/testing/**`
+
+Purpose: provide deterministic fakes and assertions that prove app/platform
+contract compatibility without real infrastructure.
+
+Typical files:
+
+- fake route, job, permission, health, config, lifecycle, and app registries;
+- fake request and job contexts;
+- fake logger, metrics, clock, feature flag reader, config reader, and abort
+  signal helpers;
+- mount-test harnesses that mount an app and inspect registered
+  contributions;
+- assertion helpers for duplicate registrations, reserved paths, unknown
+  permissions, invalid config, unsafe health output, and shutdown ordering.
+
+Allowed:
+
+- in-memory fakes that preserve the same public contract shape apps will use in
+  real runtime code;
+- test-only builders and assertions for platform, app, and contract tests;
+- fixtures that intentionally exercise invalid mounts and failure modes.
+
+Not allowed:
+
+- production runtime dependencies;
+- real network, database, queue, cloud, or secret-manager calls by default;
+- fakes that expose capabilities not present in the real contract;
+- app-specific business test helpers that belong under the owning app or
+  product package.
+
+### `platform/runtime/**`
+
+Purpose: implement provider-neutral runtime mechanics shared by server and
+worker processes.
+
+Typical files:
+
+- `registry.ts` or registry modules for route, job, health, permission, config,
+  and lifecycle registrations;
+- `context-factory.ts` for request and job context construction;
+- `lifecycle.ts`, `resources.ts`, `readiness.ts`, and `shutdown.ts` for startup,
+  readiness, draining, resource cleanup, app hooks, telemetry flush, and exit
+  sequencing;
+- `errors.ts` for safe runtime error mapping;
+- `cancellation.ts`, `clock.ts`, or `flags.ts` for runtime helpers that remain
+  provider-neutral.
+
+Allowed:
+
+- provider-neutral orchestration, validation, lifecycle, registry, retry,
+  readiness, and shutdown behavior;
+- stable runtime helpers used by both HTTP and worker entrypoints;
+- coordination with platform adapters through explicit provider-neutral
+  contracts.
+
+Not allowed:
+
+- HTTP framework startup, concrete middleware registration, or route adapter
+  details that belong in `platform/server/**`;
+- queue polling clients, AWS SDK clients, database clients, or other provider
+  SDK lifecycle unless they sit behind an approved adapter boundary;
+- Terraform, CDK, Pulumi, IAM, networking, load balancer, DNS, or deployment
+  topology;
+- product workflow decisions, resource-specific authorization, app services,
+  app repositories, or business handlers.
+
+### `platform/server/**`
+
+Purpose: run the HTTP/API process and translate registered app routes into real
+HTTP routes.
+
+Typical files:
+
+- `main.ts` for the server process entrypoint;
+- `mount.ts` for the server-side composition root that imports public app mount
+  modules;
+- `create-server.ts` for constructing the chosen HTTP framework instance;
+- `middleware.ts` for middleware ordering;
+- `register-routes.ts` for adapting route registrations to the framework;
+- `health-routes.ts` for `/livez`, `/readyz`, and safe status endpoints;
+- `errors.ts` or `responses.ts` for HTTP error and response mapping.
+
+Allowed:
+
+- concrete HTTP framework code;
+- API versioning, route prefixing, request parsing, CORS, security headers,
+  request logging, authentication hooks, context creation, authorization,
+  validation, response shaping, error mapping, and server shutdown;
+- app mount imports only in approved composition roots such as
+  `platform/server/mount.ts`.
+
+Not allowed:
+
+- importing app services, repositories, feature modules, domain models, route
+  handlers, or business rules from ordinary server internals;
+- letting apps call `listen`, install global middleware, parse credentials,
+  own CORS, own rate limits, install process signal handlers, or receive raw
+  server instances;
+- worker polling loops, retry/dead-letter mechanics, or queue provider
+  semantics that belong in `platform/workers/**` or provider adapters;
+- product-specific route meaning or resource authorization decisions.
+
+### `platform/workers/**`
+
+Purpose: run background job processes and translate registered app jobs into
+worker behavior.
+
+Typical files:
+
+- `main.ts` for the worker process entrypoint;
+- `mount.ts` for the worker-side composition root that imports public app mount
+  modules;
+- `register-jobs.ts` for validating and adapting job registrations;
+- `worker-loop.ts` for provider-neutral polling or receive loop mechanics;
+- `retry-policy.ts`, `dead-letter.ts`, and `idempotency.ts` for runtime job
+  policies;
+- `job-context.ts` for job context creation where it is worker-specific;
+- `health.ts` and `shutdown.ts` for worker readiness and draining.
+
+Allowed:
+
+- job registration validation, payload validation, retry/backoff decisions,
+  dead-letter behavior, idempotency hooks, job logs, metrics, health, and
+  graceful shutdown;
+- fake or in-memory queue behavior for deterministic local tests;
+- provider adapter integration through explicit queue contracts.
+
+Not allowed:
+
+- importing app job-handler internals outside approved app mount modules;
+- product decisions about what work means or when work should be enqueued;
+- concrete AWS SQS, EventBridge, Kafka, RabbitMQ, Redis, or cloud SDK semantics
+  in provider-neutral worker runtime modules;
+- infrastructure resources, queue provisioning, alarms, IAM permissions, or
+  worker deployment topology.
+
+### `platform/adapters/**`
+
+Purpose: translate provider-neutral runtime contracts into specific providers
+or libraries when the shell needs real external services.
+
+Typical files:
+
+- adapter factories for queues, storage, databases, feature flags,
+  observability, auth, or secrets;
+- provider error mappers;
+- provider config schemas;
+- adapter lifecycle wrappers.
+
+Allowed:
+
+- provider SDK/client integration behind explicit platform contracts;
+- provider error normalization into stable platform vocabulary;
+- connection creation and closing when lifecycle is owned by platform runtime;
+- adapter contract tests with fakes or provider-local test doubles.
+
+Not allowed:
+
+- exposing raw provider clients as the primary app-facing API;
+- app business logic or product workflow decisions;
+- infrastructure provisioning, IAM, networking, or cloud resource topology;
+- secret values in source, tests, docs, fixtures, logs, or generated packets.
+
+### `apps/platform-smoke/**`
+
+Purpose: provide a deliberately boring app that proves the platform shell can
+mount an app before real product application work begins.
+
+Typical files:
+
+- `app.mount.ts` to register one route, one job, one health check, one app
+  config schema, one permission, and one lifecycle hook;
+- `app.manifest.ts` to publish deployment-facing metadata without importing
+  app internals;
+- tiny internal route, job, health, and config files if needed to prove the
+  mount path.
+
+Allowed:
+
+- minimal smoke behavior that exercises request context, job context,
+  permission metadata, health aggregation, config validation, logging, metrics,
+  and lifecycle hooks;
+- intentionally simple app-owned internals used only by the public mount
+  module;
+- local and deployment smoke tests that prove the platform shell, not product
+  behavior.
+
+Not allowed:
+
+- real CRM, billing, onboarding, customer, entity-builder, or other product
+  behavior;
+- becoming the required internal app structure for future apps;
+- importing platform server or worker internals directly;
+- secrets, real tenant/customer data, or production provider assumptions.
+
+### Deployment-Facing Manifests And Config
+
+Purpose: give infra and deployment tooling stable facts without requiring them
+to inspect app internals.
+
+Typical files:
+
+- `apps/*/app.manifest.ts` for app-owned deployment facts;
+- generated deployment metadata when the manifest needs a machine-readable
+  projection;
+- `infra/environments/**` for target-specific values;
+- `infra/**/deploy-manifest.*` or equivalent deployment metadata once the
+  infra layout is approved.
+
+Allowed:
+
+- app identity, route base path, health endpoint names, worker process names,
+  required config keys, secret reference names, queue requirements, container
+  ports, smoke-test targets, and deployment ownership metadata;
+- non-secret references to secret stores or parameter names;
+- declarative values that are stable enough for infra checks, image builds,
+  smoke tests, and deployment readiness reports.
+
+Not allowed:
+
+- secret values, tokens, credentials, private keys, or connection strings with
+  embedded credentials;
+- imports from app services, repositories, route handlers, job handlers,
+  business rules, or feature internals;
+- hidden business logic that makes the manifest a second app implementation;
+- cloud resource creation, IAM, networking, DNS, load balancer, or deployment
+  topology outside infra-owned files.
 
 ## App-Facing Contracts and Composed Context Placement
 

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.standard.retrieval-selector-policy-system
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: retrieval
@@ -86,6 +86,26 @@ state. The selector resolves layer, mode, workflow, and corpus candidates for
 the current prompt so it can choose the right context packet. The next prompt
 must be resolved again.
 
+## Chunk Purpose And Authority
+
+Selectors must distinguish why a chunk is selected from what authority the
+chunk carries.
+
+Chunk purpose answers why the chunk is useful for the prompt. Valid purposes
+include binding rules, source explanation, ADR decisions, plan milestones,
+guides, artifact summaries, and retrieval profiles.
+
+Chunk authority answers what the consumer may do with the chunk. Valid
+authority families include execution authority, explanation support, decision
+history, implementation planning, and orientation.
+
+Explanation-support chunks can teach a human and can help an agent explain
+source-backed rationale. They cannot authorize side effects. For write, commit,
+deploy, destructive, or cloud-mutating requests, the selector may include
+explanation chunks as background, but readiness and authorization must come
+from governed workflows, explicit approvals, structured rules, required checks,
+stop conditions, and execution-authority chunks.
+
 ## Required Dimensions
 
 Every active selector policy pack must address these dimensions.
@@ -104,6 +124,7 @@ Every active selector policy pack must address these dimensions.
 | token budget | How much context can be selected and how trimming behaves. | Tuning budgets per consumer, task risk, and context window. |
 | confidence thresholds | When low confidence becomes a gap instead of a guessed answer. | Tuning thresholds by layer, mode, corpus, and task type. |
 | validation handoff | Which validator must pass before the packet is usable. | Adding stricter packet, citation, or policy validators. |
+| chunk purpose and authority | Which chunk purposes are eligible for the prompt and which selected chunks carry binding authority. | Adding purpose labels, authority labels, side-effect restrictions, or intent-specific ranking rules. |
 
 Future dimensions may be added when they are versioned and validated. They must
 not silently change existing dimension meaning.
@@ -172,15 +193,17 @@ When policies conflict, use this order:
    selection.
 3. Evidence bundles define required evidence families for recognized question
    categories.
-4. Session metadata governs provenance, continuity, branch/worktree ownership,
+4. Side-effecting requests require execution-authority evidence for readiness
+   and may use explanation-support chunks only as background.
+5. Session metadata governs provenance, continuity, branch/worktree ownership,
    and execution safety.
-5. Focused paths and artifact ownership beat broad semantic similarity.
-6. Corpus ownership boundaries beat cross-corpus convenience.
-7. Required checks and mandatory rulesets must survive trimming.
-8. Rule graph expansion should be bounded before ranking.
-9. Ranking should prefer deterministic matches before semantic/vector recall.
-10. Low confidence must produce a gap; it must not be hidden behind fluent text.
-11. Validation failure means the packet is unusable.
+6. Focused paths and artifact ownership beat broad semantic similarity.
+7. Corpus ownership boundaries beat cross-corpus convenience.
+8. Required checks and mandatory rulesets must survive trimming.
+9. Rule graph expansion should be bounded before ranking.
+10. Ranking should prefer deterministic matches before semantic/vector recall.
+11. Low confidence must produce a gap; it must not be hidden behind fluent text.
+12. Validation failure means the packet is unusable.
 
 These precedence rules should be duplicated into policy packs so future
 selectors can validate that the active pack still honors them.
@@ -249,6 +272,8 @@ must be a validated `rag-rulebook/context-packet/v1` packet.
 The selector must preserve:
 
 - selected chunk IDs
+- selected chunk purposes
+- selected chunk authorities
 - citation IDs
 - corpus IDs
 - artifact IDs

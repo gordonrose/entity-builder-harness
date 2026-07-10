@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.policy.retrieval-selector.v1.dimension.token-budget
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -36,7 +36,8 @@ required_inputs:
   - Duplicate or overlapping chunk signals.
 expected_actions:
   - Select the smallest context that satisfies routing, rules, checks, stops, citations, and provenance.
-  - Trim optional explanatory chunks before rules, checks, stops, citations, or provenance.
+  - Trim optional explanatory chunks before rules, checks, stops, citations, or provenance for implementation and side-effecting prompts.
+  - Preserve high-value explanation chunks before low-value implementation detail for explanation and tutor prompts.
   - Remove duplicate or lower-confidence chunks before mandatory chunks.
   - Record selected_context_tokens and trim_policy.
 banned_actions:
@@ -56,6 +57,8 @@ gap_or_stop_conditions:
   - Add a token-budget gap when mandatory chunk count exceeds max_selected_chunks.
 ranking_effects:
   - Mandatory checks, stops, citations, and provenance are retained before optional explanation.
+  - Explanation-support chunks are optional for side-effecting prompts.
+  - Source-explanation chunks may be high priority for explanation prompts when required rules and safety citations remain present.
   - Duplicate chunks and lower-confidence chunks are trimmed first.
   - Shorter chunks win ties when evidence quality is equal.
 validation_examples:
@@ -65,6 +68,9 @@ validation_examples:
   - name: mandatory evidence over budget creates gap
     given: Required checks and stops alone exceed max_context_tokens.
     expect: The selector reports a token-budget gap instead of dropping mandatory evidence.
+  - name: explanation prompt keeps teaching chunks
+    given: An explanation prompt has both source-explanation chunks and low-value implementation details.
+    expect: The source-explanation chunks survive before lower-value implementation details when safety evidence still fits.
 can_change_by:
   - Tune max tokens.
   - Tune max chunks.

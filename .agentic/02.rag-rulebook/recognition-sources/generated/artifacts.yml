@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 614
-  term_count: 1240
+  indexed_artifacts: 615
+  term_count: 1242
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4619,6 +4619,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.guide.source-projection-manifest
   evidence_path: .agentic/02.rag-rulebook/guides/source-projection-manifest.md
+  confidence_weight: 1
+- term: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
+  evidence_path: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
+  evidence_path: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
   confidence_weight: 1
 - term: rag-rulebook.plan.prototype-corpus-migration-map
   category: artifact-id

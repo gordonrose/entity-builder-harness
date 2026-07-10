@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.query-local-context
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: runtime
@@ -328,6 +328,9 @@ compact = {
             "corpus_id": chunk.get("corpus_id"),
             "artifact_id": chunk.get("artifact_id"),
             "source_path": chunk.get("source_path"),
+            "content_kind": chunk.get("content_kind"),
+            "chunk_purpose": chunk.get("chunk_purpose"),
+            "authority": chunk.get("authority"),
             "section_path": chunk.get("section_path"),
             "retrieval_score": chunk.get("retrieval_score"),
             "token_estimate": chunk.get("token_estimate"),

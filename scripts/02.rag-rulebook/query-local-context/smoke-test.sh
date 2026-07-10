@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.query-local-context.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: runtime
@@ -136,6 +136,8 @@ assert compact_packet["request"]["raw_text"] == full_packet["request"]["raw_text
 assert "recognition_source_matches" not in compact_packet["request"]
 assert len(compact_packet["selected_chunks"]) == len(full_packet["selected_chunks"])
 assert compact_packet["selected_chunks"][0]["content"]
+assert compact_packet["selected_chunks"][0]["chunk_purpose"] == full_packet["selected_chunks"][0]["chunk_purpose"]
+assert compact_packet["selected_chunks"][0]["authority"] == full_packet["selected_chunks"][0]["authority"]
 assert compact_packet["citations"]
 assert compact_packet["debug"]["full_packet_available_with"] == "--format full"
 assert compact_packet["debug"]["selector_strategy_id"] == full_packet["selector_trace"]["strategy_id"]

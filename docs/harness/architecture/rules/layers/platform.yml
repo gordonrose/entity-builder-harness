@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 4
+version: 6
 status: active
 
 source_derivation:
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-      sha256: 565b11afd4ab722284671005db53c7abc753271e8b91d7e86b9502b89e06ae1d
+      sha256: 4ad6629ecaee74eb9ae3f0cff2e303e6c4ce2a654d5e961bda872e414362fa85
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -176,6 +176,33 @@ rules:
     agent_guidance: >
       If code answers a product question, move it to the owning app or business
       package. If code answers a runtime question, platform may be the owner.
+
+  - id: platform.runtime-shell-surfaces-are-explicit
+    title: Platform runtime shell surfaces are explicit
+    severity: warning
+    summary: >
+      Platform runtime work should be explainable through a small set of
+      surfaces: contracts, testing, runtime mechanics, server process, worker
+      process, smoke app, and deployment-facing manifests/config.
+    must:
+      - "Treat platform/contracts/** as the app-facing contract layer for app mounts, route registration, job registration, health registration, request context, job context, feature flags, config access, and lifecycle hooks."
+      - "Treat platform/testing/** as the test-helper layer for fake registries, fake request and job contexts, fake loggers, fake queues, fake health checks, and mount-test helpers."
+      - "Treat platform/runtime/** as the provider-neutral mechanics layer for registry validation, lifecycle orchestration, resource startup and shutdown, context factories, readiness state, error mapping, cancellation, and graceful shutdown sequencing."
+      - "Treat platform/server/** as the HTTP/API process layer for server startup, middleware order, API versioning, health endpoints, request logging, auth hooks, validation, error responses, route adaptation, and shutdown wiring."
+      - "Treat platform/workers/** as the background job process layer for job polling or receiving, payload validation, retry and backoff, dead-letter behavior, idempotency hooks, job logging and metrics, and graceful shutdown."
+      - "Use apps/platform-smoke/** only as a deliberately boring dummy app that proves the shell can mount one route, one job, one health check, one config schema, and one lifecycle hook through app.mount.ts."
+      - "Use deployment-facing manifests and config for app name, route base path, required environment variables, health endpoints, worker process names, queue requirements, container port, and deployment smoke-test targets when infra needs those facts."
+    must_not:
+      - "Do not treat apps/platform-smoke/** as the real product app or the final app architecture template."
+      - "Do not put HTTP framework details, cloud SDK clients, or product business decisions in platform/runtime/**."
+      - "Do not let ordinary platform/server/** or platform/workers/** internals import app services, features, repositories, route handlers, or job-handler internals."
+      - "Do not make infra or deployment tooling scan arbitrary app source files when a manifest or generated metadata artifact should provide deployment facts."
+    agent_guidance: >
+      For learning and RAG answers, use the short mental model: contracts define
+      what apps can say to platform; testing proves the contract with fakes;
+      runtime owns shared mechanics; server owns HTTP process behavior; workers
+      own background process behavior; the smoke app proves the mount boundary;
+      manifests/config publish deployment facts without leaking app internals.
 
   - id: platform.contracts-are-the-app-boundary
     title: Apps integrate through platform contracts
@@ -379,6 +406,7 @@ source_refs:
       - "The most important design rule"
   - doc: "platform-runtime-enterprise-obligations-v1.md"
     sections:
+      - "Platform Runtime Shell Surfaces"
       - "App-Facing Contracts and Composed Context Placement"
       - "Logging Normalization"
       - "Durable Outbox and Event Delivery"

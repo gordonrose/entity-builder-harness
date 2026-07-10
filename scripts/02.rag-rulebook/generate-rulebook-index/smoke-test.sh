@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-index.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: indexing
@@ -50,6 +50,20 @@ assert data["diagnostics"]["counts"]["rule_packs"] == 4
 assert data["diagnostics"]["counts"]["rules"] > 0
 assert data["diagnostics"]["counts"]["graph_edges"] > 0
 assert data["diagnostics"]["counts"]["chunk_candidates"] > data["diagnostics"]["counts"]["rules"]
+
+for candidate in data["chunk_candidates"]:
+    assert candidate["chunk_purpose"], candidate["chunk_id"]
+    assert candidate["authority"], candidate["chunk_id"]
+assert all(
+    candidate["authority"] == "execution-authority"
+    for candidate in data["chunk_candidates"]
+    if candidate["content_kind"] in {"rule", "rule-pack-step", "required-check"}
+)
+assert all(
+    candidate["authority"] == "orientation"
+    for candidate in data["chunk_candidates"]
+    if candidate["content_kind"] == "artifact-summary"
+)
 
 source_roots = {root["root_id"]: root for root in data["source_roots"]}
 assert source_roots["root.rulebook-rules"]["path"] == "docs/02.rag-rulebook/rules"

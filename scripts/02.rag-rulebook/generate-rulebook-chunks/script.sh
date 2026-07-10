@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-chunks
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: chunking
@@ -396,6 +396,8 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             "artifact_ref": artifact_ref,
             "source_path": source_path,
             "content_kind": content_kind,
+            "chunk_purpose": candidate.get("chunk_purpose") or content_kind,
+            "authority": candidate.get("authority") or "orientation",
             "section_path": candidate.get("section_path"),
             "rule_ids": [rule.get("rule_id")] if rule else [],
             "rule_refs": [rule_ref] if isinstance(rule_ref, str) else [],

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.standard.okf-source-material-quality
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: rulebook
@@ -61,6 +61,26 @@ Required reviewer roles:
 Each reviewer must produce a scorecard, blocking gaps, recommendations, and a
 rerun decision. Recommendations must be applied or explicitly rejected with a
 recorded reason before the next loop.
+
+## Explanation Support Versus Execution Authority
+
+Source material has two valid downstream uses:
+
+- explanation support for humans and agents that need mental models,
+  rationale, examples, boundaries, and source-backed learning context;
+- execution authority only after governed source-to-rule derivation produces
+  structured rules, checks, stop conditions, or approved workflow material.
+
+Rich source material may be chunked directly for explanation when the chunks
+are bounded, cited, purpose-tagged, and authority-tagged as
+`explanation-support`. Those chunks may help answer "walk me through this"
+questions, but they must not authorize writes, commits, deploys, destructive
+actions, cloud mutation, or bypasses of governed workflows.
+
+Structured rules remain the binding execution layer. If source material says
+something that should constrain implementation or operations, it must be
+promoted through the governed source-to-rule path before agents treat it as
+binding policy.
 
 ## Required Assessment Dimensions
 
@@ -140,6 +160,10 @@ Use corpus subdirectories when helpful, for example:
 
 - Keep source material canonical and human-authored.
 - Make assumptions, variables, boundaries, and non-goals explicit.
+- Write source material so bounded heading sections can teach humans without
+  becoming binding rules by accident.
+- Mark direct source-material chunks as explanation support unless a governed
+  derivation produced structured execution rules.
 - Prefer concrete operating instructions over broad principles.
 - Separate universal policy from vertical-specific instructions.
 - Preserve reviewer disagreement instead of smoothing it away.
@@ -158,7 +182,8 @@ Do not:
 - average scores to pass the gate
 - allow a high score when blocking gaps remain
 - skip rereview after recommendations are applied
-- use source material as retrieval-ready coverage without structured rules
+- use source material as execution-authority coverage without structured rules
+- let explanation-support chunks authorize side effects or workflow bypasses
 - hide uncertainty in prose
 - let token optimization remove required safety or execution variables
 - ask humans to maintain generated hashes manually
@@ -167,5 +192,8 @@ Do not:
 
 This standard treats the core system as an Operational Knowledge Framework.
 RAG is the delivery layer that serves compact context packets from governed
-knowledge. Chunking is useful only after the source material is strong enough
-to become deterministic rules.
+knowledge. Chunking may expose source material for explanation before every
+claim has become a structured rule, but only when the packet preserves source
+paths, citations, chunk purpose, and authority. Binding execution guidance still
+comes from structured rules, required checks, stop conditions, approved
+workflows, and explicit human approval.

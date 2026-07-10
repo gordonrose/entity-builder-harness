@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.schema.retrieval-policy-dimension
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -243,6 +243,27 @@ fields:
               items:
                 type: string
 
+  chunk_selection:
+    type: object
+    note: Retrieval-strategy dimension only. Defines chunk-purpose and authority behavior used by compiled selector policy.
+    required_fields:
+      - purpose_priority_by_intent
+      - authority_rules
+      - side_effect_restrictions
+    fields:
+      purpose_priority_by_intent:
+        type: object
+        description: Maps intent IDs to ordered chunk purposes.
+      authority_rules:
+        type: object
+        description: Maps authority labels to consumer meaning.
+      side_effect_restrictions:
+        type: object
+        required_fields:
+          - side_effect_classes
+          - authorization_authorities
+          - background_only_authorities
+
 field_guide:
   - path: dimension_id
     what_it_is: Stable ID for one retrieval selection dimension.
@@ -316,3 +337,10 @@ field_guide:
     what_it_does: Gives downstream selector logic concrete fields to rank, compare, and validate.
     rules:
       - Must include confidence and conflict outputs.
+
+  - path: chunk_selection
+    what_it_is: Retrieval-strategy policy for chunk purpose and authority.
+    what_it_does: Lets selectors choose teaching chunks for explanation prompts while preserving binding authority for side-effecting prompts.
+    rules:
+      - Explanation-support chunks must not authorize writes, commits, deploys, destructive actions, or cloud mutation.
+      - Side-effecting prompts must preserve execution-authority evidence before optional explanation support.

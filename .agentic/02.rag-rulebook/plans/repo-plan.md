@@ -823,6 +823,27 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      `source-material-reviews/README.md`, and
      `scripts/02.rag-rulebook/validate-okf-source-material-reviews/`.
 
+7at. Add explanation-aware chunk purpose and authority.
+   - Separate chunk purpose from chunk authority so the same corpus can support
+     agent execution, human explanation, decision history, implementation
+     planning, and lightweight orientation without stuffing all teaching prose
+     into binding rule chunks.
+   - Let governed Markdown source material and guides become bounded,
+     cited `source-explanation` chunks when the prompt asks to learn or be
+     walked through a concept.
+   - Keep structured rules, required checks, stop conditions, explicit human
+     approval, and governed workflows as the only sources of authority for
+     writes, commits, deploys, destructive actions, or cloud mutation.
+   - Preserve chunk purpose and authority in index candidates, generated
+     chunks, selected context-packet chunks, retrieval policy, selector traces,
+     and token-budget decisions.
+   - Prove the behavior with fixtures that distinguish explanation prompts
+     from implementation and side-effecting prompts over the same source area.
+   - Status: planned in
+     `plans/explanation-aware-chunking-and-retrieval.md`; initial standards
+     and schema contract language are being added before generator, policy,
+     and fixture implementation.
+
 8. Add deploy-layer corpus gap tracking.
    - Track the deferred MCP server candidate's missing deploy-layer depth as a
      governed `corpus.04.deploy` gap.
