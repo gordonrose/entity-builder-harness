@@ -65,6 +65,8 @@ DEFAULT_CORPUS_RULE_ROOTS = (
 )
 PROCESS_SOURCE_GLOBS = (
     "AGENTS.md",
+    ".github/workflows/*.yml",
+    ".github/workflows/*.yaml",
     ".agentic/00.chat/checklists/**/*.md",
     ".agentic/00.chat/commands/**/*.md",
     ".agentic/00.chat/standards/**/*.md",
@@ -73,6 +75,14 @@ PROCESS_SOURCE_GLOBS = (
     ".agentic/01.harness/standards/**/*.md",
     ".agentic/01.harness/state/**/*.yml",
     ".agentic/01.harness/workflows/**/*.md",
+    ".agentic/02.rag-rulebook/guides/**/*.md",
+    ".agentic/02.rag-rulebook/schemas/**/*.yml",
+    ".agentic/02.rag-rulebook/service/**/*.md",
+    ".agentic/02.rag-rulebook/service/**/*.mjs",
+    ".agentic/02.rag-rulebook/source-projections/**/*.md",
+    ".agentic/02.rag-rulebook/source-projections/**/*.yml",
+    ".agentic/02.rag-rulebook/standards/**/*.md",
+    ".agentic/02.rag-rulebook/workflows/**/*.md",
     ".agentic/aws/**/*.md",
     ".agentic/education/agents/**/*.md",
     ".agentic/education/profiles/**/*.md",
@@ -82,6 +92,13 @@ PROCESS_SOURCE_GLOBS = (
     ".agentic/shared/standards/**/*.md",
     ".agentic/shared/workflows/**/*.md",
     "docs/00.chat/**/*.md",
+    "docs/education/architecture/**/*.md",
+    "infra/04.deploy/**/*.md",
+    "infra/04.deploy/**/*.yml",
+    "infra/04.deploy/**/*.yaml",
+    "infra/04.deploy/**/Dockerfile",
+    "infra/04.deploy/**/*.dockerignore",
+    "packages/core/src/**/*.ts",
     "scripts/00.chat/**/README.md",
     "scripts/00.chat/**/script.sh",
     "scripts/01.harness/*.sh",
@@ -89,6 +106,10 @@ PROCESS_SOURCE_GLOBS = (
     "scripts/01.harness/**/*.md",
     "scripts/01.harness/**/*.sh",
     "scripts/01.harness/**/*.js",
+    "scripts/02.rag-rulebook/**/README.md",
+    "scripts/02.rag-rulebook/**/script.sh",
+    "scripts/04.deploy/**/README.md",
+    "scripts/04.deploy/**/script.sh",
     ".codex/rules/*.rules",
     ".claude/settings.json",
     ".vibe/config.toml",
@@ -955,10 +976,14 @@ def process_source_corpus_id(path: str, metadata: dict[str, Any]) -> str:
     layer = str(metadata.get("layer") or "")
     if layer == "02.rag-rulebook" or path.startswith(("scripts/02.rag-rulebook/", ".agentic/02.rag-rulebook/")):
         return CURRENT_RULEBOOK_CORPUS_ID
-    if layer == "04.deploy" or path.startswith((".agentic/aws/", "scripts/04.deploy/", "docs/04.deploy/")):
+    if layer == "04.deploy" or path.startswith((".agentic/aws/", ".github/workflows/", "infra/04.deploy/", "scripts/04.deploy/", "docs/04.deploy/")):
         return "corpus.04.deploy"
     if layer == "06.shared":
         return "corpus.06.shared"
+    if path.startswith("packages/core/"):
+        return "corpus.03.product.core"
+    if path.startswith("platform/contracts/"):
+        return "corpus.03.product.platform"
     return HARNESS_CORPUS_ID
 
 
@@ -1009,6 +1034,8 @@ def discover_process_source_entries(excluded_paths: set[str]) -> list[dict[str, 
             if not repo_path(path).is_file():
                 continue
             if "/fixtures/" in path or "/generated/" in path or "/cache/" in path:
+                continue
+            if path.endswith("/workflows/default.md"):
                 continue
             metadata = parse_metadata_header(path)
             status = str(metadata.get("status") or "active")
@@ -1760,6 +1787,41 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             "role": "supporting-source",
             "migration_status": "current",
             "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.rag-rulebook-process-sources",
+            "path": ".agentic/02.rag-rulebook",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        },
+        {
+            "root_id": "root.github-workflows",
+            "path": ".github/workflows",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": "corpus.04.deploy",
+        },
+        {
+            "root_id": "root.deploy-infra-sources",
+            "path": "infra/04.deploy",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": "corpus.04.deploy",
+        },
+        {
+            "root_id": "root.education-docs",
+            "path": "docs/education",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.packages-core-source",
+            "path": "packages/core/src",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": "corpus.03.product.core",
         },
     ]
     for root in current_corpus_rule_roots:

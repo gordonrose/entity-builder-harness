@@ -353,6 +353,10 @@ terms:
       - source material over examples
       - illustrative example paths
       - example paths are deprioritized
+      - example paths
+      - target paths
+      - should not become target paths
+      - paths in a prompt
       - how RAG retrieval works
       - how context packets are assembled
     confidence_weight: 0.82
@@ -1136,6 +1140,226 @@ terms:
       - rulebook-coverage.yml
       - rulebook progress state
       - rulebook tracker state
+    confidence_weight: 0.74
+  - term: RAG deploy readiness
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.rag-readiness-workflow
+    aliases:
+      - stale deploy-readiness
+      - stale deploy readiness
+      - deploy-readiness.yml
+      - successful deploy but stale readiness
+      - RAG staging deployment readiness
+      - static deploy manifest
+      - deployment readiness manifest
+    confidence_weight: 0.82
+  - term: deploy rag rulebook staging workflow
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.rag-staging-workflow
+    evidence_path: .github/workflows/deploy-rag-rulebook-staging.yml
+    aliases:
+      - deploy RAG rulebook staging
+      - staging deploy workflow
+      - workflow deploy readiness
+    confidence_weight: 0.74
+  - term: RAG immutable runtime cache
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.rag-runtime-cache
+    aliases:
+      - immutable ECS runtime cache
+      - mutable repo source
+      - /app/.cache
+      - RAG_RUNTIME_DIR
+      - runtime cache in ECS
+      - containerized local runtime
+    confidence_weight: 0.82
+  - term: RAG service Dockerfile
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.rag-service-dockerfile
+    evidence_path: infra/04.deploy/02.rag-rulebook/image/Dockerfile
+    aliases:
+      - service Dockerfile
+      - RAG Dockerfile
+      - container runtime cache
+    confidence_weight: 0.74
+  - term: domain corpus package
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.domain-corpus-package
+    aliases:
+      - modular domain corpus package
+      - domain-corpus package
+      - corpus package standard
+      - source projection manifest
+      - source-to-rule derivation
+    confidence_weight: 0.83
+  - term: domain corpus package standard
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.domain-corpus-package-standard
+    evidence_path: .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+    aliases:
+      - domain-corpus standard
+      - corpus package contract
+      - modular corpus contract
+    confidence_weight: 0.75
+  - term: OKF source material review
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.okf-source-review
+    aliases:
+      - OKF source review
+      - review OKF source material
+      - OKF before YAML derivation
+      - source review before YAML
+      - OKF quality gate
+      - source material quality gate
+    confidence_weight: 0.83
+  - term: OKF source material quality
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.okf-source-material-quality
+    evidence_path: .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+    aliases:
+      - okf-source-material-quality
+      - OKF quality standard
+      - source material quality standard
+    confidence_weight: 0.75
+  - term: public article gates
+    category: question-category
+    match_type: phrase
+    canonical_id: question.education.public-article-gates
+    aliases:
+      - education source packets
+      - source packet before public articles
+      - reader-world research packet
+      - public article pipeline
+      - article gate
+      - article gates
+    confidence_weight: 0.82
+  - term: reader-world research packet
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.reader-world-research
+    evidence_path: .agentic/education/templates/reader-world-research-packet.md
+    aliases:
+      - reader-world research
+      - reader-world template
+      - public article research packet
+    confidence_weight: 0.74
+  - term: article editor writer roles
+    category: question-category
+    match_type: phrase
+    canonical_id: question.education.article-agent-boundaries
+    aliases:
+      - Article Editor vs Article Writer
+      - article agent boundaries
+      - editor and writer agents
+      - separate article editor and writer
+    confidence_weight: 0.82
+  - term: Article Editor Agent contract
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.article-editor-agent
+    evidence_path: .agentic/education/agents/article-editor.md
+    aliases:
+      - article editor agent
+      - article editor contract
+      - editor agent contract
+    confidence_weight: 0.74
+  - term: Article Writer Agent contract
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.article-writer-agent
+    evidence_path: .agentic/education/agents/article-writer.md
+    aliases:
+      - article writer agent
+      - article writer contract
+      - writer agent contract
+    confidence_weight: 0.74
+  - term: container build context
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.container-build-context
+    aliases:
+      - Dockerfile.dockerignore
+      - avoid .git
+      - avoid node_modules
+      - avoid including .git
+      - avoid including node_modules
+      - container image avoid
+      - container image avoids
+      - including .git
+      - including node_modules
+      - excludes .git
+      - excludes node_modules
+      - build context allowlist
+      - container excludes secrets
+    confidence_weight: 0.82
+  - term: Dockerfile.dockerignore
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.rag-dockerignore
+    evidence_path: infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore
+    aliases:
+      - docker ignore
+      - Docker ignore file
+      - image dockerignore
+    confidence_weight: 0.74
+  - term: packages core audit queues
+    category: question-category
+    match_type: phrase
+    canonical_id: question.product.core-audit-queues
+    aliases:
+      - audit and queue schema versions
+      - audit schema version
+      - queue schema version
+      - core audit queues
+    confidence_weight: 0.82
+  - term: packages core audit source
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.audit-source
+    evidence_path: packages/core/src/audit/index.ts
+    aliases:
+      - audit/index.ts
+      - audit event version
+      - currentAuditEventVersion
+    confidence_weight: 0.74
+  - term: packages core queues source
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.queues-source
+    evidence_path: packages/core/src/queues/index.ts
+    aliases:
+      - queues/index.ts
+      - queue message version
+      - currentQueueMessageVersion
+    confidence_weight: 0.74
+  - term: portable context provider
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.portable-service-boundary
+    aliases:
+      - portable service contract
+      - HTTP auth local query boundary
+      - context provider HTTP
+      - service skeleton
+      - local query boundary
+    confidence_weight: 0.82
+  - term: RAG service server
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.service-server
+    evidence_path: .agentic/02.rag-rulebook/service/server.mjs
+    aliases:
+      - server.mjs
+      - HTTP service skeleton
+      - RAG HTTP service
     confidence_weight: 0.74
 validation_rules:
   - Question categories choose expected evidence families; they do not select execution workflows.

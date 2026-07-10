@@ -1,0 +1,78 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-education-article-agent-boundaries
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove article editor/writer role questions retrieve agent contracts and separating ADRs.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-education-article-agent-boundaries
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove article agent prompts retrieve role contracts and ADR rationale together.
+input:
+  request_text: What is the difference between article editor writer roles, the Article Editor Agent contract, and the Article Writer Agent contract?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: article editor writer roles
+        category: question-category
+        canonical_id: question.education.article-agent-boundaries
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: Article Editor Agent contract
+        category: evidence-family
+        canonical_id: evidence.education.article-editor-agent
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: Article Writer Agent contract
+        category: evidence-family
+        canonical_id: evidence.education.article-writer-agent
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .agentic/education/agents/article-editor.md
+      - .agentic/education/agents/article-writer.md
+      - .agentic/education/agents/article-reporter.md
+      - docs/education/architecture/adrs/0002-use-article-editor-agent-before-public-article-drafting.md
+      - docs/education/architecture/adrs/0003-separate-article-editor-and-writer-agents.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/education/agents/article-editor.md
+  - .agentic/education/agents/article-writer.md
+  - .agentic/education/agents/article-reporter.md
+  - docs/education/architecture/adrs/0002-use-article-editor-agent-before-public-article-drafting.md
+  - docs/education/architecture/adrs/0003-separate-article-editor-and-writer-agents.md
+update_triggers:
+  - Article agent contracts change.
+  - Article editor/writer separation ADRs change.
+  - Education agent role vocabulary changes.
+

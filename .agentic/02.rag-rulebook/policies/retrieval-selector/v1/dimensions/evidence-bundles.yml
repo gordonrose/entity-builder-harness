@@ -110,6 +110,7 @@ evidence_bundles:
     always_source_paths:
       - docs/02.rag-rulebook/source-material/rag-retrieval.md
       - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
     family_source_paths:
       evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
       evidence.rag-retrieval.example-deprioritization: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
@@ -336,6 +337,94 @@ evidence_bundles:
       - docs/harness/architecture/rules/concerns/generated-code.yml
     family_source_paths:
       evidence.harness.rulebook-coverage-state: .agentic/01.harness/state/rulebook-coverage.yml
+  - question_category_id: question.deploy.rag-readiness-workflow
+    always_source_paths:
+      - .github/workflows/deploy-rag-rulebook-staging.yml
+      - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+      - infra/04.deploy/02.rag-rulebook/github-actions/README.md
+    family_source_paths:
+      evidence.deploy.rag-staging-workflow: .github/workflows/deploy-rag-rulebook-staging.yml
+  - question_category_id: question.deploy.rag-runtime-cache
+    always_source_paths:
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+      - infra/04.deploy/02.rag-rulebook/image/README.md
+      - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+      - scripts/02.rag-rulebook/build-local-runtime/README.md
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    family_source_paths:
+      evidence.deploy.rag-service-dockerfile: infra/04.deploy/02.rag-rulebook/image/Dockerfile
+  - question_category_id: question.rag.domain-corpus-package
+    always_source_paths:
+      - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - .agentic/02.rag-rulebook/schemas/source-projection-manifest.schema.yml
+      - .agentic/02.rag-rulebook/standards/source-to-rule-derivation.md
+      - .agentic/02.rag-rulebook/source-projections/README.md
+    family_source_paths:
+      evidence.rag.domain-corpus-package-standard: .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+  - question_category_id: question.rag.okf-source-review
+    always_source_paths:
+      - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+      - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+      - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml
+      - scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+    family_source_paths:
+      evidence.rag.okf-source-material-quality: .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+  - question_category_id: question.education.public-article-gates
+    always_source_paths:
+      - .agentic/education/workflows/create-educational-resource.md
+      - .agentic/education/agents/article-reporter.md
+      - .agentic/education/agents/article-editor.md
+      - .agentic/education/templates/article-source-packet.md
+      - .agentic/education/templates/reader-world-research-packet.md
+      - docs/education/architecture/adrs/0004-require-source-packets-for-public-articles.md
+      - docs/education/architecture/adrs/0005-require-reader-world-research-for-public-articles.md
+    family_source_paths:
+      evidence.education.reader-world-research: .agentic/education/templates/reader-world-research-packet.md
+  - question_category_id: question.education.article-agent-boundaries
+    always_source_paths:
+      - .agentic/education/agents/article-editor.md
+      - .agentic/education/agents/article-writer.md
+      - .agentic/education/agents/article-reporter.md
+      - docs/education/architecture/adrs/0002-use-article-editor-agent-before-public-article-drafting.md
+      - docs/education/architecture/adrs/0003-separate-article-editor-and-writer-agents.md
+    family_source_paths:
+      evidence.education.article-editor-agent: .agentic/education/agents/article-editor.md
+      evidence.education.article-writer-agent: .agentic/education/agents/article-writer.md
+  - question_category_id: question.deploy.container-build-context
+    always_source_paths:
+      - docs/04.deploy/rules/shared/container-image-management.yml
+      - scripts/04.deploy/validate-container-boundaries/script.sh
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+      - infra/04.deploy/02.rag-rulebook/image/README.md
+    family_source_paths:
+      evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+      evidence.deploy.rag-dockerignore: infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore
+  - question_category_id: question.product.core-audit-queues
+    always_source_paths:
+      - packages/core/src/audit/index.ts
+      - packages/core/src/queues/index.ts
+      - packages/core/src/index.ts
+      - packages/core/README.md
+      - docs/harness/architecture/rules/layers/packages-core.yml
+    family_source_paths:
+      evidence.packages-core.audit-source: packages/core/src/audit/index.ts
+      evidence.packages-core.queues-source: packages/core/src/queues/index.ts
+  - question_category_id: question.rag.portable-service-boundary
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - scripts/02.rag-rulebook/query-local-context/README.md
+      - .agentic/02.rag-rulebook/service/README.md
+      - .agentic/02.rag-rulebook/service/server.mjs
+      - .agentic/02.rag-rulebook/standards/portable-service-contract.md
+    family_source_paths:
+      evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      evidence.rag.service-server: .agentic/02.rag-rulebook/service/server.mjs
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.

@@ -407,6 +407,22 @@ Success criteria:
 - selector regression: `62/62` fixtures passed
 - commit gate: `scripts/02.rag-rulebook/commit-gates/script.sh` passed
 
+2026-07-10 Cycle 4 source-family A/B repair:
+
+- sub-agent Cycle 4 found `2/10` strong verdicts, with misses concentrated in
+  source families that RAG could not yet preserve: deploy workflow/manifests,
+  concrete container/runtime files, domain-corpus and OKF workflows, public
+  article gates, article agent boundaries, packages/core source APIs, and the
+  portable RAG service skeleton
+- broad repair: index concrete source families for GitHub workflows, deploy
+  infra, RAG rulebook service/process files, education ADRs, package source
+  modules, and layer scripts; skip generic `workflows/default.md` files so
+  trusted session metadata does not crowd out content evidence
+- added reusable question categories, evidence bundles, and nine selector
+  fixtures for the Cycle 4 source-family gaps
+- post-repair A/B check: `10/10` realistic prompts returned strong verdicts
+- selector regression: `71/71` fixtures passed
+
 ## Resume Checklist
 
 Use this checklist at the start of any future migration session:

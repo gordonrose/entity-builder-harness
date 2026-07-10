@@ -1,0 +1,74 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rag-deploy-readiness-workflow
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: evaluation-fixture
+#   purpose: Prove RAG deploy readiness questions retrieve workflow, static manifest, verifier, and readiness rule evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-rag-deploy-readiness-workflow
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove stale readiness prompts retrieve both the live GitHub workflow and the static deploy-readiness manifest.
+input:
+  request_text: How can RAG deploy readiness have stale deploy-readiness.yml when the deploy rag rulebook staging workflow succeeds?
+  max_chunks: 10
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: RAG deploy readiness
+        category: question-category
+        canonical_id: question.deploy.rag-readiness-workflow
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: deploy rag rulebook staging workflow
+        category: evidence-family
+        canonical_id: evidence.deploy.rag-staging-workflow
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .github/workflows/deploy-rag-rulebook-staging.yml
+      - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+      - infra/04.deploy/02.rag-rulebook/github-actions/README.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .github/workflows/deploy-rag-rulebook-staging.yml
+  - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+  - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - infra/04.deploy/02.rag-rulebook/github-actions/README.md
+update_triggers:
+  - RAG staging deploy workflow changes.
+  - Static deploy readiness manifest changes.
+  - Deployment readiness verifier changes.
+
