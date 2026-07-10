@@ -433,7 +433,10 @@ def build_chunk_set(index: dict[str, Any], raw_index: str) -> dict[str, Any]:
             return {}
         if path not in yaml_cache:
             if repo_path(path).is_file() and path.endswith((".yml", ".yaml")):
-                yaml_cache[path] = load_yaml(path)
+                try:
+                    yaml_cache[path] = load_yaml(path)
+                except yaml.YAMLError:
+                    yaml_cache[path] = {}
             else:
                 yaml_cache[path] = {}
         return yaml_cache[path]

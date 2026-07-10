@@ -311,6 +311,7 @@ terms:
     aliases:
       - manage Dockerfiles
       - manage container images
+      - container image governance
       - where should Dockerfiles live
       - where should container images live
       - prevent Dockerfile sprawl
@@ -583,6 +584,319 @@ terms:
       - adapter rule pack
       - new platform adapter
     confidence_weight: 0.74
+  - term: chat session metrics
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.session-metrics
+    aliases:
+      - session token accounting
+      - session tokens
+      - session cost accounting
+      - estimated_chat_tokens
+      - estimated_chat_cost
+      - commit log metrics
+      - chat cost estimate
+      - chat cost recorded
+      - chat token estimate
+      - record chat commit metrics
+    confidence_weight: 0.82
+  - term: record chat commit
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.record-chat-commit
+    evidence_path: scripts/00.chat/session-log/record-chat-commit/script.sh
+    aliases:
+      - record-chat-commit
+      - latest_commit_sha
+      - latest commit metrics
+      - session log commit entry
+    confidence_weight: 0.74
+  - term: estimate chat cost
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.estimate-chat-cost
+    evidence_path: scripts/00.chat/metrics/estimate-chat-cost/script.js
+    aliases:
+      - estimate-chat-cost
+      - estimated chat cost
+      - estimated_chat_cost_basis
+      - chat pricing profile
+    confidence_weight: 0.74
+  - term: commit log summary
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.commit-log-summary
+    evidence_path: scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+    aliases:
+      - generate commit log summary
+      - chat history report
+      - metrics summary
+      - session overview
+    confidence_weight: 0.72
+  - term: chat worktree recovery
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.worktree-recovery
+    aliases:
+      - git worktree recovery
+      - worktree index lock
+      - index.lock
+      - worktree cleanup
+      - refresh from main
+      - dirty worktree
+      - blocked-diverged
+      - chat branch recovery
+      - multi-agent worktree safety
+    confidence_weight: 0.82
+  - term: chat cleanup workflow
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.cleanup-workflow
+    evidence_path: .agentic/00.chat/workflows/chat-cleanup.md
+    aliases:
+      - chat cleanup
+      - cleanup chat branches
+      - cleanup worktrees
+      - remove chat worktrees
+    confidence_weight: 0.73
+  - term: chat refresh from main
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.refresh-from-main
+    evidence_path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+    aliases:
+      - refresh chat branch from main
+      - main refresh
+      - rehearse refresh from main
+      - blocked-diverged refresh
+    confidence_weight: 0.74
+  - term: dirty worktree check
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.dirty-worktree-check
+    evidence_path: scripts/00.chat/worktree/dirty-worktree-check/script.sh
+    aliases:
+      - dirty-worktree-check
+      - dirty worktree gate
+      - clean worktree precondition
+    confidence_weight: 0.72
+  - term: sub-agent activity
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.sub-agent-activity
+    aliases:
+      - subagent activity
+      - sub-agent fallback
+      - direct fallback
+      - record sub-agent activity
+      - delegated work audit
+      - no sub-agent capability
+    confidence_weight: 0.82
+  - term: record sub-agent activity
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.record-sub-agent-activity
+    evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+    aliases:
+      - record-sub-agent-activity
+      - sub-agent recorder
+      - delegated work log
+      - direct-fallback mode
+    confidence_weight: 0.75
+  - term: closeout prompt
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.closeout-prompt
+    evidence_path: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+    aliases:
+      - build closeout prompt
+      - build-closeout-prompt
+      - closeout handoff
+      - close command prompt
+    confidence_weight: 0.72
+  - term: local main promotion
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.local-main-promotion
+    aliases:
+      - merge to main
+      - promote to main
+      - local main merge
+      - local-main promotion
+      - push is separate
+      - origin/main is separate
+      - verify chat ready to merge local main
+      - verify-chat-ready-to-merge-local-main
+      - merging a chat branch to local main
+      - pushing to origin/main
+      - chat branch to local main
+    confidence_weight: 0.82
+  - term: chat promote to main
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.promote-to-main
+    evidence_path: .agentic/00.chat/workflows/chat-promote-to-main.md
+    aliases:
+      - chat promotion workflow
+      - local integration console
+      - merge into local main
+      - push requires separate approval
+    confidence_weight: 0.75
+  - term: verify local main merge
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.verify-local-main-merge
+    evidence_path: scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+    aliases:
+      - local merge verifier
+      - local main merge verifier
+      - ready to merge local main
+      - chat ready to merge
+    confidence_weight: 0.74
+  - term: generated recognition source repair
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.generated-recognition-repair
+    aliases:
+      - generated recognition sources stale
+      - recognition source freshness
+      - RAG gate failure
+      - RAG gate fails
+      - stale runtime
+      - runtime freshness failed
+      - generated sources are stale
+      - generated recognition sources are stale
+      - repair stale RAG runtime
+    confidence_weight: 0.82
+  - term: build local RAG runtime
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.build-local-runtime
+    evidence_path: scripts/02.rag-rulebook/build-local-runtime/script.sh
+    aliases:
+      - build-local-runtime
+      - local runtime build
+      - runtime freshness
+      - stale runtime repair
+    confidence_weight: 0.75
+  - term: generate recognition sources
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.generate-recognition-sources
+    evidence_path: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+    aliases:
+      - generate-recognition-sources
+      - generated recognition source
+      - generated artifacts recognition
+      - recognition source generator
+    confidence_weight: 0.75
+  - term: prompt session conflict
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.prompt-session-conflict
+    aliases:
+      - prompt/session conflict
+      - current prompt asks
+      - prompt context win
+      - prompt asks for RAG retrieval policy
+      - chat lifecycle says
+      - session says chat
+      - session says
+      - prompt asks about product
+      - session conflict
+      - prompt and session conflict
+    confidence_weight: 0.81
+  - term: prompt session conflict fixture
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.prompt-session-conflict-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+    aliases:
+      - prompt-session-conflict
+      - prompt session conflict proof
+      - prompt/session conflict proof
+    confidence_weight: 0.73
+  - term: hosted RAG auth boundary
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.hosted-auth-boundary
+    aliases:
+      - ServiceTokenSecretArn
+      - hosted RAG token
+      - hosted RAG auth
+      - service token secret
+      - bearer token secret
+      - RAG_RULEBOOK_TOKEN_SECRET_ARN
+      - RAG_SERVICE_TOKEN
+      - hosted auth boundary
+    confidence_weight: 0.83
+  - term: hosted auth foundation
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.hosted-auth-foundation
+    evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+    aliases:
+      - CloudFormation foundation
+      - service token output
+      - Secrets Manager service token
+      - staging service token
+    confidence_weight: 0.75
+  - term: packages core module contracts
+    category: question-category
+    match_type: phrase
+    canonical_id: question.product.core-module-contracts
+    aliases:
+      - diagnostics self-healing
+      - core diagnostics
+      - core events
+      - core queues
+      - core files
+      - packages/core diagnostics
+      - packages/core events
+      - packages/core queues
+      - packages/core files
+      - events queues files
+    confidence_weight: 0.81
+  - term: packages core diagnostics proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.diagnostics-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    aliases:
+      - packages-core-diagnostics-self-healing
+      - self-healing diagnostics fixture
+      - diagnostics selector proof
+    confidence_weight: 0.72
+  - term: packages core events proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.events-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+    aliases:
+      - packages-core-events-contract
+      - core events fixture
+      - events selector proof
+    confidence_weight: 0.72
+  - term: packages core queues proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.queues-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+    aliases:
+      - packages-core-queues-contract
+      - core queues fixture
+      - queues selector proof
+    confidence_weight: 0.72
+  - term: packages core files proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.files-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    aliases:
+      - packages-core-files-contract
+      - core files fixture
+      - files selector proof
+    confidence_weight: 0.72
 validation_rules:
   - Question categories choose expected evidence families; they do not select execution workflows.
   - Evidence-family terms are lower authority than exact corpus IDs, artifact IDs, and paths.

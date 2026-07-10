@@ -101,6 +101,8 @@ evidence_bundles:
   - question_category_id: question.deploy.container-governance
     always_source_paths:
       - docs/04.deploy/rules/shared/container-image-management.yml
+      - docs/04.deploy/source-material/shared/container-image-management.md
+      - scripts/04.deploy/validate-container-boundaries/script.sh
       - docs/harness/architecture/rules/layers/infra.yml
     family_source_paths:
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
@@ -158,6 +160,94 @@ evidence_bundles:
       evidence.platform-adapter.consumption: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
       evidence.platform-adapter.rule-pack: docs/harness/architecture/rule-packs/add-platform-adapter.yml
       evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - question_category_id: question.chat.session-metrics
+    always_source_paths:
+      - scripts/00.chat/session-log/record-chat-commit/script.sh
+      - scripts/00.chat/metrics/estimate-chat-cost/script.js
+      - scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+      - .agentic/00.chat/checklists/before-commit.md
+    family_source_paths:
+      evidence.chat.record-chat-commit: scripts/00.chat/session-log/record-chat-commit/script.sh
+      evidence.chat.estimate-chat-cost: scripts/00.chat/metrics/estimate-chat-cost/script.js
+      evidence.chat.commit-log-summary: scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+  - question_category_id: question.chat.worktree-recovery
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-cleanup.md
+      - .agentic/00.chat/workflows/chat-refresh-from-main.md
+      - .agentic/00.chat/workflows/chat-promote-to-main.md
+      - scripts/00.chat/worktree/dirty-worktree-check/script.sh
+      - scripts/00.chat/worktree/check-write-location/script.sh
+    family_source_paths:
+      evidence.chat.cleanup-workflow: .agentic/00.chat/workflows/chat-cleanup.md
+      evidence.chat.refresh-from-main: .agentic/00.chat/workflows/chat-refresh-from-main.md
+      evidence.chat.promote-to-main: .agentic/00.chat/workflows/chat-promote-to-main.md
+      evidence.chat.dirty-worktree-check: scripts/00.chat/worktree/dirty-worktree-check/script.sh
+  - question_category_id: question.chat.sub-agent-activity
+    always_source_paths:
+      - scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+      - scripts/00.chat/startup/start-chat-session/script.sh
+      - scripts/00.chat/closeout/build-closeout-prompt/script.sh
+    family_source_paths:
+      evidence.chat.record-sub-agent-activity: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+      evidence.chat.closeout-prompt: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+  - question_category_id: question.chat.local-main-promotion
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-promote-to-main.md
+      - .agentic/00.chat/workflows/chat-refresh-from-main.md
+      - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+      - scripts/00.chat/closeout/build-closeout-prompt/script.sh
+    family_source_paths:
+      evidence.chat.promote-to-main: .agentic/00.chat/workflows/chat-promote-to-main.md
+      evidence.chat.refresh-from-main: .agentic/00.chat/workflows/chat-refresh-from-main.md
+      evidence.chat.verify-local-main-merge: scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+      evidence.chat.closeout-prompt: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+  - question_category_id: question.rag.generated-recognition-repair
+    always_source_paths:
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      - .agentic/02.rag-rulebook/README.md
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+    family_source_paths:
+      evidence.rag.build-local-runtime: scripts/02.rag-rulebook/build-local-runtime/script.sh
+      evidence.rag.generate-recognition-sources: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+  - question_category_id: question.rag.hosted-auth-boundary
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - docs/02.rag-rulebook/postman/README.md
+      - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+    family_source_paths:
+      evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      evidence.rag.postman-collection: docs/02.rag-rulebook/postman/README.md
+      evidence.rag.hosted-auth-foundation: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+  - question_category_id: question.rag.prompt-session-conflict
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-start.md
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+    family_source_paths:
+      evidence.chat.lifecycle: .agentic/00.chat/workflows/chat-start.md
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+      evidence.rag.prompt-session-conflict-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+      evidence.rag.request-context-boundary: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+  - question_category_id: question.product.core-module-contracts
+    always_source_paths:
+      - docs/harness/architecture/rules/layers/packages-core.yml
+      - packages/core/README.md
+      - platform/contracts/README.md
+      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    family_source_paths:
+      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.packages-core.readme: packages/core/README.md
+      evidence.platform-contracts.readme: platform/contracts/README.md
+      evidence.concern.events-messaging-async: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      evidence.packages-core.diagnostics-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+      evidence.packages-core.events-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+      evidence.packages-core.queues-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+      evidence.packages-core.files-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.
