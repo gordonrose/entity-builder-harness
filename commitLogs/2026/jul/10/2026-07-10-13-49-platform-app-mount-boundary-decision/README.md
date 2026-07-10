@@ -88,6 +88,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 1 governance.
   Durable evidence: Added .agentic/product/workflows/platform-runtime-implementation.md, updated docs/harness/architecture/plans/platform-runtime-implementation-plan.md to point at the workflow, regenerated generated RAG recognition sources, and validated headers, YAML, recognition freshness, local runtime build/freshness, and git diff --check.
 
+
+- Summary: Implemented platform runtime Milestone 2 contracts hardening.
+  Durable evidence: Updated platform/contracts/src/index.ts and existing platform/contracts tests so the contract surface includes permission declarations, route/job validation helpers, default reserved platform route paths, and stable errors for duplicate registrations, reserved paths, unknown permissions, malformed permission declarations, malformed routes, and malformed jobs. Validation passed: npm run platform:contracts:check.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -185,6 +189,13 @@ Durable evidence: Added scripts/02.rag-rulebook/audit-explanation-readiness with
 Summary: Implemented platform runtime Milestone 1 governance.
 
 Durable evidence: Added .agentic/product/workflows/platform-runtime-implementation.md, updated docs/harness/architecture/plans/platform-runtime-implementation-plan.md to point at the workflow, regenerated generated RAG recognition sources, and validated headers, YAML, recognition freshness, local runtime build/freshness, and git diff --check.
+
+
+### 2026-07-10T17:47:02Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 2 contracts hardening.
+
+Durable evidence: Updated platform/contracts/src/index.ts, platform/contracts/tests/platform-contracts-runtime.test.ts, and platform/contracts/tests/platform-contracts-types.test.ts. The contract surface now includes permission declarations, route/job validation helpers, default reserved platform route paths, and stable error codes for duplicate registrations, reserved paths, unknown permissions, malformed permission declarations, malformed routes, and malformed jobs. Validation passed: npm run platform:contracts:check.
 
 ## Sub-Agent Activity
 

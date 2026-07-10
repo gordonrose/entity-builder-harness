@@ -27,6 +27,7 @@ import {
   type PlatformJobContext,
   type PlatformJobRegistration,
   type PlatformMountDeps,
+  type PlatformPermissionDeclaration,
   type PlatformRequest,
   type PlatformRequestContext,
   type PlatformResponse,
@@ -91,13 +92,22 @@ const routeValidator: Validator<unknown> = {
   validate: (_value): _value is unknown => true,
   explain: () => ({ valid: true, issues: [] }),
 };
+const jobPayloadValidator: Validator<QueueMessage["payload"]> = {
+  validate: (_value): _value is QueueMessage["payload"] => true,
+  explain: () => ({ valid: true, issues: [] }),
+};
+const dealReadPermission = "deal:read";
+const permissionDeclaration: PlatformPermissionDeclaration = {
+  permission: dealReadPermission,
+  description: "Read deals.",
+};
 
 const route: PlatformRouteRegistration = {
   name: routeName.value,
   method: "GET",
   path: "/deals/:id",
   apiVersion: apiVersion.value,
-  auth: { kind: "authenticated" },
+  auth: { kind: "authenticated", permissions: [dealReadPermission] },
   validator: routeValidator,
   handler: {
     handle: () => response,
@@ -127,6 +137,7 @@ const jobContext: PlatformJobContext = {
 const job: PlatformJobRegistration = {
   name: jobName.value,
   messageType: "crm.deals.recalculate-score" as QueueMessageType,
+  validator: jobPayloadValidator,
   handler: {
     handle: (_message, _context) => undefined,
   },
@@ -140,6 +151,7 @@ const app: PlatformApp = definePlatformApp({
   version: "0.0.0",
   mount(registry, mountDeps) {
     void mountDeps;
+    registry.registerPermission(permissionDeclaration);
     registry.registerRoute(route);
     registry.registerJob(job);
     registry.registerHealthCheck({
@@ -162,6 +174,7 @@ const app: PlatformApp = definePlatformApp({
 });
 void app.mount(
   {
+    registerPermission: () => ({ ok: true, value: undefined }),
     registerRoute: () => ({ ok: true, value: undefined }),
     registerJob: () => ({ ok: true, value: undefined }),
     registerHealthCheck: () => ({ ok: true, value: undefined }),
