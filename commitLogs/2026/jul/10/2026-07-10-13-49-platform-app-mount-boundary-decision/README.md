@@ -96,6 +96,10 @@ let's lock the platform app integration module decision in
 - Summary: Implemented platform runtime Milestone 3 platform testing helpers.
   Durable evidence: Added the @kanbien/platform-testing workspace under platform/testing with fake loggers, fake metrics, fake config source, fake registry, request/job context builders, queue message builder, mountPlatformAppForTest, config schema validation, and safe health-output checks. Added platform:testing npm scripts and workspace lockfile entries. Validation passed: npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
+
+- Summary: Implemented platform runtime Milestone 4 registry and lifecycle skeleton.
+  Durable evidence: Added the @kanbien/platform-runtime workspace under platform/runtime with provider-neutral runtime registry validation, app mounting, request/job context factories, lifecycle controller, readiness state, app hooks, resource start/drain/close, telemetry flush, runtime type tests, runtime behavior tests, and runtime boundary tests. Updated root platform:runtime npm scripts and workspace lockfile entries. Validation passed: npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
+
 ## Activity Log
 
 ### 2026-07-10T12:49:08Z - Session started
@@ -207,6 +211,13 @@ Durable evidence: Updated platform/contracts/src/index.ts, platform/contracts/te
 Summary: Implemented platform runtime Milestone 3 platform testing helpers.
 
 Durable evidence: Added @kanbien/platform-testing under platform/testing with package config, TypeScript configs, boundary/runtime/type tests, fake loggers, fake metrics, fake config source, fake registry, mountPlatformAppForTest, request/job context builders, queue message builder, config schema validation, and safe health-output checks. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
+
+
+### 2026-07-10T18:25:02Z - Context hygiene
+
+Summary: Implemented platform runtime Milestone 4 registry and lifecycle skeleton.
+
+Durable evidence: Added @kanbien/platform-runtime under platform/runtime with package config, TypeScript configs, boundary/runtime/type tests, provider-neutral runtime registry validation, app mounting, request/job context factories, lifecycle controller, readiness state, app hooks, resource start/drain/close, telemetry flush, and deterministic shutdown ordering. Updated root package scripts and package-lock workspace entries. Validation passed: npm run platform:runtime:check, npm run platform:testing:check, npm run platform:contracts:check, and git diff --check.
 
 ## Sub-Agent Activity
 
