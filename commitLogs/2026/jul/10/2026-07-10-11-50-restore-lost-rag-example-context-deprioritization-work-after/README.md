@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T19:07:59Z
-latest_commit_sha: a4e55ed
-chat_duration: 29863s (00:08:17:43)
+latest_commit_at_utc: 2026-07-10T20:34:13Z
+latest_commit_sha: dc87092
+chat_duration: 35037s (00:09:43:57)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -206,6 +206,17 @@ Summary: Repaired Cycle 4 A/B source-family gaps by indexing GitHub workflow/dep
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-07-10T20:34:13Z - Commit recorded
+
+Commit: `dc87092`
+
+Message: feat(rag): add operational diagnostic retrieval fixtures
+
+Summary: Added operational-diagnostic RAG question categories, evidence bundles, generated artifact recognition, process-source indexing coverage, ten selector fixtures, and the Cycle 5 migration-plan note after the expanded selector regression reached 81/81 passing fixtures.
+
+ADR impact: No ADR needed; extends existing deterministic RAG recognition, evidence-bundle, fixture, and process-source indexing behavior without changing the architecture boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -269,6 +280,13 @@ ADR impact: covered by session ADR disposition
   Summary: Repaired Cycle 4 A/B source-family gaps by indexing GitHub workflow/deploy infra/RAG service/education ADR/package source families, adding reusable categories and evidence bundles, and adding nine selector fixtures. Validation: Cycle 4 realistic A/B prompts 10/10 strong, selector fixtures 71/71, RAG commit gates passed.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `dc87092`
+  Time UTC: 2026-07-10T20:34:13Z
+  Message: feat(rag): add operational diagnostic retrieval fixtures
+  Summary: Added operational-diagnostic RAG question categories, evidence bundles, generated artifact recognition, process-source indexing coverage, ten selector fixtures, and the Cycle 5 migration-plan note after the expanded selector regression reached 81/81 passing fixtures.
+  ADR impact: No ADR needed; extends existing deterministic RAG recognition, evidence-bundle, fixture, and process-source indexing behavior without changing the architecture boundary.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -284,9 +302,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T19:07:59Z
-Latest commit SHA: a4e55ed
-Chat duration: 29863s (00:08:17:43)
+Latest commit at UTC: 2026-07-10T20:34:13Z
+Latest commit SHA: dc87092
+Chat duration: 35037s (00:09:43:57)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
