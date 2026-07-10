@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-10T10:50:16Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T15:27:22Z
-latest_commit_sha: 4aa0176
-chat_duration: 16626s (00:04:37:06)
+latest_commit_at_utc: 2026-07-10T17:01:24Z
+latest_commit_sha: 99f0dd3
+chat_duration: 22268s (00:06:11:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -151,6 +151,17 @@ Summary: Added final deterministic kind-contract derivation for the remaining 26
 
 ADR impact: No ADR needed; this completes the existing generated retrieval-profile coverage migration without header or schema changes.
 
+
+### 2026-07-10T17:01:24Z - Commit recorded
+
+Commit: `99f0dd3`
+
+Message: feat(rag): strengthen retrieval evidence bundles
+
+Summary: Added the printable RAG retrieval source-of-truth material with prompt payload, runtime-cache, chunk, context-packet, assembly, and ranking examples; added related corpus gap/projection wiring, selector question-category fixtures, evidence-bundle coverage, generated recognition updates, and packet gap validation support.
+
+ADR impact: No ADR needed; this strengthens existing RAG/rulebook retrieval, source-material, selector, and context-packet machinery without changing the architecture boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -179,6 +190,13 @@ ADR impact: No ADR needed; this completes the existing generated retrieval-profi
   Summary: Added final deterministic kind-contract derivation for the remaining 26 partial retrieval-profile records and updated the coverage reporter smoke test, leaving 692 strong artifacts, 0 partial, 0 weak, and 1 excluded.
   ADR impact: No ADR needed; this completes the existing generated retrieval-profile coverage migration without header or schema changes.
 
+
+- Commit: `99f0dd3`
+  Time UTC: 2026-07-10T17:01:24Z
+  Message: feat(rag): strengthen retrieval evidence bundles
+  Summary: Added the printable RAG retrieval source-of-truth material with prompt payload, runtime-cache, chunk, context-packet, assembly, and ranking examples; added related corpus gap/projection wiring, selector question-category fixtures, evidence-bundle coverage, generated recognition updates, and packet gap validation support.
+  ADR impact: No ADR needed; this strengthens existing RAG/rulebook retrieval, source-material, selector, and context-packet machinery without changing the architecture boundary.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -194,9 +212,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T15:27:22Z
-Latest commit SHA: 4aa0176
-Chat duration: 16626s (00:04:37:06)
+Latest commit at UTC: 2026-07-10T17:01:24Z
+Latest commit SHA: 99f0dd3
+Chat duration: 22268s (00:06:11:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
