@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T15:04:19Z
-latest_commit_sha: 7254a98
-chat_duration: 15243s (00:04:14:03)
+latest_commit_at_utc: 2026-07-10T15:27:22Z
+latest_commit_sha: 4aa0176
+chat_duration: 16626s (00:04:37:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -140,6 +140,17 @@ ADR impact: No ADR needed; this narrows the existing generated-profile migration
 - Updated the migration plan to make question-family retrieval evaluations the
   next slice.
 
+
+### 2026-07-10T15:27:22Z - Commit recorded
+
+Commit: `4aa0176`
+
+Message: feat(rag): complete retrieval profile coverage derivation
+
+Summary: Added final deterministic kind-contract derivation for the remaining 26 partial retrieval-profile records and updated the coverage reporter smoke test, leaving 692 strong artifacts, 0 partial, 0 weak, and 1 excluded.
+
+ADR impact: No ADR needed; this completes the existing generated retrieval-profile coverage migration without header or schema changes.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -161,6 +172,13 @@ ADR impact: No ADR needed; this narrows the existing generated-profile migration
   Summary: Added deterministic retrieval-profile derivation for readme-like artifacts, ADRs, agent contracts, recognition sources, and source material, reducing partial coverage from 112 to 26 without authored header edits.
   ADR impact: No ADR needed; this narrows the existing generated-profile migration with deterministic kind rules.
 
+
+- Commit: `4aa0176`
+  Time UTC: 2026-07-10T15:27:22Z
+  Message: feat(rag): complete retrieval profile coverage derivation
+  Summary: Added final deterministic kind-contract derivation for the remaining 26 partial retrieval-profile records and updated the coverage reporter smoke test, leaving 692 strong artifacts, 0 partial, 0 weak, and 1 excluded.
+  ADR impact: No ADR needed; this completes the existing generated retrieval-profile coverage migration without header or schema changes.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -176,9 +194,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T15:04:19Z
-Latest commit SHA: 7254a98
-Chat duration: 15243s (00:04:14:03)
+Latest commit at UTC: 2026-07-10T15:27:22Z
+Latest commit SHA: 4aa0176
+Chat duration: 16626s (00:04:37:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
