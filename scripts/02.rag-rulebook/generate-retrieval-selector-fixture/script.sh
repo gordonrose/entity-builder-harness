@@ -449,6 +449,10 @@ def load_recognition_sources() -> list[dict[str, Any]]:
     return sources
 
 
+def compiled_user_intents(compiled_policy: dict[str, Any]) -> list[dict[str, Any]]:
+    return list_of_dicts(compiled_policy.get("user_intents"))
+
+
 def load_recognition_candidates() -> list[dict[str, Any]]:
     root = repo_path(CANDIDATE_ROOT)
     if not root.exists():
@@ -733,6 +737,16 @@ def matched_intent_ids(recognition_matches: list[dict[str, Any]], *, prompt_only
     if prompt_only and not ids:
         return matched_intent_ids(recognition_matches, prompt_only=False)
     return ids
+
+
+def matched_user_intent_ids(recognition_matches: list[dict[str, Any]]) -> set[str]:
+    return {
+        str(match.get("canonical_id"))
+        for match in recognition_matches
+        if match.get("category") == "user-intent"
+        and isinstance(match.get("canonical_id"), str)
+        and match.get("matched_input") == "prompt"
+    }
 
 
 def resolve_intent_id(recognition_matches: list[dict[str, Any]], compiled_policy: dict[str, Any]) -> str:
@@ -1046,12 +1060,23 @@ def matched_candidate_evidence_paths(candidates: list[dict[str, Any]], request_t
     return paths
 
 
-def compiled_evidence_bundles(compiled_policy: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    return {
-        str(bundle.get("question_category_id")): bundle
-        for bundle in list_of_dicts(compiled_policy.get("evidence_bundles"))
-        if isinstance(bundle.get("question_category_id"), str)
-    }
+def compiled_evidence_bundles(compiled_policy: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    bundles_by_category: dict[str, list[dict[str, Any]]] = {}
+    for bundle in list_of_dicts(compiled_policy.get("evidence_bundles")):
+        category_id = bundle.get("question_category_id")
+        if not isinstance(category_id, str):
+            continue
+        bundles_by_category.setdefault(category_id, [])
+        bundles_by_category[category_id].append(bundle)
+    return bundles_by_category
+
+
+def evidence_bundle_applies(bundle: dict[str, Any], user_intent_ids: set[str]) -> bool:
+    when = dict_value(bundle.get("when"))
+    user_intent_id = when.get("user_intent_id")
+    if isinstance(user_intent_id, str) and user_intent_id:
+        return user_intent_id in user_intent_ids
+    return True
 
 
 def matched_evidence_bundle_source_paths(
@@ -1068,27 +1093,28 @@ def matched_evidence_bundle_source_paths(
         for match in recognition_matches
         if match.get("category") == "evidence-family" and isinstance(match.get("canonical_id"), str)
     }
+    user_intent_ids = matched_user_intent_ids(recognition_matches)
     paths: list[str] = []
     seen: set[str] = set()
     evidence_bundles = compiled_evidence_bundles(compiled_policy)
     for category_id in sorted(category_ids):
-        bundle = evidence_bundles.get(category_id)
-        if not bundle:
-            continue
-        for source_path in list_of_strings(bundle.get("always_source_paths")):
-            if source_path in seen or not repo_path(source_path).is_file():
+        for bundle in evidence_bundles.get(category_id, []):
+            if not evidence_bundle_applies(bundle, user_intent_ids):
                 continue
-            seen.add(source_path)
-            paths.append(source_path)
-        family_source_paths = dict_value(bundle.get("family_source_paths"))
-        for family_id in sorted(family_ids):
-            source_path = family_source_paths.get(family_id)
-            if not isinstance(source_path, str) or source_path in seen:
-                continue
-            if not repo_path(source_path).is_file():
-                continue
-            seen.add(source_path)
-            paths.append(source_path)
+            for source_path in list_of_strings(bundle.get("always_source_paths")):
+                if source_path in seen or not repo_path(source_path).is_file():
+                    continue
+                seen.add(source_path)
+                paths.append(source_path)
+            family_source_paths = dict_value(bundle.get("family_source_paths"))
+            for family_id in sorted(family_ids):
+                source_path = family_source_paths.get(family_id)
+                if not isinstance(source_path, str) or source_path in seen:
+                    continue
+                if not repo_path(source_path).is_file():
+                    continue
+                seen.add(source_path)
+                paths.append(source_path)
     return paths
 
 
@@ -1170,6 +1196,7 @@ def evidence_bundle_gaps(
         for match in recognition_matches
         if match.get("category") == "evidence-family" and isinstance(match.get("canonical_id"), str)
     }
+    user_intent_ids = matched_user_intent_ids(recognition_matches)
     selected_source_paths = {
         str(chunk.get("source_path"))
         for chunk in selected_chunks
@@ -1178,8 +1205,12 @@ def evidence_bundle_gaps(
     gaps: list[dict[str, Any]] = []
     evidence_bundles = compiled_evidence_bundles(compiled_policy)
     for category_id in sorted(category_ids):
-        bundle = evidence_bundles.get(category_id)
-        if not bundle:
+        bundles = [
+            bundle
+            for bundle in evidence_bundles.get(category_id, [])
+            if evidence_bundle_applies(bundle, user_intent_ids)
+        ]
+        if not bundles:
             gaps.append(
                 {
                     "id": f"gap.selector-fixture.no-evidence-bundle.{safe_id(category_id)}",
@@ -1190,40 +1221,42 @@ def evidence_bundle_gaps(
                 }
             )
             continue
-        expected_paths: list[str] = []
-        for source_path in list_of_strings(bundle.get("always_source_paths")):
-            expected_paths.append(source_path)
-        family_source_paths = dict_value(bundle.get("family_source_paths"))
-        for family_id in sorted(family_ids):
-            source_path = family_source_paths.get(family_id)
-            if isinstance(source_path, str):
+        for bundle in bundles:
+            bundle_id = str(bundle.get("bundle_id") or category_id)
+            expected_paths: list[str] = []
+            for source_path in list_of_strings(bundle.get("always_source_paths")):
                 expected_paths.append(source_path)
-        expected_paths = sorted(set(path for path in expected_paths if repo_path(path).is_file()))
-        if not expected_paths:
-            gaps.append(
-                {
-                    "id": f"gap.selector-fixture.no-evidence-family.{safe_id(category_id)}",
-                    "type": "missing-evidence",
-                    "description": f"Question category {category_id} matched, but no expected evidence families resolved.",
-                    "blocking": False,
-                    "suggested_resolution": "Add evidence-family terms or exact paths for this question category.",
-                }
-            )
-            continue
-        missing_paths = [path for path in expected_paths if path not in selected_source_paths]
-        if missing_paths:
-            gaps.append(
-                {
-                    "id": f"gap.selector-fixture.missing-evidence-bundle.{safe_id(category_id)}",
-                    "type": "missing-evidence",
-                    "description": (
-                        f"Question category {category_id} expected evidence that was not selected: "
-                        + ", ".join(missing_paths)
-                    ),
-                    "blocking": False,
-                    "suggested_resolution": "Add the expected evidence paths to required source selection or tune ranking/trimming.",
-                }
-            )
+            family_source_paths = dict_value(bundle.get("family_source_paths"))
+            for family_id in sorted(family_ids):
+                source_path = family_source_paths.get(family_id)
+                if isinstance(source_path, str):
+                    expected_paths.append(source_path)
+            expected_paths = sorted(set(path for path in expected_paths if repo_path(path).is_file()))
+            if not expected_paths:
+                gaps.append(
+                    {
+                        "id": f"gap.selector-fixture.no-evidence-family.{safe_id(bundle_id)}",
+                        "type": "missing-evidence",
+                        "description": f"Evidence bundle {bundle_id} resolved no expected evidence families.",
+                        "blocking": False,
+                        "suggested_resolution": "Add evidence-family terms or exact paths for this question category.",
+                    }
+                )
+                continue
+            missing_paths = [path for path in expected_paths if path not in selected_source_paths]
+            if missing_paths:
+                gaps.append(
+                    {
+                        "id": f"gap.selector-fixture.missing-evidence-bundle.{safe_id(bundle_id)}",
+                        "type": "missing-evidence",
+                        "description": (
+                            f"Evidence bundle {bundle_id} expected evidence that was not selected: "
+                            + ", ".join(missing_paths)
+                        ),
+                        "blocking": False,
+                        "suggested_resolution": "Add the expected evidence paths to required source selection or tune ranking/trimming.",
+                    }
+                )
     return gaps
 
 
@@ -1273,6 +1306,37 @@ def match_recognition_terms(
                             "confidence_weight": term.get("confidence_weight", 1),
                         }
                     )
+    return matches
+
+
+def match_user_intents(compiled_policy: dict[str, Any], request_text: str) -> list[dict[str, Any]]:
+    matches: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    match_text = prompt_text_for_broad_terms(request_text)
+    for intent in compiled_user_intents(compiled_policy):
+        intent_id = str(intent.get("intent_id") or "").strip()
+        if not intent_id:
+            continue
+        for alias in list_of_strings(intent.get("aliases")):
+            if not simple_exact_match(alias, match_text):
+                continue
+            key = (intent_id, alias.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            matches.append(
+                {
+                    "source_id": "policy.user-intents",
+                    "term": alias,
+                    "category": "user-intent",
+                    "canonical_id": intent_id,
+                    "match_type": "alias",
+                    "matched_input": "prompt",
+                    "evidence_path": ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml",
+                    "confidence_weight": intent.get("confidence_weight", 0.7),
+                    "evidence_bias": list_of_strings(intent.get("evidence_bias")),
+                }
+            )
     return matches
 
 
@@ -1648,6 +1712,7 @@ def build_selector_trace(
         match
         for match in recognition_matches
         if str(match.get("source_id") or "").startswith("recognition.curated.")
+        or str(match.get("source_id") or "") == "policy.user-intents"
     ]
     missing_evidence_gap_ids = [
         str(gap.get("id"))
@@ -2065,8 +2130,24 @@ def select_chunks(
         and item[1].get("source_path") not in required_sources
     ]
     limited = required_by_id[:max_chunks]
+    covered_required_sources = {
+        item[1].get("source_path")
+        for item in limited
+        if item[1].get("source_path") in required_sources
+    }
+    primary_required_by_source: list[tuple[float, dict[str, Any]]] = []
+    extra_required_by_source: list[tuple[float, dict[str, Any]]] = []
+    for item in required_by_source:
+        source_path = item[1].get("source_path")
+        if source_path not in covered_required_sources:
+            primary_required_by_source.append(item)
+            covered_required_sources.add(source_path)
+            continue
+        extra_required_by_source.append(item)
     if len(limited) < max_chunks:
-        limited.extend(required_by_source[: max_chunks - len(limited)])
+        limited.extend(primary_required_by_source[: max_chunks - len(limited)])
+    if len(limited) < max_chunks:
+        limited.extend(extra_required_by_source[: max_chunks - len(limited)])
     if len(limited) < max_chunks:
         limited.extend(optional[: max_chunks - len(limited)])
     return sorted(
@@ -2090,6 +2171,7 @@ def build_packet(
     chunks = list_of_dicts(chunk_set.get("chunks"))
     citations = list_of_dicts(chunk_set.get("citations"))
     prompt_terms = tokenize(prompt_text_for_broad_terms(args.request_text))
+    user_intent_ids = sorted(matched_user_intent_ids(recognition_matches))
     resolved_intent_id = resolve_intent_id(recognition_matches, compiled_policy)
     prompt_route = resolve_prompt_route(recognition_matches, resolved_intent_id, args.request_text)
     use_trusted_session_route = args.trust_session_routing and prompt_route["layer"] == "unknown"
@@ -2401,6 +2483,7 @@ def build_packet(
             "normalized_summary": "Generate a deterministic retrieval selector fixture from governed policy, request context, recognition sources, session safety metadata, and chunks.",
             "open_artifact_ids": selected_artifact_ids,
             "previous_packet_id": args.previous_packet_id,
+            "user_intent_ids": user_intent_ids,
             "recognition_source_matches": recognition_matches[:80],
         },
         "intent": {
@@ -2646,6 +2729,7 @@ def main(argv: list[str]) -> int:
             args.request_text,
             session_text,
         )
+        recognition_matches.extend(match_user_intents(compiled_policy, args.request_text))
         packet = build_packet(
             args,
             policy,

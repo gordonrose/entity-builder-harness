@@ -1,0 +1,141 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.policy.retrieval-selector.v1.dimension.user-intents
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: policy-dimension
+#   purpose: Classify generic user ask-shapes so topic matches can select the right kind of evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.policy.retrieval-selector.v1
+#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
+#     - id: rag-rulebook.script.compile-retrieval-policy
+#       path: scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+#     - id: rag-rulebook.script.generate-retrieval-selector-fixture
+#       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+
+schema: rag-rulebook/retrieval-policy-dimension/v1
+dimension_id: user-intents
+version: 1
+status: active
+applies_to_policy_pack: retrieval-selector.v1
+purpose: Separate generic ask-shape recognition from repo-topic recognition so retrieval can choose explanatory, diagnostic, validation, or source-location evidence.
+required_inputs:
+  - Raw prompt text after illustrative example spans are deprioritized.
+  - Compiled user-intent aliases and confidence weights.
+  - Recognition matches for repo topics and evidence families.
+expected_actions:
+  - Match broad user ask-shapes independently from repo-specific question categories.
+  - Preserve user-intent matches as retrieval-shape signals, not execution permission.
+  - Let evidence bundles add intent-specific source paths when both user intent and repo topic match.
+  - Prefer narrow intent aliases that describe the form of the request rather than domain-specific nouns.
+banned_actions:
+  - Do not use user-intent matches to authorize edits, commits, deploys, destructive commands, or secret access.
+  - Do not replace action-authorization intent resolution with user-intent evidence selection.
+  - Do not add product, deploy, or repo-specific topic names to this dimension; use question categories for those.
+output_obligations:
+  - user_intent_matches
+  - user_intent_ids
+  - user_intent_confidence
+  - evidence_biases
+gap_or_stop_conditions:
+  - Add no stop condition from user intent alone.
+  - Treat missing user intent as a lower-quality diagnostic signal, not a blocked packet.
+ranking_effects:
+  - Intent-specific evidence bundle paths survive trimming when their topic also matches.
+  - Troubleshooting prompts bias toward scripts, schemas, fixtures, gates, and known gaps.
+  - Explanation prompts bias toward source material, guides, readmes, and rules.
+  - Validation prompts bias toward validators, smoke tests, reports, and commit gates.
+  - Source-location prompts bias toward exact paths, owning artifacts, indexes, and readmes.
+user_intents:
+  - intent_id: user-intent.explain
+    label: Explain
+    aliases:
+      - how does
+      - explain
+      - walk me through
+      - what is
+      - what are
+    evidence_bias:
+      - source-material
+      - guide
+      - readme
+      - rule
+    confidence_weight: 0.72
+  - intent_id: user-intent.troubleshoot
+    label: Troubleshoot
+    aliases:
+      - why is
+      - why does
+      - failing
+      - failure
+      - broken
+      - diagnose
+      - error
+    evidence_bias:
+      - script
+      - schema
+      - fixture
+      - gate
+      - known-gap
+    confidence_weight: 0.82
+  - intent_id: user-intent.validate
+    label: Validate
+    aliases:
+      - how do I check
+      - validate
+      - verify
+      - what gate
+      - which gate
+      - what test
+      - which test
+      - prove
+    evidence_bias:
+      - validator
+      - smoke-test
+      - report
+      - commit-gate
+    confidence_weight: 0.78
+  - intent_id: user-intent.find-source
+    label: Find Source
+    aliases:
+      - where is
+      - which file
+      - what script
+      - source of truth
+      - source file
+      - canonical file
+    evidence_bias:
+      - exact-path
+      - owning-artifact
+      - source-index
+      - readme
+    confidence_weight: 0.78
+validation_examples:
+  - name: explanation selects explanatory evidence shape
+    given: User asks how a repo mechanism works.
+    expect: The selector records user-intent.explain without changing execution authorization.
+  - name: troubleshooting selects diagnostic evidence shape
+    given: User asks why a validator is failing.
+    expect: The selector records user-intent.troubleshoot and intent-aware bundles can add scripts, schemas, fixtures, and gates.
+  - name: validation asks for proof
+    given: User asks which gate verifies a behavior.
+    expect: The selector records user-intent.validate and validation evidence can survive trimming.
+  - name: source lookup asks where evidence lives
+    given: User asks which file is the source of truth.
+    expect: The selector records user-intent.find-source and keeps source-location evidence separate from topic identity.
+can_change_by:
+  - Add generic ask-shape aliases after retrieval fixtures prove they do not overmatch.
+  - Add new user intents for repeated ask-shape misses.
+  - Add evidence biases when a user intent repeatedly needs a distinct proof shape.
+

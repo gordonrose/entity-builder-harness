@@ -129,6 +129,48 @@ evidence_bundles:
       evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
       evidence.rag.rulebook-index-builder: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
       evidence.rag.rulebook-chunk-generator: scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+  - bundle_id: bundle.rag.index-selection.explain
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.explain
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - scripts/02.rag-rulebook/query-local-context/README.md
+    family_source_paths: {}
+  - bundle_id: bundle.rag.index-selection.troubleshoot
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.troubleshoot
+    always_source_paths:
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+    family_source_paths: {}
+  - bundle_id: bundle.rag.index-selection.validate
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.validate
+    always_source_paths:
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+    family_source_paths: {}
+  - bundle_id: bundle.rag.index-selection.find-source
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.find-source
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+    family_source_paths: {}
   - question_category_id: question.chat-rag.boundary
     always_source_paths:
       - .agentic/00.chat/workflows/chat-start.md
@@ -492,6 +534,45 @@ evidence_bundles:
       - scripts/02.rag-rulebook/query-local-context/script.sh
     family_source_paths:
       evidence.rag.context-packet-validator: scripts/02.rag-rulebook/validate-context-packet/script.sh
+  - bundle_id: bundle.rag.context-packet-validation.explain
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.explain
+    always_source_paths:
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+    family_source_paths: {}
+  - bundle_id: bundle.rag.context-packet-validation.troubleshoot
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.troubleshoot
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+    family_source_paths: {}
+  - bundle_id: bundle.rag.context-packet-validation.validate
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.validate
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+    family_source_paths: {}
+  - bundle_id: bundle.rag.context-packet-validation.find-source
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.find-source
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+    family_source_paths: {}
   - question_category_id: question.rag.recognition-source-lifecycle
     always_source_paths:
       - .agentic/02.rag-rulebook/recognition-candidates/README.md

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 731
-  term_count: 1474
+  indexed_artifacts: 740
+  term_count: 1492
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -5112,6 +5112,102 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-explain
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-explain
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-explain.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-explain.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-explain
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-explain.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-find-source
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-find-source
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-find-source.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-find-source.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-find-source
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-find-source.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-troubleshoot
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-troubleshoot
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-troubleshoot.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-troubleshoot.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-troubleshoot
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-troubleshoot.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-validate
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-validate
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-validate.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-validate.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-validate
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-context-packet-validation-validate.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-explain
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-explain
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-explain.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-explain.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-explain
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-explain.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-find-source
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-find-source
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-find-source.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-find-source.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-find-source
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-find-source.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-troubleshoot
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-troubleshoot
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-troubleshoot.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-troubleshoot.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-troubleshoot
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-troubleshoot.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-validate
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-validate
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-validate.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-validate.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-validate
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/user-intent-rag-index-selection-validate.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.vague-prompt-low-confidence
   category: artifact-id
   match_type: exact
@@ -5387,6 +5483,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.token-budget
   evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/token-budget.yml
+  confidence_weight: 1
+- term: rag-rulebook.policy.retrieval-selector.v1.dimension.user-intents
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.user-intents
+  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.policy.retrieval-selector.v1.dimension.user-intents
+  evidence_path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
   confidence_weight: 1
 - term: rag-rulebook.policy.retrieval-selector.v1.dimension.validation-handoff
   category: artifact-id
