@@ -29,28 +29,22 @@ explicitly grants write permission for task files.
 
 ## Operating Layers
 
-* `.agentic/00.chat/` governs chat lifecycle, including chat sessions, chat worktrees, session logs, chat refresh, chat closeout, cleanup, shortcuts, and chat reporting.
-* `.agentic/shared/` governs cross-layer process primitives, including git approval rules, handoff, deployment process, and context compaction.
-* `.agentic/01.harness/` governs changes to the agentic harness itself.
-* `.agentic/02.rag-rulebook/` governs reusable RAG and rulebook machinery, including corpus generation, indexing, chunking, intent, and context packets.
-* `.agentic/education/` governs educational resources derived from repo work.
-* `.agentic/aws/` governs AWS infrastructure, environments, runtime operations, and cloud deployment targets.
-* `.agentic/product/` governs Kanbien product/code work.
+* `00.chat` (`.agentic/00.chat/`) governs chat lifecycle, including sessions, worktrees, session logs, chat refresh, closeout, cleanup, shortcuts, and reporting.
+* `01.harness` (`.agentic/01.harness/`) governs the agentic harness itself, including routing, workflows, standards, gates, agents, and artifact metadata.
+* `02.rag-rulebook` (`.agentic/02.rag-rulebook/`) governs reusable RAG and rulebook machinery, including corpora, indexing, retrieval, intent, and context packets.
+* `03.product` (`.agentic/product/`) governs product and runtime contract work, including current `packages/core/` and `platform/contracts/` surfaces.
+* `04.deploy` (`.agentic/aws/`, `infra/04.deploy/`, `docs/04.deploy/`, and `scripts/04.deploy/`) governs deployment, infrastructure, AWS operations, runtime operations, and CI/CD surfaces.
+* `05.education` (`.agentic/education/`) governs educational resources derived from repo work.
+* `06.shared` (`.agentic/shared/`) governs cross-layer process primitives, including git approval rules, handoff, context compaction, and reusable standards.
 
 ## Source of Truth
 
 * Session state: current branch’s `commitLogs/<session>/README.md`
-* Chat lifecycle process: `.agentic/00.chat/`
-* Shared operating process: `.agentic/shared/`
-* Harness maintenance process: `.agentic/01.harness/`
-* RAG and rulebook process: `.agentic/02.rag-rulebook/`
-* Education resources process: `.agentic/education/`
-* AWS infrastructure and operations process: `.agentic/aws/`
-* Product/code process: `.agentic/product/`
-* Executable checks: `scripts/`
-* Human documentation: `docs/`
-* Code: `src/`
-* Tests: `tests/`
+* Governance: the owning `.agentic/...` workflow, checklist, standard, or command surface for the current prompt
+* Executable checks: `scripts/<layer>/...` and `scripts/repo/`
+* Human docs and corpus material: `docs/...`
+* Product/runtime contracts: `packages/core/` and `platform/contracts/`
+* Deployment artifacts and checks: `infra/04.deploy/`, `docs/04.deploy/`, and `scripts/04.deploy/`
 * Commit/task logs: `commitLogs/`
 
 ## Size Rule
