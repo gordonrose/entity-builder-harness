@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T20:34:13Z
-latest_commit_sha: dc87092
-chat_duration: 35037s (00:09:43:57)
+latest_commit_at_utc: 2026-07-10T21:08:42Z
+latest_commit_sha: ef7f54d
+chat_duration: 37106s (00:10:18:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -217,6 +217,17 @@ Summary: Added operational-diagnostic RAG question categories, evidence bundles,
 
 ADR impact: No ADR needed; extends existing deterministic RAG recognition, evidence-bundle, fixture, and process-source indexing behavior without changing the architecture boundary.
 
+
+### 2026-07-10T21:08:42Z - Commit recorded
+
+Commit: `ef7f54d`
+
+Message: feat(rag): add user intent retrieval bundles
+
+Summary: Added a governed user-intents retrieval-policy dimension, compiled-policy/schema support, selector matching for generic ask-shapes, conditional evidence bundles for index-selection and context-packet validation, and eight targeted user-intent selector fixtures.
+
+ADR impact: No ADR needed; extends the existing retrieval-selector policy model with generic evidence-shape signals while preserving separate execution authorization.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -287,6 +298,13 @@ ADR impact: No ADR needed; extends existing deterministic RAG recognition, evide
   Summary: Added operational-diagnostic RAG question categories, evidence bundles, generated artifact recognition, process-source indexing coverage, ten selector fixtures, and the Cycle 5 migration-plan note after the expanded selector regression reached 81/81 passing fixtures.
   ADR impact: No ADR needed; extends existing deterministic RAG recognition, evidence-bundle, fixture, and process-source indexing behavior without changing the architecture boundary.
 
+
+- Commit: `ef7f54d`
+  Time UTC: 2026-07-10T21:08:42Z
+  Message: feat(rag): add user intent retrieval bundles
+  Summary: Added a governed user-intents retrieval-policy dimension, compiled-policy/schema support, selector matching for generic ask-shapes, conditional evidence bundles for index-selection and context-packet validation, and eight targeted user-intent selector fixtures.
+  ADR impact: No ADR needed; extends the existing retrieval-selector policy model with generic evidence-shape signals while preserving separate execution authorization.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -302,9 +320,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T20:34:13Z
-Latest commit SHA: dc87092
-Chat duration: 35037s (00:09:43:57)
+Latest commit at UTC: 2026-07-10T21:08:42Z
+Latest commit SHA: ef7f54d
+Chat duration: 37106s (00:10:18:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
