@@ -897,6 +897,246 @@ terms:
       - core files fixture
       - files selector proof
     confidence_weight: 0.72
+  - term: professional review agents
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.review-agents
+    aliases:
+      - review agents
+      - review board
+      - agent scorecards
+      - scorecards
+      - review rubrics
+      - run agent review
+      - run review board
+    confidence_weight: 0.82
+  - term: professional review agent quality
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.professional-review-quality
+    evidence_path: .agentic/01.harness/standards/professional-review-agent-quality.md
+    aliases:
+      - review agent quality
+      - scorecard quality
+      - review quality standard
+    confidence_weight: 0.74
+  - term: agent contracts
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.agent-contracts
+    evidence_path: .agentic/01.harness/standards/agent-contracts.md
+    aliases:
+      - agent contract
+      - harness agent contract
+      - agent IO contract
+    confidence_weight: 0.72
+  - term: public beta llm-workbench contract
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.public-beta-portability
+    aliases:
+      - public beta
+      - llm-workbench install
+      - install/export contract
+      - standalone provider-neutral
+      - portability
+      - bootstrap export
+      - public export
+    confidence_weight: 0.82
+  - term: llm-workbench public beta contract
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.public-beta-contract
+    evidence_path: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+    aliases:
+      - public-beta contract
+      - public beta contract
+      - llm-workbench beta standard
+    confidence_weight: 0.74
+  - term: portability validation
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.portability-validation
+    evidence_path: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+    aliases:
+      - validate llm-workbench portability
+      - portability validator
+      - provider-neutral validation
+    confidence_weight: 0.73
+  - term: missing governance stop condition
+    category: question-category
+    match_type: phrase
+    canonical_id: question.governance.missing-stop-condition
+    aliases:
+      - missing governance
+      - stop condition
+      - required action is not governed
+      - governance gap
+      - capability resolution
+      - missing governance gap
+    confidence_weight: 0.83
+  - term: missing governance standard
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.missing-governance-standard
+    evidence_path: .agentic/01.harness/standards/missing-governance-stop-condition.md
+    aliases:
+      - missing-governance standard
+      - governance stop standard
+      - absent governance rule
+    confidence_weight: 0.75
+  - term: governed script permissions
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.governed-script-permissions
+    aliases:
+      - run-governed-script
+      - Codex Claude Mistral permissions
+      - vendor adapters
+      - script allowlist
+      - governed script runner
+      - tool permission config
+    confidence_weight: 0.82
+  - term: governed scripts rules
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.governed-script-rules
+    evidence_path: .codex/rules/governed-scripts.rules
+    aliases:
+      - governed-scripts.rules
+      - codex governed scripts
+      - script permission rules
+    confidence_weight: 0.73
+  - term: education resource workflow
+    category: question-category
+    match_type: phrase
+    canonical_id: question.education.resource-workflow
+    aliases:
+      - education layer
+      - content-to-resource
+      - educational resource
+      - mine daily learning material
+      - education profiles
+      - education templates
+    confidence_weight: 0.82
+  - term: create educational resource
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.create-resource
+    evidence_path: .agentic/education/workflows/create-educational-resource.md
+    aliases:
+      - educational resource workflow
+      - create education resource
+      - content to resource
+    confidence_weight: 0.74
+  - term: upstream reusable lesson
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.upstream-reusable-lesson
+    aliases:
+      - promote reusable lesson upstream
+      - upstream repo
+      - reusable lesson
+      - bootstrap upstream
+    confidence_weight: 0.82
+  - term: chat upstream reusable lesson
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.upstream-reusable-lesson
+    evidence_path: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+    aliases:
+      - chat-upstream-reusable-lesson
+      - reusable lesson workflow
+      - upstream lesson workflow
+    confidence_weight: 0.74
+  - term: artifact path migration
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.artifact-path-migration
+    aliases:
+      - path migration checks
+      - migration compatibility
+      - migrate artifact paths
+      - path migration plan
+      - retired compatibility paths
+    confidence_weight: 0.82
+  - term: artifact path migrations standard
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.artifact-path-migrations
+    evidence_path: .agentic/01.harness/standards/artifact-path-migrations.md
+    aliases:
+      - artifact-path-migrations
+      - path migration standard
+      - path migration compatibility
+    confidence_weight: 0.74
+  - term: chat command shortcuts
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.command-shortcuts
+    aliases:
+      - new close command
+      - command dispatcher
+      - chat commands
+      - shortcut surface
+      - chat new command
+      - chat close command
+    confidence_weight: 0.82
+  - term: chat command dispatcher
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.command-dispatcher
+    evidence_path: scripts/00.chat/command/dispatcher/script.sh
+    aliases:
+      - command dispatcher script
+      - dispatcher command
+      - chat command router
+    confidence_weight: 0.74
+  - term: AWS inspect plan execute
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.aws-workflow-split
+    aliases:
+      - AWS inspect, plan, and execute
+      - AWS inspect plan and execute
+      - inspect, plan, and execute workflows
+      - inspect AWS state
+      - plan AWS change
+      - execute approved AWS change
+      - AWS workflow split
+      - inspect plan execute workflow
+    confidence_weight: 0.82
+  - term: AWS workflow split
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.aws-workflows
+    evidence_path: .agentic/aws/README.md
+    aliases:
+      - AWS workflows
+      - inspect plan execute
+      - AWS operations workflow
+    confidence_weight: 0.74
+  - term: rulebook harvest coverage
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.rulebook-coverage-tracker
+    aliases:
+      - rulebook coverage tracker
+      - continue rulebook
+      - rulebook progress
+      - rulebook state
+      - harvest coverage tracker
+    confidence_weight: 0.82
+  - term: rulebook coverage state
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.rulebook-coverage-state
+    evidence_path: .agentic/01.harness/state/rulebook-coverage.yml
+    aliases:
+      - rulebook-coverage.yml
+      - rulebook progress state
+      - rulebook tracker state
+    confidence_weight: 0.74
 validation_rules:
   - Question categories choose expected evidence families; they do not select execution workflows.
   - Evidence-family terms are lower authority than exact corpus IDs, artifact IDs, and paths.

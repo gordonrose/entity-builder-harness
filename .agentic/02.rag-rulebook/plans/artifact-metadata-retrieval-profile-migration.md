@@ -370,7 +370,8 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-
 
 ### 9. Expand RAG Evaluations By Question Family
 
-Status: next.
+Status: in progress; first process-question repair complete in current branch,
+pending commit.
 
 Repeated misses should become fixtures, not ad hoc curated fixes.
 
@@ -389,6 +390,22 @@ Success criteria:
 - fixture failures point to a selector stage or missing profile signal
 - RAG retrieves useful context without a custom term for every prompt
 - source verification agrees with RAG for primary source families
+
+2026-07-10 process-question A/B repair:
+
+- sub-agent Cycle 3 found `0/10` strong verdicts for governed process
+  questions because source search surfaced `.agentic` workflows, standards,
+  state, commands, and script surfaces that RAG did not consistently preserve
+  as primary evidence
+- broad repair: index governed process sources automatically, add reusable
+  question categories and evidence bundles, and add ten selector fixtures
+  covering review agents, public beta portability, missing governance,
+  governed scripts, education workflows, upstream reusable lessons, artifact
+  path migration, chat command shortcuts, AWS workflow split, and rulebook
+  coverage tracking
+- post-repair A/B check: `10/10` realistic prompts returned strong verdicts
+- selector regression: `62/62` fixtures passed
+- commit gate: `scripts/02.rag-rulebook/commit-gates/script.sh` passed
 
 ## Resume Checklist
 

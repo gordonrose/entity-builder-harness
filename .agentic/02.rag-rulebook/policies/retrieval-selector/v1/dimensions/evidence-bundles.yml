@@ -248,6 +248,94 @@ evidence_bundles:
       evidence.packages-core.events-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
       evidence.packages-core.queues-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
       evidence.packages-core.files-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+  - question_category_id: question.harness.review-agents
+    always_source_paths:
+      - .agentic/01.harness/standards/professional-review-agent-quality.md
+      - .agentic/01.harness/standards/agent-contracts.md
+      - .agentic/01.harness/workflows/run-agent-review.md
+      - .agentic/01.harness/workflows/run-review-board.md
+      - scripts/01.harness/agents/validate-harness-agents/script.js
+    family_source_paths:
+      evidence.harness.professional-review-quality: .agentic/01.harness/standards/professional-review-agent-quality.md
+      evidence.harness.agent-contracts: .agentic/01.harness/standards/agent-contracts.md
+  - question_category_id: question.chat.public-beta-portability
+    always_source_paths:
+      - .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+      - .agentic/00.chat/checklists/llm-workbench-public-beta.md
+      - docs/00.chat/llm-workbench-acceptance-matrix.md
+      - scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+      - scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+    family_source_paths:
+      evidence.chat.public-beta-contract: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+      evidence.chat.portability-validation: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+  - question_category_id: question.governance.missing-stop-condition
+    always_source_paths:
+      - AGENTS.md
+      - .agentic/01.harness/standards/missing-governance-stop-condition.md
+      - .agentic/shared/workflows/capability-resolution-workflow.md
+      - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+    family_source_paths:
+      evidence.harness.missing-governance-standard: .agentic/01.harness/standards/missing-governance-stop-condition.md
+  - question_category_id: question.harness.governed-script-permissions
+    always_source_paths:
+      - .agentic/01.harness/standards/governed-script-permissions.md
+      - scripts/01.harness/run-governed-script.sh
+      - .codex/rules/governed-scripts.rules
+      - .claude/settings.json
+      - .vibe/config.toml
+    family_source_paths:
+      evidence.harness.governed-script-rules: .codex/rules/governed-scripts.rules
+  - question_category_id: question.education.resource-workflow
+    always_source_paths:
+      - .agentic/education/workflows/create-educational-resource.md
+      - .agentic/education/workflows/mine-daily-learning-material.md
+      - .agentic/education/profiles/audience-profile.md
+      - .agentic/education/templates/educational-resource.md
+      - .agentic/education/templates/content-mining-report.md
+    family_source_paths:
+      evidence.education.create-resource: .agentic/education/workflows/create-educational-resource.md
+  - question_category_id: question.chat.upstream-reusable-lesson
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+      - .agentic/shared/standards/upstream-repo-bootstrap.md
+      - scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
+      - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
+    family_source_paths:
+      evidence.chat.upstream-reusable-lesson: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+  - question_category_id: question.harness.artifact-path-migration
+    always_source_paths:
+      - .agentic/01.harness/standards/artifact-path-migrations.md
+      - .agentic/01.harness/workflows/migrate-artifact-paths.md
+      - scripts/01.harness/plan-artifact-path-migration.sh
+      - scripts/01.harness/check-artifact-path-migration.sh
+      - docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+    family_source_paths:
+      evidence.harness.artifact-path-migrations: .agentic/01.harness/standards/artifact-path-migrations.md
+  - question_category_id: question.chat.command-shortcuts
+    always_source_paths:
+      - .agentic/00.chat/commands/README.md
+      - scripts/00.chat/command/dispatcher/script.sh
+      - scripts/00.chat/command/new/script.sh
+      - scripts/00.chat/command/close/script.sh
+      - scripts/00.chat/command/dispatcher/README.md
+    family_source_paths:
+      evidence.chat.command-dispatcher: scripts/00.chat/command/dispatcher/script.sh
+  - question_category_id: question.deploy.aws-workflow-split
+    always_source_paths:
+      - .agentic/aws/README.md
+      - .agentic/aws/workflows/inspect-aws-state.md
+      - .agentic/aws/workflows/plan-aws-change.md
+      - .agentic/aws/workflows/execute-approved-aws-change.md
+    family_source_paths:
+      evidence.deploy.aws-workflows: .agentic/aws/README.md
+  - question_category_id: question.harness.rulebook-coverage-tracker
+    always_source_paths:
+      - .agentic/01.harness/workflows/continue-rulebook.workflow.md
+      - .agentic/01.harness/state/rulebook-coverage.yml
+      - .agentic/01.harness/state/rulebook-progress.yml
+      - docs/harness/architecture/rules/concerns/generated-code.yml
+    family_source_paths:
+      evidence.harness.rulebook-coverage-state: .agentic/01.harness/state/rulebook-coverage.yml
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.

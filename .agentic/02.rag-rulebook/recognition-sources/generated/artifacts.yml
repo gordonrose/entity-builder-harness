@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 702
-  term_count: 1416
+  indexed_artifacts: 712
+  term_count: 1436
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4512,6 +4512,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-architecture-boundary
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-architecture-boundary.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-aws-workflow-split
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-aws-workflow-split
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-aws-workflow-split.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-aws-workflow-split.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-aws-workflow-split
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-aws-workflow-split.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-capability-placement-cross-session
   category: artifact-id
   match_type: exact
@@ -4524,6 +4536,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-capability-placement-cross-session
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-capability-placement-cross-session.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-command-shortcuts
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-command-shortcuts
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-command-shortcuts.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-command-shortcuts.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-command-shortcuts
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-command-shortcuts.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-local-main-promotion
   category: artifact-id
   match_type: exact
@@ -4535,6 +4559,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-local-main-promotion
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-local-main-promotion.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-public-beta-portability
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-public-beta-portability
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-public-beta-portability.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-public-beta-portability.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-public-beta-portability
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-public-beta-portability.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-rag-boundary
   category: artifact-id
@@ -4572,6 +4608,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-sub-agent-activity
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-sub-agent-activity.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-upstream-reusable-lesson
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-upstream-reusable-lesson
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-upstream-reusable-lesson.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-upstream-reusable-lesson.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-upstream-reusable-lesson
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-upstream-reusable-lesson.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-worktree-recovery
   category: artifact-id
   match_type: exact
@@ -4584,6 +4632,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-worktree-recovery
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-worktree-recovery.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-education-resource-workflow
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-education-resource-workflow
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-education-resource-workflow.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-education-resource-workflow.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-education-resource-workflow
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-education-resource-workflow.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-external-adapter-boundary
   category: artifact-id
   match_type: exact
@@ -4595,6 +4655,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-external-adapter-boundary
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-external-adapter-boundary.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-governed-script-permissions
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-governed-script-permissions
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-governed-script-permissions.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-governed-script-permissions.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-governed-script-permissions
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-governed-script-permissions.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-artifact-path-migration
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-artifact-path-migration
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-artifact-path-migration.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-artifact-path-migration.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-artifact-path-migration
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-artifact-path-migration.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-review-agents
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-review-agents
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-review-agents.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-review-agents.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-review-agents
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-review-agents.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-hosted-auth-boundary
   category: artifact-id
@@ -4643,6 +4739,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-logging-policy-tight-budget
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-logging-policy-tight-budget.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-missing-governance-stop-condition
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-missing-governance-stop-condition
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-missing-governance-stop-condition.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-missing-governance-stop-condition.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-missing-governance-stop-condition
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-missing-governance-stop-condition.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-platform-runtime-modules-policy-implementation
   category: artifact-id
@@ -4751,6 +4859,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rag-retrieval-source-of-truth
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-retrieval-source-of-truth.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rulebook-coverage-tracker
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rulebook-coverage-tracker
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rulebook-coverage-tracker.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rulebook-coverage-tracker.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rulebook-coverage-tracker
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rulebook-coverage-tracker.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
   category: artifact-id

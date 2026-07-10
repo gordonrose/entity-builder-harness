@@ -63,6 +63,36 @@ DEFAULT_CORPUS_RULE_ROOTS = (
     (CURRENT_RULEBOOK_CORPUS_ID, DEFAULT_RULEBOOK_RULES_ROOT),
     ("corpus.04.deploy", DEFAULT_DEPLOY_RULES_ROOT),
 )
+PROCESS_SOURCE_GLOBS = (
+    "AGENTS.md",
+    ".agentic/00.chat/checklists/**/*.md",
+    ".agentic/00.chat/commands/**/*.md",
+    ".agentic/00.chat/standards/**/*.md",
+    ".agentic/00.chat/workflows/**/*.md",
+    ".agentic/01.harness/agents/**/*.md",
+    ".agentic/01.harness/standards/**/*.md",
+    ".agentic/01.harness/state/**/*.yml",
+    ".agentic/01.harness/workflows/**/*.md",
+    ".agentic/aws/**/*.md",
+    ".agentic/education/agents/**/*.md",
+    ".agentic/education/profiles/**/*.md",
+    ".agentic/education/references/**/*.md",
+    ".agentic/education/templates/**/*.md",
+    ".agentic/education/workflows/**/*.md",
+    ".agentic/shared/standards/**/*.md",
+    ".agentic/shared/workflows/**/*.md",
+    "docs/00.chat/**/*.md",
+    "scripts/00.chat/**/README.md",
+    "scripts/00.chat/**/script.sh",
+    "scripts/01.harness/*.sh",
+    "scripts/01.harness/*.js",
+    "scripts/01.harness/**/*.md",
+    "scripts/01.harness/**/*.sh",
+    "scripts/01.harness/**/*.js",
+    ".codex/rules/*.rules",
+    ".claude/settings.json",
+    ".vibe/config.toml",
+)
 SUPPORTING_SOURCE_ENTRIES = (
     {
         "current_path": ".agentic/01.harness/artifact-metadata/README.md",
@@ -921,6 +951,83 @@ def default_manifest_path_for_corpus(corpus_id: str, rules_root: str) -> str | N
     return None
 
 
+def process_source_corpus_id(path: str, metadata: dict[str, Any]) -> str:
+    layer = str(metadata.get("layer") or "")
+    if layer == "02.rag-rulebook" or path.startswith(("scripts/02.rag-rulebook/", ".agentic/02.rag-rulebook/")):
+        return CURRENT_RULEBOOK_CORPUS_ID
+    if layer == "04.deploy" or path.startswith((".agentic/aws/", "scripts/04.deploy/", "docs/04.deploy/")):
+        return "corpus.04.deploy"
+    if layer == "06.shared":
+        return "corpus.06.shared"
+    return HARNESS_CORPUS_ID
+
+
+def process_source_type(path: str, metadata: dict[str, Any]) -> str:
+    kind = str(metadata.get("kind") or "").strip()
+    if kind == "workflow":
+        return "workflow"
+    if kind in {"standard", "schema", "plan"}:
+        return kind
+    return "source"
+
+
+def process_artifact_type(path: str, metadata: dict[str, Any]) -> str:
+    kind = str(metadata.get("kind") or "").strip()
+    if kind:
+        return kind
+    if path.endswith(".rules"):
+        return "tool-permission-config"
+    if path.endswith((".json", ".toml")):
+        return "config"
+    return Path(path).suffix.lstrip(".") or "source"
+
+
+def process_source_profile(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    kind = process_artifact_type(path, metadata)
+    domain = str(metadata.get("domain") or Path(path).parent.as_posix()).replace("/", ".")
+    purpose = str(metadata.get("purpose") or f"Provide governed process evidence for {path}")
+    return {
+        "retrieval_roles": [f"{safe_id(kind)}-authority", "governed-process-source"],
+        "answers_questions_about": [
+            purpose,
+            f"how {domain} is governed",
+        ],
+        "produces": [f"{kind} guidance"],
+        "consumes": [],
+        "validates": ["governed process evidence"],
+    }
+
+
+def discover_process_source_entries(excluded_paths: set[str]) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for pattern in PROCESS_SOURCE_GLOBS:
+        for absolute in sorted(glob.glob((ROOT / pattern).as_posix(), recursive=True)):
+            path = normalize_path(Path(absolute))
+            if path in seen or path in excluded_paths:
+                continue
+            if not repo_path(path).is_file():
+                continue
+            if "/fixtures/" in path or "/generated/" in path or "/cache/" in path:
+                continue
+            metadata = parse_metadata_header(path)
+            status = str(metadata.get("status") or "active")
+            if status not in {"active", "draft"}:
+                continue
+            seen.add(path)
+            entries.append(
+                {
+                    "current_path": path,
+                    "corpus_id": process_source_corpus_id(path, metadata),
+                    "artifact_type": process_artifact_type(path, metadata),
+                    "source_type": process_source_type(path, metadata),
+                    "retrieval_profile": process_source_profile(path, metadata),
+                    "auto_discovered": True,
+                }
+            )
+    return entries
+
+
 def parse_corpus_rule_roots(args: argparse.Namespace) -> list[dict[str, str]]:
     roots = {corpus_id: path for corpus_id, path in DEFAULT_CORPUS_RULE_ROOTS}
     roots[CURRENT_RULEBOOK_CORPUS_ID] = args.rulebook_rules_root
@@ -1246,7 +1353,16 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                         artifact_ref,
                     )
 
-    for entry in SUPPORTING_SOURCE_ENTRIES:
+    supporting_source_entries = list(SUPPORTING_SOURCE_ENTRIES)
+    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
+    yaml_paths = {
+        normalize_path(str(entry.get("current_path")))
+        for _, entry in yaml_entries
+        if isinstance(entry.get("current_path"), str)
+    }
+    supporting_source_entries.extend(discover_process_source_entries(supporting_paths | yaml_paths))
+
+    for entry in supporting_source_entries:
         current_path = str(entry["current_path"])
         corpus_id = str(entry["corpus_id"])
         metadata = parse_metadata_header(current_path) if repo_path(current_path).is_file() else {}
@@ -1567,7 +1683,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
 
     input_paths = [migration_map_path]
     input_paths.extend(entry.get("current_path") for _, entry in yaml_entries if isinstance(entry.get("current_path"), str))
-    input_paths.extend(entry["current_path"] for entry in SUPPORTING_SOURCE_ENTRIES)
+    input_paths.extend(entry["current_path"] for entry in supporting_source_entries)
     inputs = []
     for path in sorted(set(input_paths)):
         if repo_path(path).is_file():
@@ -1613,6 +1729,34 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         {
             "root_id": "root.harness-artifact-metadata-scripts",
             "path": "scripts/01.harness/artifact-metadata",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.agentic-process-sources",
+            "path": ".agentic",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.repo-agent-instructions",
+            "path": "AGENTS.md",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.chat-process-scripts",
+            "path": "scripts/00.chat",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.harness-process-scripts",
+            "path": "scripts/01.harness",
             "role": "supporting-source",
             "migration_status": "current",
             "corpus_id": HARNESS_CORPUS_ID,

@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-artifact-path-migration
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove artifact path migration questions retrieve standard, workflow, planning/check scripts, and ADR rationale.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-harness-artifact-path-migration
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove path migration prompts retrieve the migration standard, workflow, executable checks, and compatibility ADR.
+input:
+  request_text: How do artifact path migration checks use the artifact path migrations standard, migrate artifact paths workflow, and compatibility ADR?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: artifact path migration
+        category: question-category
+        canonical_id: question.harness.artifact-path-migration
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: artifact path migrations standard
+        category: evidence-family
+        canonical_id: evidence.harness.artifact-path-migrations
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .agentic/01.harness/standards/artifact-path-migrations.md
+      - .agentic/01.harness/workflows/migrate-artifact-paths.md
+      - scripts/01.harness/plan-artifact-path-migration.sh
+      - scripts/01.harness/check-artifact-path-migration.sh
+      - docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/01.harness/standards/artifact-path-migrations.md
+  - .agentic/01.harness/workflows/migrate-artifact-paths.md
+  - scripts/01.harness/plan-artifact-path-migration.sh
+  - scripts/01.harness/check-artifact-path-migration.sh
+  - docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+update_triggers:
+  - Artifact path migration standard or workflow changes.
+  - Migration plan/check scripts change.
+  - Migration ADR changes.
+

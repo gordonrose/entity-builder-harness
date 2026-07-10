@@ -1,0 +1,78 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-harness-review-agents
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove professional review agent questions retrieve scorecard, contract, workflow, and validator evidence together.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-harness-review-agents
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove review-agent and scorecard prompts retrieve both standards, review workflows, and the harness-agent validator.
+input:
+  request_text: How do professional review agents, professional review agent quality, and agent contracts define scorecards and the review board?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: professional review agents
+        category: question-category
+        canonical_id: question.harness.review-agents
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: professional review agent quality
+        category: evidence-family
+        canonical_id: evidence.harness.professional-review-quality
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: agent contracts
+        category: evidence-family
+        canonical_id: evidence.harness.agent-contracts
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .agentic/01.harness/standards/professional-review-agent-quality.md
+      - .agentic/01.harness/standards/agent-contracts.md
+      - .agentic/01.harness/workflows/run-agent-review.md
+      - .agentic/01.harness/workflows/run-review-board.md
+      - scripts/01.harness/agents/validate-harness-agents/script.js
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/01.harness/standards/professional-review-agent-quality.md
+  - .agentic/01.harness/standards/agent-contracts.md
+  - .agentic/01.harness/workflows/run-agent-review.md
+  - .agentic/01.harness/workflows/run-review-board.md
+  - scripts/01.harness/agents/validate-harness-agents/script.js
+update_triggers:
+  - Review agent standards or workflows change.
+  - Harness-agent validator behavior changes.
+  - Review-agent recognition vocabulary changes.
+

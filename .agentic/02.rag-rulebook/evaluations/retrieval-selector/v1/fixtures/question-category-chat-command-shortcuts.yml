@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-command-shortcuts
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove chat command shortcut questions retrieve command docs, dispatcher, and new/close command scripts.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-chat-command-shortcuts
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove chat command shortcut prompts retrieve the README, dispatcher, and concrete new/close implementations.
+input:
+  request_text: How do chat command shortcuts use the chat command dispatcher for the new close command surface?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: chat command shortcuts
+        category: question-category
+        canonical_id: question.chat.command-shortcuts
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: chat command dispatcher
+        category: evidence-family
+        canonical_id: evidence.chat.command-dispatcher
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .agentic/00.chat/commands/README.md
+      - scripts/00.chat/command/dispatcher/script.sh
+      - scripts/00.chat/command/new/script.sh
+      - scripts/00.chat/command/close/script.sh
+      - scripts/00.chat/command/dispatcher/README.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/00.chat/commands/README.md
+  - scripts/00.chat/command/dispatcher/script.sh
+  - scripts/00.chat/command/new/script.sh
+  - scripts/00.chat/command/close/script.sh
+  - scripts/00.chat/command/dispatcher/README.md
+update_triggers:
+  - Chat command shortcut docs change.
+  - Command dispatcher changes.
+  - new or close command behavior changes.
+
