@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T14:58:23Z
-latest_commit_sha: d73ae37
-chat_duration: 14887s (00:04:08:07)
+latest_commit_at_utc: 2026-07-10T15:04:19Z
+latest_commit_sha: 7254a98
+chat_duration: 15243s (00:04:14:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -113,6 +113,17 @@ Summary: Restored illustrative example-path deprioritization, added generated ar
 
 ADR impact: No ADR needed; extends existing RAG/rulebook retrieval and artifact metadata machinery.
 
+
+### 2026-07-10T15:04:19Z - Commit recorded
+
+Commit: `7254a98`
+
+Message: feat(rag): enrich retrieval profile kind derivation
+
+Summary: Added deterministic retrieval-profile derivation for readme-like artifacts, ADRs, agent contracts, recognition sources, and source material, reducing partial coverage from 112 to 26 without authored header edits.
+
+ADR impact: No ADR needed; this narrows the existing generated-profile migration with deterministic kind rules.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -126,6 +137,13 @@ ADR impact: No ADR needed; extends existing RAG/rulebook retrieval and artifact 
   Message: feat(rag): generate artifact retrieval profiles
   Summary: Restored illustrative example-path deprioritization, added generated artifact retrieval profiles, widened metadata indexing scope, added a retrieval-profile coverage reporter, recorded an LLM calibration audit, and refreshed generated recognition sources.
   ADR impact: No ADR needed; extends existing RAG/rulebook retrieval and artifact metadata machinery.
+
+
+- Commit: `7254a98`
+  Time UTC: 2026-07-10T15:04:19Z
+  Message: feat(rag): enrich retrieval profile kind derivation
+  Summary: Added deterministic retrieval-profile derivation for readme-like artifacts, ADRs, agent contracts, recognition sources, and source material, reducing partial coverage from 112 to 26 without authored header edits.
+  ADR impact: No ADR needed; this narrows the existing generated-profile migration with deterministic kind rules.
 
 ## Main Refresh Conflicts
 
@@ -142,9 +160,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T14:58:23Z
-Latest commit SHA: d73ae37
-Chat duration: 14887s (00:04:08:07)
+Latest commit at UTC: 2026-07-10T15:04:19Z
+Latest commit SHA: 7254a98
+Chat duration: 15243s (00:04:14:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
