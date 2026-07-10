@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-10T12:49:08Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id: packet.selector-fixture.fe99e59aeaff1ed2
 latest_context_packet_routing_summary: App mount boundary prompt selected platform, apps, and dependency-direction rules for app.mount.ts integration and app-internal opacity.
 latest_context_packet_at_utc: 2026-07-10T12:53:51Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-10T14:52:16Z
+latest_commit_sha: 41abb61
+chat_duration: 7388s (00:02:03:08)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -87,13 +87,30 @@ Summary: Commit attempt blocked by sandbox .git permissions; platform runtime pl
 
 Durable evidence: Git staging failed because /home/owner/projects/entity-builder-harness-001/.git/worktrees/.../index.lock is read-only in this sandbox. Plan artifact: docs/harness/architecture/plans/platform-runtime-implementation-plan.md. Validation passed: artifact header check, recognition-source freshness, source projections, source material coverage, git diff --check, and local RAG runtime rebuild.
 
+
+### 2026-07-10T14:52:16Z - Commit recorded
+
+Commit: `41abb61`
+
+Message: Record platform app mount boundary and runtime plan
+
+Summary: Recorded ADR 0026 for the app mount boundary, updated platform/apps/dependency-direction guidance and platform/contracts notes, added RAG derivation and selector evidence, refreshed generated recognition sources, and added the platform runtime implementation plan for a dummy app and AWS production readiness.
+
+ADR impact: ADR 0026 records app mount as the platform integration boundary; the runtime plan relies on ADR 0025 and ADR 0026 before implementation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `41abb61`
+  Time UTC: 2026-07-10T14:52:16Z
+  Message: Record platform app mount boundary and runtime plan
+  Summary: Recorded ADR 0026 for the app mount boundary, updated platform/apps/dependency-direction guidance and platform/contracts notes, added RAG derivation and selector evidence, refreshed generated recognition sources, and added the platform runtime implementation plan for a dummy app and AWS production readiness.
+  ADR impact: ADR 0026 records app mount as the platform integration boundary; the runtime plan relies on ADR 0025 and ADR 0026 before implementation.
 
 ## Main Refresh Conflicts
 
@@ -108,12 +125,12 @@ Reason: Durable architecture decision that platform consumes public app mount mo
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T12:49:08Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-10T14:52:16Z
+Latest commit SHA: 41abb61
+Chat duration: 7388s (00:02:03:08)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
