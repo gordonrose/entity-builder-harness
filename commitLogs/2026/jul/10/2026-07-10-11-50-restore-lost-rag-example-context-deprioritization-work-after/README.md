@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-07-10T17:30:24Z
-latest_commit_sha: c57d011
-chat_duration: 24008s (00:06:40:08)
+latest_commit_at_utc: 2026-07-10T18:18:44Z
+latest_commit_sha: bd59a57
+chat_duration: 26908s (00:07:28:28)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -184,6 +184,17 @@ Summary: Added selector fixtures for chat metrics, worktree recovery, sub-agent 
 
 ADR impact: No ADR impact; regression coverage for cycle-2 RAG retrieval hardening.
 
+
+### 2026-07-10T18:18:44Z - Commit recorded
+
+Commit: `bd59a57`
+
+Message: feat(rag): index governed process evidence
+
+Summary: Expanded RAG governed-process indexing, curated question categories, evidence bundles, and ten selector fixtures after Cycle 3 A/B misses. Validation: realistic A/B repair set 10/10 strong, selector fixtures 62/62, RAG commit gates passed.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -233,6 +244,13 @@ ADR impact: No ADR impact; regression coverage for cycle-2 RAG retrieval hardeni
   Summary: Added selector fixtures for chat metrics, worktree recovery, sub-agent activity, local-main promotion, hosted auth, prompt/session conflict, generated recognition repair, and packages/core contract retrieval; tightened container governance fixture source-path proof.
   ADR impact: No ADR impact; regression coverage for cycle-2 RAG retrieval hardening.
 
+
+- Commit: `bd59a57`
+  Time UTC: 2026-07-10T18:18:44Z
+  Message: feat(rag): index governed process evidence
+  Summary: Expanded RAG governed-process indexing, curated question categories, evidence bundles, and ten selector fixtures after Cycle 3 A/B misses. Validation: realistic A/B repair set 10/10 strong, selector fixtures 62/62, RAG commit gates passed.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -248,9 +266,9 @@ does not introduce a new architecture boundary or reverse an accepted decision.
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T10:50:16Z
-Latest commit at UTC: 2026-07-10T17:30:24Z
-Latest commit SHA: c57d011
-Chat duration: 24008s (00:06:40:08)
+Latest commit at UTC: 2026-07-10T18:18:44Z
+Latest commit SHA: bd59a57
+Chat duration: 26908s (00:07:28:28)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
