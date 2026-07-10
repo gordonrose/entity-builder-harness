@@ -1,0 +1,69 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-recognition-source-lifecycle
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove recognition lifecycle prompts retrieve candidate review, validation, generation, and curated/generated source evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-recognition-source-lifecycle
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove recognition candidate prompts retrieve the lifecycle docs plus concrete generation and validation commands.
+input:
+  request_text: How do recognition candidates become curated or generated recognition sources, and which validators check them?
+  max_chunks: 12
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - question.rag.recognition-source-lifecycle
+  selected_chunks:
+    required_source_paths:
+      - .agentic/02.rag-rulebook/recognition-candidates/README.md
+      - .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+      - .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+      - scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+      - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      - scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+      - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+      - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/02.rag-rulebook/recognition-candidates/README.md
+  - .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+  - .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+  - scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+  - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+  - scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+  - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+  - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+update_triggers:
+  - Recognition candidate review workflow changes.
+  - Recognition source generation or validation changes.
+  - Curated/generated recognition source ownership changes.

@@ -76,9 +76,19 @@ PROCESS_SOURCE_GLOBS = (
     ".agentic/01.harness/state/**/*.yml",
     ".agentic/01.harness/workflows/**/*.md",
     ".agentic/02.rag-rulebook/guides/**/*.md",
+    ".agentic/02.rag-rulebook/corpus-gaps/**/*.md",
+    ".agentic/02.rag-rulebook/corpus-gaps/**/*.yml",
+    ".agentic/02.rag-rulebook/evaluations/**/*.md",
+    ".agentic/02.rag-rulebook/policies/**/*.yml",
+    ".agentic/02.rag-rulebook/plans/**/*.md",
+    ".agentic/02.rag-rulebook/plans/**/*.yml",
+    ".agentic/02.rag-rulebook/recognition-candidates/**/*.md",
+    ".agentic/02.rag-rulebook/recognition-candidates/**/*.yml",
+    ".agentic/02.rag-rulebook/recognition-sources/**/*.yml",
     ".agentic/02.rag-rulebook/schemas/**/*.yml",
     ".agentic/02.rag-rulebook/service/**/*.md",
     ".agentic/02.rag-rulebook/service/**/*.mjs",
+    ".agentic/02.rag-rulebook/skills/**/*.md",
     ".agentic/02.rag-rulebook/source-projections/**/*.md",
     ".agentic/02.rag-rulebook/source-projections/**/*.yml",
     ".agentic/02.rag-rulebook/standards/**/*.md",
@@ -1033,7 +1043,8 @@ def discover_process_source_entries(excluded_paths: set[str]) -> list[dict[str, 
                 continue
             if not repo_path(path).is_file():
                 continue
-            if "/fixtures/" in path or "/generated/" in path or "/cache/" in path:
+            generated_recognition_source = path.startswith(".agentic/02.rag-rulebook/recognition-sources/generated/")
+            if "/fixtures/" in path or ("/generated/" in path and not generated_recognition_source) or "/cache/" in path:
                 continue
             if path.endswith("/workflows/default.md"):
                 continue
@@ -1791,6 +1802,13 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         {
             "root_id": "root.rag-rulebook-process-sources",
             "path": ".agentic/02.rag-rulebook",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        },
+        {
+            "root_id": "root.rag-rulebook-diagnostics",
+            "path": ".agentic/02.rag-rulebook/corpus-gaps",
             "role": "supporting-source",
             "migration_status": "current",
             "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,

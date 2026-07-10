@@ -423,6 +423,22 @@ Success criteria:
 - post-repair A/B check: `10/10` realistic prompts returned strong verdicts
 - selector regression: `71/71` fixtures passed
 
+2026-07-10 Cycle 5 operational-diagnostics A/B repair:
+
+- sub-agent Cycle 5 found `1/10` strong verdicts, with misses concentrated in
+  operational diagnostics and validation wiring: hosted auth command behavior,
+  runtime freshness, source projections, profile coverage, knowledge
+  disposition, context-packet validation, recognition-source lifecycle, MCP
+  deploy corpus gaps, and selector failure diagnosis
+- broad repair: index RAG rulebook plans, policies, skills, recognition
+  sources/candidates, corpus gaps, generated recognition sources, and
+  diagnostic process artifacts as selectable process evidence
+- added reusable question categories, evidence bundles, and ten selector
+  fixtures for operational diagnostics and learner-facing index-selection
+  prompts
+- post-repair A/B check: `10/10` realistic prompts returned strong verdicts
+- selector regression: `81/81` fixtures passed
+
 ## Resume Checklist
 
 Use this checklist at the start of any future migration session:

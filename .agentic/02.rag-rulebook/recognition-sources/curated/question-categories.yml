@@ -371,6 +371,38 @@ terms:
       - source material first
       - source-of-truth driven retrieval
     confidence_weight: 0.76
+  - term: RAG index selection
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.index-selection
+    aliases:
+      - rulebook index use artifact metadata
+      - rulebook index uses artifact metadata
+      - retrieval profiles to preserve the right chunks
+      - index selection
+      - generated retrieval profiles
+      - right chunks
+    confidence_weight: 0.82
+  - term: rulebook index builder
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.rulebook-index-builder
+    evidence_path: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+    aliases:
+      - generate-rulebook-index
+      - rulebook index generator
+      - builds the rulebook index
+    confidence_weight: 0.74
+  - term: rulebook chunk generator
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.rulebook-chunk-generator
+    evidence_path: scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+    aliases:
+      - generate-rulebook-chunks
+      - generated chunks
+      - retrieval chunks
+    confidence_weight: 0.74
   - term: illustrative examples
     category: evidence-family
     match_type: phrase
@@ -828,6 +860,10 @@ terms:
       - ServiceTokenSecretArn
       - hosted RAG token
       - hosted RAG auth
+      - missing bearer token
+      - rejected bearer token
+      - bearer token behavior
+      - hosted bearer auth
       - service token secret
       - bearer token secret
       - RAG_RULEBOOK_TOKEN_SECRET_ARN
@@ -845,6 +881,16 @@ terms:
       - Secrets Manager service token
       - staging service token
     confidence_weight: 0.75
+  - term: query context provider command
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.query-context-command
+    evidence_path: scripts/02.rag-rulebook/query-context/script.sh
+    aliases:
+      - query-context command
+      - context provider command
+      - hosted local provider command
+    confidence_weight: 0.74
   - term: packages core module contracts
     category: question-category
     match_type: phrase
@@ -1360,6 +1406,180 @@ terms:
       - server.mjs
       - HTTP service skeleton
       - RAG HTTP service
+    confidence_weight: 0.74
+  - term: runtime freshness fingerprint
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.runtime-freshness
+    aliases:
+      - runtime cache stale
+      - stale runtime cache
+      - runtime cache freshness
+      - local runtime fingerprint
+      - runtime fingerprint
+      - cache fingerprint
+      - check runtime freshness
+    confidence_weight: 0.82
+  - term: runtime freshness checker
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.runtime-freshness-checker
+    evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+    aliases:
+      - check-runtime-freshness
+      - freshness checker
+      - runtime freshness script
+    confidence_weight: 0.74
+  - term: source projection checks
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.source-projection-checks
+    aliases:
+      - source material projection
+      - source material projection checks
+      - source projection checks before commit
+      - source material gap checks
+      - projection gap checks
+      - projection checks before commit
+      - source-to-rule work order
+    confidence_weight: 0.82
+  - term: source projection checker
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.source-projection-checker
+    evidence_path: scripts/02.rag-rulebook/check-source-projections/script.sh
+    aliases:
+      - check-source-projections
+      - source projection validator
+      - projection checker
+    confidence_weight: 0.74
+  - term: artifact retrieval profile coverage
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.artifact-profile-coverage
+    aliases:
+      - retrieval-profile coverage
+      - retrieval profile coverage command
+      - artifact profile coverage
+      - why evaluation is not finished
+      - coverage versus selector evaluation
+    confidence_weight: 0.82
+  - term: artifact retrieval profile coverage reporter
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.artifact-profile-coverage-reporter
+    evidence_path: scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/script.sh
+    aliases:
+      - report-artifact-retrieval-profile-coverage
+      - profile coverage reporter
+      - retrieval profile coverage reporter
+    confidence_weight: 0.74
+  - term: knowledge disposition gate
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.knowledge-disposition-gate
+    aliases:
+      - knowledge-bearing code change disposition
+      - knowledge-bearing code change gate
+      - code change knowledge coverage
+      - knowledge disposition recorder
+      - record knowledge disposition
+    confidence_weight: 0.82
+  - term: knowledge disposition recorder
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.knowledge-disposition-recorder
+    evidence_path: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+    aliases:
+      - record-knowledge-disposition
+      - knowledge disposition record
+      - disposition recorder
+    confidence_weight: 0.74
+  - term: context packet validation
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.context-packet-validation
+    aliases:
+      - validate context packet
+      - context packet schema
+      - context packet validation schema
+      - context packet check
+      - packet validation
+    confidence_weight: 0.82
+  - term: context packet validator
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.context-packet-validator
+    evidence_path: scripts/02.rag-rulebook/validate-context-packet/script.sh
+    aliases:
+      - validate-context-packet
+      - context packet check script
+      - packet validator
+    confidence_weight: 0.74
+  - term: recognition source lifecycle
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.recognition-source-lifecycle
+    aliases:
+      - recognition candidates vs curated sources
+      - recognition candidates versus generated sources
+      - curated generated recognition sources
+      - curated or generated recognition sources
+      - recognition candidates become curated
+      - recognition candidates become generated
+      - recognition candidate lifecycle
+      - generated recognition source lifecycle
+    confidence_weight: 0.82
+  - term: recognition candidate validator
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.recognition-candidate-validator
+    evidence_path: scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+    aliases:
+      - validate-recognition-candidates
+      - recognition candidates checker
+    confidence_weight: 0.74
+  - term: MCP server deployment corpus gap
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.mcp-corpus-gap
+    aliases:
+      - MCP server deployment corpus gaps
+      - deploy blockers
+      - MCP deploy blockers
+      - MCP server deploy gap
+      - gap.corpus.04.deploy.mcp-server-deployment
+    confidence_weight: 0.82
+  - term: MCP server deployment gap record
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.mcp-corpus-gap-record
+    evidence_path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+    aliases:
+      - mcp-server-deployment.yml
+      - mcp server gap record
+      - deploy corpus gap record
+    confidence_weight: 0.74
+  - term: selector fixture failure diagnosis
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.selector-diagnostics
+    aliases:
+      - selector fixture failure
+      - selector trace stage
+      - trace stage diagnosis
+      - retrieval selector diagnosis
+      - diagnose selector fixture
+    confidence_weight: 0.82
+  - term: retrieval selector evaluation runner
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.selector-evaluation-runner
+    evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+    aliases:
+      - evaluate-retrieval-selector-fixtures
+      - selector evaluation runner
+      - fixture evaluator
     confidence_weight: 0.74
 validation_rules:
   - Question categories choose expected evidence families; they do not select execution workflows.

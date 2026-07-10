@@ -114,6 +114,21 @@ evidence_bundles:
     family_source_paths:
       evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
       evidence.rag-retrieval.example-deprioritization: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
+  - question_category_id: question.rag.index-selection
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+    family_source_paths:
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+      evidence.rag.rulebook-index-builder: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      evidence.rag.rulebook-chunk-generator: scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
   - question_category_id: question.chat-rag.boundary
     always_source_paths:
       - .agentic/00.chat/workflows/chat-start.md
@@ -216,12 +231,15 @@ evidence_bundles:
     always_source_paths:
       - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
       - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - scripts/02.rag-rulebook/query-context/script.sh
+      - scripts/02.rag-rulebook/query-context/README.md
       - docs/02.rag-rulebook/postman/README.md
       - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
     family_source_paths:
       evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
       evidence.rag.postman-collection: docs/02.rag-rulebook/postman/README.md
       evidence.rag.hosted-auth-foundation: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+      evidence.rag.query-context-command: scripts/02.rag-rulebook/query-context/script.sh
   - question_category_id: question.rag.prompt-session-conflict
     always_source_paths:
       - .agentic/00.chat/workflows/chat-start.md
@@ -425,6 +443,88 @@ evidence_bundles:
     family_source_paths:
       evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
       evidence.rag.service-server: .agentic/02.rag-rulebook/service/server.mjs
+  - question_category_id: question.rag.runtime-freshness
+    always_source_paths:
+      - scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+      - scripts/02.rag-rulebook/check-runtime-freshness/README.md
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/build-local-runtime/README.md
+      - scripts/02.rag-rulebook/query-local-context/README.md
+    family_source_paths:
+      evidence.rag.runtime-freshness-checker: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+  - question_category_id: question.rag.source-projection-checks
+    always_source_paths:
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - scripts/02.rag-rulebook/check-source-projections/script.sh
+      - scripts/02.rag-rulebook/check-source-projections/README.md
+      - scripts/02.rag-rulebook/check-source-material-coverage/script.sh
+      - scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+    family_source_paths:
+      evidence.rag.source-projection-checker: scripts/02.rag-rulebook/check-source-projections/script.sh
+      evidence.rag-rulebook.commit-gates: scripts/02.rag-rulebook/commit-gates/script.sh
+  - question_category_id: question.rag.artifact-profile-coverage
+    always_source_paths:
+      - scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/script.sh
+      - scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/README.md
+      - .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+      - .agentic/02.rag-rulebook/evaluations/retrieval-profile-coverage/2026-07-10-llm-audit.md
+    family_source_paths:
+      evidence.rag.artifact-profile-coverage-reporter: scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/script.sh
+      evidence.rag.retrieval-selector-evaluations: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  - question_category_id: question.rag.knowledge-disposition-gate
+    always_source_paths:
+      - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+      - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+      - scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+      - scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+    family_source_paths:
+      evidence.rag.knowledge-disposition-recorder: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+      evidence.rag-rulebook.commit-gates: scripts/02.rag-rulebook/commit-gates/script.sh
+  - question_category_id: question.rag.context-packet-validation
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+    family_source_paths:
+      evidence.rag.context-packet-validator: scripts/02.rag-rulebook/validate-context-packet/script.sh
+  - question_category_id: question.rag.recognition-source-lifecycle
+    always_source_paths:
+      - .agentic/02.rag-rulebook/recognition-candidates/README.md
+      - .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+      - .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+      - scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+      - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      - scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+      - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+      - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+    family_source_paths:
+      evidence.rag.recognition-candidate-validator: scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+      evidence.rag.generate-recognition-sources: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+  - question_category_id: question.deploy.mcp-corpus-gap
+    always_source_paths:
+      - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    family_source_paths:
+      evidence.deploy.mcp-corpus-gap-record: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  - question_category_id: question.rag.selector-diagnostics
+    always_source_paths:
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/README.md
+      - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+      - .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/rule-graph.yml
+    family_source_paths:
+      evidence.rag.selector-evaluation-runner: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.
