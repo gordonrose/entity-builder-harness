@@ -29,11 +29,15 @@ import {
 } from "@kanbien/platform-observability";
 import {
   authorizePlatformPermissions,
-  corsPolicyForOrigin,
+  corsPolicyForRequestOrigin,
   createInMemoryPlatformRateLimiter,
   createPlatformSecurityHeaders,
   denyByDefaultAuthenticationResult,
+  platformRateLimitKey,
   platformRateLimitError,
+  validateAuthzMappingPermissions,
+  type PlatformAuthenticationHook,
+  type PlatformAuthenticationResult,
   type PlatformRateLimiter,
 } from "@kanbien/platform-security";
 
@@ -61,6 +65,7 @@ export type PlatformServerErrorCode =
   | "PLATFORM_SERVER_RATE_LIMITED"
   | "PLATFORM_SERVER_UNAUTHENTICATED"
   | "PLATFORM_SERVER_FORBIDDEN"
+  | "PLATFORM_SERVER_AUTHZ_MAPPING_INVALID"
   | "PLATFORM_SERVER_INVALID_REQUEST"
   | "PLATFORM_SERVER_HANDLER_FAILED";
 
@@ -86,13 +91,18 @@ export interface PlatformServerResponse {
   readonly middleware: readonly PlatformServerMiddlewareStep[];
 }
 
-export interface PlatformServerAuthResult {
-  readonly authenticated: boolean;
-  readonly permissions?: readonly Permission[];
+export interface PlatformServerAuthResult extends PlatformAuthenticationResult {
 }
 
-export interface PlatformServerAuthHook {
+export interface PlatformServerAuthHook extends PlatformAuthenticationHook {
   authenticate(request: PlatformServerRequest): Promise<PlatformServerAuthResult> | PlatformServerAuthResult;
+}
+
+export type PlatformHealthEndpointExposure = "public" | "authenticated";
+
+export interface PlatformHealthExposurePolicy {
+  readonly liveness?: PlatformHealthEndpointExposure;
+  readonly readiness?: PlatformHealthEndpointExposure;
 }
 
 export interface PlatformServerOptions {
@@ -101,6 +111,8 @@ export interface PlatformServerOptions {
   readonly auth?: PlatformServerAuthHook;
   readonly logger?: Logger;
   readonly corsOrigin?: string;
+  readonly corsAllowlist?: readonly string[];
+  readonly healthExposure?: PlatformHealthExposurePolicy;
   readonly rateLimiter?: PlatformRateLimiter;
 }
 
@@ -146,6 +158,11 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
     };
   }
 
+  const authzMapping = validateServerAuthzMapping(options.auth, mounted.value.permissions.map((permission) => permission.permission));
+  if (!authzMapping.ok) {
+    return authzMapping;
+  }
+
   const config = assertPlatformConfigValid({
     source: options.deps.config,
     schemas: mounted.value.configSchemas,
@@ -181,6 +198,8 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
         lifecycle,
         healthChecks: mounted.value.healthChecks,
         ...(options.corsOrigin === undefined ? {} : { corsOrigin: options.corsOrigin }),
+        ...(options.corsAllowlist === undefined ? {} : { corsAllowlist: options.corsAllowlist }),
+        ...(options.healthExposure === undefined ? {} : { healthExposure: options.healthExposure }),
         ...(options.auth === undefined ? {} : { auth: options.auth }),
       }),
       listen: (listenOptions = {}) => listenPlatformServer({
@@ -193,6 +212,8 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
           lifecycle,
           healthChecks: mounted.value.healthChecks,
           ...(options.corsOrigin === undefined ? {} : { corsOrigin: options.corsOrigin }),
+          ...(options.corsAllowlist === undefined ? {} : { corsAllowlist: options.corsAllowlist }),
+          ...(options.healthExposure === undefined ? {} : { healthExposure: options.healthExposure }),
           ...(options.auth === undefined ? {} : { auth: options.auth }),
         }),
         options: listenOptions,
@@ -208,6 +229,8 @@ async function handlePlatformServerRequest(input: {
   readonly deps: PlatformMountDeps;
   readonly logger: Logger;
   readonly corsOrigin?: string;
+  readonly corsAllowlist?: readonly string[];
+  readonly healthExposure?: PlatformHealthExposurePolicy;
   readonly rateLimiter: PlatformRateLimiter;
   readonly lifecycle: PlatformRuntimeLifecycleController;
   readonly healthChecks: PlatformRuntimeMountResult["healthChecks"];
@@ -215,7 +238,13 @@ async function handlePlatformServerRequest(input: {
   const middleware: PlatformServerMiddlewareStep[] = [];
   const startedAt = input.deps.clock.now();
   const requestId = requestIdFromHeaders(input.request.headers ?? {});
-  const headers = createPlatformSecurityHeaders({ cors: corsPolicyForOrigin(input.corsOrigin) });
+  const requestOrigin = firstHeaderValue(input.request.headers ?? {}, "origin");
+  const headers = createPlatformSecurityHeaders({
+    cors: corsPolicyForRequestOrigin({
+      ...(requestOrigin === undefined ? {} : { requestOrigin }),
+      allowedOrigins: input.corsAllowlist ?? (input.corsOrigin === undefined ? [] : [input.corsOrigin]),
+    }),
+  });
 
   const finish = (
     platformResponse: PlatformServerResponse,
@@ -255,7 +284,7 @@ async function handlePlatformServerRequest(input: {
   try {
     middleware.push("request-id", "request-logging", "cors", "security-headers", "rate-limit", "parse");
 
-    const rateLimit = input.rateLimiter.check("global");
+    const rateLimit = input.rateLimiter.check(platformRateLimitKey({ headers: input.request.headers ?? {} }));
     if (!rateLimit.allowed) {
       middleware.push("error-mapping", "response-logging");
       const error = platformRateLimitError(rateLimit.retryAfterMs);
@@ -267,6 +296,12 @@ async function handlePlatformServerRequest(input: {
     }
 
     if (input.request.path === "/livez") {
+      const auth = await authenticateHealthEndpoint(input.auth, input.request, input.healthExposure?.liveness ?? "public", middleware);
+      if (!auth.authenticated && (input.healthExposure?.liveness ?? "public") === "authenticated") {
+        middleware.push("error-mapping", "response-logging");
+        const error = serverError("PLATFORM_SERVER_UNAUTHENTICATED", 401, "Authentication is required.");
+        return finish(errorResponse(error, headers, middleware), "platform.livez", error);
+      }
       middleware.push("handler", "response-logging");
       const live = platformLiveness(input.deps.clock);
       recordPlatformHealthMetric(input.deps.metrics, input.deps.clock, { healthState: live.status });
@@ -274,6 +309,12 @@ async function handlePlatformServerRequest(input: {
     }
 
     if (input.request.path === "/readyz") {
+      const auth = await authenticateHealthEndpoint(input.auth, input.request, input.healthExposure?.readiness ?? "public", middleware);
+      if (!auth.authenticated && (input.healthExposure?.readiness ?? "public") === "authenticated") {
+        middleware.push("error-mapping", "response-logging");
+        const error = serverError("PLATFORM_SERVER_UNAUTHENTICATED", 401, "Authentication is required.");
+        return finish(errorResponse(error, headers, middleware), "platform.readyz", error);
+      }
       middleware.push("handler", "response-logging");
       const ready = await platformReadiness({
         lifecycleReady: input.lifecycle.isReady(),
@@ -461,6 +502,52 @@ async function authenticateRequest(auth: PlatformServerAuthHook | undefined, req
   return auth.authenticate(request);
 }
 
+async function authenticateHealthEndpoint(
+  auth: PlatformServerAuthHook | undefined,
+  request: PlatformServerRequest,
+  exposure: PlatformHealthEndpointExposure,
+  middleware: PlatformServerMiddlewareStep[],
+): Promise<PlatformServerAuthResult> {
+  if (exposure === "public") {
+    return denyByDefaultAuthenticationResult;
+  }
+
+  middleware.push("auth");
+  return authenticateRequest(auth, request);
+}
+
+function validateServerAuthzMapping(
+  auth: PlatformServerAuthHook | undefined,
+  declaredPermissions: readonly Permission[],
+): Result<void, PlatformServerError> {
+  const grantedPermissions = auth?.grantedPermissions?.() ?? [];
+  const validation = validateAuthzMappingPermissions(
+    {
+      claims: [
+        {
+          claim: "platform:authz-map",
+          equals: true,
+          permissions: grantedPermissions,
+        },
+      ],
+    },
+    declaredPermissions,
+  );
+  if (validation.ok) {
+    return { ok: true, value: undefined };
+  }
+
+  return {
+    ok: false,
+    error: {
+      code: "PLATFORM_SERVER_AUTHZ_MAPPING_INVALID",
+      defaultMessage: validation.error.defaultMessage,
+      status: 500,
+      ...(validation.error.details === undefined ? {} : { details: validation.error.details }),
+    },
+  };
+}
+
 function requestIdFromHeaders(headers: Readonly<Record<string, string | readonly string[]>>): CorrelationId {
   const value = headers["x-request-id"];
   if (typeof value === "string") {
@@ -468,6 +555,12 @@ function requestIdFromHeaders(headers: Readonly<Record<string, string | readonly
   }
 
   return correlationId(value?.[0] ?? defaultRequestId);
+}
+
+function firstHeaderValue(headers: Readonly<Record<string, string | readonly string[]>>, name: string): string | undefined {
+  const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === name.toLowerCase());
+  const value = entry?.[1];
+  return typeof value === "string" ? value : value?.[0];
 }
 
 async function nodeRequestToPlatformRequest(req: IncomingMessage): Promise<PlatformServerRequest> {

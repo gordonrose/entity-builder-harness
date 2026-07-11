@@ -356,36 +356,49 @@ Do not expose the platform shell to the public internet until a real auth/authz
 path is selected, implemented, tested, and represented in deployment readiness
 evidence.
 
-Current status: not implemented. The current shell has security headers,
-CORS/rate-limit surfaces, permission checks, and fake-auth tests, but no real
-authentication provider, token/session validation, provider-backed identity
-mapping, or target-specific public exposure policy.
+Current status: locally implemented and deployment-blocked. Cognito is selected
+as the first provider path in
+`docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md`.
+`platform/security` validates Cognito-shaped access tokens through
+provider-neutral JWT/JWKS interfaces, maps groups/scopes/claims to app-declared
+permissions, derives non-global rate-limit keys, and validates target authz
+maps against mounted app permissions. `platform/server` wires the auth hook
+from config/environment values, denies authenticated app routes by default,
+supports target-profile CORS allowlists, supports explicit `/livez` and
+`/readyz` exposure policy, and proves protected-route `401`, `403`, and
+success paths with local mounted-smoke tests. Public deployment remains blocked
+until the Kanbien staging Cognito user pool/client, CORS origins, secret/config
+source, product app permission source, and deployed protected dummy-route smoke
+proof are recorded in the target profile.
 
-This milestone may be completed with an approved provider such as AWS Cognito,
-Auth0, Clerk, a custom OIDC provider, or another governed identity provider.
-The provider choice must be recorded before production exposure. If the first
-internet-facing target intentionally uses a private network, VPN, ALB auth,
-CloudFront signed access, or another non-app auth boundary, that must be
-recorded as the target-specific exposure decision and still prove who can reach
-protected routes.
+This milestone uses AWS Cognito for the first Kanbien staging provider path.
+Future targets may choose Auth0, Clerk, a custom OIDC provider, private
+network, VPN, ALB auth, CloudFront signed access, or another governed identity
+boundary through a new target-specific decision. Any replacement must still
+prove who can reach protected routes.
 
 Acceptance:
 
 - The real authentication provider choice is recorded with the reason it fits
-  the target client/environment.
+  the target client/environment. Status: Cognito selected for Kanbien staging
+  in AWS ADR 0002.
 - `platform/security` validates tokens or sessions through provider-neutral
   interfaces and does not expose raw provider clients as ordinary app-facing
-  APIs.
+  APIs. Status: implemented with JWT/JWKS verification and Cognito issuer/JWKS
+  helpers.
 - `platform/server/src/main.ts` wires a production auth hook from config,
   target profile, or provider adapter; unauthenticated app routes remain
-  denied by default.
+  denied by default. Status: implemented with `PLATFORM_AUTH_PROVIDER=cognito`
+  and Cognito/JWT environment inputs.
 - Claims, roles, groups, scopes, or entitlements map deterministically into
-  platform `Permission` values.
+  platform `Permission` values. Status: implemented for Cognito groups,
+  scopes, and claims.
 - Permission vocabularies are app-owned. Target-specific authz maps may grant
   only permissions declared by the apps included in the product target, and
   startup/deploy validation must fail on unknown permissions.
 - The dummy app proves protected-route `401`, `403`, and success paths through
-  local tests and deployment smoke expectations.
+  local tests and deployment smoke expectations. Status: local mounted-smoke
+  tests pass; deployed smoke remains a readiness blocker until a target exists.
 - Public and private route classification is explicit. Health endpoint exposure
   is decided for `/livez` and `/readyz` instead of assumed.
 - CORS allowlists come from deployment target profiles or equivalent

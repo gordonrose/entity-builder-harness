@@ -74,11 +74,40 @@ config:
     - PORT
   optional_environment:
     - PLATFORM_CORS_ORIGIN
+    - PLATFORM_CORS_ALLOWLIST
+    - PLATFORM_AUTH_PROVIDER
+    - PLATFORM_AUTH_COGNITO_REGION
+    - PLATFORM_AUTH_COGNITO_USER_POOL_ID
+    - PLATFORM_AUTH_COGNITO_APP_CLIENT_ID
+    - PLATFORM_AUTHZ_GROUP_PERMISSIONS
+    - PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+    - PLATFORM_AUTHZ_CLAIM_PERMISSIONS
+    - PLATFORM_HEALTH_LIVEZ_EXPOSURE
+    - PLATFORM_HEALTH_READYZ_EXPOSURE
     - PLATFORM_SOURCE_COMMIT_SHA
+auth:
+  first_provider: cognito
+  provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  token_validation: jwt-jwks
+  token_use: access
+  provider_neutral_boundary: platform/security
+  server_wiring: platform/server/src/main.ts
+  route_default: authenticated-deny-by-default
+  permission_mapping:
+    source: target-profile-env
+    validates_against_app_declared_permissions: true
+  health_exposure_default:
+    livez: public
+    readyz: authenticated-when-auth-provider-enabled
+  cors_source: target-profile-env
+  rate_limit_keying: principal-token-or-forwarded-ip
 secrets:
   local_required: []
-  production_required: []
+  production_required:
+    - target-specific-auth-config-or-secret-source
   notes:
+    - Cognito user pool and app client identifiers are config, not secret values.
+    - Confidential auth material, if introduced later, must come from the target secret store and must not be committed.
     - Secret store and concrete secret references are deferred until AWS deployment planning.
 queues:
   local: in-memory test queue only

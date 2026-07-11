@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  version: 6
+  version: 7
   status: active
   layer: 01.harness
   domain: architecture
@@ -257,6 +257,48 @@ Not allowed:
 - worker polling loops, retry/dead-letter mechanics, or queue provider
   semantics that belong in `platform/workers/**` or provider adapters;
 - product-specific route meaning or resource authorization decisions.
+
+### `platform/security/**`
+
+Purpose: own provider-neutral security mechanics for the platform runtime while
+keeping app code free of identity-provider and deployment-target details.
+
+Typical files:
+
+- `index.ts` or security modules for authentication result types, JWT/session
+  validators, token parsing, authz mapping validation, CORS policy helpers,
+  rate-limit key derivation, and standard security errors;
+- provider-shaped helpers such as Cognito issuer/JWKS URI builders when they
+  remain hidden behind provider-neutral interfaces;
+- tests that prove missing credentials, invalid tokens, valid tokens,
+  permission mapping, CORS allowlists, rate-limit keying, and unknown
+  target-granted permissions.
+
+Allowed:
+
+- validating JWT signatures against JWKS, issuer, token use, expiry, and app
+  client claims;
+- mapping provider groups, scopes, claims, roles, or entitlements into
+  app-declared `Permission` values;
+- validating target authz maps against permissions declared by mounted apps;
+- deriving non-secret rate-limit keys from principal identity, token/session
+  hash, trusted forwarded IP, or an approved local fallback;
+- deciding CORS allowlist behavior from target profile or equivalent
+  environment config.
+
+Not allowed:
+
+- making provider groups, scopes, or claims the source of truth for what app
+  permissions exist;
+- exposing raw Cognito, Auth0, Clerk, OIDC, cloud SDK, or provider clients as
+  ordinary app-facing APIs;
+- committing token values, client secrets, private keys, refresh tokens,
+  credentials, or connection strings in source, docs, tests, logs, fixtures, or
+  generated packets;
+- placing product-specific business authorization, resource ownership,
+  approval workflow, quota, or feature-access decisions in platform security;
+- letting apps parse JWTs, own global CORS policy, or choose platform-wide
+  rate-limit behavior.
 
 ### `platform/workers/**`
 

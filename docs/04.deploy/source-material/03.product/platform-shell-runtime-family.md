@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.source-material.03-product.platform-shell-runtime-family
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -98,11 +98,40 @@ A target profile should name:
 - source provider, repository, ref, commit, workflow path, and workflow run id;
 - cloud provider and account, subscription, tenant, role/profile, or region;
 - runtime provider, runtime family, and selected adapter path;
+- auth provider, token validation mode, issuer/JWKS/app-client config,
+  target authz mapping source, route exposure policy, health exposure policy,
+  CORS allowlist, rate-limit keying, and secret/config source;
 - target-specific blockers, readiness proof, smoke proof, and rollback proof.
 
 Adding a future client, repository, AWS account, Azure subscription, or runtime
 family should require a new target profile and, where necessary, a governed
 provider adapter. It should not require changing ordinary app feature code.
+
+## Auth Provider Target Profile
+
+The first product platform shell auth provider path is Amazon Cognito, recorded
+in `docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md`.
+
+Cognito is a target auth provider choice, not an app contract. Apps still
+declare app-owned permissions through app mounts. Target authz mappings may
+grant only permissions declared by apps included in the product target.
+
+For Kanbien staging, the target profile must record:
+
+- `auth.provider: cognito`;
+- Cognito user-pool issuer, JWKS URI, app client id, and `token_use: access`;
+- local token-validation proof through `platform/security`;
+- the source of group, scope, or claim to permission mappings;
+- validation that mapped permissions are declared by mounted apps;
+- protected dummy-route proof for `401`, `403`, and success paths;
+- public/private route classification and `/livez`/`/readyz` exposure policy;
+- CORS allowlist source and concrete origins before public exposure;
+- rate-limit keying based on principal, token/session identity, trusted
+  forwarded IP, or an approved fallback;
+- secret/config source without committing secret values.
+
+Readiness remains blocked until those values and deployment smoke proofs are
+present for the target.
 
 ## Blockers Before AWS Mutation
 
@@ -121,6 +150,9 @@ shell must record:
 - ECR repository and publish workflow or governed equivalent;
 - secret store, queue resources, storage resources, and environment values or
   explicit deferrals;
+- auth provider, Cognito issuer/JWKS/app-client values, target authz mapping
+  source, CORS allowlist, rate-limit keying, health exposure policy, and
+  secret/config source;
 - deployment circuit breaker, rollback target, rollback authority, alarms,
   cost limit, owner, and escalation path;
 - source commit, workflow run identity, SBOM or accepted risk record,

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 6
+#   version: 7
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 9
+version: 10
 status: active
 
 source_derivation:
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-      sha256: dd85783cf132b9a26c0f57da1b89b4cade6e011155b1d22c4a231be011559c29
+      sha256: f3b564ef3257a91398fe2c75aaa777b57f3217e36b095e42ee20672a5c7344fc
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -187,12 +187,14 @@ rules:
     summary: >
       Platform runtime work should be explainable through a small set of
       surfaces: contracts, testing, runtime mechanics, server process, worker
-      process, smoke app, and deployment-facing manifests/config.
+      process, security mechanisms, smoke app, and deployment-facing
+      manifests/config.
     must:
       - "Treat platform/contracts/** as the app-facing contract layer for app mounts, route registration, job registration, health registration, request context, job context, feature flags, config access, and lifecycle hooks."
       - "Treat platform/testing/** as the test-helper layer for fake registries, fake request and job contexts, fake loggers, fake queues, fake health checks, and mount-test helpers."
       - "Treat platform/runtime/** as the provider-neutral mechanics layer for registry validation, lifecycle orchestration, resource startup and shutdown, context factories, readiness state, error mapping, cancellation, and graceful shutdown sequencing."
       - "Treat platform/server/** as the HTTP/API process layer for server startup, middleware order, API versioning, health endpoints, request logging, auth hooks, validation, error responses, route adaptation, and shutdown wiring."
+      - "Treat platform/security/** as the security-mechanism layer for provider-neutral token/session validation, auth result types, permission mapping validation, CORS policy helpers, rate-limit key derivation, and standard security errors."
       - "Treat platform/workers/** as the background job process layer for job polling or receiving, payload validation, retry and backoff, dead-letter behavior, idempotency hooks, job logging and metrics, and graceful shutdown."
       - "Treat platform/adapters/** as the provider-specific translation layer, organized as platform/adapters/<provider>/<adapter-type>/<service-name>/."
       - "Use adapter paths such as platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/runtime/lambda, platform/adapters/aws/queue/sqs, platform/adapters/aws/storage/s3, platform/adapters/aws/secrets/secrets-manager, and platform/adapters/aws/observability/cloudwatch when those adapters are implemented."
@@ -316,6 +318,9 @@ rules:
     must:
       - "Authenticate requests, parse credentials, create principals, enforce route-level permissions, and attach identity to context."
       - "Enforce permissions declared by app mounts, and validate target authz mappings against the permissions declared by apps included in the product target."
+      - "Validate JWT/session issuer, signature, expiry, token use, and app/client identity before trusting provider claims."
+      - "Map provider groups, scopes, claims, roles, or entitlements into app-declared Permission values without making provider terms the permission source of truth."
+      - "Use target-profile CORS allowlists and rate-limit keying based on principal, token/session identity, trusted forwarded IP, or an approved fallback."
       - "Keep resource-specific business authorization inside the owning app after resource loading."
       - "Own structured log format, request logging, common telemetry hooks, and safe error mapping."
       - "Expose standard health endpoints such as /livez and /readyz, and aggregate app-provided readiness checks."
@@ -323,6 +328,9 @@ rules:
     must_not:
       - "Do not put CRM-specific permission logic, business quotas, feature-specific analytics, expensive business audits, or domain-specific health decisions in platform."
       - "Do not make target authz mappings the source of truth for what permissions exist; mappings may grant only app-declared permissions."
+      - "Do not expose raw identity-provider clients or cloud SDKs as ordinary app-facing APIs."
+      - "Do not commit token values, client secrets, private keys, refresh tokens, credentials, or connection strings."
+      - "Do not use one global in-memory bucket as the production rate-limit identity."
       - "Do not let apps create their own logging frameworks for normal platform-managed runtime behavior."
       - "Do not use liveness checks to test external dependencies that belong in readiness."
     agent_guidance: >

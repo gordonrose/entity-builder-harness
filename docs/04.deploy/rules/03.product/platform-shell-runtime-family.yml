@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.rules.03-product.platform-shell-runtime-family
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -20,7 +20,7 @@
 #     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
 id: deploy.03-product.platform-shell-runtime-family
 title: Platform shell runtime family and target profile rules
-version: 2
+version: 3
 status: active
 corpus_id: corpus.04.deploy
 owner_layer: 04.deploy
@@ -36,7 +36,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
   source_material:
     - path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
-      sha256: 671f14b9ab7bece71b53733ca86e194d7a7c6b83b8c96d23742b8c8fd3811482
+      sha256: 4320cc0f9f254d3a5b95d488801eb5e108749763d192b1a360659bb5e60b35a3
 
 description: >
   Product platform shell deployment planning selects ECS Fargate as the first
@@ -136,12 +136,41 @@ rules:
       Use the mental model: apps declare needs, platform adapters translate
       providers, and infra provisions resources.
 
+  - id: platform-shell-runtime-family.records-auth-readiness
+    title: Auth readiness is target-profile evidence
+    severity: error
+    summary: >
+      Public platform shell exposure requires a recorded auth provider,
+      token-validation path, authz mapping source, route exposure policy, CORS
+      allowlist, rate-limit keying, and secret/config source in the target
+      profile.
+    must:
+      - "Use Cognito as the first Kanbien staging auth provider path unless a later governed ADR replaces it."
+      - "Record Cognito issuer, JWKS URI, app client id, and access-token validation mode before public exposure."
+      - "Record target authz mapping from groups, scopes, or claims to app-declared permissions."
+      - "Validate target-granted permissions against permissions declared by apps included in the product target."
+      - "Record protected dummy-route 401, 403, and success proof before deployment readiness."
+      - "Record explicit /livez and /readyz exposure policy, target-profile CORS allowlist, rate-limit keying, and secret/config source."
+    must_not:
+      - "Do not expose the platform shell publicly while auth provider, token validation, permission mapping, CORS, rate-limit keying, health exposure, or secret/config source are pending."
+      - "Do not commit Cognito client secrets, tokens, private keys, refresh tokens, credentials, or connection strings."
+      - "Do not let Cognito groups, scopes, or claims define app permission vocabulary."
+      - "Do not hardcode target authz maps or CORS origins in ordinary app feature code."
+    required_checks:
+      - "Verify deploy-readiness manifests include an auth section with provider, token_validation, permission_mapping, route_exposure, health_exposure, cors, rate_limiting, and secrets fields."
+      - "Run scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh for the target profile before treating readiness as passed."
+    agent_guidance: >
+      Treat Cognito as the first target identity provider, not as an app
+      contract. Apps own permissions; target profiles map real identities to
+      those permissions.
+
 source_refs:
   - doc: "platform-shell-runtime-family.md"
     sections:
       - "Decision"
       - "Boundary"
       - "Deployment Target Profiles"
+      - "Auth Provider Target Profile"
       - "Blockers Before AWS Mutation"
       - "Non-Goals"
 
@@ -150,3 +179,4 @@ success_criteria:
   - "The rule distinguishes planning from AWS execution approval."
   - "The rule requires client/environment target profiles for deploy-readiness proof."
   - "The rule keeps ECS Fargate out of ordinary app code and provider-neutral platform runtime contracts."
+  - "The rule blocks public exposure until auth readiness evidence is present in the target profile."

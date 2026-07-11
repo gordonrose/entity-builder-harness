@@ -181,6 +181,13 @@ REQUIRED_BLOCKED_PATHS = [
     "proof.aws_read_only_inspection",
     "proof.deployment_smoke",
     "proof.rollback_proof",
+    "auth.token_validation.issuer",
+    "auth.token_validation.jwks_uri",
+    "auth.token_validation.app_client_id",
+    "auth.permission_mapping.declared_app_permissions_source",
+    "auth.route_exposure.protected_dummy_route.deployment_smoke",
+    "auth.cors.allowed_origins",
+    "auth.secrets.source",
 ]
 
 
@@ -401,6 +408,36 @@ def validate(data: dict[str, Any]) -> None:
     if get(data, "runtime.server.container_port") != 3000:
         block("runtime.server.container_port", "container port must match the image blueprint", "Set container_port to 3000.")
 
+    require_string(data, "auth.provider")
+    if get(data, "auth.provider") != "cognito":
+        block("auth.provider", "Milestone 10a selected Cognito for the first platform shell auth path", "Use `auth.provider: cognito` or update the governed auth provider ADR first.")
+    require_file(data, "auth.provider_decision")
+    if get(data, "auth.token_validation.mode") != "jwt-jwks":
+        block("auth.token_validation.mode", "auth token validation mode must be jwt-jwks", "Use provider-neutral JWT/JWKS validation through platform/security.")
+    if get(data, "auth.token_validation.token_use") != "access":
+        block("auth.token_validation.token_use", "Cognito API route auth must validate access tokens", "Set token_use to `access` for platform API route authorization.")
+    require_bool_ready(data, "auth.token_validation.local_tests_passed")
+    if get(data, "auth.permission_mapping.source") != "target-profile":
+        block("auth.permission_mapping.source", "authz mappings must come from the target profile or equivalent environment config", "Use target-profile authz mapping for Cognito groups, scopes, or claims.")
+    require_bool_ready(data, "auth.permission_mapping.validates_against_app_permissions")
+    if get(data, "auth.route_exposure.app_routes_default") != "authenticated":
+        block("auth.route_exposure.app_routes_default", "internet-facing app routes must default to authenticated", "Keep app routes denied by default unless explicitly public.")
+    require_bool_ready(data, "auth.route_exposure.unauthenticated_app_routes_denied_by_default")
+    require_bool_ready(data, "auth.route_exposure.protected_dummy_route.local_401_test")
+    require_bool_ready(data, "auth.route_exposure.protected_dummy_route.local_403_test")
+    require_bool_ready(data, "auth.route_exposure.protected_dummy_route.local_success_test")
+    if get(data, "auth.health_exposure.livez") not in {"public", "authenticated"}:
+        block("auth.health_exposure.livez", "liveness exposure must be explicit", "Set liveness exposure to public or authenticated.")
+    if get(data, "auth.health_exposure.readyz") not in {"public", "authenticated"}:
+        block("auth.health_exposure.readyz", "readiness exposure must be explicit", "Set readiness exposure to public or authenticated.")
+    if get(data, "auth.cors.allowlist_source") != "target-profile-env":
+        block("auth.cors.allowlist_source", "CORS allowlist must come from target profile or equivalent environment config", "Set CORS allowlist source to target-profile-env.")
+    if get(data, "auth.rate_limiting.keying") != "principal-token-or-forwarded-ip":
+        block("auth.rate_limiting.keying", "rate limits must not use one global in-memory bucket", "Use principal, token/session identity, trusted forwarded IP, or an approved fallback.")
+    require_bool_ready(data, "auth.rate_limiting.local_tests_passed")
+    if get(data, "auth.secrets.committed_secret_values") is not False:
+        block("auth.secrets.committed_secret_values", "secret values must not be committed", "Keep Cognito secrets and provider credentials in the target secret store or environment.")
+
     blocked_paths = blocker_paths(data)
     if status == "blocked":
         if not blocked_paths:
@@ -439,6 +476,13 @@ def validate(data: dict[str, Any]) -> None:
             "github.oidc.workflow_has_id_token_permission",
         ):
             require_bool_ready(data, path)
+        require_string(data, "auth.token_validation.issuer", pattern=r"https://cognito-idp\.[a-z]{2}-[a-z]+-[0-9]\.amazonaws\.com/[a-z]{2}-[a-z]+-[0-9]_[A-Za-z0-9]+")
+        require_string(data, "auth.token_validation.jwks_uri", pattern=r"https://cognito-idp\.[a-z]{2}-[a-z]+-[0-9]\.amazonaws\.com/[a-z]{2}-[a-z]+-[0-9]_[A-Za-z0-9]+/\.well-known/jwks\.json")
+        require_string(data, "auth.token_validation.app_client_id")
+        require_string(data, "auth.permission_mapping.declared_app_permissions_source")
+        if is_pending(get(data, "auth.cors.allowed_origins")):
+            block("auth.cors.allowed_origins", "ready public targets need a concrete CORS allowlist", "Record one or more allowed origins before public deployment.")
+        require_string(data, "auth.secrets.source")
     else:
         if get(data, "proof.image_smoke") != "passed-local":
             warn("proof.image_smoke", "local image smoke proof is not recorded as passed-local")

@@ -107,6 +107,48 @@ runtime:
     task_definition: arn:aws:ecs:eu-west-1:123456789012:task-definition/platform-shell-worker:1
     service: arn:aws:ecs:eu-west-1:123456789012:service/platform/platform-shell-worker
     queue_adapter: platform/adapters/aws/queue/sqs/
+auth:
+  provider: cognito
+  provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  token_validation:
+    mode: jwt-jwks
+    issuer: https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_EXAMPLE
+    jwks_uri: https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_EXAMPLE/.well-known/jwks.json
+    app_client_id: 1example23456789
+    token_use: access
+    validator: platform/security.createCognitoAccessTokenVerifier
+    local_tests_passed: true
+  permission_mapping:
+    source: target-profile
+    group_permissions_env: PLATFORM_AUTHZ_GROUP_PERMISSIONS
+    scope_permissions_env: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+    claim_permissions_env: PLATFORM_AUTHZ_CLAIM_PERMISSIONS
+    validates_against_app_permissions: true
+    declared_app_permissions_source: products/kanbien-platform/product.manifest.ts
+  route_exposure:
+    app_routes_default: authenticated
+    unauthenticated_app_routes_denied_by_default: true
+    protected_dummy_route:
+      local_401_test: true
+      local_403_test: true
+      local_success_test: true
+      deployment_smoke: passed
+  health_exposure:
+    livez: public
+    readyz: authenticated
+    reason: Liveness is minimal; readiness is authenticated for internet-facing targets.
+  cors:
+    allowlist_source: target-profile-env
+    env: PLATFORM_CORS_ALLOWLIST
+    allowed_origins:
+      - https://staging.kanbien.example
+  rate_limiting:
+    keying: principal-token-or-forwarded-ip
+    fallback: anonymous-local-only
+    local_tests_passed: true
+  secrets:
+    source: aws-secrets-manager
+    committed_secret_values: false
 cloud:
   provider: aws
   account_id: "123456789012"
@@ -258,6 +300,8 @@ assert "gap.deploy.platform-shell-readiness.github-source-policy" in gap_ids
 assert "gap.deploy.platform-shell-readiness.github-commit-sha" in gap_ids
 assert "gap.deploy.platform-shell-readiness-artifacts-source-commit-sha" not in gap_ids
 assert "gap.deploy.platform-shell-readiness.artifacts-source-commit-sha" in gap_ids
+assert "gap.deploy.platform-shell-readiness.auth-provider" in gap_ids
+assert "gap.deploy.platform-shell-readiness.auth-token-validation-local-tests-passed" in gap_ids
 PY
 
 echo "Platform shell deploy-readiness verification smoke test passed."

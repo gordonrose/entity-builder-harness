@@ -9,6 +9,7 @@ import { createPlatformTestMountDeps } from "@kanbien/platform-testing";
 import {
   createPlatformServerShell,
   type PlatformServerAuthHook,
+  type PlatformHealthExposurePolicy,
   type PlatformServerMiddlewareStep,
   type PlatformServerResponse,
 } from "../src/index";
@@ -21,8 +22,11 @@ if (!appId.ok || !routeName.ok) {
 
 const permission = "smoke:read" as Permission;
 const auth: PlatformServerAuthHook = {
-  authenticate: () => ({ authenticated: true, permissions: [permission] }),
+  grantedPermissions: () => [permission],
+  authenticate: () => ({ authenticated: true, permissions: [permission], subject: "subject", rateLimitKey: "principal:subject" }),
 };
+const healthExposure: PlatformHealthExposurePolicy = { liveness: "public", readiness: "authenticated" };
+void healthExposure;
 const app = definePlatformApp({
   id: appId.value,
   name: "Smoke",
@@ -40,7 +44,13 @@ const app = definePlatformApp({
   },
 });
 
-const shell = createPlatformServerShell({ apps: [app], deps: createPlatformTestMountDeps(), auth });
+const shell = createPlatformServerShell({
+  apps: [app],
+  deps: createPlatformTestMountDeps(),
+  auth,
+  corsAllowlist: ["https://app.example.test"],
+  healthExposure,
+});
 void shell;
 
 const response: PlatformServerResponse = {

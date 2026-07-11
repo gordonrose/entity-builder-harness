@@ -91,6 +91,15 @@ let's lock the platform app integration module decision in
   dev/integration target for the Kanbien Platform product, not the product
   itself.
 
+
+- Decision: Use Amazon Cognito as the first auth provider path for Kanbien
+  staging platform shell readiness.
+  Rationale: The first deployment planning target is AWS ECS Fargate, and
+  Cognito gives the staging shell a real JWT/JWKS validation path while
+  keeping app code provider-neutral behind `platform/security`. Public
+  exposure remains blocked until concrete Cognito target values, CORS origins,
+  secret/config source, and deployed protected-route smoke proof are recorded.
+
 ## Context Hygiene
 
 - Built local RAG/rulebook runtime cache for this worktree, queried the app
@@ -205,6 +214,21 @@ let's lock the platform app integration module decision in
   product composition target, products compose apps, apps own permission
   vocabulary, and `kanbien/staging` remains an environment/deployment target
   rather than the product.
+
+
+- Summary: Implemented Milestone 10a Cognito auth readiness locally while
+  keeping public deployment blocked.
+  Durable evidence: Added AWS ADR 0002 for Cognito as the first auth provider
+  path. Updated `platform/security` with Cognito-shaped JWT/JWKS validation,
+  group/scope/claim permission mapping, authz-map validation, CORS allowlist
+  helpers, and non-global rate-limit key derivation. Updated
+  `platform/server` and `platform/server/src/main.ts` so Cognito auth can be
+  wired from environment/target config, unknown target-granted permissions
+  fail startup, health exposure is explicit, and protected-route local tests
+  prove `401`, `403`, and success paths. Updated the Kanbien staging
+  deploy-readiness manifest and verifier so auth provider, token validation,
+  permission mapping, CORS, rate-limit keying, health exposure, secret/config
+  source, and remaining auth blockers are explicit.
 
 ## Activity Log
 
@@ -463,6 +487,38 @@ derivation reports, local RAG runtime build, runtime freshness,
 `git diff --check`, and a retrieval smoke query selecting
 `apps.products-compose-apps` as the rank 1 chunk.
 
+### 2026-07-11T14:47:12Z - Cognito auth readiness
+
+Summary: Implemented Milestone 10a locally with Cognito selected as the first
+auth provider path.
+
+Durable evidence: Added
+`docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md`.
+Updated `platform/security/src/index.ts`,
+`platform/security/tests/platform-security-runtime.test.ts`,
+`platform/security/tests/platform-security-types.test.ts`,
+`platform/security/tests/platform-security-boundaries.test.mjs`,
+`platform/server/src/index.ts`, `platform/server/src/main.ts`,
+`platform/server/tests/platform-server-runtime.test.ts`,
+`platform/server/tests/platform-server-types.test.ts`,
+`infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml`,
+`infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml`,
+`scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh`, and
+related architecture/source/rule docs. Local proof passed:
+`npm run platform:security:check`, `npm run platform:server:check`,
+`npm run platform:server:image-build`,
+`bash scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh`,
+and the real Kanbien staging readiness manifest in blocked planning mode with
+zero hidden blocking gaps. Additional validation passed: artifact metadata
+headers, generated recognition-source freshness, YAML syntax, source
+projections, source material coverage, derivation reports, container boundary
+validation, local RAG runtime build/freshness, platform shell image smoke, and
+a retrieval smoke query selecting
+`platform-shell-runtime-family.records-auth-readiness` as the rank 1 chunk.
+Public deployment remains blocked until real Cognito user-pool/app-client
+values, CORS origins, secret/config source, product app permission source, and
+deployed protected-route smoke proof are recorded.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -506,7 +562,8 @@ ADR paths:
 - docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
 - docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
 - docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
-Reason: Durable architecture decisions now cover app mount boundaries, purpose/authority-aware RAG retrieval, provider/type/service adapter layout, client/environment deployment target profiles, formal commit-readiness gating before task commits, products as the app composition boundary, and ECS Fargate as the first AWS planning runtime family. The new auth-readiness blocker and app-owned permission vocabulary rule are captured in the runtime plan/source/rules; provider-choice ADR is deferred until a provider path is selected.
+- docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+Reason: Durable architecture decisions now cover app mount boundaries, purpose/authority-aware RAG retrieval, provider/type/service adapter layout, client/environment deployment target profiles, formal commit-readiness gating before task commits, products as the app composition boundary, ECS Fargate as the first AWS planning runtime family, and Cognito as the first auth provider path. The app-owned permission vocabulary rule is captured in the runtime plan/source/rules.
 
 ## Session Metrics
 

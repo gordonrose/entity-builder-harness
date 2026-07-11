@@ -91,6 +91,47 @@ runtime:
     task_definition: pending
     service: pending
     queue_adapter: platform/adapters/aws/queue/sqs/
+auth:
+  provider: cognito
+  provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  token_validation:
+    mode: jwt-jwks
+    issuer: pending
+    jwks_uri: pending
+    app_client_id: pending
+    token_use: access
+    validator: platform/security.createCognitoAccessTokenVerifier
+    local_tests_passed: true
+  permission_mapping:
+    source: target-profile
+    group_permissions_env: PLATFORM_AUTHZ_GROUP_PERMISSIONS
+    scope_permissions_env: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+    claim_permissions_env: PLATFORM_AUTHZ_CLAIM_PERMISSIONS
+    validates_against_app_permissions: true
+    declared_app_permissions_source: pending
+  route_exposure:
+    app_routes_default: authenticated
+    unauthenticated_app_routes_denied_by_default: true
+    protected_dummy_route:
+      local_401_test: true
+      local_403_test: true
+      local_success_test: true
+      deployment_smoke: blocked
+  health_exposure:
+    livez: public
+    readyz: authenticated
+    reason: Liveness returns minimal status; readiness is protected for internet-facing targets unless a private health-check exception is recorded.
+  cors:
+    allowlist_source: target-profile-env
+    env: PLATFORM_CORS_ALLOWLIST
+    allowed_origins: []
+  rate_limiting:
+    keying: principal-token-or-forwarded-ip
+    fallback: anonymous-local-only
+    local_tests_passed: true
+  secrets:
+    source: pending
+    committed_secret_values: false
 cloud:
   provider: aws
   account_id: pending
@@ -174,3 +215,28 @@ blockers:
     path: proof
     reason: Deployment smoke, AWS read-only inspection, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require a selected AWS target.
     resolution: Complete target inspection, deploy through the governed workflow, verify health and dummy app behavior, and record rollback proof.
+  - id: platform-shell-readiness.auth-provider-target
+    severity: blocking
+    path: auth.token_validation
+    reason: Cognito is selected as the first auth provider path, but the Kanbien staging user pool issuer, JWKS URI, and app client id are not selected.
+    resolution: Create or select the Kanbien staging Cognito user pool and app client through the governed AWS workflow, then record issuer, JWKS URI, and app client id.
+  - id: platform-shell-readiness.authz-map-source
+    severity: blocking
+    path: auth.permission_mapping.declared_app_permissions_source
+    reason: Target authz mapping validation needs a product/app permission source after the smoke app or product manifest exists.
+    resolution: Record the product manifest or generated app metadata that declares the permissions granted by the Kanbien staging Cognito authz map.
+  - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
+    severity: blocking
+    path: auth.route_exposure.protected_dummy_route.deployment_smoke
+    reason: Local server tests prove 401, 403, and success paths, but deployed protected dummy-route smoke proof does not exist yet.
+    resolution: After the smoke app and staging target are deployed, record deployment smoke proof for unauthenticated, forbidden, and authorized requests.
+  - id: platform-shell-readiness.cors-allowlist
+    severity: blocking
+    path: auth.cors.allowed_origins
+    reason: Public browser access needs explicit allowed origins from the Kanbien staging target profile.
+    resolution: Record the staging UI/API origins that may call the platform shell before public exposure.
+  - id: platform-shell-readiness.auth-secret-source
+    severity: blocking
+    path: auth.secrets.source
+    reason: Cognito/provider config and any future confidential client material need a target secret/config source before public deployment.
+    resolution: Record the AWS secret/config source and keep secret values out of source, logs, fixtures, docs, and generated packets.

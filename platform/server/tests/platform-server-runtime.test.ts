@@ -55,10 +55,18 @@ async function main(): Promise<void> {
     apps: [app],
     deps,
     auth: {
-      authenticate: (request) => request.headers?.authorization === "Bearer ok"
-        ? { authenticated: true, permissions: [permission] }
-        : { authenticated: false, permissions: [] },
+      grantedPermissions: () => [permission],
+      authenticate: (request) => {
+        if (request.headers?.authorization === "Bearer ok") {
+          return { authenticated: true, permissions: [permission], subject: "subject-ok", rateLimitKey: "principal:subject-ok" };
+        }
+        if (request.headers?.authorization === "Bearer no-permission") {
+          return { authenticated: true, permissions: [], subject: "subject-no-permission", rateLimitKey: "principal:subject-no-permission" };
+        }
+        return { authenticated: false, permissions: [] };
+      },
     },
+    corsAllowlist: ["https://app.example.test"],
   });
   equal(shell.ok, true);
   if (!shell.ok) {
@@ -71,6 +79,18 @@ async function main(): Promise<void> {
   equal(live.headers["x-content-type-options"], "nosniff");
   equal(live.headers["content-security-policy"], "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
   equal(live.headers["access-control-allow-origin"], undefined);
+  const corsAllowed = await shell.value.handle({
+    method: "GET",
+    path: "/livez",
+    headers: { origin: "https://app.example.test" },
+  });
+  equal(corsAllowed.headers["access-control-allow-origin"], "https://app.example.test");
+  const corsDenied = await shell.value.handle({
+    method: "GET",
+    path: "/livez",
+    headers: { origin: "https://evil.example.test" },
+  });
+  equal(corsDenied.headers["access-control-allow-origin"], undefined);
 
   const notReady = await shell.value.handle({ method: "GET", path: "/readyz" });
   equal(notReady.status, 503);
@@ -95,6 +115,15 @@ async function main(): Promise<void> {
   });
   equal(invalid.status, 400);
   equal((invalid.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_INVALID_REQUEST");
+
+  const forbidden = await shell.value.handle({
+    method: "POST",
+    path: "/echo/123",
+    headers: { authorization: "Bearer no-permission", "x-request-id": "request-123" },
+    body: { message: "hello" },
+  });
+  equal(forbidden.status, 403);
+  equal((forbidden.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
 
   const ok = await shell.value.handle({
     method: "POST",
@@ -126,6 +155,53 @@ async function main(): Promise<void> {
   equal(metrics.points().some((point) => point.name === "platform.server.request"), true);
   equal(logger.records().some((record) => record.message === "platform.server.request"), true);
 
+  const rateLimitKeys: string[] = [];
+  const keyedRateLimitShell = await createPlatformServerShell({
+    apps: [app],
+    deps: createPlatformTestMountDeps(),
+    rateLimiter: {
+      check: (key) => {
+        rateLimitKeys.push(key);
+        return { allowed: true };
+      },
+    },
+  });
+  equal(keyedRateLimitShell.ok, true);
+  if (!keyedRateLimitShell.ok) {
+    throw new Error("Expected keyed rate-limit shell to mount.");
+  }
+  await keyedRateLimitShell.value.handle({
+    method: "GET",
+    path: "/livez",
+    headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" },
+  });
+  equal(rateLimitKeys[0], "ip:203.0.113.10");
+
+  const privateHealthShell = await createPlatformServerShell({
+    apps: [app],
+    deps: createPlatformTestMountDeps(),
+    auth: {
+      grantedPermissions: () => [permission],
+      authenticate: (request) => request.headers?.authorization === "Bearer ok"
+        ? { authenticated: true, permissions: [permission], subject: "subject-ok", rateLimitKey: "principal:subject-ok" }
+        : { authenticated: false, permissions: [] },
+    },
+    healthExposure: { liveness: "public", readiness: "authenticated" },
+  });
+  equal(privateHealthShell.ok, true);
+  if (!privateHealthShell.ok) {
+    throw new Error("Expected private-health shell to mount.");
+  }
+  const privateReadyDenied = await privateHealthShell.value.handle({ method: "GET", path: "/readyz" });
+  equal(privateReadyDenied.status, 401);
+  await privateHealthShell.value.lifecycle.start();
+  const privateReadyOk = await privateHealthShell.value.handle({
+    method: "GET",
+    path: "/readyz",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(privateReadyOk.status, 200);
+
   const rateLimitedShell = await createPlatformServerShell({
     apps: [app],
     deps: createPlatformTestMountDeps(),
@@ -138,6 +214,19 @@ async function main(): Promise<void> {
   const limited = await rateLimitedShell.value.handle({ method: "GET", path: "/livez" });
   equal(limited.status, 429);
   equal((limited.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_RATE_LIMITED");
+
+  const invalidAuthzShell = await createPlatformServerShell({
+    apps: [app],
+    deps: createPlatformTestMountDeps(),
+    auth: {
+      grantedPermissions: () => ["other:read" as Permission],
+      authenticate: () => ({ authenticated: true, permissions: [] }),
+    },
+  });
+  equal(invalidAuthzShell.ok, false);
+  if (!invalidAuthzShell.ok) {
+    equal(invalidAuthzShell.error.code, "PLATFORM_SERVER_AUTHZ_MAPPING_INVALID");
+  }
 
   const invalidConfigSchema: ConfigSchema<never> = {
     parse: () => ({
