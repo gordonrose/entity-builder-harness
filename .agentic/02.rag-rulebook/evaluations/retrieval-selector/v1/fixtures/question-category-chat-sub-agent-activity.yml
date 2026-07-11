@@ -1,0 +1,66 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-sub-agent-activity
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove sub-agent activity and direct-fallback questions retrieve session-log recording evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-chat-sub-agent-activity
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove delegation and direct-fallback audit questions select recorder, startup, and closeout evidence.
+input:
+  request_text: How should sub-agent activity and fallback be recorded in the chat session log?
+  max_chunks: 8
+expected:
+  routing:
+    layer: 00.chat
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: sub-agent activity
+        category: question-category
+        canonical_id: question.chat.sub-agent-activity
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+      - scripts/00.chat/startup/start-chat-session/script.sh
+      - scripts/00.chat/closeout/build-closeout-prompt/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - generated-concepts
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+  - scripts/00.chat/startup/start-chat-session/script.sh
+  - scripts/00.chat/closeout/build-closeout-prompt/script.sh
+update_triggers:
+  - Sub-agent activity recording changes.
+  - Closeout prompt delegation policy changes.
+  - Chat startup session-log behavior changes.
+

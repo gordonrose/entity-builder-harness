@@ -51,6 +51,7 @@ expected:
       - session-metadata
   gaps:
     allowed:
+      - gap.corpus.02.rag-rulebook.rag-retrieval-source-of-truth
       - gap.selector-fixture.prototype-corpus-bridge
     no_unexpected: true
   required_checks:

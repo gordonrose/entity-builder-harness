@@ -1,0 +1,74 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rag-index-selection
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove index-selection prompts retrieve the index, chunk, policy, and query surfaces that explain how RAG finds content.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-rag-index-selection
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove learner phrasing around artifact metadata, retrieval profiles, and chunks routes to the RAG index-selection pipeline.
+input:
+  request_text: How does the rulebook index use artifact metadata and retrieval profiles to preserve the right chunks?
+  max_chunks: 12
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - question.rag.index-selection
+  selected_chunks:
+    required_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    allowed:
+      - gap.corpus.02.rag-rulebook.rag-retrieval-source-of-truth
+    no_unexpected: true
+source_refs:
+  - docs/02.rag-rulebook/source-material/rag-retrieval.md
+  - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+  - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+  - scripts/02.rag-rulebook/query-local-context/script.sh
+  - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  - .agentic/02.rag-rulebook/source-projections/v1.yml
+  - .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+update_triggers:
+  - Rulebook index generation changes.
+  - Chunk generation or selector policy changes.
+  - Retrieval-profile migration guidance changes.
+

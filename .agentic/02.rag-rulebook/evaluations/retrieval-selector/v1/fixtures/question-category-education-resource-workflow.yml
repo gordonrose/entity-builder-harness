@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-education-resource-workflow
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove education content-to-resource questions retrieve workflows, profiles, and templates together.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-education-resource-workflow
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove education-layer prompts retrieve the content mining workflow, educational resource workflow, profile, and templates.
+input:
+  request_text: How does the education resource workflow create educational resource output from content-to-resource mining with education profiles and templates?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: education resource workflow
+        category: question-category
+        canonical_id: question.education.resource-workflow
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: create educational resource
+        category: evidence-family
+        canonical_id: evidence.education.create-resource
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .agentic/education/workflows/create-educational-resource.md
+      - .agentic/education/workflows/mine-daily-learning-material.md
+      - .agentic/education/profiles/audience-profile.md
+      - .agentic/education/templates/educational-resource.md
+      - .agentic/education/templates/content-mining-report.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/education/workflows/create-educational-resource.md
+  - .agentic/education/workflows/mine-daily-learning-material.md
+  - .agentic/education/profiles/audience-profile.md
+  - .agentic/education/templates/educational-resource.md
+  - .agentic/education/templates/content-mining-report.md
+update_triggers:
+  - Education workflows change.
+  - Education profiles or templates change.
+  - Education recognition vocabulary changes.
+

@@ -1,0 +1,54 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-find-source
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove source-location RAG index-selection prompts retrieve canonical index and policy source files.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.user-intent-rag-index-selection-find-source
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove find-source intent keeps index-selection source-of-truth files visible.
+input:
+  request_text: Which file is the source of truth for RAG index selection?
+  max_chunks: 12
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - user-intent.find-source
+      - question.rag.index-selection
+  selected_chunks:
+    required_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    allowed:
+      - gap.corpus.02.rag-rulebook.rag-retrieval-source-of-truth
+    no_unexpected: true
+source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+

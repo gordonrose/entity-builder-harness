@@ -87,12 +87,525 @@ evidence_bundles:
       evidence.platform.testing: docs/harness/architecture/rules/layers/platform.yml
       evidence.platform.workers: docs/harness/architecture/rules/layers/platform.yml
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+  - question_category_id: question.artifact-metadata.headers
+    always_source_paths:
+      - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+      - .agentic/01.harness/artifact-metadata/README.md
+      - .agentic/01.harness/artifact-metadata/standard.md
+      - .agentic/01.harness/artifact-metadata/schema.v2.yml
+      - scripts/01.harness/artifact-metadata/check-headers/script.sh
+      - scripts/01.harness/artifact-metadata/generate-index/script.sh
+      - scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh
+    family_source_paths:
+      evidence.artifact-metadata.headers: .agentic/01.harness/artifact-metadata/standard.md
   - question_category_id: question.deploy.container-governance
     always_source_paths:
       - docs/04.deploy/rules/shared/container-image-management.yml
+      - docs/04.deploy/source-material/shared/container-image-management.md
+      - scripts/04.deploy/validate-container-boundaries/script.sh
       - docs/harness/architecture/rules/layers/infra.yml
     family_source_paths:
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+  - question_category_id: question.rag-retrieval.source-of-truth
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
+    family_source_paths:
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+      evidence.rag-retrieval.example-deprioritization: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
+  - question_category_id: question.rag.index-selection
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+    family_source_paths:
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+      evidence.rag.rulebook-index-builder: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      evidence.rag.rulebook-chunk-generator: scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+  - bundle_id: bundle.rag.index-selection.explain
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.explain
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - scripts/02.rag-rulebook/query-local-context/README.md
+    family_source_paths: {}
+  - bundle_id: bundle.rag.index-selection.troubleshoot
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.troubleshoot
+    always_source_paths:
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+    family_source_paths: {}
+  - bundle_id: bundle.rag.index-selection.validate
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.validate
+    always_source_paths:
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+    family_source_paths: {}
+  - bundle_id: bundle.rag.index-selection.find-source
+    question_category_id: question.rag.index-selection
+    when:
+      user_intent_id: user-intent.find-source
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+      - scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+    family_source_paths: {}
+  - question_category_id: question.chat-rag.boundary
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-start.md
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+    family_source_paths:
+      evidence.chat.lifecycle: .agentic/00.chat/workflows/chat-start.md
+      evidence.rag.request-context-boundary: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+  - question_category_id: question.rag.hosted-context-packet
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - scripts/02.rag-rulebook/query-local-context/README.md
+    family_source_paths:
+      evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      evidence.rag.compact-context-packet: scripts/02.rag-rulebook/query-local-context/README.md
+      evidence.rag.postman-collection: docs/02.rag-rulebook/postman/README.md
+  - question_category_id: question.rag-rulebook.commit-gates
+    always_source_paths:
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+      - scripts/repo/commit-gates/script.sh
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+    family_source_paths:
+      evidence.rag-rulebook.commit-gates: scripts/02.rag-rulebook/commit-gates/script.sh
+      evidence.repo.commit-gates: scripts/repo/commit-gates/script.sh
+      evidence.rag.retrieval-selector-evaluations: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  - question_category_id: question.product.contract-surface
+    always_source_paths:
+      - docs/harness/architecture/rules/layers/packages-core.yml
+      - packages/core/README.md
+      - platform/contracts/README.md
+      - docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    family_source_paths:
+      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.packages-core.readme: packages/core/README.md
+      evidence.platform-contracts.readme: platform/contracts/README.md
+      evidence.platform-contracts.composed-runtime-contexts-adr: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+  - question_category_id: question.platform-adapter.external-boundary
+    always_source_paths:
+      - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+      - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    family_source_paths:
+      evidence.platform-adapter.consumption: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+      evidence.platform-adapter.rule-pack: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+      evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - question_category_id: question.chat.session-metrics
+    always_source_paths:
+      - scripts/00.chat/session-log/record-chat-commit/script.sh
+      - scripts/00.chat/metrics/estimate-chat-cost/script.js
+      - scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+      - .agentic/00.chat/checklists/before-commit.md
+    family_source_paths:
+      evidence.chat.record-chat-commit: scripts/00.chat/session-log/record-chat-commit/script.sh
+      evidence.chat.estimate-chat-cost: scripts/00.chat/metrics/estimate-chat-cost/script.js
+      evidence.chat.commit-log-summary: scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+  - question_category_id: question.chat.worktree-recovery
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-cleanup.md
+      - .agentic/00.chat/workflows/chat-refresh-from-main.md
+      - .agentic/00.chat/workflows/chat-promote-to-main.md
+      - scripts/00.chat/worktree/dirty-worktree-check/script.sh
+      - scripts/00.chat/worktree/check-write-location/script.sh
+    family_source_paths:
+      evidence.chat.cleanup-workflow: .agentic/00.chat/workflows/chat-cleanup.md
+      evidence.chat.refresh-from-main: .agentic/00.chat/workflows/chat-refresh-from-main.md
+      evidence.chat.promote-to-main: .agentic/00.chat/workflows/chat-promote-to-main.md
+      evidence.chat.dirty-worktree-check: scripts/00.chat/worktree/dirty-worktree-check/script.sh
+  - question_category_id: question.chat.sub-agent-activity
+    always_source_paths:
+      - scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+      - scripts/00.chat/startup/start-chat-session/script.sh
+      - scripts/00.chat/closeout/build-closeout-prompt/script.sh
+    family_source_paths:
+      evidence.chat.record-sub-agent-activity: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+      evidence.chat.closeout-prompt: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+  - question_category_id: question.chat.local-main-promotion
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-promote-to-main.md
+      - .agentic/00.chat/workflows/chat-refresh-from-main.md
+      - scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+      - scripts/00.chat/closeout/build-closeout-prompt/script.sh
+    family_source_paths:
+      evidence.chat.promote-to-main: .agentic/00.chat/workflows/chat-promote-to-main.md
+      evidence.chat.refresh-from-main: .agentic/00.chat/workflows/chat-refresh-from-main.md
+      evidence.chat.verify-local-main-merge: scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+      evidence.chat.closeout-prompt: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+  - question_category_id: question.rag.generated-recognition-repair
+    always_source_paths:
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      - .agentic/02.rag-rulebook/README.md
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+    family_source_paths:
+      evidence.rag.build-local-runtime: scripts/02.rag-rulebook/build-local-runtime/script.sh
+      evidence.rag.generate-recognition-sources: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+  - question_category_id: question.rag.hosted-auth-boundary
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - scripts/02.rag-rulebook/query-context/script.sh
+      - scripts/02.rag-rulebook/query-context/README.md
+      - docs/02.rag-rulebook/postman/README.md
+      - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+    family_source_paths:
+      evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      evidence.rag.postman-collection: docs/02.rag-rulebook/postman/README.md
+      evidence.rag.hosted-auth-foundation: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+      evidence.rag.query-context-command: scripts/02.rag-rulebook/query-context/script.sh
+  - question_category_id: question.rag.prompt-session-conflict
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-start.md
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+    family_source_paths:
+      evidence.chat.lifecycle: .agentic/00.chat/workflows/chat-start.md
+      evidence.rag-retrieval.source-material: docs/02.rag-rulebook/source-material/rag-retrieval.md
+      evidence.rag.prompt-session-conflict-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+      evidence.rag.request-context-boundary: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+  - question_category_id: question.product.core-module-contracts
+    always_source_paths:
+      - docs/harness/architecture/rules/layers/packages-core.yml
+      - packages/core/README.md
+      - platform/contracts/README.md
+      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    family_source_paths:
+      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.packages-core.readme: packages/core/README.md
+      evidence.platform-contracts.readme: platform/contracts/README.md
+      evidence.concern.events-messaging-async: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      evidence.packages-core.diagnostics-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+      evidence.packages-core.events-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+      evidence.packages-core.queues-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+      evidence.packages-core.files-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+  - question_category_id: question.harness.review-agents
+    always_source_paths:
+      - .agentic/01.harness/standards/professional-review-agent-quality.md
+      - .agentic/01.harness/standards/agent-contracts.md
+      - .agentic/01.harness/workflows/run-agent-review.md
+      - .agentic/01.harness/workflows/run-review-board.md
+      - scripts/01.harness/agents/validate-harness-agents/script.js
+    family_source_paths:
+      evidence.harness.professional-review-quality: .agentic/01.harness/standards/professional-review-agent-quality.md
+      evidence.harness.agent-contracts: .agentic/01.harness/standards/agent-contracts.md
+  - question_category_id: question.chat.public-beta-portability
+    always_source_paths:
+      - .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+      - .agentic/00.chat/checklists/llm-workbench-public-beta.md
+      - docs/00.chat/llm-workbench-acceptance-matrix.md
+      - scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+      - scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+    family_source_paths:
+      evidence.chat.public-beta-contract: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+      evidence.chat.portability-validation: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+  - question_category_id: question.governance.missing-stop-condition
+    always_source_paths:
+      - AGENTS.md
+      - .agentic/01.harness/standards/missing-governance-stop-condition.md
+      - .agentic/shared/workflows/capability-resolution-workflow.md
+      - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+    family_source_paths:
+      evidence.harness.missing-governance-standard: .agentic/01.harness/standards/missing-governance-stop-condition.md
+  - question_category_id: question.harness.governed-script-permissions
+    always_source_paths:
+      - .agentic/01.harness/standards/governed-script-permissions.md
+      - scripts/01.harness/run-governed-script.sh
+      - .codex/rules/governed-scripts.rules
+      - .claude/settings.json
+      - .vibe/config.toml
+    family_source_paths:
+      evidence.harness.governed-script-rules: .codex/rules/governed-scripts.rules
+  - question_category_id: question.education.resource-workflow
+    always_source_paths:
+      - .agentic/education/workflows/create-educational-resource.md
+      - .agentic/education/workflows/mine-daily-learning-material.md
+      - .agentic/education/profiles/audience-profile.md
+      - .agentic/education/templates/educational-resource.md
+      - .agentic/education/templates/content-mining-report.md
+    family_source_paths:
+      evidence.education.create-resource: .agentic/education/workflows/create-educational-resource.md
+  - question_category_id: question.chat.upstream-reusable-lesson
+    always_source_paths:
+      - .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+      - .agentic/shared/standards/upstream-repo-bootstrap.md
+      - scripts/00.chat/upstream/ensure-llm-workbench-repo/script.sh
+      - scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
+    family_source_paths:
+      evidence.chat.upstream-reusable-lesson: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+  - question_category_id: question.harness.artifact-path-migration
+    always_source_paths:
+      - .agentic/01.harness/standards/artifact-path-migrations.md
+      - .agentic/01.harness/workflows/migrate-artifact-paths.md
+      - scripts/01.harness/plan-artifact-path-migration.sh
+      - scripts/01.harness/check-artifact-path-migration.sh
+      - docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+    family_source_paths:
+      evidence.harness.artifact-path-migrations: .agentic/01.harness/standards/artifact-path-migrations.md
+  - question_category_id: question.chat.command-shortcuts
+    always_source_paths:
+      - .agentic/00.chat/commands/README.md
+      - scripts/00.chat/command/dispatcher/script.sh
+      - scripts/00.chat/command/new/script.sh
+      - scripts/00.chat/command/close/script.sh
+      - scripts/00.chat/command/dispatcher/README.md
+    family_source_paths:
+      evidence.chat.command-dispatcher: scripts/00.chat/command/dispatcher/script.sh
+  - question_category_id: question.deploy.aws-workflow-split
+    always_source_paths:
+      - .agentic/aws/README.md
+      - .agentic/aws/workflows/inspect-aws-state.md
+      - .agentic/aws/workflows/plan-aws-change.md
+      - .agentic/aws/workflows/execute-approved-aws-change.md
+    family_source_paths:
+      evidence.deploy.aws-workflows: .agentic/aws/README.md
+  - question_category_id: question.harness.rulebook-coverage-tracker
+    always_source_paths:
+      - .agentic/01.harness/workflows/continue-rulebook.workflow.md
+      - .agentic/01.harness/state/rulebook-coverage.yml
+      - .agentic/01.harness/state/rulebook-progress.yml
+      - docs/harness/architecture/rules/concerns/generated-code.yml
+    family_source_paths:
+      evidence.harness.rulebook-coverage-state: .agentic/01.harness/state/rulebook-coverage.yml
+  - question_category_id: question.deploy.rag-readiness-workflow
+    always_source_paths:
+      - .github/workflows/deploy-rag-rulebook-staging.yml
+      - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+      - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+      - infra/04.deploy/02.rag-rulebook/github-actions/README.md
+    family_source_paths:
+      evidence.deploy.rag-staging-workflow: .github/workflows/deploy-rag-rulebook-staging.yml
+  - question_category_id: question.deploy.rag-runtime-cache
+    always_source_paths:
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+      - infra/04.deploy/02.rag-rulebook/image/README.md
+      - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+      - scripts/02.rag-rulebook/build-local-runtime/README.md
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+    family_source_paths:
+      evidence.deploy.rag-service-dockerfile: infra/04.deploy/02.rag-rulebook/image/Dockerfile
+  - question_category_id: question.rag.domain-corpus-package
+    always_source_paths:
+      - .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - .agentic/02.rag-rulebook/schemas/source-projection-manifest.schema.yml
+      - .agentic/02.rag-rulebook/standards/source-to-rule-derivation.md
+      - .agentic/02.rag-rulebook/source-projections/README.md
+    family_source_paths:
+      evidence.rag.domain-corpus-package-standard: .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+  - question_category_id: question.rag.okf-source-review
+    always_source_paths:
+      - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+      - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+      - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml
+      - scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+    family_source_paths:
+      evidence.rag.okf-source-material-quality: .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+  - question_category_id: question.education.public-article-gates
+    always_source_paths:
+      - .agentic/education/workflows/create-educational-resource.md
+      - .agentic/education/agents/article-reporter.md
+      - .agentic/education/agents/article-editor.md
+      - .agentic/education/templates/article-source-packet.md
+      - .agentic/education/templates/reader-world-research-packet.md
+      - docs/education/architecture/adrs/0004-require-source-packets-for-public-articles.md
+      - docs/education/architecture/adrs/0005-require-reader-world-research-for-public-articles.md
+    family_source_paths:
+      evidence.education.reader-world-research: .agentic/education/templates/reader-world-research-packet.md
+  - question_category_id: question.education.article-agent-boundaries
+    always_source_paths:
+      - .agentic/education/agents/article-editor.md
+      - .agentic/education/agents/article-writer.md
+      - .agentic/education/agents/article-reporter.md
+      - docs/education/architecture/adrs/0002-use-article-editor-agent-before-public-article-drafting.md
+      - docs/education/architecture/adrs/0003-separate-article-editor-and-writer-agents.md
+    family_source_paths:
+      evidence.education.article-editor-agent: .agentic/education/agents/article-editor.md
+      evidence.education.article-writer-agent: .agentic/education/agents/article-writer.md
+  - question_category_id: question.deploy.container-build-context
+    always_source_paths:
+      - docs/04.deploy/rules/shared/container-image-management.yml
+      - scripts/04.deploy/validate-container-boundaries/script.sh
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+      - infra/04.deploy/02.rag-rulebook/image/README.md
+    family_source_paths:
+      evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
+      evidence.deploy.rag-dockerignore: infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore
+  - question_category_id: question.product.core-audit-queues
+    always_source_paths:
+      - packages/core/src/audit/index.ts
+      - packages/core/src/queues/index.ts
+      - packages/core/src/index.ts
+      - packages/core/README.md
+      - docs/harness/architecture/rules/layers/packages-core.yml
+    family_source_paths:
+      evidence.packages-core.audit-source: packages/core/src/audit/index.ts
+      evidence.packages-core.queues-source: packages/core/src/queues/index.ts
+  - question_category_id: question.rag.portable-service-boundary
+    always_source_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - scripts/02.rag-rulebook/query-local-context/README.md
+      - .agentic/02.rag-rulebook/service/README.md
+      - .agentic/02.rag-rulebook/service/server.mjs
+      - .agentic/02.rag-rulebook/standards/portable-service-contract.md
+    family_source_paths:
+      evidence.rag.hosted-context-provider: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      evidence.rag.service-server: .agentic/02.rag-rulebook/service/server.mjs
+  - question_category_id: question.rag.runtime-freshness
+    always_source_paths:
+      - scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+      - scripts/02.rag-rulebook/check-runtime-freshness/README.md
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/build-local-runtime/README.md
+      - scripts/02.rag-rulebook/query-local-context/README.md
+    family_source_paths:
+      evidence.rag.runtime-freshness-checker: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+  - question_category_id: question.rag.source-projection-checks
+    always_source_paths:
+      - .agentic/02.rag-rulebook/source-projections/v1.yml
+      - scripts/02.rag-rulebook/check-source-projections/script.sh
+      - scripts/02.rag-rulebook/check-source-projections/README.md
+      - scripts/02.rag-rulebook/check-source-material-coverage/script.sh
+      - scripts/02.rag-rulebook/generate-source-to-rule-work-order/script.sh
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+    family_source_paths:
+      evidence.rag.source-projection-checker: scripts/02.rag-rulebook/check-source-projections/script.sh
+      evidence.rag-rulebook.commit-gates: scripts/02.rag-rulebook/commit-gates/script.sh
+  - question_category_id: question.rag.artifact-profile-coverage
+    always_source_paths:
+      - scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/script.sh
+      - scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/README.md
+      - .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+      - .agentic/02.rag-rulebook/evaluations/retrieval-profile-coverage/2026-07-10-llm-audit.md
+    family_source_paths:
+      evidence.rag.artifact-profile-coverage-reporter: scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/script.sh
+      evidence.rag.retrieval-selector-evaluations: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+  - question_category_id: question.rag.knowledge-disposition-gate
+    always_source_paths:
+      - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+      - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+      - scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+      - scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+    family_source_paths:
+      evidence.rag.knowledge-disposition-recorder: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+      evidence.rag-rulebook.commit-gates: scripts/02.rag-rulebook/commit-gates/script.sh
+  - question_category_id: question.rag.context-packet-validation
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+    family_source_paths:
+      evidence.rag.context-packet-validator: scripts/02.rag-rulebook/validate-context-packet/script.sh
+  - bundle_id: bundle.rag.context-packet-validation.explain
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.explain
+    always_source_paths:
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+    family_source_paths: {}
+  - bundle_id: bundle.rag.context-packet-validation.troubleshoot
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.troubleshoot
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+    family_source_paths: {}
+  - bundle_id: bundle.rag.context-packet-validation.validate
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.validate
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+    family_source_paths: {}
+  - bundle_id: bundle.rag.context-packet-validation.find-source
+    question_category_id: question.rag.context-packet-validation
+    when:
+      user_intent_id: user-intent.find-source
+    always_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+    family_source_paths: {}
+  - question_category_id: question.rag.recognition-source-lifecycle
+    always_source_paths:
+      - .agentic/02.rag-rulebook/recognition-candidates/README.md
+      - .agentic/02.rag-rulebook/standards/recognition-candidate-review.md
+      - .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
+      - scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+      - scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+      - scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+      - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
+      - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+    family_source_paths:
+      evidence.rag.recognition-candidate-validator: scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+      evidence.rag.generate-recognition-sources: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+  - question_category_id: question.deploy.mcp-corpus-gap
+    always_source_paths:
+      - .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+      - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+    family_source_paths:
+      evidence.deploy.mcp-corpus-gap-record: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+  - question_category_id: question.rag.selector-diagnostics
+    always_source_paths:
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/README.md
+      - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+      - .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/rule-graph.yml
+    family_source_paths:
+      evidence.rag.selector-evaluation-runner: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
 validation_examples:
   - name: architecture boundary retrieves layer families
     given: User asks whether a capability belongs in apps or platform.

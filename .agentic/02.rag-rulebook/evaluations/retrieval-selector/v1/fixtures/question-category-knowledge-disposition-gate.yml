@@ -1,0 +1,63 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-knowledge-disposition-gate
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove knowledge-bearing code change prompts retrieve coverage gate, disposition recorder, and commit gate evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-knowledge-disposition-gate
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove code-knowledge prompts retrieve both the disposition workflow and executable commit checks.
+input:
+  request_text: How does the knowledge-bearing code change disposition gate decide whether to record knowledge before commit?
+  max_chunks: 10
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - question.rag.knowledge-disposition-gate
+  selected_chunks:
+    required_source_paths:
+      - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+      - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+      - scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+      - scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh
+  - scripts/02.rag-rulebook/check-code-change-knowledge-coverage/README.md
+  - scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+  - scripts/02.rag-rulebook/record-knowledge-disposition/README.md
+  - scripts/02.rag-rulebook/commit-gates/script.sh
+update_triggers:
+  - Knowledge disposition gate behavior changes.
+  - Disposition recorder behavior changes.
+  - RAG commit gate scope changes.

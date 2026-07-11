@@ -1,0 +1,63 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-context-packet-validation
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove context-packet validation prompts retrieve validator, schema, guide, and query evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-context-packet-validation
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove packet validation questions return both schema and executable validation paths.
+input:
+  request_text: Which context packet validation schema and check script confirm a RAG query packet is valid?
+  max_chunks: 10
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - question.rag.context-packet-validation
+  selected_chunks:
+    required_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - scripts/02.rag-rulebook/validate-context-packet/README.md
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/guides/context-packet.md
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - scripts/02.rag-rulebook/validate-context-packet/script.sh
+  - scripts/02.rag-rulebook/validate-context-packet/README.md
+  - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+  - .agentic/02.rag-rulebook/guides/context-packet.md
+  - scripts/02.rag-rulebook/query-local-context/script.sh
+update_triggers:
+  - Context packet schema changes.
+  - Context packet validator behavior changes.
+  - Query packet generation behavior changes.

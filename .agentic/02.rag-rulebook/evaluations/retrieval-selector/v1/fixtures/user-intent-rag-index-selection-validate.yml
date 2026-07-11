@@ -1,0 +1,53 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-rag-index-selection-validate
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove validation-shaped RAG index-selection prompts retrieve gates and runtime build evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.user-intent-rag-index-selection-validate
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove validate intent adds gates and build evidence to RAG index-selection topic evidence.
+input:
+  request_text: Which gate proves RAG index selection and generated retrieval profiles are current?
+  max_chunks: 12
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - user-intent.validate
+      - question.rag.index-selection
+  selected_chunks:
+    required_source_paths:
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+      - scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+      - scripts/02.rag-rulebook/build-local-runtime/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    allowed:
+      - gap.corpus.02.rag-rulebook.rag-retrieval-source-of-truth
+    no_unexpected: true
+source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+

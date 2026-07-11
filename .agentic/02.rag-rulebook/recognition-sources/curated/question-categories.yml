@@ -65,6 +65,36 @@ terms:
       - how is it implemented
       - explain the policy
     confidence_weight: 0.78
+  - term: headers are added
+    category: question-category
+    match_type: phrase
+    canonical_id: question.artifact-metadata.headers
+    aliases:
+      - headers are maintained
+      - how headers are added
+      - how headers are maintained
+      - metadata headers
+      - artifact metadata headers
+      - artefact metadata headers
+      - agentic-artifact header
+      - agentic-artifact headers
+      - artifact headers
+      - artefact headers
+    confidence_weight: 0.82
+  - term: artifact metadata
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.artifact-metadata.headers
+    evidence_path: .agentic/01.harness/artifact-metadata/standard.md
+    aliases:
+      - artefact metadata
+      - metadata header
+      - artifact metadata header
+      - artefact metadata header
+      - agentic-artifact
+      - agentic-artifact/v2
+      - header maintenance
+    confidence_weight: 0.74
   - term: platform
     category: evidence-family
     match_type: exact
@@ -281,6 +311,7 @@ terms:
     aliases:
       - manage Dockerfiles
       - manage container images
+      - container image governance
       - where should Dockerfiles live
       - where should container images live
       - prevent Dockerfile sprawl
@@ -312,6 +343,1244 @@ terms:
       - test policy
       - check policy
     confidence_weight: 0.7
+  - term: RAG retrieval source of truth
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag-retrieval.source-of-truth
+    aliases:
+      - retrieval source of truth
+      - source of truth hierarchy
+      - source material over examples
+      - illustrative example paths
+      - example paths are deprioritized
+      - example paths
+      - target paths
+      - should not become target paths
+      - paths in a prompt
+      - how RAG retrieval works
+      - how context packets are assembled
+    confidence_weight: 0.82
+  - term: RAG retrieval source material
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag-retrieval.source-material
+    evidence_path: docs/02.rag-rulebook/source-material/rag-retrieval.md
+    aliases:
+      - retrieval profiles
+      - context packet assembly
+      - source material first
+      - source-of-truth driven retrieval
+    confidence_weight: 0.76
+  - term: RAG index selection
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.index-selection
+    aliases:
+      - rulebook index use artifact metadata
+      - rulebook index uses artifact metadata
+      - retrieval profiles to preserve the right chunks
+      - index selection
+      - generated retrieval profiles
+      - right chunks
+    confidence_weight: 0.82
+  - term: rulebook index builder
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.rulebook-index-builder
+    evidence_path: scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+    aliases:
+      - generate-rulebook-index
+      - rulebook index generator
+      - builds the rulebook index
+    confidence_weight: 0.74
+  - term: rulebook chunk generator
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.rulebook-chunk-generator
+    evidence_path: scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh
+    aliases:
+      - generate-rulebook-chunks
+      - generated chunks
+      - retrieval chunks
+    confidence_weight: 0.74
+  - term: illustrative examples
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag-retrieval.example-deprioritization
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml
+    aliases:
+      - illustrative example
+      - e.g. paths
+      - for example paths
+      - example-only paths
+      - examples should not become target paths
+    confidence_weight: 0.74
+  - term: chat RAG boundary
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat-rag.boundary
+    aliases:
+      - 00.chat lifecycle versus RAG routing
+      - chat lifecycle vs RAG routing
+      - per-prompt RAG routing
+      - chat should not classify
+      - classify by mode or layer
+      - session context versus route authority
+    confidence_weight: 0.81
+  - term: chat lifecycle
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.lifecycle
+    evidence_path: .agentic/00.chat/workflows/chat-start.md
+    aliases:
+      - chat start
+      - chat startup
+      - session lifecycle
+      - worktree lifecycle
+      - commit log lifecycle
+    confidence_weight: 0.73
+  - term: request context route authority
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.request-context-boundary
+    evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
+    aliases:
+      - route authority
+      - prompt-level routing
+      - session metadata is provenance
+      - previous packet is continuity
+    confidence_weight: 0.74
+  - term: hosted compact context packet
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.hosted-context-packet
+    aliases:
+      - hosted RAG service
+      - compact packet testing
+      - /context/query
+      - context query endpoint
+      - postman collection
+      - query local context
+    confidence_weight: 0.8
+  - term: hosted context provider
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.hosted-context-provider
+    evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    aliases:
+      - hosted provider contract
+      - hosted RAG provider
+      - bearer auth
+      - hosted fallback
+    confidence_weight: 0.74
+  - term: compact context packet
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.compact-context-packet
+    evidence_path: scripts/02.rag-rulebook/query-local-context/README.md
+    aliases:
+      - compact packet
+      - query-local-context
+      - local context query
+      - context packet compact
+    confidence_weight: 0.73
+  - term: Postman collection
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.postman-collection
+    evidence_path: docs/02.rag-rulebook/postman/README.md
+    aliases:
+      - Postman
+      - service collection
+      - HTTP smoke collection
+    confidence_weight: 0.7
+  - term: RAG commit gates
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag-rulebook.commit-gates
+    aliases:
+      - RAG commit gate
+      - rulebook commit gate
+      - which commit gates
+      - selector evaluations should run
+      - recognition source changes
+      - generated recognition source changes
+      - chunk generation changes
+      - retrieval policy changes
+      - after recognition changes
+      - after chunk changes
+      - after retrieval policy changes
+      - commit gates after RAG changes
+    confidence_weight: 0.81
+  - term: RAG rulebook commit gate
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag-rulebook.commit-gates
+    evidence_path: scripts/02.rag-rulebook/commit-gates/script.sh
+    aliases:
+      - rulebook commit gates
+      - retrieval commit gate
+      - RAG gate script
+    confidence_weight: 0.75
+  - term: repo commit gate
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.repo.commit-gates
+    evidence_path: scripts/repo/commit-gates/script.sh
+    aliases:
+      - repository commit gate
+      - root commit gate
+      - repo gate script
+    confidence_weight: 0.72
+  - term: retrieval selector evaluations
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.retrieval-selector-evaluations
+    evidence_path: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+    aliases:
+      - selector fixtures
+      - retrieval selector fixtures
+      - selector evaluation
+      - retrieval evaluation
+    confidence_weight: 0.74
+  - term: package contract surface
+    category: question-category
+    match_type: phrase
+    canonical_id: question.product.contract-surface
+    aliases:
+      - packages/core contract surface
+      - packages core contract
+      - platform/contracts surface
+      - composed runtime contexts
+      - describe packages/core
+    confidence_weight: 0.8
+  - term: packages core README
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.readme
+    evidence_path: packages/core/README.md
+    aliases:
+      - packages/core README
+      - core package README
+      - packages core overview
+    confidence_weight: 0.72
+  - term: platform contracts README
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-contracts.readme
+    evidence_path: platform/contracts/README.md
+    aliases:
+      - platform/contracts README
+      - platform contract docs
+      - runtime contract docs
+    confidence_weight: 0.72
+  - term: composed runtime contexts ADR
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-contracts.composed-runtime-contexts-adr
+    evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    aliases:
+      - composed runtime context ADR
+      - place composed runtime contexts
+      - runtime contexts in platform contracts
+    confidence_weight: 0.72
+  - term: external adapter boundary
+    category: question-category
+    match_type: phrase
+    canonical_id: question.platform-adapter.external-boundary
+    aliases:
+      - external adapter
+      - adapter like
+      - third-party adapter
+      - provider adapter
+      - vendor adapter
+      - avoid mixing product deploy and RAG authority
+      - mixing product deploy and RAG authority
+    confidence_weight: 0.8
+  - term: platform adapter consumption
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-adapter.consumption
+    evidence_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    aliases:
+      - adapter consumption
+      - provider-specific imports
+      - vendor SDK imports
+      - platform profile imports
+      - feature code consumes core contracts
+    confidence_weight: 0.74
+  - term: add platform adapter
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.platform-adapter.rule-pack
+    evidence_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    aliases:
+      - add-platform-adapter
+      - platform adapter rule pack
+      - adapter rule pack
+      - new platform adapter
+    confidence_weight: 0.74
+  - term: chat session metrics
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.session-metrics
+    aliases:
+      - session token accounting
+      - session tokens
+      - session cost accounting
+      - estimated_chat_tokens
+      - estimated_chat_cost
+      - commit log metrics
+      - chat cost estimate
+      - chat cost recorded
+      - chat token estimate
+      - record chat commit metrics
+    confidence_weight: 0.82
+  - term: record chat commit
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.record-chat-commit
+    evidence_path: scripts/00.chat/session-log/record-chat-commit/script.sh
+    aliases:
+      - record-chat-commit
+      - latest_commit_sha
+      - latest commit metrics
+      - session log commit entry
+    confidence_weight: 0.74
+  - term: estimate chat cost
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.estimate-chat-cost
+    evidence_path: scripts/00.chat/metrics/estimate-chat-cost/script.js
+    aliases:
+      - estimate-chat-cost
+      - estimated chat cost
+      - estimated_chat_cost_basis
+      - chat pricing profile
+    confidence_weight: 0.74
+  - term: commit log summary
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.commit-log-summary
+    evidence_path: scripts/00.chat/reporting/generate-commit-log-summary/script.sh
+    aliases:
+      - generate commit log summary
+      - chat history report
+      - metrics summary
+      - session overview
+    confidence_weight: 0.72
+  - term: chat worktree recovery
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.worktree-recovery
+    aliases:
+      - git worktree recovery
+      - worktree index lock
+      - index.lock
+      - worktree cleanup
+      - refresh from main
+      - dirty worktree
+      - blocked-diverged
+      - chat branch recovery
+      - multi-agent worktree safety
+    confidence_weight: 0.82
+  - term: chat cleanup workflow
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.cleanup-workflow
+    evidence_path: .agentic/00.chat/workflows/chat-cleanup.md
+    aliases:
+      - chat cleanup
+      - cleanup chat branches
+      - cleanup worktrees
+      - remove chat worktrees
+    confidence_weight: 0.73
+  - term: chat refresh from main
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.refresh-from-main
+    evidence_path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+    aliases:
+      - refresh chat branch from main
+      - main refresh
+      - rehearse refresh from main
+      - blocked-diverged refresh
+    confidence_weight: 0.74
+  - term: dirty worktree check
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.dirty-worktree-check
+    evidence_path: scripts/00.chat/worktree/dirty-worktree-check/script.sh
+    aliases:
+      - dirty-worktree-check
+      - dirty worktree gate
+      - clean worktree precondition
+    confidence_weight: 0.72
+  - term: sub-agent activity
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.sub-agent-activity
+    aliases:
+      - subagent activity
+      - sub-agent fallback
+      - direct fallback
+      - record sub-agent activity
+      - delegated work audit
+      - no sub-agent capability
+    confidence_weight: 0.82
+  - term: record sub-agent activity
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.record-sub-agent-activity
+    evidence_path: scripts/00.chat/session-log/record-sub-agent-activity/script.sh
+    aliases:
+      - record-sub-agent-activity
+      - sub-agent recorder
+      - delegated work log
+      - direct-fallback mode
+    confidence_weight: 0.75
+  - term: closeout prompt
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.closeout-prompt
+    evidence_path: scripts/00.chat/closeout/build-closeout-prompt/script.sh
+    aliases:
+      - build closeout prompt
+      - build-closeout-prompt
+      - closeout handoff
+      - close command prompt
+    confidence_weight: 0.72
+  - term: local main promotion
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.local-main-promotion
+    aliases:
+      - merge to main
+      - promote to main
+      - local main merge
+      - local-main promotion
+      - push is separate
+      - origin/main is separate
+      - verify chat ready to merge local main
+      - verify-chat-ready-to-merge-local-main
+      - merging a chat branch to local main
+      - pushing to origin/main
+      - chat branch to local main
+    confidence_weight: 0.82
+  - term: chat promote to main
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.promote-to-main
+    evidence_path: .agentic/00.chat/workflows/chat-promote-to-main.md
+    aliases:
+      - chat promotion workflow
+      - local integration console
+      - merge into local main
+      - push requires separate approval
+    confidence_weight: 0.75
+  - term: verify local main merge
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.verify-local-main-merge
+    evidence_path: scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh
+    aliases:
+      - local merge verifier
+      - local main merge verifier
+      - ready to merge local main
+      - chat ready to merge
+    confidence_weight: 0.74
+  - term: generated recognition source repair
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.generated-recognition-repair
+    aliases:
+      - generated recognition sources stale
+      - recognition source freshness
+      - RAG gate failure
+      - RAG gate fails
+      - stale runtime
+      - runtime freshness failed
+      - generated sources are stale
+      - generated recognition sources are stale
+      - repair stale RAG runtime
+    confidence_weight: 0.82
+  - term: build local RAG runtime
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.build-local-runtime
+    evidence_path: scripts/02.rag-rulebook/build-local-runtime/script.sh
+    aliases:
+      - build-local-runtime
+      - local runtime build
+      - runtime freshness
+      - stale runtime repair
+    confidence_weight: 0.75
+  - term: generate recognition sources
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.generate-recognition-sources
+    evidence_path: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+    aliases:
+      - generate-recognition-sources
+      - generated recognition source
+      - generated artifacts recognition
+      - recognition source generator
+    confidence_weight: 0.75
+  - term: prompt session conflict
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.prompt-session-conflict
+    aliases:
+      - prompt/session conflict
+      - current prompt asks
+      - prompt context win
+      - prompt asks for RAG retrieval policy
+      - chat lifecycle says
+      - session says chat
+      - session says
+      - prompt asks about product
+      - session conflict
+      - prompt and session conflict
+    confidence_weight: 0.81
+  - term: prompt session conflict fixture
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.prompt-session-conflict-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml
+    aliases:
+      - prompt-session-conflict
+      - prompt session conflict proof
+      - prompt/session conflict proof
+    confidence_weight: 0.73
+  - term: hosted RAG auth boundary
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.hosted-auth-boundary
+    aliases:
+      - ServiceTokenSecretArn
+      - hosted RAG token
+      - hosted RAG auth
+      - missing bearer token
+      - rejected bearer token
+      - bearer token behavior
+      - hosted bearer auth
+      - service token secret
+      - bearer token secret
+      - RAG_RULEBOOK_TOKEN_SECRET_ARN
+      - RAG_SERVICE_TOKEN
+      - hosted auth boundary
+    confidence_weight: 0.83
+  - term: hosted auth foundation
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.hosted-auth-foundation
+    evidence_path: infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+    aliases:
+      - CloudFormation foundation
+      - service token output
+      - Secrets Manager service token
+      - staging service token
+    confidence_weight: 0.75
+  - term: query context provider command
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.query-context-command
+    evidence_path: scripts/02.rag-rulebook/query-context/script.sh
+    aliases:
+      - query-context command
+      - context provider command
+      - hosted local provider command
+    confidence_weight: 0.74
+  - term: packages core module contracts
+    category: question-category
+    match_type: phrase
+    canonical_id: question.product.core-module-contracts
+    aliases:
+      - diagnostics self-healing
+      - core diagnostics
+      - core events
+      - core queues
+      - core files
+      - packages/core diagnostics
+      - packages/core events
+      - packages/core queues
+      - packages/core files
+      - events queues files
+    confidence_weight: 0.81
+  - term: packages core diagnostics proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.diagnostics-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
+    aliases:
+      - packages-core-diagnostics-self-healing
+      - self-healing diagnostics fixture
+      - diagnostics selector proof
+    confidence_weight: 0.72
+  - term: packages core events proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.events-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
+    aliases:
+      - packages-core-events-contract
+      - core events fixture
+      - events selector proof
+    confidence_weight: 0.72
+  - term: packages core queues proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.queues-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
+    aliases:
+      - packages-core-queues-contract
+      - core queues fixture
+      - queues selector proof
+    confidence_weight: 0.72
+  - term: packages core files proof
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.files-fixture
+    evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml
+    aliases:
+      - packages-core-files-contract
+      - core files fixture
+      - files selector proof
+    confidence_weight: 0.72
+  - term: professional review agents
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.review-agents
+    aliases:
+      - review agents
+      - review board
+      - agent scorecards
+      - scorecards
+      - review rubrics
+      - run agent review
+      - run review board
+    confidence_weight: 0.82
+  - term: professional review agent quality
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.professional-review-quality
+    evidence_path: .agentic/01.harness/standards/professional-review-agent-quality.md
+    aliases:
+      - review agent quality
+      - scorecard quality
+      - review quality standard
+    confidence_weight: 0.74
+  - term: agent contracts
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.agent-contracts
+    evidence_path: .agentic/01.harness/standards/agent-contracts.md
+    aliases:
+      - agent contract
+      - harness agent contract
+      - agent IO contract
+    confidence_weight: 0.72
+  - term: public beta llm-workbench contract
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.public-beta-portability
+    aliases:
+      - public beta
+      - llm-workbench install
+      - install/export contract
+      - standalone provider-neutral
+      - portability
+      - bootstrap export
+      - public export
+    confidence_weight: 0.82
+  - term: llm-workbench public beta contract
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.public-beta-contract
+    evidence_path: .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+    aliases:
+      - public-beta contract
+      - public beta contract
+      - llm-workbench beta standard
+    confidence_weight: 0.74
+  - term: portability validation
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.portability-validation
+    evidence_path: scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+    aliases:
+      - validate llm-workbench portability
+      - portability validator
+      - provider-neutral validation
+    confidence_weight: 0.73
+  - term: missing governance stop condition
+    category: question-category
+    match_type: phrase
+    canonical_id: question.governance.missing-stop-condition
+    aliases:
+      - missing governance
+      - stop condition
+      - required action is not governed
+      - governance gap
+      - capability resolution
+      - missing governance gap
+    confidence_weight: 0.83
+  - term: missing governance standard
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.missing-governance-standard
+    evidence_path: .agentic/01.harness/standards/missing-governance-stop-condition.md
+    aliases:
+      - missing-governance standard
+      - governance stop standard
+      - absent governance rule
+    confidence_weight: 0.75
+  - term: governed script permissions
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.governed-script-permissions
+    aliases:
+      - run-governed-script
+      - Codex Claude Mistral permissions
+      - vendor adapters
+      - script allowlist
+      - governed script runner
+      - tool permission config
+    confidence_weight: 0.82
+  - term: governed scripts rules
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.governed-script-rules
+    evidence_path: .codex/rules/governed-scripts.rules
+    aliases:
+      - governed-scripts.rules
+      - codex governed scripts
+      - script permission rules
+    confidence_weight: 0.73
+  - term: education resource workflow
+    category: question-category
+    match_type: phrase
+    canonical_id: question.education.resource-workflow
+    aliases:
+      - education layer
+      - content-to-resource
+      - educational resource
+      - mine daily learning material
+      - education profiles
+      - education templates
+    confidence_weight: 0.82
+  - term: create educational resource
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.create-resource
+    evidence_path: .agentic/education/workflows/create-educational-resource.md
+    aliases:
+      - educational resource workflow
+      - create education resource
+      - content to resource
+    confidence_weight: 0.74
+  - term: upstream reusable lesson
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.upstream-reusable-lesson
+    aliases:
+      - promote reusable lesson upstream
+      - upstream repo
+      - reusable lesson
+      - bootstrap upstream
+    confidence_weight: 0.82
+  - term: chat upstream reusable lesson
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.upstream-reusable-lesson
+    evidence_path: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+    aliases:
+      - chat-upstream-reusable-lesson
+      - reusable lesson workflow
+      - upstream lesson workflow
+    confidence_weight: 0.74
+  - term: artifact path migration
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.artifact-path-migration
+    aliases:
+      - path migration checks
+      - migration compatibility
+      - migrate artifact paths
+      - path migration plan
+      - retired compatibility paths
+    confidence_weight: 0.82
+  - term: artifact path migrations standard
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.artifact-path-migrations
+    evidence_path: .agentic/01.harness/standards/artifact-path-migrations.md
+    aliases:
+      - artifact-path-migrations
+      - path migration standard
+      - path migration compatibility
+    confidence_weight: 0.74
+  - term: chat command shortcuts
+    category: question-category
+    match_type: phrase
+    canonical_id: question.chat.command-shortcuts
+    aliases:
+      - new close command
+      - command dispatcher
+      - chat commands
+      - shortcut surface
+      - chat new command
+      - chat close command
+    confidence_weight: 0.82
+  - term: chat command dispatcher
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.chat.command-dispatcher
+    evidence_path: scripts/00.chat/command/dispatcher/script.sh
+    aliases:
+      - command dispatcher script
+      - dispatcher command
+      - chat command router
+    confidence_weight: 0.74
+  - term: AWS inspect plan execute
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.aws-workflow-split
+    aliases:
+      - AWS inspect, plan, and execute
+      - AWS inspect plan and execute
+      - inspect, plan, and execute workflows
+      - inspect AWS state
+      - plan AWS change
+      - execute approved AWS change
+      - AWS workflow split
+      - inspect plan execute workflow
+    confidence_weight: 0.82
+  - term: AWS workflow split
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.aws-workflows
+    evidence_path: .agentic/aws/README.md
+    aliases:
+      - AWS workflows
+      - inspect plan execute
+      - AWS operations workflow
+    confidence_weight: 0.74
+  - term: rulebook harvest coverage
+    category: question-category
+    match_type: phrase
+    canonical_id: question.harness.rulebook-coverage-tracker
+    aliases:
+      - rulebook coverage tracker
+      - continue rulebook
+      - rulebook progress
+      - rulebook state
+      - harvest coverage tracker
+    confidence_weight: 0.82
+  - term: rulebook coverage state
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.harness.rulebook-coverage-state
+    evidence_path: .agentic/01.harness/state/rulebook-coverage.yml
+    aliases:
+      - rulebook-coverage.yml
+      - rulebook progress state
+      - rulebook tracker state
+    confidence_weight: 0.74
+  - term: RAG deploy readiness
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.rag-readiness-workflow
+    aliases:
+      - stale deploy-readiness
+      - stale deploy readiness
+      - deploy-readiness.yml
+      - successful deploy but stale readiness
+      - RAG staging deployment readiness
+      - static deploy manifest
+      - deployment readiness manifest
+    confidence_weight: 0.82
+  - term: deploy rag rulebook staging workflow
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.rag-staging-workflow
+    evidence_path: .github/workflows/deploy-rag-rulebook-staging.yml
+    aliases:
+      - deploy RAG rulebook staging
+      - staging deploy workflow
+      - workflow deploy readiness
+    confidence_weight: 0.74
+  - term: RAG immutable runtime cache
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.rag-runtime-cache
+    aliases:
+      - immutable ECS runtime cache
+      - mutable repo source
+      - /app/.cache
+      - RAG_RUNTIME_DIR
+      - runtime cache in ECS
+      - containerized local runtime
+    confidence_weight: 0.82
+  - term: RAG service Dockerfile
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.rag-service-dockerfile
+    evidence_path: infra/04.deploy/02.rag-rulebook/image/Dockerfile
+    aliases:
+      - service Dockerfile
+      - RAG Dockerfile
+      - container runtime cache
+    confidence_weight: 0.74
+  - term: domain corpus package
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.domain-corpus-package
+    aliases:
+      - modular domain corpus package
+      - domain-corpus package
+      - corpus package standard
+      - source projection manifest
+      - source-to-rule derivation
+    confidence_weight: 0.83
+  - term: domain corpus package standard
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.domain-corpus-package-standard
+    evidence_path: .agentic/02.rag-rulebook/standards/domain-corpus-package.md
+    aliases:
+      - domain-corpus standard
+      - corpus package contract
+      - modular corpus contract
+    confidence_weight: 0.75
+  - term: OKF source material review
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.okf-source-review
+    aliases:
+      - OKF source review
+      - review OKF source material
+      - OKF before YAML derivation
+      - source review before YAML
+      - OKF quality gate
+      - source material quality gate
+    confidence_weight: 0.83
+  - term: OKF source material quality
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.okf-source-material-quality
+    evidence_path: .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+    aliases:
+      - okf-source-material-quality
+      - OKF quality standard
+      - source material quality standard
+    confidence_weight: 0.75
+  - term: public article gates
+    category: question-category
+    match_type: phrase
+    canonical_id: question.education.public-article-gates
+    aliases:
+      - education source packets
+      - source packet before public articles
+      - reader-world research packet
+      - public article pipeline
+      - article gate
+      - article gates
+    confidence_weight: 0.82
+  - term: reader-world research packet
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.reader-world-research
+    evidence_path: .agentic/education/templates/reader-world-research-packet.md
+    aliases:
+      - reader-world research
+      - reader-world template
+      - public article research packet
+    confidence_weight: 0.74
+  - term: article editor writer roles
+    category: question-category
+    match_type: phrase
+    canonical_id: question.education.article-agent-boundaries
+    aliases:
+      - Article Editor vs Article Writer
+      - article agent boundaries
+      - editor and writer agents
+      - separate article editor and writer
+    confidence_weight: 0.82
+  - term: Article Editor Agent contract
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.article-editor-agent
+    evidence_path: .agentic/education/agents/article-editor.md
+    aliases:
+      - article editor agent
+      - article editor contract
+      - editor agent contract
+    confidence_weight: 0.74
+  - term: Article Writer Agent contract
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.education.article-writer-agent
+    evidence_path: .agentic/education/agents/article-writer.md
+    aliases:
+      - article writer agent
+      - article writer contract
+      - writer agent contract
+    confidence_weight: 0.74
+  - term: container build context
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.container-build-context
+    aliases:
+      - Dockerfile.dockerignore
+      - avoid .git
+      - avoid node_modules
+      - avoid including .git
+      - avoid including node_modules
+      - container image avoid
+      - container image avoids
+      - including .git
+      - including node_modules
+      - excludes .git
+      - excludes node_modules
+      - build context allowlist
+      - container excludes secrets
+    confidence_weight: 0.82
+  - term: Dockerfile.dockerignore
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.rag-dockerignore
+    evidence_path: infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore
+    aliases:
+      - docker ignore
+      - Docker ignore file
+      - image dockerignore
+    confidence_weight: 0.74
+  - term: packages core audit queues
+    category: question-category
+    match_type: phrase
+    canonical_id: question.product.core-audit-queues
+    aliases:
+      - audit and queue schema versions
+      - audit schema version
+      - queue schema version
+      - core audit queues
+    confidence_weight: 0.82
+  - term: packages core audit source
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.audit-source
+    evidence_path: packages/core/src/audit/index.ts
+    aliases:
+      - audit/index.ts
+      - audit event version
+      - currentAuditEventVersion
+    confidence_weight: 0.74
+  - term: packages core queues source
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.packages-core.queues-source
+    evidence_path: packages/core/src/queues/index.ts
+    aliases:
+      - queues/index.ts
+      - queue message version
+      - currentQueueMessageVersion
+    confidence_weight: 0.74
+  - term: portable context provider
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.portable-service-boundary
+    aliases:
+      - portable service contract
+      - HTTP auth local query boundary
+      - context provider HTTP
+      - service skeleton
+      - local query boundary
+    confidence_weight: 0.82
+  - term: RAG service server
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.service-server
+    evidence_path: .agentic/02.rag-rulebook/service/server.mjs
+    aliases:
+      - server.mjs
+      - HTTP service skeleton
+      - RAG HTTP service
+    confidence_weight: 0.74
+  - term: runtime freshness fingerprint
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.runtime-freshness
+    aliases:
+      - runtime cache stale
+      - stale runtime cache
+      - runtime cache freshness
+      - local runtime fingerprint
+      - runtime fingerprint
+      - cache fingerprint
+      - check runtime freshness
+    confidence_weight: 0.82
+  - term: runtime freshness checker
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.runtime-freshness-checker
+    evidence_path: scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+    aliases:
+      - check-runtime-freshness
+      - freshness checker
+      - runtime freshness script
+    confidence_weight: 0.74
+  - term: source projection checks
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.source-projection-checks
+    aliases:
+      - source material projection
+      - source material projection checks
+      - source projection checks before commit
+      - source material gap checks
+      - projection gap checks
+      - projection checks before commit
+      - source-to-rule work order
+    confidence_weight: 0.82
+  - term: source projection checker
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.source-projection-checker
+    evidence_path: scripts/02.rag-rulebook/check-source-projections/script.sh
+    aliases:
+      - check-source-projections
+      - source projection validator
+      - projection checker
+    confidence_weight: 0.74
+  - term: artifact retrieval profile coverage
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.artifact-profile-coverage
+    aliases:
+      - retrieval-profile coverage
+      - retrieval profile coverage command
+      - artifact profile coverage
+      - why evaluation is not finished
+      - coverage versus selector evaluation
+    confidence_weight: 0.82
+  - term: artifact retrieval profile coverage reporter
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.artifact-profile-coverage-reporter
+    evidence_path: scripts/02.rag-rulebook/report-artifact-retrieval-profile-coverage/script.sh
+    aliases:
+      - report-artifact-retrieval-profile-coverage
+      - profile coverage reporter
+      - retrieval profile coverage reporter
+    confidence_weight: 0.74
+  - term: knowledge disposition gate
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.knowledge-disposition-gate
+    aliases:
+      - knowledge-bearing code change disposition
+      - knowledge-bearing code change gate
+      - code change knowledge coverage
+      - knowledge disposition recorder
+      - record knowledge disposition
+    confidence_weight: 0.82
+  - term: knowledge disposition recorder
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.knowledge-disposition-recorder
+    evidence_path: scripts/02.rag-rulebook/record-knowledge-disposition/script.sh
+    aliases:
+      - record-knowledge-disposition
+      - knowledge disposition record
+      - disposition recorder
+    confidence_weight: 0.74
+  - term: context packet validation
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.context-packet-validation
+    aliases:
+      - validate context packet
+      - context packet schema
+      - context packet validation schema
+      - context packet check
+      - packet validation
+    confidence_weight: 0.82
+  - term: context packet validator
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.context-packet-validator
+    evidence_path: scripts/02.rag-rulebook/validate-context-packet/script.sh
+    aliases:
+      - validate-context-packet
+      - context packet check script
+      - packet validator
+    confidence_weight: 0.74
+  - term: recognition source lifecycle
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.recognition-source-lifecycle
+    aliases:
+      - recognition candidates vs curated sources
+      - recognition candidates versus generated sources
+      - curated generated recognition sources
+      - curated or generated recognition sources
+      - recognition candidates become curated
+      - recognition candidates become generated
+      - recognition candidate lifecycle
+      - generated recognition source lifecycle
+    confidence_weight: 0.82
+  - term: recognition candidate validator
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.recognition-candidate-validator
+    evidence_path: scripts/02.rag-rulebook/validate-recognition-candidates/script.sh
+    aliases:
+      - validate-recognition-candidates
+      - recognition candidates checker
+    confidence_weight: 0.74
+  - term: MCP server deployment corpus gap
+    category: question-category
+    match_type: phrase
+    canonical_id: question.deploy.mcp-corpus-gap
+    aliases:
+      - MCP server deployment corpus gaps
+      - deploy blockers
+      - MCP deploy blockers
+      - MCP server deploy gap
+      - gap.corpus.04.deploy.mcp-server-deployment
+    confidence_weight: 0.82
+  - term: MCP server deployment gap record
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.deploy.mcp-corpus-gap-record
+    evidence_path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+    aliases:
+      - mcp-server-deployment.yml
+      - mcp server gap record
+      - deploy corpus gap record
+    confidence_weight: 0.74
+  - term: selector fixture failure diagnosis
+    category: question-category
+    match_type: phrase
+    canonical_id: question.rag.selector-diagnostics
+    aliases:
+      - selector fixture failure
+      - selector trace stage
+      - trace stage diagnosis
+      - retrieval selector diagnosis
+      - diagnose selector fixture
+    confidence_weight: 0.82
+  - term: retrieval selector evaluation runner
+    category: evidence-family
+    match_type: phrase
+    canonical_id: evidence.rag.selector-evaluation-runner
+    evidence_path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+    aliases:
+      - evaluate-retrieval-selector-fixtures
+      - selector evaluation runner
+      - fixture evaluator
+    confidence_weight: 0.74
 validation_rules:
   - Question categories choose expected evidence families; they do not select execution workflows.
   - Evidence-family terms are lower authority than exact corpus IDs, artifact IDs, and paths.

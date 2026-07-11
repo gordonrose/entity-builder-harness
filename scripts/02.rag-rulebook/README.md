@@ -71,6 +71,9 @@ validation, and standalone service adapters.
 - `audit-explanation-readiness/script.sh` reports whether governed Markdown
   source material and guides are indexed, chunked as `source-explanation`,
   useful for human explanation, and distinct from execution-authority coverage.
+- `report-artifact-retrieval-profile-coverage/script.sh` reports whether
+  indexed artifact metadata has enough deterministic signal to derive useful
+  retrieval profiles, without mutating headers or generated outputs.
 - `check-corpus-root-changes/script.sh` detects changed governed corpus-root
   files, requires retirement records for deleted or renamed old paths, and
   proves changed rule files still reach generated index and chunks.

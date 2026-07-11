@@ -67,6 +67,9 @@ dimensions:
   - id: prompt
     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 
+  - id: user-intents
+    path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
+
   - id: request-context
     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
 

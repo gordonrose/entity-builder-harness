@@ -295,6 +295,52 @@ def compile_intent_resolution(prompt_dimension: dict[str, Any], sources: list[di
     }
 
 
+def compile_user_intents(user_intents_dimension: dict[str, Any]) -> list[dict[str, Any]]:
+    intents: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    seen_aliases: set[str] = set()
+    for index, raw_intent in enumerate(list_of_dicts(user_intents_dimension.get("user_intents")), start=1):
+        intent_id = str(raw_intent.get("intent_id") or "").strip()
+        label = str(raw_intent.get("label") or "").strip()
+        aliases = list_of_strings(raw_intent.get("aliases"))
+        evidence_bias = list_of_strings(raw_intent.get("evidence_bias"))
+        confidence_weight = raw_intent.get("confidence_weight")
+        if not intent_id:
+            raise ValueError(f"user-intents[{index}] intent_id is required")
+        if intent_id in seen_ids:
+            raise ValueError(f"duplicate user intent id: {intent_id}")
+        if not aliases:
+            raise ValueError(f"user intent {intent_id} must include aliases")
+        if not isinstance(confidence_weight, (int, float)) or isinstance(confidence_weight, bool):
+            raise ValueError(f"user intent {intent_id} confidence_weight must be a number")
+        if confidence_weight <= 0 or confidence_weight > 1:
+            raise ValueError(f"user intent {intent_id} confidence_weight must be between 0 and 1")
+        compiled_aliases = []
+        for alias in aliases:
+            normalized = alias.strip().lower()
+            if not normalized:
+                continue
+            if normalized in seen_aliases:
+                raise ValueError(f"duplicate user intent alias: {alias}")
+            seen_aliases.add(normalized)
+            compiled_aliases.append(alias)
+        if not compiled_aliases:
+            raise ValueError(f"user intent {intent_id} must include non-empty aliases")
+        seen_ids.add(intent_id)
+        intents.append(
+            {
+                "intent_id": intent_id,
+                "label": label or intent_id,
+                "aliases": compiled_aliases,
+                "evidence_bias": evidence_bias,
+                "confidence_weight": float(confidence_weight),
+            }
+        )
+    if not intents:
+        raise ValueError("user-intents dimension must include user_intents")
+    return intents
+
+
 def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     bundles = []
     known_question_categories = set()
@@ -314,6 +360,13 @@ def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[d
             raise ValueError("evidence bundle missing question_category_id")
         if question_category_id not in known_question_categories:
             raise ValueError(f"evidence bundle references unknown question category: {question_category_id}")
+        bundle_id = str(raw_bundle.get("bundle_id") or "").strip()
+        when = dict_value(raw_bundle.get("when"))
+        compiled_when: dict[str, str] = {}
+        for field in ("user_intent_id", "intent_id"):
+            value = when.get(field)
+            if isinstance(value, str) and value.strip():
+                compiled_when[field] = value.strip()
         always_source_paths = list_of_strings(raw_bundle.get("always_source_paths"))
         family_source_paths = dict_value(raw_bundle.get("family_source_paths"))
         for source_path in always_source_paths:
@@ -328,7 +381,9 @@ def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[d
             compiled_family_paths[str(family_id)] = source_path
         bundles.append(
             {
+                "bundle_id": bundle_id or question_category_id,
                 "question_category_id": question_category_id,
+                "when": compiled_when,
                 "always_source_paths": always_source_paths,
                 "family_source_paths": compiled_family_paths,
             }
@@ -435,6 +490,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
     if index.get("schema") != INDEX_SCHEMA:
         raise ValueError("rulebook index has unsupported schema")
     prompt_dimension = dimension_by_id(dimensions, "prompt")
+    user_intents_dimension = dimension_by_id(dimensions, "user-intents")
     evidence_dimension = dimension_by_id(dimensions, "evidence-bundles")
     strategy_dimension = dimension_by_id(dimensions, "retrieval-strategy")
     generated_at = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -459,6 +515,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
         "precedence": policy.get("precedence") or [],
         "thresholds": policy.get("thresholds") or {},
         "intent_resolution": compile_intent_resolution(prompt_dimension, sources),
+        "user_intents": compile_user_intents(user_intents_dimension),
         "evidence_bundles": compile_evidence_bundles(evidence_dimension, sources),
         "retrieval_strategy": compile_retrieval_strategy(strategy_dimension),
         "chunk_selection": compile_chunk_selection(strategy_dimension),

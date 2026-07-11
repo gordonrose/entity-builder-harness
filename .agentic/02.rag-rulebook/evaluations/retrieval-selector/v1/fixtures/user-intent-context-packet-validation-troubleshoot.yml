@@ -1,0 +1,50 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-troubleshoot
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove troubleshooting-shaped context-packet validation prompts retrieve script, schema, selector-evaluation, and gate evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.user-intent-context-packet-validation-troubleshoot
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove troubleshoot intent adds diagnostics to context-packet validation topic evidence.
+input:
+  request_text: Why is context packet validation failing after a RAG query?
+  max_chunks: 10
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - user-intent.troubleshoot
+      - question.rag.context-packet-validation
+  selected_chunks:
+    required_source_paths:
+      - scripts/02.rag-rulebook/validate-context-packet/script.sh
+      - .agentic/02.rag-rulebook/schemas/context-packet.schema.yml
+      - .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
+      - scripts/02.rag-rulebook/commit-gates/script.sh
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml

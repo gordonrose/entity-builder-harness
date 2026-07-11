@@ -1,0 +1,74 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-rag-runtime-cache
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: evaluation-fixture
+#   purpose: Prove RAG runtime cache questions retrieve Dockerfile, image, CloudFormation, and local-runtime build evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-rag-runtime-cache
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove immutable runtime-cache prompts retrieve the concrete container and ECS wiring, not only deploy rules.
+input:
+  request_text: How does the RAG immutable runtime cache use the RAG service Dockerfile instead of mutable repo source in ECS?
+  max_chunks: 10
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: RAG immutable runtime cache
+        category: question-category
+        canonical_id: question.deploy.rag-runtime-cache
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: RAG service Dockerfile
+        category: evidence-family
+        canonical_id: evidence.deploy.rag-service-dockerfile
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+      - infra/04.deploy/02.rag-rulebook/image/README.md
+      - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+      - scripts/02.rag-rulebook/build-local-runtime/README.md
+      - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - infra/04.deploy/02.rag-rulebook/image/Dockerfile
+  - infra/04.deploy/02.rag-rulebook/image/README.md
+  - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+  - scripts/02.rag-rulebook/build-local-runtime/README.md
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+update_triggers:
+  - RAG image Dockerfile changes.
+  - ECS service CloudFormation changes.
+  - Local runtime cache build behavior changes.
+

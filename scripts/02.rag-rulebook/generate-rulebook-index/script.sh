@@ -59,6 +59,7 @@ INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
 GENERATOR_VERSION = "prototype-v1"
 CURRENT_RULEBOOK_CORPUS_ID = "corpus.02.rag-rulebook"
 MIN_MARKDOWN_SECTION_WORDS = 10
+HARNESS_CORPUS_ID = "corpus.01.harness"
 DEFAULT_CORPUS_RULE_ROOTS = (
     (CURRENT_RULEBOOK_CORPUS_ID, DEFAULT_RULEBOOK_RULES_ROOT),
     ("corpus.04.deploy", DEFAULT_DEPLOY_RULES_ROOT),
@@ -69,6 +70,719 @@ DEFAULT_EXPLANATION_MARKDOWN_ROOTS = (
     "docs/02.rag-rulebook/source-material",
     "docs/04.deploy/source-material",
     ".agentic/02.rag-rulebook/guides",
+)
+PROCESS_SOURCE_GLOBS = (
+    "AGENTS.md",
+    ".github/workflows/*.yml",
+    ".github/workflows/*.yaml",
+    ".agentic/00.chat/checklists/**/*.md",
+    ".agentic/00.chat/commands/**/*.md",
+    ".agentic/00.chat/standards/**/*.md",
+    ".agentic/00.chat/workflows/**/*.md",
+    ".agentic/01.harness/agents/**/*.md",
+    ".agentic/01.harness/standards/**/*.md",
+    ".agentic/01.harness/state/**/*.yml",
+    ".agentic/01.harness/workflows/**/*.md",
+    ".agentic/02.rag-rulebook/guides/**/*.md",
+    ".agentic/02.rag-rulebook/corpus-gaps/**/*.md",
+    ".agentic/02.rag-rulebook/corpus-gaps/**/*.yml",
+    ".agentic/02.rag-rulebook/evaluations/**/*.md",
+    ".agentic/02.rag-rulebook/policies/**/*.yml",
+    ".agentic/02.rag-rulebook/plans/**/*.md",
+    ".agentic/02.rag-rulebook/plans/**/*.yml",
+    ".agentic/02.rag-rulebook/recognition-candidates/**/*.md",
+    ".agentic/02.rag-rulebook/recognition-candidates/**/*.yml",
+    ".agentic/02.rag-rulebook/recognition-sources/**/*.yml",
+    ".agentic/02.rag-rulebook/schemas/**/*.yml",
+    ".agentic/02.rag-rulebook/service/**/*.md",
+    ".agentic/02.rag-rulebook/service/**/*.mjs",
+    ".agentic/02.rag-rulebook/skills/**/*.md",
+    ".agentic/02.rag-rulebook/source-projections/**/*.md",
+    ".agentic/02.rag-rulebook/source-projections/**/*.yml",
+    ".agentic/02.rag-rulebook/standards/**/*.md",
+    ".agentic/02.rag-rulebook/workflows/**/*.md",
+    ".agentic/aws/**/*.md",
+    ".agentic/education/agents/**/*.md",
+    ".agentic/education/profiles/**/*.md",
+    ".agentic/education/references/**/*.md",
+    ".agentic/education/templates/**/*.md",
+    ".agentic/education/workflows/**/*.md",
+    ".agentic/shared/standards/**/*.md",
+    ".agentic/shared/workflows/**/*.md",
+    "docs/00.chat/**/*.md",
+    "docs/education/architecture/**/*.md",
+    "infra/04.deploy/**/*.md",
+    "infra/04.deploy/**/*.yml",
+    "infra/04.deploy/**/*.yaml",
+    "infra/04.deploy/**/Dockerfile",
+    "infra/04.deploy/**/*.dockerignore",
+    "packages/core/src/**/*.ts",
+    "scripts/00.chat/**/README.md",
+    "scripts/00.chat/**/script.sh",
+    "scripts/01.harness/*.sh",
+    "scripts/01.harness/*.js",
+    "scripts/01.harness/**/*.md",
+    "scripts/01.harness/**/*.sh",
+    "scripts/01.harness/**/*.js",
+    "scripts/02.rag-rulebook/**/README.md",
+    "scripts/02.rag-rulebook/**/script.sh",
+    "scripts/04.deploy/**/README.md",
+    "scripts/04.deploy/**/script.sh",
+    ".codex/rules/*.rules",
+    ".claude/settings.json",
+    ".vibe/config.toml",
+)
+SUPPORTING_SOURCE_ENTRIES = (
+    {
+        "current_path": ".agentic/01.harness/artifact-metadata/README.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "readme",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-metadata-capability"],
+            "answers_questions_about": ["how harness artifact metadata is organized"],
+            "produces": [],
+            "consumes": ["agentic-artifact/v2 metadata headers"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": ".agentic/01.harness/artifact-metadata/standard.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "standard",
+        "source_type": "standard",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-metadata-standard"],
+            "answers_questions_about": ["how artifact metadata headers are shaped"],
+            "produces": ["agentic-artifact/v2 metadata contract"],
+            "consumes": [],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": ".agentic/01.harness/artifact-metadata/schema.v2.yml",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "schema",
+        "source_type": "schema",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-metadata-schema"],
+            "answers_questions_about": ["machine-readable artifact metadata fields"],
+            "produces": ["agentic-artifact/v2 field contract"],
+            "consumes": [],
+            "validates": ["agentic-artifact/v2 field shape"],
+        },
+    },
+    {
+        "current_path": "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-header-validator"],
+            "answers_questions_about": ["how artifact metadata headers are validated"],
+            "produces": ["artifact metadata validation report"],
+            "consumes": ["agentic-artifact/v2 metadata headers", "agentic-script metadata headers"],
+            "validates": ["metadata header shape", "metadata taxonomy values"],
+        },
+    },
+    {
+        "current_path": "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-index-builder"],
+            "answers_questions_about": ["how the harness is indexed", "how metadata headers become an artifact index"],
+            "produces": ["agentic-artifact-index"],
+            "consumes": ["agentic-artifact/v2 metadata headers", "agentic-script metadata headers"],
+            "validates": ["artifact metadata index"],
+        },
+    },
+    {
+        "current_path": "scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-header-backfill"],
+            "answers_questions_about": ["how artifact metadata headers are added and maintained"],
+            "produces": ["agentic-artifact/v2 metadata headers"],
+            "consumes": ["existing artifact files", "artifact metadata standard"],
+            "validates": ["changed metadata headers", "artifact metadata index"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/generate-recognition-sources/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["recognition-source-generator"],
+            "answers_questions_about": ["how harness metadata becomes RAG recognition terms"],
+            "produces": ["generated artifact recognition source", "generated routing recognition source"],
+            "consumes": ["agentic artifact index", "routing policy", "rulebook index"],
+            "validates": ["generated recognition source freshness"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/generate-rulebook-index/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["rulebook-index-builder"],
+            "answers_questions_about": ["how the rulebook index is built", "how RAG knows source roots and artifacts"],
+            "produces": ["rulebook index", "artifacts", "source references", "path mappings", "chunk candidates", "graph edges"],
+            "consumes": ["prototype corpus migration map", "rule roots", "metadata headers"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chunk-generator"],
+            "answers_questions_about": ["how the rulebook index becomes retrievable chunks"],
+            "produces": ["rulebook chunk set", "retrieval chunks", "citations"],
+            "consumes": ["rulebook index"],
+            "validates": ["rulebook index before chunk generation"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/build-local-runtime/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["runtime-builder"],
+            "answers_questions_about": ["how the local RAG runtime is packaged"],
+            "produces": ["local runtime cache", "rulebook index cache", "chunk cache", "compiled retrieval policy"],
+            "consumes": ["rulebook index", "rulebook chunks", "compiled retrieval policy", "recognition sources"],
+            "validates": ["runtime freshness inputs"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/query-local-context/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["runtime-query"],
+            "answers_questions_about": ["how RAG queries the built runtime", "how context packets are produced"],
+            "produces": ["context packet", "compact context packet"],
+            "consumes": ["local runtime cache", "request text", "session metadata"],
+            "validates": ["runtime freshness", "context packet"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["retrieval-selector"],
+            "answers_questions_about": ["how RAG uses the index to find content", "how chunks are selected and ranked"],
+            "produces": ["selected chunks", "selector trace", "context packet"],
+            "consumes": ["rulebook chunks", "compiled retrieval policy", "recognition sources", "request text"],
+            "validates": ["selected context packet"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["retrieval-policy-compiler"],
+            "answers_questions_about": ["how retrieval policy dimensions become selector policy"],
+            "produces": ["compiled retrieval policy"],
+            "consumes": ["retrieval selector policy pack", "retrieval policy dimensions"],
+            "validates": ["retrieval policy pack"],
+        },
+    },
+    {
+        "current_path": "docs/02.rag-rulebook/source-material/rag-retrieval.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "source-material",
+        "source_type": "source-material",
+        "retrieval_profile": {
+            "retrieval_roles": ["rag-retrieval-source-of-truth"],
+            "answers_questions_about": ["how RAG retrieval works", "how source material becomes context packets"],
+            "produces": ["RAG retrieval source-of-truth guidance"],
+            "consumes": ["repo source material", "artifact metadata", "recognition sources"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "corpus-gap",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["rag-retrieval-gap"],
+            "answers_questions_about": ["which RAG retrieval source-of-truth coverage is still incomplete"],
+            "produces": ["retrieval coverage gap"],
+            "consumes": ["RAG retrieval source material"],
+            "validates": ["selector fixture coverage expectations"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/illustrative-example-paths-deprioritized.yml",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "evaluation-fixture",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["example-deprioritization-fixture"],
+            "answers_questions_about": ["how illustrative paths are deprioritized"],
+            "produces": ["selector proof for example-only paths"],
+            "consumes": ["prompt recognition policy"],
+            "validates": ["example context deprioritization"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "evaluation-fixture",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["prompt-session-conflict-fixture"],
+            "answers_questions_about": ["how prompt request context and session metadata conflicts are handled"],
+            "produces": ["selector proof for prompt/session conflicts"],
+            "consumes": ["request context policy", "session metadata"],
+            "validates": ["prompt/session conflict behavior"],
+        },
+    },
+    {
+        "current_path": ".agentic/00.chat/workflows/chat-start.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "workflow",
+        "source_type": "workflow",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-lifecycle-workflow"],
+            "answers_questions_about": ["what 00.chat owns", "how chat lifecycle differs from RAG routing"],
+            "produces": ["chat session lifecycle context"],
+            "consumes": ["opening user message", "session metadata"],
+            "validates": ["chat-owned worktree"],
+        },
+    },
+    {
+        "current_path": ".agentic/00.chat/checklists/before-commit.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "checklist",
+        "source_type": "standard",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-before-commit-checklist"],
+            "answers_questions_about": ["which chat checks run before commit", "how chat commits are prepared"],
+            "produces": ["chat commit checklist"],
+            "consumes": ["chat session log", "changed paths"],
+            "validates": ["chat commit readiness"],
+        },
+    },
+    {
+        "current_path": ".agentic/00.chat/workflows/chat-cleanup.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "workflow",
+        "source_type": "workflow",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-cleanup-workflow"],
+            "answers_questions_about": ["how chat branches and worktrees are safely cleaned up"],
+            "produces": ["chat cleanup guidance"],
+            "consumes": ["chat branch state", "worktree state", "session logs"],
+            "validates": ["cleanup safety"],
+        },
+    },
+    {
+        "current_path": ".agentic/00.chat/workflows/chat-refresh-from-main.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "workflow",
+        "source_type": "workflow",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-refresh-workflow"],
+            "answers_questions_about": ["how chat branches refresh from local main without losing work"],
+            "produces": ["main refresh guidance"],
+            "consumes": ["main branch state", "chat branch state", "conflict classifications"],
+            "validates": ["refresh readiness"],
+        },
+    },
+    {
+        "current_path": ".agentic/00.chat/workflows/chat-promote-to-main.md",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "workflow",
+        "source_type": "workflow",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-promote-local-main-workflow"],
+            "answers_questions_about": ["how chat work is merged into local main", "why push is separate from local promotion"],
+            "produces": ["local main promotion guidance"],
+            "consumes": ["chat branch", "local main", "session log"],
+            "validates": ["local merge readiness"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/session-log/record-chat-commit/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-commit-recorder"],
+            "answers_questions_about": ["how chat commits and session metrics are recorded"],
+            "produces": ["session log commit entry", "session metrics"],
+            "consumes": ["task commit", "transcript metadata", "cost estimate"],
+            "validates": ["recorded commit metadata"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/metrics/estimate-chat-cost/script.js",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-cost-estimator"],
+            "answers_questions_about": ["how estimated chat cost is calculated"],
+            "produces": ["estimated_chat_cost", "estimated_chat_cost_basis"],
+            "consumes": ["estimated_chat_tokens", "chat pricing profile"],
+            "validates": ["cost estimate metadata"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/reporting/generate-commit-log-summary/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-commit-log-summary"],
+            "answers_questions_about": ["how commit log summaries and chat history reports are generated"],
+            "produces": ["commit log summary"],
+            "consumes": ["chat session logs"],
+            "validates": ["summary output"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/worktree/dirty-worktree-check/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-dirty-worktree-check"],
+            "answers_questions_about": ["how dirty worktrees block chat actions"],
+            "produces": ["dirty worktree status"],
+            "consumes": ["git worktree state"],
+            "validates": ["clean worktree precondition"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/worktree/check-write-location/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-write-location-check"],
+            "answers_questions_about": ["how chat-owned worktree location is verified"],
+            "produces": ["write location verification"],
+            "consumes": ["chat session metadata", "current working directory"],
+            "validates": ["chat worktree ownership"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/session-log/record-sub-agent-activity/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-sub-agent-recorder"],
+            "answers_questions_about": ["how sub-agent activity and direct fallback are recorded"],
+            "produces": ["sub-agent activity log entry"],
+            "consumes": ["delegated work summary", "current chat session log"],
+            "validates": ["delegation audit evidence"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/startup/start-chat-session/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-startup-engine"],
+            "answers_questions_about": ["how chat branches, worktrees, prompts, and session logs are created"],
+            "produces": ["chat session", "chat branch", "chat worktree", "first prompt"],
+            "consumes": ["task summary", "repo state"],
+            "validates": ["chat startup inputs"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/closeout/build-closeout-prompt/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-closeout-prompt-builder"],
+            "answers_questions_about": ["how closeout prompts guide commit and handoff"],
+            "produces": ["closeout prompt"],
+            "consumes": ["chat worktree", "session log", "changed paths"],
+            "validates": ["closeout handoff readiness"],
+        },
+    },
+    {
+        "current_path": "scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["chat-local-main-merge-verifier"],
+            "answers_questions_about": ["how local main promotion is verified"],
+            "produces": ["local merge readiness report"],
+            "consumes": ["chat branch", "local main", "session log"],
+            "validates": ["chat branch is ready for local main merge"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "standard",
+        "source_type": "standard",
+        "retrieval_profile": {
+            "retrieval_roles": ["retrieval-selector-policy-standard"],
+            "answers_questions_about": ["how prompt request context drives RAG routing"],
+            "produces": ["retrieval selector policy rules"],
+            "consumes": ["recognition sources", "request context"],
+            "validates": ["selector policy expectations"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/README.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "readme",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["rag-rulebook-layer-readme"],
+            "answers_questions_about": ["what the RAG rulebook layer owns"],
+            "produces": ["RAG rulebook layer orientation"],
+            "consumes": ["RAG rulebook artifacts"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "source-material",
+        "source_type": "source-material",
+        "retrieval_profile": {
+            "retrieval_roles": ["hosted-context-provider-source"],
+            "answers_questions_about": ["how hosted RAG provider contracts work"],
+            "produces": ["hosted context provider source guidance"],
+            "consumes": ["local RAG runtime", "HTTP service contract"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": "docs/02.rag-rulebook/postman/README.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "readme",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["hosted-rag-postman"],
+            "answers_questions_about": ["how to test hosted RAG with Postman"],
+            "produces": ["Postman collection usage guidance"],
+            "consumes": ["hosted RAG HTTP endpoints"],
+            "validates": ["service smoke test workflow"],
+        },
+    },
+    {
+        "current_path": "infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml",
+        "corpus_id": "corpus.04.deploy",
+        "artifact_type": "deploy-template",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["rag-hosted-auth-foundation"],
+            "answers_questions_about": ["where hosted RAG service token secrets are declared"],
+            "produces": ["ServiceTokenSecretArn output"],
+            "consumes": ["AWS Secrets Manager", "RAG rulebook service config"],
+            "validates": ["hosted service auth infrastructure"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/query-local-context/README.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "readme",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["local-context-query-readme"],
+            "answers_questions_about": ["how compact and full context packets are queried locally"],
+            "produces": ["query-local-context usage guidance"],
+            "consumes": ["local runtime cache", "request text"],
+            "validates": ["context packet output"],
+        },
+    },
+    {
+        "current_path": "docs/04.deploy/source-material/shared/container-image-management.md",
+        "corpus_id": "corpus.04.deploy",
+        "artifact_type": "source-material",
+        "source_type": "source-material",
+        "retrieval_profile": {
+            "retrieval_roles": ["container-image-source-material"],
+            "answers_questions_about": ["source rationale for container image governance"],
+            "produces": ["container image source guidance"],
+            "consumes": ["deploy image boundaries"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": "scripts/04.deploy/validate-container-boundaries/script.sh",
+        "corpus_id": "corpus.04.deploy",
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["container-boundary-validator"],
+            "answers_questions_about": ["how container image boundaries are validated"],
+            "produces": ["container boundary validation report"],
+            "consumes": ["Dockerfile paths", "deploy image directories"],
+            "validates": ["container image boundary rules"],
+        },
+    },
+    {
+        "current_path": "scripts/02.rag-rulebook/commit-gates/script.sh",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["rag-rulebook-commit-gate"],
+            "answers_questions_about": ["which RAG rulebook checks run before commit"],
+            "produces": ["RAG commit gate result"],
+            "consumes": ["recognition sources", "retrieval policy", "selector fixtures", "runtime files"],
+            "validates": ["RAG rulebook changes"],
+        },
+    },
+    {
+        "current_path": "scripts/repo/commit-gates/script.sh",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "script",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["repo-commit-gate"],
+            "answers_questions_about": ["how repository-wide commit gates invoke layer checks"],
+            "produces": ["repo commit gate result"],
+            "consumes": ["layer commit gates"],
+            "validates": ["repository changes before commit"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "standard",
+        "source_type": "standard",
+        "retrieval_profile": {
+            "retrieval_roles": ["retrieval-selector-evaluation-standard"],
+            "answers_questions_about": ["how retrieval selector fixtures should prove behavior"],
+            "produces": ["selector evaluation requirements"],
+            "consumes": ["selector fixtures", "context packets"],
+            "validates": ["retrieval selector behavior"],
+        },
+    },
+    {
+        "current_path": "packages/core/README.md",
+        "corpus_id": "corpus.03.product.core",
+        "artifact_type": "readme",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["packages-core-overview"],
+            "answers_questions_about": ["what packages/core owns"],
+            "produces": ["core package orientation"],
+            "consumes": ["platform-independent runtime contracts"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": "platform/contracts/README.md",
+        "corpus_id": "corpus.03.product.platform",
+        "artifact_type": "readme",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["platform-contracts-overview"],
+            "answers_questions_about": ["what platform/contracts owns"],
+            "produces": ["platform contract orientation"],
+            "consumes": ["packages/core contracts", "runtime integration contracts"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml",
+        "corpus_id": "corpus.03.product.core",
+        "artifact_type": "evaluation-fixture",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["packages-core-diagnostics-fixture"],
+            "answers_questions_about": ["how packages/core diagnostics support self-healing vocabulary"],
+            "produces": ["diagnostics selector proof"],
+            "consumes": ["packages-core rules"],
+            "validates": ["diagnostics retrieval behavior"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml",
+        "corpus_id": "corpus.03.product.core",
+        "artifact_type": "evaluation-fixture",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["packages-core-events-fixture"],
+            "answers_questions_about": ["how packages/core events stay provider-neutral"],
+            "produces": ["events selector proof"],
+            "consumes": ["packages-core events rules"],
+            "validates": ["events retrieval behavior"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml",
+        "corpus_id": "corpus.03.product.core",
+        "artifact_type": "evaluation-fixture",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["packages-core-queues-fixture"],
+            "answers_questions_about": ["how packages/core queues stay provider-neutral"],
+            "produces": ["queues selector proof"],
+            "consumes": ["packages-core queues rules"],
+            "validates": ["queues retrieval behavior"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml",
+        "corpus_id": "corpus.03.product.core",
+        "artifact_type": "evaluation-fixture",
+        "source_type": "source",
+        "retrieval_profile": {
+            "retrieval_roles": ["packages-core-files-fixture"],
+            "answers_questions_about": ["how packages/core files define high-risk file storage contracts"],
+            "produces": ["files selector proof"],
+            "consumes": ["packages-core files rules"],
+            "validates": ["files retrieval behavior"],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "standard",
+        "source_type": "standard",
+        "retrieval_profile": {
+            "retrieval_roles": ["request-context-policy"],
+            "answers_questions_about": ["how request context influences retrieval"],
+            "produces": ["request-context selector signals"],
+            "consumes": ["prompt recognition matches", "session metadata"],
+            "validates": [],
+        },
+    },
+    {
+        "current_path": ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml",
+        "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        "artifact_type": "standard",
+        "source_type": "standard",
+        "retrieval_profile": {
+            "retrieval_roles": ["evidence-bundle-policy"],
+            "answers_questions_about": ["how canonical source paths are preserved"],
+            "produces": ["required evidence source paths"],
+            "consumes": ["question categories", "evidence families"],
+            "validates": ["missing evidence gaps"],
+        },
+    },
 )
 
 
@@ -381,6 +1095,7 @@ def chunk_purpose_for_content_kind(content_kind: str) -> str:
         "rule-pack-step": "rule",
         "required-check": "rule",
         "source-reference": "source-explanation",
+        "source-excerpt": "source-explanation",
         "migration-entry": "artifact-summary",
         "source-explanation": "source-explanation",
         "adr-decision": "adr-decision",
@@ -427,6 +1142,90 @@ def default_manifest_path_for_corpus(corpus_id: str, rules_root: str) -> str | N
     if repo_path(corpus_readme).is_file():
         return normalize_path(corpus_readme)
     return None
+
+
+def process_source_corpus_id(path: str, metadata: dict[str, Any]) -> str:
+    layer = str(metadata.get("layer") or "")
+    if layer == "02.rag-rulebook" or path.startswith(("scripts/02.rag-rulebook/", ".agentic/02.rag-rulebook/")):
+        return CURRENT_RULEBOOK_CORPUS_ID
+    if layer == "04.deploy" or path.startswith((".agentic/aws/", ".github/workflows/", "infra/04.deploy/", "scripts/04.deploy/", "docs/04.deploy/")):
+        return "corpus.04.deploy"
+    if layer == "06.shared":
+        return "corpus.06.shared"
+    if path.startswith("packages/core/"):
+        return "corpus.03.product.core"
+    if path.startswith("platform/contracts/"):
+        return "corpus.03.product.platform"
+    return HARNESS_CORPUS_ID
+
+
+def process_source_type(path: str, metadata: dict[str, Any]) -> str:
+    kind = str(metadata.get("kind") or "").strip()
+    if kind == "workflow":
+        return "workflow"
+    if kind in {"standard", "schema", "plan"}:
+        return kind
+    return "source"
+
+
+def process_artifact_type(path: str, metadata: dict[str, Any]) -> str:
+    kind = str(metadata.get("kind") or "").strip()
+    if kind:
+        return kind
+    if path.endswith(".rules"):
+        return "tool-permission-config"
+    if path.endswith((".json", ".toml")):
+        return "config"
+    return Path(path).suffix.lstrip(".") or "source"
+
+
+def process_source_profile(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    kind = process_artifact_type(path, metadata)
+    domain = str(metadata.get("domain") or Path(path).parent.as_posix()).replace("/", ".")
+    purpose = str(metadata.get("purpose") or f"Provide governed process evidence for {path}")
+    return {
+        "retrieval_roles": [f"{safe_id(kind)}-authority", "governed-process-source"],
+        "answers_questions_about": [
+            purpose,
+            f"how {domain} is governed",
+        ],
+        "produces": [f"{kind} guidance"],
+        "consumes": [],
+        "validates": ["governed process evidence"],
+    }
+
+
+def discover_process_source_entries(excluded_paths: set[str]) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for pattern in PROCESS_SOURCE_GLOBS:
+        for absolute in sorted(glob.glob((ROOT / pattern).as_posix(), recursive=True)):
+            path = normalize_path(Path(absolute))
+            if path in seen or path in excluded_paths:
+                continue
+            if not repo_path(path).is_file():
+                continue
+            generated_recognition_source = path.startswith(".agentic/02.rag-rulebook/recognition-sources/generated/")
+            if "/fixtures/" in path or ("/generated/" in path and not generated_recognition_source) or "/cache/" in path:
+                continue
+            if path.endswith("/workflows/default.md"):
+                continue
+            metadata = parse_metadata_header(path)
+            status = str(metadata.get("status") or "active")
+            if status not in {"active", "draft"}:
+                continue
+            seen.add(path)
+            entries.append(
+                {
+                    "current_path": path,
+                    "corpus_id": process_source_corpus_id(path, metadata),
+                    "artifact_type": process_artifact_type(path, metadata),
+                    "source_type": process_source_type(path, metadata),
+                    "retrieval_profile": process_source_profile(path, metadata),
+                    "auto_discovered": True,
+                }
+            )
+    return entries
 
 
 def parse_corpus_rule_roots(args: argparse.Namespace) -> list[dict[str, str]]:
@@ -621,6 +1420,9 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             errors.append(f"duplicate artifact_ref: {artifact_ref}")
         artifact_refs.add(artifact_ref)
         artifacts.append(artifact)
+        current_path = artifact.get("current_path")
+        if isinstance(current_path, str):
+            path_to_artifact_ref[normalize_path(current_path)] = artifact_ref
         add_edge(
             artifact_ref,
             artifact["corpus_id"],
@@ -834,8 +1636,19 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                         artifact_ref,
                     )
 
-    for current_path in collect_explanation_markdown_paths():
-        if current_path in markdown_artifact_paths:
+    supporting_source_entries = list(SUPPORTING_SOURCE_ENTRIES)
+    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
+    yaml_paths = {
+        normalize_path(str(entry.get("current_path")))
+        for _, entry in yaml_entries
+        if isinstance(entry.get("current_path"), str)
+    }
+    supporting_source_entries.extend(discover_process_source_entries(supporting_paths | yaml_paths))
+    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
+    explanation_markdown_paths = set(collect_explanation_markdown_paths())
+
+    for current_path in explanation_markdown_paths:
+        if current_path in markdown_artifact_paths or current_path in supporting_paths:
             continue
         metadata = parse_metadata_header(current_path)
         if metadata.get("schema") != "agentic-artifact/v2":
@@ -859,6 +1672,93 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
                 "migration_status": "current",
             },
         )
+
+    for entry in supporting_source_entries:
+        current_path = str(entry["current_path"])
+        corpus_id = str(entry["corpus_id"])
+        metadata = parse_metadata_header(current_path) if repo_path(current_path).is_file() else {}
+        artifact_ref = artifact_ref_for(None, metadata.get("id"), current_path)
+        source_ref_id = make_source_ref_id(str(entry["source_type"]), current_path)
+        source_references.append(
+            {
+                "source_ref_id": source_ref_id,
+                "corpus_id": corpus_id,
+                "artifact_ref": artifact_ref,
+                "source_path": current_path,
+                "source_type": entry["source_type"],
+            }
+        )
+        add_artifact(
+            {
+                "artifact_ref": artifact_ref,
+                "metadata_id": metadata.get("id"),
+                "artifact_type": entry["artifact_type"],
+                "title": metadata.get("purpose") or Path(current_path).stem,
+                "status": metadata.get("status") or "active",
+                "version": metadata.get("version") or 1,
+                "corpus_id": corpus_id,
+                "current_path": current_path,
+                "proposed_path": current_path,
+                "migration_status": "current",
+                "source_ref_ids": [source_ref_id],
+                "retrieval_profile": entry.get("retrieval_profile", {}),
+                "diagnostics": [],
+            }
+        )
+        add_path_mapping(
+            {
+                "current_path": current_path,
+                "proposed_target_path": current_path,
+                "proposed_corpus_id": corpus_id,
+                "migration_status": "current",
+            },
+            artifact_ref,
+        )
+        chunk_id = f"chunk.source.{safe_id(artifact_ref)}"
+        chunk_candidates.append(
+            {
+                "chunk_id": chunk_id,
+                "artifact_ref": artifact_ref,
+                "corpus_id": corpus_id,
+                **chunk_candidate_base("source-excerpt"),
+                "section_path": "source-excerpt",
+                "source_path": current_path,
+                "token_estimate": 1200,
+                "source_ref_ids": [source_ref_id],
+            }
+        )
+        add_edge(
+            artifact_ref,
+            chunk_id,
+            "contains-chunk",
+            "Supporting source excerpt is a retrievable chunk candidate.",
+            [source_ref_id],
+        )
+        profile = entry.get("retrieval_profile")
+        if isinstance(profile, dict) and profile:
+            profile_chunk_id = f"chunk.profile.{safe_id(artifact_ref)}"
+            chunk_candidates.append(
+                {
+                    "chunk_id": profile_chunk_id,
+                    "artifact_ref": artifact_ref,
+                    "corpus_id": corpus_id,
+                    **chunk_candidate_base("retrieval-profile"),
+                    "section_path": "retrieval-profile",
+                    "source_path": current_path,
+                    "token_estimate": 220,
+                    "source_ref_ids": [source_ref_id],
+                    "retrieval_profile": profile,
+                }
+            )
+            add_edge(
+                artifact_ref,
+                profile_chunk_id,
+                "contains-chunk",
+                "Generated retrieval profile is a retrievable chunk candidate.",
+                [source_ref_id],
+            )
+        if current_path in explanation_markdown_paths:
+            add_markdown_section_chunks(artifact_ref, corpus_id, current_path, str(entry["source_type"]))
 
     for group_name, entry in yaml_entries:
         current_path = entry.get("current_path")
@@ -1103,6 +2003,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
     input_paths = [migration_map_path]
     input_paths.extend(entry.get("current_path") for _, entry in yaml_entries if isinstance(entry.get("current_path"), str))
     input_paths.extend(sorted(markdown_input_paths))
+    input_paths.extend(entry["current_path"] for entry in supporting_source_entries)
     inputs = []
     for path in sorted(set(input_paths)):
         if repo_path(path).is_file():
@@ -1137,6 +2038,90 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             "path": migration_map_path,
             "role": "migration-map",
             "migration_status": "proposed",
+        },
+        {
+            "root_id": "root.harness-artifact-metadata",
+            "path": ".agentic/01.harness/artifact-metadata",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.harness-artifact-metadata-scripts",
+            "path": "scripts/01.harness/artifact-metadata",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.agentic-process-sources",
+            "path": ".agentic",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.repo-agent-instructions",
+            "path": "AGENTS.md",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.chat-process-scripts",
+            "path": "scripts/00.chat",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.harness-process-scripts",
+            "path": "scripts/01.harness",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.rag-rulebook-process-sources",
+            "path": ".agentic/02.rag-rulebook",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        },
+        {
+            "root_id": "root.rag-rulebook-diagnostics",
+            "path": ".agentic/02.rag-rulebook/corpus-gaps",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": CURRENT_RULEBOOK_CORPUS_ID,
+        },
+        {
+            "root_id": "root.github-workflows",
+            "path": ".github/workflows",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": "corpus.04.deploy",
+        },
+        {
+            "root_id": "root.deploy-infra-sources",
+            "path": "infra/04.deploy",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": "corpus.04.deploy",
+        },
+        {
+            "root_id": "root.education-docs",
+            "path": "docs/education",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": HARNESS_CORPUS_ID,
+        },
+        {
+            "root_id": "root.packages-core-source",
+            "path": "packages/core/src",
+            "role": "supporting-source",
+            "migration_status": "current",
+            "corpus_id": "corpus.03.product.core",
         },
     ]
     for root in current_corpus_rule_roots:

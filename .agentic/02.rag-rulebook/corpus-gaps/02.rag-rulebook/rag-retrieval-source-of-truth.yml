@@ -1,0 +1,155 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.corpus-gap.02-rag-rulebook.rag-retrieval-source-of-truth
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: corpus-gap
+#   purpose: Track source-to-rule and selector proof still needed for the printable RAG retrieval source-of-truth document.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.check-source-material-coverage
+#       path: scripts/02.rag-rulebook/check-source-material-coverage/script.sh
+#     - id: rag-rulebook.source-projections.v1
+#       path: .agentic/02.rag-rulebook/source-projections/v1.yml
+schema: rag-rulebook/corpus-gap/v1
+gap_id: gap.corpus.02.rag-rulebook.rag-retrieval-source-of-truth
+status: in-progress
+target_corpus_id: corpus.02.rag-rulebook
+owner_layer: 02.rag-rulebook
+owner_path: .agentic/02.rag-rulebook/
+summary: >
+  A printable RAG retrieval source-of-truth document now exists, but it has not
+  yet completed OKF source-material review, source-to-rule derivation,
+  structured rule projection, generated chunk proof, or selector evaluation
+  coverage for runtime payloads, context-packet assembly, and
+  teach/decide/plan/implement intent handling.
+observed_prompt: >
+  We should probably create a RAG retrieval markdown document in the same style
+  as the other source material, printable for study, and usable to create chunks
+  that teach, decide, and plan based on intent.
+match_terms:
+  - RAG retrieval source of truth
+  - rag retrieval
+  - retrieval profiles
+  - source of truth hierarchy
+  - context packets
+  - teach decide plan intent
+  - generated chunks
+  - source-to-rule derivation
+target_question: >
+  What prompt payloads, runtime files, source-of-truth hierarchy, RAG retrieval
+  pipeline, chunking model, context-packet contract, assembly algorithm,
+  freshness expectation, intent handling, and update rule should agents use
+  when teaching, deciding, planning, implementing, or reviewing repo work?
+source_material:
+  status: present
+  evidence_paths:
+    - docs/02.rag-rulebook/source-material/rag-retrieval.md
+  expectation: >
+    Source material now records the repo-level RAG retrieval runtime path,
+    prompt payloads, runtime files, corpus ownership, artifact metadata role,
+    retrieval profiles, recognition sources, chunk shape, context-packet shape,
+    packet assembly algorithm, intent behavior, gaps, freshness, and update
+    rules.
+scope:
+  included:
+    - Human-readable RAG retrieval source-of-truth study material.
+    - Current HTTP and CLI prompt payload shapes.
+    - Current runtime cache and context-packet assembly path.
+    - Source hierarchy from repo artifacts through context packets.
+    - Intent-aware retrieval guidance for teaching, decisions, planning,
+      implementation, review, and context retrieval.
+    - Generated retrieval-profile and artifact metadata boundaries.
+    - Update rules for keeping RAG source material current.
+  excluded:
+    - Treating the new markdown as already-derived structured rule coverage.
+    - Marking runtime chunks current before rule derivation and chunk generation.
+    - Adding LLM review to normal gates without a governed review workflow.
+    - Changing artifact metadata schema fields.
+required_coverage:
+  source_material:
+    status: present
+    evidence_paths:
+      - docs/02.rag-rulebook/source-material/rag-retrieval.md
+    expectation: >
+      The source document is present and should be reviewed before rule
+      derivation.
+  okf_source_material_review:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      Add an OKF review record before accepting this source as production-grade
+      source material for durable structured rules.
+  structured_rulebook:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      Derive focused 02.rag-rulebook rules for source hierarchy, retrieval
+      profiles, intent handling, context packets, gap behavior, and update
+      triggers.
+  indexed_chunks:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      Regenerate rulebook index and chunks after structured rules are derived.
+  selector_evaluation:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      Add selector fixtures proving teach, decide, plan, implement, review, and
+      misleading-example prompts retrieve the right chunks and preserve gaps.
+needed_outputs:
+  - accepted OKF source-material review record
+  - source-to-rule derivation report
+  - structured RAG retrieval rule YAML
+  - generated rulebook index and chunks
+  - selector fixtures for teach, decide, plan, implement, review, and example-deprioritization prompt shapes
+  - update to this gap when proof becomes present
+local_query_behavior:
+  should_emit_gap: true
+  blocking: false
+  blocking_by_intent:
+    intent.planning.guidance: false
+    intent.planning.decision-support: false
+    intent.explanation.tutor: false
+    intent.discovery.explanation: false
+    intent.no-action.explanation: false
+    intent.context.retrieve: false
+    intent.implementation.request: false
+    intent.deploy.execution: true
+execution_blocking_gaps:
+  - id: gap.rag-rulebook.rag-retrieval-structured-rules-missing
+    type: missing-structured-rulebook
+    description: >
+      The RAG retrieval source-of-truth document is not yet projected into
+      structured rules with source_derivation provenance.
+    suggested_resolution: >
+      Run source-material review, produce a derivation report, and add focused
+      rule YAML before treating this source as complete runtime policy.
+  - id: gap.rag-rulebook.rag-retrieval-selector-proof-missing
+    type: missing-evaluation
+    description: >
+      The selector does not yet have fixtures proving intent-aware retrieval
+      behavior directly from this source.
+    suggested_resolution: >
+      Add fixtures for teaching, decision support, planning, implementation,
+      review, and misleading illustrative examples.
+suggested_resolution: >
+  Review the source material, derive structured rules, generate chunks, and add
+  selector fixtures before closing this gap.
+review:
+  required: true
+  owner: 02.rag-rulebook
+  cadence: Review whenever retrieval policy, generated retrieval profiles,
+    source projections, context packets, or commit-log-to-source promotion rules
+    change.

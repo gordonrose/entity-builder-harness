@@ -559,6 +559,72 @@ Summary: Added apps/platform-smoke and products/kanbien-platform, wired the depl
 
 ADR impact: Covered by existing app mount, product composition, Cognito auth, and ECS Fargate planning ADRs; no new ADR required for this implementation slice.
 
+
+### 2026-07-11T21:46:46Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Regenerated artifacts.yml from the merged source scripts so generated recognition terms reflect both branches.
+
+
+### 2026-07-11T21:46:46Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Merged explanation chunk purpose/authority fields with source-excerpt and retrieval-profile schema support.
+
+
+### 2026-07-11T21:46:46Z - Main refresh conflict recorded
+
+Path: `scripts/02.rag-rulebook/README.md`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept both audit-explanation-readiness and report-artifact-retrieval-profile-coverage descriptions.
+
+
+### 2026-07-11T21:46:46Z - Main refresh conflict recorded
+
+Path: `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Merged source-explanation ranking and intent purpose selection with retrieval-profile evidence ranking and required source preservation.
+
+
+### 2026-07-11T21:46:46Z - Main refresh conflict recorded
+
+Path: `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept source-explanation rendering and added source-excerpt plus retrieval-profile rendering paths.
+
+
+### 2026-07-11T21:46:47Z - Main refresh conflict recorded
+
+Path: `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Merged explanation markdown source discovery with supporting-source retrieval profiles, avoided duplicate artifacts, attached explanation chunks to supported paths, and added base chunk metadata to source-excerpt/profile candidates.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -596,7 +662,72 @@ ADR impact: Covered by existing app mount, product composition, Cognito auth, an
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Classifier reported normal-repo-conflict; user approved manual resolution. The file is generated recognition-source output from both branches.
+  Action: Regenerated artifacts.yml from the merged source scripts so generated recognition terms reflect both branches.
+  Preflight branch: `agentic/preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c/20260711213436`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c-20260711213436`
+  Files changed by resolution: Regenerated .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml.
+  Checks: bash -n affected scripts; generate-recognition-sources --check --source all; generate-rulebook-index smoke-test; generate-rulebook-chunks smoke-test; generate-retrieval-selector-fixture smoke-test; generate-recognition-sources smoke-test; report-artifact-retrieval-profile-coverage smoke-test; git diff --check
+
+
+- Path: `.agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Classifier reported normal-repo-conflict; user approved manual resolution. Both branches changed the rulebook index schema vocabulary.
+  Action: Merged explanation chunk purpose/authority fields with source-excerpt and retrieval-profile schema support.
+  Preflight branch: `agentic/preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c/20260711213436`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c-20260711213436`
+  Files changed by resolution: Updated .agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml.
+  Checks: bash -n affected scripts; generate-recognition-sources --check --source all; generate-rulebook-index smoke-test; generate-rulebook-chunks smoke-test; generate-retrieval-selector-fixture smoke-test; generate-recognition-sources smoke-test; report-artifact-retrieval-profile-coverage smoke-test; git diff --check
+
+
+- Path: `scripts/02.rag-rulebook/README.md`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Classifier reported normal-repo-conflict; user approved manual resolution. Both branches documented different RAG helper scripts.
+  Action: Kept both audit-explanation-readiness and report-artifact-retrieval-profile-coverage descriptions.
+  Preflight branch: `agentic/preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c/20260711213436`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c-20260711213436`
+  Files changed by resolution: Updated scripts/02.rag-rulebook/README.md.
+  Checks: bash -n affected scripts; generate-recognition-sources --check --source all; generate-rulebook-index smoke-test; generate-rulebook-chunks smoke-test; generate-retrieval-selector-fixture smoke-test; generate-recognition-sources smoke-test; report-artifact-retrieval-profile-coverage smoke-test; git diff --check
+
+
+- Path: `scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Classifier reported normal-repo-conflict; user approved manual resolution. Both branches changed retrieval fixture ranking and required evidence selection.
+  Action: Merged source-explanation ranking and intent purpose selection with retrieval-profile evidence ranking and required source preservation.
+  Preflight branch: `agentic/preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c/20260711213436`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c-20260711213436`
+  Files changed by resolution: Updated scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh.
+  Checks: bash -n affected scripts; generate-recognition-sources --check --source all; generate-rulebook-index smoke-test; generate-rulebook-chunks smoke-test; generate-retrieval-selector-fixture smoke-test; generate-recognition-sources smoke-test; report-artifact-retrieval-profile-coverage smoke-test; git diff --check
+
+
+- Path: `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Classifier reported normal-repo-conflict; user approved manual resolution. Both branches added new chunk rendering modes.
+  Action: Kept source-explanation rendering and added source-excerpt plus retrieval-profile rendering paths.
+  Preflight branch: `agentic/preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c/20260711213436`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c-20260711213436`
+  Files changed by resolution: Updated scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh.
+  Checks: bash -n affected scripts; generate-recognition-sources --check --source all; generate-rulebook-index smoke-test; generate-rulebook-chunks smoke-test; generate-retrieval-selector-fixture smoke-test; generate-recognition-sources smoke-test; report-artifact-retrieval-profile-coverage smoke-test; git diff --check
+
+
+- Path: `scripts/02.rag-rulebook/generate-rulebook-index/script.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Classifier reported normal-repo-conflict; user approved manual resolution. Both branches changed how the index creates source and profile chunk candidates.
+  Action: Merged explanation markdown source discovery with supporting-source retrieval profiles, avoided duplicate artifacts, attached explanation chunks to supported paths, and added base chunk metadata to source-excerpt/profile candidates.
+  Preflight branch: `agentic/preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c/20260711213436`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-07-10-13-49-let-s-lock-the-platform-ap-eb1137a3693c-20260711213436`
+  Files changed by resolution: Updated scripts/02.rag-rulebook/generate-rulebook-index/script.sh.
+  Checks: bash -n affected scripts; generate-recognition-sources --check --source all; generate-rulebook-index smoke-test; generate-rulebook-chunks smoke-test; generate-retrieval-selector-fixture smoke-test; generate-recognition-sources smoke-test; report-artifact-retrieval-profile-coverage smoke-test; git diff --check
 
 ## ADR Disposition
 

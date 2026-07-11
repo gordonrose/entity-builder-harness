@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-missing-governance-stop-condition
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove missing governance stop-condition questions retrieve repo instructions, standard, capability workflow, and ADR evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-missing-governance-stop-condition
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove missing-governance prompts retrieve the universal instruction, detailed standard, resolution workflow, and ADR rationale.
+input:
+  request_text: When missing governance is a stop condition, how do AGENTS.md and the missing governance standard handle capability resolution?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: missing governance
+        category: question-category
+        canonical_id: question.governance.missing-stop-condition
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: missing governance standard
+        category: evidence-family
+        canonical_id: evidence.harness.missing-governance-standard
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - AGENTS.md
+      - .agentic/01.harness/standards/missing-governance-stop-condition.md
+      - .agentic/shared/workflows/capability-resolution-workflow.md
+      - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - AGENTS.md
+  - .agentic/01.harness/standards/missing-governance-stop-condition.md
+  - .agentic/shared/workflows/capability-resolution-workflow.md
+  - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+update_triggers:
+  - Missing governance stop condition changes.
+  - Capability resolution workflow changes.
+  - Repo-level agent instructions change.
+

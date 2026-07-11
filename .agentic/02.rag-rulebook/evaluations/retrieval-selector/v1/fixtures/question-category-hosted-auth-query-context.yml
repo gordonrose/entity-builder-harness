@@ -1,0 +1,65 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-hosted-auth-query-context
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#     - sre
+#   kind: evaluation-fixture
+#   purpose: Prove hosted auth troubleshooting prompts retrieve the query-context command as well as provider contract evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-hosted-auth-query-context
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove bearer-token troubleshooting questions keep the hosted provider contract and local query command together.
+input:
+  request_text: How does hosted RAG auth handle a missing bearer token or rejected bearer token through the query context provider command?
+  max_chunks: 10
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_canonical_ids:
+      - question.rag.hosted-auth-boundary
+      - evidence.rag.query-context-command
+  selected_chunks:
+    required_source_paths:
+      - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+      - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+      - scripts/02.rag-rulebook/query-context/script.sh
+      - scripts/02.rag-rulebook/query-context/README.md
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    allowed:
+      - gap.corpus.02.rag-rulebook.hosted-context-provider-contract
+    no_unexpected: true
+source_refs:
+  - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  - scripts/02.rag-rulebook/query-context/script.sh
+  - scripts/02.rag-rulebook/query-context/README.md
+update_triggers:
+  - Hosted auth behavior changes.
+  - Query-context command auth handling changes.
+  - Hosted auth recognition vocabulary changes.

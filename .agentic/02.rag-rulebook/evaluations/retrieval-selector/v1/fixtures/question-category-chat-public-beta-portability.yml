@@ -1,0 +1,78 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.question-category-chat-public-beta-portability
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove public beta llm-workbench install and portability questions retrieve contract, checklist, acceptance, and validation evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.question-category-chat-public-beta-portability
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove public-beta portability prompts retrieve the beta contract, checklist, acceptance matrix, and validation scripts.
+input:
+  request_text: Which llm-workbench public beta contract and portability validation define the install/export contract?
+  max_chunks: 8
+expected:
+  routing:
+    status: ready
+  recognition:
+    required_matches:
+      - source_id: recognition.curated.question-categories
+        term: public beta
+        category: question-category
+        canonical_id: question.chat.public-beta-portability
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: llm-workbench public beta contract
+        category: evidence-family
+        canonical_id: evidence.chat.public-beta-contract
+        matched_input: prompt
+      - source_id: recognition.curated.question-categories
+        term: portability validation
+        category: evidence-family
+        canonical_id: evidence.chat.portability-validation
+        matched_input: prompt
+  selected_chunks:
+    required_source_paths:
+      - .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+      - .agentic/00.chat/checklists/llm-workbench-public-beta.md
+      - docs/00.chat/llm-workbench-acceptance-matrix.md
+      - scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+      - scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+  gaps:
+    no_unexpected: true
+source_refs:
+  - .agentic/00.chat/standards/llm-workbench-public-beta-contract.md
+  - .agentic/00.chat/checklists/llm-workbench-public-beta.md
+  - docs/00.chat/llm-workbench-acceptance-matrix.md
+  - scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh
+  - scripts/00.chat/upstream/check-llm-workbench-contract/script.sh
+update_triggers:
+  - Public beta contract or checklist changes.
+  - Portability validation scripts change.
+  - llm-workbench acceptance matrix changes.
+

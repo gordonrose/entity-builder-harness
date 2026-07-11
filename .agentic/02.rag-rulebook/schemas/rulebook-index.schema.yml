@@ -168,9 +168,11 @@ fields:
             - source-material
             - source-original
             - adr
+            - readme
             - layer-ruleset
             - concern-ruleset
             - rule-pack
+            - script
             - schema
             - guide
             - standard
@@ -218,6 +220,11 @@ fields:
           description: >
             Optional source-to-rule provenance copied from structured YAML when
             the artifact is a generated projection of governed source material.
+        retrieval_profile:
+          type: object
+          description: >
+            Generated source capability hints used by deterministic retrieval to
+            match generic process questions to the artifacts that answer them.
         diagnostics:
           type: array
           items:
@@ -327,6 +334,7 @@ fields:
             - rule-pack-step
             - required-check
             - source-reference
+            - source-excerpt
             - migration-entry
             - source-explanation
             - adr-decision
@@ -382,6 +390,10 @@ fields:
           description: >
             Optional source-to-rule provenance carried forward so generated
             chunks can identify the source material hash behind a rule.
+        retrieval_profile:
+          type: object
+          description: >
+            Generated role and capability hints for `retrieval-profile` chunks.
 
   graph_edges:
     type: array
@@ -442,11 +454,13 @@ fields:
             - source-guide
             - source-material
             - source-original
+            - source
             - adr
             - rule
             - rule-pack
             - schema
             - guide
+            - standard
             - plan
         line_start:
           type: integer
@@ -762,7 +776,7 @@ field_guide:
       - "Must be deterministic from artifact and section identity."
   - path: chunk_candidates[].content_kind
     what_it_is: "The kind of content represented by the chunk."
-    what_it_does: "Helps retrievers rank summaries, rules, checks, and migration entries differently."
+    what_it_does: "Helps retrievers rank summaries, rules, checks, generated retrieval profiles, and migration entries differently."
     rules:
       - "Use one of the allowed values."
   - path: chunk_candidates[].chunk_purpose
@@ -785,6 +799,11 @@ field_guide:
     rules:
       - "Use for Markdown-derived explanation chunks."
       - "Pair with line_start and line_end so chunks remain citable and bounded."
+  - path: chunk_candidates[].retrieval_profile
+    what_it_is: "Generated source capability hints for profile chunks."
+    what_it_does: "Lets generic process questions retrieve the artifacts that explain the process before a curated training term exists."
+    rules:
+      - "Use deterministic source metadata and known generator roles only."
   - path: graph_edges
     what_it_is: "Relationships between indexed artifacts, rules, chunks, corpora, paths, and sources."
     what_it_does: "Lets retrieval expand from one match to required or related context deterministically."

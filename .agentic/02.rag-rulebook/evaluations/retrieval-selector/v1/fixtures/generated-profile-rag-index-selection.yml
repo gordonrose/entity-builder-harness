@@ -1,0 +1,83 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.generated-profile-rag-index-selection
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove generated retrieval profiles proactively answer how RAG uses the index to select content.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#       path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.generated-profile-rag-index-selection
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove generic RAG/index selection questions use generated source capability profiles before curated training has been authored.
+input:
+  request_text: how does rag use the index to find the right content?
+  session:
+    trust_routing: true
+    layer: 02.rag-rulebook
+    mode: discovery
+    workflow: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  max_chunks: 6
+expected:
+  routing:
+    layer: 02.rag-rulebook
+    mode: discovery
+    status: ready
+    target_paths: []
+  gaps:
+    no_unexpected: true
+  selected_chunks:
+    required_chunk_ids:
+      - chunk.profile.artifact.rag.rulebook.script.query.local.context
+      - chunk.profile.artifact.rag.rulebook.script.generate.retrieval.selector.fixture
+      - chunk.profile.artifact.rag.rulebook.script.compile.retrieval.policy
+      - chunk.profile.artifact.rag.rulebook.policy.retrieval.selector.v1.dimension.request.context
+      - chunk.profile.artifact.rag.rulebook.policy.retrieval.selector.v1.dimension.evidence.bundles
+      - chunk.profile.artifact.rag.rulebook.script.generate.rulebook.index
+    required_source_paths:
+      - scripts/02.rag-rulebook/query-local-context/script.sh
+      - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+      - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+      - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+      - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+  selector_trace:
+    strategy_id: retrieval-selector.v1.hybrid-deterministic-first
+    required_applied_stage_ids:
+      - generated-concepts
+      - curated-concepts
+      - evidence-bundles
+      - final-ranking
+  confidence:
+    min_retrieval: 0.9
+banned:
+  gaps:
+    - gap.selector-fixture.low-confidence-prompt
+  selected_artifact_ids:
+    - artifact.concern.hosted.context.provider.contract
+source_refs:
+  - scripts/02.rag-rulebook/query-local-context/script.sh
+  - scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh
+  - scripts/02.rag-rulebook/compile-retrieval-policy/script.sh
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml
+  - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
+  - scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+update_triggers:
+  - Generated retrieval-profile role names change.
+  - Runtime query, selector, policy compiler, or retrieval policy flow changes.
+  - Rulebook index generation changes.

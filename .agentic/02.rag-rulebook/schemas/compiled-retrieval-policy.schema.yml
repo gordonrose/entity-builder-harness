@@ -45,6 +45,7 @@ required_fields:
   - precedence
   - thresholds
   - intent_resolution
+  - user_intents
   - evidence_bundles
   - retrieval_strategy
   - chunk_selection
@@ -106,6 +107,13 @@ fields:
     rules:
       - Intent precedence must come from governed policy dimensions, not selector constants.
       - Every precedence intent should be known to curated intent-form recognition terms or the default intent.
+
+  user_intents:
+    type: array
+    description: Generic user ask-shape taxonomy used to bias evidence selection without granting execution permission.
+    rules:
+      - User intents must come from governed user-intents policy, not selector constants.
+      - User intents must not replace action authorization or side-effect intent resolution.
 
   evidence_bundles:
     type: array

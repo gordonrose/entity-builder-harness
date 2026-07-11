@@ -139,6 +139,9 @@ def collect_all_paths() -> list[str]:
         ROOT / ".agentic",
         ROOT / "docs/00.chat",
         ROOT / "docs/02.rag-rulebook",
+        ROOT / "docs/04.deploy",
+        ROOT / "docs/aws",
+        ROOT / "docs/education",
         ROOT / "docs/harness",
         ROOT / "infra",
     ]
@@ -164,6 +167,7 @@ def is_markdown_artifact(path: str) -> bool:
         path.startswith(".agentic/")
         or path.startswith("docs/00.chat/")
         or path.startswith("docs/02.rag-rulebook/")
+        or path.startswith("docs/04.deploy/")
         or path.startswith("docs/aws/")
         or path.startswith("docs/education/")
         or path.startswith("docs/harness/")
@@ -177,7 +181,11 @@ def is_yaml_artifact(path: str) -> bool:
         path.startswith(".agentic/")
         or path.startswith(".github/workflows/")
         or path.startswith("docs/02.rag-rulebook/")
+        or path.startswith("docs/04.deploy/")
+        or path.startswith("docs/aws/")
+        or path.startswith("docs/education/")
         or path.startswith("docs/harness/")
+        or path.startswith("scripts/")
     )
 
 

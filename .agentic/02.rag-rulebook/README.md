@@ -227,6 +227,8 @@ final homes.
   selector trace used by local runtime packets and evaluations.
 - `evaluations/retrieval-selector/v1/fixtures/` - active selector evaluation
   fixtures with expected and banned context-packet outcomes.
+- `evaluations/retrieval-profile-coverage/` - calibration records for
+  deterministic artifact retrieval-profile coverage reporting.
 
 ## Guides
 
@@ -258,6 +260,9 @@ final homes.
 - `plans/prototype-corpus-migration-map.yml` - inventories the current
   prototype corpus and maps YAML rules, rule packs, source guides, and ADRs to
   proposed numbered corpus packages before any file moves.
+- `plans/artifact-metadata-retrieval-profile-migration.md` - tracks the
+  migration from header coverage to generated retrieval profiles and selector
+  evaluations.
 
 ## Commands
 
