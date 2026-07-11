@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.schema.compiled-retrieval-policy
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -48,6 +48,7 @@ required_fields:
   - user_intents
   - evidence_bundles
   - retrieval_strategy
+  - chunk_selection
   - recognition_sources
   - corpus_ownership
   - rule_graph
@@ -129,6 +130,19 @@ fields:
     rules:
       - Runtime selector code must use this stage order when reporting selector trace behavior.
       - Stage IDs must remain stable enough for evaluation fixtures to assert them.
+
+  chunk_selection:
+    type: object
+    required_fields:
+      - purpose_priority_by_intent
+      - authority_rules
+      - side_effect_restrictions
+    description: Runtime rules for chunk purpose and authority selection.
+    rules:
+      - Explanation and tutor intents should prefer source-explanation, guide, and decision-history chunks before low-value implementation detail.
+      - Implementation intents should prefer rule and execution-authority chunks before optional explanation support.
+      - Planning intents should preserve plan milestones, ADR decisions, and binding rules needed for safe next steps.
+      - Write, git, deploy, destructive, and cloud-mutating intents must not be authorized by explanation-support chunks.
 
   recognition_sources:
     type: object

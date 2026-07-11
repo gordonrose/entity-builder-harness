@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.validate-rulebook-index
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: indexing
@@ -45,6 +45,22 @@ from typing import Any
 
 
 INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
+ALLOWED_CHUNK_PURPOSES = {
+    "rule",
+    "source-explanation",
+    "adr-decision",
+    "plan-milestone",
+    "guide",
+    "artifact-summary",
+    "retrieval-profile",
+}
+ALLOWED_CHUNK_AUTHORITIES = {
+    "execution-authority",
+    "explanation-support",
+    "decision-history",
+    "implementation-plan",
+    "orientation",
+}
 GENERATOR_SCRIPT = "scripts/02.rag-rulebook/generate-rulebook-index/script.sh"
 REQUIRED_TOP_LEVEL = [
     "schema",
@@ -379,9 +395,20 @@ def validate(data: dict[str, Any]) -> dict[str, Any]:
         artifact_ref = string_value(chunk, "artifact_ref")
         corpus_id = string_value(chunk, "corpus_id")
         source_path = string_value(chunk, "source_path")
+        chunk_purpose = string_value(chunk, "chunk_purpose")
+        authority = string_value(chunk, "authority")
         if not chunk_id:
             errors.append("chunk candidate missing chunk_id")
             continue
+        for required_field in ["content_kind", "chunk_purpose", "authority"]:
+            if not string_value(chunk, required_field):
+                errors.append(f"chunk candidate missing {required_field}: {chunk_id}")
+        if chunk_purpose and chunk_purpose not in ALLOWED_CHUNK_PURPOSES:
+            errors.append(f"chunk candidate has invalid chunk_purpose: {chunk_id} -> {chunk_purpose}")
+        if authority and authority not in ALLOWED_CHUNK_AUTHORITIES:
+            errors.append(f"chunk candidate has invalid authority: {chunk_id} -> {authority}")
+        if authority == "execution-authority" and chunk_purpose != "rule":
+            errors.append(f"execution-authority chunk candidate must have rule purpose: {chunk_id}")
         if not artifact_ref or artifact_ref not in artifact_ref_set:
             errors.append(f"chunk has unknown artifact_ref: {chunk_id}")
         if not corpus_id or corpus_id not in corpus_id_set:

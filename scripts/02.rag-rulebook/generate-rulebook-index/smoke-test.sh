@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-rulebook-index.smoke-test
-#   version: 1
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: indexing
@@ -51,6 +51,35 @@ assert data["diagnostics"]["counts"]["rules"] > 0
 assert data["diagnostics"]["counts"]["graph_edges"] > 0
 assert data["diagnostics"]["counts"]["chunk_candidates"] > data["diagnostics"]["counts"]["rules"]
 
+for candidate in data["chunk_candidates"]:
+    assert candidate["chunk_purpose"], candidate["chunk_id"]
+    assert candidate["authority"], candidate["chunk_id"]
+assert all(
+    candidate["authority"] == "execution-authority"
+    for candidate in data["chunk_candidates"]
+    if candidate["content_kind"] in {"rule", "rule-pack-step", "required-check"}
+)
+assert all(
+    candidate["authority"] == "orientation"
+    for candidate in data["chunk_candidates"]
+    if candidate["content_kind"] == "artifact-summary"
+)
+source_explanation_candidates = [
+    candidate
+    for candidate in data["chunk_candidates"]
+    if candidate["content_kind"] == "source-explanation"
+]
+assert source_explanation_candidates
+assert all(candidate["chunk_purpose"] == "source-explanation" for candidate in source_explanation_candidates)
+assert all(candidate["authority"] == "explanation-support" for candidate in source_explanation_candidates)
+assert any(
+    candidate["source_path"] == "docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"
+    and candidate["heading_path"].endswith("Platform Runtime Shell Surfaces")
+    and candidate["line_start"] >= 1
+    and candidate["line_end"] >= candidate["line_start"]
+    for candidate in source_explanation_candidates
+)
+
 source_roots = {root["root_id"]: root for root in data["source_roots"]}
 assert source_roots["root.rulebook-rules"]["path"] == "docs/02.rag-rulebook/rules"
 assert source_roots["root.rulebook-rules"]["role"] == "corpus-package"
@@ -78,6 +107,12 @@ assert aws_runtime_artifact["migration_status"] == "current"
 readiness_artifact = artifacts_by_path["docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml"]
 assert readiness_artifact["corpus_id"] == "corpus.04.deploy"
 assert readiness_artifact["migration_status"] == "current"
+platform_runtime_source = artifacts_by_path["docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"]
+assert platform_runtime_source["artifact_type"] == "source-material"
+assert platform_runtime_source["corpus_id"] == "corpus.03.product.platform"
+assert platform_runtime_source["migration_status"] == "current"
+path_mappings = {mapping["proposed_path"]: mapping for mapping in data["path_mappings"]}
+assert path_mappings["docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"]["migration_status"] == "current"
 
 rule_ids = {rule["rule_id"] for rule in data["rules"]}
 assert "mcp-server-deployment-architecture.uses-validated-context-packets" in rule_ids

@@ -1,0 +1,62 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmit": false,
+    "outDir": "../../.cache/product-kanbien-platform-runtime",
+    "baseUrl": "../..",
+    "paths": {
+      "@kanbien/app-platform-smoke": [
+        "apps/platform-smoke/src/index.ts"
+      ],
+      "@kanbien/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@kanbien/core/*": [
+        "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-config": [
+        "platform/config/src/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-health": [
+        "platform/health/src/index.ts"
+      ],
+      "@kanbien/platform-observability": [
+        "platform/observability/src/index.ts"
+      ],
+      "@kanbien/platform-runtime": [
+        "platform/runtime/src/index.ts"
+      ],
+      "@kanbien/platform-security": [
+        "platform/security/src/index.ts"
+      ],
+      "@kanbien/platform-server": [
+        "platform/server/src/index.ts"
+      ],
+      "@kanbien/platform-testing": [
+        "platform/testing/src/index.ts"
+      ],
+      "@kanbien/platform-workers": [
+        "platform/workers/src/index.ts"
+      ]
+    },
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/*-runtime.test.ts",
+    "../../apps/platform-smoke/src/**/*.ts",
+    "../../platform/**/*.ts"
+  ]
+}

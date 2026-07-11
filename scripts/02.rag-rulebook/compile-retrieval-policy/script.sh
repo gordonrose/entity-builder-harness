@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.compile-retrieval-policy
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -432,6 +432,34 @@ def compile_retrieval_strategy(strategy_dimension: dict[str, Any]) -> dict[str, 
     }
 
 
+def compile_chunk_selection(strategy_dimension: dict[str, Any]) -> dict[str, Any]:
+    chunk_selection = dict_value(strategy_dimension.get("chunk_selection"))
+    purpose_priority_by_intent = dict_value(chunk_selection.get("purpose_priority_by_intent"))
+    authority_rules = dict_value(chunk_selection.get("authority_rules"))
+    side_effect_restrictions = dict_value(chunk_selection.get("side_effect_restrictions"))
+    if not purpose_priority_by_intent:
+        raise ValueError("retrieval-strategy dimension chunk_selection.purpose_priority_by_intent is required")
+    if not authority_rules:
+        raise ValueError("retrieval-strategy dimension chunk_selection.authority_rules is required")
+    if not side_effect_restrictions:
+        raise ValueError("retrieval-strategy dimension chunk_selection.side_effect_restrictions is required")
+    return {
+        "purpose_priority_by_intent": {
+            str(intent_id): list_of_strings(priority)
+            for intent_id, priority in sorted(purpose_priority_by_intent.items())
+        },
+        "authority_rules": {
+            str(authority): str(rule)
+            for authority, rule in sorted(authority_rules.items())
+        },
+        "side_effect_restrictions": {
+            "side_effect_classes": list_of_strings(side_effect_restrictions.get("side_effect_classes")),
+            "authorization_authorities": list_of_strings(side_effect_restrictions.get("authorization_authorities")),
+            "background_only_authorities": list_of_strings(side_effect_restrictions.get("background_only_authorities")),
+        },
+    }
+
+
 def edge_type_counts(edges: list[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for edge in edges:
@@ -490,6 +518,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
         "user_intents": compile_user_intents(user_intents_dimension),
         "evidence_bundles": compile_evidence_bundles(evidence_dimension, sources),
         "retrieval_strategy": compile_retrieval_strategy(strategy_dimension),
+        "chunk_selection": compile_chunk_selection(strategy_dimension),
         "recognition_sources": {
             "counts": recognition_report.get("counts"),
             "sources": sources,

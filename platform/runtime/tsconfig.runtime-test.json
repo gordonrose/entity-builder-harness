@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmit": false,
+    "outDir": "../../.cache/platform-runtime-runtime",
+    "baseUrl": "../..",
+    "paths": {
+      "@kanbien/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@kanbien/core/*": [
+        "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-testing": [
+        "platform/testing/src/index.ts"
+      ]
+    },
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/*-runtime.test.ts",
+    "../testing/src/**/*.ts"
+  ]
+}

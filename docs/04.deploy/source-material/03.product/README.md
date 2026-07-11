@@ -30,3 +30,9 @@ database migration coordination, and product health checks.
 
 Deployment governance remains owned by `04.deploy`; this track names the system
 being deployed.
+
+## Source Inventory
+
+- `platform-shell-runtime-family.md` records ECS Fargate as the first AWS
+  planning runtime family for the platform shell and names blockers before AWS
+  mutation.

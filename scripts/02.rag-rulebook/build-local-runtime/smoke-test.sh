@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.build-local-runtime.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: runtime
@@ -84,6 +84,7 @@ for fingerprint in manifest["fingerprints"]["inputs"].values():
     assert fingerprint["algorithm"] == "sha256-relpath-content-v1"
     assert len(fingerprint["sha256"]) == 64
     assert isinstance(fingerprint["file_count"], int)
+assert ".agentic/02.rag-rulebook/guides" in manifest["fingerprints"]["inputs"]["source_material"]["roots"]
 assert manifest["fingerprints"]["runtime_outputs"]["rulebook_index"]["sha256"]
 assert manifest["fingerprints"]["runtime_outputs"]["rulebook_chunks"]["sha256"]
 assert manifest["fingerprints"]["runtime_outputs"]["compiled_retrieval_policy"]["sha256"]

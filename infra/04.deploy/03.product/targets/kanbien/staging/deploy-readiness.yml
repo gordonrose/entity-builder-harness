@@ -1,0 +1,247 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-manifest
+#   purpose: Record blocked staging deploy-readiness proof for the product platform shell before AWS mutation.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-deploy-readiness
+#     path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+#   - id: infra.04-deploy.03-product.aws-runtime-family-decision
+#     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+schema: deploy/platform-shell-readiness-manifest/v1
+status: blocked
+client:
+  id: kanbien
+  display_name: Kanbien
+environment:
+  id: staging
+  class: staging
+deployment:
+  service_id: platform-shell
+  environment: staging
+  runtime_target: aws.ecs-fargate.platform-shell-staging
+  source_policy: local-planning
+  mutation_authorized: false
+source:
+  provider: github
+  repository: gordonrose/entity-builder-harness
+  ref: refs/heads/main
+  commit_sha: pending
+  workflow_path: pending
+  workflow_run_id: pending
+github:
+  repository: gordonrose/entity-builder-harness
+  source_policy: pending
+  ref: refs/heads/main
+  commit_sha: pending
+  workflow_path: pending
+  workflow_run_id: pending
+  environment:
+    name: staging
+    protection_rules:
+      required_reviewers: pending
+      deployment_branch_policy: pending
+      prevent_self_review: pending
+  oidc:
+    role_arn: pending
+    audience: sts.amazonaws.com
+    subject_condition: pending
+    repository_condition: gordonrose/entity-builder-harness
+    ref_condition: refs/heads/main
+    environment_condition: staging
+    trust_scoped_to_repository: pending
+    trust_scoped_to_ref: pending
+    workflow_has_id_token_permission: pending
+artifacts:
+  source_commit_sha: pending
+  image:
+    dockerfile: infra/04.deploy/03.product/image/Dockerfile
+    build_context: .
+    local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+    local_smoke_passed: true
+    image_digest: pending
+    base_image_digest: pending
+    sbom: pending
+    vulnerability_scan: pending
+    provenance_or_attestation: pending
+runtime:
+  provider: aws
+  family: ecs-fargate
+  adapter: platform/adapters/aws/runtime/ecs-fargate/
+  decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+  server:
+    health:
+      liveness: /livez
+      readiness: /readyz
+    container_port: 3000
+    task_definition: pending
+    service: pending
+  worker:
+    status: planned-separate-ecs-service
+    task_definition: pending
+    service: pending
+    queue_adapter: platform/adapters/aws/queue/sqs/
+product:
+  manifest: products/kanbien-platform/src/product.manifest.ts
+  apps:
+    - app_id: platform-smoke
+      package: "@kanbien/app-platform-smoke"
+      route_base_path: /smoke
+      declared_permissions:
+        - smoke:read
+      required_config:
+        - PLATFORM_SMOKE_APP_NAME
+auth:
+  provider: cognito
+  provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  token_validation:
+    mode: jwt-jwks
+    issuer: pending
+    jwks_uri: pending
+    app_client_id: pending
+    token_use: access
+    validator: platform/security.createCognitoAccessTokenVerifier
+    local_tests_passed: true
+  permission_mapping:
+    source: target-profile
+    group_permissions_env: PLATFORM_AUTHZ_GROUP_PERMISSIONS
+    scope_permissions_env: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+    claim_permissions_env: PLATFORM_AUTHZ_CLAIM_PERMISSIONS
+    validates_against_app_permissions: true
+    declared_app_permissions_source: products/kanbien-platform/src/product.manifest.ts
+  route_exposure:
+    app_routes_default: authenticated
+    unauthenticated_app_routes_denied_by_default: true
+    protected_dummy_route:
+      local_401_test: true
+      local_403_test: true
+      local_success_test: true
+      deployment_smoke: blocked
+  health_exposure:
+    livez: public
+    readyz: authenticated
+    reason: Liveness returns minimal status; readiness is protected for internet-facing targets unless a private health-check exception is recorded.
+  cors:
+    allowlist_source: target-profile-env
+    env: PLATFORM_CORS_ALLOWLIST
+    allowed_origins: []
+  rate_limiting:
+    keying: principal-token-or-forwarded-ip
+    fallback: anonymous-local-only
+    local_tests_passed: true
+  secrets:
+    source: pending
+    committed_secret_values: false
+cloud:
+  provider: aws
+  account_id: pending
+  profile_or_oidc_role: pending
+  region: pending
+aws:
+  account_id: pending
+  profile_or_oidc_role: pending
+  region: pending
+  cluster: pending
+  vpc: pending
+  subnets: []
+  security_groups: []
+  alb: pending
+  target_group: pending
+  tls_certificate: pending
+  dns_hostname: pending-or-deferred
+  secret_store: pending
+  log_group: pending
+  alarms: []
+operations:
+  owner: pending
+  escalation_path: pending
+  budget_name: pending
+  cost_limit: pending
+  rollback_target: pending
+  rollback_authority: pending
+  rollback_runbook: pending
+proof:
+  static_validation: passed-local
+  policy_checks: pending
+  generated_output_review: pending
+  image_smoke: passed-local
+  local_runtime_smoke: passed-product-smoke-local
+  aws_read_only_inspection: blocked
+  deployment_smoke: blocked
+  rollback_proof: blocked
+blockers:
+  - id: platform-shell-readiness.github-source
+    severity: blocking
+    path: source
+    reason: The production-bound source commit and workflow run identity are not selected for this Kanbien staging proof.
+    resolution: Record the target repository, remote-main commit SHA, workflow path, run id, and GitHub environment protections before deployment execution.
+  - id: platform-shell-readiness.github-oidc
+    severity: blocking
+    path: github.oidc
+    reason: GitHub-to-AWS OIDC trust for the product platform shell has not been inspected or recorded.
+    resolution: Select the AWS role and record repository, ref, environment, and workflow permission conditions.
+  - id: platform-shell-readiness.github-detail
+    severity: blocking
+    path: github
+    reason: GitHub workflow and environment protection details remain pending until the Kanbien staging source target is selected.
+    resolution: Record the workflow path, run id, source policy, and environment protection values after target planning.
+  - id: platform-shell-readiness.image-provenance
+    severity: blocking
+    path: artifacts
+    reason: The platform shell image has only been proven locally; no immutable deploy image digest, base digest, SBOM, scan, or attestation is recorded.
+    resolution: Build the deploy image in the governed workflow and record immutable image and provenance evidence.
+  - id: platform-shell-readiness.runtime-target
+    severity: blocking
+    path: runtime
+    reason: ECS Fargate task definitions, services, CPU/memory, and server/worker topology are not selected.
+    resolution: Record server and worker task/service targets or an explicit worker deferral accepted by the platform runtime plan.
+  - id: platform-shell-readiness.aws-target
+    severity: blocking
+    path: cloud
+    reason: AWS account, role/profile, region, cluster, network, ingress, TLS, DNS, secrets, logs, and alarms are not selected for the Kanbien staging product shell target.
+    resolution: Run the governed AWS planning/inspection workflow and copy the selected target identity into this manifest.
+  - id: platform-shell-readiness.aws-detail
+    severity: blocking
+    path: aws
+    reason: AWS implementation details remain pending until the Kanbien staging cloud target is selected.
+    resolution: Record concrete ECS, network, ingress, secrets, logs, and alarm values after target inspection.
+  - id: platform-shell-readiness.operations
+    severity: blocking
+    path: operations
+    reason: Owner, escalation path, budget/cost guard, rollback target, rollback authority, and rollback runbook are not recorded.
+    resolution: Record production operations ownership and rollback evidence before deployment exposure.
+  - id: platform-shell-readiness.smoke-proof
+    severity: blocking
+    path: proof
+    reason: Deployment smoke, AWS read-only inspection, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require a selected AWS target.
+    resolution: Complete target inspection, deploy through the governed workflow, verify health and dummy app behavior, and record rollback proof.
+  - id: platform-shell-readiness.auth-provider-target
+    severity: blocking
+    path: auth.token_validation
+    reason: Cognito is selected as the first auth provider path, but the Kanbien staging user pool issuer, JWKS URI, and app client id are not selected.
+    resolution: Create or select the Kanbien staging Cognito user pool and app client through the governed AWS workflow, then record issuer, JWKS URI, and app client id.
+  - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
+    severity: blocking
+    path: auth.route_exposure.protected_dummy_route.deployment_smoke
+    reason: Local server tests prove 401, 403, and success paths, but deployed protected dummy-route smoke proof does not exist yet.
+    resolution: After the smoke app and staging target are deployed, record deployment smoke proof for unauthenticated, forbidden, and authorized requests.
+  - id: platform-shell-readiness.cors-allowlist
+    severity: blocking
+    path: auth.cors.allowed_origins
+    reason: Public browser access needs explicit allowed origins from the Kanbien staging target profile.
+    resolution: Record the staging UI/API origins that may call the platform shell before public exposure.
+  - id: platform-shell-readiness.auth-secret-source
+    severity: blocking
+    path: auth.secrets.source
+    reason: Cognito/provider config and any future confidential client material need a target secret/config source before public deployment.
+    resolution: Record the AWS secret/config source and keep secret values out of source, logs, fixtures, docs, and generated packets.

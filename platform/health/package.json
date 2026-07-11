@@ -1,0 +1,17 @@
+{
+  "name": "@kanbien/platform-health",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@kanbien/core": "0.0.0",
+    "@kanbien/platform-contracts": "0.0.0",
+    "@kanbien/platform-observability": "0.0.0"
+  }
+}

@@ -96,6 +96,36 @@ field_value() {
   sed -n "s/^${label}: //p" "$LOG_FILE" | tail -n 1
 }
 
+adr_paths() {
+  awk '
+    $0 == "## ADR Disposition" {
+      in_section = 1
+      next
+    }
+    in_section && /^## / {
+      exit
+    }
+    in_section && /^ADR path: / {
+      path = substr($0, 11)
+      if (path != "") {
+        print path
+      }
+      next
+    }
+    in_section && /^ADR paths:$/ {
+      in_paths = 1
+      next
+    }
+    in_section && in_paths && /^- / {
+      print substr($0, 3)
+      next
+    }
+    in_section && in_paths && /^[^[:space:]-]/ {
+      in_paths = 0
+    }
+  ' "$LOG_FILE"
+}
+
 require_section_entry() {
   local section="$1"
   local description="$2"
@@ -111,17 +141,25 @@ require_section_entry "## Context Hygiene" "Context hygiene summary"
 require_section_entry "## ADR Disposition" "ADR disposition"
 
 ADR_NEEDED="$(field_value "ADR needed")"
-ADR_PATH="$(field_value "ADR path")"
 ADR_REASON="$(field_value "Reason")"
+ADR_PATHS=()
+
+while IFS= read -r adr_path; do
+  ADR_PATHS+=("$adr_path")
+done < <(adr_paths)
 
 case "$ADR_NEEDED" in
   yes)
-    if [ -z "${ADR_PATH// }" ]; then
+    if [ "${#ADR_PATHS[@]}" -eq 0 ]; then
       fail "ADR needed is yes, but ADR path is empty"
-    elif [[ "$ADR_PATH" != docs/harness/architecture/adrs/*.md ]]; then
-      fail "ADR path must be under docs/harness/architecture/adrs/: $ADR_PATH"
-    elif [ ! -f "$ADR_PATH" ]; then
-      fail "ADR path does not exist: $ADR_PATH"
+    else
+      for ADR_PATH in "${ADR_PATHS[@]}"; do
+        if [[ "$ADR_PATH" != docs/*/architecture/adrs/*.md ]]; then
+          fail "ADR path must be under docs/<track>/architecture/adrs/: $ADR_PATH"
+        elif [ ! -f "$ADR_PATH" ]; then
+          fail "ADR path does not exist: $ADR_PATH"
+        fi
+      done
     fi
 
     if [ -z "${ADR_REASON// }" ]; then

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.standard.source-to-rule-derivation
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: rulebook
@@ -87,6 +87,22 @@ the agent does not re-discover context or omit required evidence. The draft
 packet is still read-only evidence; it is not permission to write files or
 approve derivation.
 
+## Direct Explanation Chunking
+
+Not every useful source-material section needs to become a YAML rule.
+
+Source material, guides, plans, and ADRs may produce bounded explanation,
+orientation, decision-history, or plan chunks without a source-to-rule
+derivation report when their purpose is to teach, orient, or explain. Those
+chunks must preserve source path, heading path, citations, chunk purpose, and
+authority. Their authority must be lower than structured rules for
+implementation, operations, git, deploy, destructive, or cloud-mutating
+requests.
+
+A source-to-rule derivation report is required when a source-material claim is
+being promoted into binding execution guidance: rules, required checks, stop
+conditions, forbidden actions, rule packs, or workflow constraints.
+
 ## Required Derivation Report
 
 Every non-trivial source-material change that creates, updates, removes, or
@@ -157,6 +173,10 @@ must name the replacement.
   derivation.
 - Generate a source-to-rule draft packet when the agent needs source and
   current-artifact content to propose semantic changes.
+- Use explanation-support chunks for teaching material that does not yet need
+  binding rule projection.
+- Keep explanation-support chunk generation separate from source-to-rule
+  derivation approval.
 - Name affected rules, rule packs, corpus gaps, recognition candidates, chunks,
   and selector fixtures.
 - Preserve source paths and evidence paths.
@@ -175,6 +195,7 @@ must name the replacement.
 Do not:
 
 - treat source material as retrieval-ready rulebook coverage by itself
+- treat source-explanation chunks as structured rule coverage
 - let an LLM rewrite rules without a derivation report
 - derive production rules from source material that has not passed the OKF
   source-material review loop

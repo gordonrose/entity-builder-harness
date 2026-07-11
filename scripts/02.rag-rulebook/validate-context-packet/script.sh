@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.validate-context-packet
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: context-packets
@@ -95,6 +95,22 @@ ALLOWED_ACTION_AUTHORIZATION_STATUSES = {
     "not-executable-intent",
     "not-requested",
     "requires-deploy-workflow-approval",
+}
+ALLOWED_CHUNK_PURPOSES = {
+    "rule",
+    "source-explanation",
+    "adr-decision",
+    "plan-milestone",
+    "guide",
+    "artifact-summary",
+    "retrieval-profile",
+}
+ALLOWED_CHUNK_AUTHORITIES = {
+    "execution-authority",
+    "explanation-support",
+    "decision-history",
+    "implementation-plan",
+    "orientation",
 }
 
 
@@ -406,7 +422,20 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
         require_fields(
             f"selected_chunks[{chunk_id or '?'}]",
             chunk,
-            ["chunk_id", "corpus_id", "artifact_id", "source_path", "content", "rank", "token_estimate", "selection_reason", "citation_ids"],
+            [
+                "chunk_id",
+                "corpus_id",
+                "artifact_id",
+                "source_path",
+                "content_kind",
+                "chunk_purpose",
+                "authority",
+                "content",
+                "rank",
+                "token_estimate",
+                "selection_reason",
+                "citation_ids",
+            ],
             errors,
         )
         if not chunk_id:
@@ -421,6 +450,16 @@ def validate(packet: dict[str, Any], chunk_set: dict[str, Any]) -> dict[str, Any
             errors.append(f"selected chunk artifact mismatch: {chunk_id}")
         if chunk.get("source_path") != source_chunk.get("source_path"):
             errors.append(f"selected chunk source_path mismatch: {chunk_id}")
+        if chunk.get("content_kind") != source_chunk.get("content_kind"):
+            errors.append(f"selected chunk content_kind mismatch: {chunk_id}")
+        if chunk.get("chunk_purpose") != source_chunk.get("chunk_purpose"):
+            errors.append(f"selected chunk chunk_purpose mismatch: {chunk_id}")
+        if chunk.get("authority") != source_chunk.get("authority"):
+            errors.append(f"selected chunk authority mismatch: {chunk_id}")
+        if chunk.get("chunk_purpose") not in ALLOWED_CHUNK_PURPOSES:
+            errors.append(f"selected chunk chunk_purpose is invalid: {chunk_id} -> {chunk.get('chunk_purpose')}")
+        if chunk.get("authority") not in ALLOWED_CHUNK_AUTHORITIES:
+            errors.append(f"selected chunk authority is invalid: {chunk_id} -> {chunk.get('authority')}")
         if chunk.get("content") != source_chunk.get("content"):
             errors.append(f"selected chunk content mismatch: {chunk_id}")
         if chunk.get("rank") != rank:

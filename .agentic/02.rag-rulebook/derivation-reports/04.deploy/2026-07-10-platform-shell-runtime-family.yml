@@ -1,0 +1,138 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.04-deploy.2026-07-10-platform-shell-runtime-family
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for platform shell runtime-family planning.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.rules.03-product.platform-shell-runtime-family
+#     path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.04.deploy.2026-07-10.platform-shell-runtime-family
+status: accepted
+
+source_change:
+  change_type: updated
+  approved_source_state: approved
+  changed_paths:
+    - docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+    - docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+  summary: >
+    Accepted product deploy source material for the platform shell AWS runtime
+    family and client/environment target-profile convention was projected into
+    a structured deploy rule and planning-only infra decision manifest.
+
+target:
+  corpus_id: corpus.04.deploy
+  owner_layer: 04.deploy
+  expected_rule_paths:
+    - docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  affected_rule_paths:
+    - docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  affected_rulesets: []
+  affected_evaluations: []
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: platform-shell.runtime-family.ecs-fargate
+      summary: The product platform shell selects ecs-fargate as the first AWS runtime family for planning.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+    - claim_id: platform-shell.runtime-family.planning-only
+      summary: The ECS Fargate decision does not authorize AWS mutation, DNS changes, IAM changes, image publishing, or production exposure.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+    - claim_id: platform-shell.runtime-family.not-app-contract
+      summary: ECS Fargate is not part of the app contract; apps continue to declare provider-neutral needs through platform contracts and manifests.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+    - claim_id: platform-shell.adapters.provider-type-service
+      summary: Provider adapters use platform/adapters/<provider>/<adapter-type>/<service-name>/.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+    - claim_id: platform-shell.targets.client-environment-profile
+      summary: Product platform shell deployment target selection is profile-driven under infra/04.deploy/03.product/targets/<client>/<environment>/.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+    - claim_id: platform-shell.targets.no-app-hardcoding
+      summary: Client, repository, cloud provider, account/subscription, region, runtime family, adapter, and readiness proof must live in target profiles instead of ordinary app feature code.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+      - docs/harness/architecture/rules/
+      - docs/04.deploy/rules/
+      - infra/04.deploy/
+      - platform/adapters/
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+      - Runtime-family selection and AWS mutation blockers are deploy-layer concerns.
+      - Adapter layout is shared with platform architecture rules because platform owns runtime translation code.
+      - Concrete AWS resources remain blocked until AWS target details and mutation approval are recorded.
+      - Client/environment deployment target selection is a deploy-layer concern and should not be hardcoded into app feature code.
+
+proposed_updates:
+  rules:
+    - docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  rule_packs: []
+  recognition_sources:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations: []
+  notes:
+    - This rule is intentionally product-track deploy guidance, not a reusable ECS rule.
+    - ECS Fargate-specific deployment readiness remains a Milestone 10 concern.
+    - Client/environment target profiles make future repositories, AWS accounts, Azure subscriptions, and runtime adapters additive rather than app-code changes.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: codex-agentic-review-loop
+  reviewed_at_utc: "2026-07-10T22:30:00Z"
+  notes:
+    - Milestone 9 remains planning-only and records blockers instead of executing AWS changes.
+    - ADR 0028 codifies client/environment deployment target profiles without authorizing cloud mutation.

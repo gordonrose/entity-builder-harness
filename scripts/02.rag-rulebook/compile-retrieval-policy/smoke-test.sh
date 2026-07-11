@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.compile-retrieval-policy.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -67,6 +67,8 @@ assert [intent["intent_id"] for intent in compiled["user_intents"]] == [
 assert compiled["evidence_bundles"][0]["question_category_id"] == "question.architecture-boundary.capability-placement"
 assert compiled["evidence_bundles"][0]["family_source_paths"]["evidence.layer.apps"].endswith("apps.yml")
 assert compiled["retrieval_strategy"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
+assert compiled["chunk_selection"]["purpose_priority_by_intent"]["intent.explanation.tutor"][0] == "source-explanation"
+assert compiled["chunk_selection"]["side_effect_restrictions"]["authorization_authorities"] == ["execution-authority"]
 assert [stage["stage_id"] for stage in compiled["retrieval_strategy"]["stages"]][:3] == [
     "exact-identifiers",
     "generated-concepts",

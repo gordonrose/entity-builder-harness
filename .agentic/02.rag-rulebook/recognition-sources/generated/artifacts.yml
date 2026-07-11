@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 740
-  term_count: 1492
+  indexed_artifacts: 771
+  term_count: 1554
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3168,6 +3168,78 @@ terms:
   canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
   evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   confidence_weight: 1
+- term: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  evidence_path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  evidence_path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  evidence_path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  evidence_path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  evidence_path: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  evidence_path: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
+  confidence_weight: 1
 - term: harness.adr.readme
   category: artifact-id
   match_type: exact
@@ -3263,6 +3335,18 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
   evidence_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+  confidence_weight: 1
+- term: harness.architecture.plan.platform-runtime-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+  confidence_weight: 1
+- term: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
   confidence_weight: 1
 - term: harness.architecture.rule-packs.add-core-module
   category: rule-pack-id
@@ -4092,6 +4176,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-08-platform-infra-capability-layering-v1
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   category: artifact-id
   match_type: exact
@@ -4127,6 +4223,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.derivation-report.04-deploy.2026-06-30-container-image-management
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml
+  confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-07-10-platform-shell-runtime-family
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-07-10-platform-shell-runtime-family
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-07-10-platform-shell-runtime-family
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
   confidence_weight: 1
 - term: rag-rulebook.derivation-reports.readme
   category: artifact-id
@@ -4452,6 +4560,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-security-contract
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.platform-infra-capability-layering
   category: artifact-id
   match_type: exact
@@ -4475,6 +4595,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-enterprise-obligations
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-source-explanation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-source-explanation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-runtime-source-explanation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.product-term-session-boundary
   category: artifact-id
@@ -5291,6 +5423,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.plan.artifact-metadata-retrieval-profile-migration
   evidence_path: .agentic/02.rag-rulebook/plans/artifact-metadata-retrieval-profile-migration.md
+  confidence_weight: 1
+- term: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
+  evidence_path: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
+  evidence_path: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
   confidence_weight: 1
 - term: rag-rulebook.plan.prototype-corpus-migration-map
   category: artifact-id
@@ -6149,6 +6293,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.scripts.readme
   evidence_path: scripts/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.audit-explanation-readiness.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.readme
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/README.md
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/audit-explanation-readiness/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.readme
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/README.md
+  confidence_weight: 1
+- term: rag-rulebook.script.audit-explanation-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/script.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/audit-explanation-readiness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/script.sh
+  confidence_weight: 1
+- term: rag-rulebook.script.audit-explanation-readiness.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.smoke-test
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/02.rag-rulebook/audit-explanation-readiness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.script.audit-explanation-readiness.smoke-test
+  evidence_path: scripts/02.rag-rulebook/audit-explanation-readiness/smoke-test.sh
   confidence_weight: 1
 - term: rag-rulebook.script.build-local-runtime.readme
   category: artifact-id
@@ -7350,6 +7530,18 @@ terms:
   canonical_id: product.workflows.default
   evidence_path: .agentic/product/workflows/default.md
   confidence_weight: 1
+- term: product.workflow.platform-runtime-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
+- term: .agentic/product/workflows/platform-runtime-implementation.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
 - term: aws.readme
   category: artifact-id
   match_type: exact
@@ -7542,6 +7734,30 @@ terms:
   canonical_id: deploy.rules.02-rag-rulebook.supply-chain-provenance
   evidence_path: docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
   confidence_weight: 1
+- term: deploy.rules.03-product.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.rules.03-product.readme
+  evidence_path: docs/04.deploy/rules/03.product/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/rules/03.product/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.rules.03-product.readme
+  evidence_path: docs/04.deploy/rules/03.product/README.md
+  confidence_weight: 1
+- term: deploy.rules.03-product.platform-shell-runtime-family
+  category: rule-id
+  match_type: exact
+  canonical_id: deploy.rules.03-product.platform-shell-runtime-family
+  evidence_path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  confidence_weight: 1
+- term: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.rules.03-product.platform-shell-runtime-family
+  evidence_path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  confidence_weight: 1
 - term: deploy.rules.readme
   category: artifact-id
   match_type: exact
@@ -7638,6 +7854,18 @@ terms:
   canonical_id: deploy.source-material.03-product.readme
   evidence_path: docs/04.deploy/source-material/03.product/README.md
   confidence_weight: 1
+- term: deploy.source-material.03-product.platform-shell-runtime-family
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.source-material.03-product.platform-shell-runtime-family
+  evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+  confidence_weight: 1
+- term: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.source-material.03-product.platform-shell-runtime-family
+  evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+  confidence_weight: 1
 - term: deploy.source-material.readme
   category: artifact-id
   match_type: exact
@@ -7673,6 +7901,30 @@ terms:
   match_type: exact
   canonical_id: deploy.source-material.shared.container-image-management
   evidence_path: docs/04.deploy/source-material/shared/container-image-management.md
+  confidence_weight: 1
+- term: aws.architecture.adr.0001-select-ecs-fargate-for-platform-shell-planning
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.architecture.adr.0001-select-ecs-fargate-for-platform-shell-planning
+  evidence_path: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+  confidence_weight: 1
+- term: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.architecture.adr.0001-select-ecs-fargate-for-platform-shell-planning
+  evidence_path: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+  confidence_weight: 1
+- term: aws.architecture.adr.0002-select-cognito-for-platform-shell-auth
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.architecture.adr.0002-select-cognito-for-platform-shell-auth
+  evidence_path: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  confidence_weight: 1
+- term: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.architecture.adr.0002-select-cognito-for-platform-shell-auth
+  evidence_path: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
   confidence_weight: 1
 - term: aws.architecture.adr.readme
   category: artifact-id
@@ -7746,6 +7998,30 @@ terms:
   canonical_id: infra.04-deploy.02-rag-rulebook.image.readme
   evidence_path: infra/04.deploy/02.rag-rulebook/image/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.readme
+  evidence_path: infra/04.deploy/03.product/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.readme
+  evidence_path: infra/04.deploy/03.product/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.image.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.image.readme
+  evidence_path: infra/04.deploy/03.product/image/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/image/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.image.readme
+  evidence_path: infra/04.deploy/03.product/image/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.readme
   category: artifact-id
   match_type: exact
@@ -7782,6 +8058,66 @@ terms:
   canonical_id: deploy.scripts.readme
   evidence_path: scripts/04.deploy/README.md
   confidence_weight: 1
+- term: deploy.script.build-platform-shell-image.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.readme
+  evidence_path: scripts/04.deploy/build-platform-shell-image/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.readme
+  evidence_path: scripts/04.deploy/build-platform-shell-image/README.md
+  confidence_weight: 1
+- term: deploy.script.build-platform-shell-image.prepare-runtime
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.prepare-runtime
+  evidence_path: scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.prepare-runtime
+  evidence_path: scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs
+  confidence_weight: 1
+- term: deploy.script.build-platform-shell-image
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image
+  evidence_path: scripts/04.deploy/build-platform-shell-image/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image
+  evidence_path: scripts/04.deploy/build-platform-shell-image/script.sh
+  confidence_weight: 1
+- term: deploy.script.smoke-test-platform-shell-image.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.smoke-test-platform-shell-image.readme
+  evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/smoke-test-platform-shell-image/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.smoke-test-platform-shell-image.readme
+  evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/README.md
+  confidence_weight: 1
+- term: deploy.script.smoke-test-platform-shell-image
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.smoke-test-platform-shell-image
+  evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.smoke-test-platform-shell-image
+  evidence_path: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+  confidence_weight: 1
 - term: deploy.script.validate-container-boundaries.readme
   category: artifact-id
   match_type: exact
@@ -7817,6 +8153,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.validate-container-boundaries.smoke-test
   evidence_path: scripts/04.deploy/validate-container-boundaries/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deploy-readiness.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deploy-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id

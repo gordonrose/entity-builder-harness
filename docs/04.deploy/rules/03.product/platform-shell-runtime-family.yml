@@ -1,0 +1,182 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.03-product.platform-shell-runtime-family
+#   version: 3
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: rule
+#   purpose: Define platform shell runtime-family, target-profile, and deployment blocker rules.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.rules.03-product.readme
+#     path: docs/04.deploy/rules/03.product/README.md
+#   - id: infra.04-deploy.03-product.aws-runtime-family-decision
+#     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+id: deploy.03-product.platform-shell-runtime-family
+title: Platform shell runtime family and target profile rules
+version: 3
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 03.product
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-07-10T22:30:00Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+  source_material:
+    - path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+      sha256: 4320cc0f9f254d3a5b95d488801eb5e108749763d192b1a360659bb5e60b35a3
+
+description: >
+  Product platform shell deployment planning selects ECS Fargate as the first
+  AWS runtime family while representing client/environment deployment targets
+  as profiles and keeping provider-specific decisions out of ordinary app code
+  and provider-neutral platform contracts.
+
+related_rulesets:
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  - .agentic/aws/workflows/plan-aws-change.md
+
+applies_to:
+  paths:
+    - "infra/04.deploy/03.product/**"
+    - "infra/04.deploy/03.product/targets/**"
+    - "docs/04.deploy/source-material/03.product/**"
+    - "docs/04.deploy/rules/03.product/**"
+    - "docs/aws/architecture/adrs/**"
+    - "docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md"
+    - "platform/adapters/**"
+    - "apps/**"
+
+rules:
+  - id: platform-shell-runtime-family.selects-ecs-fargate-for-planning
+    title: ECS Fargate is the first platform shell planning runtime
+    severity: error
+    summary: >
+      Platform shell deployment planning uses ecs-fargate as the first AWS
+      runtime family, but this does not authorize AWS mutation or make ECS part
+      of the app contract.
+    must:
+      - "Record runtime_family as ecs-fargate for the first product platform shell AWS planning target."
+      - "Treat the ECS Fargate selection as planning-only until account/profile, region, environment, service target, rollback, and exact mutation are approved."
+      - "Keep ECS-specific task, service, ALB, target group, health, scaling, rollback, alarm, and cost assumptions in deploy/AWS planning artifacts, provider adapters, or infra implementation."
+      - "Allow future runtime families through governed provider adapters and deployment profiles without changing app mount contracts."
+    must_not:
+      - "Do not mutate AWS, DNS, IAM, ECR, GitHub deployment settings, or production exposure from this decision alone."
+      - "Do not treat the RAG/rulebook ECS Fargate staging service as the product platform shell target."
+      - "Do not put ECS Fargate-specific assumptions into ordinary app feature code or provider-neutral platform runtime contracts."
+    required_checks:
+      - "Verify infra/04.deploy/03.product/aws-runtime-family.decision.yml records runtime_family ecs-fargate."
+      - "Verify AWS mutation remains blocked until target account/profile, region, environment, service target, rollback path, and exact mutation are approved."
+      - "Verify Milestone 10 readiness checks are ECS Fargate-specific only after this planning decision."
+    agent_guidance: >
+      If asked which runtime family was selected for the platform shell, answer
+      ecs-fargate for planning. Also state that this is not a deployment
+      approval and not an app contract.
+
+  - id: platform-shell-runtime-family.uses-client-environment-target-profiles
+    title: Client and environment deployment choices live in target profiles
+    severity: error
+    summary: >
+      Client, environment, repository, provider, account or subscription,
+      region, runtime family, adapter, and readiness proof are deploy target
+      profile choices, not app feature code or provider-neutral runtime code.
+    must:
+      - "Use infra/04.deploy/03.product/targets/<client>/<environment>/ for product platform shell deployment target profiles."
+      - "Name client.id and environment.id in every platform shell deploy-readiness target profile."
+      - "Name source provider, repository, ref, commit, workflow path, and workflow run identity in the target profile before deployment readiness."
+      - "Name cloud provider, account or subscription identity, role/profile, region, runtime provider, runtime family, and runtime adapter in the target profile."
+      - "Allow future clients, repositories, AWS accounts, Azure subscriptions, regions, and runtime families through new target profiles and governed provider adapters."
+    must_not:
+      - "Do not create one global product platform shell deployment target when client, environment, provider, account, subscription, region, and runtime family can vary."
+      - "Do not hardcode client, repository, cloud provider, account/subscription, region, runtime family, or adapter selection in ordinary app feature code."
+      - "Do not make provider-neutral platform runtime internals depend on a specific client target profile."
+    required_checks:
+      - "Verify product platform shell deploy-readiness manifests live under infra/04.deploy/03.product/targets/<client>/<environment>/."
+      - "Verify platform shell readiness validation checks target profile identity, source provider, cloud provider, runtime family, and adapter selection."
+      - "Verify app code does not import deployment target profiles or provider adapters."
+    agent_guidance: >
+      Use the mental model: apps declare needs; target profiles select the
+      client, repository, cloud, account, region, runtime family, adapter, and
+      readiness proof.
+
+  - id: platform-shell-runtime-family.keeps-provider-adapters-out-of-app-code
+    title: Provider adapters satisfy app needs without becoming app internals
+    severity: error
+    summary: >
+      Apps declare provider-neutral needs; platform/deploy composition maps
+      those needs to runtime adapters and deployment profiles.
+    must:
+      - "Use platform/adapters/<provider>/<adapter-type>/<service-name>/ for provider-specific runtime translation."
+      - "Use examples such as platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/runtime/lambda, platform/adapters/aws/runtime/app-runner, and platform/adapters/aws/queue/sqs when those adapters are implemented."
+      - "Have apps declare routes, jobs, health checks, config schemas, permissions, lifecycle hooks, and deployment requirements through app.mount.ts, app.manifest.ts, generated metadata, or platform contracts."
+      - "Let platform/deploy composition choose the runtime adapter and deployment profile."
+    must_not:
+      - "Do not let ordinary app feature code import provider adapters directly."
+      - "Do not expose raw provider clients as the normal app-facing API."
+      - "Do not make platform adapters provision AWS resources, IAM, networking, DNS, queues, storage, secrets, or alarms."
+    required_checks:
+      - "Verify provider adapter paths follow provider/type/service naming before implementation."
+      - "Verify app code consumes provider-neutral platform contracts rather than provider adapters."
+    agent_guidance: >
+      Use the mental model: apps declare needs, platform adapters translate
+      providers, and infra provisions resources.
+
+  - id: platform-shell-runtime-family.records-auth-readiness
+    title: Auth readiness is target-profile evidence
+    severity: error
+    summary: >
+      Public platform shell exposure requires a recorded auth provider,
+      token-validation path, authz mapping source, route exposure policy, CORS
+      allowlist, rate-limit keying, and secret/config source in the target
+      profile.
+    must:
+      - "Use Cognito as the first Kanbien staging auth provider path unless a later governed ADR replaces it."
+      - "Record Cognito issuer, JWKS URI, app client id, and access-token validation mode before public exposure."
+      - "Record target authz mapping from groups, scopes, or claims to app-declared permissions."
+      - "Validate target-granted permissions against permissions declared by apps included in the product target."
+      - "Record protected dummy-route 401, 403, and success proof before deployment readiness."
+      - "Record explicit /livez and /readyz exposure policy, target-profile CORS allowlist, rate-limit keying, and secret/config source."
+    must_not:
+      - "Do not expose the platform shell publicly while auth provider, token validation, permission mapping, CORS, rate-limit keying, health exposure, or secret/config source are pending."
+      - "Do not commit Cognito client secrets, tokens, private keys, refresh tokens, credentials, or connection strings."
+      - "Do not let Cognito groups, scopes, or claims define app permission vocabulary."
+      - "Do not hardcode target authz maps or CORS origins in ordinary app feature code."
+    required_checks:
+      - "Verify deploy-readiness manifests include an auth section with provider, token_validation, permission_mapping, route_exposure, health_exposure, cors, rate_limiting, and secrets fields."
+      - "Run scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh for the target profile before treating readiness as passed."
+    agent_guidance: >
+      Treat Cognito as the first target identity provider, not as an app
+      contract. Apps own permissions; target profiles map real identities to
+      those permissions.
+
+source_refs:
+  - doc: "platform-shell-runtime-family.md"
+    sections:
+      - "Decision"
+      - "Boundary"
+      - "Deployment Target Profiles"
+      - "Auth Provider Target Profile"
+      - "Blockers Before AWS Mutation"
+      - "Non-Goals"
+
+success_criteria:
+  - "The selected runtime family is retrievable as ecs-fargate for the platform shell."
+  - "The rule distinguishes planning from AWS execution approval."
+  - "The rule requires client/environment target profiles for deploy-readiness proof."
+  - "The rule keeps ECS Fargate out of ordinary app code and provider-neutral platform runtime contracts."
+  - "The rule blocks public exposure until auth readiness evidence is present in the target profile."

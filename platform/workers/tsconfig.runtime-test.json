@@ -1,0 +1,49 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmit": false,
+    "outDir": "../../.cache/platform-workers-runtime",
+    "baseUrl": "../..",
+    "paths": {
+      "@kanbien/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@kanbien/core/*": [
+        "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-config": [
+        "platform/config/src/index.ts"
+      ],
+      "@kanbien/platform-health": [
+        "platform/health/src/index.ts"
+      ],
+      "@kanbien/platform-observability": [
+        "platform/observability/src/index.ts"
+      ],
+      "@kanbien/platform-runtime": [
+        "platform/runtime/src/index.ts"
+      ],
+      "@kanbien/platform-testing": [
+        "platform/testing/src/index.ts"
+      ]
+    },
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/*-runtime.test.ts",
+    "../testing/src/**/*.ts"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@kanbien/product-kanbien-platform",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@kanbien/app-platform-smoke": "0.0.0"
+  },
+  "devDependencies": {
+    "@kanbien/platform-server": "0.0.0",
+    "@kanbien/platform-testing": "0.0.0",
+    "@kanbien/platform-workers": "0.0.0"
+  }
+}

@@ -1,0 +1,162 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.aws-runtime-family-decision
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-manifest
+#   purpose: Record the planning-only AWS runtime-family decision for the platform shell.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: aws.architecture.adr.0001-select-ecs-fargate-for-platform-shell-planning
+#     path: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+#   - id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
+#     path: infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+#   - id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+#     path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+schema: platform-shell/aws-runtime-family-decision/v1
+status: planning-only
+deployment_track: 03.product
+service:
+  logical_name: platform-shell
+  image_blueprint: infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+decision:
+  runtime_family: ecs-fargate
+  selected_at_milestone: 9
+  decision_scope: first-production-planning-target
+  does_not_authorize:
+    - aws_mutation
+    - dns_mutation
+    - iam_mutation
+    - image_publish
+    - production_exposure
+  rationale:
+    - Platform shell has long-running HTTP server and background worker concerns.
+    - ECS Fargate supports separate server and worker services from one containerized runtime model.
+    - ECS Fargate aligns with ALB health checks, service stability, rollback, logs, scaling, and queue integration.
+    - Existing repo deploy material already contains ECS Fargate vocabulary and readiness examples for the 02.rag-rulebook track.
+adapter_layout:
+  convention: platform/adapters/<provider>/<adapter-type>/<service-name>/
+  examples:
+    - platform/adapters/aws/runtime/ecs-fargate/
+    - platform/adapters/aws/runtime/lambda/
+    - platform/adapters/aws/runtime/app-runner/
+    - platform/adapters/aws/queue/sqs/
+    - platform/adapters/aws/storage/s3/
+    - platform/adapters/aws/secrets/secrets-manager/
+    - platform/adapters/aws/observability/cloudwatch/
+  app_contract_boundary:
+    - Apps declare provider-neutral needs through platform contracts and app manifests.
+    - Platform/deploy composition maps those needs to runtime adapters and deployment profiles.
+    - Ordinary app feature code must not import provider adapters directly.
+target_profile_layout:
+  convention: infra/04.deploy/03.product/targets/<client>/<environment>/
+  first_target: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+  profile_owns:
+    - client identity
+    - environment identity
+    - source provider and repository identity
+    - cloud provider and account or subscription identity
+    - runtime family and adapter selection
+    - target-specific readiness proof and blockers
+  app_contract_boundary:
+    - Apps declare provider-neutral needs through platform contracts and app manifests.
+    - Target profiles select the client, repository, cloud provider, account, region, runtime family, and adapter.
+    - Ordinary app feature code must not import target profiles or cloud account/environment manifests.
+current_state_inspection:
+  repo_evidence:
+    - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml records runtime_family ecs-fargate for an existing RAG/rulebook staging target.
+    - infra/04.deploy/02.rag-rulebook/ecs-fargate/ defines an ECS Fargate implementation boundary for the RAG/rulebook track.
+    - infra/04.deploy/03.product/image/ defines the platform shell image boundary and local image smoke proof.
+  live_aws_inspection:
+    status: not-run
+    reason: Product platform shell account/profile, region, environment, and service target are not selected for this chat.
+target_topology:
+  provider: aws
+  runtime_family: ecs-fargate
+  server:
+    expected_service: ecs-service
+    expected_ingress: application-load-balancer
+    health_paths:
+      liveness: /livez
+      readiness: /readyz
+  worker:
+    expected_service: separate-ecs-service-or-task-family
+    queue_adapter_candidate: platform/adapters/aws/queue/sqs/
+    status: planned-after-smoke-app-job-requirements
+  image:
+    source: infra/04.deploy/03.product/image/Dockerfile
+    identity_for_deployment: immutable-digest-required
+required_before_mutation:
+  target_profile:
+    - client_id
+    - environment_id
+    - source_provider
+    - source_repository
+    - source_ref
+    - cloud_provider
+    - runtime_provider
+    - runtime_family
+    - runtime_adapter
+  aws_target:
+    - account_id
+    - profile_or_oidc_role
+    - region
+    - environment
+    - cluster_or_service_target
+  network_and_ingress:
+    - vpc
+    - subnet_boundary
+    - security_groups
+    - alb_or_ingress_choice
+    - target_group
+    - tls_certificate
+    - dns_hostname_or_explicit_deferral
+  runtime_resources:
+    - server_task_definition
+    - worker_task_definition_or_deferral
+    - cpu_memory_limits
+    - desired_count
+    - autoscaling_policy_or_explicit_deferral
+    - log_group
+    - secret_store
+    - queue_resources_or_explicit_deferral
+    - storage_resources_or_explicit_deferral
+  operations:
+    - deployment_circuit_breaker
+    - rollback_target
+    - rollback_authority
+    - alarms
+    - cost_limit
+    - owner
+    - escalation_path
+  provenance:
+    - source_commit_sha
+    - image_digest
+    - base_image_digest
+    - sbom_or_accepted_risk
+    - vulnerability_scan_or_accepted_risk
+    - workflow_run_identity
+alternatives_considered:
+  - runtime_family: app-runner
+    disposition: deferred
+    reason: Good fit for simple HTTP services, but server plus worker topology and queue processing are clearer in ECS Fargate for the first platform shell proof.
+  - runtime_family: lambda
+    disposition: future-adapter
+    reason: Useful for event and request slices later, but it would force different process, lifecycle, and worker semantics for the first shell proof.
+  - runtime_family: eks
+    disposition: rejected-for-v1
+    reason: Adds Kubernetes operational complexity before the platform shell needs it.
+validation_required_for_milestone_10:
+  - deploy-readiness manifest for the product platform shell
+  - target-specific static validation
+  - container image digest proof
+  - local image smoke proof
+  - read-only AWS target inspection after account/profile/region/environment are selected
+  - rollback proof or explicit blocker

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.schema.context-packet
-#   version: 1
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: context-packets
@@ -72,7 +72,7 @@ compact_output_contract:
       - "Do not include full recognition-source matches in compact output."
     selected_chunks:
       - "Include selected chunk content because this is the primary agent context."
-      - "Keep rank, IDs, source path, section path, retrieval score, token estimate, selection reason, citations, and rule IDs."
+      - "Keep rank, IDs, source path, content kind, chunk purpose, authority, section path, retrieval score, token estimate, selection reason, citations, and rule IDs."
     citations:
       - "Include only citations referenced by selected chunks or gaps."
     debug:
@@ -386,6 +386,9 @@ fields:
         - corpus_id
         - artifact_id
         - source_path
+        - content_kind
+        - chunk_purpose
+        - authority
         - content
         - rank
         - token_estimate
@@ -405,6 +408,27 @@ fields:
           examples:
             - artifact-summary
             - rule
+            - source-explanation
+        chunk_purpose:
+          type: enum
+          description: Why this selected chunk was useful for the prompt.
+          allowed_values:
+            - rule
+            - source-explanation
+            - adr-decision
+            - plan-milestone
+            - guide
+            - artifact-summary
+            - retrieval-profile
+        authority:
+          type: enum
+          description: What consumers may treat this selected chunk as authority for.
+          allowed_values:
+            - execution-authority
+            - explanation-support
+            - decision-history
+            - implementation-plan
+            - orientation
         source_path:
           type: string
         source_ref_ids:
@@ -413,6 +437,18 @@ fields:
             type: string
         section_path:
           type: string
+        heading_title:
+          type: string
+          description: Optional Markdown heading title for source-explanation chunks.
+        heading_path:
+          type: string
+          description: Optional Markdown heading path for source-explanation chunks.
+        line_start:
+          type: integer
+          minimum: 1
+        line_end:
+          type: integer
+          minimum: 1
         rule_ids:
           type: array
           items:
@@ -1054,6 +1090,22 @@ field_guide:
     rules:
       - "Use when the chunk comes from structured rules."
 
+  - path: selected_chunks[].chunk_purpose
+    what_it_is: "Why the selected chunk belongs in the packet."
+    what_it_does: "Lets consumers distinguish execution, explanation, decision-history, planning, and orientation evidence."
+    rules:
+      - "Use `source-explanation` for bounded source-material or guide sections selected to teach a human."
+      - "Use `rule` for structured rule chunks selected to govern execution."
+      - "Purpose does not grant authorization."
+
+  - path: selected_chunks[].authority
+    what_it_is: "The authority carried by the selected chunk."
+    what_it_does: "Prevents explanatory context from being mistaken for permission to act."
+    rules:
+      - "Use `execution-authority` only when the chunk is binding for implementation or operations."
+      - "Use `explanation-support` when the chunk explains rationale, examples, or boundaries."
+      - "Side-effecting requests must not be marked ready because an explanation-support chunk was selected."
+
   - path: selected_chunks[].content
     what_it_is: "The selected text sent as model context."
     what_it_does: "Provides only the needed evidence or instruction."
@@ -1432,6 +1484,9 @@ minimal_example:
       corpus_id: corpus.02.rag-rulebook
       artifact_id: rag-rulebook.plan.repo
       source_path: .agentic/02.rag-rulebook/plans/repo-plan.md
+      content_kind: plan-milestone
+      chunk_purpose: plan-milestone
+      authority: implementation-plan
       rule_ids: []
       content: "Design a context-packet schema including intent, routing metadata, matched corpora, selected chunks, required checks, stop conditions, citations, confidence, and gaps."
       rank: 1

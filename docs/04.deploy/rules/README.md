@@ -31,3 +31,9 @@ authorize AWS mutation, GitHub workflow deployment, or production exposure.
 
 Index, chunk, and selector-evaluation support for this directory is tracked as
 a separate RAG/rulebook follow-up.
+
+Track-specific rules:
+
+- `02.rag-rulebook/` for RAG/rulebook services and MCP exposure.
+- `03.product/` for product applications, product services, and platform
+  runtime services.

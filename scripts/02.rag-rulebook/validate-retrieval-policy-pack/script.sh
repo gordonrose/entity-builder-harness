@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.validate-retrieval-policy-pack
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -111,6 +111,7 @@ PRECEDENCE_CONCEPTS = [
     "stop",
     "request",
     "evidence",
+    "authority",
     "session",
     "path",
     "corpus",
@@ -468,6 +469,33 @@ def validate_dimension_contract(
             }
             for stage_id in sorted(required_stage_ids - set(stage_ids)):
                 errors.append(f"dimension retrieval-strategy missing required stage: {stage_id}")
+        chunk_selection = dimension.get("chunk_selection")
+        if not isinstance(chunk_selection, dict):
+            errors.append("dimension retrieval-strategy must include chunk_selection")
+        else:
+            purpose_priority = chunk_selection.get("purpose_priority_by_intent")
+            authority_rules = chunk_selection.get("authority_rules")
+            side_effects = chunk_selection.get("side_effect_restrictions")
+            if not isinstance(purpose_priority, dict) or not purpose_priority:
+                errors.append("dimension retrieval-strategy chunk_selection.purpose_priority_by_intent must be a non-empty object")
+            else:
+                explanation_priorities = list_of_strings(purpose_priority.get("intent.explanation.tutor"))
+                implementation_priorities = list_of_strings(purpose_priority.get("intent.implementation.request"))
+                if not explanation_priorities or explanation_priorities[0] != "source-explanation":
+                    errors.append("dimension retrieval-strategy explanation tutor priority must start with source-explanation")
+                if not implementation_priorities or implementation_priorities[0] != "rule":
+                    errors.append("dimension retrieval-strategy implementation priority must start with rule")
+            if not isinstance(authority_rules, dict) or "execution-authority" not in authority_rules or "explanation-support" not in authority_rules:
+                errors.append("dimension retrieval-strategy chunk_selection.authority_rules must define execution-authority and explanation-support")
+            if not isinstance(side_effects, dict):
+                errors.append("dimension retrieval-strategy chunk_selection.side_effect_restrictions must be an object")
+            else:
+                authorization_authorities = list_of_strings(side_effects.get("authorization_authorities"))
+                background_only = list_of_strings(side_effects.get("background_only_authorities"))
+                if authorization_authorities != ["execution-authority"]:
+                    errors.append("dimension retrieval-strategy side effects must authorize only execution-authority chunks")
+                if "explanation-support" not in background_only:
+                    errors.append("dimension retrieval-strategy side effects must keep explanation-support background-only")
     if len(list_of_strings(dimension.get("banned_actions"))) < 2:
         warnings.append(f"{owner} should include more than one banned action")
 

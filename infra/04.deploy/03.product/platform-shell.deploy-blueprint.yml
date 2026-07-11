@@ -1,0 +1,152 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-manifest
+#   purpose: Name deployment requirements for the platform runtime shell image and selected planning runtime family.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: harness.architecture.plan.platform-runtime-implementation
+#     path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+schema: platform-shell/deploy-blueprint/v1
+status: planning-only
+deployment_track: 03.product
+service:
+  logical_name: platform-shell
+  description: Provider-neutral platform runtime shell proving server startup, health endpoints, and Kanbien Platform app composition.
+  source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
+runtime_family:
+  provider: aws
+  selected: ecs-fargate
+  decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+  adr: docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
+  scope: first-production-planning-target
+  not_app_contract: true
+image:
+  logical_name: entity-builder-harness/03.product/platform-shell
+  dockerfile: infra/04.deploy/03.product/image/Dockerfile
+  build_context: .
+  effective_ignore_file: infra/04.deploy/03.product/image/Dockerfile.dockerignore
+  local_tag: entity-builder-harness/03.product/platform-shell:local
+  container_port: 3000
+  runtime_user: node
+  local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+server:
+  process_name: platform-server
+  command: node .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js
+  host_env: HOST
+  port_env: PORT
+  default_host: 0.0.0.0
+  default_port: 3000
+  health:
+    liveness_path: /livez
+    readiness_path: /readyz
+worker:
+  process_name: platform-worker
+  status: planned-separate-process
+  notes:
+    - Worker queue polling is proven locally by platform/workers tests.
+    - ECS Fargate planning expects separate server and worker service topology before deployment readiness.
+    - Provider-specific queue adapters remain deferred until smoke-app job requirements are explicit.
+adapters:
+  layout: platform/adapters/<provider>/<adapter-type>/<service-name>/
+  runtime_candidate: platform/adapters/aws/runtime/ecs-fargate/
+  queue_candidate: platform/adapters/aws/queue/sqs/
+  app_boundary:
+    - Apps declare provider-neutral needs through app.mount.ts and app.manifest.ts.
+    - Ordinary app feature code must not import provider adapters directly.
+observability:
+  logs: stdout-json
+  metrics: platform-runtime-contracts
+  required_log_safety: redacted-bounded-fields
+config:
+  required_environment:
+    - NODE_ENV
+    - HOST
+    - PORT
+    - PLATFORM_SMOKE_APP_NAME
+  optional_environment:
+    - PLATFORM_CORS_ORIGIN
+    - PLATFORM_CORS_ALLOWLIST
+    - PLATFORM_AUTH_PROVIDER
+    - PLATFORM_AUTH_COGNITO_REGION
+    - PLATFORM_AUTH_COGNITO_USER_POOL_ID
+    - PLATFORM_AUTH_COGNITO_APP_CLIENT_ID
+    - PLATFORM_AUTHZ_GROUP_PERMISSIONS
+    - PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+    - PLATFORM_AUTHZ_CLAIM_PERMISSIONS
+    - PLATFORM_HEALTH_LIVEZ_EXPOSURE
+    - PLATFORM_HEALTH_READYZ_EXPOSURE
+    - PLATFORM_SOURCE_COMMIT_SHA
+auth:
+  first_provider: cognito
+  provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  token_validation: jwt-jwks
+  token_use: access
+  provider_neutral_boundary: platform/security
+  server_wiring: platform/server/src/main.ts
+  route_default: authenticated-deny-by-default
+  permission_mapping:
+    source: target-profile-env
+    validates_against_app_declared_permissions: true
+  health_exposure_default:
+    livez: public
+    readyz: authenticated-when-auth-provider-enabled
+  cors_source: target-profile-env
+  rate_limit_keying: principal-token-or-forwarded-ip
+product:
+  manifest: products/kanbien-platform/src/product.manifest.ts
+  apps:
+    - app_id: platform-smoke
+      package: "@kanbien/app-platform-smoke"
+      mount_module: "@kanbien/app-platform-smoke"
+      route_base_path: /smoke
+      declared_permissions:
+        - smoke:read
+      required_config:
+        - PLATFORM_SMOKE_APP_NAME
+secrets:
+  local_required: []
+  production_required:
+    - target-specific-auth-config-or-secret-source
+  notes:
+    - Cognito user pool and app client identifiers are config, not secret values.
+    - Confidential auth material, if introduced later, must come from the target secret store and must not be committed.
+    - Secret store and concrete secret references are deferred until AWS deployment planning.
+queues:
+  local: in-memory test queue only
+  production: AWS SQS candidate; concrete resources deferred until smoke-app job requirements and AWS target planning.
+storage:
+  local: none
+  production: product storage requirements deferred until app layer and AWS planning.
+network:
+  dns: deferred-to-aws-plan
+  tls: deferred-to-aws-plan
+  ingress: ALB candidate for ECS Fargate; exact listener, target group, and hostname deferred to AWS plan.
+operations:
+  alarms: deferred-to-aws-plan
+  rollback: deferred-to-aws-plan
+  cost_limits: deferred-to-aws-plan
+iac_ownership:
+  status: ecs-fargate-planning-selected
+  required_before_production_readiness:
+    - account_profile
+    - region
+    - environment
+    - service_target
+    - rollback_path
+    - exact_mutation_plan
+non_goals:
+  - no AWS mutation
+  - no DNS mutation
+  - no IAM provisioning
+  - no Terraform/CDK/Pulumi resources
+  - no real product app behavior

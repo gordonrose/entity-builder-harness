@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.schema.rulebook-index
-#   version: 1
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -100,6 +100,7 @@ fields:
             - corpus-package
             - migration-map
             - generated-index
+            - source-material
         migration_status:
           type: enum
           allowed_values:
@@ -164,6 +165,7 @@ fields:
           type: enum
           allowed_values:
             - source-guide
+            - source-material
             - source-original
             - adr
             - readme
@@ -309,6 +311,8 @@ fields:
         - artifact_ref
         - corpus_id
         - content_kind
+        - chunk_purpose
+        - authority
         - source_path
       fields:
         chunk_id:
@@ -331,10 +335,47 @@ fields:
             - required-check
             - source-reference
             - source-excerpt
-            - retrieval-profile
             - migration-entry
+            - source-explanation
+            - adr-decision
+            - plan-milestone
+            - guide
+            - retrieval-profile
+        chunk_purpose:
+          type: enum
+          description: Why this candidate may be selected.
+          allowed_values:
+            - rule
+            - source-explanation
+            - adr-decision
+            - plan-milestone
+            - guide
+            - artifact-summary
+            - retrieval-profile
+        authority:
+          type: enum
+          description: What consumers may treat this candidate as authority for.
+          allowed_values:
+            - execution-authority
+            - explanation-support
+            - decision-history
+            - implementation-plan
+            - orientation
         section_path:
           type: string
+        heading_title:
+          type: string
+        heading_path:
+          type: string
+        heading_level:
+          type: integer
+          minimum: 1
+        line_start:
+          type: integer
+          minimum: 1
+        line_end:
+          type: integer
+          minimum: 1
         source_path:
           type: string
         token_estimate:
@@ -411,6 +452,7 @@ fields:
           type: enum
           allowed_values:
             - source-guide
+            - source-material
             - source-original
             - source
             - adr
@@ -426,6 +468,8 @@ fields:
         line_end:
           type: integer
           minimum: 1
+        section:
+          type: string
         section:
           type: string
 
@@ -735,6 +779,26 @@ field_guide:
     what_it_does: "Helps retrievers rank summaries, rules, checks, generated retrieval profiles, and migration entries differently."
     rules:
       - "Use one of the allowed values."
+  - path: chunk_candidates[].chunk_purpose
+    what_it_is: "Why this chunk candidate may be selected."
+    what_it_does: "Lets retrieval choose different evidence for execution, explanation, planning, decision history, and orientation prompts."
+    rules:
+      - "Use `source-explanation` for bounded Markdown teaching sections."
+      - "Use `rule` for structured rule material."
+      - "Do not use purpose as permission to execute side effects."
+  - path: chunk_candidates[].authority
+    what_it_is: "What the consumer may treat the candidate as authority for."
+    what_it_does: "Separates human explanation support from binding execution guidance."
+    rules:
+      - "Use `execution-authority` only for governed rules, checks, stops, workflows, or approved binding material."
+      - "Use `explanation-support` for source-material teaching chunks."
+      - "Explanation-support candidates must not authorize writes, commits, deploys, destructive actions, or cloud mutation."
+  - path: chunk_candidates[].heading_path
+    what_it_is: "Markdown heading path for source-explanation candidates."
+    what_it_does: "Lets humans and tools see which bounded teaching section produced a chunk."
+    rules:
+      - "Use for Markdown-derived explanation chunks."
+      - "Pair with line_start and line_end so chunks remain citable and bounded."
   - path: chunk_candidates[].retrieval_profile
     what_it_is: "Generated source capability hints for profile chunks."
     what_it_does: "Lets generic process questions retrieve the artifacts that explain the process before a curated training term exists."
@@ -849,6 +913,8 @@ minimal_example:
       rule_ref: rule.packages-core.shared-foundation
       corpus_id: corpus.03.product.core
       content_kind: rule
+      chunk_purpose: rule
+      authority: execution-authority
       section_path: rules[0]
       source_path: docs/harness/architecture/rules/layers/packages-core.yml
       token_estimate: 80

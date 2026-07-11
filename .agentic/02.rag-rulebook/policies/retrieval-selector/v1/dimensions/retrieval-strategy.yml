@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.policy.retrieval-selector.v1.dimension.retrieval-strategy
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -39,6 +39,7 @@ required_inputs:
 expected_actions:
   - Run exact identifier recognition before broad concept matching.
   - Apply generated concept sources before curated broad terms.
+  - Apply chunk purpose and authority rules before final ranking and token trimming.
   - Expand bounded graph evidence before final ranking.
   - Apply evidence bundles before trimming selected chunks.
   - Re-rank rule chunks inside required source paths using prompt terms, evidence-family terms, rule IDs, rule titles, rule summaries, and rule body fields.
@@ -48,9 +49,12 @@ banned_actions:
   - Do not skip exact identifier matching because a broad curated term matched first.
   - Do not graph-expand without a bounded rule source or artifact-summary signal.
   - Do not hide missing evidence-family requirements inside an otherwise high-confidence packet.
+  - Do not let explanation-support chunks authorize writes, commits, deploys, destructive actions, or cloud mutation.
 output_obligations:
   - strategy_id
   - stage_ids
+  - chunk_purpose
+  - chunk_authority
   - stage_statuses
   - recognition_match_counts
   - candidate_counts
@@ -64,6 +68,8 @@ gap_or_stop_conditions:
 ranking_effects:
   - Exact identifiers outrank broad concepts.
   - Generated concept matches outrank curated broad vocabulary.
+  - Explanation and tutor intents prefer source-explanation, guide, and decision-history chunks.
+  - Implementation and side-effecting intents prefer rule and execution-authority chunks.
   - Evidence bundle source paths survive trimming before optional ranked chunks.
   - Within required evidence sources, rule title and summary matches outrank broad file-level matches.
   - Graph expansion is bounded and feeds required source paths before final selection.
@@ -127,14 +133,90 @@ retrieval_strategy:
         - intra_source_reranking_stage_status
     - stage_id: final-ranking
       rank: 7
-      purpose: Score, filter, trim, and validate selected chunks after required evidence has been preserved.
+      purpose: Score, filter, trim, authority-label, and validate selected chunks after required evidence has been preserved.
       primary_inputs:
         - ranked chunks
         - required chunk IDs
         - required source paths
+        - chunk purpose and authority policy
       expected_outputs:
         - selected_chunk_ids
+        - selected_chunk_purposes
+        - selected_chunk_authorities
         - retrieval_confidence
+chunk_selection:
+  purpose_priority_by_intent:
+    intent.no-action.explanation:
+      - source-explanation
+      - guide
+      - adr-decision
+      - rule
+      - artifact-summary
+    intent.explanation.tutor:
+      - source-explanation
+      - guide
+      - adr-decision
+      - rule
+      - artifact-summary
+    intent.discovery.explanation:
+      - source-explanation
+      - guide
+      - adr-decision
+      - rule
+      - artifact-summary
+    intent.planning.guidance:
+      - plan-milestone
+      - adr-decision
+      - rule
+      - source-explanation
+      - artifact-summary
+    intent.planning.decision-support:
+      - adr-decision
+      - plan-milestone
+      - rule
+      - source-explanation
+      - artifact-summary
+    intent.implementation.request:
+      - rule
+      - plan-milestone
+      - adr-decision
+      - source-explanation
+      - artifact-summary
+    intent.git.commit:
+      - rule
+      - plan-milestone
+      - artifact-summary
+      - source-explanation
+    intent.deploy.execution:
+      - rule
+      - plan-milestone
+      - adr-decision
+      - artifact-summary
+      - source-explanation
+    intent.context.retrieve:
+      - rule
+      - source-explanation
+      - guide
+      - artifact-summary
+  authority_rules:
+    execution-authority: May govern implementation or operations when paired with applicable workflow and approval.
+    explanation-support: May explain rationale, examples, and boundaries; must not authorize side effects.
+    decision-history: May explain durable decisions and consequences.
+    implementation-plan: May guide sequencing and acceptance criteria; does not replace workflow approval.
+    orientation: May help candidate selection and source inspection.
+  side_effect_restrictions:
+    side_effect_classes:
+      - write
+      - git
+      - deploy
+      - destructive
+    authorization_authorities:
+      - execution-authority
+    background_only_authorities:
+      - explanation-support
+      - decision-history
+      - implementation-plan
+      - orientation
 validation_examples:
   - name: exact identifiers run before broad terms
     given: The prompt names an exact corpus and also contains broad words such as platform or app.
@@ -148,8 +230,12 @@ validation_examples:
   - name: required sources are re-ranked by rule fields
     given: An evidence bundle selects a long source file with multiple rule chunks.
     expect: The selector trace lists intra-source-reranking and selected chunks include the best matching rule IDs from required source paths.
+  - name: explanation asks prefer teaching chunks without granting authority
+    given: The prompt asks to be walked through a platform boundary.
+    expect: Source-explanation chunks outrank optional implementation details, while side-effect authorization remains unavailable.
 can_change_by:
   - Add a new retrieval stage with an evaluation fixture.
   - Change stage order only with policy-pack version review.
   - Add stage trace outputs.
   - Add confidence penalties tied to specific strategy stages.
+  - Add chunk-purpose or authority priorities with fixture proof.

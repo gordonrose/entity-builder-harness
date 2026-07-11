@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -197,6 +197,16 @@ def packet_sets(packet: dict[str, Any]) -> dict[str, set[str]]:
             item.get("content_kind")
             for item in packet.get("selected_chunks", [])
             if isinstance(item, dict) and isinstance(item.get("content_kind"), str)
+        },
+        "selected_chunk_purposes": {
+            item.get("chunk_purpose")
+            for item in packet.get("selected_chunks", [])
+            if isinstance(item, dict) and isinstance(item.get("chunk_purpose"), str)
+        },
+        "selected_authorities": {
+            item.get("authority")
+            for item in packet.get("selected_chunks", [])
+            if isinstance(item, dict) and isinstance(item.get("authority"), str)
         },
         "selected_artifact_ids": {
             item.get("artifact_id")
@@ -474,6 +484,18 @@ def evaluate_fixture(path: Path, fixture: dict[str, Any], chunks_path: Path) -> 
         "selected_content_kinds",
         sets["selected_content_kinds"],
         list_of_strings(dict_value(expected.get("selected_content_kinds")).get("required")),
+        errors,
+    )
+    require_contains(
+        "selected_chunk_purposes",
+        sets["selected_chunk_purposes"],
+        list_of_strings(dict_value(expected.get("selected_chunk_purposes")).get("required")),
+        errors,
+    )
+    require_contains(
+        "selected_authorities",
+        sets["selected_authorities"],
+        list_of_strings(dict_value(expected.get("selected_authorities")).get("required")),
         errors,
     )
 

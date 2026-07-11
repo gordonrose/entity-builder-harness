@@ -19,6 +19,8 @@ portability:
 used_by:
 - id: deploy.script.verify-rag-rulebook-deploy-readiness
   path: scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh
+- id: deploy.script.verify-platform-shell-deploy-readiness
+  path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
 - id: deploy.script.validate-container-boundaries
   path: scripts/04.deploy/validate-container-boundaries/script.sh
 -->
@@ -32,8 +34,15 @@ mutating effect and require current-chat approval.
 
 Current commands:
 
+- `build-platform-shell-image/`: local-only Docker image build wrapper for the
+  provider-neutral platform shell.
+- `smoke-test-platform-shell-image/`: local-only image smoke test for platform
+  shell `/livez` and `/readyz`.
 - `validate-container-boundaries/`: read-only Dockerfile and container image
   placement validation so deployable images stay under governed `infra/**`
   image directories.
+- `verify-platform-shell-deploy-readiness/`: read-only manifest validation for
+  product platform shell deployment readiness, including explicit blocker
+  coverage for planning-only evidence.
 - `verify-rag-rulebook-deploy-readiness/`: read-only manifest validation for
   RAG/rulebook GitHub-to-AWS deployment readiness.

@@ -34,3 +34,10 @@ Use one of these statuses:
 - `proposed`
 - `accepted`
 - `superseded`
+
+## Records
+
+- `0001-select-ecs-fargate-for-platform-shell-planning.md` - select ECS
+  Fargate as the first AWS planning runtime family for the platform shell.
+- `0002-select-cognito-for-platform-shell-auth.md` - select Amazon Cognito as
+  the first auth provider path for the platform shell staging target.

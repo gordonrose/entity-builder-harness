@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.scripts.readme
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: scripts
@@ -68,6 +68,9 @@ validation, and standalone service adapters.
 - `check-source-material-coverage/script.sh` verifies that governed source
   material has a structured rule, derivation report, or corpus gap outcome and
   that claimed structured rules reached the generated index and chunk set.
+- `audit-explanation-readiness/script.sh` reports whether governed Markdown
+  source material and guides are indexed, chunked as `source-explanation`,
+  useful for human explanation, and distinct from execution-authority coverage.
 - `report-artifact-retrieval-profile-coverage/script.sh` reports whether
   indexed artifact metadata has enough deterministic signal to derive useful
   retrieval profiles, without mutating headers or generated outputs.

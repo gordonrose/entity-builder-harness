@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.generate-retrieval-selector-fixture
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: retrieval
@@ -55,7 +55,7 @@ except ImportError:
 
 PACKET_SCHEMA = "rag-rulebook/context-packet/v1"
 CHUNK_SET_SCHEMA = "rag-rulebook/chunk-set/v1"
-GENERATOR_VERSION = "retrieval-selector-fixture-v1"
+GENERATOR_VERSION = "retrieval-selector-fixture-v2"
 COMPILED_POLICY_SCHEMA = "rag-rulebook/compiled-retrieval-policy/v1"
 POLICY_PACK_PATH = ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml"
 RECOGNITION_ROOT = ".agentic/02.rag-rulebook/recognition-sources"
@@ -1383,6 +1383,10 @@ def chunk_haystack(chunk: dict[str, Any]) -> str:
         chunk.get("artifact_ref"),
         chunk.get("source_path"),
         chunk.get("content_kind"),
+        chunk.get("chunk_purpose"),
+        chunk.get("authority"),
+        chunk.get("heading_title"),
+        chunk.get("heading_path"),
         chunk.get("rule_title"),
         chunk.get("rule_summary"),
         chunk.get("rule_must_text"),
@@ -1536,6 +1540,8 @@ def score_chunk(
         score += 5
     if kind == "artifact-summary" and term_set.intersection({"artifact", "source", "rulebook", "rag"}):
         score += 4
+    if kind == "source-explanation" and term_set.intersection({"source", "guide", "boundary", "surface", "runtime"}):
+        score += 5
     if kind == "retrieval-profile" and term_set.intersection({"artifact", "content", "harness", "index", "rag", "retrieval"}):
         score += 8
     score += intra_source_score(chunk, prompt_terms, recognition_matches)
@@ -2041,6 +2047,7 @@ def select_chunks(
     max_chunks: int,
     required_chunk_ids: list[str] | None = None,
     required_source_paths: list[str] | None = None,
+    purpose_priorities: list[str] | None = None,
 ) -> list[tuple[float, dict[str, Any]]]:
     selected: dict[str, tuple[float, dict[str, Any]]] = {}
     required_ids = set(required_chunk_ids or [])
@@ -2053,6 +2060,29 @@ def select_chunks(
         selected.setdefault(chunk_id, (score, chunk))
 
     by_chunk_id = {chunk_id: item for item in ranked for chunk_id in [item[2]]}
+
+    preferred_purpose_item = next(
+        (
+            item
+            for purpose in purpose_priorities or []
+            for item in ranked
+            if item[3].get("chunk_purpose") == purpose
+            and item[0] > 0
+            and (
+                purpose != "source-explanation"
+                or item[3].get("source_path") in required_sources
+            )
+        ),
+        None,
+    )
+    add(preferred_purpose_item)
+
+    for kind in ["required-check", "rule", "artifact-summary"]:
+        preferred = next((item for item in ranked if item[3].get("content_kind") == kind and item[0] > 0), None)
+        if kind == "required-check" and preferred is None:
+            continue
+        fallback = next((item for item in ranked if item[3].get("content_kind") == kind), None)
+        add(preferred or fallback)
 
     for chunk_id in required_chunk_ids or []:
         add(by_chunk_id.get(chunk_id))
@@ -2156,6 +2186,15 @@ def select_chunks(
     )
 
 
+def purpose_priorities_for_intent(compiled_policy: dict[str, Any], intent_id: str) -> list[str]:
+    chunk_selection = dict_value(compiled_policy.get("chunk_selection"))
+    by_intent = dict_value(chunk_selection.get("purpose_priority_by_intent"))
+    priorities = list_of_strings(by_intent.get(intent_id))
+    if priorities:
+        return priorities
+    return list_of_strings(by_intent.get("intent.context.retrieve"))
+
+
 def build_packet(
     args: argparse.Namespace,
     policy: dict[str, Any],
@@ -2214,14 +2253,26 @@ def build_packet(
     required_source_paths = list(candidate_evidence_paths)
     if gap_required_chunk_ids:
         required_source_paths += graph_expansion_source_paths
+    required_source_paths += rule_evidence_paths(evidence_bundle_source_paths)
     required_source_paths += evidence_bundle_source_paths
     required_source_paths += profile_evidence_source_paths
+    available_source_paths = {
+        str(item[3].get("source_path"))
+        for item in candidate_ranked
+        if isinstance(item[3].get("source_path"), str)
+    }
+    required_source_paths += [
+        path
+        for path in prompt_target_paths(recognition_matches)
+        if path in available_source_paths
+    ]
     required_source_paths = unique_source_paths(required_source_paths)
     selected_pairs = select_chunks(
         candidate_ranked,
         args.max_chunks,
         required_chunk_ids=required_chunk_ids,
         required_source_paths=required_source_paths,
+        purpose_priorities=purpose_priorities_for_intent(compiled_policy, resolved_intent_id),
     )
     selected_source_chunks = [chunk for _score, chunk in selected_pairs]
     if len(selected_source_chunks) < 3:

@@ -44,6 +44,8 @@ LOG_FILE="$LOG_DIR/README.md"
 
 mkdir -p \
   "$REPO/.agentic/00.chat/checklists" \
+  "$REPO/docs/aws/architecture/adrs" \
+  "$REPO/docs/harness/architecture/adrs" \
   "$REPO/scripts/00.chat/session-log/check-commit-prerequisites" \
   "$REPO/scripts/00.chat/session-log/check-commitlog-deletions" \
   "$REPO/scripts/00.chat/session-log/paths" \
@@ -75,6 +77,30 @@ done
 
 cat > "$REPO/.agentic/00.chat/checklists/before-commit.md" <<'EOF'
 # Before Commit
+EOF
+
+cat > "$REPO/docs/harness/architecture/adrs/0001-first-decision.md" <<'EOF'
+# ADR 0001: First Decision
+
+## Status
+
+Accepted.
+EOF
+
+cat > "$REPO/docs/harness/architecture/adrs/0002-second-decision.md" <<'EOF'
+# ADR 0002: Second Decision
+
+## Status
+
+Accepted.
+EOF
+
+cat > "$REPO/docs/aws/architecture/adrs/0001-aws-decision.md" <<'EOF'
+# ADR 0001: AWS Decision
+
+## Status
+
+Accepted.
 EOF
 
 cat > "$LOG_FILE" <<EOF
@@ -137,5 +163,48 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 
 grep -q 'Chat session is ready for commit:' "$TMP_ROOT/passing.out" \
   || fail "prepare gate did not pass with context hygiene"
+
+cat > "$LOG_FILE" <<EOF
+# Chat Session: prepare context hygiene smoke
+
+<!-- agentic-session
+id: $SESSION_ID
+task: test prepare context hygiene
+branch: chat/$SESSION_ID
+worktree:
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+status: ready
+-->
+
+## Initial Intent
+
+test prepare context hygiene
+
+## Decisions Made
+
+- Decision: Accept multiple ADR paths.
+  Rationale: Some chats create or rely on more than one durable architecture decision.
+
+## Context Hygiene
+
+- Summary: Noisy evidence was reduced to decisions, tests, and unresolved issues.
+  Durable evidence: Session log and task commit carry forward the important state.
+
+## ADR Disposition
+
+ADR needed: yes
+ADR paths:
+- docs/harness/architecture/adrs/0001-first-decision.md
+- docs/harness/architecture/adrs/0002-second-decision.md
+- docs/aws/architecture/adrs/0001-aws-decision.md
+Reason: This smoke test covers multiple ADR paths in one session log.
+EOF
+
+bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+  bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
+  >"$TMP_ROOT/multi-adr.out"
+
+grep -q 'Chat session is ready for commit:' "$TMP_ROOT/multi-adr.out" \
+  || fail "prepare gate did not pass with multiple ADR paths"
 
 echo "prepare chat session smoke test passed."

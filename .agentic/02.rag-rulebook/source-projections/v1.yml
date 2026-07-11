@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.source-projections.v1
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -199,6 +199,33 @@ projection_sets:
       - The validator enforces the infra image boundary before the first Dockerfile is introduced.
       - Source acceptance record lives at .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml.
 
+  - id: projection.04.deploy.03-product.platform-shell-runtime-family
+    status: active
+    projection_mode: manual-reviewed
+    source_material:
+      - path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
+        role: primary
+    target:
+      corpus_id: corpus.04.deploy
+      owner_layer: 04.deploy
+      deploy_track: 03.product
+    expected_rule_paths:
+      - docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+    derivation_reports:
+      - .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+    corpus_gap_paths: []
+    expected_selector_evaluations: []
+    required_checks:
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+      - bash scripts/02.rag-rulebook/query-local-context/script.sh --request-text "Where should platform adapters go and what AWS runtime family was selected for the platform shell?" --max-chunks 8 --format compact --pretty
+    notes:
+      - Product platform shell runtime-family and target-profile source projects into one 03.product deploy rule.
+      - The selected first AWS planning runtime family is ecs-fargate.
+      - Product platform shell deployment targets use infra/04.deploy/03.product/targets/<client>/<environment>/.
+      - The decision is planning-only and does not authorize AWS mutation, DNS changes, IAM changes, image publishing, or production exposure.
+
   - id: projection.03.product.core.packages-core-contract-surface-v1
     status: active
     projection_mode: manual-reviewed
@@ -262,14 +289,17 @@ projection_sets:
     corpus_gap_paths: []
     expected_selector_evaluations:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
     required_checks:
       - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
       - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+      - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
     notes:
       - The source records deferred platform and infra runtime obligations identified while hardening packages/core contract modules.
       - The projection keeps enterprise runtime guidance available before platform adapters, outbox relays, audit recorders, and infra resources are implemented.
+      - The source-explanation fixture proves the Markdown source itself remains retrievable for human walkthroughs of runtime shell surfaces and boundaries.
       - Deferrals should be recorded as explicit gaps rather than disappearing into chat history.
 
   - id: projection.03.product.platform.platform-infra-capability-layering-v1
