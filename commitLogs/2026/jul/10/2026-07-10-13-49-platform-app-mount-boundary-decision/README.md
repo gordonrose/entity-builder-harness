@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id: packet.selector-fixture.fe99e59aeaff1ed2
 latest_context_packet_routing_summary: App mount boundary prompt selected platform, apps, and dependency-direction rules for app.mount.ts integration and app-internal opacity.
 latest_context_packet_at_utc: 2026-07-10T12:53:51Z
-latest_commit_at_utc: 2026-07-10T20:30:16Z
-latest_commit_sha: 813264f
-chat_duration: 16056s (00:04:27:36)
+latest_commit_at_utc: 2026-07-11T08:34:53Z
+latest_commit_sha: 8c7bdb31beb53514fbb367cec78ba7a1123439d2
+chat_duration: 71145s (00:19:45:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -341,6 +341,17 @@ generated RAG recognition sources so the new ADR metadata is discoverable.
 Deploy readiness manifests remain a watch item covered for now by ADR 0028 and
 AWS ADR 0001.
 
+
+### 2026-07-11T08:34:53Z - Commit recorded
+
+Commit: `8c7bdb31beb53514fbb367cec78ba7a1123439d2`
+
+Message: Record ADR coverage governance decisions
+
+Summary: Added ADR 0029 for purpose/authority-aware RAG retrieval, ADR 0030 for formal commit readiness gating before task commits, refreshed generated recognition sources, and tightened before-commit guidance for terminal commits.
+
+ADR impact: ADR 0029 records retrieval purpose/authority separation; ADR 0030 records formal commit-readiness gate policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -362,6 +373,13 @@ AWS ADR 0001.
   Summary: Implemented source-explanation Markdown chunk candidates/chunks, purpose/authority packet fields, selector fixture proof, projection registration, and runtime freshness coverage for source material and guides.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `8c7bdb31beb53514fbb367cec78ba7a1123439d2`
+  Time UTC: 2026-07-11T08:34:53Z
+  Message: Record ADR coverage governance decisions
+  Summary: Added ADR 0029 for purpose/authority-aware RAG retrieval, ADR 0030 for formal commit readiness gating before task commits, refreshed generated recognition sources, and tightened before-commit guidance for terminal commits.
+  ADR impact: ADR 0029 records retrieval purpose/authority separation; ADR 0030 records formal commit-readiness gate policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -381,9 +399,9 @@ Reason: Durable architecture decisions now cover app mount boundaries, purpose/a
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T12:49:08Z
-Latest commit at UTC: 2026-07-10T20:30:16Z
-Latest commit SHA: 813264f
-Chat duration: 16056s (00:04:27:36)
+Latest commit at UTC: 2026-07-11T08:34:53Z
+Latest commit SHA: 8c7bdb31beb53514fbb367cec78ba7a1123439d2
+Chat duration: 71145s (00:19:45:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
