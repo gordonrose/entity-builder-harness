@@ -128,19 +128,23 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 
 ## ADR Disposition
 
-- If the chat made a durable harness architecture decision, create or update an
-  ADR under `docs/harness/architecture/adrs/`.
+- If the chat made a durable architecture decision, create or update an ADR
+  under the owning ADR root, such as `docs/<track>/architecture/adrs/`.
 - If no ADR is needed, record a short reason in the session log.
 
 ## Gate
 
-Run:
+Run after approved paths are staged in the committing worktree:
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 ```
 
 Do not commit if the gate fails.
+
+If the agent cannot stage because Git metadata is not writable in its sandbox
+and the human will commit in a terminal, give the human the sequence as stage
+approved paths, run this gate, then commit only if the gate passes.
 
 ## After Commit
 

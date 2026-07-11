@@ -54,6 +54,18 @@ let's lock the platform app integration module decision in
 - Decision: Track explanation-aware chunking as a separate RAG-rulebook plan before continuing platform runtime work.
   Rationale: Keeping execution-authority retrieval and human explanation support in .agentic/02.rag-rulebook avoids muddying docs/harness/architecture/plans/platform-runtime-implementation-plan.md while still making the platform runtime source material retrievable for future teaching prompts.
 
+
+- Decision: Record explanation-aware retrieval as a durable ADR rather than
+  leaving it only in the implementation plan.
+  Rationale: Separating chunk purpose from chunk authority affects future
+  retrieval behavior for both human explanation and agent execution prompts.
+
+
+- Decision: Record formal gate-before-task-commit behavior as a durable ADR.
+  Rationale: Human terminal commits must preserve the same readiness boundary
+  as agent-created commits, especially when sandbox Git metadata permissions
+  prevent the agent from staging the actual commit candidate.
+
 ## Context Hygiene
 
 - Built local RAG/rulebook runtime cache for this worktree, queried the app
@@ -115,6 +127,24 @@ let's lock the platform app integration module decision in
 
 - Summary: Codified client/environment deployment target profiles for future multi-client and multi-cloud flexibility.
   Durable evidence: Added ADR 0028 for client/environment deployment target profiles; moved the first platform shell readiness scaffold to infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml; updated the readiness verifier to require client, environment, source provider, cloud provider, runtime provider, and adapter fields; and updated product/deploy source material, rules, workflow guidance, and readiness docs. Validation passed: readiness verifier smoke, blocked Kanbien staging target planning verification, normal-mode blocked exit proof, source projections, source material coverage, derivation report validation, recognition freshness, local RAG runtime freshness, target-profile retrieval query, container boundary validation, and git diff --check.
+
+
+- Summary: Fixed the formal before-commit gate so it accepts session logs with multiple ADR paths and layered ADR roots.
+  Durable evidence: Updated scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh and smoke-test.sh to accept `ADR paths:` lists and `docs/<track>/architecture/adrs/*.md` paths, including docs/aws architecture ADRs. Updated before-commit and prepare-gate docs. Initial smoke validation passed.
+
+
+- Summary: Added missing ADRs for the durable retrieval and commit-boundary
+  decisions made in this chat.
+  Durable evidence: Added ADR 0029 for purpose/authority-aware RAG retrieval
+  and ADR 0030 for requiring the formal chat commit readiness gate before task
+  commits. Updated before-commit guidance to make the safe terminal sequence
+  explicit when the agent cannot stage due sandbox Git metadata permissions.
+  Regenerated generated RAG recognition sources so the new ADR metadata is
+  discoverable.
+  Deploy readiness manifests remain a watch item covered for now by ADR 0028
+  and AWS ADR 0001; create a dedicated deploy ADR if readiness manifests
+  become the general cloud-mutation gate beyond the current platform shell
+  scaffold.
 
 ## Activity Log
 
@@ -291,6 +321,26 @@ Summary: Codified client/environment deployment target profiles for future multi
 
 Durable evidence: Added `docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md`; moved the first product platform shell readiness scaffold to `infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml`; updated `scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh` so target profiles must name client, environment, source provider, cloud provider, runtime provider, and adapter fields; updated deploy source material/rules, source derivation evidence, product workflow guidance, runtime plan, and deploy READMEs. Initial validation passed: readiness verifier smoke test and blocked Kanbien staging target planning verification with no hidden gaps.
 
+
+### 2026-07-10T22:36:57Z - Context hygiene
+
+Summary: Fixed the formal before-commit gate for multiple ADR paths and layered ADR roots.
+
+Durable evidence: Updated `scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh` so `ADR needed: yes` accepts either `ADR path:` or an `ADR paths:` list and validates each entry under `docs/<track>/architecture/adrs/*.md`. Updated the smoke test to cover multiple ADR paths spanning harness and AWS ADR roots, and updated before-commit/prepare-gate docs. Targeted validation passed: `bash scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh`.
+
+### 2026-07-11T08:19:35Z - ADR coverage audit cleanup
+
+Summary: Added missing ADRs for explanation-aware retrieval and formal commit
+readiness gates.
+
+Durable evidence: Added `docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md`
+and `docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md`.
+Updated before-commit guidance so terminal commits follow stage approved paths,
+run the formal readiness gate, then commit only if it passes. Regenerated
+generated RAG recognition sources so the new ADR metadata is discoverable.
+Deploy readiness manifests remain a watch item covered for now by ADR 0028 and
+AWS ADR 0001.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -323,8 +373,10 @@ ADR paths:
 - docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
 - docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
 - docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+- docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+- docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
 - docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
-Reason: Durable architecture decisions now cover app mount boundaries, provider/type/service adapter layout, client/environment deployment target profiles, and ECS Fargate as the first AWS planning runtime family.
+Reason: Durable architecture decisions now cover app mount boundaries, purpose/authority-aware RAG retrieval, provider/type/service adapter layout, client/environment deployment target profiles, formal commit-readiness gating before task commits, and ECS Fargate as the first AWS planning runtime family.
 
 ## Session Metrics
 

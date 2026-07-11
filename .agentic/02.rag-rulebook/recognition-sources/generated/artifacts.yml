@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 633
-  term_count: 1278
+  indexed_artifacts: 635
+  term_count: 1282
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3203,6 +3203,30 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
   evidence_path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  confidence_weight: 1
+- term: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
   confidence_weight: 1
 - term: harness.adr.readme
   category: artifact-id

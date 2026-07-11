@@ -61,8 +61,8 @@ Then it validates the current chat session:
 - `## Context Hygiene` must have a real entry
 - `## ADR Disposition` must have a real entry
 - `ADR needed` must be `yes` or `no`
-- when `ADR needed: yes`, the ADR path must point to an existing file under
-  `docs/harness/architecture/adrs/`
+- when `ADR needed: yes`, each ADR path must point to an existing file under a
+  governed architecture ADR root such as `docs/<track>/architecture/adrs/`
 - when `ADR needed` is `yes` or `no`, the reason must be present
 
 ## What This Does Not Do
@@ -75,13 +75,19 @@ Then it validates the current chat session:
 
 ## Typical Sequence
 
-1. Run this readiness check.
-2. Commit the task changes.
-3. Run `record-chat-commit` with the task commit SHA and summary.
-4. If only the session log is dirty, run `checkpoint-chat-session-log`.
-5. If continuing the same chat into a new phase, run `/compact` so Codex keeps
+1. Stage only approved task paths in the committing worktree.
+2. Run this readiness check.
+3. Commit the task changes only if this check passes.
+4. Run `record-chat-commit` with the task commit SHA and summary.
+5. If only the session log is dirty, run `checkpoint-chat-session-log`.
+6. If continuing the same chat into a new phase, run `/compact` so Codex keeps
    the commit summary, decisions, unresolved issues, and context hygiene instead
    of raw intermediate output.
+
+If the agent cannot stage because Git metadata is not writable in its sandbox
+and the human will commit in a terminal, the agent should provide the same
+sequence to the human: stage approved paths, run this readiness check, then
+commit only if the check passes.
 
 ## Repository Extensions
 
