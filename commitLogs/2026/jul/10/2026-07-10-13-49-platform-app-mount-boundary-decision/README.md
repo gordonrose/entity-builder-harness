@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-10T12:49:08Z
-transcript_provider: 
-transcript_path: 
-transcript_bytes: 
-transcript_source: 
+transcript_provider: codex
+transcript_path: /home/owner/.codex/sessions/2026/07/09/rollout-2026-07-09T13-41-58-019f46e6-2f6e-7993-807e-64302c957bed.jsonl
+transcript_bytes: 19584539
+transcript_source: codex path: /home/owner/.codex/sessions/2026/07/09/rollout-2026-07-09T13-41-58-019f46e6-2f6e-7993-807e-64302c957bed.jsonl
 latest_context_packet_id: packet.selector-fixture.fe99e59aeaff1ed2
 latest_context_packet_routing_summary: App mount boundary prompt selected platform, apps, and dependency-direction rules for app.mount.ts integration and app-internal opacity.
 latest_context_packet_at_utc: 2026-07-10T12:53:51Z
-latest_commit_at_utc: 2026-07-11T08:34:53Z
-latest_commit_sha: 8c7bdb31beb53514fbb367cec78ba7a1123439d2
-chat_duration: 71145s (00:19:45:45)
-estimated_chat_tokens: unavailable; transcript source not supplied by chat
-estimated_chat_cost: unavailable; estimated chat tokens are unavailable
-estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
+latest_commit_at_utc: 2026-07-11T21:32:23Z
+latest_commit_sha: febec66
+chat_duration: 117795s (01:08:43:15)
+estimated_chat_tokens: 4896135 estimated from chat transcript bytes (19584539 bytes; source: codex path: /home/owner/.codex/sessions/2026/07/09/rollout-2026-07-09T13-41-58-019f46e6-2f6e-7993-807e-64302c957bed.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -548,6 +548,17 @@ Public deployment remains blocked on AWS target selection, Cognito target
 values, CORS origins, secret/config source, deployed protected-route smoke,
 operations ownership, and rollback proof.
 
+
+### 2026-07-11T21:32:23Z - Commit recorded
+
+Commit: `febec66`
+
+Message: Implement Kanbien Platform smoke composition
+
+Summary: Added apps/platform-smoke and products/kanbien-platform, wired the deployable Kanbien Platform server entrypoint, updated image/readiness metadata, and proved local app/product/server/image smoke paths before AWS target planning.
+
+ADR impact: Covered by existing app mount, product composition, Cognito auth, and ECS Fargate planning ADRs; no new ADR required for this implementation slice.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -576,6 +587,13 @@ operations ownership, and rollback proof.
   Summary: Added ADR 0029 for purpose/authority-aware RAG retrieval, ADR 0030 for formal commit readiness gating before task commits, refreshed generated recognition sources, and tightened before-commit guidance for terminal commits.
   ADR impact: ADR 0029 records retrieval purpose/authority separation; ADR 0030 records formal commit-readiness gate policy.
 
+
+- Commit: `febec66`
+  Time UTC: 2026-07-11T21:32:23Z
+  Message: Implement Kanbien Platform smoke composition
+  Summary: Added apps/platform-smoke and products/kanbien-platform, wired the deployable Kanbien Platform server entrypoint, updated image/readiness metadata, and proved local app/product/server/image smoke paths before AWS target planning.
+  ADR impact: Covered by existing app mount, product composition, Cognito auth, and ECS Fargate planning ADRs; no new ADR required for this implementation slice.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -597,12 +615,12 @@ Reason: Durable architecture decisions now cover app mount boundaries, purpose/a
 ## Session Metrics
 
 Raised at UTC: 2026-07-10T12:49:08Z
-Latest commit at UTC: 2026-07-11T08:34:53Z
-Latest commit SHA: 8c7bdb31beb53514fbb367cec78ba7a1123439d2
-Chat duration: 71145s (00:19:45:45)
-Estimated chat tokens: unavailable; transcript source not supplied by chat
-Estimated chat cost: unavailable; estimated chat tokens are unavailable
-Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
+Latest commit at UTC: 2026-07-11T21:32:23Z
+Latest commit SHA: febec66
+Chat duration: 117795s (01:08:43:15)
+Estimated chat tokens: 4896135 estimated from chat transcript bytes (19584539 bytes; source: codex path: /home/owner/.codex/sessions/2026/07/09/rollout-2026-07-09T13-41-58-019f46e6-2f6e-7993-807e-64302c957bed.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
