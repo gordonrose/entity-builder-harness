@@ -37,6 +37,7 @@ runtime shell, including:
 - `platform/health/**`
 - `platform/config/**`
 - `apps/platform-smoke/**`
+- `products/kanbien-platform/**`
 - deployment-facing target profiles, manifests, or config that prove the
   platform shell without mutating cloud state
 
@@ -69,6 +70,12 @@ Before editing runtime code:
   repositories, route handlers, job handlers, or other app internals.
 - Apps may organize internals however they choose; platform only depends on
   approved public mount modules, manifests, generated metadata, or contracts.
+- Apps own app-specific permission vocabulary. Platform validates and enforces
+  declared permissions; product and deployment target authz mapping decides
+  which real-world identities receive those permissions.
+- Products compose apps. Use `products/kanbien-platform/**` as the first
+  product composition target for Kanbien Platform; keep `kanbien/staging` as a
+  deployment target, not the product.
 - `platform/contracts/**` is the app-facing contract surface.
 - `platform/runtime/**` owns provider-neutral runtime mechanics, not HTTP
   framework details, cloud SDK clients, or product business decisions.
@@ -89,6 +96,11 @@ Before editing runtime code:
   or `apps/**`.
 - Ordinary app feature code must not import deployment target profiles,
   provider adapters, cloud SDK clients, or account/environment manifests.
+- Target authz mappings must not invent permissions that are not declared by
+  the apps included in the product target.
+- Product composition manifests must not contain AWS account, region, DNS,
+  auth provider secrets, image digests, or other environment-specific deploy
+  values.
 
 ## Required Checks
 
@@ -111,6 +123,9 @@ Minimum expected checks by surface:
 - `apps/platform-smoke/**`: app mount contract tests proving one route, one
   job, one health check, one config schema, one lifecycle hook, and one
   manifest.
+- `products/kanbien-platform/**`: product manifest validation proving the
+  product lists app public manifests or generated app metadata without
+  importing app internals or target-specific deploy values.
 - Deployment-facing target profiles/manifests/config: schema or static
   validation, target profile validation, and local runtime smoke that consumes
   the metadata.
@@ -125,6 +140,8 @@ Stop before editing or executing if:
 - The task would mutate AWS, DNS, secrets, GitHub deployment settings, or other
   production infrastructure.
 - The slice needs a real product app feature rather than dummy app proof.
+- The slice treats an environment such as `kanbien/staging` as the product
+  instead of a deployment target for `products/kanbien-platform`.
 - Platform code would need to import app internals.
 - App internal structure would become part of a platform contract.
 - A check needed to prove the slice is missing and no gap has been recorded.
@@ -144,6 +161,7 @@ Record in the session log:
 - boundary decision applied;
 - checks run and results;
 - any gaps or deferred production obligations;
+- product/app composition impact, if product manifests or app lists changed;
 - ADR impact, if the slice changes durable architecture;
 - deployment impact, if the slice changes manifests or container/deploy
   metadata.

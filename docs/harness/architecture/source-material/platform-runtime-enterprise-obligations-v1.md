@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  version: 4
+  version: 6
   status: active
   layer: 01.harness
   domain: architecture
@@ -81,6 +81,17 @@ not only from implementation files. These surfaces are the first mental model:
   one config schema, and one lifecycle hook through `app.mount.ts`. It is not
   the real product app and should not become the final app architecture
   template.
+- Apps own their permission vocabulary. A real app should define its
+  app-specific permission names near the public mount surface, register them
+  through `app.mount.ts`, and use those same permissions on routes and jobs.
+  Platform validates and enforces those declarations; product or target-level
+  authz mapping decides which provider groups, roles, scopes, claims, or
+  machine identities receive them.
+- `products/<product>/**` is the product composition layer. The first product
+  composition target is `products/kanbien-platform`, used to bundle
+  `apps/platform-smoke` first and later real Kanbien apps. Product composition
+  is distinct from deployment targets: `kanbien/staging` is an environment used
+  for dev and integration proof, not the product itself.
 - Deployment-facing manifests and config are declarative facts that infra and
   deployment tooling can consume without inspecting app internals. Examples
   include app name, route base path, required environment variables, health
@@ -92,7 +103,10 @@ In short: contracts define what apps can say to platform; testing proves that
 contract with fakes; runtime owns shared mechanics; server owns HTTP process
 behavior; workers own background process behavior; the smoke app proves the
 mount boundary; manifests/config publish deployment facts without leaking app
-internals.
+internals. Apps define permission vocabulary; platform validates and enforces
+permissions; products bundle apps; target profiles map real-world identities to
+app-declared permissions. Product manifests answer which apps form a product;
+deployment target profiles answer where and how that product runs.
 
 ## Runtime Surface Boundaries
 
@@ -329,6 +343,8 @@ Typical files:
 
 - `app.mount.ts` to register one route, one job, one health check, one app
   config schema, one permission, and one lifecycle hook;
+- `app.permissions.ts` or equivalent app-owned module for app-specific
+  permission declarations used by routes and jobs;
 - `app.manifest.ts` to publish deployment-facing metadata without importing
   app internals;
 - tiny internal route, job, health, and config files if needed to prove the
@@ -339,6 +355,8 @@ Allowed:
 - minimal smoke behavior that exercises request context, job context,
   permission metadata, health aggregation, config validation, logging, metrics,
   and lifecycle hooks;
+- app-owned permission vocabulary that is registered through the public mount
+  module and then validated by platform;
 - intentionally simple app-owned internals used only by the public mount
   module;
 - local and deployment smoke tests that prove the platform shell, not product
@@ -352,6 +370,40 @@ Not allowed:
 - importing platform server or worker internals directly;
 - secrets, real tenant/customer data, or production provider assumptions.
 
+### `products/<product>/**`
+
+Purpose: compose app modules into a named product without mixing in deployment
+target values.
+
+Typical files:
+
+- `product.manifest.ts` for product identity, app list, app enablement, and
+  product-level composition metadata;
+- generated product metadata when deploy or smoke tooling needs a
+  machine-readable projection;
+- optional product role grouping that references permissions declared by apps
+  included in the product target.
+
+Allowed:
+
+- product identity and display metadata;
+- references to app public manifests, app mount modules, or generated app
+  metadata;
+- lists of apps included in the product, starting with `apps/platform-smoke`
+  for the Kanbien Platform proof;
+- product-level role groupings that reference app-declared permissions.
+
+Not allowed:
+
+- treating an environment such as `kanbien/staging` as the product;
+- AWS account, region, runtime family, DNS, CORS origins, auth provider
+  configuration, image digests, or readiness blockers;
+- secret values, provider client secrets, tokens, private keys, or connection
+  strings;
+- imports from app services, repositories, route handlers, job handlers,
+  business rules, or feature internals;
+- defining permission vocabulary that belongs to apps.
+
 ### Deployment-Facing Manifests And Config
 
 Purpose: give infra and deployment tooling stable facts without requiring them
@@ -360,6 +412,11 @@ to inspect app internals.
 Typical files:
 
 - `apps/*/app.manifest.ts` for app-owned deployment facts;
+- `products/*/product.manifest.ts` for product-owned app composition facts;
+- target-specific authz maps such as
+  `infra/**/targets/<client>/<environment>/authz-map.yml` when a target needs
+  to map provider groups, roles, scopes, claims, or machine identities to
+  app-declared permissions;
 - generated deployment metadata when the manifest needs a machine-readable
   projection;
 - `infra/environments/**` for target-specific values;
@@ -371,6 +428,8 @@ Allowed:
 - app identity, route base path, health endpoint names, worker process names,
   required config keys, secret reference names, queue requirements, container
   ports, smoke-test targets, and deployment ownership metadata;
+- non-secret authz mappings that grant only permissions declared by apps in the
+  product target;
 - non-secret references to secret stores or parameter names;
 - declarative values that are stable enough for infra checks, image builds,
   smoke tests, and deployment readiness reports.
@@ -382,6 +441,9 @@ Not allowed:
 - imports from app services, repositories, route handlers, job handlers,
   business rules, or feature internals;
 - hidden business logic that makes the manifest a second app implementation;
+- target authz mappings that invent permissions not declared by app mounts;
+- provider-specific group, role, scope, or claim names leaking into ordinary
+  app route handlers;
 - cloud resource creation, IAM, networking, DNS, load balancer, or deployment
   topology outside infra-owned files.
 

@@ -40,7 +40,9 @@ let's lock the platform app integration module decision in
 
 ## Issues Raised
 
-- None recorded yet.
+- Public internet exposure would be unsafe without real authentication and
+  authorization modules. Resolution: updated the platform runtime plan with
+  Milestone 10a so auth/authz readiness is a blocker before public deployment.
 
 ## Decisions Made
 
@@ -65,6 +67,29 @@ let's lock the platform app integration module decision in
   Rationale: Human terminal commits must preserve the same readiness boundary
   as agent-created commits, especially when sandbox Git metadata permissions
   prevent the agent from staging the actual commit candidate.
+
+
+- Decision: Add internet-facing auth/authz readiness as a platform runtime
+  milestone before application-layer readiness or public deployment.
+  Rationale: Existing security hooks, fake auth tests, CORS plumbing, and
+  permission checks are not enough to publish the shell to the public internet.
+  The real provider choice remains deferred until the auth design slice.
+
+
+- Decision: Apps own app-specific permission vocabulary.
+  Rationale: Platform should validate and enforce declared permissions, while
+  products bundle apps and deployment targets map provider claims, groups,
+  roles, scopes, or machine identities to app-declared permissions. This keeps
+  app meaning out of platform and provider-specific identity terms out of app
+  route handlers.
+
+
+- Decision: Products compose apps, with `products/kanbien-platform` as the
+  first Kanbien Platform product composition target.
+  Rationale: Product identity and app bundling need to stay separate from
+  environment-specific deployment targets. `kanbien/staging` is the first
+  dev/integration target for the Kanbien Platform product, not the product
+  itself.
 
 ## Context Hygiene
 
@@ -145,6 +170,41 @@ let's lock the platform app integration module decision in
   and AWS ADR 0001; create a dedicated deploy ADR if readiness manifests
   become the general cloud-mutation gate beyond the current platform shell
   scaffold.
+
+
+- Summary: Updated the platform runtime plan to block public internet exposure
+  until real auth/authz readiness is proven.
+  Durable evidence: Added Milestone 10a to
+  `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`.
+  The milestone requires provider choice, token/session validation,
+  production auth hook wiring, permission mapping, protected dummy-route
+  proofs, public/private route classification, health exposure policy,
+  target-profile CORS, principal/IP rate limiting, secret/config source, and
+  deployment readiness auth blockers. Regenerated generated RAG recognition
+  sources after the plan metadata version change. Provider-choice ADR is
+  deferred until a provider path is selected.
+
+
+- Summary: Codified app-owned permission vocabulary across platform runtime
+  planning and RAG source material.
+  Durable evidence: Updated
+  `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`,
+  `docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md`,
+  `docs/harness/architecture/rules/layers/platform.yml`, and
+  `.agentic/product/workflows/platform-runtime-implementation.md` so apps own
+  permission vocabulary, platform validates/enforces declared permissions,
+  products bundle apps, and target authz maps may grant only permissions
+  declared by apps in the product target. Refreshed the platform rule source
+  hash and generated recognition sources.
+
+
+- Summary: Codified product composition as separate from deployment targets.
+  Durable evidence: Added ADR 0031 and updated the platform runtime plan,
+  enterprise obligation source material, product workflow, apps rule, and
+  platform rule so `products/kanbien-platform` is the first Kanbien Platform
+  product composition target, products compose apps, apps own permission
+  vocabulary, and `kanbien/staging` remains an environment/deployment target
+  rather than the product.
 
 ## Activity Log
 
@@ -352,6 +412,57 @@ Summary: Added ADR 0029 for purpose/authority-aware RAG retrieval, ADR 0030 for 
 
 ADR impact: ADR 0029 records retrieval purpose/authority separation; ADR 0030 records formal commit-readiness gate policy.
 
+### 2026-07-11T08:57:31Z - Auth readiness plan update
+
+Summary: Added internet-facing auth/authz readiness as Milestone 10a in the
+platform runtime implementation plan.
+
+Durable evidence: Updated
+`docs/harness/architecture/plans/platform-runtime-implementation-plan.md` so
+public exposure is blocked until a real authentication provider path,
+token/session validation, production auth hook, permission mapping, protected
+dummy route proof, route exposure classification, health exposure policy,
+target-profile CORS, principal/IP rate limiting, secret/config source, and
+deployment readiness auth blockers are resolved. Regenerated generated RAG
+recognition sources after the plan metadata version change. Provider-choice
+ADR is deferred until the provider path is selected.
+
+### 2026-07-11T13:39:22Z - App-owned permission vocabulary
+
+Summary: Locked in the permission ownership split for multi-product,
+multi-app, multi-client authz.
+
+Durable evidence: Updated
+`docs/harness/architecture/plans/platform-runtime-implementation-plan.md`,
+`docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md`,
+`docs/harness/architecture/rules/layers/platform.yml`, and
+`.agentic/product/workflows/platform-runtime-implementation.md`. Apps now own
+app-specific permission vocabulary; platform validates and enforces declared
+permissions; products bundle apps; target authz maps may grant only
+permissions declared by apps in the product target. Refreshed the platform rule
+source hash and generated recognition sources.
+
+### 2026-07-11T14:10:11Z - Product composition boundary
+
+Summary: Locked in products as the app composition boundary.
+
+Durable evidence: Added
+`docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md`
+and updated
+`docs/harness/architecture/plans/platform-runtime-implementation-plan.md`,
+`docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md`,
+`docs/harness/architecture/rules/layers/apps.yml`,
+`docs/harness/architecture/rules/layers/platform.yml`, and
+`.agentic/product/workflows/platform-runtime-implementation.md`. The first
+product composition target is `products/kanbien-platform`; it composes
+`apps/platform-smoke` first and later real Kanbien apps. `kanbien/staging`
+remains a deployment target for dev/integration proof, not the product.
+Validation passed: artifact metadata headers, generated recognition-source
+freshness, YAML syntax, source projections, source material coverage,
+derivation reports, local RAG runtime build, runtime freshness,
+`git diff --check`, and a retrieval smoke query selecting
+`apps.products-compose-apps` as the rank 1 chunk.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -393,8 +504,9 @@ ADR paths:
 - docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
 - docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
 - docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+- docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
 - docs/aws/architecture/adrs/0001-select-ecs-fargate-for-platform-shell-planning.md
-Reason: Durable architecture decisions now cover app mount boundaries, purpose/authority-aware RAG retrieval, provider/type/service adapter layout, client/environment deployment target profiles, formal commit-readiness gating before task commits, and ECS Fargate as the first AWS planning runtime family.
+Reason: Durable architecture decisions now cover app mount boundaries, purpose/authority-aware RAG retrieval, provider/type/service adapter layout, client/environment deployment target profiles, formal commit-readiness gating before task commits, products as the app composition boundary, and ECS Fargate as the first AWS planning runtime family. The new auth-readiness blocker and app-owned permission vocabulary rule are captured in the runtime plan/source/rules; provider-choice ADR is deferred until a provider path is selected.
 
 ## Session Metrics
 

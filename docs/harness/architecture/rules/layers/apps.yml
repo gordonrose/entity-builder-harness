@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.apps
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -20,18 +20,20 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.apps
 title: apps layer rules
-version: 2
+version: 3
 status: active
 
 description: >
-  Rules governing apps/ as Kanbien's deployable and mountable product
-  composition layer: application entrypoints, app mounting, product routes,
-  product UI composition, business workflows, app-owned migrations, app
-  manifests, runtime wiring, smoke tests, and deployment-facing metadata.
+  Rules governing apps/ as Kanbien's mountable app modules and products/ as
+  the product composition layer: app entrypoints, app mounting, product app
+  lists, product routes, product UI composition, business workflows,
+  app-owned migrations, app manifests, product manifests, runtime wiring,
+  smoke tests, and deployment-facing metadata.
 
 applies_to:
   paths:
     - "apps/**"
+    - "products/**"
 
 related_rulesets:
   - docs/harness/architecture/rules/layers/platform.yml
@@ -55,8 +57,9 @@ app_surfaces:
     typical_paths:
       - "apps/*/migrations/**"
   - id: product_composition
-    purpose: "Product routes, pages, features, workers, workflow wiring, and app-specific dependencies."
+    purpose: "Product app composition, routes, pages, features, workers, workflow wiring, and app-specific dependencies."
     typical_paths:
+      - "products/*/product.manifest.ts"
       - "apps/*/src/**"
       - "apps/*/features/**"
 
@@ -159,16 +162,16 @@ test_taxonomy:
 
 rules:
   - id: apps.are-composition-roots
-    title: Apps are deployable composition roots
+    title: Apps are mountable app modules
     severity: error
     summary: >
-      Apps assemble product packages, platform contracts, routes, UI,
-      environment wiring, telemetry, database clients, workers, and deployment
-      behavior into independently runnable products or services.
+      Apps own app-specific behavior, public mount surfaces, routes, jobs,
+      permissions, UI, workers, and app manifests. Products compose apps into
+      deployable products.
     must:
-      - "Use apps/** for deployable application entrypoints such as web, api, worker, admin, and public-site apps."
-      - "Let apps assemble platform services, product packages, routes, UI composition, environment wiring, logging, telemetry, database clients, workers, and deployment-specific behavior."
-      - "Keep apps independently runnable where the product boundary requires it, while also allowing platform mounting through approved contracts."
+      - "Use apps/** for mountable app modules such as web, api, worker, admin, public-site, or domain-specific app units."
+      - "Let apps own app-specific routes, jobs, UI composition, permissions, app config meaning, app manifests, workers, and app-local dependencies."
+      - "Keep apps independently testable and mountable through approved platform contracts."
     must_not:
       - "Do not use apps/** as a shared foundation imported by packages, platform internals, script capabilities, or infra."
       - "Do not hide reusable domain logic, shared API contracts, shared UI components, or cross-app utilities in an app because it was the first consumer."
@@ -176,6 +179,28 @@ rules:
     agent_guidance: >
       If code starts as app wiring but another app needs it, move the reusable
       behavior to an owning package and keep only the composition in the app.
+
+  - id: apps.products-compose-apps
+    title: Products compose apps
+    severity: error
+    summary: >
+      Products bundle app modules into named product surfaces. Environments
+      such as staging or production are deployment targets for a product, not
+      products themselves.
+    must:
+      - "Use products/** for product composition manifests that name which apps are included in a product."
+      - "Use products/kanbien-platform/** as the first Kanbien Platform product composition target for dev and integration proof."
+      - "Let product manifests reference app public manifests, app public mount modules, or generated app metadata instead of app internals."
+      - "Keep environment-specific provider, account, region, DNS, CORS, auth provider, image digest, secret, and readiness values in deployment target profiles."
+      - "Allow product-level role groupings only when they reference permissions declared by apps included in the product target."
+    must_not:
+      - "Do not treat kanbien/staging or another environment target as the product."
+      - "Do not put AWS account, region, DNS, auth provider secrets, image digest, or deployment readiness blockers in product manifests."
+      - "Do not let product manifests invent app permission vocabulary."
+      - "Do not import app services, repositories, route handlers, job handlers, or feature internals from product manifests."
+    agent_guidance: >
+      Products answer which apps form a product. Target profiles answer where
+      and how that product runs.
 
   - id: apps.own-product-behavior
     title: Apps own product behavior
@@ -319,7 +344,8 @@ source_refs:
 
 success_criteria:
   - "The file exists at docs/harness/architecture/rules/layers/apps.yml."
-  - "It defines apps/ as Kanbien's deployable and mountable product composition layer."
+  - "It defines apps/ as Kanbien's mountable app module layer and products/ as the product composition layer."
+  - "It records products/kanbien-platform as the first Kanbien Platform product composition target."
   - "It keeps product behavior, route/page composition, app-level permissions, app config meaning, and workflow decisions in apps or product packages."
   - "It requires explicit app.mount.ts and app.manifest.ts style surfaces for platform and infra consumption."
   - "It requires app-owned ordered migration streams."

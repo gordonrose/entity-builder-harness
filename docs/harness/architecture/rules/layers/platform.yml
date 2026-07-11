@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 4
+#   version: 6
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 7
+version: 9
 status: active
 
 source_derivation:
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
     - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-      sha256: 9fbb08dc362af47d4549eb670f997f5fc28fc2e8349a904e0dc79c1b4a441816
+      sha256: dd85783cf132b9a26c0f57da1b89b4cade6e011155b1d22c4a231be011559c29
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -68,7 +68,7 @@ runtime_modules:
     purpose: "HTTP API process startup, app mounting, route adaptation, middleware, and versioning."
     public_to_apps: false
   - id: security
-    purpose: "Authentication hooks, coarse route authorization, CORS, and rate limiting."
+    purpose: "Authentication hooks, app-declared permission enforcement, CORS, and rate limiting."
     public_to_apps: through_policies
   - id: observability
     purpose: "Structured logging, request logging, metrics, and tracing hooks."
@@ -197,12 +197,14 @@ rules:
       - "Treat platform/adapters/** as the provider-specific translation layer, organized as platform/adapters/<provider>/<adapter-type>/<service-name>/."
       - "Use adapter paths such as platform/adapters/aws/runtime/ecs-fargate, platform/adapters/aws/runtime/lambda, platform/adapters/aws/queue/sqs, platform/adapters/aws/storage/s3, platform/adapters/aws/secrets/secrets-manager, and platform/adapters/aws/observability/cloudwatch when those adapters are implemented."
       - "Use apps/platform-smoke/** only as a deliberately boring dummy app that proves the shell can mount one route, one job, one health check, one config schema, and one lifecycle hook through app.mount.ts."
+      - "Treat products/kanbien-platform/** as the first product composition target for bundling apps into the Kanbien Platform while keeping kanbien/staging as an infra deployment target."
       - "Use deployment-facing manifests and config for app name, route base path, required environment variables, health endpoints, worker process names, queue requirements, container port, and deployment smoke-test targets when infra needs those facts."
     must_not:
       - "Do not treat apps/platform-smoke/** as the real product app or the final app architecture template."
       - "Do not put HTTP framework details, cloud SDK clients, or product business decisions in platform/runtime/**."
       - "Do not let ordinary app feature code import or select provider adapters directly."
       - "Do not let ordinary platform/server/** or platform/workers/** internals import app services, features, repositories, route handlers, or job-handler internals."
+      - "Do not treat a deployment environment such as kanbien/staging as the product."
       - "Do not make infra or deployment tooling scan arbitrary app source files when a manifest or generated metadata artifact should provide deployment facts."
     agent_guidance: >
       For learning and RAG answers, use the short mental model: contracts define
@@ -221,6 +223,7 @@ rules:
     must:
       - "Expose stable app-facing contracts from platform/contracts/** or another explicitly approved public contract entry point."
       - "Let apps mount through approved public app.mount.ts integration modules that register routes, permissions, jobs, health checks, optional config schemas, and optional lifecycle hooks."
+      - "Let apps own their permission vocabulary and register app-specific permissions through the public mount contract."
       - "Give apps registries and mount dependencies, not raw HTTP server instances."
       - "Keep composed request and job runtime contexts in platform/contracts until multiple consumers justify a provider-neutral core promotion."
       - "Compose request/job context from core primitives such as correlation id, causation id, tenant context, principal, locale, config, logger, metrics, clock, queue message, delivery metadata, feature flags, and cancellation."
@@ -229,6 +232,7 @@ rules:
     must_not:
       - "Do not pass Fastify, Express, Hono, or another raw server object into business apps as their integration surface."
       - "Do not let apps install global middleware, start servers, configure CORS, parse JWTs, or install process signal handlers."
+      - "Do not let platform invent app-specific permission names or make provider group, role, scope, or claim names part of ordinary app route logic."
       - "Do not let apps mount at root or steal reserved platform paths such as health, metrics, or admin paths unless explicitly allowed."
       - "Do not move composed contexts that depend on authn, tenancy, localization, logging, monitoring, queues, config, flags, deadlines, or cancellation into packages/core/shared."
       - "Do not pass concrete feature-flag provider clients or SDKs through app mount dependencies."
@@ -311,17 +315,20 @@ rules:
       meaning.
     must:
       - "Authenticate requests, parse credentials, create principals, enforce route-level permissions, and attach identity to context."
+      - "Enforce permissions declared by app mounts, and validate target authz mappings against the permissions declared by apps included in the product target."
       - "Keep resource-specific business authorization inside the owning app after resource loading."
       - "Own structured log format, request logging, common telemetry hooks, and safe error mapping."
       - "Expose standard health endpoints such as /livez and /readyz, and aggregate app-provided readiness checks."
       - "Ensure health output and logs do not leak secrets."
     must_not:
       - "Do not put CRM-specific permission logic, business quotas, feature-specific analytics, expensive business audits, or domain-specific health decisions in platform."
+      - "Do not make target authz mappings the source of truth for what permissions exist; mappings may grant only app-declared permissions."
       - "Do not let apps create their own logging frameworks for normal platform-managed runtime behavior."
       - "Do not use liveness checks to test external dependencies that belong in readiness."
     agent_guidance: >
       Platform provides mechanisms and consistent enforcement. Apps provide
-      business meaning, business events, and resource-specific decisions.
+      business meaning, app-specific permission vocabulary, business events,
+      and resource-specific decisions.
 
   - id: platform.config-resources-workers-and-shutdown-are-owned-by-runtime
     title: Runtime owns config, resources, workers, and shutdown

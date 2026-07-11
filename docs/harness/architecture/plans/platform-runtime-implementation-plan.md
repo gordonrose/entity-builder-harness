@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 2
+version: 3
 status: active
 layer: 01.harness
 domain: architecture
@@ -43,6 +43,14 @@ can work together without depending on product app internals.
 - App internals remain app-owned. A future app may organize by service,
   feature, capability, domain, use case, workflow, route, job, health, or some
   later product pattern without requiring platform changes.
+- Apps own their permission vocabulary. Platform validates and enforces
+  declared permissions, products compose apps, and deployment target profiles
+  map provider claims, groups, roles, scopes, or machine identities to those
+  app-declared permissions.
+- Products compose apps. The first product composition target is
+  `products/kanbien-platform`, used to bundle platform-smoke first and later
+  real Kanbien apps. `kanbien/staging` is an environment/deployment target for
+  dev and integration proof, not the product itself.
 - Composed request and job contexts start in `platform/contracts`.
 - Infra owns resource provisioning and deployment topology. Platform owns
   runtime lifecycle and clients. Apps own product meaning.
@@ -52,6 +60,9 @@ can work together without depending on product app internals.
   Client, source repository, cloud provider, account/subscription, region,
   runtime family, adapter, and readiness proof live in deploy target profiles
   such as `infra/04.deploy/03.product/targets/<client>/<environment>/`.
+- Internet-facing deployment requires a real authentication and authorization
+  provider path. Platform security hooks and fake auth tests are not enough to
+  expose the shell publicly.
 - External URL shape is not locked by the platform runtime plan. The runtime
   should support host-agnostic route registration and deployment-facing
   manifests. DNS choices such as `app.domain.com` belong to infra/environment
@@ -90,11 +101,12 @@ The first production-shaped shell should include these modules:
 | `platform/runtime` | Registry validation, context factories, lifecycle, resources, error mapping, shutdown primitives | Unit and integration tests |
 | `platform/server` | HTTP entrypoint, app mounting composition root, middleware order, route adaptation, health routes | Local smoke server with dummy app |
 | `platform/workers` | Worker entrypoint, app mounting composition root, job registry, retry/dead-letter mechanics, shutdown | Local worker smoke with dummy job |
-| `platform/security` | Auth parsing hook, permission enforcement, CORS/rate-limit policy surfaces | Denied and allowed route tests |
+| `platform/security` | Auth parsing hook, token/session validation contracts, permission enforcement, CORS/rate-limit policy surfaces | Denied and allowed route tests |
 | `platform/observability` | Structured logging, redaction, metrics/tracing hooks, request/job ids | Safe log and metric assertions |
 | `platform/health` | `/livez`, `/readyz`, health aggregation, dependency readiness | Local and container health smoke |
 | `platform/config` | Startup config loading, namespaced app config schemas, environment validation | Invalid config fails before listen |
 | `platform/adapters` | Provider-specific runtime clients where needed, organized as provider/type/service | Adapter contract tests before cloud use |
+| `products/kanbien-platform` | First product composition target that names which apps form the Kanbien Platform | Product manifest validation and mount/smoke proof |
 | `infra/**` | Container image, IaC, environment values, deployment metadata, policy checks | Static, policy, image, and smoke checks |
 
 ## Dummy App Strategy
@@ -103,6 +115,9 @@ Use a deliberately boring smoke app to exercise the public contract:
 
 - `apps/platform-smoke/app.mount.ts` registers one route, one permission, one
   health check, one config schema, one lifecycle hook, and one background job.
+- Real apps should define app-specific permissions near the app mount surface,
+  such as `apps/<app>/app.permissions.ts`, then register those permissions
+  through `app.mount.ts`.
 - `apps/platform-smoke/app.manifest.ts` publishes deployment-facing metadata
   needed by infra without importing app internals.
 - Internal files are minimal and app-owned. They exist only to prove the mount
@@ -115,6 +130,27 @@ Use a deliberately boring smoke app to exercise the public contract:
 If implementation governance is not ready when the smoke app begins, keep the
 first dummy app as a test fixture under `platform/testing` and graduate it into
 `apps/platform-smoke` only after app-layer write governance exists.
+
+## Product Composition Strategy
+
+Use `products/kanbien-platform` as the first product composition target.
+
+The Kanbien Platform product should answer which app modules are bundled into
+the product. Its first app is `apps/platform-smoke`; later it may add real apps
+such as entity-builder, admin, billing, onboarding, or other Kanbien-owned app
+modules.
+
+The product composition target should own product identity, app list, product
+manifest metadata, app enablement, and any product-level role grouping that
+references app-declared permissions.
+
+It should not own environment-specific deployment values. AWS account, region,
+runtime family, auth provider configuration, CORS origins, DNS, secrets, image
+digests, and readiness blockers belong in deployment target profiles such as
+`infra/04.deploy/03.product/targets/kanbien/staging`.
+
+Do not call `kanbien/staging` the product. It is the first dev/integration
+target for the Kanbien Platform product.
 
 ## Implementation Milestones
 
@@ -314,6 +350,56 @@ Acceptance:
   route, dummy job/queue health where applicable, logs, metrics, DNS/routing,
   and safe status output.
 
+### 10a. Prove Internet-Facing Auth And Authorization Readiness
+
+Do not expose the platform shell to the public internet until a real auth/authz
+path is selected, implemented, tested, and represented in deployment readiness
+evidence.
+
+Current status: not implemented. The current shell has security headers,
+CORS/rate-limit surfaces, permission checks, and fake-auth tests, but no real
+authentication provider, token/session validation, provider-backed identity
+mapping, or target-specific public exposure policy.
+
+This milestone may be completed with an approved provider such as AWS Cognito,
+Auth0, Clerk, a custom OIDC provider, or another governed identity provider.
+The provider choice must be recorded before production exposure. If the first
+internet-facing target intentionally uses a private network, VPN, ALB auth,
+CloudFront signed access, or another non-app auth boundary, that must be
+recorded as the target-specific exposure decision and still prove who can reach
+protected routes.
+
+Acceptance:
+
+- The real authentication provider choice is recorded with the reason it fits
+  the target client/environment.
+- `platform/security` validates tokens or sessions through provider-neutral
+  interfaces and does not expose raw provider clients as ordinary app-facing
+  APIs.
+- `platform/server/src/main.ts` wires a production auth hook from config,
+  target profile, or provider adapter; unauthenticated app routes remain
+  denied by default.
+- Claims, roles, groups, scopes, or entitlements map deterministically into
+  platform `Permission` values.
+- Permission vocabularies are app-owned. Target-specific authz maps may grant
+  only permissions declared by the apps included in the product target, and
+  startup/deploy validation must fail on unknown permissions.
+- The dummy app proves protected-route `401`, `403`, and success paths through
+  local tests and deployment smoke expectations.
+- Public and private route classification is explicit. Health endpoint exposure
+  is decided for `/livez` and `/readyz` instead of assumed.
+- CORS allowlists come from deployment target profiles or equivalent
+  environment config, not hardcoded platform defaults.
+- Rate limiting is keyed by principal, token/session identity, trusted
+  forwarded IP, or an approved fallback, not only one global in-memory bucket.
+- Secrets and provider config are loaded from the target profile, environment,
+  or secret store without committing secret values.
+- The deployment readiness manifest records auth provider, protected exposure
+  policy, CORS, rate-limit keying, secret/config source, and remaining auth
+  blockers before any public deployment.
+- Internet-facing readiness remains blocked until these proofs pass or an
+  explicit target-specific private-exposure decision replaces public exposure.
+
 ### 11. Declare Application Layer Ready To Start
 
 Only start real app work after the platform shell is proven enough that app
@@ -321,12 +407,16 @@ teams can build against contracts instead of guesses.
 
 Entry criteria:
 
+- Kanbien Platform has a product composition manifest or equivalent governed
+  product target that lists the apps included in the shell proof.
 - Dummy app can mount locally and in the deployed shell.
 - Server and worker entrypoints run with the same contract model.
 - Platform contract tests protect the boundary.
 - Infra consumes manifests or generated deployment metadata, not app internals.
 - Production target has either passed deployment readiness or has explicit
   blocking gaps that do not affect local app development.
+- Internet-facing exposure is blocked until Milestone 10a auth/authz readiness
+  is complete or a target-specific private-exposure decision is recorded.
 - The app URL/DNS pattern is either intentionally deferred or recorded as an
   infra/AWS decision.
 
@@ -344,6 +434,8 @@ Entry criteria:
 | Image includes local or secret files | Container boundary validation and effective ignore checks |
 | AWS target is ambiguous | AWS inspect/plan evidence naming profile/account, region, environment, target, runtime family |
 | Production cannot roll back | Rollback target, authority, command/workflow, and post-rollback health proof |
+| Public route exposure bypasses auth | Auth provider decision, token/session validation tests, permission mapping, protected dummy route smoke, and deployment readiness auth blockers |
+| CORS or rate limits are unsafe for production | Target-profile CORS allowlist, principal/IP rate-limit keying proof, and explicit private/public exposure decision |
 
 ## Stop Conditions
 
@@ -356,11 +448,15 @@ Entry criteria:
   are named.
 - A URL or DNS convention is treated as locked without an infra/AWS decision.
 - Deployment readiness is claimed from local tests alone.
+- Internet-facing deployment is claimed while real auth/authz provider choice,
+  token/session validation, permission mapping, CORS allowlist, rate-limit
+  keying, health exposure policy, or auth readiness blockers are unresolved.
 - Secrets, tokens, credentials, private keys, or connection strings with values
   appear in source, logs, docs, fixtures, or generated packets.
 
 ## First Slice Recommendation
 
-After committing this plan, start with milestone 1. The fastest useful next
-change is a focused `platform-runtime-implementation` workflow/checklist that
-unblocks code work while preserving the boundaries above.
+Current next slice: work through Milestone 10a as a planning and design slice
+before public deployment work. Start by choosing the first auth/authz provider
+path, then update `platform/security`, `platform/server`, the dummy app tests,
+and the deployment readiness manifest in small governed commits.
