@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "../../apps/platform-smoke/src/**/*.ts",
+    "../../platform/testing/src/**/*.ts",
+    "../../platform/server/src/**/*.ts",
+    "../../platform/workers/src/**/*.ts"
+  ]
+}

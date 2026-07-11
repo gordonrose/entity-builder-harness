@@ -8,32 +8,23 @@
     "module": "CommonJS",
     "moduleResolution": "Node10",
     "noEmit": false,
-    "outDir": "../../.cache/platform-shell-image-build",
+    "outDir": "../../.cache/product-kanbien-platform-runtime",
     "baseUrl": "../..",
     "paths": {
+      "@kanbien/app-platform-smoke": [
+        "apps/platform-smoke/src/index.ts"
+      ],
       "@kanbien/core": [
         "packages/core/src/index.ts"
       ],
       "@kanbien/core/*": [
         "packages/core/src/*/index.ts"
       ],
-      "@kanbien/app-platform-smoke": [
-        "apps/platform-smoke/src/index.ts"
-      ],
-      "@kanbien/product-kanbien-platform": [
-        "products/kanbien-platform/src/index.ts"
-      ],
-      "@kanbien/platform-server": [
-        "platform/server/src/index.ts"
-      ],
-      "@kanbien/platform-server/main": [
-        "platform/server/src/main.ts"
+      "@kanbien/platform-config": [
+        "platform/config/src/index.ts"
       ],
       "@kanbien/platform-contracts": [
         "platform/contracts/src/index.ts"
-      ],
-      "@kanbien/platform-config": [
-        "platform/config/src/index.ts"
       ],
       "@kanbien/platform-health": [
         "platform/health/src/index.ts"
@@ -46,6 +37,15 @@
       ],
       "@kanbien/platform-security": [
         "platform/security/src/index.ts"
+      ],
+      "@kanbien/platform-server": [
+        "platform/server/src/index.ts"
+      ],
+      "@kanbien/platform-testing": [
+        "platform/testing/src/index.ts"
+      ],
+      "@kanbien/platform-workers": [
+        "platform/workers/src/index.ts"
       ]
     },
     "rootDir": "../..",
@@ -55,14 +55,8 @@
   },
   "include": [
     "src/**/*.ts",
+    "tests/*-runtime.test.ts",
     "../../apps/platform-smoke/src/**/*.ts",
-    "../../products/kanbien-platform/src/**/*.ts",
-    "../../infra/04.deploy/03.product/entrypoints/**/*.ts",
-    "../config/src/**/*.ts",
-    "../contracts/src/**/*.ts",
-    "../health/src/**/*.ts",
-    "../observability/src/**/*.ts",
-    "../runtime/src/**/*.ts",
-    "../security/src/**/*.ts"
+    "../../platform/**/*.ts"
   ]
 }

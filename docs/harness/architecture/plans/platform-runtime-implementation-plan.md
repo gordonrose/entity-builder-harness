@@ -418,6 +418,18 @@ Acceptance:
 Only start real app work after the platform shell is proven enough that app
 teams can build against contracts instead of guesses.
 
+Current status: local product composition is implemented and deploy-image
+smoke tested. `apps/platform-smoke` registers the smoke route, app-owned
+permission, config schema, health check, lifecycle hooks, and queue job through
+`platform/contracts`. `products/kanbien-platform` composes that app through the
+public app package and publishes the product manifest used by deployment
+readiness. The local app check, product check, server check, image-build
+entrypoint, direct product server entrypoint smoke, container boundary check,
+deploy-readiness blocked-mode check, and platform shell image smoke have
+passed. AWS deployment, deployed protected-route smoke, CORS origins, Cognito
+target values, secret/config source, ECS task/service targets, and rollback
+proof remain blocked in the Kanbien staging target profile.
+
 Entry criteria:
 
 - Kanbien Platform has a product composition manifest or equivalent governed
@@ -469,7 +481,8 @@ Entry criteria:
 
 ## First Slice Recommendation
 
-Current next slice: work through Milestone 10a as a planning and design slice
-before public deployment work. Start by choosing the first auth/authz provider
-path, then update `platform/security`, `platform/server`, the dummy app tests,
-and the deployment readiness manifest in small governed commits.
+Current next slice: after committing Milestone 11, choose between starting real
+application-layer work against the local platform contracts or continuing AWS
+target planning for Kanbien staging. Public deployment still needs target
+Cognito values, CORS origins, secret/config source, ECS server/worker targets,
+deployment smoke, rollback evidence, and operations ownership before exposure.

@@ -87,10 +87,20 @@ runtime:
     task_definition: pending
     service: pending
   worker:
-    status: blocked-until-smoke-app-job-requirements
+    status: planned-separate-ecs-service
     task_definition: pending
     service: pending
     queue_adapter: platform/adapters/aws/queue/sqs/
+product:
+  manifest: products/kanbien-platform/src/product.manifest.ts
+  apps:
+    - app_id: platform-smoke
+      package: "@kanbien/app-platform-smoke"
+      route_base_path: /smoke
+      declared_permissions:
+        - smoke:read
+      required_config:
+        - PLATFORM_SMOKE_APP_NAME
 auth:
   provider: cognito
   provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
@@ -108,7 +118,7 @@ auth:
     scope_permissions_env: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
     claim_permissions_env: PLATFORM_AUTHZ_CLAIM_PERMISSIONS
     validates_against_app_permissions: true
-    declared_app_permissions_source: pending
+    declared_app_permissions_source: products/kanbien-platform/src/product.manifest.ts
   route_exposure:
     app_routes_default: authenticated
     unauthenticated_app_routes_denied_by_default: true
@@ -165,7 +175,7 @@ proof:
   policy_checks: pending
   generated_output_review: pending
   image_smoke: passed-local
-  local_runtime_smoke: passed-server-health-only
+  local_runtime_smoke: passed-product-smoke-local
   aws_read_only_inspection: blocked
   deployment_smoke: blocked
   rollback_proof: blocked
@@ -220,11 +230,6 @@ blockers:
     path: auth.token_validation
     reason: Cognito is selected as the first auth provider path, but the Kanbien staging user pool issuer, JWKS URI, and app client id are not selected.
     resolution: Create or select the Kanbien staging Cognito user pool and app client through the governed AWS workflow, then record issuer, JWKS URI, and app client id.
-  - id: platform-shell-readiness.authz-map-source
-    severity: blocking
-    path: auth.permission_mapping.declared_app_permissions_source
-    reason: Target authz mapping validation needs a product/app permission source after the smoke app or product manifest exists.
-    resolution: Record the product manifest or generated app metadata that declares the permissions granted by the Kanbien staging Cognito authz map.
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke

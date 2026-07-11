@@ -38,8 +38,11 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY apps/ ./apps/
 COPY packages/ ./packages/
 COPY platform/ ./platform/
+COPY products/ ./products/
+COPY infra/04.deploy/03.product/entrypoints/ ./infra/04.deploy/03.product/entrypoints/
 COPY scripts/04.deploy/build-platform-shell-image/ ./scripts/04.deploy/build-platform-shell-image/
 
 RUN npm ci --ignore-scripts \
@@ -64,5 +67,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/livez').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", ".cache/platform-shell-image-build/platform/server/src/main.js"]
-
+CMD ["node", ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"]

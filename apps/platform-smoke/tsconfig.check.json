@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "../../platform/testing/src/**/*.ts",
+    "../../platform/server/src/**/*.ts",
+    "../../platform/workers/src/**/*.ts"
+  ]
+}

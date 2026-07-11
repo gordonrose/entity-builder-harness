@@ -486,8 +486,8 @@ def validate(data: dict[str, Any]) -> None:
     else:
         if get(data, "proof.image_smoke") != "passed-local":
             warn("proof.image_smoke", "local image smoke proof is not recorded as passed-local")
-        if get(data, "proof.local_runtime_smoke") != "passed-server-health-only":
-            warn("proof.local_runtime_smoke", "local runtime smoke proof is not recorded as passed-server-health-only")
+        if get(data, "proof.local_runtime_smoke") not in {"passed-server-health-only", "passed-product-smoke-local"}:
+            warn("proof.local_runtime_smoke", "local runtime smoke proof is not recorded as passed locally")
 
 
 try:

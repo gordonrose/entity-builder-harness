@@ -2,6 +2,8 @@
   "name": "entity-builder-harness",
   "private": true,
   "workspaces": [
+    "apps/*",
+    "products/*",
     "packages/*",
     "platform/*"
   ],
@@ -26,6 +28,11 @@
     "rag:image:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
     "platform:shell:image:build": "bash scripts/04.deploy/build-platform-shell-image/script.sh",
     "platform:shell:image:smoke": "bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+    "app:platform-smoke:boundary": "node apps/platform-smoke/tests/platform-smoke-boundaries.test.mjs",
+    "app:platform-smoke:build": "tsc -p apps/platform-smoke/tsconfig.json",
+    "app:platform-smoke:check": "npm run app:platform-smoke:typecheck && npm run app:platform-smoke:build && npm run app:platform-smoke:test && npm run app:platform-smoke:boundary",
+    "app:platform-smoke:test": "tsc -p apps/platform-smoke/tsconfig.runtime-test.json && node apps/platform-smoke/tests/run-runtime-tests.mjs",
+    "app:platform-smoke:typecheck": "tsc -p apps/platform-smoke/tsconfig.check.json",
     "core:check": "npm run core:typecheck && npm run core:test && node packages/core/tests/core-boundaries.test.mjs",
     "core:test": "tsc -p packages/core/tsconfig.runtime-test.json && node packages/core/tests/run-runtime-tests.mjs",
     "core:typecheck": "tsc -p packages/core/tsconfig.check.json",
@@ -74,7 +81,12 @@
     "platform:workers:build": "tsc -p platform/workers/tsconfig.json",
     "platform:workers:check": "npm run platform:workers:typecheck && npm run platform:workers:build && npm run platform:workers:test && npm run platform:workers:boundary",
     "platform:workers:test": "tsc -p platform/workers/tsconfig.runtime-test.json && node platform/workers/tests/run-runtime-tests.mjs",
-    "platform:workers:typecheck": "tsc -p platform/workers/tsconfig.check.json"
+    "platform:workers:typecheck": "tsc -p platform/workers/tsconfig.check.json",
+    "product:kanbien-platform:boundary": "node products/kanbien-platform/tests/kanbien-platform-boundaries.test.mjs",
+    "product:kanbien-platform:build": "tsc -p products/kanbien-platform/tsconfig.json",
+    "product:kanbien-platform:check": "npm run product:kanbien-platform:typecheck && npm run product:kanbien-platform:build && npm run product:kanbien-platform:test && npm run product:kanbien-platform:boundary",
+    "product:kanbien-platform:test": "tsc -p products/kanbien-platform/tsconfig.runtime-test.json && node products/kanbien-platform/tests/run-runtime-tests.mjs",
+    "product:kanbien-platform:typecheck": "tsc -p products/kanbien-platform/tsconfig.check.json"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

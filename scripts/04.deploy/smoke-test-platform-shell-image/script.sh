@@ -134,6 +134,7 @@ bash scripts/04.deploy/build-platform-shell-image/script.sh \
   --security-opt no-new-privileges \
   --env HOST=0.0.0.0 \
   --env PORT=3000 \
+  --env PLATFORM_SMOKE_APP_NAME="Platform Shell Image Smoke" \
   "$TAG" >/dev/null
 
 node - "$PORT" <<'NODE'

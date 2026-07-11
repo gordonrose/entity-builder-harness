@@ -21,8 +21,8 @@ status: planning-only
 deployment_track: 03.product
 service:
   logical_name: platform-shell
-  description: Provider-neutral platform runtime shell proving server startup and health endpoints.
-  source_entrypoint: platform/server/src/main.ts
+  description: Provider-neutral platform runtime shell proving server startup, health endpoints, and Kanbien Platform app composition.
+  source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
 runtime_family:
   provider: aws
   selected: ecs-fargate
@@ -41,7 +41,7 @@ image:
   local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
 server:
   process_name: platform-server
-  command: node .cache/platform-shell-image-build/platform/server/src/main.js
+  command: node .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js
   host_env: HOST
   port_env: PORT
   default_host: 0.0.0.0
@@ -72,6 +72,7 @@ config:
     - NODE_ENV
     - HOST
     - PORT
+    - PLATFORM_SMOKE_APP_NAME
   optional_environment:
     - PLATFORM_CORS_ORIGIN
     - PLATFORM_CORS_ALLOWLIST
@@ -101,6 +102,17 @@ auth:
     readyz: authenticated-when-auth-provider-enabled
   cors_source: target-profile-env
   rate_limit_keying: principal-token-or-forwarded-ip
+product:
+  manifest: products/kanbien-platform/src/product.manifest.ts
+  apps:
+    - app_id: platform-smoke
+      package: "@kanbien/app-platform-smoke"
+      mount_module: "@kanbien/app-platform-smoke"
+      route_base_path: /smoke
+      declared_permissions:
+        - smoke:read
+      required_config:
+        - PLATFORM_SMOKE_APP_NAME
 secrets:
   local_required: []
   production_required:

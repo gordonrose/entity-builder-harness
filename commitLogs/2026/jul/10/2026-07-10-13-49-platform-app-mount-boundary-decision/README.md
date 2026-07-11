@@ -519,6 +519,35 @@ Public deployment remains blocked until real Cognito user-pool/app-client
 values, CORS origins, secret/config source, product app permission source, and
 deployed protected-route smoke proof are recorded.
 
+### 2026-07-11T19:13:17Z - Product smoke app composition
+
+Summary: Implemented Milestone 11 local product composition for the platform
+runtime shell.
+
+Durable evidence: Added `apps/platform-smoke` as the first complete dummy app
+package with app-owned permission vocabulary, config schema, protected smoke
+route, health check, lifecycle hooks, queue job, runtime tests, type tests, and
+boundary checks. Added `products/kanbien-platform` as the first product
+composition package, importing the app only through its public package root and
+publishing the product manifest used by deploy readiness. Added the
+Kanbien-product server entrypoint under
+`infra/04.deploy/03.product/entrypoints/`, updated the platform shell image to
+run that product entrypoint, copied app/product sources into the image build
+closure, and recorded the product manifest as the authz permission source in
+the Kanbien staging readiness manifest. Local proof passed:
+`npm run app:platform-smoke:check`,
+`npm run product:kanbien-platform:check`, `npm run platform:server:check`,
+`npm run platform:server:image-build`, direct compiled product-entrypoint
+startup with `PLATFORM_SERVER_EXIT_AFTER_START=1`, container boundary
+validation, blocked-mode deploy-readiness verification, and
+`bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+--allow-skip-without-engine`. The platform app-mount retrieval fixture budget
+was raised from 10 to 12 chunks after the new app/product terms pushed the
+composition-root rule just outside the old cross-corpus explanation budget.
+Public deployment remains blocked on AWS target selection, Cognito target
+values, CORS origins, secret/config source, deployed protected-route smoke,
+operations ownership, and rollback proof.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

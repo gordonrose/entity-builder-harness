@@ -47,11 +47,17 @@ build
 !package.json
 !package-lock.json
 
+!apps/
+!apps/**
+
 !packages/
 !packages/**
 
 !platform/
 !platform/**
+
+!products/
+!products/**
 
 !scripts/
 !scripts/04.deploy/
@@ -61,6 +67,8 @@ build
 !infra/
 !infra/04.deploy/
 !infra/04.deploy/03.product/
+!infra/04.deploy/03.product/entrypoints/
+!infra/04.deploy/03.product/entrypoints/**
 !infra/04.deploy/03.product/image/
 !infra/04.deploy/03.product/image/**
 
@@ -94,4 +102,3 @@ build
 **/credentials/**
 **/credential
 **/credential/**
-

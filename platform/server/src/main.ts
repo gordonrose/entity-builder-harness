@@ -23,6 +23,7 @@ import {
 
 export interface PlatformServerProcessOptions {
   readonly apps?: readonly PlatformApp[];
+  readonly configKeys?: readonly string[];
   readonly env?: NodeJS.ProcessEnv;
   readonly logger?: Logger;
   readonly port?: number;
@@ -41,7 +42,7 @@ export async function startPlatformServerProcess(
 ): Promise<Result<PlatformServerProcess, PlatformServerError>> {
   const env = options.env ?? process.env;
   const logger = options.logger ?? consoleJsonLogger;
-  const deps = createServerProcessMountDeps(env, logger);
+  const deps = createServerProcessMountDeps(env, logger, options.configKeys ?? []);
   const auth = createServerProcessAuthHook(env, deps.clock);
   if (!auth.ok) {
     return auth;
@@ -172,20 +173,24 @@ export async function runPlatformServerMain(): Promise<void> {
   }
 }
 
-function createServerProcessMountDeps(env: NodeJS.ProcessEnv, logger: Logger): PlatformMountDeps {
+function createServerProcessMountDeps(
+  env: NodeJS.ProcessEnv,
+  logger: Logger,
+  extraConfigKeys: readonly string[],
+): PlatformMountDeps {
   return {
     logger,
     metrics: noopMetrics,
-    config: recordConfigSource(configRecordFromEnv(env)),
+    config: recordConfigSource(configRecordFromEnv(env, extraConfigKeys)),
     flags: fixedFeatureFlagReader({}),
     clock: systemClock,
   };
 }
 
-function configRecordFromEnv(env: NodeJS.ProcessEnv): ConfigRecord {
+function configRecordFromEnv(env: NodeJS.ProcessEnv, extraConfigKeys: readonly string[]): ConfigRecord {
   const values: Record<string, string> = {};
 
-  for (const key of platformConfigEnvKeys) {
+  for (const key of [...platformConfigEnvKeys, ...extraConfigKeys]) {
     const value = env[key];
     if (value !== undefined) {
       values[key] = value;

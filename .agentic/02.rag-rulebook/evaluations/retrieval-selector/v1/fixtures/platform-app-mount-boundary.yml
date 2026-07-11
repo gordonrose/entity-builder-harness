@@ -32,7 +32,7 @@ input:
     layer: 03.product
     mode: discovery
     workflow: .agentic/product/workflows/default.md
-  max_chunks: 10
+  max_chunks: 12
 expected:
   routing:
     status: ready

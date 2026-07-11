@@ -1,29 +1,9 @@
-#!/usr/bin/env node
-// agentic-artifact:
-//   schema: agentic-artifact/v2
-//   id: deploy.script.build-platform-shell-image.prepare-runtime
-//   version: 1
-//   status: active
-//   layer: 04.deploy
-//   domain: infra.ci-cd
-//   disciplines:
-//   - agentic
-//   - sre
-//   kind: script
-//   purpose: Prepare CommonJS package shims for the platform shell image runtime payload.
-//   portability:
-//     class: internal
-//     targets: []
-//   effects:
-//   - writes-files
-//   used_by:
-//   - id: deploy.script.build-platform-shell-image
-//     path: scripts/04.deploy/build-platform-shell-image/script.sh
-
-import { mkdirSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path, { join } from "node:path";
 
-const runtimeRoot = ".cache/platform-shell-image-build";
+const runtimeRoot = ".cache/product-kanbien-platform-runtime";
+const testDirectory = join(runtimeRoot, "products/kanbien-platform/tests");
 const coreModules = [
   "audit",
   "authn",
@@ -40,21 +20,18 @@ const coreModules = [
   "validation",
 ];
 
+writePackageShim("@kanbien/app-platform-smoke", {
+  ".": join(runtimeRoot, "apps/platform-smoke/src/index.js"),
+});
 writePackageShim("@kanbien/core", {
   ".": join(runtimeRoot, "packages/core/src/index.js"),
   ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
 });
-writePackageShim("@kanbien/app-platform-smoke", {
-  ".": join(runtimeRoot, "apps/platform-smoke/src/index.js"),
-});
-writePackageShim("@kanbien/product-kanbien-platform", {
-  ".": join(runtimeRoot, "products/kanbien-platform/src/index.js"),
+writePackageShim("@kanbien/platform-config", {
+  ".": join(runtimeRoot, "platform/config/src/index.js"),
 });
 writePackageShim("@kanbien/platform-contracts", {
   ".": join(runtimeRoot, "platform/contracts/src/index.js"),
-});
-writePackageShim("@kanbien/platform-config", {
-  ".": join(runtimeRoot, "platform/config/src/index.js"),
 });
 writePackageShim("@kanbien/platform-health", {
   ".": join(runtimeRoot, "platform/health/src/index.js"),
@@ -70,10 +47,32 @@ writePackageShim("@kanbien/platform-security", {
 });
 writePackageShim("@kanbien/platform-server", {
   ".": join(runtimeRoot, "platform/server/src/index.js"),
-  "./main": join(runtimeRoot, "platform/server/src/main.js"),
+});
+writePackageShim("@kanbien/platform-testing", {
+  ".": join(runtimeRoot, "platform/testing/src/index.js"),
+});
+writePackageShim("@kanbien/platform-workers", {
+  ".": join(runtimeRoot, "platform/workers/src/index.js"),
 });
 
-console.log(`Prepared platform shell image runtime at ${runtimeRoot}`);
+const testFiles = readdirSync(testDirectory)
+  .filter((fileName) => fileName.endsWith("-runtime.test.js"))
+  .sort();
+
+if (testFiles.length === 0) {
+  throw new Error(`No Kanbien Platform runtime tests found in ${testDirectory}.`);
+}
+
+for (const testFile of testFiles) {
+  const result = spawnSync(process.execPath, [join(testDirectory, testFile)], {
+    stdio: "inherit",
+  });
+
+  if (result.status !== 0) {
+    process.exitCode = result.status ?? 1;
+    break;
+  }
+}
 
 function writePackageShim(packageName, exportsMap) {
   const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));
