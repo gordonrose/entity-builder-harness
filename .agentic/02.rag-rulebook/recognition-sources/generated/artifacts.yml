@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 771
-  term_count: 1554
+  indexed_artifacts: 772
+  term_count: 1556
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7937,6 +7937,18 @@ terms:
   match_type: exact
   canonical_id: aws.architecture.adr.readme
   evidence_path: docs/aws/architecture/adrs/README.md
+  confidence_weight: 1
+- term: aws.inventory.kanbien-staging-platform-shell-target-inspection
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
+  evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
+  confidence_weight: 1
+- term: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
+  evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
   confidence_weight: 1
 - term: infra.04-deploy.02-rag-rulebook.readme
   category: artifact-id

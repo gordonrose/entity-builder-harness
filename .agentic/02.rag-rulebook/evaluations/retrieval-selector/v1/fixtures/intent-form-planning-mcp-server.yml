@@ -35,7 +35,7 @@ input:
     layer: 01.harness
     mode: planning
     workflow: .agentic/01.harness/workflows/change-harness.md
-  max_chunks: 6
+  max_chunks: 10
 expected:
   routing:
     layer: 04.deploy

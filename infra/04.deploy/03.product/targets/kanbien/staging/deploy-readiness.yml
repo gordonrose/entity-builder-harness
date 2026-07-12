@@ -32,6 +32,57 @@ deployment:
   runtime_target: aws.ecs-fargate.platform-shell-staging
   source_policy: local-planning
   mutation_authorized: false
+inspection:
+  last_read_only_inspection_at_utc: "2026-07-11T22:24:12Z"
+  workflow: .agentic/aws/workflows/inspect-aws-state.md
+  profile: kanbien-dev
+  region: eu-west-1
+  inventory_note: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
+  mutation_performed: false
+  conclusion:
+    existing_kanbien_staging_boundary_candidate: true
+    product_platform_shell_target_selected: false
+    reason: Existing staging account, cluster, ALB, network, and certificate were inspected, but the product platform shell ECS services, Cognito target, hostname, image provenance, operations owner, and rollback path remain unselected.
+  existing_boundary:
+    account_id: "337159794548"
+    cluster_arn: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+    cluster_status: ACTIVE
+    active_services:
+      - service-platform
+      - rag-rulebook-staging
+    alb_arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
+    alb_dns_name: kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com
+    alb_scheme: internet-facing
+    alb_security_group_id: sg-08d590b0aee6e2e60
+    vpc_id: vpc-0063b6c3d2d781f3c
+    public_subnet_ids:
+      - subnet-05d385e4d57b18032
+      - subnet-0397df802e31ff6fe
+    certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+  existing_service_platform:
+    selected_for_product_platform_shell: false
+    service_arn: arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/service-platform
+    task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12
+    image: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien/service-platform:public-site-brochure-20260529-7
+    target_group_arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb
+    target_group_health_check: /v1/health
+    log_group: /ecs/kanbien-staging-service-platform
+    reason_not_selected: Existing service is the current Kanbien service-platform deployment, not the product platform shell image and /livez /readyz smoke composition.
+  ecr:
+    existing_repositories:
+      - rag-rulebook-service
+      - kanbien/service-platform
+    platform_shell_repository_found: false
+  route53:
+    hosted_zone_id: Z0909415EFV969Z95D5F
+    existing_aliases_to_staging_alb:
+      - kanbien.com
+      - www.kanbien.com
+      - rag.kanbien.com
+    selected_platform_shell_hostname: pending
+  cognito:
+    user_pools_found: 0
+    selected_user_pool: pending
 source:
   provider: github
   repository: gordonrose/entity-builder-harness
@@ -144,20 +195,23 @@ auth:
     committed_secret_values: false
 cloud:
   provider: aws
-  account_id: pending
+  account_id: "337159794548"
   profile_or_oidc_role: pending
-  region: pending
+  region: eu-west-1
 aws:
-  account_id: pending
+  account_id: "337159794548"
   profile_or_oidc_role: pending
-  region: pending
-  cluster: pending
-  vpc: pending
-  subnets: []
-  security_groups: []
-  alb: pending
+  region: eu-west-1
+  cluster: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+  vpc: vpc-0063b6c3d2d781f3c
+  subnets:
+    - subnet-05d385e4d57b18032
+    - subnet-0397df802e31ff6fe
+  security_groups:
+    - sg-08d590b0aee6e2e60
+  alb: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
   target_group: pending
-  tls_certificate: pending
+  tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
   dns_hostname: pending-or-deferred
   secret_store: pending
   log_group: pending
@@ -176,7 +230,7 @@ proof:
   generated_output_review: pending
   image_smoke: passed-local
   local_runtime_smoke: passed-product-smoke-local
-  aws_read_only_inspection: blocked
+  aws_read_only_inspection: partial-kanbien-staging-boundary-inspected
   deployment_smoke: blocked
   rollback_proof: blocked
 blockers:
@@ -198,23 +252,23 @@ blockers:
   - id: platform-shell-readiness.image-provenance
     severity: blocking
     path: artifacts
-    reason: The platform shell image has only been proven locally; no immutable deploy image digest, base digest, SBOM, scan, or attestation is recorded.
-    resolution: Build the deploy image in the governed workflow and record immutable image and provenance evidence.
+    reason: The platform shell image has only been proven locally; no platform shell ECR repository, immutable deploy image digest, base digest, SBOM, scan, or attestation is recorded.
+    resolution: Create or select the product platform shell ECR repository through the governed AWS workflow, build the deploy image, and record immutable image and provenance evidence.
   - id: platform-shell-readiness.runtime-target
     severity: blocking
     path: runtime
-    reason: ECS Fargate task definitions, services, CPU/memory, and server/worker topology are not selected.
-    resolution: Record server and worker task/service targets or an explicit worker deferral accepted by the platform runtime plan.
+    reason: The existing service-platform ECS service was inspected but is not selected as the product platform shell target; ECS Fargate task definitions, services, CPU/memory, target group, host rule, and server/worker topology are not selected.
+    resolution: Record product platform shell server and worker task/service targets, or an explicit worker deferral accepted by the platform runtime plan, before deployment execution.
   - id: platform-shell-readiness.aws-target
     severity: blocking
     path: cloud
-    reason: AWS account, role/profile, region, cluster, network, ingress, TLS, DNS, secrets, logs, and alarms are not selected for the Kanbien staging product shell target.
-    resolution: Run the governed AWS planning/inspection workflow and copy the selected target identity into this manifest.
+    reason: AWS account and region were inspected, but the deployment role/profile remains unselected for the Kanbien staging product shell target.
+    resolution: Select the deployment access identity through the governed AWS planning workflow and record it before deployment execution.
   - id: platform-shell-readiness.aws-detail
     severity: blocking
     path: aws
-    reason: AWS implementation details remain pending until the Kanbien staging cloud target is selected.
-    resolution: Record concrete ECS, network, ingress, secrets, logs, and alarm values after target inspection.
+    reason: Existing staging cluster, VPC, subnets, ALB, security group, and certificate were inspected, but the product platform shell target group, DNS hostname, secret store, log group, and alarms remain pending.
+    resolution: Record the product platform shell ECS target group, hostname or explicit DNS deferral, secret/config source, log group, and alarms after target planning.
   - id: platform-shell-readiness.operations
     severity: blocking
     path: operations
@@ -223,12 +277,12 @@ blockers:
   - id: platform-shell-readiness.smoke-proof
     severity: blocking
     path: proof
-    reason: Deployment smoke, AWS read-only inspection, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require a selected AWS target.
+    reason: Partial AWS read-only boundary inspection exists, but deployment smoke, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require a selected platform shell AWS target.
     resolution: Complete target inspection, deploy through the governed workflow, verify health and dummy app behavior, and record rollback proof.
   - id: platform-shell-readiness.auth-provider-target
     severity: blocking
     path: auth.token_validation
-    reason: Cognito is selected as the first auth provider path, but the Kanbien staging user pool issuer, JWKS URI, and app client id are not selected.
+    reason: Cognito is selected as the first auth provider path, but read-only inspection found no Cognito user pools in kanbien-dev eu-west-1; the Kanbien staging user pool issuer, JWKS URI, and app client id are not selected.
     resolution: Create or select the Kanbien staging Cognito user pool and app client through the governed AWS workflow, then record issuer, JWKS URI, and app client id.
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
@@ -238,7 +292,7 @@ blockers:
   - id: platform-shell-readiness.cors-allowlist
     severity: blocking
     path: auth.cors.allowed_origins
-    reason: Public browser access needs explicit allowed origins from the Kanbien staging target profile.
+    reason: Existing Route 53 aliases were inspected, but the product platform shell hostname and public browser origins are not selected.
     resolution: Record the staging UI/API origins that may call the platform shell before public exposure.
   - id: platform-shell-readiness.auth-secret-source
     severity: blocking

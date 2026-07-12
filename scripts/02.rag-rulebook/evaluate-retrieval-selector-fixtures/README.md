@@ -59,6 +59,9 @@ Run all current fixtures:
 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
 ```
 
+The full current suite is a command-only regression check. Commit gates run the
+smoke test for evaluator wiring, not the complete fixture suite.
+
 Run one fixture:
 
 ```bash

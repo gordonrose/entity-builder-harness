@@ -128,7 +128,7 @@ echo "RAG/rulebook retrieval selector fixture is valid."
 
 require_executable "scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh"
 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/smoke-test.sh >/dev/null
-echo "RAG/rulebook retrieval selector evaluations passed."
+echo "RAG/rulebook retrieval selector evaluation runner smoke passed."
 
 require_executable "scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh"
 bash scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh >/dev/null

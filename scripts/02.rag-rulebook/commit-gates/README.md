@@ -58,8 +58,9 @@ required.
 - Require and run the retrieval selector fixture smoke test so policy,
   recognition sources, generated chunks, and context-packet validation remain
   wired together.
-- Require and run the retrieval selector evaluation fixture smoke test so
-  expected and banned packet behaviors remain pinned.
+- Require and run the retrieval selector evaluation runner smoke test against a
+  small fixed fixture set so the evaluator stays wired without making every
+  commit run the full selector regression suite.
 - Require and run the local runtime build smoke test so index, chunks,
   manifest, and validation-report generation remain wired together.
 - Require and run the local runtime freshness smoke test so fresh, missing,
@@ -78,6 +79,17 @@ required.
   knowledge disposition fails deterministically.
 - Require and run the local context query smoke test so the runtime cache can
   still produce a validated context packet.
+
+## Command-Only Checks
+
+The full retrieval selector fixture suite is intentionally command-only because
+it can be expensive on large fixture sets. Run it when selector behavior,
+recognition policy, generated chunks, or retrieval-shape assertions need full
+regression proof:
+
+```bash
+bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current --json
+```
 
 ## Maintenance Rule
 
