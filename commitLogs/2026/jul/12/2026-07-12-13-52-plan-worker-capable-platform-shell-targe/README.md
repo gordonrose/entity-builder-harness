@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-12T12:52:06Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-12T13:01:39Z
+latest_commit_sha: 803a544
+chat_duration: 573s (00:00:09:33)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -93,13 +93,30 @@ ADR needed: no
 
 Reason: This records a target-planning constraint inside existing platform/deploy planning artifacts; no new architecture decision beyond existing ECS/server-worker platform direction.
 
+
+### 2026-07-12T13:01:39Z - Commit recorded
+
+Commit: `803a544`
+
+Message: Plan worker-capable platform shell target
+
+Summary: Recorded the Kanbien staging platform shell target as server-first but worker-capable, reserving sibling server/worker service names and deferring the worker until a real background workload exists.
+
+ADR impact: No new ADR required; this is a target-planning constraint captured in the platform runtime plan and deploy-readiness profile.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `803a544`
+  Time UTC: 2026-07-12T13:01:39Z
+  Message: Plan worker-capable platform shell target
+  Summary: Recorded the Kanbien staging platform shell target as server-first but worker-capable, reserving sibling server/worker service names and deferring the worker until a real background workload exists.
+  ADR impact: No new ADR required; this is a target-planning constraint captured in the platform runtime plan and deploy-readiness profile.
 
 ## Main Refresh Conflicts
 
@@ -114,12 +131,12 @@ Reason: This records a target-planning constraint inside existing platform/deplo
 ## Session Metrics
 
 Raised at UTC: 2026-07-12T12:52:06Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-12T13:01:39Z
+Latest commit SHA: 803a544
+Chat duration: 573s (00:00:09:33)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
