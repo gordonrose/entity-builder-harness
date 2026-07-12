@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-11T21:58:48Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-12T10:17:23Z
+latest_commit_sha: 7425349
+chat_duration: 44315s (00:12:18:35)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -111,13 +111,30 @@ Decision: Make full retrieval-selector fixture evaluation command-only instead o
 
 Rationale: The full suite is valuable regression evidence but too expensive and too buffered for every commit; the commit gate now validates evaluator wiring with a small fixed fixture set.
 
+
+### 2026-07-12T10:17:23Z - Commit recorded
+
+Commit: `7425349`
+
+Message: Plan Kanbien staging platform shell target
+
+Summary: Recorded read-only Kanbien staging target evidence, kept platform-shell deployment blockers explicit, regenerated artifact recognition, and made the full retrieval-selector fixture suite command-only while preserving a commit-gate smoke.
+
+ADR impact: No new ADR required; the commit records target inspection evidence and a validation-policy adjustment captured in the session log.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `7425349`
+  Time UTC: 2026-07-12T10:17:23Z
+  Message: Plan Kanbien staging platform shell target
+  Summary: Recorded read-only Kanbien staging target evidence, kept platform-shell deployment blockers explicit, regenerated artifact recognition, and made the full retrieval-selector fixture suite command-only while preserving a commit-gate smoke.
+  ADR impact: No new ADR required; the commit records target inspection evidence and a validation-policy adjustment captured in the session log.
 
 ## Main Refresh Conflicts
 
@@ -132,12 +149,12 @@ Reason: This slice records read-only target inspection evidence and keeps existi
 ## Session Metrics
 
 Raised at UTC: 2026-07-11T21:58:48Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-12T10:17:23Z
+Latest commit SHA: 7425349
+Chat duration: 44315s (00:12:18:35)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
