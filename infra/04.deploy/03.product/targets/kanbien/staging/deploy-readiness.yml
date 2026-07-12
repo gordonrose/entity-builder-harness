@@ -130,6 +130,14 @@ runtime:
   family: ecs-fargate
   adapter: platform/adapters/aws/runtime/ecs-fargate/
   decision: infra/04.deploy/03.product/aws-runtime-family.decision.yml
+  deployment_project:
+    name: kanbien-staging-platform-shell
+    topology: server-first-worker-capable
+    initial_exposure: server
+    server_service_candidate: kanbien-staging-platform-shell
+    worker_service_candidate: kanbien-staging-platform-shell-worker
+    worker_initial_state: deferred-until-background-workload
+    worker_activation_condition: app-declared background job or platform runtime queue workload selected for staging
   server:
     health:
       liveness: /livez
@@ -138,7 +146,10 @@ runtime:
     task_definition: pending
     service: pending
   worker:
-    status: planned-separate-ecs-service
+    status: deferred-worker-capable-project
+    task_definition_family_candidate: kanbien-staging-platform-shell-worker
+    service_candidate: kanbien-staging-platform-shell-worker
+    desired_count_initial: 0
     task_definition: pending
     service: pending
     queue_adapter: platform/adapters/aws/queue/sqs/
@@ -257,8 +268,8 @@ blockers:
   - id: platform-shell-readiness.runtime-target
     severity: blocking
     path: runtime
-    reason: The existing service-platform ECS service was inspected but is not selected as the product platform shell target; ECS Fargate task definitions, services, CPU/memory, target group, host rule, and server/worker topology are not selected.
-    resolution: Record product platform shell server and worker task/service targets, or an explicit worker deferral accepted by the platform runtime plan, before deployment execution.
+    reason: The existing service-platform ECS service was inspected but is not selected as the product platform shell target; the target profile now records a server-first worker-capable project shape, but concrete ECS Fargate task definitions, services, CPU/memory, target group, and host rule remain unselected.
+    resolution: Record the product platform shell server task/service target for first exposure, keep the reserved worker service slot deferred until an app-declared background workload exists, and select concrete ECS task families before deployment execution.
   - id: platform-shell-readiness.aws-target
     severity: blocking
     path: cloud
