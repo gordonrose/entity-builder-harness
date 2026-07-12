@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-12T15:45:55Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-12T16:27:22Z
+latest_commit_sha: c342692
+chat_duration: 2487s (00:00:41:27)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -95,13 +95,30 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Platform shell ECR repository and image provenance planning decisions are captured in deploy readiness and AWS inventory evidence.
 
+
+### 2026-07-12T16:27:22Z - Commit recorded
+
+Commit: `c342692`
+
+Message: Plan platform shell image provenance
+
+Summary: Recorded Kanbien staging platform-shell ECR repository naming and image tag/provenance readiness policy without AWS mutation.
+
+ADR impact: No new ADR; covered by existing platform runtime and AWS runtime-family decisions.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `c342692`
+  Time UTC: 2026-07-12T16:27:22Z
+  Message: Plan platform shell image provenance
+  Summary: Recorded Kanbien staging platform-shell ECR repository naming and image tag/provenance readiness policy without AWS mutation.
+  ADR impact: No new ADR; covered by existing platform runtime and AWS runtime-family decisions.
 
 ## Main Refresh Conflicts
 
@@ -119,12 +136,12 @@ or mutate AWS.
 ## Session Metrics
 
 Raised at UTC: 2026-07-12T15:45:55Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-12T16:27:22Z
+Latest commit SHA: c342692
+Chat duration: 2487s (00:00:41:27)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
