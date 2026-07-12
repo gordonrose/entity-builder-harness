@@ -80,7 +80,8 @@ The platform shell still needs explicit selection or creation of:
 - GitHub deployment workflow and OIDC role;
 - ECR repository and immutable image provenance;
 - ECS server service, task definition, target group, and host rule;
-- ECS worker topology or explicit worker deferral;
+- server-first, worker-capable ECS project shape with a reserved worker
+  service/task-family slot and explicit worker activation condition;
 - Cognito user pool, app client, issuer, and JWKS URI;
 - CORS origins and product shell hostname;
 - secret/config source;
@@ -88,4 +89,3 @@ The platform shell still needs explicit selection or creation of:
   authority, and rollback runbook;
 - deployed smoke proof for `/livez`, `/readyz`, protected dummy route, logs,
   routing, and rollback.
-

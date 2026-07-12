@@ -280,6 +280,9 @@ Acceptance:
 
 - Provider-neutral infra requirements name server, worker, health, logs,
   secrets, config, queues, storage, DNS, TLS, alarms, rollback, and cost limits.
+- The first product shell deployment project may expose server traffic first,
+  but its project shape must reserve sibling server and worker process targets
+  so a worker can be added later without renaming the product target.
 - Deployable image definitions live under a governed infra image boundary such
   as `infra/03.product/platform-shell/image/Dockerfile`.
 - The Dockerfile has a sibling README and effective ignore file.
@@ -306,6 +309,14 @@ This selection does not make ECS part of the app contract. Future runtime
 families may be added through governed adapters such as
 `platform/adapters/aws/runtime/lambda/` or deployment profiles. Apps declare
 provider-neutral needs through public platform contracts and manifests.
+
+Kanbien staging target-planning direction: build the initial platform shell
+deployment project as server-first but worker-capable. The first public target
+may deploy only the HTTP server behind the ALB, but the target profile should
+reserve sibling names and configuration slots for a future worker ECS service,
+task family, queue adapter, log group, alarms, and rollback proof. The worker
+remains deferred until a real background workload or app-declared job requires
+it.
 
 Acceptance:
 
@@ -486,3 +497,7 @@ application-layer work against the local platform contracts or continuing AWS
 target planning for Kanbien staging. Public deployment still needs target
 Cognito values, CORS origins, secret/config source, ECS server/worker targets,
 deployment smoke, rollback evidence, and operations ownership before exposure.
+For the Kanbien staging target, record a server-first, worker-capable project
+shape before deployment execution: server ingress can be selected first, but a
+future worker service must already have an explicit naming/configuration slot
+and activation condition.

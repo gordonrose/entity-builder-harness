@@ -1,0 +1,126 @@
+# Chat Session: 2026-07-12-13-52 plan-worker-capable-platform-shell-targe
+
+<!-- agentic-session
+id: 2026-07-12-13-52-update-platform-runtime-plan-so-the-initial-shell-target-cre
+task: Update platform runtime plan so the initial shell target creates a project shape that can support a worker later
+branch: chat/2026-07-12-13-52-update-platform-runtime-plan-so-the-initial-shell-target-cre
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-12-13-52-update-platform-runtime-plan-so-the-initial-shell-target-cre-3311665103
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+status: ready
+raised_at_utc: 2026-07-12T12:52:06Z
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
+latest_commit_at_utc:
+latest_commit_sha:
+chat_duration:
+estimated_chat_tokens:
+estimated_chat_cost:
+estimated_chat_cost_basis:
+-->
+
+## Initial Intent
+
+Update platform runtime plan so the initial shell target creates a project shape that can support a worker later
+
+## Session Log
+
+- Session started.
+- Branch created.
+- Chat-owned worktree created.
+- Commit log initialized.
+
+## Questions Asked
+
+
+
+- Asked: Update the plan so the initial shell target is built as a project that can support a worker later.
+  Response: Recorded a server-first, worker-capable project shape for Kanbien staging: initial exposure stays server-only, with a reserved sibling worker service/task-family slot and activation condition.
+
+## Issues Raised
+
+- None recorded yet.
+
+## Decisions Made
+
+
+
+- Decision: Initial Kanbien staging platform-shell target should be server-first but worker-capable.
+  Rationale: The first exposed deployment should prove HTTP runtime behind the ALB while reserving worker naming/configuration slots so background processing can be added without renaming the target project.
+
+## Context Hygiene
+
+
+
+- Summary: Recorded worker-capable target planning only; no AWS mutation, task definition, service, queue, DNS, TLS, or secret changes were made.
+  Durable evidence: Durable evidence lives in the platform runtime plan, Kanbien staging deploy-readiness profile, and AWS inventory note.
+
+## Activity Log
+
+### 2026-07-12T12:52:06Z - Session started
+
+Initial intent: Update platform runtime plan so the initial shell target creates a project shape that can support a worker later
+
+
+### 2026-07-12T12:54:20Z - Question
+
+Asked: Update the plan so the initial shell target is built as a project that can support a worker later.
+
+Response: Recorded a server-first, worker-capable project shape for Kanbien staging: initial exposure stays server-only, with a reserved sibling worker service/task-family slot and activation condition.
+
+
+### 2026-07-12T12:54:20Z - Context hygiene
+
+Summary: Recorded worker-capable target planning only; no AWS mutation, task definition, service, queue, DNS, TLS, or secret changes were made.
+
+Durable evidence: Durable evidence lives in the platform runtime plan, Kanbien staging deploy-readiness profile, and AWS inventory note.
+
+
+### 2026-07-12T12:54:20Z - Decision
+
+Decision: Initial Kanbien staging platform-shell target should be server-first but worker-capable.
+
+Rationale: The first exposed deployment should prove HTTP runtime behind the ALB while reserving worker naming/configuration slots so background processing can be added without renaming the target project.
+
+
+### 2026-07-12T12:54:20Z - ADR disposition
+
+ADR needed: no
+
+Reason: This records a target-planning constraint inside existing platform/deploy planning artifacts; no new architecture decision beyond existing ECS/server-worker platform direction.
+
+## Sub-Agent Activity
+
+- None recorded yet.
+
+## Commits
+
+- None recorded yet.
+
+## Main Refresh Conflicts
+
+- None recorded yet.
+
+## ADR Disposition
+
+ADR needed: no
+ADR path:
+Reason: This records a target-planning constraint inside existing platform/deploy planning artifacts; no new architecture decision beyond existing ECS/server-worker platform direction.
+
+## Session Metrics
+
+Raised at UTC: 2026-07-12T12:52:06Z
+Latest commit at UTC:
+Latest commit SHA:
+Chat duration:
+Estimated chat tokens:
+Estimated chat cost:
+Estimated chat cost basis:
+
+## Notes
+
+- None recorded yet.
