@@ -68,6 +68,27 @@ Other inspected deployment facts:
 - No platform shell hostname or host rule is selected.
 - Cognito user pools returned by `list-user-pools`: none.
 
+## Post-Inspection Planning Decisions
+
+- Selected ECR repository name: `platform-shell`
+- Expected ECR repository URI:
+  `337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell`
+- Creation status: pending governed AWS mutation
+- Expected ECR policy: immutable tags with scan-on-push enabled
+- Selected build source policy: only images built from pushed `origin/main`
+  count as deployable staging images; local builds are smoke-only.
+- Selected tag format:
+  `staging-<YYYYMMDD>-<short-sha>-run<github-run-id>`
+- Selected deploy reference policy: deploy ECS by immutable image digest, not
+  by tag alone.
+- Selected evidence policy: require source commit, GitHub workflow run id,
+  image digest, base image digest, vulnerability scan, local smoke, and
+  deployed smoke for first staging; keep SBOM and attestation as blockers
+  before public exposure.
+- Selected vulnerability policy: block critical vulnerabilities and fix or
+  record explicit risk acceptance for high vulnerabilities before deployment.
+- Selected base image policy: pin the base image by digest for official builds.
+
 ## Planning Conclusion
 
 The product platform shell can likely reuse the existing Kanbien staging AWS
@@ -78,7 +99,8 @@ target.
 The platform shell still needs explicit selection or creation of:
 
 - GitHub deployment workflow and OIDC role;
-- ECR repository and immutable image provenance;
+- creation of selected ECR repository `platform-shell` and immutable image
+  provenance;
 - ECS server service, task definition, target group, and host rule;
 - server-first, worker-capable ECS project shape with a reserved worker
   service/task-family slot and explicit worker activation condition;

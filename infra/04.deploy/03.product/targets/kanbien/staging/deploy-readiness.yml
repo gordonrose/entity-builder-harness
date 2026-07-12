@@ -73,6 +73,11 @@ inspection:
       - rag-rulebook-service
       - kanbien/service-platform
     platform_shell_repository_found: false
+    selected_platform_shell_repository: platform-shell
+    selected_platform_shell_repository_uri: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
+    repository_creation_status: pending-aws-mutation
+    tag_mutability_expected: IMMUTABLE
+    scan_on_push_expected: true
   route53:
     hosted_zone_id: Z0909415EFV969Z95D5F
     existing_aliases_to_staging_alb:
@@ -115,7 +120,34 @@ github:
     workflow_has_id_token_permission: pending
 artifacts:
   source_commit_sha: pending
+  build_policy:
+    official_source: origin/main
+    local_builds: smoke-only-not-deployable
+    tag_format: "staging-<YYYYMMDD>-<short-sha>-run<github-run-id>"
+    tag_mutability: IMMUTABLE
+    deploy_reference: digest
+    deploy_uri_shape: "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:<image-digest>"
+    base_image_policy: pin-by-digest-for-official-build
+    vulnerability_policy:
+      critical: block
+      high: fix-or-record-risk-acceptance-before-deployment
+    first_staging_minimum_evidence:
+      - source_commit_sha
+      - workflow_run_id
+      - image_digest
+      - base_image_digest
+      - vulnerability_scan
+      - local_smoke
+      - deployed_smoke
+    deferred_hardening_evidence:
+      sbom: required-before-public-exposure
+      attestation: required-before-public-exposure
   image:
+    repository: platform-shell
+    repository_uri: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
+    repository_creation_status: pending-aws-mutation
+    tag_mutability_expected: IMMUTABLE
+    scan_on_push_expected: true
     dockerfile: infra/04.deploy/03.product/image/Dockerfile
     build_context: .
     local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
@@ -263,8 +295,8 @@ blockers:
   - id: platform-shell-readiness.image-provenance
     severity: blocking
     path: artifacts
-    reason: The platform shell image has only been proven locally; no platform shell ECR repository, immutable deploy image digest, base digest, SBOM, scan, or attestation is recorded.
-    resolution: Create or select the product platform shell ECR repository through the governed AWS workflow, build the deploy image, and record immutable image and provenance evidence.
+    reason: The platform shell image has only been proven locally; the target ECR repository name and tag/provenance policy are selected, but the repository is not created and no immutable deploy image digest, base digest, scan, SBOM, or attestation is recorded.
+    resolution: Create the selected product platform shell ECR repository through the governed AWS workflow, build from pushed origin/main, deploy by digest, record minimum staging provenance evidence, and keep SBOM plus attestation as blockers before public exposure.
   - id: platform-shell-readiness.runtime-target
     severity: blocking
     path: runtime
