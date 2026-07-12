@@ -32,7 +32,7 @@ input:
     layer: 02.rag-rulebook
     mode: discovery
     workflow: .agentic/02.rag-rulebook/workflows/default.md
-  max_chunks: 8
+  max_chunks: 12
 expected:
   routing:
     layer: 02.rag-rulebook

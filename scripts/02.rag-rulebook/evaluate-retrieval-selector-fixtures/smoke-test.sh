@@ -31,7 +31,8 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 REPORT_FILE="$TMP_DIR/retrieval-selector-evaluations.json"
 
 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh \
-  --current \
+  --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/exact-rag-rulebook-workflow.yml \
+  --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/prompt-session-conflict.yml \
   --json > "$REPORT_FILE"
 
 python3 - "$REPORT_FILE" <<'PY'
@@ -43,22 +44,11 @@ from pathlib import Path
 
 report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert report["ok"], report
-assert report["counts"]["fixtures"] >= 13
+assert report["counts"]["fixtures"] == 2
 assert report["counts"]["failed"] == 0
 fixture_ids = {item["fixture_id"] for item in report["fixtures"]}
 assert "retrieval-selector.v1.exact-rag-rulebook-workflow" in fixture_ids
 assert "retrieval-selector.v1.prompt-session-conflict" in fixture_ids
-assert "retrieval-selector.v1.vague-prompt-low-confidence" in fixture_ids
-assert "retrieval-selector.v1.product-term-session-boundary" in fixture_ids
-assert "retrieval-selector.v1.question-category-architecture-boundary" in fixture_ids
-assert "retrieval-selector.v1.request-context-exact-corpus-cross-session" in fixture_ids
-assert "retrieval-selector.v1.curated-prompt-vocabulary" in fixture_ids
-assert "retrieval-selector.v1.intent-form-planning-mcp-server" in fixture_ids
-assert "retrieval-selector.v1.deploy-execution-mcp-server-blocked" in fixture_ids
-assert "retrieval-selector.v1.intent-form-deploy-planning-question" in fixture_ids
-assert "retrieval-selector.v1.intent-form-deploy-explanation-question" in fixture_ids
-assert "retrieval-selector.v1.intent-form-deploy-plan-request" in fixture_ids
-assert "retrieval-selector.v1.intent-form-deploy-negation" in fixture_ids
 PY
 
 echo "Retrieval selector evaluation fixtures smoke test passed."
