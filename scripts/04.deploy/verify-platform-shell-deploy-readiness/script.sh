@@ -116,6 +116,7 @@ allow_blocked = sys.argv[3] == "true"
 caller_intent = sys.argv[4]
 
 SCHEMA = "deploy/platform-shell-readiness-manifest/v1"
+TARGET_PROFILE_SCHEMA = "deploy/platform-shell-target-profile/v1"
 REPORT_SCHEMA = "deploy/platform-shell-readiness-report/v1"
 ALLOWED_BLOCKED_CALLER_INTENTS = {"planning", "explanation"}
 PENDING_VALUES = {
@@ -270,6 +271,29 @@ def require_file(data: dict[str, Any], path: str) -> None:
         block(path, f"referenced file does not exist: {value}", f"Create the referenced file or update `{path}`.")
 
 
+def require_yaml_file(data: dict[str, Any], path: str, *, schema: str | None = None) -> dict[str, Any] | None:
+    value = get(data, path)
+    if not isinstance(value, str) or is_pending(value):
+        block(path, "required local YAML path is missing or pending", f"Set `{path}` to a repo-relative YAML path.")
+        return None
+    target = ROOT / value
+    if not target.is_file():
+        block(path, f"referenced file does not exist: {value}", f"Create the referenced file or update `{path}`.")
+        return None
+    try:
+        with target.open(encoding="utf-8") as handle:
+            loaded = yaml.safe_load(handle) or {}
+    except Exception as exc:
+        block(path, f"referenced YAML could not be parsed: {exc}", f"Fix YAML syntax in `{value}`.")
+        return None
+    if not isinstance(loaded, dict):
+        block(path, "referenced YAML must be an object", f"Make `{value}` a YAML object.")
+        return None
+    if schema and loaded.get("schema") != schema:
+        block(path, f"referenced YAML schema must be `{schema}`", f"Set `{value}` schema to `{schema}`.")
+    return loaded
+
+
 def require_matching(data: dict[str, Any], left: str, right: str) -> None:
     left_value = get(data, left)
     right_value = get(data, right)
@@ -332,6 +356,31 @@ def validate_blocked_coverage(data: dict[str, Any], blocked_paths: set[str]) -> 
 def validate(data: dict[str, Any]) -> None:
     if data.get("schema") != SCHEMA:
         block("schema", "manifest schema is missing or unsupported", f"Use schema `{SCHEMA}`.")
+
+    profile = get(data, "target_profile")
+    if profile is not None:
+        if not isinstance(profile, dict):
+            block("target_profile", "target_profile must be an object", "Use target_profile.path to reference the reusable decision feed.")
+        else:
+            if profile.get("schema") != TARGET_PROFILE_SCHEMA:
+                block(
+                    "target_profile.schema",
+                    f"target_profile schema must be `{TARGET_PROFILE_SCHEMA}`",
+                    f"Use schema `{TARGET_PROFILE_SCHEMA}` for platform shell target profiles.",
+                )
+            target_profile = require_yaml_file(data, "target_profile.path", schema=TARGET_PROFILE_SCHEMA)
+            if target_profile:
+                for left, right in (
+                    ("client.id", "client.id"),
+                    ("environment.id", "environment.id"),
+                    ("deployment.service_id", "deployment.service_id"),
+                ):
+                    if get(data, left) != get(target_profile, right):
+                        block(
+                            left,
+                            f"value must match target_profile.{right}",
+                            f"Keep `{left}` aligned with the reusable target profile.",
+                        )
 
     status = data.get("status")
     if status not in {"ready", "blocked"}:

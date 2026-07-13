@@ -42,8 +42,9 @@ bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
   --caller-intent planning
 ```
 
-The command is read-only. It checks manifest shape, target profile identity,
-source provider, cloud provider, selected runtime family, adapter selection,
-auth provider/readiness evidence, CORS allowlist source, health exposure
-policy, rate-limit keying, local file references, local smoke evidence,
-blocker coverage, and whether the manifest can be treated as ready or blocked.
+The command is read-only. It checks manifest shape, optional reusable target
+profile references, target profile identity, source provider, cloud provider,
+selected runtime family, adapter selection, auth provider/readiness evidence,
+CORS allowlist source, health exposure policy, rate-limit keying, local file
+references, local smoke evidence, blocker coverage, and whether the manifest
+can be treated as ready or blocked.

@@ -1,0 +1,262 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-target-profile
+#   purpose: Record reusable non-secret target decisions for the Kanbien staging product platform shell before AWS mutation.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+#   - id: deploy.script.verify-platform-shell-deploy-readiness
+#     path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+schema: deploy/platform-shell-target-profile/v1
+status: draft
+client:
+  id: kanbien
+  display_name: Kanbien
+environment:
+  id: staging
+  class: staging
+product:
+  id: kanbien-platform
+  manifest: products/kanbien-platform/src/product.manifest.ts
+  apps:
+    - app_id: platform-smoke
+      package: "@kanbien/app-platform-smoke"
+      route_base_path: /smoke
+      declared_permissions:
+        - smoke:read
+      required_config:
+        - PLATFORM_SMOKE_APP_NAME
+deployment:
+  service_id: platform-shell
+  runtime_target: aws.ecs-fargate.platform-shell-staging
+  mutation_authorized_by_profile: false
+  first_mutation_candidate: create-ecr-repository
+  execution_policy:
+    style: hybrid-bootstrap-manual-then-github-oidc
+    bootstrap:
+      mutation_style: governed-manual-aws-cli
+      aws_profile: kanbien-dev
+      governing_workflow: .agentic/aws/workflows/execute-approved-aws-change.md
+      allowed_initial_mutations:
+        - create-ecr-repository
+        - create-github-oidc-deploy-role
+    repeatable_deploy:
+      mutation_style: github-actions-oidc
+      workflow: .github/workflows/deploy-platform-shell-staging.yml
+      approval: github-environment-manual
+      role_name: github-platform-shell-staging-deploy
+      role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+source:
+  provider: github
+  repository: gordonrose/entity-builder-harness
+  official_remote: origin
+  deployable_ref: refs/heads/main
+  deployable_branch: main
+  workflow:
+    path: .github/workflows/deploy-platform-shell-staging.yml
+    trigger: workflow_dispatch
+    environment: staging
+    approval: github-environment-manual
+    required_reviewers: true
+    deployment_branch_policy: main-only
+    prevent_self_review: true
+  oidc:
+    audience: sts.amazonaws.com
+    repository_condition: gordonrose/entity-builder-harness
+    ref_condition: refs/heads/main
+    environment_condition: staging
+    role_name: github-platform-shell-staging-deploy
+    role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+    subject_condition: repo:gordonrose/entity-builder-harness:environment:staging
+    trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-trust.json
+    permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
+artifacts:
+  image:
+    repository: platform-shell
+    repository_arn: arn:aws:ecr:eu-west-1:337159794548:repository/platform-shell
+    repository_uri: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
+    repository_creation_status: created
+    tag_mutability: IMMUTABLE
+    scan_on_push: true
+    encryption: AES256
+    build_context: .
+    dockerfile: infra/04.deploy/03.product/image/Dockerfile
+    official_source: origin/main
+    local_builds: smoke-only-not-deployable
+    tag_format: "staging-<YYYYMMDD>-<short-sha>-run<github-run-id>"
+    deploy_reference: digest
+    deploy_uri_shape: "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:<image-digest>"
+    base_image_policy: pin-by-digest-for-official-build
+    vulnerability_policy:
+      critical: block
+      high: fix-or-record-risk-acceptance-before-deployment
+    first_staging_minimum_evidence:
+      - source_commit_sha
+      - workflow_run_id
+      - image_digest
+      - base_image_digest
+      - vulnerability_scan
+      - local_smoke
+      - deployed_smoke
+    deferred_hardening_evidence:
+      sbom: required-before-public-exposure
+      attestation: required-before-public-exposure
+runtime:
+  provider: aws
+  family: ecs-fargate
+  adapter: platform/adapters/aws/runtime/ecs-fargate/
+  deployment_project:
+    name: kanbien-staging-platform-shell
+    topology: server-first-worker-capable
+    initial_exposure: server
+    server_service: kanbien-staging-platform-shell
+    worker_service: kanbien-staging-platform-shell-worker
+    worker_initial_state: deferred-until-background-workload
+    worker_activation_condition: app-declared background job or platform runtime queue workload selected for staging
+  server:
+    task_family: kanbien-staging-platform-shell
+    service: kanbien-staging-platform-shell
+    container_name: platform-shell
+    container_port: 3000
+    desired_count: 1
+    cpu: 256
+    memory_mib: 512
+    health:
+      liveness: /livez
+      readiness: /readyz
+      alb_health_check_path: /livez
+      readiness_exposure: authenticated
+  worker:
+    task_family: kanbien-staging-platform-shell-worker
+    service: kanbien-staging-platform-shell-worker
+    desired_count_initial: 0
+    queue_adapter: platform/adapters/aws/queue/sqs/
+cloud:
+  provider: aws
+  account_id: "337159794548"
+  profile: kanbien-dev
+  bootstrap_identity: aws-profile:kanbien-dev
+  repeatable_deployment_identity: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+  region: eu-west-1
+aws:
+  cluster: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+  vpc: vpc-0063b6c3d2d781f3c
+  public_subnets:
+    - subnet-05d385e4d57b18032
+    - subnet-0397df802e31ff6fe
+  security_groups:
+    alb: sg-08d590b0aee6e2e60
+    service: pending
+  alb:
+    arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
+    reuse_existing: true
+    listener_https: pending
+    certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+    target_group: pending
+    host_rule: staging.platform.kanbien.com
+  route53:
+    hosted_zone_id: Z0909415EFV969Z95D5F
+    hostname: staging.platform.kanbien.com
+    action: create-alias-to-existing-staging-alb
+auth:
+  provider: cognito
+  mode: machine-to-machine
+  provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  user_pool:
+    id: eu-west-1_EQaXioA1n
+    name: kanbien-staging-platform-shell
+    arn: arn:aws:cognito-idp:eu-west-1:337159794548:userpool/eu-west-1_EQaXioA1n
+    domain: kanbien-staging-platform-shell-337159794548
+  app_client:
+    id: 4n7kuqstbvb97ur3btbur8afjt
+    name: platform-shell-staging-machine-client
+    type: confidential
+    grant_type: client_credentials
+    client_secret_storage: aws-secrets-manager
+  resource_server:
+    identifier: platform-shell
+    scopes:
+      - name: smoke.read
+        maps_to_permission: smoke:read
+  token_validation:
+    mode: jwt-jwks
+    token_use: access
+    issuer: https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_EQaXioA1n
+    jwks_uri: https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_EQaXioA1n/.well-known/jwks.json
+    app_client_id: 4n7kuqstbvb97ur3btbur8afjt
+    token_url: https://kanbien-staging-platform-shell-337159794548.auth.eu-west-1.amazoncognito.com/oauth2/token
+  permission_mapping:
+    source: target-profile
+    scope_permissions:
+      platform-shell/smoke.read:
+        - smoke:read
+    group_permissions: {}
+    claim_permissions: {}
+cors:
+  source: target-profile-env
+  env: PLATFORM_CORS_ALLOWLIST
+  allow_credentials: true
+  origin_reflection: allowlist-match-only
+  allowed_origins:
+    - https://kanbien.com
+  allowed_origin_patterns:
+    - https://*.kanbien.com
+  local_dev_origins:
+    - http://localhost:3000
+config:
+  non_secret_source: ecs-task-environment
+  secret_source: aws-secrets-manager
+  committed_secret_values: false
+  non_secret_env:
+    PLATFORM_AUTH_PROVIDER: cognito
+    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["smoke:read"]}'
+    PLATFORM_CORS_ALLOWLIST: "https://kanbien.com,https://*.kanbien.com,http://localhost:3000"
+    PLATFORM_SMOKE_APP_NAME: Kanbien Platform Smoke
+  secret_refs:
+    cognito_machine_client_secret:
+      name: kanbien/staging/platform-shell/cognito-machine-client
+      arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
+observability:
+  log_group: /ecs/kanbien-staging-platform-shell
+  log_retention_days: 14
+  alarm_destination:
+    type: email
+    value: gordonrose164@hotmail.com
+  alarms:
+    - alb-unhealthy-targets
+    - alb-5xx-spike
+    - ecs-running-count-mismatch
+    - ecs-high-cpu
+    - ecs-high-memory
+operations:
+  owner: Gordon Rose
+  escalation_path: Gordon Rose / LLM-assisted operations
+  budget:
+    name: kanbien-staging-platform-shell-monthly
+    amount_usd: 25
+    period: monthly
+    alert_thresholds_percent:
+      - 50
+      - 80
+      - 100
+    forecasted_alert_thresholds_percent:
+      - 100
+    alert_destination:
+      type: email
+      value: gordonrose164@hotmail.com
+  rollback:
+    authority: Gordon Rose
+    assisted_by: LLM
+    target: previous-ecs-task-definition-primary-previous-image-digest-fallback
+    runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
