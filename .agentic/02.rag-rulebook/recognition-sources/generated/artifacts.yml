@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 772
-  term_count: 1556
+  indexed_artifacts: 773
+  term_count: 1558
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7949,6 +7949,18 @@ terms:
   match_type: exact
   canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
   evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
+  confidence_weight: 1
+- term: aws.runbooks.platform-shell-staging-rollback
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.runbooks.platform-shell-staging-rollback
+  evidence_path: docs/aws/runbooks/platform-shell-staging-rollback.md
+  confidence_weight: 1
+- term: docs/aws/runbooks/platform-shell-staging-rollback.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.runbooks.platform-shell-staging-rollback
+  evidence_path: docs/aws/runbooks/platform-shell-staging-rollback.md
   confidence_weight: 1
 - term: infra.04-deploy.02-rag-rulebook.readme
   category: artifact-id
