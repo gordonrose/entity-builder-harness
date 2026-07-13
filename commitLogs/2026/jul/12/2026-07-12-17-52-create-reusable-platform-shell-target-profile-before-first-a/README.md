@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-12T16:52:36Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-13T13:54:54Z
+latest_commit_sha: 2bf492b2eaef5dbc4a81ff07cfa920a164e4edf2
+chat_duration: 75738s (00:21:02:18)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -221,13 +221,30 @@ Initial intent: create reusable platform shell target profile before first AWS d
 - Refreshed generated artifact recognition sources after the commit gate found
   the new rollback runbook artifact was not indexed yet.
 
+
+### 2026-07-13T13:54:54Z - Commit recorded
+
+Commit: `2bf492b2eaef5dbc4a81ff07cfa920a164e4edf2`
+
+Message: Record platform shell staging target profile
+
+Summary: Recorded the reusable Kanbien staging platform-shell target profile, readiness references, IAM/Cognito/ECR proof artifacts, rollback runbook, and deploy-readiness verifier alignment for the first AWS platform-shell deploy.
+
+ADR impact: No ADR change; this records target-specific deployment decisions and readiness evidence under existing platform-runtime and deploy governance.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `2bf492b2eaef5dbc4a81ff07cfa920a164e4edf2`
+  Time UTC: 2026-07-13T13:54:54Z
+  Message: Record platform shell staging target profile
+  Summary: Recorded the reusable Kanbien staging platform-shell target profile, readiness references, IAM/Cognito/ECR proof artifacts, rollback runbook, and deploy-readiness verifier alignment for the first AWS platform-shell deploy.
+  ADR impact: No ADR change; this records target-specific deployment decisions and readiness evidence under existing platform-runtime and deploy governance.
 
 ## Main Refresh Conflicts
 
@@ -259,12 +276,12 @@ Corpus gaps:
 ## Session Metrics
 
 Raised at UTC: 2026-07-12T16:52:36Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-13T13:54:54Z
+Latest commit SHA: 2bf492b2eaef5dbc4a81ff07cfa920a164e4edf2
+Chat duration: 75738s (00:21:02:18)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
