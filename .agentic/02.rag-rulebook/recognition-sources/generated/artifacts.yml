@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 773
-  term_count: 1558
+  indexed_artifacts: 774
+  term_count: 1560
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7613,6 +7613,18 @@ terms:
   match_type: exact
   canonical_id: aws.workflows.plan-aws-change
   evidence_path: .agentic/aws/workflows/plan-aws-change.md
+  confidence_weight: 1
+- term: github.workflow.deploy-platform-shell-staging
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.deploy-platform-shell-staging
+  evidence_path: .github/workflows/deploy-platform-shell-staging.yml
+  confidence_weight: 1
+- term: .github/workflows/deploy-platform-shell-staging.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.deploy-platform-shell-staging
+  evidence_path: .github/workflows/deploy-platform-shell-staging.yml
   confidence_weight: 1
 - term: github.workflow.deploy-rag-rulebook-staging
   category: artifact-id

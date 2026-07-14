@@ -1,0 +1,280 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: github.workflow.deploy-platform-shell-staging
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - agentic
+#   - sre
+#   kind: ci-workflow
+#   purpose: Build and publish the Kanbien staging platform shell image through the GitHub OIDC deployment path before ECS service mutation.
+#   portability:
+#     class: internal
+#     targets: []
+#   effects:
+#   - network
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+
+name: Deploy Platform Shell Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_image_ref:
+        description: Base image tag or digest to resolve and pin for this staging build.
+        required: true
+        default: node:22-bookworm-slim
+      publish_image:
+        description: Push the built image to the staging ECR repository.
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: platform-shell-staging
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+  ECR_REPOSITORY: platform-shell
+  ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
+  READINESS_MANIFEST: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+  SERVICE_URL: https://staging.platform.kanbien.com
+
+jobs:
+  build-image:
+    name: Build staging image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Enforce remote-main deploy source
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Deploy blocked: expected refs/heads/main, got $GITHUB_REF" >&2
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install repository dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install script dependencies
+        run: python -m pip install PyYAML==6.0.2
+
+      - name: Run platform shell checks
+        run: |
+          npm run platform:server:check
+          npm run product:kanbien-platform:check
+          bash scripts/04.deploy/validate-container-boundaries/script.sh
+
+      - name: Verify blocked deploy-readiness manifest
+        run: |
+          bash scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh \
+            --manifest "$READINESS_MANIFEST" \
+            --allow-blocked \
+            --caller-intent planning \
+            --json
+
+      - name: Configure AWS credentials
+        if: ${{ inputs.publish_image }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        if: ${{ inputs.publish_image }}
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Resolve digest-pinned base image
+        id: base-image
+        run: |
+          set -euo pipefail
+
+          base_ref="${{ inputs.base_image_ref }}"
+          if [[ "$base_ref" == *@sha256:* ]]; then
+            base_repository="${base_ref%@sha256:*}"
+            base_digest="sha256:${base_ref##*@sha256:}"
+            base_image="$base_ref"
+          else
+            base_repository="${base_ref%:*}"
+            if [ "$base_repository" = "$base_ref" ]; then
+              echo "Base image must include a tag or digest: $base_ref" >&2
+              exit 1
+            fi
+            base_digest="$(docker buildx imagetools inspect "$base_ref" --format '{{.Manifest.Digest}}')"
+            base_image="${base_repository}@${base_digest}"
+          fi
+
+          if [[ ! "$base_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Resolved base image digest has invalid shape: $base_digest" >&2
+            exit 1
+          fi
+
+          echo "repository=$base_repository" >> "$GITHUB_OUTPUT"
+          echo "digest=$base_digest" >> "$GITHUB_OUTPUT"
+          echo "image=$base_image" >> "$GITHUB_OUTPUT"
+
+      - name: Select immutable staging image tag
+        id: image-tag
+        run: |
+          short_sha="${GITHUB_SHA::12}"
+          image_tag="staging-$(date -u +%Y%m%d)-${short_sha}-run${GITHUB_RUN_ID}"
+          echo "tag=$image_tag" >> "$GITHUB_OUTPUT"
+          echo "uri=$ECR_URI:$image_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Check for existing staging image
+        if: ${{ inputs.publish_image }}
+        id: existing-image
+        run: |
+          set +e
+          digest="$(
+            aws ecr describe-images \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-ids imageTag="${{ steps.image-tag.outputs.tag }}" \
+              --query "imageDetails[0].imageDigest" \
+              --output text 2>/dev/null
+          )"
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ] && [ "$digest" != "None" ] && [ -n "$digest" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build platform shell image
+        if: ${{ !inputs.publish_image || steps.existing-image.outputs.exists != 'true' }}
+        run: |
+          bash scripts/04.deploy/build-platform-shell-image/script.sh \
+            --tag "${{ steps.image-tag.outputs.uri }}" \
+            --base-image "${{ steps.base-image.outputs.image }}" \
+            --require-digest-base
+
+      - name: Push platform shell image
+        if: ${{ inputs.publish_image && steps.existing-image.outputs.exists != 'true' }}
+        run: docker push "${{ steps.image-tag.outputs.uri }}"
+
+      - name: Resolve immutable image digest
+        if: ${{ inputs.publish_image }}
+        id: image
+        run: |
+          digest="${{ steps.existing-image.outputs.digest }}"
+          if [ -z "$digest" ]; then
+            digest="$(
+              aws ecr describe-images \
+                --repository-name "$ECR_REPOSITORY" \
+                --image-ids imageTag="${{ steps.image-tag.outputs.tag }}" \
+                --query "imageDetails[0].imageDigest" \
+                --output text
+            )"
+          fi
+
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Resolved image digest has invalid shape: $digest" >&2
+            exit 1
+          fi
+
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "uri=$ECR_URI@$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Read ECR scan finding counts
+        if: ${{ inputs.publish_image }}
+        id: scan
+        run: |
+          set +e
+          aws ecr wait image-scan-complete \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-id imageDigest="${{ steps.image.outputs.digest }}"
+          wait_status=$?
+          set -e
+
+          scan_status="$(
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --query "imageScanStatus.status" \
+              --output text 2>/dev/null || true
+          )"
+          critical="$(
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --query "imageScanFindings.findingSeverityCounts.CRITICAL || \`0\`" \
+              --output text 2>/dev/null || true
+          )"
+          high="$(
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --query "imageScanFindings.findingSeverityCounts.HIGH || \`0\`" \
+              --output text 2>/dev/null || true
+          )"
+
+          critical="${critical:-0}"
+          high="${high:-0}"
+          echo "wait-status=$wait_status" >> "$GITHUB_OUTPUT"
+          echo "status=${scan_status:-unavailable}" >> "$GITHUB_OUTPUT"
+          echo "critical=$critical" >> "$GITHUB_OUTPUT"
+          echo "high=$high" >> "$GITHUB_OUTPUT"
+
+          if [ "$critical" != "0" ]; then
+            echo "Image scan found CRITICAL vulnerabilities: $critical" >&2
+            exit 1
+          fi
+
+      - name: Record deployment summary
+        run: |
+          {
+            echo "## Platform Shell staging image"
+            echo ""
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Workflow run: ${GITHUB_RUN_ID}"
+            echo "- Base image: ${{ steps.base-image.outputs.image }}"
+            echo "- Base digest: ${{ steps.base-image.outputs.digest }}"
+            echo "- Image tag: ${{ steps.image-tag.outputs.tag }}"
+            if [ "${{ inputs.publish_image }}" = "true" ]; then
+              echo "- Image digest: ${{ steps.image.outputs.digest }}"
+              echo "- Deploy image URI: ${{ steps.image.outputs.uri }}"
+              echo "- ECR scan status: ${{ steps.scan.outputs.status }}"
+              echo "- ECR scan CRITICAL: ${{ steps.scan.outputs.critical }}"
+              echo "- ECR scan HIGH: ${{ steps.scan.outputs.high }}"
+            else
+              echo "- Image publish: skipped by workflow input"
+            fi
+            echo "- Service URL: $SERVICE_URL"
+            echo ""
+            echo "ECS service, ALB target group, DNS proof, deployed smoke, and rollback proof remain blocked until the runtime target slice is executed."
+          } >> "$GITHUB_STEP_SUMMARY"
