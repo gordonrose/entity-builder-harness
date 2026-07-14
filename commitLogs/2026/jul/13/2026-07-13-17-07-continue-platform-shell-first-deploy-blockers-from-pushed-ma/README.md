@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-07-13T16:07:37Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-07-14T10:32:40Z
+latest_commit_sha: 0467182db26e767361584f85177e1172da37447e
+chat_duration: 66303s (00:18:25:03)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -84,13 +84,30 @@ Initial intent: Continue platform shell first-deploy blockers from pushed main
 - Ran `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all`.
 - Generated artifact recognition metadata now indexes `.github/workflows/deploy-platform-shell-staging.yml`.
 
+
+### 2026-07-14T10:32:40Z - Commit recorded
+
+Commit: `0467182db26e767361584f85177e1172da37447e`
+
+Message: Add platform shell staging image workflow
+
+Summary: Added the manual GitHub/OIDC staging image workflow for platform-shell, updated deploy-readiness source/OIDC evidence, taught the readiness verifier to validate workflow presence and OIDC permissions, refreshed generated recognition metadata, and recorded validation evidence.
+
+ADR impact: No ADR change; this implements the selected GitHub/OIDC image provenance path without changing runtime family, auth provider, or live AWS topology.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `0467182db26e767361584f85177e1172da37447e`
+  Time UTC: 2026-07-14T10:32:40Z
+  Message: Add platform shell staging image workflow
+  Summary: Added the manual GitHub/OIDC staging image workflow for platform-shell, updated deploy-readiness source/OIDC evidence, taught the readiness verifier to validate workflow presence and OIDC permissions, refreshed generated recognition metadata, and recorded validation evidence.
+  ADR impact: No ADR change; this implements the selected GitHub/OIDC image provenance path without changing runtime family, auth provider, or live AWS topology.
 
 ## Main Refresh Conflicts
 
@@ -105,12 +122,12 @@ Reason: This slice implements the previously selected GitHub/OIDC staging image 
 ## Session Metrics
 
 Raised at UTC: 2026-07-13T16:07:37Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-07-14T10:32:40Z
+Latest commit SHA: 0467182db26e767361584f85177e1172da37447e
+Chat duration: 66303s (00:18:25:03)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
