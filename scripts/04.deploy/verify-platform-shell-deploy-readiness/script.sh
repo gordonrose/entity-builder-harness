@@ -271,6 +271,42 @@ def require_file(data: dict[str, Any], path: str) -> None:
         block(path, f"referenced file does not exist: {value}", f"Create the referenced file or update `{path}`.")
 
 
+def require_github_workflow(data: dict[str, Any], path: str) -> None:
+    value = get(data, path)
+    if not isinstance(value, str) or is_pending(value):
+        block(path, "required GitHub workflow path is missing or pending", f"Set `{path}` to a repo-relative workflow path.")
+        return
+    if not re.fullmatch(r"\.github/workflows/[^/]+\.ya?ml", value):
+        block(path, f"workflow path has invalid shape: {value}", "Use a workflow under `.github/workflows/`.")
+        return
+
+    target = ROOT / value
+    if not target.is_file():
+        block(path, f"referenced workflow does not exist: {value}", f"Create `{value}` or update `{path}`.")
+        return
+
+    text = target.read_text(encoding="utf-8")
+    has_id_token_write = re.search(r"(?m)^\s*id-token:\s*write\s*$", text) is not None
+    if not re.search(r"(?m)^\s*workflow_dispatch:\s*$", text):
+        block(path, "workflow must be manually dispatchable", "Add a `workflow_dispatch` trigger for governed staging deploys.")
+    if not has_id_token_write:
+        block(
+            "github.oidc.workflow_has_id_token_permission",
+            "workflow does not grant GitHub OIDC id-token permission",
+            "Set workflow permissions to include `id-token: write`.",
+        )
+
+    environment_name = get(data, "github.environment.name")
+    if isinstance(environment_name, str) and environment_name.strip():
+        environment_pattern = rf"(?m)^\s*environment:\s*{re.escape(environment_name.strip())}\s*$"
+        if not re.search(environment_pattern, text):
+            block(
+                "github.environment.name",
+                f"workflow does not use GitHub environment `{environment_name}`",
+                "Set the deploy job environment to the protected staging environment.",
+            )
+
+
 def require_yaml_file(data: dict[str, Any], path: str, *, schema: str | None = None) -> dict[str, Any] | None:
     value = get(data, path)
     if not isinstance(value, str) or is_pending(value):
@@ -413,6 +449,7 @@ def validate(data: dict[str, Any]) -> None:
     require_matching(data, "source.commit_sha", "github.commit_sha")
     require_matching(data, "source.workflow_path", "github.workflow_path")
     require_matching(data, "source.workflow_run_id", "github.workflow_run_id")
+    require_github_workflow(data, "github.workflow_path")
     require_string(data, "github.oidc.audience")
     require_string(data, "github.oidc.repository_condition")
     require_string(data, "github.oidc.ref_condition")

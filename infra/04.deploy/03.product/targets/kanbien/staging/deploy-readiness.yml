@@ -35,7 +35,7 @@ deployment:
   service_id: platform-shell
   environment: staging
   runtime_target: aws.ecs-fargate.platform-shell-staging
-  source_policy: local-planning
+  source_policy: remote-main
   mutation_authorized: false
   execution_policy:
     style: hybrid-bootstrap-manual-then-github-oidc
@@ -148,7 +148,7 @@ github:
     environment_condition: staging
     trust_scoped_to_repository: true
     trust_scoped_to_ref: true
-    workflow_has_id_token_permission: pending
+    workflow_has_id_token_permission: true
     trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-trust.json
     permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
 artifacts:
@@ -341,17 +341,17 @@ blockers:
     severity: blocking
     path: source
     reason: The production-bound source commit and workflow run identity are not selected for this Kanbien staging proof.
-    resolution: Record the target repository, remote-main commit SHA, workflow path, run id, and GitHub environment protections before deployment execution.
+    resolution: After this workflow is merged to main and run, record the remote-main commit SHA, workflow run id, and environment protection proof before ECS deployment execution.
   - id: platform-shell-readiness.github-detail
     severity: blocking
     path: github
-    reason: GitHub workflow, source policy, and environment protection settings are selected, but no workflow run id or deploy execution proof exists yet.
-    resolution: Run the selected manual GitHub workflow after AWS target planning, then record the workflow run id and proof.
+    reason: GitHub workflow, source policy, OIDC permission, and environment protection settings are selected, but no workflow run id or deploy execution proof exists yet.
+    resolution: Run the selected manual GitHub workflow after ECS target planning, then record the workflow run id and proof.
   - id: platform-shell-readiness.image-provenance
     severity: blocking
     path: artifacts
     reason: The platform shell image has only been proven locally; the target ECR repository exists with immutable tags and scan-on-push, but no immutable deploy image digest, base digest, scan result, SBOM, or attestation is recorded.
-    resolution: Build from pushed origin/main through the repeatable GitHub/OIDC path, deploy by digest, record minimum staging provenance evidence, and keep SBOM plus attestation as blockers before public exposure.
+    resolution: Build from pushed origin/main through the repeatable GitHub/OIDC path, record the immutable image digest, base digest, and scan result, then deploy ECS by digest after runtime targets are selected; keep SBOM plus attestation as blockers before public exposure.
   - id: platform-shell-readiness.runtime-target
     severity: blocking
     path: runtime
