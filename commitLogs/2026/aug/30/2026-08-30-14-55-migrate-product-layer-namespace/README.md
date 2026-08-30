@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-08-30T13:55:01Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-08-30T21:21:19Z
+latest_commit_sha: beb2f5c
+chat_duration: 26778s (00:07:26:18)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -99,13 +99,30 @@ Checks passed:
 
 ADR impact: updated `docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md`.
 
+
+### 2026-08-30T21:21:19Z - Commit recorded
+
+Commit: `beb2f5c`
+
+Message: Migrate product governance namespace
+
+Summary: Renamed product governance from .agentic/product to .agentic/03.product, added a durable migration plan and product layer indexes, updated active references and generated recognition sources, and extended artifact-path migration governance with standalone plan artifacts and checker --plan support.
+
+ADR impact: ADR updated: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `beb2f5c`
+  Time UTC: 2026-08-30T21:21:19Z
+  Message: Migrate product governance namespace
+  Summary: Renamed product governance from .agentic/product to .agentic/03.product, added a durable migration plan and product layer indexes, updated active references and generated recognition sources, and extended artifact-path migration governance with standalone plan artifacts and checker --plan support.
+  ADR impact: ADR updated: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
 
 ## Main Refresh Conflicts
 
@@ -120,12 +137,12 @@ Reason: The migration changes a durable product layer governance namespace and c
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T13:55:01Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-08-30T21:21:19Z
+Latest commit SHA: beb2f5c
+Chat duration: 26778s (00:07:26:18)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
