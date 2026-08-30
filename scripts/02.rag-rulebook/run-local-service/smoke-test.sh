@@ -146,10 +146,10 @@ async function main() {
   if (
     promptPathPacket.routing.layer !== "03.product" ||
     promptPathPacket.routing.mode !== "discovery" ||
-    promptPathPacket.routing.workflow !== ".agentic/product/workflows/default.md" ||
+    promptPathPacket.routing.workflow !== ".agentic/03.product/workflows/default.md" ||
     promptPathPacket.intent.layer !== "03.product" ||
     promptPathPacket.intent.mode !== "discovery" ||
-    promptPathPacket.intent.workflow !== ".agentic/product/workflows/default.md"
+    promptPathPacket.intent.workflow !== ".agentic/03.product/workflows/default.md"
   ) {
     throw new Error(`prompt routing did not stay product-scoped under hostile session hint: ${JSON.stringify(promptPathPacket.routing)}`);
   }

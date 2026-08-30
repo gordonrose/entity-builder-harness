@@ -77,7 +77,7 @@ if [ -z "$(find "$CFO_FIXTURE_ROOT" -name README.md -type f -print -quit 2>/dev/
   write_cfo_fixture "01" "chat-workflow-startup-a" "fixture-chat-workflow-startup-a" "chat workflow startup" "100" "0.01" ".agentic/00.chat/workflows/chat-start.md"
   write_cfo_fixture "02" "chat-workflow-startup-b" "fixture-chat-workflow-startup-b" "chat workflow startup" "200" "0.02" ".agentic/00.chat/workflows/chat-start.md"
   write_cfo_fixture "03" "chat-workflow-startup-c" "fixture-chat-workflow-startup-c" "chat workflow startup" "300" "0.03" ".agentic/00.chat/workflows/chat-start.md"
-  write_cfo_fixture "04" "unrelated-database-migration" "fixture-unrelated-task" "unrelated database migration" "900" "0.09" ".agentic/product/workflows/database-migration.md"
+  write_cfo_fixture "04" "unrelated-database-migration" "fixture-unrelated-task" "unrelated database migration" "900" "0.09" ".agentic/03.product/workflows/database-migration.md"
   CFO_FIXTURE_ROOT="$TMP_CFO_FIXTURE_ROOT"
 fi
 

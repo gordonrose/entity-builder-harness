@@ -33,6 +33,10 @@ files or directories.
 For harness layer or owner namespace renames, include both the `.agentic/`
 namespace and the matching `scripts/` namespace in the migration plan.
 
+Migration plans are durable artifacts. Session logs should reference those plan
+artifacts and record chat activity against them; they should not be the only
+place where a harness-built plan lives.
+
 ## Required Gates
 
 Run the active workflow dirty-worktree gate before editing:
@@ -49,7 +53,28 @@ Consult:
 .agentic/01.harness/standards/artifact-path-migrations.md
 ```
 
-## Step 2: Plan References
+## Step 2: Create Or Update The Plan Artifact
+
+Create or update a committed `kind: migration-plan` artifact before changing
+active references.
+
+Use this location for `.agentic/` layer-owned migration plans:
+
+```txt
+.agentic/<affected-layer>/plans/migration/<slug>.md
+```
+
+For implementation plans, use the sibling implementation folder:
+
+```txt
+.agentic/<affected-layer>/plans/implementation/<slug>.md
+```
+
+For a layer namespace rename, the affected layer is the proposed canonical layer
+path. It is acceptable to create the new layer root first only to hold the
+migration plan.
+
+## Step 3: Plan References
 
 Run the planner for each old path and proposed new path:
 
@@ -57,17 +82,21 @@ Run the planner for each old path and proposed new path:
 bash scripts/01.harness/plan-artifact-path-migration.sh <old-path> <new-path>
 ```
 
+Record the planner output, compatibility choice, affected reference buckets,
+validation checks, and rollback or recovery approach in the migration plan
+artifact.
+
 For a layer namespace rename, run one plan for the process path and one for the
 script owner path.
 
 Example:
 
 ```bash
-bash scripts/01.harness/plan-artifact-path-migration.sh .agentic/01.harness .agentic/01.harness
-bash scripts/01.harness/plan-artifact-path-migration.sh scripts/01.harness scripts/01.harness
+bash scripts/01.harness/plan-artifact-path-migration.sh .agentic/<old-layer> .agentic/<new-layer>
+bash scripts/01.harness/plan-artifact-path-migration.sh scripts/<old-layer> scripts/<new-layer>
 ```
 
-## Step 3: Choose Compatibility
+## Step 4: Choose Compatibility
 
 Choose the old-path disposition:
 
@@ -78,19 +107,28 @@ Choose the old-path disposition:
 
 Stop if active old-path references exist and none of these choices is safe.
 
-## Step 4: Edit Canonical Surfaces
+## Step 5: Edit Canonical Surfaces
 
 Update active routers, workflows, standards, scripts, tests, bootstrap exports,
 and templates to name the canonical path.
 
 Do not rewrite historical session logs only to modernize old paths.
 
-## Step 5: Validate
+## Step 6: Validate
 
 Run the checker:
 
 ```bash
 bash scripts/01.harness/check-artifact-path-migration.sh <old-path> <new-path>
+```
+
+If the migration plan artifact names the old path as migration evidence, pass it
+explicitly so the checker still fails on other active old-path references:
+
+```bash
+bash scripts/01.harness/check-artifact-path-migration.sh \
+  --plan <migration-plan-path> \
+  <old-path> <new-path>
 ```
 
 Use `--allow-active-old-path` only when an alias, wrapper, or pointer is part of
@@ -109,10 +147,11 @@ The migration helper smoke test is:
 bash scripts/01.harness/smoke-test-artifact-path-migration.sh
 ```
 
-## Step 6: Record Outcome
+## Step 7: Record Outcome
 
 Record in the session log:
 
+- migration-plan artifact path and status;
 - old path
 - new path
 - compatibility choice

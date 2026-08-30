@@ -157,7 +157,7 @@ assert packet["schema"] == "rag-rulebook/context-packet/v1"
 assert packet["routing"]["scope"] == "prompt"
 assert packet["routing"]["layer"] == "03.product"
 assert packet["routing"]["mode"] == "discovery"
-assert packet["routing"]["workflow"] == ".agentic/product/workflows/default.md"
+assert packet["routing"]["workflow"] == ".agentic/03.product/workflows/default.md"
 assert packet["routing"]["previous_packet_id"] == "packet.selector-fixture.previous"
 assert packet["request"]["previous_packet_id"] == "packet.selector-fixture.previous"
 assert packet["provenance"]["session_context"]["session_id"] == "chat-test-session"
@@ -181,10 +181,10 @@ matched_corpora = [corpus["corpus_id"] for corpus in packet["matched_corpora"]]
 assert packet["routing"]["scope"] == "prompt"
 assert packet["routing"]["layer"] == "03.product"
 assert packet["routing"]["mode"] == "discovery"
-assert packet["routing"]["workflow"] == ".agentic/product/workflows/default.md"
+assert packet["routing"]["workflow"] == ".agentic/03.product/workflows/default.md"
 assert packet["intent"]["layer"] == "03.product"
 assert packet["intent"]["mode"] == "discovery"
-assert packet["intent"]["workflow"] == ".agentic/product/workflows/default.md"
+assert packet["intent"]["workflow"] == ".agentic/03.product/workflows/default.md"
 assert packet["provenance"]["session_context"]["legacy_routing_hint"]["layer"] == "04.deploy"
 assert packet["provenance"]["session_context"]["legacy_routing_hint"]["trusted"] is False
 assert "corpus.03.product.platform" in matched_corpora
@@ -202,9 +202,9 @@ packet = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert packet["routing"]["scope"] == "prompt"
 assert packet["routing"]["layer"] == "03.product"
 assert packet["routing"]["mode"] == "discovery"
-assert packet["routing"]["workflow"] == ".agentic/product/workflows/default.md"
+assert packet["routing"]["workflow"] == ".agentic/03.product/workflows/default.md"
 assert packet["intent"]["layer"] == "03.product"
-assert packet["intent"]["workflow"] == ".agentic/product/workflows/default.md"
+assert packet["intent"]["workflow"] == ".agentic/03.product/workflows/default.md"
 PY
 
 python3 - "$SIDE_EFFECT_PACKET_FILE" <<'PY'

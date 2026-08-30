@@ -439,6 +439,24 @@ terms:
   canonical_id: 02.rag-rulebook.workflow.review-recognition-candidates
   evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   confidence_weight: 1
+- term: .agentic/03.product/workflows/README.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: .agentic/03.product/workflows/README.md
+  evidence_path: .agentic/routing-policy.yaml
+  confidence_weight: 1
+- term: .agentic/03.product/workflows/default.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.default
+  evidence_path: .agentic/03.product/workflows/default.md
+  confidence_weight: 1
+- term: .agentic/03.product/workflows/platform-runtime-implementation.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -498,24 +516,6 @@ terms:
   match_type: exact
   canonical_id: education.workflow.mine-daily-learning-material
   evidence_path: .agentic/education/workflows/mine-daily-learning-material.md
-  confidence_weight: 1
-- term: .agentic/product/workflows/README.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: .agentic/product/workflows/README.md
-  evidence_path: .agentic/routing-policy.yaml
-  confidence_weight: 1
-- term: .agentic/product/workflows/default.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: product.workflow.default
-  evidence_path: .agentic/product/workflows/default.md
-  confidence_weight: 1
-- term: .agentic/product/workflows/platform-runtime-implementation.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: product.workflow.platform-runtime-implementation
-  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
 - term: .agentic/shared/workflows/README.md
   category: workflow-name
@@ -706,8 +706,8 @@ terms:
 - term: platform-runtime-implementation.md
   category: workflow-name
   match_type: exact
-  canonical_id: product.workflow.platform-runtime-implementation
-  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  canonical_id: 03.product.workflow.platform-runtime-implementation
+  evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
 - term: review-okf-source-material.md
   category: workflow-name

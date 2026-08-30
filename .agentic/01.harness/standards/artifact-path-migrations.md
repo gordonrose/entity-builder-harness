@@ -41,6 +41,9 @@ templates, bootstrap exports, and session metadata may name that path.
 
 - Plan before editing. Produce a reference inventory for the old path and, when
   relevant, the proposed new path.
+- Store any harness-built migration plan in a standalone committed plan
+  artifact. The session log records chat activity and links to the plan; it must
+  not be the only plan record.
 - Separate active references from historical references.
 - Keep old paths working when current sessions, public templates, bootstrap
   exports, or compatibility contracts still require them.
@@ -54,6 +57,26 @@ templates, bootstrap exports, and session metadata may name that path.
 - Record ADR impact when the migration changes a durable namespace, public
   bootstrap surface, compatibility promise, or layer layout.
 
+## Plan Artifact Placement
+
+Use `plans/migration/` for artifact-path migration plans and
+`plans/implementation/` for implementation plans.
+
+For `.agentic/` layer-owned plans, place the plan under the affected layer:
+
+```txt
+.agentic/<affected-layer>/plans/migration/<slug>.md
+.agentic/<affected-layer>/plans/implementation/<slug>.md
+```
+
+For a namespace rename, the affected layer is the proposed canonical layer path.
+Creating the new layer root only to hold the migration plan is allowed before
+moving the rest of the files.
+
+The migration-plan artifact may name the old path as evidence. That reference is
+not an old-path compatibility promise when the checker is run with the plan path
+explicitly supplied.
+
 ## Reference Buckets
 
 Classify old-path references into these buckets:
@@ -62,15 +85,18 @@ Classify old-path references into these buckets:
 |---|---|
 | `routing` | Always-loaded routers, routing policy, and classifiers |
 | `workflow` | `.agentic/` workflows, standards, checklists, skills, and process docs |
+| `migration-plan` | The durable migration plan artifact for the active path migration |
 | `script` | Runtime scripts, governed runner allowlists, tests, and smoke fixtures |
 | `bootstrap` | Public templates, bootstrap planners, export manifests, and readiness docs |
 | `architecture` | ADRs and architecture docs |
 | `session-history` | `commitLogs/` and other audit history |
 | `other` | Any remaining reference |
 
-Active references are every bucket except `session-history`. Historical
-references may stay if they are clearly audit history and do not look like
-current runnable instructions.
+Active references are every bucket except `session-history`. Old-path references
+inside the active `migration-plan` artifact may stay as migration evidence when
+the checker is told which plan file owns them. Historical references may stay if
+they are clearly audit history and do not look like current runnable
+instructions.
 
 ## Compatibility Choices
 

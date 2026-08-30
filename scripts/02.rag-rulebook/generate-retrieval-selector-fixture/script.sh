@@ -97,7 +97,7 @@ DEFAULT_WORKFLOW_BY_LAYER = {
     "00.chat": ".agentic/00.chat/workflows/chat-start.md",
     "01.harness": ".agentic/01.harness/workflows/change-harness.md",
     "02.rag-rulebook": ".agentic/02.rag-rulebook/workflows/default.md",
-    "03.product": ".agentic/product/workflows/default.md",
+    "03.product": ".agentic/03.product/workflows/default.md",
     "04.deploy": ".agentic/aws/workflows/plan-aws-change.md",
     "05.education": ".agentic/education/workflows/create-educational-resource.md",
     "06.shared": ".agentic/shared/workflows/change-shared-process.md",
@@ -801,7 +801,7 @@ def layer_from_path(path: str) -> str:
         return "02.rag-rulebook"
     if path.startswith("docs/harness/architecture/"):
         return "03.product"
-    if path.startswith(".agentic/product/") or path.startswith("docs/03.product/") or "/03.product/" in path:
+    if path.startswith(".agentic/03.product/") or path.startswith("docs/03.product/") or "/03.product/" in path:
         return "03.product"
     if path.startswith(".agentic/aws/") or path.startswith("docs/04.deploy/") or "/04.deploy/" in path:
         return "04.deploy"

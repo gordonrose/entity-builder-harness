@@ -165,7 +165,7 @@ case "$TASK" in
   *code*|*feature*|*design\ system*|*auth*|*tenant*|*database*|*test*|*CI*|*CD*)
     echo "Layer: product"
     echo "Mode: ${MODE}"
-    echo "Workflow: .agentic/product/workflows/default.md"
+    echo "Workflow: .agentic/03.product/workflows/default.md"
     ;;
   *)
     echo "Layer: unknown"

@@ -103,7 +103,7 @@ layers:
       - task changes business application behaviour
       - task changes platform/auth/tenancy/data model
       - task changes tests, CI, deployment for the product
-    workflow_index: .agentic/product/workflows/README.md
+    workflow_index: .agentic/03.product/workflows/README.md
 
   mixed:
     use_when:
