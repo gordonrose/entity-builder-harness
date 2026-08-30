@@ -35,6 +35,10 @@ procedure, capability, example, automation, or enforcement point.
 The goal is to keep always-loaded instructions small while giving repeatable
 work a clear home.
 
+Use `.agentic/01.harness/standards/repo-terminology.md` as the canonical source
+for repo-wide term definitions. This standard decides artifact placement; it
+does not create a second glossary.
+
 ## Core Rule
 
 Put each instruction in the narrowest artifact that owns it.
@@ -86,6 +90,9 @@ Keep always-loaded files short, durable, and low-variance.
 Every artifact should have one clear owner, one clear audience, and one clear
 reason to exist.
 
+- Put repo-wide term definitions in
+  `.agentic/01.harness/standards/repo-terminology.md`; local artifacts may
+  describe usage, but they must not redefine canonical terms.
 - Define artifacts by stable purpose, not by a current vendor implementation.
 - Put a rule in one place. Standards explain intent, templates provide shape,
   scripts validate mechanics, and workflows say when to consult them.

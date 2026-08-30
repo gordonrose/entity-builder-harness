@@ -110,6 +110,17 @@ Summary: Renamed product governance from .agentic/product to .agentic/03.product
 
 ADR impact: ADR updated: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
 
+
+### 2026-08-30T21:52:30Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `generated-artifact-conflict`
+
+Mode: deterministic
+
+Action: regenerated artifacts recognition source after user approval and staged resolved output
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -126,7 +137,17 @@ ADR impact: ADR updated: docs/harness/architecture/adrs/0018-govern-artifact-pat
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `generated-artifact-conflict`
+  Mode: deterministic
+  Reason: classifier returned normal-repo-conflict; inspected path is a generated recognition source reproducible from governed artifact metadata
+  Action: regenerated artifacts recognition source after user approval and staged resolved output
+  Preflight branch: `agentic/preflight/chat-2026-08-30-14-55-can-you-walk-me-through-ho-7ca6a340e539/20260830213114`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-30-14-55-can-you-walk-me-through-ho-7ca6a340e539-20260830213114`
+  Files changed by resolution: .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml; commitLogs/2026/aug/30/2026-08-30-14-55-migrate-product-layer-namespace/README.md
+  Checks: generate-recognition-sources --check passed; generate-recognition-sources smoke-test passed
 
 ## ADR Disposition
 
