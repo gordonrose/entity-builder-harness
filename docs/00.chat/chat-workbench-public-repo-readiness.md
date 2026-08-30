@@ -118,7 +118,7 @@ inside a chat-owned worktree on first chat startup.
 Do not copy:
 
 - source repo `commitLogs/`
-- `.agentic/product/`
+- `.agentic/03.product/`
 - `.agentic/education/`
 - `.agentic/aws/`
 - product `src/`, app tests, or deployment docs

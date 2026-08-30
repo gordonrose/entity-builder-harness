@@ -31,7 +31,7 @@ input:
     trust_routing: true
     layer: 03.product
     mode: planning
-    workflow: .agentic/product/workflows/default.md
+    workflow: .agentic/03.product/workflows/default.md
   focused_paths:
     - packages/core/src/authz/index.ts
     - packages/core/src/config/index.ts

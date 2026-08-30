@@ -64,6 +64,9 @@ bucket_for_path() {
     AGENTS.md|CLAUDE.md|.agentic/routing-policy.yaml)
       printf '%s\n' "routing"
       ;;
+    .agentic/*/plans/migration/*)
+      printf '%s\n' "migration-plan"
+      ;;
     .agentic/*)
       printf '%s\n' "workflow"
       ;;
@@ -125,7 +128,7 @@ print_refs_for() {
   fi
 
   printf 'references=%s\n' "$(printf '%s\n' "$refs" | wc -l | tr -d ' ')"
-  for bucket in routing workflow script bootstrap architecture session-history other; do
+  for bucket in routing workflow migration-plan script bootstrap architecture session-history other; do
     if printf '%s\n' "$refs" | awk -F '\t' -v bucket="$bucket" '$1 == bucket { found = 1 } END { exit found ? 0 : 1 }'; then
       printf '\n[%s]\n' "$bucket"
       printf '%s\n' "$refs" | awk -F '\t' -v bucket="$bucket" '$1 == bucket { print $2 "\n  " $3 }'
@@ -151,5 +154,7 @@ print_refs_for "New path references" "$NEW_PATH"
 printf '\n'
 printf 'Compatibility guidance\n'
 printf -- '- active old-path references require alias, wrapper, pointer, or reference updates\n'
+printf -- '- record planner output, compatibility choice, checks, and recovery approach in a migration-plan artifact\n'
+printf -- '- pass --plan <migration-plan-path> to the checker when the plan names the old path as evidence\n'
 printf -- '- session-history references may remain as audit history\n'
 printf -- '- layer namespace renames should also plan the matching scripts/ owner path\n'

@@ -126,7 +126,7 @@ Workflow: .agentic/00.chat/workflows/chat-refresh-from-main.md
 ```text
 Layer: product
 Mode: implementation
-Workflow: .agentic/product/workflows/default.md
+Workflow: .agentic/03.product/workflows/default.md
 ```
 
 ## Gates

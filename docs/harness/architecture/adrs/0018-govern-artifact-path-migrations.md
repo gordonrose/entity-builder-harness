@@ -21,6 +21,8 @@ used_by:
   path: .agentic/01.harness/standards/artifact-path-migrations.md
 - id: chat.doc.public-chat-workbench-adrs
   path: docs/00.chat/public-chat-workbench-adrs.md
+- id: product.migration-plan.agentic-product-namespace
+  path: .agentic/03.product/plans/migration/agentic-product-namespace.md
 -->
 
 # 0018 Govern Artifact Path Migrations
@@ -65,6 +67,10 @@ compatibility surface is approved.
 For harness layer or owner namespace renames, the workflow requires planning
 both the `.agentic/` namespace and the matching `scripts/` namespace.
 
+Migration plans built by the harness must be standalone artifacts under the
+affected layer's `plans/migration/` tree. Session logs reference the plan and
+record chat activity, but they are not the sole durable plan record.
+
 ## Consequences
 
 Path moves become slower at the start but safer overall. Agents have a standard
@@ -75,7 +81,7 @@ Historical commit logs do not need to be rewritten only to modernize paths.
 They remain audit history unless they are being treated as current runnable
 instructions.
 
-The `.agentic/01.harness` to `.agentic/01.harness` rename is not blocked forever,
+The `.agentic/harness` to `.agentic/01.harness` rename is not blocked forever,
 but it is now clearly a compatibility migration. It needs either active
 reference updates plus a temporary compatibility alias, or an explicit decision
 to keep the old path as a durable pointer.
@@ -85,3 +91,11 @@ keeps numbered `scripts/<layer>/...` namespaces as the durable executable
 command surface and reserves future product and deployment command surfaces
 under that convention. Any future `scripts/01.harness/...` move would update
 that script-layout decision rather than happen incidentally.
+
+On 2026-08-30, this workflow was applied to retire the legacy unnumbered
+product governance namespace in favor of `.agentic/03.product`. The migration
+used
+`.agentic/03.product/plans/migration/agentic-product-namespace.md` as the
+durable plan artifact, updated active routing, scripts, fixtures, bootstrap
+docs, ADR references, and generated recognition sources, and left historical
+`commitLogs/` references unchanged.

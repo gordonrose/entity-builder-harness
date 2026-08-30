@@ -101,6 +101,7 @@ PROCESS_SOURCE_GLOBS = (
     ".agentic/02.rag-rulebook/source-projections/**/*.yml",
     ".agentic/02.rag-rulebook/standards/**/*.md",
     ".agentic/02.rag-rulebook/workflows/**/*.md",
+    ".agentic/03.product/**/*.md",
     ".agentic/aws/**/*.md",
     ".agentic/education/agents/**/*.md",
     ".agentic/education/profiles/**/*.md",
@@ -1152,6 +1153,12 @@ def process_source_corpus_id(path: str, metadata: dict[str, Any]) -> str:
         return "corpus.04.deploy"
     if layer == "06.shared":
         return "corpus.06.shared"
+    if layer == "03.product":
+        if "platform" in path:
+            return "corpus.03.product.platform"
+        if "packages-core" in path or path.startswith("packages/core/"):
+            return "corpus.03.product.core"
+        return "corpus.03.product"
     if path.startswith("packages/core/"):
         return "corpus.03.product.core"
     if path.startswith("platform/contracts/"):

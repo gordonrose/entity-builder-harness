@@ -133,7 +133,7 @@ Before commit, complete
 
 In addition to the shared standard exclusions, do not copy:
 
-- `.agentic/product/`
+- `.agentic/03.product/`
 - `.agentic/education/`
 - `.agentic/aws/`
 - product `src/`, `tests/`, or app docs

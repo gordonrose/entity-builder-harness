@@ -20,7 +20,7 @@
   - id: harness.architecture.rules.layers.platform
     path: docs/harness/architecture/rules/layers/platform.yml
   - id: product.workflow.platform-runtime-implementation
-    path: .agentic/product/workflows/platform-runtime-implementation.md
+    path: .agentic/03.product/workflows/platform-runtime-implementation.md
 -->
 # ADR 0031: Use Products As App Composition Boundary
 

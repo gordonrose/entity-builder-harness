@@ -80,7 +80,7 @@ can work together without depending on product app internals.
 
 ## Governance Precondition
 
-`.agentic/product/workflows/platform-runtime-implementation.md` governs
+`.agentic/03.product/workflows/platform-runtime-implementation.md` governs
 platform runtime implementation slices. Use it before editing runtime code,
 dummy-app code, platform testing helpers, or deployment-facing platform shell
 manifests.
@@ -172,7 +172,7 @@ Create a product/platform implementation workflow or checklist before runtime
 code changes begin.
 
 Status: implemented in
-`.agentic/product/workflows/platform-runtime-implementation.md`.
+`.agentic/03.product/workflows/platform-runtime-implementation.md`.
 
 Acceptance:
 
@@ -475,7 +475,7 @@ Entry criteria:
 
 ## Stop Conditions
 
-- Product/platform implementation begins while `.agentic/product` still lacks
+- Product/platform implementation begins while `.agentic/03.product` still lacks
   real implementation governance.
 - Platform code imports app internals outside approved composition roots.
 - Infra code imports app internals instead of manifests or generated metadata.

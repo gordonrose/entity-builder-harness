@@ -36,7 +36,7 @@ expected:
   routing:
     layer: 03.product
     mode: discovery
-    workflow: .agentic/product/workflows/default.md
+    workflow: .agentic/03.product/workflows/default.md
     status: ready
   action_authorization:
     requested_action: context-retrieval

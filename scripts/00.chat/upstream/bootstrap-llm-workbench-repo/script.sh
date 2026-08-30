@@ -312,7 +312,7 @@ echo
 echo "Excluded source paths:"
 echo "EXCLUDE commitLogs/"
 echo "EXCLUDE .agentic/01.harness/"
-echo "EXCLUDE .agentic/product/"
+echo "EXCLUDE .agentic/03.product/"
 echo "EXCLUDE .agentic/education/"
 echo "EXCLUDE .agentic/aws/"
 echo "EXCLUDE product src/, app tests, deployment docs, local transcripts, and local worktree paths"

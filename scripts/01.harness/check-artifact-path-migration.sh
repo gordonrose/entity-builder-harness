@@ -28,7 +28,7 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  check-artifact-path-migration.sh [--allow-active-old-path] <old-path> <new-path>
+  check-artifact-path-migration.sh [--plan <migration-plan-path>] [--allow-active-old-path] <old-path> <new-path>
 
 Fails when active files still reference <old-path> unless compatibility for the
 old path has been explicitly approved with --allow-active-old-path.
@@ -36,9 +36,24 @@ EOF
 }
 
 ALLOW_ACTIVE_OLD_PATH="no"
+PLAN_PATH=""
+
+normalize_input_path() {
+  local path="$1"
+  path="${path#./}"
+  printf '%s\n' "$path"
+}
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --plan)
+      if [ $# -lt 2 ]; then
+        usage >&2
+        exit 2
+      fi
+      PLAN_PATH="$(normalize_input_path "$2")"
+      shift 2
+      ;;
     --allow-active-old-path)
       ALLOW_ACTIVE_OLD_PATH="yes"
       shift
@@ -72,6 +87,11 @@ esac
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
+if [ -n "$PLAN_PATH" ] && [ ! -f "$PLAN_PATH" ]; then
+  echo "ERROR: --plan path is not a file: $PLAN_PATH" >&2
+  exit 2
+fi
+
 all_files() {
   {
     git ls-files
@@ -96,6 +116,9 @@ active_old_refs() {
   while IFS= read -r file; do
     [ -f "$file" ] || continue
     is_historical_path "$file" && continue
+    if [ -n "$PLAN_PATH" ] && [ "$file" = "$PLAN_PATH" ]; then
+      continue
+    fi
     grep -nF "$OLD_PATH" "$file" 2>/dev/null | while IFS=: read -r line_no text; do
       printf '%s:%s\n  %s\n' "$file" "$line_no" "$text"
     done
@@ -126,5 +149,8 @@ fi
 printf 'artifact_path_migration_check=ok\n'
 printf 'old_path=%s\n' "$OLD_PATH"
 printf 'new_path=%s\n' "$NEW_PATH"
+if [ -n "$PLAN_PATH" ]; then
+  printf 'plan_path=%s\n' "$PLAN_PATH"
+fi
 printf 'new_exists=%s\n' "$new_exists"
 printf 'active_old_refs=%s\n' "$active_old_refs"

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 774
-  term_count: 1560
+  indexed_artifacts: 777
+  term_count: 1566
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7518,29 +7518,65 @@ terms:
   canonical_id: rag-rulebook.script.validate-yaml-syntax.smoke-test
   evidence_path: scripts/02.rag-rulebook/validate-yaml-syntax/smoke-test.sh
   confidence_weight: 1
+- term: product.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.readme
+  evidence_path: .agentic/03.product/README.md
+  confidence_weight: 1
+- term: .agentic/03.product/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.readme
+  evidence_path: .agentic/03.product/README.md
+  confidence_weight: 1
+- term: product.migration-plan.agentic-product-namespace
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.migration-plan.agentic-product-namespace
+  evidence_path: .agentic/03.product/plans/migration/agentic-product-namespace.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/migration/agentic-product-namespace.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.migration-plan.agentic-product-namespace
+  evidence_path: .agentic/03.product/plans/migration/agentic-product-namespace.md
+  confidence_weight: 1
+- term: product.workflows.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.workflows.readme
+  evidence_path: .agentic/03.product/workflows/README.md
+  confidence_weight: 1
+- term: .agentic/03.product/workflows/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.workflows.readme
+  evidence_path: .agentic/03.product/workflows/README.md
+  confidence_weight: 1
 - term: product.workflows.default
   category: artifact-id
   match_type: exact
   canonical_id: product.workflows.default
-  evidence_path: .agentic/product/workflows/default.md
+  evidence_path: .agentic/03.product/workflows/default.md
   confidence_weight: 1
-- term: .agentic/product/workflows/default.md
+- term: .agentic/03.product/workflows/default.md
   category: file-path
   match_type: exact
   canonical_id: product.workflows.default
-  evidence_path: .agentic/product/workflows/default.md
+  evidence_path: .agentic/03.product/workflows/default.md
   confidence_weight: 1
 - term: product.workflow.platform-runtime-implementation
   category: artifact-id
   match_type: exact
   canonical_id: product.workflow.platform-runtime-implementation
-  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
-- term: .agentic/product/workflows/platform-runtime-implementation.md
+- term: .agentic/03.product/workflows/platform-runtime-implementation.md
   category: file-path
   match_type: exact
   canonical_id: product.workflow.platform-runtime-implementation
-  evidence_path: .agentic/product/workflows/platform-runtime-implementation.md
+  evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id

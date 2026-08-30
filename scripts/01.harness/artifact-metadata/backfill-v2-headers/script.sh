@@ -319,7 +319,7 @@ def selected_for_batch(path: Path) -> bool:
             "scripts/00.chat/upstream/",
         ))
     if batch == 10:
-        return s.startswith((".agentic/aws/", ".agentic/product/"))
+        return s.startswith((".agentic/aws/", ".agentic/03.product/"))
     if batch == 11:
         return s == ".agentic/education/README.md" or s.startswith((".agentic/education/agents/", ".agentic/education/workflows/"))
     if batch == 12:
@@ -375,7 +375,7 @@ def layer_for(path: Path, metadata: dict[str, Any]) -> str:
         return "01.harness"
     if s.startswith((".agentic/02.rag-rulebook/", "scripts/02.rag-rulebook/")):
         return "02.rag-rulebook"
-    if s.startswith(".agentic/product/"):
+    if s.startswith(".agentic/03.product/"):
         return "03.product"
     if s.startswith((".agentic/aws/", "docs/aws/")):
         return "04.deploy"
@@ -393,7 +393,7 @@ def domain_for(path: Path, metadata: dict[str, Any]) -> str:
         return "metadata"
     if s.startswith("docs/harness/architecture/"):
         return "architecture"
-    if s.startswith(".agentic/product/"):
+    if s.startswith(".agentic/03.product/"):
         return "requirements"
     if s.startswith((".agentic/aws/", "docs/aws/")):
         return "infra.ci-cd"
@@ -471,7 +471,7 @@ def portability_for(path: Path, metadata: dict[str, Any]) -> dict[str, Any]:
         return {"class": "source-only", "targets": []}
     if s.startswith((".agentic/aws/", "docs/aws/")):
         return {"class": "source-only", "targets": []}
-    if s.startswith(".agentic/product/"):
+    if s.startswith(".agentic/03.product/"):
         return {"class": "required", "targets": ["entity-builder"]}
     if s.startswith((".agentic/education/", "docs/education/")):
         return {"class": "required", "targets": ["llm-workbench"]}

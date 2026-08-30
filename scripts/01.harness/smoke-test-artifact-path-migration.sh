@@ -41,6 +41,7 @@ git -C "$REPO" init -q
 
 mkdir -p \
   "$REPO/.agentic/01.harness/workflows" \
+  "$REPO/.agentic/harness-renamed/plans/migration" \
   "$REPO/scripts/01.harness" \
   "$REPO/docs/00.chat/bootstrap" \
   "$REPO/commitLogs/2026/jun/20/example"
@@ -51,6 +52,10 @@ EOF
 
 cat > "$REPO/.agentic/01.harness/workflows/change-harness.md" <<'EOF'
 Consult .agentic/01.harness/standards/example.md.
+EOF
+
+cat > "$REPO/.agentic/harness-renamed/plans/migration/example.md" <<'EOF'
+Migrate .agentic/01.harness to .agentic/harness-renamed.
 EOF
 
 cat > "$REPO/scripts/01.harness/example.sh" <<'EOF'
@@ -68,23 +73,40 @@ EOF
 
 (
   cd "$REPO"
-  PLAN_OUTPUT="$(bash "$SOURCE_ROOT/scripts/01.harness/plan-artifact-path-migration.sh" .agentic/01.harness .agentic/01.harness)"
+  PLAN_OUTPUT="$(bash "$SOURCE_ROOT/scripts/01.harness/plan-artifact-path-migration.sh" .agentic/01.harness .agentic/harness-renamed)"
 
   printf '%s\n' "$PLAN_OUTPUT" | grep -q '^old_path=.agentic/01.harness$' || fail "plan missing old path"
   printf '%s\n' "$PLAN_OUTPUT" | grep -q '^\[routing\]$' || fail "plan missing routing bucket"
   printf '%s\n' "$PLAN_OUTPUT" | grep -q '^\[workflow\]$' || fail "plan missing workflow bucket"
+  printf '%s\n' "$PLAN_OUTPUT" | grep -q '^\[migration-plan\]$' || fail "plan missing migration-plan bucket"
   printf '%s\n' "$PLAN_OUTPUT" | grep -q '^\[script\]$' || fail "plan missing script bucket"
   printf '%s\n' "$PLAN_OUTPUT" | grep -q '^\[bootstrap\]$' || fail "plan missing bootstrap bucket"
   printf '%s\n' "$PLAN_OUTPUT" | grep -q '^\[session-history\]$' || fail "plan missing session-history bucket"
 
-  if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" .agentic/01.harness .agentic/01.harness >"$TMP_ROOT/check.out" 2>"$TMP_ROOT/check.err"; then
+  if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/check.out" 2>"$TMP_ROOT/check.err"; then
     fail "checker allowed active old-path references without compatibility approval"
   fi
 
   grep -q 'active old-path references remain' "$TMP_ROOT/check.err" || fail "checker failure did not explain active references"
 
-  bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" --allow-active-old-path .agentic/01.harness .agentic/01.harness >"$TMP_ROOT/allow.out"
+  bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" --allow-active-old-path .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/allow.out"
   grep -q '^artifact_path_migration_check=ok$' "$TMP_ROOT/allow.out" || fail "checker did not pass with explicit compatibility approval"
+
+  sed -i 's#\.agentic/01\.harness#\.agentic/harness-renamed#g' \
+    AGENTS.md \
+    .agentic/01.harness/workflows/change-harness.md \
+    scripts/01.harness/example.sh \
+    docs/00.chat/bootstrap/example.md
+
+  if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/plan-missing.out" 2>"$TMP_ROOT/plan-missing.err"; then
+    fail "checker allowed migration-plan old-path references without an explicit plan path"
+  fi
+
+  bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" \
+    --plan .agentic/harness-renamed/plans/migration/example.md \
+    .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/plan.out"
+  grep -q '^plan_path=.agentic/harness-renamed/plans/migration/example.md$' "$TMP_ROOT/plan.out" || fail "checker did not report plan path"
+  grep -q '^active_old_refs=none$' "$TMP_ROOT/plan.out" || fail "checker did not ignore explicit plan evidence"
 )
 
 echo "OK: artifact path migration helpers smoke test passed."

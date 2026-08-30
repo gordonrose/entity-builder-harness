@@ -19,7 +19,7 @@ used_by:
 - id: deploy.rules.03-product.platform-shell-runtime-family
   path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
 - id: product.workflow.platform-runtime-implementation
-  path: .agentic/product/workflows/platform-runtime-implementation.md
+  path: .agentic/03.product/workflows/platform-runtime-implementation.md
 -->
 # ADR 0028: Use Client Environment Deployment Target Profiles
 
