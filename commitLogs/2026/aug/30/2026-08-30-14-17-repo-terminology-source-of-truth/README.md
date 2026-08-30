@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-08-30T13:17:28Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-08-30T13:57:12Z
+latest_commit_sha: c59d639ac5e78677bb88c5bb0a6ce18933d318c8
+chat_duration: 2384s (00:00:39:44)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -76,13 +76,30 @@ Validation:
 - `check-headers --paths` for the changed harness/RAG files
 - `git diff --check`
 
+
+### 2026-08-30T13:57:12Z - Commit recorded
+
+Commit: `c59d639ac5e78677bb88c5bb0a6ce18933d318c8`
+
+Message: Add repo terminology standard
+
+Summary: Added a canonical repo terminology standard, linked it from harness governance docs, and regenerated artifact recognition entries for the new standard.
+
+ADR impact: ADR not needed: narrow harness terminology standard with no durable architecture tradeoff.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `c59d639ac5e78677bb88c5bb0a6ce18933d318c8`
+  Time UTC: 2026-08-30T13:57:12Z
+  Message: Add repo terminology standard
+  Summary: Added a canonical repo terminology standard, linked it from harness governance docs, and regenerated artifact recognition entries for the new standard.
+  ADR impact: ADR not needed: narrow harness terminology standard with no durable architecture tradeoff.
 
 ## Main Refresh Conflicts
 
@@ -98,12 +115,12 @@ not introduce a durable architecture tradeoff requiring an ADR.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T13:17:28Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-08-30T13:57:12Z
+Latest commit SHA: c59d639ac5e78677bb88c5bb0a6ce18933d318c8
+Chat duration: 2384s (00:00:39:44)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
