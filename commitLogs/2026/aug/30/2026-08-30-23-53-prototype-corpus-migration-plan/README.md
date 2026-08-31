@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T01:21:36Z
-latest_commit_sha: adc3cea
-chat_duration: 8899s (00:02:28:19)
+latest_commit_at_utc: 2026-08-31T01:36:43Z
+latest_commit_sha: b6c60e5
+chat_duration: 9806s (00:02:43:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -459,6 +459,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Execution slice 4 is covered by ADR 0032, the corpus split migration plan, the canonical chat ADR root, old-path compatibility pointers, updated chat/public/education references, refreshed recognition sources, runtime freshness, and focused chat selector fixture coverage.
 
+
+### 2026-08-31T01:36:43Z - Commit recorded
+
+Commit: `b6c60e5`
+
+Message: Move chat ADRs to chat corpus
+
+Summary: Added the chat ADR root, moved chat-owned ADRs 0001, 0002, 0004, 0005, 0006, 0007, 0009, 0010, 0011, 0013, 0014, 0019, and 0030 into docs/00.chat/adrs with compatibility pointers, updated active chat/public/education references, and refreshed retrieval evidence.
+
+ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this slice applies it to the chat-owned ADR batch.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -494,6 +505,13 @@ Rationale: Execution slice 4 is covered by ADR 0032, the corpus split migration 
   Summary: Moved RAG ADRs 0022, 0023, and 0029 plus deploy ADRs 0016 and 0028 into owner-aligned ADR roots with compatibility pointers and refreshed RAG/deploy evidence.
   ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this slice applies it to the RAG/deploy batch.
 
+
+- Commit: `b6c60e5`
+  Time UTC: 2026-08-31T01:36:43Z
+  Message: Move chat ADRs to chat corpus
+  Summary: Added the chat ADR root, moved chat-owned ADRs 0001, 0002, 0004, 0005, 0006, 0007, 0009, 0010, 0011, 0013, 0014, 0019, and 0030 into docs/00.chat/adrs with compatibility pointers, updated active chat/public/education references, and refreshed retrieval evidence.
+  ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this slice applies it to the chat-owned ADR batch.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -509,9 +527,9 @@ without introducing a new ADR-level policy change.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T01:21:36Z
-Latest commit SHA: adc3cea
-Chat duration: 8899s (00:02:28:19)
+Latest commit at UTC: 2026-08-31T01:36:43Z
+Latest commit SHA: b6c60e5
+Chat duration: 9806s (00:02:43:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
