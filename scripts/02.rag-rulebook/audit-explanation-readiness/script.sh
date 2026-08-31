@@ -56,8 +56,14 @@ SOURCE_PROJECTION_MANIFEST = ".agentic/02.rag-rulebook/source-projections/v1.yml
 MARKDOWN_ROOTS = [
     "docs/harness/architecture/source-material",
     "docs/harness/architecture/guides/markdown",
+    "docs/01.harness/source-material",
+    "docs/01.harness/guides",
     "docs/02.rag-rulebook/source-material",
+    "docs/03.product/source-material",
+    "docs/03.product/guides",
     "docs/04.deploy/source-material",
+    "docs/06.shared/source-material",
+    "docs/06.shared/guides",
     ".agentic/02.rag-rulebook/guides",
 ]
 WEAK_HEADING_TITLES = {

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 780
-  term_count: 1572
+  indexed_artifacts: 784
+  term_count: 1580
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2892,6 +2892,18 @@ terms:
   canonical_id: harness.workflows.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
+- term: harness.corpus.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.corpus.readme
+  evidence_path: docs/01.harness/README.md
+  confidence_weight: 1
+- term: docs/01.harness/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.corpus.readme
+  evidence_path: docs/01.harness/README.md
+  confidence_weight: 1
 - term: harness.adr.0001-record-harness-session-decisions-before-commit
   category: artifact-id
   match_type: exact
@@ -3360,16 +3372,16 @@ terms:
   canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
   evidence_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
   confidence_weight: 1
-- term: harness.architecture.plan.platform-runtime-implementation
+- term: harness.architecture.plan.platform-runtime-implementation.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  canonical_id: harness.architecture.plan.platform-runtime-implementation.pointer
   evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
   confidence_weight: 1
 - term: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  canonical_id: harness.architecture.plan.platform-runtime-implementation.pointer
   evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
   confidence_weight: 1
 - term: harness.architecture.rule-packs.add-core-module
@@ -7566,6 +7578,18 @@ terms:
   canonical_id: product.readme
   evidence_path: .agentic/03.product/README.md
   confidence_weight: 1
+- term: harness.architecture.plan.platform-runtime-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  evidence_path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.plan.platform-runtime-implementation
+  evidence_path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+  confidence_weight: 1
 - term: product.migration-plan.agentic-product-namespace
   category: artifact-id
   match_type: exact
@@ -7613,6 +7637,18 @@ terms:
   match_type: exact
   canonical_id: product.workflow.platform-runtime-implementation
   evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
+- term: product.corpus.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.corpus.readme
+  evidence_path: docs/03.product/README.md
+  confidence_weight: 1
+- term: docs/03.product/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.corpus.readme
+  evidence_path: docs/03.product/README.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id
@@ -9461,6 +9497,18 @@ terms:
   match_type: exact
   canonical_id: shared.workflows.change-shared-process
   evidence_path: .agentic/shared/workflows/change-shared-process.md
+  confidence_weight: 1
+- term: shared.corpus.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: shared.corpus.readme
+  evidence_path: docs/06.shared/README.md
+  confidence_weight: 1
+- term: docs/06.shared/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: shared.corpus.readme
+  evidence_path: docs/06.shared/README.md
   confidence_weight: 1
 - term: repo.script.commit-gates.readme
   category: artifact-id

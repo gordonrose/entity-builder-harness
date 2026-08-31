@@ -170,7 +170,17 @@ import yaml
 
 batch = int(sys.argv[1])
 EXTENSIONS = {".md", ".yml", ".yaml", ".sh"}
-ALLOWED_REF_PREFIXES = (".agentic/", "docs/00.chat/", "docs/harness/", "scripts/")
+ALLOWED_REF_PREFIXES = (
+    ".agentic/",
+    "docs/00.chat/",
+    "docs/01.harness/",
+    "docs/02.rag-rulebook/",
+    "docs/03.product/",
+    "docs/04.deploy/",
+    "docs/06.shared/",
+    "docs/harness/",
+    "scripts/",
+)
 ALL_TARGETS = ["llm-workbench", "entity-builder", "design-system-builder"]
 
 SPECIAL_IDS = {
@@ -371,13 +381,13 @@ def layer_for(path: Path, metadata: dict[str, Any]) -> str:
     s = path.as_posix()
     if s.startswith((".agentic/00.chat/", "docs/00.chat/", "scripts/00.chat/")):
         return "00.chat"
-    if s.startswith((".agentic/01.harness/", "docs/harness/", "scripts/01.harness/")):
+    if s.startswith((".agentic/01.harness/", "docs/01.harness/", "docs/harness/", "scripts/01.harness/")):
         return "01.harness"
-    if s.startswith((".agentic/02.rag-rulebook/", "scripts/02.rag-rulebook/")):
+    if s.startswith((".agentic/02.rag-rulebook/", "docs/02.rag-rulebook/", "scripts/02.rag-rulebook/")):
         return "02.rag-rulebook"
-    if s.startswith(".agentic/03.product/"):
+    if s.startswith((".agentic/03.product/", "docs/03.product/")):
         return "03.product"
-    if s.startswith((".agentic/aws/", "docs/aws/")):
+    if s.startswith((".agentic/aws/", "docs/04.deploy/", "docs/aws/")):
         return "04.deploy"
     if s.startswith((".agentic/education/", "docs/education/")):
         return "05.education"
@@ -393,6 +403,16 @@ def domain_for(path: Path, metadata: dict[str, Any]) -> str:
         return "metadata"
     if s.startswith("docs/harness/architecture/"):
         return "architecture"
+    if s.startswith("docs/01.harness/"):
+        return "governance"
+    if s.startswith("docs/02.rag-rulebook/"):
+        return "corpus"
+    if s.startswith("docs/03.product/"):
+        return "requirements"
+    if s.startswith("docs/04.deploy/"):
+        return "infra.ci-cd"
+    if s.startswith("docs/06.shared/"):
+        return "governance"
     if s.startswith(".agentic/03.product/"):
         return "requirements"
     if s.startswith((".agentic/aws/", "docs/aws/")):
@@ -419,7 +439,9 @@ def kind_for(path: Path, metadata: dict[str, Any]) -> str:
     if path.suffix == ".sh":
         return "script"
     if path.suffix in {".yml", ".yaml"}:
-        return "rule" if s.startswith("docs/harness/architecture/rules/") else "config"
+        if "/rule-packs/" in s:
+            return "rule-pack"
+        return "rule" if "/rules/" in s else "config"
     if "template" in s:
         return "template"
     if "workflow" in s:

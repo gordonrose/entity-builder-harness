@@ -71,6 +71,8 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer source material: `docs/02.rag-rulebook/source-material/`
 - Layer structured rulebook content: `docs/02.rag-rulebook/rules/`
 - Layer command surface: `scripts/02.rag-rulebook/`
+- Current initialized domain corpus roots: `docs/01.harness/`,
+  `docs/03.product/`, `docs/04.deploy/`, and `docs/06.shared/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
 
 The current architecture YAMLs under `docs/harness/architecture/` are treated
@@ -271,9 +273,10 @@ final homes.
 
 - `scripts/02.rag-rulebook/generate-rulebook-index/script.sh` - emits a
   read-only `rag-rulebook/rulebook-index/v1` JSON index from the current
-  prototype architecture rulebook, numbered corpus rule roots such as
-  `docs/02.rag-rulebook/rules/` and `docs/04.deploy/rules/`, and migration
-  map.
+  prototype architecture rulebook, numbered corpus roots such as
+  `docs/01.harness/`, `docs/02.rag-rulebook/rules/`,
+  `docs/03.product/`, `docs/04.deploy/rules/`, and `docs/06.shared/`, plus
+  the migration map.
 - `scripts/02.rag-rulebook/validate-rulebook-index/script.sh` - validates a
   `rag-rulebook/rulebook-index/v1` JSON index without modifying files.
 - `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh` - emits

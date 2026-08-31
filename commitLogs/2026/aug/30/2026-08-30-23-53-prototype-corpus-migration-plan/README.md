@@ -42,6 +42,17 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Validated metadata headers, recognition-source freshness, source projections,
   source-material coverage, rulebook index smoke, chunk generator smoke, and
   diff whitespace.
+- Committed the planning/governance slice and began execution slice 1.
+- Initialized the `docs/01.harness/`, `docs/03.product/`, and
+  `docs/06.shared/` corpus roots with READMEs.
+- Registered the new roots with metadata, recognition, corpus-root,
+  source-material, runtime, YAML, explanation-readiness, and retirement
+  reference checks.
+- Moved the platform runtime implementation plan into the product layer and
+  left a compatibility pointer at the old path.
+- Rebuilt the local runtime and validated execution slice 1 with corpus,
+  metadata, recognition, projection, derivation, explanation-readiness,
+  migration-helper, and focused selector checks.
 
 ## Questions Asked
 
@@ -49,7 +60,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 
 ## Issues Raised
 
-- None recorded yet.
+- The full retrieval selector fixture matrix did not finish within a
+  10-minute bounded run and emitted no report. The focused migration selector
+  set passed 5/5; treat the broad matrix runtime as a follow-up rather than a
+  blocker for this focused migration slice.
 
 ## Decisions Made
 
@@ -69,6 +83,16 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Treat missing numbered docs roots as governed setup work; create the root
   README, metadata allowlist support, and corpus wiring before placing ordinary
   content there.
+- `docs/01.harness/`, `docs/03.product/`, and `docs/06.shared/` are now
+  initialized corpus roots for forward placement.
+- The platform runtime implementation plan remains stable as artifact
+  `harness.architecture.plan.platform-runtime-implementation`, but its
+  canonical path is now
+  `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 1 is covered by the governed corpus split plan, document placement standard, canonical product plan, compatibility pointer, refreshed recognition sources, root-discovery script updates, runtime freshness, and focused selector fixture coverage.
 
 ## Context Hygiene
 
@@ -79,6 +103,8 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - `docs/harness/architecture/**` files were not moved or edited.
 - Generated recognition sources were updated because new indexed artifacts were
   added.
+- The old platform runtime implementation plan path now contains a
+  compatibility pointer, not a duplicate plan.
 
 ## Activity Log
 
@@ -143,6 +169,68 @@ Summary: Added the prototype corpus domain-split migration plan, a harness docum
 
 ADR impact: No ADR created; the slice planned the migration and added governance without moving durable docs roots.
 
+### 2026-08-31T00:11:14Z - Execution slice 1 started
+
+Committed the planning/governance slice as `95e7534` and checkpointed session
+bookkeeping as `b3f5eac`.
+
+Initialized these corpus roots:
+
+- `docs/01.harness/`
+- `docs/03.product/`
+- `docs/06.shared/`
+
+Updated deterministic root discovery and validation surfaces for the new roots:
+
+- metadata header checks and artifact index generation;
+- deterministic process and governed-script drift scanners;
+- rulebook index default corpus roots;
+- corpus-root change detection;
+- source-material coverage;
+- local runtime fingerprints;
+- YAML syntax validation;
+- explanation-readiness audit;
+- retirement active-reference scanning.
+
+Moved
+`docs/harness/architecture/plans/platform-runtime-implementation-plan.md` to
+`.agentic/03.product/plans/implementation/platform-runtime-implementation.md`
+and left a compatibility pointer at the old path.
+
+Focused migration check passed with approved pointer compatibility:
+
+- `bash scripts/01.harness/check-artifact-path-migration.sh --plan .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md --allow-active-old-path docs/harness/architecture/plans/platform-runtime-implementation-plan.md .agentic/03.product/plans/implementation/platform-runtime-implementation.md`
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- `timeout 300 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-artifact-path-migration.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-domain-corpus-package.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-product-contract-surface.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-aws-workflow-split.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml`
+- `git diff --check`
+
+Non-blocking validation note:
+
+- `timeout 600 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current` exited `124` with no report.
+
+
+### 2026-08-31T00:35:13Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 1 is covered by the governed corpus split plan, document placement standard, canonical product plan, compatibility pointer, refreshed recognition sources, root-discovery script updates, runtime freshness, and focused selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -165,10 +253,11 @@ ADR impact: No ADR created; the slice planned the migration and added governance
 
 ADR needed: no
 ADR path:
-Reason: This slice adds a migration-plan artifact and a harness placement
-standard, but does not move durable documentation roots. Actual execution of
-the corpus split should add or update an ADR before retiring old prototype
-paths because it changes durable documentation layout.
+Reason: The planning slice added a migration-plan artifact and harness
+placement standard. Execution slice 1 initializes numbered corpus roots and
+moves one implementation plan with pointer compatibility, but does not retire
+the prototype corpus root. A corpus-split ADR should be added or updated before
+retiring old prototype paths because that changes durable documentation layout.
 
 ## Session Metrics
 
@@ -183,3 +272,19 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## Notes
 
 - None recorded yet.
+
+## RAG Knowledge Disposition
+
+Status: covered
+Reason: Execution slice 1 is covered by the governed corpus split plan, document placement standard, canonical product plan, compatibility pointer, refreshed recognition sources, root-discovery script updates, runtime freshness, and focused selector fixture coverage.
+Evidence:
+- .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+- .agentic/01.harness/standards/document-artifact-placement.md
+- .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+- docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+- .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+- scripts/02.rag-rulebook/generate-rulebook-index/script.sh
+- scripts/02.rag-rulebook/build-local-runtime/script.sh
+- infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+Corpus gaps:
+- None.

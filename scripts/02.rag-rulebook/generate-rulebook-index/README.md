@@ -30,8 +30,11 @@ and numbered corpus rule roots.
 It reads:
 
 - `docs/harness/architecture/`
+- `docs/01.harness/`
 - `docs/02.rag-rulebook/rules/`
+- `docs/03.product/`
 - `docs/04.deploy/rules/`
+- `docs/06.shared/`
 - `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml`
 
 It emits:

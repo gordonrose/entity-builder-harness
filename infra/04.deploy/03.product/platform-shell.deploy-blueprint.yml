@@ -15,7 +15,7 @@
 #     targets: []
 #   used_by:
 #   - id: harness.architecture.plan.platform-runtime-implementation
-#     path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+#     path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
 schema: platform-shell/deploy-blueprint/v1
 status: planning-only
 deployment_track: 03.product

@@ -13,8 +13,8 @@
     class: source-only
     targets: []
   used_by:
-  - id: harness.architecture.plans.platform-runtime-implementation
-    path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+  - id: harness.architecture.plan.platform-runtime-implementation
+    path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
   - id: harness.architecture.rules.layers.apps
     path: docs/harness/architecture/rules/layers/apps.yml
   - id: harness.architecture.rules.layers.platform

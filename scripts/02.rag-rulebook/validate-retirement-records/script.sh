@@ -86,8 +86,11 @@ ALLOWED_PATH_STATES = {"removed", "renamed", "superseded", "retained-retired"}
 ACTIVE_REFERENCE_ROOTS = [
     ".agentic/02.rag-rulebook",
     ".agentic/aws",
+    "docs/01.harness",
     "docs/02.rag-rulebook",
+    "docs/03.product",
     "docs/04.deploy",
+    "docs/06.shared",
     "scripts/02.rag-rulebook",
 ]
 EXCLUDED_REFERENCE_ROOTS = [

@@ -69,6 +69,15 @@ collect_default_paths() {
     if [ -d .agentic ]; then
       find .agentic -type f
     fi
+    if [ -d docs/01.harness ]; then
+      find docs/01.harness -type f
+    fi
+    if [ -d docs/03.product ]; then
+      find docs/03.product -type f
+    fi
+    if [ -d docs/06.shared ]; then
+      find docs/06.shared -type f
+    fi
     if [ -d docs/harness ]; then
       find docs/harness -type f
     fi
@@ -96,7 +105,7 @@ is_scannable_path() {
     docs/harness/architecture/adrs/*.md)
       return 1
       ;;
-    AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
+    AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/01.harness/*.md|docs/01.harness/**/*.md|docs/03.product/*.md|docs/03.product/**/*.md|docs/06.shared/*.md|docs/06.shared/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
       return 0
       ;;
     *)

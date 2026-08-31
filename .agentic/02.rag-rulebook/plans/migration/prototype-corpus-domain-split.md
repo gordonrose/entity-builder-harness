@@ -55,6 +55,23 @@ The inventory map at
 `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml` remains the
 file-level target inventory for this migration plan.
 
+## Execution Status
+
+- 2026-08-31 Slice 1 started execution. Initialized `docs/01.harness/`,
+  `docs/03.product/`, and `docs/06.shared/` root READMEs; registered those
+  roots with metadata, recognition, corpus-root, source-material, runtime,
+  YAML, explanation-readiness, and retirement-reference checks; moved the
+  platform runtime implementation plan to
+  `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`;
+  and left a compatibility pointer at the old plan path.
+- 2026-08-31 Slice 1 validation passed for metadata headers, recognition
+  freshness, corpus-root changes, source projections, source-material coverage,
+  derivation reports, rulebook index/chunk smoke checks, runtime freshness,
+  explanation readiness, path-migration helpers, and focused selector fixtures.
+  The full selector fixture matrix exceeded a 10-minute bounded run and should
+  be treated as a separate performance/coverage follow-up before requiring it
+  for every migration slice.
+
 ## Target Homes
 
 The migration should use physical repo paths that align with numbered layer
