@@ -236,7 +236,7 @@ projection_sets:
       corpus_id: corpus.03.product.core
       owner_layer: 03.product
     expected_rule_paths:
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
     derivation_reports:
       - .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
     corpus_gap_paths: []
@@ -283,7 +283,7 @@ projection_sets:
       corpus_id: corpus.03.product.platform
       owner_layer: 03.product
     expected_rule_paths:
-      - docs/harness/architecture/rules/layers/platform.yml
+      - docs/03.product/rules/platform/layers/platform.yml
     derivation_reports:
       - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
     corpus_gap_paths: []
@@ -312,7 +312,7 @@ projection_sets:
       corpus_id: corpus.03.product.platform
       owner_layer: 03.product
     expected_rule_paths:
-      - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+      - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
     derivation_reports:
       - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
     corpus_gap_paths: []

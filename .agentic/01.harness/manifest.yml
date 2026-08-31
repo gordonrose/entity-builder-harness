@@ -44,10 +44,10 @@ canonical_paths:
   harness_workflows: .agentic/01.harness/workflows
   harness_templates: .agentic/01.harness/templates
   harness_validators: scripts/01.harness
-  source_guides: docs/03.product/source-material/guides/markdown
-  layer_rules: docs/harness/architecture/rules/layers
-  concern_rules: docs/harness/architecture/rules/concerns
-  rule_packs: docs/harness/architecture/rule-packs
+  product_source_guides: docs/03.product/source-material/guides/markdown
+  product_rules: docs/03.product/rules
+  product_rule_packs: docs/03.product/rule-packs
+  legacy_rules: docs/harness/architecture/rules
 
 generated_by_human_or_codex: codex
 
@@ -57,7 +57,7 @@ guardrails:
   - Create executable harness validators, gates, metrics, or eval runners only when a workflow or standard identifies deterministic behavior they own.
   - Do not modify production repo code.
   - Do not edit the source markdown guides.
-  - Do not create architecture rules or rule packs unless that artifact is the requested task and the architecture workflow applies.
+  - Do not create architecture rules or rule packs unless that artifact is the requested task, the architecture workflow applies, and document placement routes it to the owner-aligned corpus.
   - Review agents may not edit files during review mode.
   - Implementation-agent mode requires an explicit workflow, bounded artifact scope, and normal chat lifecycle write permission.
   - Work one artifact at a time.
@@ -83,31 +83,31 @@ current_known_artifacts:
     - .agentic/01.harness/standards/professional-review-agent-quality.md
     - .agentic/01.harness/standards/evaluation-fixtures.md
   layer_rulesets:
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/layers/design-system.yml
-    - docs/harness/architecture/rules/layers/frontend-kit.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/03.product/rules/design-system/layers/design-system.yml
+    - docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
     - docs/harness/architecture/rules/layers/infra.yml
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
     - docs/harness/architecture/rules/layers/scripts-command-surface.yml
   concern_rulesets:
-    - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
-    - docs/harness/architecture/rules/concerns/design-label-theming.yml
-    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-    - docs/harness/architecture/rules/concerns/i18n-localization.yml
-    - docs/harness/architecture/rules/concerns/identity-access-security.yml
-    - docs/harness/architecture/rules/concerns/notifications.yml
+    - docs/03.product/rules/design-system/concerns/design-label-theming.yml
+    - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+    - docs/03.product/rules/concerns/i18n-localization.yml
+    - docs/03.product/rules/platform/concerns/identity-access-security.yml
+    - docs/03.product/rules/platform/concerns/notifications.yml
     - docs/harness/architecture/rules/concerns/ci-quality.yml
     - docs/harness/architecture/rules/concerns/generated-code.yml
-    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-    - docs/harness/architecture/rules/concerns/tenancy.yml
+    - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+    - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+    - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+    - docs/03.product/rules/platform/concerns/tenancy.yml
     - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
-    - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+    - docs/03.product/rules/core/concerns/validation-api-errors.yml
   rule_packs:
-    - docs/harness/architecture/rule-packs/add-core-module.yml
-    - docs/harness/architecture/rule-packs/add-design-system-component.yml
-    - docs/harness/architecture/rule-packs/create-entity.yml
-    - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    - docs/03.product/rule-packs/core/add-core-module.yml
+    - docs/03.product/rule-packs/design-system/add-design-system-component.yml
+    - docs/03.product/rule-packs/apps/create-entity.yml
+    - docs/03.product/rule-packs/platform/add-platform-adapter.yml

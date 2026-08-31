@@ -132,13 +132,13 @@ substitute_limits:
 
 layer_test_taxonomy_scope:
   layer_files:
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
     - docs/harness/architecture/rules/layers/scripts-command-surface.yml
     - docs/harness/architecture/rules/layers/infra.yml
-    - docs/harness/architecture/rules/layers/design-system.yml
-    - docs/harness/architecture/rules/layers/frontend-kit.yml
+    - docs/03.product/rules/design-system/layers/design-system.yml
+    - docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
   excluded_paths:
     - path: "harness/**"
       reason: "Harness process work is governed by .agentic/01.harness workflows, standards, and scripts rather than an architecture layer matrix."

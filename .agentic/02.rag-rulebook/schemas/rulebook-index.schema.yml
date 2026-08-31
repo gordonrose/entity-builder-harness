@@ -883,7 +883,7 @@ minimal_example:
       status: active
       version: 1
       corpus_id: corpus.03.product.core
-      current_path: docs/harness/architecture/rules/layers/packages-core.yml
+      current_path: docs/03.product/rules/core/layers/packages-core.yml
       proposed_path: corpus.03.product.core/rules/layers/packages-core.yml
       migration_status: target-candidate
       applies_to_paths:
@@ -916,7 +916,7 @@ minimal_example:
       chunk_purpose: rule
       authority: execution-authority
       section_path: rules[0]
-      source_path: docs/harness/architecture/rules/layers/packages-core.yml
+      source_path: docs/03.product/rules/core/layers/packages-core.yml
       token_estimate: 80
       source_ref_ids: []
   graph_edges:
@@ -928,7 +928,7 @@ minimal_example:
       source_ref_ids: []
   source_references: []
   path_mappings:
-    - current_path: docs/harness/architecture/rules/layers/packages-core.yml
+    - current_path: docs/03.product/rules/core/layers/packages-core.yml
       proposed_path: corpus.03.product.core/rules/layers/packages-core.yml
       proposed_corpus_id: corpus.03.product.core
       migration_status: target-candidate
@@ -954,5 +954,5 @@ minimal_example:
     generator_version: design-only
     git_commit: unknown
     inputs:
-      - path: docs/harness/architecture/rules/layers/packages-core.yml
+      - path: docs/03.product/rules/core/layers/packages-core.yml
         role: prototype-ruleset

@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.identity-access-security
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -30,10 +30,10 @@ description: >
   auditability, and ownership splits across core, apps, platform, and infra.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/tenancy.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -176,7 +176,7 @@ source_refs:
       - "Enterprise Future"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/identity-access-security.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/identity-access-security.yml."
   - "It keeps authentication and authorization separate."
   - "It defines day-one Principal and Authenticator expectations without hardcoding one identity provider."
   - "It requires explicit authorization decisions before state changes or sensitive reads."

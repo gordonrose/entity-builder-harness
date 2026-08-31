@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.platform-infra-capability-layering
 #   version: 2
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
   source_material:
     - path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
-      sha256: ae37e97bf9f3805cba1ad24dbd5c840165e24ae93f261cd91b7bf871e34191ba
+      sha256: f5ba953cc7a93df32586e39df2c50e53dd18a1e37697be66e18bd9371f52b6c1
 
 description: >
   Cross-cutting placement rules for capabilities that span provider-neutral
@@ -43,11 +43,11 @@ description: >
   resources, and environment-specific deployment values.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
   - docs/harness/architecture/rules/layers/infra.yml
-  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -159,7 +159,7 @@ source_refs:
       - "Acceptance Guidance"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml."
   - "It defines the core, platform runtime, platform adapter, infra blueprint, infra provider, infra environment, and app ownership split."
   - "It uses queues as the worked example for the ownership split."
   - "It requires provider-neutral infra blueprints before provider-specific resource definitions."

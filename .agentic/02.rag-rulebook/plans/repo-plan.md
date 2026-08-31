@@ -752,7 +752,7 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      layer ownership, implementation mechanics, verification expectations, and
      forbidden actions before answering.
    - Add evidence-family coverage for every runtime module listed in
-     `docs/harness/architecture/rules/layers/platform.yml`: contracts, config,
+     `docs/03.product/rules/platform/layers/platform.yml`: contracts, config,
      runtime, server, security, observability, health, workers, and testing.
    - Prove the miss class with a logging-policy fixture that requires
      reporting/analytics/audit concern evidence and platform implementation

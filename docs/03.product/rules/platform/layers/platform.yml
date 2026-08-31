@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.layers.platform
 #   version: 7
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -34,7 +34,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
     - path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
-      sha256: 4334d91b0fd09f91294b1e85e559910863e75eb16322b758ed829982432a44d4
+      sha256: 1d3ad22ace3401b00bf94247f6976606f29e55f70943c2fbb0a1db4aa516e689
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -49,10 +49,10 @@ applies_to:
 related_rulesets:
   - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+  - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
 
 runtime_modules:
   - id: contracts
@@ -445,7 +445,7 @@ source_refs:
       - "Consequences"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/platform.yml."
+  - "The file exists at docs/03.product/rules/platform/layers/platform.yml."
   - "It defines platform/ as the runtime composition layer for startup, server, app mounting, route/job registries, security hooks, observability, health, config, workers, resource lifecycle, shutdown, and contract testing."
   - "It maps platform test types to runtime critical paths, validation, edge cases, security, failure modes, compatibility, and observability/health categories."
   - "It keeps product workflows, business permission meaning, app services, app repositories, product health decisions, business quotas, and domain-specific jobs inside apps or business packages."

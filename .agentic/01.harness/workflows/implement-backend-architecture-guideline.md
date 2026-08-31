@@ -59,8 +59,10 @@ workflow changes.
 Implementation mode is limited to architecture-guideline artifacts. It may
 create or edit:
 
-- `docs/harness/architecture/rules/**`
-- `docs/harness/architecture/rule-packs/**`
+- `docs/03.product/rules/**`
+- `docs/03.product/rule-packs/**`
+- legacy `docs/harness/architecture/rules/**` files only when the current
+  migration plan or owner classification says the artifact still belongs there
 - `.agentic/01.harness/workflows/*rule*.md`
 - `.agentic/01.harness/templates/*rule*.yml`
 - narrowly related harness documentation that indexes or explains those

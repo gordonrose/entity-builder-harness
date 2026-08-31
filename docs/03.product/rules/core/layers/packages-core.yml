@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.layers.packages-core
 #   version: 17
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -14,7 +14,7 @@
 #     targets: []
 #   used_by:
 #   - id: harness.architecture.rule-packs.add-core-module
-#     path: docs/harness/architecture/rule-packs/add-core-module.yml
+#     path: docs/03.product/rule-packs/core/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
 version: 17
@@ -30,7 +30,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
     - path: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
-      sha256: d2934e4ecafbfee52d54fb09cf8e5d06d4d15ca57bf8790c09f4dabaaebb561c
+      sha256: 3dafd7114f1618b1ee869fa4193953017f7953aa5dc3a5e36bfc380f703af64d
 
 description: >
   Rules governing what may live in packages/core and how agents should treat
@@ -789,7 +789,7 @@ source_refs:
       - "Principles to guide Kanbien for the next 10 years"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/packages-core.yml."
+  - "The file exists at docs/03.product/rules/core/layers/packages-core.yml."
   - "It defines packages/core admission rules for stable, cross-cutting, product-neutral concepts and contracts."
   - "It requires ownership, current need, documentation, and tests before adding new core surfaces."
   - "It keeps packages/core independent from apps, platform, infra, cloud SDKs, ORMs, web servers, and vendor clients."

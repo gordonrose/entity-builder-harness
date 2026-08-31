@@ -19,7 +19,7 @@
     - design-system-builder
   used_by:
   - id: harness.architecture.rules.layers.platform
-    path: docs/harness/architecture/rules/layers/platform.yml
+    path: docs/03.product/rules/platform/layers/platform.yml
 -->
 # Platform Runtime Enterprise Obligations v1
 

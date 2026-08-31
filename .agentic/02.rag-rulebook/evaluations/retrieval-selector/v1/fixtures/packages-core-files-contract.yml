@@ -27,7 +27,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about CSV uploads and stored file contracts retrieve file metadata, validation, scan, access intent, duplicate/idempotent put behavior, storage-port, app/platform/infra boundary guidance.
 input:
-  request_text: Using corpus.03.product.core, docs/harness/architecture/rules/layers/packages-core.yml, and docs/harness/architecture/rules/concerns/persistence-files-storage.yml, explain how packages/core should model a CSV upload file contract with file id, name, content type, size, checksum, scan status, metadata, storage reference, access intent for reads/deletes, duplicate/idempotent put behavior, retention/legal-hold facts, and FileStorage without putting object storage, signed URLs, virus scanning, CSV parsing, retention jobs, or cloud resources in core.
+  request_text: Using corpus.03.product.core, docs/03.product/rules/core/layers/packages-core.yml, and docs/03.product/rules/platform/concerns/persistence-files-storage.yml, explain how packages/core should model a CSV upload file contract with file id, name, content type, size, checksum, scan status, metadata, storage reference, access intent for reads/deletes, duplicate/idempotent put behavior, retention/legal-hold facts, and FileStorage without putting object storage, signed URLs, virus scanning, CSV parsing, retention jobs, or cloud resources in core.
   session:
     trust_routing: true
     layer: 03.product
@@ -35,9 +35,9 @@ input:
     workflow: .agentic/03.product/workflows/default.md
   focused_paths:
     - packages/core/src/files/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+    - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
   max_chunks: 10
 expected:
   routing:
@@ -69,9 +69,9 @@ banned:
     - corpus.00.chat
 source_refs:
   - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+  - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - packages/core files ownership rules change.

@@ -92,7 +92,7 @@ source_refs:
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
 update_triggers:
   - Logging rule ID, title, summary, or aliases change.
   - Intra-source reranking or final trimming changes.

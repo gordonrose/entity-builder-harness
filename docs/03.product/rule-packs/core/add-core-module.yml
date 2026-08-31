@@ -3,7 +3,7 @@
 #   id: harness.architecture.rule-packs.add-core-module
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -14,7 +14,7 @@
 #     targets: []
 #   used_by:
 #   - id: harness.architecture.rules.layers.packages-core
-#     path: docs/harness/architecture/rules/layers/packages-core.yml
+#     path: docs/03.product/rules/core/layers/packages-core.yml
 #   - id: harness.architecture.rules.concerns.dependency-direction
 #     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
 id: pack.add-core-module
@@ -33,8 +33,8 @@ applies_when:
   - "A task proposes moving shared logic into packages/core."
 
 required_rulesets:
-  - "../rules/layers/packages-core.yml"
-  - "../rules/concerns/dependency-direction.yml"
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 required_checks:
   - "Confirm the proposed concept is stable, cross-cutting, product-neutral, and genuinely shared."
@@ -110,9 +110,9 @@ must_not:
   - "Do not put HTTP servers, Redis clients, Fastify plugins, background workers, cloud SDKs, or ORM implementations in core."
 
 success_criteria:
-  - "The rule pack exists at docs/harness/architecture/rule-packs/add-core-module.yml."
-  - "The rule pack references ../rules/layers/packages-core.yml."
-  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The rule pack exists at docs/03.product/rule-packs/core/add-core-module.yml."
+  - "The rule pack references docs/03.product/rules/core/layers/packages-core.yml."
+  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - "The rule pack is task-shaped, not layer-shaped."
   - "The rule pack is concise and usable by an agent."
   - "The rule pack requires owner, current consumers, documentation, tests, and framework independence for new core surfaces."

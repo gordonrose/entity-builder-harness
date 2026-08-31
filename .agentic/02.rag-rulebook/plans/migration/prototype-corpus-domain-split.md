@@ -109,6 +109,26 @@ file-level target inventory for this migration plan.
   command drift, focused selector fixtures, and diff whitespace. The full
   selector fixture matrix again ran silently beyond several polling windows and
   was stopped; focused product source-material selector coverage passed 14/14.
+- 2026-08-31 Slice 7 moved product structured rules and task rule packs.
+  Moved five product layer rules, twelve product concern rules, and four
+  product task packs under `docs/03.product/rules/**` and
+  `docs/03.product/rule-packs/**`; added canonical product README artifacts
+  plus old-root compatibility pointers; updated harness forward guidance,
+  active rule graph references, source derivation paths and hashes, migration
+  map entries, generated recognition sources, rulebook index discovery, runtime
+  smoke expectations, and an accepted retirement record for the removed exact
+  prototype YAML paths.
+- 2026-08-31 Slice 7 validation passed for metadata headers, YAML syntax,
+  generated recognition freshness, recognition-source validation, source
+  projections, source-material coverage, derivation reports, retirement
+  records, corpus-root changes, explanation readiness, rulebook index/chunk
+  smoke checks, local runtime build/freshness, query-local-context smoke,
+  local-service smoke, governed-script command drift, focused selector
+  fixtures, concrete path-migration checks, stale-reference scanning, and diff
+  whitespace. Focused selector coverage for product rule and rule-pack
+  references passed 27/27. The rulebook index still reports one unrelated
+  warning for `.agentic/shared/workflows/deployment-process.md` from
+  `artifact.concern.mcp.server.deployment.architecture`.
 
 ## Target Homes
 

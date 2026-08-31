@@ -14,7 +14,7 @@
     targets: []
   used_by:
   - id: harness.architecture.rules.layers.packages-core
-    path: docs/harness/architecture/rules/layers/packages-core.yml
+    path: docs/03.product/rules/core/layers/packages-core.yml
   - id: harness.architecture.source-material.packages-core-contract-surface-v1
     path: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
 -->

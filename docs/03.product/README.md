@@ -40,7 +40,8 @@ apps rules, packages/core rules, design-system rules, frontend-kit rules,
 platform/runtime rules, product task rule packs, and product-owned ADRs.
 
 Product ADRs live under `adrs/`. Product guides and source material live under
-`source-material/`.
+`source-material/`. Product structured rules live under `rules/`. Product task
+rule packs live under `rule-packs/`.
 
 Product corpus material may be subdivided by owner topic, including `apps`,
 `core`, `design-system`, `frontend-kit`, and `platform`.
@@ -49,6 +50,6 @@ Do not store deployment operations, infrastructure runbooks, or RAG/rulebook
 service machinery here unless the material is product-facing source evidence
 for a product rule.
 
-During the prototype corpus migration, old product-oriented material remains
-under `docs/harness/architecture/**` until a governed artifact path migration
-moves a concrete source and target pair.
+During the prototype corpus migration, old product-oriented prototype paths may
+retain compatibility pointers while the remaining deploy, harness, and shared
+artifacts move in later governed slices.

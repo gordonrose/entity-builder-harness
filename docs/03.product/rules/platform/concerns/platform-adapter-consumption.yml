@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.platform-adapter-consumption
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -195,7 +195,7 @@ source_refs:
       - "14. The Simple Answer"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml."
   - "Feature code consumes packages/core contracts and avoids platform, adapter, and vendor SDK imports."
   - "App bootstrap is treated as the provider selection boundary."
   - "Adapter packages expose predictable factories, config types and schemas, metadata, health checks where useful, and lifecycle hooks where useful."

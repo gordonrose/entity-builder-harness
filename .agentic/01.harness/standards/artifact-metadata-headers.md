@@ -143,7 +143,7 @@ comments:
 #   domain: architecture
 #   portability: source-only
 #   used_by:
-#     - docs/harness/architecture/rule-packs/add-core-module.yml
+#     - docs/03.product/rule-packs/core/add-core-module.yml
 ```
 
 Common `kind` values:

@@ -26,7 +26,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about packages/core persistence contracts retrieve storage boundary and adapter placement rules.
 input:
-  request_text: Explain how product code should use packages/core/src/persistence/index.ts contracts for page totals, repository saves, optimistic concurrency, transactions, after-commit events, and database adapters; use docs/harness/architecture/rules/layers/packages-core.yml for the package-core boundary.
+  request_text: Explain how product code should use packages/core/src/persistence/index.ts contracts for page totals, repository saves, optimistic concurrency, transactions, after-commit events, and database adapters; use docs/03.product/rules/core/layers/packages-core.yml for the package-core boundary.
   session:
     trust_routing: true
     layer: 03.product
@@ -61,7 +61,7 @@ banned:
     - corpus.00.chat
 source_refs:
   - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
-  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - packages/core persistence ownership rules change.

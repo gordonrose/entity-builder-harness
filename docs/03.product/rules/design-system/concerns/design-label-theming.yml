@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.design-label-theming
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -29,7 +29,7 @@ description: >
   governance.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/design-system.yml
+  - docs/03.product/rules/design-system/layers/design-system.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -151,7 +151,7 @@ source_refs:
       - "How to implement this cleanly in React"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/design-label-theming.yml."
+  - "The file exists at docs/03.product/rules/design-system/concerns/design-label-theming.yml."
   - "It defines design labels as visual-system selectors, not product behavior forks."
   - "It requires generated CSS variables and stable component APIs across labels."
   - "It requires provider or application-shell runtime scope that avoids token-loading flicker."

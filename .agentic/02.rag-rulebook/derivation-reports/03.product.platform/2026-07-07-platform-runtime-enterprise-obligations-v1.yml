@@ -20,7 +20,7 @@
 #     - design-system-builder
 #   used_by:
 #   - id: harness.architecture.rules.layers.platform
-#     path: docs/harness/architecture/rules/layers/platform.yml
+#     path: docs/03.product/rules/platform/layers/platform.yml
 
 schema: rag-rulebook/source-to-rule-derivation-report/v1
 report_id: derivation.03.product-platform.2026-07-07.platform-runtime-enterprise-obligations-v1
@@ -44,13 +44,13 @@ target:
   corpus_id: corpus.03.product.platform
   owner_layer: 03.product
   expected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
   affected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
   affected_rulesets:
-    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+    - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+    - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
   affected_corpus_gaps: []
@@ -84,12 +84,12 @@ semantic_review:
   conflicts:
     status: none-found
     search_scope:
-      - docs/harness/architecture/rules/layers/platform.yml
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/platform/layers/platform.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
       - docs/harness/architecture/rules/layers/infra.yml
-      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-      - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+      - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+      - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+      - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
     items: []
   drift:
     status: none-found
@@ -103,7 +103,7 @@ semantic_review:
 
 proposed_updates:
   rules:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates: []

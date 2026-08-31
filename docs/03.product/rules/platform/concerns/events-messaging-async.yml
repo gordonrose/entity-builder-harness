@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.events-messaging-async
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -29,8 +29,8 @@ description: >
   idempotency, and ownership splits across core, apps, platform, and infra.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -206,7 +206,7 @@ source_refs:
       - "Analytics is tracked"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/events-messaging-async.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/events-messaging-async.yml."
   - "It distinguishes domain events from commands."
   - "It defines ownership splits for core contracts, app business meaning, platform runtime mechanics, and infra resources."
   - "It requires event/message/job envelope metadata for tenancy, correlation, causation, versioning, attempts, idempotency, and observability where relevant."

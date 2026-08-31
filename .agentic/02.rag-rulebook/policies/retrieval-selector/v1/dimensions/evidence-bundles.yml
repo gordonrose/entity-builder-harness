@@ -65,27 +65,27 @@ evidence_bundles:
     always_source_paths:
       - docs/harness/architecture/rules/concerns/dependency-direction.yml
     family_source_paths:
-      evidence.layer.apps: docs/harness/architecture/rules/layers/apps.yml
-      evidence.layer.platform: docs/harness/architecture/rules/layers/platform.yml
+      evidence.layer.apps: docs/03.product/rules/apps/layers/apps.yml
+      evidence.layer.platform: docs/03.product/rules/platform/layers/platform.yml
   - question_category_id: question.policy-implementation.explain
     always_source_paths: []
     family_source_paths:
       evidence.concern.ci-quality: docs/harness/architecture/rules/concerns/ci-quality.yml
-      evidence.concern.config-runtime-settings: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+      evidence.concern.config-runtime-settings: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
       evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
-      evidence.concern.events-messaging-async: docs/harness/architecture/rules/concerns/events-messaging-async.yml
-      evidence.concern.identity-access-security: docs/harness/architecture/rules/concerns/identity-access-security.yml
-      evidence.concern.reporting-analytics-audit: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
-      evidence.platform.config: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.contracts: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.health: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.observability: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.runtime: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.security: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.server: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.testing: docs/harness/architecture/rules/layers/platform.yml
-      evidence.platform.workers: docs/harness/architecture/rules/layers/platform.yml
+      evidence.concern.events-messaging-async: docs/03.product/rules/platform/concerns/events-messaging-async.yml
+      evidence.concern.identity-access-security: docs/03.product/rules/platform/concerns/identity-access-security.yml
+      evidence.concern.reporting-analytics-audit: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+      evidence.layer.packages-core: docs/03.product/rules/core/layers/packages-core.yml
+      evidence.platform.config: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.contracts: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.health: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.observability: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.runtime: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.security: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.server: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.testing: docs/03.product/rules/platform/layers/platform.yml
+      evidence.platform.workers: docs/03.product/rules/platform/layers/platform.yml
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
   - question_category_id: question.artifact-metadata.headers
     always_source_paths:
@@ -200,23 +200,23 @@ evidence_bundles:
       evidence.rag.retrieval-selector-evaluations: .agentic/02.rag-rulebook/standards/retrieval-selector-evaluations.md
   - question_category_id: question.product.contract-surface
     always_source_paths:
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
       - packages/core/README.md
       - platform/contracts/README.md
       - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
     family_source_paths:
-      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.layer.packages-core: docs/03.product/rules/core/layers/packages-core.yml
       evidence.packages-core.readme: packages/core/README.md
       evidence.platform-contracts.readme: platform/contracts/README.md
       evidence.platform-contracts.composed-runtime-contexts-adr: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   - question_category_id: question.platform-adapter.external-boundary
     always_source_paths:
-      - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-      - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+      - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+      - docs/03.product/rule-packs/platform/add-platform-adapter.yml
       - docs/harness/architecture/rules/concerns/dependency-direction.yml
     family_source_paths:
-      evidence.platform-adapter.consumption: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-      evidence.platform-adapter.rule-pack: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+      evidence.platform-adapter.consumption: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+      evidence.platform-adapter.rule-pack: docs/03.product/rule-packs/platform/add-platform-adapter.yml
       evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
   - question_category_id: question.chat.session-metrics
     always_source_paths:
@@ -295,16 +295,16 @@ evidence_bundles:
       evidence.rag.request-context-boundary: .agentic/02.rag-rulebook/standards/retrieval-selector-policy-system.md
   - question_category_id: question.product.core-module-contracts
     always_source_paths:
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
       - packages/core/README.md
       - platform/contracts/README.md
-      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+      - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+      - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
     family_source_paths:
-      evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
+      evidence.layer.packages-core: docs/03.product/rules/core/layers/packages-core.yml
       evidence.packages-core.readme: packages/core/README.md
       evidence.platform-contracts.readme: platform/contracts/README.md
-      evidence.concern.events-messaging-async: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+      evidence.concern.events-messaging-async: docs/03.product/rules/platform/concerns/events-messaging-async.yml
       evidence.packages-core.diagnostics-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml
       evidence.packages-core.events-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml
       evidence.packages-core.queues-fixture: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml
@@ -470,7 +470,7 @@ evidence_bundles:
       - packages/core/src/queues/index.ts
       - packages/core/src/index.ts
       - packages/core/README.md
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
     family_source_paths:
       evidence.packages-core.audit-source: packages/core/src/audit/index.ts
       evidence.packages-core.queues-source: packages/core/src/queues/index.ts

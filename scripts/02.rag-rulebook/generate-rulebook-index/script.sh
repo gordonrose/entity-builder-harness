@@ -1398,13 +1398,21 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
 
     known_corpora = {entry["corpus_id"] for entry in corpus_packages}
     yaml_entries: list[tuple[str, dict[str, Any]]] = []
+    mapped_yaml_paths: set[str] = set()
     yaml_artifacts = migration_map.get("yaml_artifacts") or {}
     if isinstance(yaml_artifacts, dict):
         for group_name in ("layer_rulesets", "concern_rulesets", "rule_packs"):
             for entry in list_of_dicts(yaml_artifacts.get(group_name)):
+                current_path = entry.get("current_path")
+                if isinstance(current_path, str):
+                    mapped_yaml_paths.add(normalize_path(current_path))
                 yaml_entries.append((group_name, entry))
     for root in current_corpus_rule_roots:
-        yaml_entries.extend(collect_current_rulebook_entries(root["corpus_id"], root["rules_root"]))
+        for group_name, entry in collect_current_rulebook_entries(root["corpus_id"], root["rules_root"]):
+            current_path = entry.get("current_path")
+            if isinstance(current_path, str) and normalize_path(current_path) in mapped_yaml_paths:
+                continue
+            yaml_entries.append((group_name, entry))
     guide_corpus_by_path = {
         normalize_path(str(guide.get("current_path"))): str(guide.get("proposed_corpus_id"))
         for guide in list_of_dicts((migration_map.get("source_material") or {}).get("guides"))

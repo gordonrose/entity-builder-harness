@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.tenancy
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -29,11 +29,11 @@ description: >
   and ownership splits across core, apps, platform, and infra.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
 
 applies_to:
   paths:
@@ -190,7 +190,7 @@ source_refs:
       - "Where tenancy support belongs"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/tenancy.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/tenancy.yml."
   - "It requires tenancy to be designed before tenant-scoped workflows assume a single tenant."
   - "It requires tenant resolution from trusted sources and verified membership or authorization."
   - "It requires tenant context propagation through persistence, events, queues, files, audit, analytics, logging, monitoring, notifications, reports, and jobs."

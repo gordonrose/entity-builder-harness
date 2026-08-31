@@ -27,7 +27,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about self-healing failure classification retrieve diagnostics vocabulary plus the core/platform/runtime/adapter/infra boundary.
 input:
-  request_text: Using corpus.03.product.core and docs/harness/architecture/rules/layers/packages-core.yml, explain how packages/core should classify CSV import row failures so monitoring can trigger a safe self-healing workflow using logs, queues, events, audit, retries, and escalation without putting the remediation engine in core. Include core.diagnostics-classify-failures-for-recovery and core.capability-modules-stay-contract-shaped.
+  request_text: Using corpus.03.product.core and docs/03.product/rules/core/layers/packages-core.yml, explain how packages/core should classify CSV import row failures so monitoring can trigger a safe self-healing workflow using logs, queues, events, audit, retries, and escalation without putting the remediation engine in core. Include core.diagnostics-classify-failures-for-recovery and core.capability-modules-stay-contract-shaped.
   session:
     trust_routing: true
     layer: 03.product
@@ -37,9 +37,9 @@ input:
     - packages/core/src/diagnostics/index.ts
     - packages/core/src/shared/index.ts
     - packages/core/src/queues/index.ts
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+    - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
   max_chunks: 10
 expected:
   routing:
@@ -71,9 +71,9 @@ banned:
     - corpus.00.chat
 source_refs:
   - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - packages/core diagnostics ownership or self-healing vocabulary changes.

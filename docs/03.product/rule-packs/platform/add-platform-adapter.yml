@@ -3,7 +3,7 @@
 #   id: harness.architecture.rule-packs.add-platform-adapter
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -37,8 +37,8 @@ applies_when:
   - "A task changes app bootstrap code that consumes a platform profile."
 
 required_rulesets:
-  - "../rules/concerns/platform-adapter-consumption.yml"
-  - "../rules/concerns/dependency-direction.yml"
+  - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 required_checks:
   - "Confirm the adapter implements one or more packages/core contracts."
@@ -111,9 +111,9 @@ must_not:
   - "Do not remove deprecated adapter or profile surfaces without the documented compatibility window."
 
 success_criteria:
-  - "The rule pack exists at docs/harness/architecture/rule-packs/add-platform-adapter.yml."
-  - "The rule pack references ../rules/concerns/platform-adapter-consumption.yml."
-  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The rule pack exists at docs/03.product/rule-packs/platform/add-platform-adapter.yml."
+  - "The rule pack references docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml."
+  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - "The adapter implements a packages/core contract or explicitly routes missing core-contract work to the add-core-module pack."
   - "Feature code remains free of platform, adapter, and vendor SDK imports."
   - "App bootstrap consumes platform profiles at the provider boundary."

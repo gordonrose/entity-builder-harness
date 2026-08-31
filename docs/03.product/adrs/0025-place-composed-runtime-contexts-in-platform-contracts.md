@@ -14,9 +14,9 @@
     targets: []
   used_by:
   - id: harness.architecture.rules.layers.platform
-    path: docs/harness/architecture/rules/layers/platform.yml
+    path: docs/03.product/rules/platform/layers/platform.yml
   - id: harness.architecture.rules.layers.packages-core
-    path: docs/harness/architecture/rules/layers/packages-core.yml
+    path: docs/03.product/rules/core/layers/packages-core.yml
   - id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
     path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
 -->

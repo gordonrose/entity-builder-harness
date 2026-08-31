@@ -88,7 +88,7 @@ source_refs:
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/platform/layers/platform.yml
 update_triggers:
   - Platform server rule ID, title, summary, or aliases change.
   - Intra-source reranking stage or scoring behavior changes.

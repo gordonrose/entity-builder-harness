@@ -3,7 +3,7 @@
 #   id: harness.architecture.rule-packs.create-entity
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -35,8 +35,8 @@ applies_when:
   - "A task regenerates backend schema, API contracts, frontend config, migrations, or entity tests."
 
 required_rulesets:
-  - "../rules/concerns/generated-code.yml"
-  - "../rules/concerns/dependency-direction.yml"
+  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 required_checks:
   - "Confirm the entity definition is the source of truth for downstream artifacts."
@@ -91,9 +91,9 @@ must_not:
   - "Do not rely on TypeScript alone for runtime inputs, database rows, migrations, authorization policy, or cross-language API clients."
 
 success_criteria:
-  - "The rule pack exists at docs/harness/architecture/rule-packs/create-entity.yml."
-  - "The rule pack references ../rules/concerns/generated-code.yml."
-  - "The rule pack references ../rules/concerns/dependency-direction.yml."
+  - "The rule pack exists at docs/03.product/rule-packs/apps/create-entity.yml."
+  - "The rule pack references docs/harness/architecture/rules/concerns/generated-code.yml."
+  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
   - "The entity definition is treated as the source of truth."
   - "Generated artifacts are placed according to ownership and sharing scope."
   - "Generated migrations enter an ordered app migration stream."

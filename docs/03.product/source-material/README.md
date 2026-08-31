@@ -34,6 +34,5 @@ source material.
 Use `guides/` for long-form product architecture guides and their preserved
 original files.
 
-Structured rules derived from this material may stay in their existing
-prototype paths until the product rules slice moves them into
+Structured product rules derived from this material live under
 `docs/03.product/rules/`.

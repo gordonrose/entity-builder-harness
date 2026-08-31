@@ -17,9 +17,9 @@
   - id: platform.adapters.readme
     path: platform/adapters/README.md
   - id: harness.architecture.rules.layers.platform
-    path: docs/harness/architecture/rules/layers/platform.yml
+    path: docs/03.product/rules/platform/layers/platform.yml
   - id: harness.architecture.rules.concerns.platform-infra-capability-layering
-    path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    path: docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
 -->
 # ADR 0027: Use Provider Type Service Adapter Layout
 

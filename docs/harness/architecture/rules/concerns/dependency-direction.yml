@@ -14,7 +14,7 @@
 #     targets: []
 #   used_by:
 #   - id: harness.architecture.rule-packs.add-core-module
-#     path: docs/harness/architecture/rule-packs/add-core-module.yml
+#     path: docs/03.product/rule-packs/core/add-core-module.yml
 id: concern.dependency-direction
 title: Dependency direction rules
 version: 2

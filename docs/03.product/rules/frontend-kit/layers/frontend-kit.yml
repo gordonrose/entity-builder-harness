@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.layers.frontend-kit
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -37,8 +37,8 @@ applies_to:
     - "packages/ui-table/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/apps.yml
-  - docs/harness/architecture/rules/layers/design-system.yml
+  - docs/03.product/rules/apps/layers/apps.yml
+  - docs/03.product/rules/design-system/layers/design-system.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
@@ -270,7 +270,7 @@ source_refs:
       - "7. Frontend table config"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/frontend-kit.yml."
+  - "The file exists at docs/03.product/rules/frontend-kit/layers/frontend-kit.yml."
   - "It defines frontend-kit as a portable React product shell rather than app-specific UI."
   - "It keeps entity-specific product meaning, routing, data loading, permissions, workflow decisions, and product copy in apps or product packages."
   - "It requires frontend-kit to compose public design-system APIs rather than mutate tokens, primitives, patterns, or components."

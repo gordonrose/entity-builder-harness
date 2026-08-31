@@ -14,9 +14,9 @@
     targets: []
   used_by:
   - id: harness.architecture.rules.layers.platform
-    path: docs/harness/architecture/rules/layers/platform.yml
+    path: docs/03.product/rules/platform/layers/platform.yml
   - id: harness.architecture.rules.layers.apps
-    path: docs/harness/architecture/rules/layers/apps.yml
+    path: docs/03.product/rules/apps/layers/apps.yml
   - id: harness.architecture.rules.concerns.dependency-direction
     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
 -->

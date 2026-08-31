@@ -114,8 +114,8 @@ source_refs:
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
-  - docs/harness/architecture/rules/layers/apps.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/apps/layers/apps.yml
+  - docs/03.product/rules/platform/layers/platform.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 update_triggers:
   - Retrieval strategy stage order changes.

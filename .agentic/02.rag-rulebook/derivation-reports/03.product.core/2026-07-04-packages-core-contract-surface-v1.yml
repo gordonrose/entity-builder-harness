@@ -18,7 +18,7 @@
 #     - design-system-builder
 #   used_by:
 #   - id: harness.architecture.rules.layers.packages-core
-#     path: docs/harness/architecture/rules/layers/packages-core.yml
+#     path: docs/03.product/rules/core/layers/packages-core.yml
 
 schema: rag-rulebook/source-to-rule-derivation-report/v1
 report_id: derivation.03.product-core.2026-07-04.packages-core-contract-surface-v1
@@ -51,9 +51,9 @@ target:
   corpus_id: corpus.03.product.core
   owner_layer: 03.product
   expected_rule_paths:
-    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
   affected_rule_paths:
-    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
   affected_rulesets: []
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml
@@ -338,9 +338,9 @@ semantic_review:
   conflicts:
     status: none-found
     search_scope:
-      - docs/harness/architecture/rules/layers/packages-core.yml
-      - docs/harness/architecture/rules/layers/platform.yml
-      - docs/harness/architecture/rules/layers/apps.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
+      - docs/03.product/rules/platform/layers/platform.yml
+      - docs/03.product/rules/apps/layers/apps.yml
       - docs/harness/architecture/rules/concerns/dependency-direction.yml
     items: []
   drift:
@@ -355,7 +355,7 @@ semantic_review:
 
 proposed_updates:
   rules:
-    - docs/harness/architecture/rules/layers/packages-core.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates: []

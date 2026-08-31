@@ -110,29 +110,29 @@ source_material:
 
 yaml_artifacts:
   layer_rulesets:
-    - current_path: docs/harness/architecture/rules/layers/apps.yml
+    - current_path: docs/03.product/rules/apps/layers/apps.yml
       metadata_id: harness.architecture.rules.layers.apps
       rulebook_id: layer.apps
       title: apps layer rules
       proposed_corpus_id: corpus.03.product.apps
       proposed_target_path: corpus.03.product.apps/rules/layers/apps.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Applies to `apps/**` product composition and app-owned behavior.
-    - current_path: docs/harness/architecture/rules/layers/design-system.yml
+    - current_path: docs/03.product/rules/design-system/layers/design-system.yml
       metadata_id: harness.architecture.rules.layers.design-system
       rulebook_id: layer.design-system
       title: design-system layer rules
       proposed_corpus_id: corpus.03.product.design-system
       proposed_target_path: corpus.03.product.design-system/rules/layers/design-system.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Applies to `packages/design-system/**`.
-    - current_path: docs/harness/architecture/rules/layers/frontend-kit.yml
+    - current_path: docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
       metadata_id: harness.architecture.rules.layers.frontend-kit
       rulebook_id: layer.frontend-kit
       title: frontend-kit layer rules
       proposed_corpus_id: corpus.03.product.frontend-kit
       proposed_target_path: corpus.03.product.frontend-kit/rules/layers/frontend-kit.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Applies to frontend-kit, forms, tables, and reusable entity-page UI shell packages.
     - current_path: docs/harness/architecture/rules/layers/infra.yml
       metadata_id: harness.architecture.rules.layers.infra
@@ -142,21 +142,21 @@ yaml_artifacts:
       proposed_target_path: corpus.04.deploy/rules/layers/infra.yml
       migration_status: target-candidate
       reason: Applies to `infra/**` infrastructure and deployment definition work.
-    - current_path: docs/harness/architecture/rules/layers/packages-core.yml
+    - current_path: docs/03.product/rules/core/layers/packages-core.yml
       metadata_id: harness.architecture.rules.layers.packages-core
       rulebook_id: layer.packages-core
       title: packages/core rules
       proposed_corpus_id: corpus.03.product.core
       proposed_target_path: corpus.03.product.core/rules/layers/packages-core.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Applies to `packages/core/**` product-neutral contracts and primitives.
-    - current_path: docs/harness/architecture/rules/layers/platform.yml
+    - current_path: docs/03.product/rules/platform/layers/platform.yml
       metadata_id: harness.architecture.rules.layers.platform
       rulebook_id: layer.platform
       title: platform layer rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/layers/platform.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Applies to `platform/**` runtime composition and platform/app contracts.
     - current_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
       metadata_id: harness.architecture.rules.layers.scripts-command-surface
@@ -176,13 +176,13 @@ yaml_artifacts:
       proposed_target_path: corpus.06.shared/rules/concerns/ci-quality.yml
       migration_status: split-review-required
       reason: Applies across product, deploy, and harness script surfaces; may remain shared or split after index evidence.
-    - current_path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    - current_path: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
       metadata_id: harness.architecture.rules.concerns.config-runtime-settings
       rulebook_id: concern.config-runtime-settings
       title: Configuration and runtime settings rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/config-runtime-settings.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Primarily product runtime/platform config, with deployment environment edges.
     - current_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
       metadata_id: harness.architecture.rules.concerns.dependency-direction
@@ -192,21 +192,21 @@ yaml_artifacts:
       proposed_target_path: corpus.06.shared/rules/concerns/dependency-direction.yml
       migration_status: split-review-required
       reason: Deliberately governs dependency boundaries across product, harness, scripts, and deploy surfaces.
-    - current_path: docs/harness/architecture/rules/concerns/design-label-theming.yml
+    - current_path: docs/03.product/rules/design-system/concerns/design-label-theming.yml
       metadata_id: harness.architecture.rules.concerns.design-label-theming
       rulebook_id: concern.design-label-theming
       title: Design-label theming rules
       proposed_corpus_id: corpus.03.product.design-system
       proposed_target_path: corpus.03.product.design-system/rules/concerns/design-label-theming.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Primarily design-system theming, with app consumption edges.
-    - current_path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    - current_path: docs/03.product/rules/platform/concerns/events-messaging-async.yml
       metadata_id: harness.architecture.rules.concerns.events-messaging-async
       rulebook_id: concern.events-messaging-async
       title: Events, messaging, and async rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/events-messaging-async.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Product/platform async behavior with deployment infrastructure edges.
     - current_path: docs/harness/architecture/rules/concerns/generated-code.yml
       metadata_id: harness.architecture.rules.concerns.generated-code
@@ -216,69 +216,69 @@ yaml_artifacts:
       proposed_target_path: corpus.06.shared/rules/concerns/generated-code.yml
       migration_status: split-review-required
       reason: Applies across product generated outputs and harness/script generator surfaces.
-    - current_path: docs/harness/architecture/rules/concerns/i18n-localization.yml
+    - current_path: docs/03.product/rules/concerns/i18n-localization.yml
       metadata_id: harness.architecture.rules.concerns.i18n-localization
       rulebook_id: concern.i18n-localization
       title: Internationalization and localization rules
       proposed_corpus_id: corpus.03.product
       proposed_target_path: corpus.03.product/rules/concerns/i18n-localization.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Product-facing localization across apps, core, design-system, and platform surfaces.
-    - current_path: docs/harness/architecture/rules/concerns/identity-access-security.yml
+    - current_path: docs/03.product/rules/platform/concerns/identity-access-security.yml
       metadata_id: harness.architecture.rules.concerns.identity-access-security
       rulebook_id: concern.identity-access-security
       title: Identity, access, and security rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/identity-access-security.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Product/platform identity and authorization with deployment/security infrastructure edges.
-    - current_path: docs/harness/architecture/rules/concerns/notifications.yml
+    - current_path: docs/03.product/rules/platform/concerns/notifications.yml
       metadata_id: harness.architecture.rules.concerns.notifications
       rulebook_id: concern.notifications
       title: Notification rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/notifications.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Product notification contracts with provider and infrastructure edges.
-    - current_path: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    - current_path: docs/03.product/rules/platform/concerns/persistence-files-storage.yml
       metadata_id: harness.architecture.rules.concerns.persistence-files-storage
       rulebook_id: concern.persistence-files-storage
       title: Persistence, files, and storage rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/persistence-files-storage.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Product data/file contracts with infra storage and database edges.
-    - current_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    - current_path: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
       metadata_id: harness.architecture.rules.concerns.platform-adapter-consumption
       rulebook_id: concern.platform-adapter-consumption
       title: Platform adapter consumption rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/platform-adapter-consumption.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Governs platform adapter boundaries and app consumption.
-    - current_path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    - current_path: docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
       metadata_id: harness.architecture.rules.concerns.platform-infra-capability-layering
       rulebook_id: concern.platform-infra-capability-layering
       title: Platform and infra capability layering rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/platform-infra-capability-layering.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Governs capability placement across product core contracts, platform runtime, provider adapters, infra blueprints, provider resources, and environment values.
-    - current_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - current_path: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
       metadata_id: harness.architecture.rules.concerns.reporting-analytics-audit
       rulebook_id: concern.reporting-analytics-audit
       title: Reporting, analytics, audit, and observability rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/reporting-analytics-audit.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Product/platform reporting and observability with deploy/runtime operations edges.
-    - current_path: docs/harness/architecture/rules/concerns/tenancy.yml
+    - current_path: docs/03.product/rules/platform/concerns/tenancy.yml
       metadata_id: harness.architecture.rules.concerns.tenancy
       rulebook_id: concern.tenancy
       title: Tenancy rules
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rules/concerns/tenancy.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Product tenant context and isolation with persistence/platform/infrastructure edges.
     - current_path: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
       metadata_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
@@ -288,47 +288,47 @@ yaml_artifacts:
       proposed_target_path: corpus.06.shared/rules/concerns/typescript-monorepo-tooling.yml
       migration_status: split-review-required
       reason: Tooling rules apply across product, harness, scripts, infra, and root workspace files.
-    - current_path: docs/harness/architecture/rules/concerns/validation-api-errors.yml
+    - current_path: docs/03.product/rules/core/concerns/validation-api-errors.yml
       metadata_id: harness.architecture.rules.concerns.validation-api-errors
       rulebook_id: concern.validation-api-errors
       title: Validation and API error rules
       proposed_corpus_id: corpus.03.product.core
       proposed_target_path: corpus.03.product.core/rules/concerns/validation-api-errors.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-7
       reason: Core validation/error contracts with app, platform, and frontend consumption edges.
 
   rule_packs:
-    - current_path: docs/harness/architecture/rule-packs/add-core-module.yml
+    - current_path: docs/03.product/rule-packs/core/add-core-module.yml
       metadata_id: harness.architecture.rule-packs.add-core-module
       rulebook_id: pack.add-core-module
       title: Add or modify a packages/core module
       proposed_corpus_id: corpus.03.product.core
       proposed_target_path: corpus.03.product.core/rule-packs/add-core-module.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Task pack is scoped to packages/core module admission and dependency direction.
-    - current_path: docs/harness/architecture/rule-packs/add-design-system-component.yml
+    - current_path: docs/03.product/rule-packs/design-system/add-design-system-component.yml
       metadata_id: harness.architecture.rule-packs.add-design-system-component
       rulebook_id: pack.add-design-system-component
       title: Add or modify a design-system component
       proposed_corpus_id: corpus.03.product.design-system
       proposed_target_path: corpus.03.product.design-system/rule-packs/add-design-system-component.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Task pack is scoped to design-system components, tokens, primitives, patterns, and tests.
-    - current_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    - current_path: docs/03.product/rule-packs/platform/add-platform-adapter.yml
       metadata_id: harness.architecture.rule-packs.add-platform-adapter
       rulebook_id: pack.add-platform-adapter
       title: Add or modify a platform adapter
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/rule-packs/add-platform-adapter.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Task pack is scoped to platform adapter packages and platform profiles.
-    - current_path: docs/harness/architecture/rule-packs/create-entity.yml
+    - current_path: docs/03.product/rule-packs/apps/create-entity.yml
       metadata_id: harness.architecture.rule-packs.create-entity
       rulebook_id: pack.create-entity
       title: Create an entity through the entity-builder flow
       proposed_corpus_id: corpus.03.product.apps
       proposed_target_path: corpus.03.product.apps/rule-packs/create-entity.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-7
       reason: Task pack is scoped to app-owned entity definitions and generated product contract chains.
 
 reference_update_requirements:

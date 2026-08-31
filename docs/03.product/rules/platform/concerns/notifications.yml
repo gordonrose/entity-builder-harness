@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.notifications
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -30,13 +30,13 @@ description: >
   across core, apps, platform, and infra.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/i18n-localization.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-  - docs/harness/architecture/rules/concerns/tenancy.yml
-  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - docs/03.product/rules/concerns/i18n-localization.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
+  - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
 
 applies_to:
   paths:
@@ -150,7 +150,7 @@ source_refs:
       - "notifications/ deep dive"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/notifications.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/notifications.yml."
   - "It requires provider-neutral notification contracts."
   - "It keeps product copy, templates, preferences, and message meaning app-owned."
   - "It requires delivery tracking, retry, rate limit, and dead-letter handling where relevant."

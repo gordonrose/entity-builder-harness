@@ -90,7 +90,7 @@ YAML artifacts should use the same fields as YAML comments:
 #     targets: []
 #   used_by:
 #     - id: harness.rulepack.add-core-module
-#       path: docs/harness/architecture/rule-packs/add-core-module.yml
+#       path: docs/03.product/rule-packs/core/add-core-module.yml
 ```
 
 Script artifacts are also in scope for v2. They should eventually use the same

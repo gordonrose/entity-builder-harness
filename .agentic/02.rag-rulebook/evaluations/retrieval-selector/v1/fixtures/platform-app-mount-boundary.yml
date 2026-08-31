@@ -26,7 +26,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about app service/feature/capability structure before platform runtime retrieve the app mount boundary rules.
 input:
-  request_text: "Using docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md, docs/harness/architecture/rules/layers/platform.yml, docs/harness/architecture/rules/layers/apps.yml, and docs/harness/architecture/rules/concerns/dependency-direction.yml, explain the platform app mount boundary: apps expose app.mount.ts, the platform composition root is the only app importer, and platform must not depend on app internal service feature capability structure."
+  request_text: "Using docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md, docs/03.product/rules/platform/layers/platform.yml, docs/03.product/rules/apps/layers/apps.yml, and docs/harness/architecture/rules/concerns/dependency-direction.yml, explain the platform app mount boundary: apps expose app.mount.ts, the platform composition root is the only app importer, and platform must not depend on app internal service feature capability structure."
   session:
     trust_routing: true
     layer: 03.product
@@ -65,8 +65,8 @@ banned:
     - corpus.04.deploy
 source_refs:
   - docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/layers/apps.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/apps/layers/apps.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:

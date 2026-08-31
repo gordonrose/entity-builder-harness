@@ -16,9 +16,9 @@
   - id: harness.architecture.plan.platform-runtime-implementation
     path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
   - id: harness.architecture.rules.layers.apps
-    path: docs/harness/architecture/rules/layers/apps.yml
+    path: docs/03.product/rules/apps/layers/apps.yml
   - id: harness.architecture.rules.layers.platform
-    path: docs/harness/architecture/rules/layers/platform.yml
+    path: docs/03.product/rules/platform/layers/platform.yml
   - id: product.workflow.platform-runtime-implementation
     path: .agentic/03.product/workflows/platform-runtime-implementation.md
 -->

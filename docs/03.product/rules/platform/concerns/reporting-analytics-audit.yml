@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.reporting-analytics-audit
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -29,9 +29,9 @@ description: >
   tenant-aware, and placed in the correct architectural layer.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -208,7 +208,7 @@ source_refs:
       - "Quick comparison"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml."
   - "It keeps reporting, analytics, business intelligence, audit, logging, monitoring, and observability distinct."
   - "It requires audit records to be durable accountability evidence with actor, tenant, resource, action, timestamp, retention, access, and integrity expectations."
   - "It gives reports lifecycle, access, export, tenant, retention, and audit handling."

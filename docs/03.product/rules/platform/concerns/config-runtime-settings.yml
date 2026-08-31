@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.config-runtime-settings
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -31,10 +31,10 @@ description: >
   splits across core, apps, platform, and infra.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/identity-access-security.yml
-  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/identity-access-security.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -152,7 +152,7 @@ source_refs:
       - "Enterprise Future"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/config-runtime-settings.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/config-runtime-settings.yml."
   - "It requires typed config access and startup validation."
   - "It prevents scattered process.env access and late missing-config failures."
   - "It keeps secrets out of code and requires controlled secret references."

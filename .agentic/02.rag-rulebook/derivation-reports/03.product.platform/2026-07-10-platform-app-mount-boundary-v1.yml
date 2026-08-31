@@ -18,9 +18,9 @@
 #     - design-system-builder
 #   used_by:
 #   - id: harness.architecture.rules.layers.platform
-#     path: docs/harness/architecture/rules/layers/platform.yml
+#     path: docs/03.product/rules/platform/layers/platform.yml
 #   - id: harness.architecture.rules.layers.apps
-#     path: docs/harness/architecture/rules/layers/apps.yml
+#     path: docs/03.product/rules/apps/layers/apps.yml
 #   - id: harness.architecture.rules.concerns.dependency-direction
 #     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
 
@@ -43,16 +43,16 @@ target:
   corpus_id: corpus.03.product.platform
   owner_layer: 03.product
   expected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
   affected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
   affected_rulesets:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
@@ -75,8 +75,8 @@ semantic_review:
   conflicts:
     status: none-found
     search_scope:
-      - docs/harness/architecture/rules/layers/platform.yml
-      - docs/harness/architecture/rules/layers/apps.yml
+      - docs/03.product/rules/platform/layers/platform.yml
+      - docs/03.product/rules/apps/layers/apps.yml
       - docs/harness/architecture/rules/concerns/dependency-direction.yml
     items: []
   drift:
@@ -91,8 +91,8 @@ semantic_review:
 
 proposed_updates:
   rules:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
     - docs/harness/architecture/rules/concerns/dependency-direction.yml
   rule_packs: []
   recognition_sources: []

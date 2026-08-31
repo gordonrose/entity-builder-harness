@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.i18n-localization
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -30,9 +30,9 @@ description: >
   ownership splits across core, design-system, and apps.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/design-system.yml
-  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/design-system/layers/design-system.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -179,7 +179,7 @@ source_refs:
       - "Responsibility split"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/i18n-localization.yml."
+  - "The file exists at docs/03.product/rules/concerns/i18n-localization.yml."
   - "It distinguishes internationalization preparation from localization execution."
   - "It requires translation keys, safe interpolation, fallback locale behavior, pluralization strategy, and RTL support where relevant."
   - "It requires explicit locale resolution and validation."

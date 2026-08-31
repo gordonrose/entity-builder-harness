@@ -47,8 +47,8 @@ description: >
 related_rulesets:
   - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
   - docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
   - .agentic/aws/workflows/plan-aws-change.md
 
 applies_to:

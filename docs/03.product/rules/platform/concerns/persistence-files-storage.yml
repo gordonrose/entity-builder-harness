@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.persistence-files-storage
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -30,11 +30,11 @@ description: >
   isolation, and ownership splits across core, apps, platform, and infra.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/tenancy.yml
-  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
+  - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
 
 applies_to:
@@ -152,7 +152,7 @@ source_refs:
       - "persistence"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/persistence-files-storage.yml."
+  - "The file exists at docs/03.product/rules/platform/concerns/persistence-files-storage.yml."
   - "It keeps packages/core persistence contracts database-agnostic."
   - "It requires explicit transaction boundaries, optimistic locking where needed, and outbox support for state-plus-event consistency."
   - "It standardizes pagination and retention expectations."

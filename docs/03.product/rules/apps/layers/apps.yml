@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.layers.apps
 #   version: 3
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -36,11 +36,11 @@ applies_to:
     - "products/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/platform/layers/platform.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
-  - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+  - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
   - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
 
 app_surfaces:
@@ -343,7 +343,7 @@ source_refs:
       - "The simple v1 runtime flow"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/apps.yml."
+  - "The file exists at docs/03.product/rules/apps/layers/apps.yml."
   - "It defines apps/ as Kanbien's mountable app module layer and products/ as the product composition layer."
   - "It records products/kanbien-platform as the first Kanbien Platform product composition target."
   - "It keeps product behavior, route/page composition, app-level permissions, app config meaning, and workflow decisions in apps or product packages."

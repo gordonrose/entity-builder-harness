@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 832
-  term_count: 1676
+  indexed_artifacts: 837
+  term_count: 1686
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3600,53 +3600,29 @@ terms:
   canonical_id: harness.architecture.plan.platform-runtime-implementation.pointer
   evidence_path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
   confidence_weight: 1
-- term: harness.architecture.rule-packs.add-core-module
-  category: rule-pack-id
-  match_type: exact
-  canonical_id: harness.architecture.rule-packs.add-core-module
-  evidence_path: docs/harness/architecture/rule-packs/add-core-module.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rule-packs/add-core-module.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rule-packs.add-core-module
-  evidence_path: docs/harness/architecture/rule-packs/add-core-module.yml
-  confidence_weight: 1
-- term: harness.architecture.rule-packs.add-design-system-component
+- term: harness.architecture.rule-packs.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.rule-packs.add-design-system-component
-  evidence_path: docs/harness/architecture/rule-packs/add-design-system-component.yml
+  canonical_id: harness.architecture.rule-packs.pointer
+  evidence_path: docs/harness/architecture/rule-packs/README.md
   confidence_weight: 1
-- term: docs/harness/architecture/rule-packs/add-design-system-component.yml
+- term: docs/harness/architecture/rule-packs/README.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.rule-packs.add-design-system-component
-  evidence_path: docs/harness/architecture/rule-packs/add-design-system-component.yml
+  canonical_id: harness.architecture.rule-packs.pointer
+  evidence_path: docs/harness/architecture/rule-packs/README.md
   confidence_weight: 1
-- term: harness.architecture.rule-packs.add-platform-adapter
+- term: harness.architecture.rules.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.rule-packs.add-platform-adapter
-  evidence_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+  canonical_id: harness.architecture.rules.pointer
+  evidence_path: docs/harness/architecture/rules/README.md
   confidence_weight: 1
-- term: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+- term: docs/harness/architecture/rules/README.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.rule-packs.add-platform-adapter
-  evidence_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
-  confidence_weight: 1
-- term: harness.architecture.rule-packs.create-entity
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.rule-packs.create-entity
-  evidence_path: docs/harness/architecture/rule-packs/create-entity.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rule-packs/create-entity.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rule-packs.create-entity
-  evidence_path: docs/harness/architecture/rule-packs/create-entity.yml
+  canonical_id: harness.architecture.rules.pointer
+  evidence_path: docs/harness/architecture/rules/README.md
   confidence_weight: 1
 - term: harness.architecture.rules.concerns.ci-quality
   category: rule-id
@@ -3660,18 +3636,6 @@ terms:
   canonical_id: harness.architecture.rules.concerns.ci-quality
   evidence_path: docs/harness/architecture/rules/concerns/ci-quality.yml
   confidence_weight: 1
-- term: harness.architecture.rules.concerns.config-runtime-settings
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.config-runtime-settings
-  evidence_path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.config-runtime-settings
-  evidence_path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
-  confidence_weight: 1
 - term: harness.architecture.rules.concerns.dependency-direction
   category: rule-pack-id
   match_type: exact
@@ -3683,30 +3647,6 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.rules.concerns.dependency-direction
   evidence_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.design-label-theming
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.design-label-theming
-  evidence_path: docs/harness/architecture/rules/concerns/design-label-theming.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/design-label-theming.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.design-label-theming
-  evidence_path: docs/harness/architecture/rules/concerns/design-label-theming.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.events-messaging-async
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.events-messaging-async
-  evidence_path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.events-messaging-async
-  evidence_path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
   confidence_weight: 1
 - term: harness.architecture.rules.concerns.generated-code
   category: rule-id
@@ -3720,102 +3660,6 @@ terms:
   canonical_id: harness.architecture.rules.concerns.generated-code
   evidence_path: docs/harness/architecture/rules/concerns/generated-code.yml
   confidence_weight: 1
-- term: harness.architecture.rules.concerns.i18n-localization
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.i18n-localization
-  evidence_path: docs/harness/architecture/rules/concerns/i18n-localization.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/i18n-localization.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.i18n-localization
-  evidence_path: docs/harness/architecture/rules/concerns/i18n-localization.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.identity-access-security
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.identity-access-security
-  evidence_path: docs/harness/architecture/rules/concerns/identity-access-security.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/identity-access-security.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.identity-access-security
-  evidence_path: docs/harness/architecture/rules/concerns/identity-access-security.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.notifications
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.notifications
-  evidence_path: docs/harness/architecture/rules/concerns/notifications.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/notifications.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.notifications
-  evidence_path: docs/harness/architecture/rules/concerns/notifications.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.persistence-files-storage
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.persistence-files-storage
-  evidence_path: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.persistence-files-storage
-  evidence_path: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.platform-adapter-consumption
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.platform-adapter-consumption
-  evidence_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.platform-adapter-consumption
-  evidence_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.platform-infra-capability-layering
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.platform-infra-capability-layering
-  evidence_path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.platform-infra-capability-layering
-  evidence_path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.reporting-analytics-audit
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.reporting-analytics-audit
-  evidence_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.reporting-analytics-audit
-  evidence_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.tenancy
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.tenancy
-  evidence_path: docs/harness/architecture/rules/concerns/tenancy.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/tenancy.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.tenancy
-  evidence_path: docs/harness/architecture/rules/concerns/tenancy.yml
-  confidence_weight: 1
 - term: harness.architecture.rules.concerns.typescript-monorepo-tooling
   category: rule-id
   match_type: exact
@@ -3828,54 +3672,6 @@ terms:
   canonical_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
   evidence_path: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
   confidence_weight: 1
-- term: harness.architecture.rules.concerns.validation-api-errors
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.validation-api-errors
-  evidence_path: docs/harness/architecture/rules/concerns/validation-api-errors.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/validation-api-errors.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.validation-api-errors
-  evidence_path: docs/harness/architecture/rules/concerns/validation-api-errors.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.apps
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.apps
-  evidence_path: docs/harness/architecture/rules/layers/apps.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/apps.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.apps
-  evidence_path: docs/harness/architecture/rules/layers/apps.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.design-system
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.design-system
-  evidence_path: docs/harness/architecture/rules/layers/design-system.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/design-system.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.design-system
-  evidence_path: docs/harness/architecture/rules/layers/design-system.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.frontend-kit
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.frontend-kit
-  evidence_path: docs/harness/architecture/rules/layers/frontend-kit.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/frontend-kit.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.frontend-kit
-  evidence_path: docs/harness/architecture/rules/layers/frontend-kit.yml
-  confidence_weight: 1
 - term: harness.architecture.rules.layers.infra
   category: rule-id
   match_type: exact
@@ -3887,30 +3683,6 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.rules.layers.infra
   evidence_path: docs/harness/architecture/rules/layers/infra.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.packages-core
-  category: rule-pack-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.packages-core
-  evidence_path: docs/harness/architecture/rules/layers/packages-core.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/packages-core.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.packages-core
-  evidence_path: docs/harness/architecture/rules/layers/packages-core.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.platform
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.platform
-  evidence_path: docs/harness/architecture/rules/layers/platform.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/platform.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.platform
-  evidence_path: docs/harness/architecture/rules/layers/platform.yml
   confidence_weight: 1
 - term: harness.architecture.rules.layers.scripts-command-surface
   category: rule-pack-id
@@ -5939,6 +5711,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
   evidence_path: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-08-31-product-rules-and-packs
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-product-rules-and-packs
+  evidence_path: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-product-rules-and-packs
+  evidence_path: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml
   confidence_weight: 1
 - term: rag-rulebook.retirement.2026-08-31-product-source-material-paths
   category: artifact-id
@@ -7997,6 +7781,282 @@ terms:
   match_type: exact
   canonical_id: product.adrs.readme
   evidence_path: docs/03.product/adrs/README.md
+  confidence_weight: 1
+- term: product.rule-packs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.rule-packs.readme
+  evidence_path: docs/03.product/rule-packs/README.md
+  confidence_weight: 1
+- term: docs/03.product/rule-packs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.rule-packs.readme
+  evidence_path: docs/03.product/rule-packs/README.md
+  confidence_weight: 1
+- term: harness.architecture.rule-packs.create-entity
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.create-entity
+  evidence_path: docs/03.product/rule-packs/apps/create-entity.yml
+  confidence_weight: 1
+- term: docs/03.product/rule-packs/apps/create-entity.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.create-entity
+  evidence_path: docs/03.product/rule-packs/apps/create-entity.yml
+  confidence_weight: 1
+- term: harness.architecture.rule-packs.add-core-module
+  category: rule-pack-id
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.add-core-module
+  evidence_path: docs/03.product/rule-packs/core/add-core-module.yml
+  confidence_weight: 1
+- term: docs/03.product/rule-packs/core/add-core-module.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.add-core-module
+  evidence_path: docs/03.product/rule-packs/core/add-core-module.yml
+  confidence_weight: 1
+- term: harness.architecture.rule-packs.add-design-system-component
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.add-design-system-component
+  evidence_path: docs/03.product/rule-packs/design-system/add-design-system-component.yml
+  confidence_weight: 1
+- term: docs/03.product/rule-packs/design-system/add-design-system-component.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.add-design-system-component
+  evidence_path: docs/03.product/rule-packs/design-system/add-design-system-component.yml
+  confidence_weight: 1
+- term: harness.architecture.rule-packs.add-platform-adapter
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.add-platform-adapter
+  evidence_path: docs/03.product/rule-packs/platform/add-platform-adapter.yml
+  confidence_weight: 1
+- term: docs/03.product/rule-packs/platform/add-platform-adapter.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rule-packs.add-platform-adapter
+  evidence_path: docs/03.product/rule-packs/platform/add-platform-adapter.yml
+  confidence_weight: 1
+- term: product.rules.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.rules.readme
+  evidence_path: docs/03.product/rules/README.md
+  confidence_weight: 1
+- term: docs/03.product/rules/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.rules.readme
+  evidence_path: docs/03.product/rules/README.md
+  confidence_weight: 1
+- term: harness.architecture.rules.layers.apps
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.apps
+  evidence_path: docs/03.product/rules/apps/layers/apps.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/apps/layers/apps.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.apps
+  evidence_path: docs/03.product/rules/apps/layers/apps.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.i18n-localization
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.i18n-localization
+  evidence_path: docs/03.product/rules/concerns/i18n-localization.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/concerns/i18n-localization.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.i18n-localization
+  evidence_path: docs/03.product/rules/concerns/i18n-localization.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.validation-api-errors
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.validation-api-errors
+  evidence_path: docs/03.product/rules/core/concerns/validation-api-errors.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/core/concerns/validation-api-errors.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.validation-api-errors
+  evidence_path: docs/03.product/rules/core/concerns/validation-api-errors.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.layers.packages-core
+  category: rule-pack-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.packages-core
+  evidence_path: docs/03.product/rules/core/layers/packages-core.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/core/layers/packages-core.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.packages-core
+  evidence_path: docs/03.product/rules/core/layers/packages-core.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.design-label-theming
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.design-label-theming
+  evidence_path: docs/03.product/rules/design-system/concerns/design-label-theming.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/design-system/concerns/design-label-theming.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.design-label-theming
+  evidence_path: docs/03.product/rules/design-system/concerns/design-label-theming.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.layers.design-system
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.design-system
+  evidence_path: docs/03.product/rules/design-system/layers/design-system.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/design-system/layers/design-system.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.design-system
+  evidence_path: docs/03.product/rules/design-system/layers/design-system.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.layers.frontend-kit
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.frontend-kit
+  evidence_path: docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.frontend-kit
+  evidence_path: docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.config-runtime-settings
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.config-runtime-settings
+  evidence_path: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.config-runtime-settings
+  evidence_path: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.events-messaging-async
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.events-messaging-async
+  evidence_path: docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.events-messaging-async
+  evidence_path: docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.identity-access-security
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.identity-access-security
+  evidence_path: docs/03.product/rules/platform/concerns/identity-access-security.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/identity-access-security.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.identity-access-security
+  evidence_path: docs/03.product/rules/platform/concerns/identity-access-security.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.notifications
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.notifications
+  evidence_path: docs/03.product/rules/platform/concerns/notifications.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/notifications.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.notifications
+  evidence_path: docs/03.product/rules/platform/concerns/notifications.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.persistence-files-storage
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.persistence-files-storage
+  evidence_path: docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.persistence-files-storage
+  evidence_path: docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.platform-adapter-consumption
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.platform-adapter-consumption
+  evidence_path: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.platform-adapter-consumption
+  evidence_path: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.platform-infra-capability-layering
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.platform-infra-capability-layering
+  evidence_path: docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.platform-infra-capability-layering
+  evidence_path: docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.reporting-analytics-audit
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.reporting-analytics-audit
+  evidence_path: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.reporting-analytics-audit
+  evidence_path: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.tenancy
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.tenancy
+  evidence_path: docs/03.product/rules/platform/concerns/tenancy.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/concerns/tenancy.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.tenancy
+  evidence_path: docs/03.product/rules/platform/concerns/tenancy.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.layers.platform
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.platform
+  evidence_path: docs/03.product/rules/platform/layers/platform.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/platform/layers/platform.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.platform
+  evidence_path: docs/03.product/rules/platform/layers/platform.yml
   confidence_weight: 1
 - term: product.source-material.readme
   category: artifact-id

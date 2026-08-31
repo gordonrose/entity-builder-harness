@@ -54,7 +54,7 @@ expected:
       - packages/core/src/queues/index.ts
       - packages/core/src/index.ts
       - packages/core/README.md
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -70,7 +70,7 @@ source_refs:
   - packages/core/src/queues/index.ts
   - packages/core/src/index.ts
   - packages/core/README.md
-  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
 update_triggers:
   - packages/core audit or queues API changes.
   - packages/core README changes.

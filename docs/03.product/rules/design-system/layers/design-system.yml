@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.layers.design-system
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -295,7 +295,7 @@ source_refs:
       - "Part 6: Final recommended Kanbien architecture"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/design-system.yml."
+  - "The file exists at docs/03.product/rules/design-system/layers/design-system.yml."
   - "It defines packages/design-system ownership for tokens, resolvers, primitives, patterns, components, templates, providers, docs, tests, and governance."
   - "It keeps design-system code domain-neutral, accessible, documented, tested, and versioned."
   - "It keeps routed pages, product workflows, data fetching, permissions, analytics, and business logic in applications."

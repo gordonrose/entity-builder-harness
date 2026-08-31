@@ -45,7 +45,7 @@ expected:
         matched_input: prompt
   selected_chunks:
     required_source_paths:
-      - docs/harness/architecture/rules/layers/packages-core.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
       - packages/core/README.md
       - platform/contracts/README.md
       - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
@@ -60,7 +60,7 @@ expected:
   gaps:
     no_unexpected: true
 source_refs:
-  - docs/harness/architecture/rules/layers/packages-core.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
   - packages/core/README.md
   - platform/contracts/README.md
   - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md

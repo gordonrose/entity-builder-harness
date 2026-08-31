@@ -18,7 +18,7 @@ used_by:
 - id: harness.architecture.plan.platform-runtime-implementation
   path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
 - id: harness.architecture.rules.layers.platform
-  path: docs/harness/architecture/rules/layers/platform.yml
+  path: docs/03.product/rules/platform/layers/platform.yml
 -->
 # Platform Runtime Implementation Workflow
 

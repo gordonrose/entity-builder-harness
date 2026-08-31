@@ -1,0 +1,203 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.retirement.2026-08-31-product-rules-and-packs
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: retirement-record
+#   purpose: Record renamed prototype product rule and rule-pack paths after moving them to the product corpus.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+#     - id: rag-rulebook.script.check-corpus-root-changes
+#       path: scripts/02.rag-rulebook/check-corpus-root-changes/script.sh
+
+schema: rag-rulebook/retirement-record/v1
+retirement_id: rag-rulebook.retirement.2026-08-31-product-rules-and-packs
+status: accepted
+owner_layer: 03.product
+corpus_id: corpus.03.product
+retired_at_utc: "2026-08-31T19:21:33Z"
+retired_artifacts:
+  - path: docs/harness/architecture/rules/layers/apps.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 0c688f4093a3eb0b3a7bcf1d3cf4bb3cd1e0cc7d792d0802560e1c33a136f567
+    replacement_paths:
+      - docs/03.product/rules/apps/layers/apps.yml
+  - path: docs/harness/architecture/rules/layers/design-system.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 9f4c30c6342e52183dd9c20374ff504242d64ab29a624ba62c181373d276066d
+    replacement_paths:
+      - docs/03.product/rules/design-system/layers/design-system.yml
+  - path: docs/harness/architecture/rules/layers/frontend-kit.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 622c322dd831dcdf3ceedb2e339a088a939e24bbff0b41769bb377dcbb7b4492
+    replacement_paths:
+      - docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
+  - path: docs/harness/architecture/rules/layers/packages-core.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 1a7993700dae560c56f0c69eab3324f2b469c8e97bef2171193b1534697f4fa0
+    replacement_paths:
+      - docs/03.product/rules/core/layers/packages-core.yml
+  - path: docs/harness/architecture/rules/layers/platform.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: bee976b6e809a3dcc1bd3a40e1968bfc5ab1572c1a21a3dfee7a4f64d034e1f1
+    replacement_paths:
+      - docs/03.product/rules/platform/layers/platform.yml
+  - path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: fc0e9e5547520472378be0263bc38d2c245e9b6e0845b70b1dd63b0f4c8faf83
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+  - path: docs/harness/architecture/rules/concerns/design-label-theming.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: e0e544a0304b1cb573e8a22845d111de9ba16bedc5d8926f12b5b9eb0b3f3203
+    replacement_paths:
+      - docs/03.product/rules/design-system/concerns/design-label-theming.yml
+  - path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 18dacfcb69659c847af3f4023a9fe4963418c63f48ddad7c3fc1e48198cdd10c
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - path: docs/harness/architecture/rules/concerns/i18n-localization.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 3be9300198ce17ea2b3ce46c6291d27597037e9c1b3aa2cfe939e14864a056e7
+    replacement_paths:
+      - docs/03.product/rules/concerns/i18n-localization.yml
+  - path: docs/harness/architecture/rules/concerns/identity-access-security.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 058d8d6815f350d67da707bb52c5cd55277b082ef83e67e99fb5bd82069be316
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/identity-access-security.yml
+  - path: docs/harness/architecture/rules/concerns/notifications.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: dcc383d5910ddd859653d38ed5cc853fce81f09f069c36424fe4aa2ce4055015
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/notifications.yml
+  - path: docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: de5682f09f2d9163c15e31c60a1476d62bb9f420b38a928fbf120a630cc3b0b8
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+  - path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: f344b39a00dadf8ef62ad4c2b67a950b8295ed560b7e072f7de0a6051aa9c2ef
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  - path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 54cb6a36fe499065be74ae892604e6f469a1edfe11d7ee13efe46c7321fd5b58
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  - path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 04961fa00cfed02ec482272f4c8f462fcbdba7db7e98afb2eab4a83af5c91672
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  - path: docs/harness/architecture/rules/concerns/tenancy.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 793557ec8638d4b2a62945eebfba31c56d639b25988bc06c2427d4d1cf57aefd
+    replacement_paths:
+      - docs/03.product/rules/platform/concerns/tenancy.yml
+  - path: docs/harness/architecture/rules/concerns/validation-api-errors.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 08f448d68965cf2da616e4c06155c4dfc61ab90f1635f6e3e84311497fb2dfc4
+    replacement_paths:
+      - docs/03.product/rules/core/concerns/validation-api-errors.yml
+  - path: docs/harness/architecture/rule-packs/add-core-module.yml
+    kind: rule-pack
+    path_state: renamed
+    previous_sha256: e89a37e3b0c30ff091e43af3948426a4b08878e30c3cd55b969d78348c509dca
+    replacement_paths:
+      - docs/03.product/rule-packs/core/add-core-module.yml
+  - path: docs/harness/architecture/rule-packs/add-design-system-component.yml
+    kind: rule-pack
+    path_state: renamed
+    previous_sha256: 93fea0ae6c3eac4003188d72ba7ebf83cb883fcbca9ef2b4631db8ac083ff274
+    replacement_paths:
+      - docs/03.product/rule-packs/design-system/add-design-system-component.yml
+  - path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    kind: rule-pack
+    path_state: renamed
+    previous_sha256: d8f2645de3c87a39a3a60a1d763c8c903f8b46685503f5d6004a01c3c51fc76b
+    replacement_paths:
+      - docs/03.product/rule-packs/platform/add-platform-adapter.yml
+  - path: docs/harness/architecture/rule-packs/create-entity.yml
+    kind: rule-pack
+    path_state: renamed
+    previous_sha256: 939c3ada85bf5486bbd4980218894c609676a5ea8f9e6f198d113c285b55c05a
+    replacement_paths:
+      - docs/03.product/rule-packs/apps/create-entity.yml
+reason:
+  - Product-owned structured rules and task packs moved out of the prototype harness architecture tree into the owner-aligned product corpus.
+  - Product platform rules with deploy edges stayed intact for this slice because their rule content governs product runtime contracts while deploy-owned rule placement remains linked through related rulesets.
+  - Active references now point at the canonical product rule and rule-pack paths, while shared, deploy, and harness rule candidates remain in the legacy prototype root for later governed migration.
+reference_checks:
+  checked_roots:
+    - .agentic/01.harness
+    - .agentic/02.rag-rulebook
+    - .agentic/03.product
+    - .agentic/aws
+    - docs/harness/architecture
+    - docs/00.chat
+    - docs/01.harness
+    - docs/02.rag-rulebook
+    - docs/03.product
+    - docs/04.deploy
+    - docs/06.shared
+    - scripts/01.harness
+    - scripts/02.rag-rulebook
+  remaining_references: []
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+    - bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: accept
+  reviewer: Gordon Rose

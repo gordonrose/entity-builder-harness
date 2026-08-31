@@ -82,6 +82,15 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Updated the artifact path migration checker and smoke test so governed
   RAG/rulebook retirement records can preserve old paths as audit evidence
   without counting as active old-path references.
+- Started execution slice 7 by moving product structured rules and product
+  task rule packs from the prototype corpus into `docs/03.product/rules/**`
+  and `docs/03.product/rule-packs/**`.
+- Added product rule and rule-pack README artifacts plus compatibility pointer
+  READMEs at the old prototype roots.
+- Updated harness forward guidance, active rule graph references, source
+  derivation paths and hashes, migration-map statuses, generated recognition
+  sources, rulebook index discovery, runtime smoke expectations, and the
+  product rule retirement record.
 
 ## Questions Asked
 
@@ -101,6 +110,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - The full selector fixture matrix again ran silently during slice 6 and was
   stopped after several polling windows. The focused product source-material
   selector set passed 14/14 and remains the validation evidence for this slice.
+- The generated rulebook index still reports one unrelated warning for
+  `.agentic/shared/workflows/deployment-process.md` from
+  `artifact.concern.mcp.server.deployment.architecture`; validators and smoke
+  checks continue to pass.
 
 ## Decisions Made
 
@@ -169,6 +182,16 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   `.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml`.
 - Artifact path migration checks exclude governed RAG/rulebook retirement
   records when searching for active old-path references.
+- Product structured rules and product task rule packs are now canonical under
+  `docs/03.product/rules/**` and `docs/03.product/rule-packs/**`.
+- Old product rule and rule-pack prototype roots now contain compatibility
+  pointer README artifacts, not duplicate product YAML.
+- Active references to the moved product YAML artifacts now use canonical
+  product corpus paths; exact retired prototype YAML paths are preserved in
+  `.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml`.
+- `generate-rulebook-index` now skips live current-corpus YAML entries already
+  represented by the migration map so migrated artifacts keep their mapped
+  subcorpus metadata without duplicate discovered entries.
 
 
 - Decision: Record RAG knowledge disposition: covered
@@ -193,6 +216,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Execution slice 6 is covered by the corpus split migration plan, product source-material README artifacts, canonical product source-material files, directory compatibility pointers, source projection updates, the product guide corpus gap, the product source-material retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 7 is covered by the corpus split migration plan, product rules and rule-pack README artifacts, canonical product structured rule YAML, canonical product task packs, old-root compatibility pointers, updated rule graph references, source derivation hash updates, the product rules retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 
 ## Context Hygiene
 
@@ -223,6 +250,13 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   no-rule dispositions.
 - Historical `commitLogs/**` references to old paths were left as audit
   history.
+- Slice 7 work continues in the same chat-owned worktree. Old product rule and
+  rule-pack roots now contain compatibility pointer READMEs, not duplicate
+  product YAML.
+- The moved product source-material hashes changed only because their metadata
+  `used_by` paths now point at canonical product rule files.
+- Historical `commitLogs/**` references to old product rule and rule-pack paths
+  were left as audit history.
 
 ## Activity Log
 
@@ -676,6 +710,97 @@ Summary: Moved product source-material Markdown files, long-form guide derivativ
 
 ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product source material and guide evidence.
 
+### 2026-08-31T19:37:14Z - Execution slice 7 started
+
+Moved product structured rules into the owner-aligned product corpus:
+
+- `docs/03.product/rules/apps/layers/apps.yml`
+- `docs/03.product/rules/core/layers/packages-core.yml`
+- `docs/03.product/rules/core/concerns/validation-api-errors.yml`
+- `docs/03.product/rules/design-system/layers/design-system.yml`
+- `docs/03.product/rules/design-system/concerns/design-label-theming.yml`
+- `docs/03.product/rules/frontend-kit/layers/frontend-kit.yml`
+- `docs/03.product/rules/platform/layers/platform.yml`
+- `docs/03.product/rules/platform/concerns/config-runtime-settings.yml`
+- `docs/03.product/rules/platform/concerns/events-messaging-async.yml`
+- `docs/03.product/rules/platform/concerns/identity-access-security.yml`
+- `docs/03.product/rules/platform/concerns/notifications.yml`
+- `docs/03.product/rules/platform/concerns/persistence-files-storage.yml`
+- `docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml`
+- `docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml`
+- `docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml`
+- `docs/03.product/rules/platform/concerns/tenancy.yml`
+- `docs/03.product/rules/concerns/i18n-localization.yml`
+
+Moved product task rule packs into product subcorpora:
+
+- `docs/03.product/rule-packs/apps/create-entity.yml`
+- `docs/03.product/rule-packs/core/add-core-module.yml`
+- `docs/03.product/rule-packs/design-system/add-design-system-component.yml`
+- `docs/03.product/rule-packs/platform/add-platform-adapter.yml`
+
+Added `docs/03.product/rules/README.md`,
+`docs/03.product/rule-packs/README.md`,
+`docs/harness/architecture/rules/README.md`, and
+`docs/harness/architecture/rule-packs/README.md` so forward placement and
+legacy compatibility are explicit.
+
+Updated harness forward guidance, product ADR/source references,
+source-derivation paths and hashes, rule-pack `required_rulesets`, migration
+map statuses, generated recognition sources, runtime smoke expectations, and
+the rulebook index generator's current-corpus YAML discovery.
+
+Added
+`.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml`
+for the removed exact prototype product YAML paths, including prior SHA-256
+hashes and replacement product paths.
+
+Focused selector validation passed:
+
+- `bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh` with the 27 fixtures that cite `docs/03.product/rules` or `docs/03.product/rule-packs`.
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/run-local-service/smoke-test.sh`
+- `bash scripts/01.harness/check-governed-script-command-drift.sh`
+- `git diff --check`
+
+Concrete path-migration checks passed for all 21 moved product rule and
+rule-pack source/target pairs. A focused stale-reference scan found no active
+old product rule or rule-pack references outside governed retirement evidence
+and historical session logs.
+
+Non-blocking validation note:
+
+- `bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --index /tmp/current-rulebook-index.json` passed with one unrelated warning for `.agentic/shared/workflows/deployment-process.md` from `artifact.concern.mcp.server.deployment.architecture`.
+
+
+### 2026-08-31T19:37:44Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 7 is covered by the corpus split migration plan,
+product rules and rule-pack README artifacts, canonical product structured rule
+YAML, canonical product task packs, old-root compatibility pointers, updated
+rule graph references, source derivation hash updates, the product rules
+retirement record, refreshed recognition sources, runtime freshness, and
+focused selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -741,8 +866,8 @@ ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus spli
 ADR needed: yes
 ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
 Reason: ADR 0032 records the owner-aligned ADR root decision. Execution slice
-6 applies that accepted decision to product source material, product guide
-source evidence, and old-path compatibility without introducing a new ADR-level
+7 applies that accepted decision to product structured rules, product task
+rule packs, and old-path compatibility without introducing a new ADR-level
 policy change.
 
 ## Session Metrics
@@ -762,16 +887,18 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 6 is covered by the corpus split migration plan, product source-material README artifacts, canonical product source-material files, directory compatibility pointers, source projection updates, the product guide corpus gap, the product source-material retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+Reason: Execution slice 7 is covered by the corpus split migration plan, product rules and rule-pack README artifacts, canonical product structured rule YAML, canonical product task packs, old-root compatibility pointers, updated rule graph references, source derivation hash updates, the product rules retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 Evidence:
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
-- docs/03.product/source-material/README.md
-- docs/03.product/source-material/core/packages-core-contract-surface-v1.md
-- docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
-- docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+- docs/03.product/rules/README.md
+- docs/03.product/rule-packs/README.md
+- docs/03.product/rules/platform/layers/platform.yml
+- docs/03.product/rules/core/layers/packages-core.yml
+- docs/03.product/rules/apps/layers/apps.yml
+- docs/03.product/rule-packs/platform/add-platform-adapter.yml
+- docs/03.product/rule-packs/core/add-core-module.yml
 - .agentic/02.rag-rulebook/source-projections/v1.yml
-- .agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml
-- .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml
+- .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 Corpus gaps:
 - None.

@@ -56,23 +56,27 @@ A rule pack answers: "What rules and steps apply to this task?"
 
 ## Decision Model
 
-Layer rules belong in:
+Product layer rules belong in owner topic subdirectories such as:
 
 ```text
-docs/harness/architecture/rules/layers/*.yml
+docs/03.product/rules/<topic>/layers/*.yml
 ```
 
-Concern rules belong in:
+Product concern rules belong in owner topic subdirectories such as:
 
 ```text
-docs/harness/architecture/rules/concerns/*.yml
+docs/03.product/rules/<topic>/concerns/*.yml
 ```
 
-Rule packs belong in:
+Product rule packs belong in owner topic subdirectories such as:
 
 ```text
-docs/harness/architecture/rule-packs/*.yml
+docs/03.product/rule-packs/<topic>/*.yml
 ```
+
+Legacy deploy, harness, and shared rule candidates remain under
+`docs/harness/architecture/rules` until later migration slices move or split
+them. Do not add new product rule artifacts to the legacy prototype root.
 
 ## Default Flow
 

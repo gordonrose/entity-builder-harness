@@ -34,7 +34,7 @@ related_rulesets:
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
-  - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+  - docs/03.product/rules/core/concerns/validation-api-errors.yml
 
 applies_to:
   paths:

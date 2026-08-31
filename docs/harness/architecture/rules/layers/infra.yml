@@ -36,9 +36,9 @@ applies_to:
     - "infra/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/apps.yml
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+  - docs/03.product/rules/apps/layers/apps.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/ci-quality.yml
 

@@ -49,19 +49,23 @@ rubrics, executable fixtures, and deterministic validators are also governed
 capabilities when a workflow or standard assigns them explicit ownership.
 
 RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
-The architecture rulebook artifacts referenced here remain a prototype corpus
-until a governed migration assigns final domain corpus homes.
+The prototype architecture corpus is being split into owner-aligned corpus
+homes as governed migration slices complete.
 
 New document artifacts should use
 `standards/document-artifact-placement.md` instead of extending the prototype
 `docs/harness/architecture/**` corpus.
 
-Canonical architecture source remains
+Canonical product architecture source remains
 `docs/03.product/source-material/guides/markdown`.
 
-Canonical rules remain `docs/harness/architecture/rules`.
+Canonical product rules now live under `docs/03.product/rules`.
 
-Canonical rule packs remain `docs/harness/architecture/rule-packs`.
+Canonical product rule packs now live under `docs/03.product/rule-packs`.
+
+Legacy deploy, harness, and shared rule candidates remain under
+`docs/harness/architecture/rules` until later migration slices move or split
+them.
 
 Future Codex sessions continuing harness-governance work should start by
 reading `manifest.yml`, the relevant workflow, and any standard named by that

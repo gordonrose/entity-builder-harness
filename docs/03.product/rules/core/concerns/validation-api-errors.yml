@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.validation-api-errors
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -30,11 +30,11 @@ description: >
   splitting ownership across core, apps, platform, and generated artifacts.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
   - docs/harness/architecture/rules/concerns/generated-code.yml
-  - docs/harness/architecture/rules/concerns/i18n-localization.yml
-  - docs/harness/architecture/rules/concerns/identity-access-security.yml
+  - docs/03.product/rules/concerns/i18n-localization.yml
+  - docs/03.product/rules/platform/concerns/identity-access-security.yml
 
 applies_to:
   paths:
@@ -151,7 +151,7 @@ source_refs:
       - "validation"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/validation-api-errors.yml."
+  - "The file exists at docs/03.product/rules/core/concerns/validation-api-errors.yml."
   - "It requires server-side runtime validation for unknown input."
   - "It standardizes ValidationResult and ValidationError shapes with path, code, and message."
   - "It requires consistent API validation error responses."

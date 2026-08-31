@@ -3,7 +3,7 @@
 #   id: harness.architecture.rule-packs.add-design-system-component
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 03.product
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -36,10 +36,10 @@ applies_when:
   - "A task adds supporting primitives, patterns, builder tokens, generated token artifacts, or application usage examples for a design-system component."
 
 required_rulesets:
-  - "../rules/layers/design-system.yml"
-  - "../rules/concerns/design-label-theming.yml"
-  - "../rules/concerns/dependency-direction.yml"
-  - "../rules/concerns/ci-quality.yml"
+  - docs/03.product/rules/design-system/layers/design-system.yml
+  - docs/03.product/rules/design-system/concerns/design-label-theming.yml
+  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/harness/architecture/rules/concerns/ci-quality.yml
 
 required_checks:
   - "Confirm the component follows the chain: design label -> foundation tokens -> semantic tokens -> builder tokens -> primitive -> pattern -> component -> application usage."
@@ -105,11 +105,11 @@ must_not:
   - "Do not add a component without documentation, tests, accessibility notes, and migration notes when a public surface changes."
 
 success_criteria:
-  - "The rule pack exists at docs/harness/architecture/rule-packs/add-design-system-component.yml."
-  - "The rule pack references ../rules/layers/design-system.yml."
-  - "The rule pack references ../rules/concerns/design-label-theming.yml."
-  - "The rule pack references ../rules/concerns/dependency-direction.yml."
-  - "The rule pack references ../rules/concerns/ci-quality.yml."
+  - "The rule pack exists at docs/03.product/rule-packs/design-system/add-design-system-component.yml."
+  - "The rule pack references docs/03.product/rules/design-system/layers/design-system.yml."
+  - "The rule pack references docs/03.product/rules/design-system/concerns/design-label-theming.yml."
+  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
+  - "The rule pack references docs/harness/architecture/rules/concerns/ci-quality.yml."
   - "The task preserves stable component APIs across design labels."
   - "The task keeps token, primitive, pattern, component, provider, app usage, docs, and tests in their correct owners."
   - "The task validates typecheck, lint, accessibility, token graph, visual regression, and app usage checks where applicable."

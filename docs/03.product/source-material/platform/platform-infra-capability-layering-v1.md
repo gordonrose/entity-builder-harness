@@ -18,7 +18,7 @@
     - design-system-builder
   used_by:
   - id: harness.architecture.rules.concerns.platform-infra-capability-layering
-    path: docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    path: docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
 -->
 # Platform and Infra Capability Layering v1
 
