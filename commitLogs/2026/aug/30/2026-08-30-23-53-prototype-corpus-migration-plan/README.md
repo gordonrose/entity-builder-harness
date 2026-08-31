@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T00:01:48Z
-latest_commit_sha: 95e7534
-chat_duration: 4111s (00:01:08:31)
+latest_commit_at_utc: 2026-08-31T00:38:33Z
+latest_commit_sha: 087415a
+chat_duration: 6316s (00:01:45:16)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -231,6 +231,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Execution slice 1 is covered by the governed corpus split plan, document placement standard, canonical product plan, compatibility pointer, refreshed recognition sources, root-discovery script updates, runtime freshness, and focused selector fixture coverage.
 
+
+### 2026-08-31T00:38:33Z - Commit recorded
+
+Commit: `087415a`
+
+Message: Execute prototype corpus split slice 1
+
+Summary: Initialized numbered corpus roots, registered root-discovery checks, moved the platform runtime plan to product governance, left a compatibility pointer, and refreshed generated recognition sources.
+
+ADR impact: No new ADR; this starts the governed corpus split without retiring the prototype root.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -244,6 +255,13 @@ Rationale: Execution slice 1 is covered by the governed corpus split plan, docum
   Message: Plan prototype corpus domain split
   Summary: Added the prototype corpus domain-split migration plan, a harness document-artifact placement standard, and refreshed generated recognition sources.
   ADR impact: No ADR created; the slice planned the migration and added governance without moving durable docs roots.
+
+
+- Commit: `087415a`
+  Time UTC: 2026-08-31T00:38:33Z
+  Message: Execute prototype corpus split slice 1
+  Summary: Initialized numbered corpus roots, registered root-discovery checks, moved the platform runtime plan to product governance, left a compatibility pointer, and refreshed generated recognition sources.
+  ADR impact: No new ADR; this starts the governed corpus split without retiring the prototype root.
 
 ## Main Refresh Conflicts
 
@@ -262,9 +280,9 @@ retiring old prototype paths because that changes durable documentation layout.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T00:01:48Z
-Latest commit SHA: 95e7534
-Chat duration: 4111s (00:01:08:31)
+Latest commit at UTC: 2026-08-31T00:38:33Z
+Latest commit SHA: 087415a
+Chat duration: 6316s (00:01:45:16)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
