@@ -22,6 +22,11 @@ used_by:
 
 # Harness Architecture Decision Records
 
+This prototype ADR root is being split into owner-aligned ADR roots by
+`docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md` and
+`.agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md`.
+Do not add ordinary new ADRs here while the migration is active.
+
 Harness ADRs record durable decisions about the agentic harness: workflows,
 gates, scripts, routing, session state, and agent operating rules.
 

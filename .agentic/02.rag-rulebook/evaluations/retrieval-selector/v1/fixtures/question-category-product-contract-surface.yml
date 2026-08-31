@@ -48,7 +48,7 @@ expected:
       - docs/harness/architecture/rules/layers/packages-core.yml
       - packages/core/README.md
       - platform/contracts/README.md
-      - docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+      - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -63,7 +63,7 @@ source_refs:
   - docs/harness/architecture/rules/layers/packages-core.yml
   - packages/core/README.md
   - platform/contracts/README.md
-  - docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+  - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
 update_triggers:
   - Product contract surface vocabulary changes.
   - packages/core or platform/contracts orientation changes.

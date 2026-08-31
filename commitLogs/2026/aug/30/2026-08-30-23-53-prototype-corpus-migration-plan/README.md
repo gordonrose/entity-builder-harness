@@ -53,6 +53,9 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Rebuilt the local runtime and validated execution slice 1 with corpus,
   metadata, recognition, projection, derivation, explanation-readiness,
   migration-helper, and focused selector checks.
+- Started execution slice 2 by adding ADR 0032 for owner-aligned ADR roots,
+  updating the commit readiness gate to accept numbered ADR roots, and moving
+  the first product-owned ADR batch into `docs/03.product/adrs/`.
 
 ## Questions Asked
 
@@ -64,6 +67,11 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   10-minute bounded run and emitted no report. The focused migration selector
   set passed 5/5; treat the broad matrix runtime as a follow-up rather than a
   blocker for this focused migration slice.
+- The first focused selector run after moving product ADRs failed because one
+  product-contract fixture path replacement malformed a YAML list item and the
+  app-mount fixture needed a clearer prompt phrase to keep the composition-root
+  rule selected under the 12-chunk limit. Both fixture issues were corrected
+  and the focused set passed 4/4.
 
 ## Decisions Made
 
@@ -89,10 +97,23 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   `harness.architecture.plan.platform-runtime-implementation`, but its
   canonical path is now
   `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
+- Owner-aligned ADR roots are now the durable target for new and migrated
+  corpus-history ADRs. The commit readiness gate accepts
+  `docs/<numbered-layer>/adrs/*.md` while retaining legacy
+  `docs/<track>/architecture/adrs/*.md` roots during migration.
+- Product ADRs 0024, 0025, 0026, 0027, and 0031 are now canonical under
+  `docs/03.product/adrs/` with stable artifact IDs preserved and old-path
+  compatibility pointers left in `docs/harness/architecture/adrs/`.
+- ADR 0019 remains accepted for the chat docs namespace, but its centralized
+  ADR storage clause is superseded by ADR 0032.
 
 
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Execution slice 1 is covered by the governed corpus split plan, document placement standard, canonical product plan, compatibility pointer, refreshed recognition sources, root-discovery script updates, runtime freshness, and focused selector fixture coverage.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 2 is covered by ADR 0032, the corpus split migration plan, product ADR canonical files and pointers, updated retrieval evidence, refreshed recognition sources, and focused selector fixture coverage.
 
 ## Context Hygiene
 
@@ -105,6 +126,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   added.
 - The old platform runtime implementation plan path now contains a
   compatibility pointer, not a duplicate plan.
+- Slice 2 work continues in the same chat-owned worktree. Old product ADR
+  paths now contain compatibility pointers, not duplicate ADR text.
+- Historical `commitLogs/**` references to old paths were left as audit
+  history.
 
 ## Activity Log
 
@@ -242,6 +267,54 @@ Summary: Initialized numbered corpus roots, registered root-discovery checks, mo
 
 ADR impact: No new ADR; this starts the governed corpus split without retiring the prototype root.
 
+### 2026-08-31T00:48:00Z - Execution slice 2 started
+
+Added `docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md` to record
+the owner-aligned ADR root decision. Added ADR root READMEs for
+`docs/01.harness/adrs/` and `docs/03.product/adrs/`.
+
+Updated the chat commit readiness gate, its smoke test, and its documentation
+so ADR disposition accepts numbered ADR roots such as
+`docs/01.harness/adrs/` as well as legacy transition roots such as
+`docs/harness/architecture/adrs/`.
+
+Moved product-owned ADRs 0024, 0025, 0026, 0027, and 0031 to
+`docs/03.product/adrs/`, preserved their stable artifact IDs, updated active
+RAG references for product-contract and app-mount evidence, and left
+compatibility pointers at the old prototype ADR paths.
+
+Focused selector validation passed after correcting product ADR path
+expectations:
+
+- `timeout 300 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-product-contract-surface.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-domain-corpus-package.yml`
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- `bash scripts/01.harness/check-governed-script-command-drift.sh`
+- `git diff --check`
+
+
+### 2026-08-31T01:02:35Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 2 is covered by ADR 0032, the corpus split migration plan, product ADR canonical files and pointers, updated retrieval evidence, refreshed recognition sources, and focused selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -269,13 +342,11 @@ ADR impact: No new ADR; this starts the governed corpus split without retiring t
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path:
-Reason: The planning slice added a migration-plan artifact and harness
-placement standard. Execution slice 1 initializes numbered corpus roots and
-moves one implementation plan with pointer compatibility, but does not retire
-the prototype corpus root. A corpus-split ADR should be added or updated before
-retiring old prototype paths because that changes durable documentation layout.
+ADR needed: yes
+ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
+Reason: Execution slice 2 changes the durable ADR storage contract by
+introducing owner-aligned ADR roots and updating the commit readiness gate to
+accept numbered ADR locations.
 
 ## Session Metrics
 
@@ -294,15 +365,18 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 1 is covered by the governed corpus split plan, document placement standard, canonical product plan, compatibility pointer, refreshed recognition sources, root-discovery script updates, runtime freshness, and focused selector fixture coverage.
+Reason: Execution slice 2 is covered by ADR 0032, the corpus split migration plan, product ADR canonical files and pointers, updated retrieval evidence, refreshed recognition sources, and focused selector fixture coverage.
 Evidence:
+- docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
-- .agentic/01.harness/standards/document-artifact-placement.md
-- .agentic/03.product/plans/implementation/platform-runtime-implementation.md
-- docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+- docs/03.product/adrs/0024-use-translation-ready-message-descriptors.md
+- docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+- docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+- docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
+- docs/03.product/adrs/0031-use-products-as-app-composition-boundary.md
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
-- scripts/02.rag-rulebook/generate-rulebook-index/script.sh
-- scripts/02.rag-rulebook/build-local-runtime/script.sh
-- infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-product-contract-surface.yml
+- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+- scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
 Corpus gaps:
 - None.

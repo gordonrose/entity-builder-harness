@@ -38,6 +38,8 @@ Use this corpus for harness ADRs, harness source material, harness-owned
 structured rules, command-surface rules, metadata migration history, and
 documentation layout decisions.
 
+Harness ADRs live under `adrs/`.
+
 Do not store product runtime contracts, deployment runbooks, reusable
 RAG/rulebook service rules, or general shared-process standards here unless the
 decision owner is the harness layer.

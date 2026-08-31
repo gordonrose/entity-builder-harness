@@ -203,12 +203,12 @@ evidence_bundles:
       - docs/harness/architecture/rules/layers/packages-core.yml
       - packages/core/README.md
       - platform/contracts/README.md
-      - docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+      - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
     family_source_paths:
       evidence.layer.packages-core: docs/harness/architecture/rules/layers/packages-core.yml
       evidence.packages-core.readme: packages/core/README.md
       evidence.platform-contracts.readme: platform/contracts/README.md
-      evidence.platform-contracts.composed-runtime-contexts-adr: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+      evidence.platform-contracts.composed-runtime-contexts-adr: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   - question_category_id: question.platform-adapter.external-boundary
     always_source_paths:
       - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml

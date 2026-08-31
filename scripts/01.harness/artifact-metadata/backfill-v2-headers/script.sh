@@ -369,7 +369,7 @@ def purpose_for(path: Path, metadata: dict[str, Any]) -> str:
             return f"Define the {leaf} architecture rule artifact."
         return f"Define the {leaf} configuration artifact."
     title = title_from_markdown(path) or humanize(path.stem)
-    if s.startswith("docs/harness/architecture/adrs/"):
+    if "/adrs/" in s:
         return f"Record the {title} architecture decision."
     return f"Document {title}."
 
@@ -562,6 +562,10 @@ def used_by_for(path: Path, metadata: dict[str, Any]) -> list[dict[str, str]]:
     s = path.as_posix()
     if s.startswith("docs/harness/architecture/rules/"):
         ref = ".agentic/01.harness/workflows/change-harness.md"
+    elif s.startswith("docs/01.harness/adrs/"):
+        ref = "docs/01.harness/adrs/README.md"
+    elif s.startswith("docs/03.product/adrs/"):
+        ref = "docs/03.product/adrs/README.md"
     elif s.startswith("docs/harness/architecture/adrs/"):
         ref = "docs/harness/architecture/adrs/README.md"
     elif s.startswith("docs/harness/architecture/"):

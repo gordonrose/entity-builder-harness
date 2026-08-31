@@ -37,7 +37,9 @@ the RAG/rulebook service can index, chunk, cite, and evaluate.
 
 Use this corpus for product architecture guides, product source material,
 apps rules, packages/core rules, design-system rules, frontend-kit rules,
-platform/runtime rules, and product task rule packs.
+platform/runtime rules, product task rule packs, and product-owned ADRs.
+
+Product ADRs live under `adrs/`.
 
 Product corpus material may be subdivided by owner topic, including `apps`,
 `core`, `design-system`, `frontend-kit`, and `platform`.

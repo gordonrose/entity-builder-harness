@@ -15,7 +15,7 @@ portability:
   targets: []
 used_by:
 - id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
-  path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+    path: docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
 -->
 # Platform Adapters
 

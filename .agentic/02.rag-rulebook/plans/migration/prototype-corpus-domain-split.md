@@ -71,6 +71,11 @@ file-level target inventory for this migration plan.
   The full selector fixture matrix exceeded a 10-minute bounded run and should
   be treated as a separate performance/coverage follow-up before requiring it
   for every migration slice.
+- 2026-08-31 Slice 2 started ADR migration. Added ADR 0032 to record
+  owner-aligned ADR roots, updated the chat commit readiness gate to accept
+  numbered ADR roots, added `docs/01.harness/adrs/` and
+  `docs/03.product/adrs/` READMEs, and moved product-owned ADRs 0024, 0025,
+  0026, 0027, and 0031 to `docs/03.product/adrs/` with old-path pointers.
 
 ## Target Homes
 
@@ -170,6 +175,47 @@ families expected by that map:
 The exact ADR split should be a first execution deliverable. Do not move ADRs
 as a bulk directory until each ADR has an assigned decision owner and stable
 target path.
+
+## ADR Owner Classification
+
+This table records the provisional target owner for prototype ADRs before
+moving them. Move files in small batches and keep old-path pointer
+compatibility until active references are updated.
+
+| ADR | Owner | Target root | Status |
+| --- | --- | --- | --- |
+| 0001 Record Harness Session Decisions Before Commit | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0002 Clean Up Duplicate Chat Branches | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0003 Review Process Prose For Deterministic Gates | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0004 Group Chat Logs And Summarize Session Metrics | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0006 Use Session Metadata For Routing After Chat Start | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0007 Require Explicit Write Permission With Bookkeeping Exception | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0008 Add Education Layer | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0009 Use Isolated Worktrees For Session Commit Boundaries | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0010 Protect Commit Logs With Recorded Work | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0011 Use Chat-Owned Worktrees For Local Convergence | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0012 Treat Missing Governance As Stop Condition | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0013 Create Chat Layer And On-Demand Session Summary | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0014 Promote Reusable Lessons Upstream | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0015 Use Shared Upstream Repo Bootstrap Standard | `06.shared` | `docs/06.shared/adrs/` | pending |
+| 0016 Add AWS Layer | `04.deploy` | `docs/04.deploy/adrs/` | pending |
+| 0017 Organize Scripts By Owner, Domain, And Capability | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0018 Govern Artifact Path Migrations | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0019 Use Chat Docs Namespace | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0020 Use Scripts For Layer Command Surfaces | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0021 Use Versioned Artifact Metadata For Agent Navigation | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0022 Add RAG/Rulebook Layer | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | pending |
+| 0023 Require RAG Knowledge Disposition For Code Changes | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | pending |
+| 0024 Use Translation-Ready Message Descriptors | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
+| 0025 Place Composed Runtime Contexts In Platform Contracts | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
+| 0026 Use App Mount As Platform Integration Boundary | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
+| 0027 Use Provider Type Service Adapter Layout | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
+| 0028 Use Client Environment Deployment Target Profiles | `04.deploy` | `docs/04.deploy/adrs/` | pending |
+| 0029 Use Purpose And Authority Aware RAG Retrieval | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | pending |
+| 0030 Require Formal Commit Readiness Gate Before Task Commits | `00.chat` | `docs/00.chat/adrs/` | pending |
+| 0031 Use Products As App Composition Boundary | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
+| 0032 Use Owner-Aligned ADR Roots | `01.harness` | `docs/01.harness/adrs/` | added in slice 2 |
 
 ## Ordered Execution Plan
 

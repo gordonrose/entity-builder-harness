@@ -69,7 +69,7 @@ banned:
 source_refs:
   - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
   - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+  - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   - docs/harness/architecture/rules/concerns/events-messaging-async.yml
   - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml

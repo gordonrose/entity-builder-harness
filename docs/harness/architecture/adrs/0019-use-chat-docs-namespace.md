@@ -23,7 +23,7 @@ used_by:
 
 # 0019 Use Chat Docs Namespace
 
-Status: accepted
+Status: accepted; centralized ADR storage superseded by ADR 0032
 Date: 2026-06-23
 
 ## Context
@@ -75,4 +75,5 @@ Existing ADR tooling and before-commit checks can continue to treat
 `docs/harness/architecture/adrs/` as the canonical ADR root.
 
 A future move to layer-owned ADR directories would need its own ADR and tooling
-change, because it would alter the durable ADR storage contract.
+change, because it would alter the durable ADR storage contract. ADR 0032 made
+that follow-up decision and starts the owner-aligned ADR root migration.

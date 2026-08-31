@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 784
-  term_count: 1580
+  indexed_artifacts: 792
+  term_count: 1596
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2904,6 +2904,30 @@ terms:
   canonical_id: harness.corpus.readme
   evidence_path: docs/01.harness/README.md
   confidence_weight: 1
+- term: harness.adr.0032-use-owner-aligned-adr-roots
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0032-use-owner-aligned-adr-roots
+  evidence_path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0032-use-owner-aligned-adr-roots
+  evidence_path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
+  confidence_weight: 1
+- term: harness.adrs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adrs.readme
+  evidence_path: docs/01.harness/adrs/README.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adrs.readme
+  evidence_path: docs/01.harness/adrs/README.md
+  confidence_weight: 1
 - term: harness.adr.0001-record-harness-session-decisions-before-commit
   category: artifact-id
   match_type: exact
@@ -3180,52 +3204,52 @@ terms:
   canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
   evidence_path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
   confidence_weight: 1
-- term: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+- term: harness.architecture.adr.0024-use-translation-ready-message-descriptors.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors.pointer
   evidence_path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors.pointer
   evidence_path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
   confidence_weight: 1
-- term: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
+- term: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
+  canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts.pointer
   evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
+  canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts.pointer
   evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   confidence_weight: 1
-- term: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+- term: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary.pointer
   evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary.pointer
   evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
   confidence_weight: 1
-- term: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+- term: harness.architecture.adr.0027-use-provider-type-service-adapter-layout.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout.pointer
   evidence_path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout.pointer
   evidence_path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
   confidence_weight: 1
 - term: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
@@ -3264,16 +3288,16 @@ terms:
   canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
   evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
   confidence_weight: 1
-- term: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+- term: harness.architecture.adr.0031-use-products-as-app-composition-boundary.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary.pointer
   evidence_path: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary.pointer
   evidence_path: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
   confidence_weight: 1
 - term: harness.adr.readme
@@ -7649,6 +7673,78 @@ terms:
   match_type: exact
   canonical_id: product.corpus.readme
   evidence_path: docs/03.product/README.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  evidence_path: docs/03.product/adrs/0024-use-translation-ready-message-descriptors.md
+  confidence_weight: 1
+- term: docs/03.product/adrs/0024-use-translation-ready-message-descriptors.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0024-use-translation-ready-message-descriptors
+  evidence_path: docs/03.product/adrs/0024-use-translation-ready-message-descriptors.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
+  evidence_path: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+  confidence_weight: 1
+- term: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0025-place-composed-runtime-contexts-in-platform-contracts
+  evidence_path: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  evidence_path: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  confidence_weight: 1
+- term: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
+  evidence_path: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  evidence_path: docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
+  confidence_weight: 1
+- term: docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
+  evidence_path: docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  evidence_path: docs/03.product/adrs/0031-use-products-as-app-composition-boundary.md
+  confidence_weight: 1
+- term: docs/03.product/adrs/0031-use-products-as-app-composition-boundary.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0031-use-products-as-app-composition-boundary
+  evidence_path: docs/03.product/adrs/0031-use-products-as-app-composition-boundary.md
+  confidence_weight: 1
+- term: product.adrs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.adrs.readme
+  evidence_path: docs/03.product/adrs/README.md
+  confidence_weight: 1
+- term: docs/03.product/adrs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.adrs.readme
+  evidence_path: docs/03.product/adrs/README.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id

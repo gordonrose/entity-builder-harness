@@ -578,7 +578,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform-contracts.composed-runtime-contexts-adr
-    evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    evidence_path: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
     aliases:
       - composed runtime context ADR
       - place composed runtime contexts
