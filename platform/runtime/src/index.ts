@@ -1,4 +1,5 @@
 import { recordConfigSource, type ConfigSchema, type ConfigSource } from "@kanbien/core/config";
+import type { Principal } from "@kanbien/core/authn";
 import { noopLogger, type Logger } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics } from "@kanbien/core/monitoring";
 import type { QueueMessage } from "@kanbien/core/queues";
@@ -102,6 +103,7 @@ export interface PlatformRuntimeRequestContextInput extends PlatformRuntimeConte
   readonly requestId: CorrelationId;
   readonly correlationId?: CorrelationId;
   readonly now?: ISODateTime;
+  readonly principal?: Principal;
   readonly method: PlatformRequestContext["method"];
   readonly path: string;
   readonly abortSignal?: AbortSignal;
@@ -326,6 +328,7 @@ export function createPlatformRuntimeRequestContext(input: PlatformRuntimeReques
     config: deps.config,
     flags: deps.flags,
     clock: deps.clock,
+    ...(input.principal === undefined ? {} : { principal: input.principal }),
     method: input.method,
     path: input.path,
     ...(input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal }),

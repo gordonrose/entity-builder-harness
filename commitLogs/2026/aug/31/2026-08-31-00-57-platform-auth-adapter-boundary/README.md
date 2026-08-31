@@ -128,6 +128,17 @@ Summary: Moved Cognito authentication translation into the AWS Cognito adapter, 
 
 ADR impact: Updated AWS ADR 0002 implementation boundary; no new ADR.
 
+
+### 2026-08-31T00:46:07Z - Main refresh conflict recorded
+
+Path: `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: With user approval, retain both independently implemented outcomes in one additive plan update.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -144,7 +155,17 @@ ADR impact: Updated AWS ADR 0002 implementation boundary; no new ADR.
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored runtime-plan prose changed independently: this branch corrects the provider boundary and main documents Principal threading.
+  Action: With user approval, retain both independently implemented outcomes in one additive plan update.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-00-57-implement-platform-auth-bo-6d2215e076ea/20260831003409`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-00-57-implement-platform-auth-bo-6d2215e076ea-20260831003409`
+  Files changed by resolution: docs/harness/architecture/plans/platform-runtime-implementation-plan.md; current chat session log
+  Checks: passed: platform runtime, security, Cognito adapter, server, product composition, and recognition-source freshness; the aggregate RAG commit gate is deferred because it requires a chat branch
 
 ## ADR Disposition
 

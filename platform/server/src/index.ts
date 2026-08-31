@@ -35,6 +35,7 @@ import {
   denyByDefaultAuthenticationResult,
   platformRateLimitKey,
   platformRateLimitError,
+  principalFromPlatformAuthenticationResult,
   validateAuthzMappingPermissions,
   type PlatformAuthenticationHook,
   type PlatformAuthenticationResult,
@@ -362,10 +363,14 @@ async function handlePlatformServerRequest(input: {
     }
 
     middleware.push("handler");
+    const principal = route.registration.auth.kind === "authenticated"
+      ? principalFromPlatformAuthenticationResult(auth)
+      : undefined;
     const context = createPlatformRuntimeRequestContext({
       requestId,
       method: input.request.method,
       path: input.request.path,
+      ...(principal === undefined ? {} : { principal }),
       logger: input.deps.logger,
       metrics: input.deps.metrics,
       config: input.deps.config,

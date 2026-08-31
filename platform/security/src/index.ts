@@ -1,5 +1,15 @@
 import { createHash, createPublicKey, createVerify, type JsonWebKey, type KeyObject } from "node:crypto";
-import { principalId, type Clock, type JsonValue, type Permission, type PrincipalClaims, type PrincipalType, type Result } from "@kanbien/core";
+import {
+  principal,
+  principalId,
+  type Clock,
+  type JsonValue,
+  type Permission,
+  type Principal,
+  type PrincipalClaims,
+  type PrincipalType,
+  type Result,
+} from "@kanbien/core";
 
 export type PlatformSecurityErrorCode =
   | "PLATFORM_SECURITY_UNAUTHENTICATED"
@@ -137,6 +147,27 @@ export const denyByDefaultAuthenticationResult: PlatformAuthenticationResult = {
   authenticated: false,
   permissions: [],
 };
+
+export function principalFromPlatformAuthenticationResult(
+  authentication: PlatformAuthenticationResult,
+): Principal | undefined {
+  if (
+    !authentication.authenticated
+    || authentication.principalId === undefined
+    || authentication.principalType === undefined
+    || authentication.subject === undefined
+  ) {
+    return undefined;
+  }
+
+  return principal({
+    id: principalId(authentication.principalId),
+    type: authentication.principalType,
+    subject: authentication.subject,
+    claims: authentication.claims ?? {},
+    scopes: authentication.scopes ?? [],
+  });
+}
 
 export function createJwtBearerAuthenticationHook(
   options: JwtBearerAuthenticationHookOptions,
