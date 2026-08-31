@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T12:04:50Z
-latest_commit_sha: 9534f395e1955e83937985cf6c02416a1c473a98
-chat_duration: 47493s (00:13:11:33)
+latest_commit_at_utc: 2026-08-31T12:41:40Z
+latest_commit_sha: e5a4cbd05636d470a3b6a244fcd2cfbd602717b1
+chat_duration: 49703s (00:13:48:23)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -665,6 +665,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Execution slice 6 is covered by the corpus split migration plan, product source-material README artifacts, canonical product source-material files, directory compatibility pointers, source projection updates, the product guide corpus gap, the product source-material retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 
+
+### 2026-08-31T12:41:40Z - Commit recorded
+
+Commit: `e5a4cbd05636d470a3b6a244fcd2cfbd602717b1`
+
+Message: Move product source material to product corpus
+
+Summary: Moved product source-material Markdown files, long-form guide derivatives, and guide originals into docs/03.product/source-material; added product source-material READMEs, old-directory compatibility pointers, product guide corpus-gap tracking, retirement proof for exact old source paths, source projection updates, refreshed recognition evidence, and indexer/path-migration guard fixes.
+
+ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product source material and guide evidence.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -714,6 +725,13 @@ Rationale: Execution slice 6 is covered by the corpus split migration plan, prod
   Summary: Moved harness ADRs 0003, 0008, 0012, 0017, 0018, 0020, and 0021 to docs/01.harness/adrs and shared ADR 0015 to docs/06.shared/adrs with compatibility pointers, updated active references, and refreshed retrieval evidence.
   ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this slice applies it to the harness/shared ADR batch.
 
+
+- Commit: `e5a4cbd05636d470a3b6a244fcd2cfbd602717b1`
+  Time UTC: 2026-08-31T12:41:40Z
+  Message: Move product source material to product corpus
+  Summary: Moved product source-material Markdown files, long-form guide derivatives, and guide originals into docs/03.product/source-material; added product source-material READMEs, old-directory compatibility pointers, product guide corpus-gap tracking, retirement proof for exact old source paths, source projection updates, refreshed recognition evidence, and indexer/path-migration guard fixes.
+  ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product source material and guide evidence.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -730,9 +748,9 @@ policy change.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T12:04:50Z
-Latest commit SHA: 9534f395e1955e83937985cf6c02416a1c473a98
-Chat duration: 47493s (00:13:11:33)
+Latest commit at UTC: 2026-08-31T12:41:40Z
+Latest commit SHA: e5a4cbd05636d470a3b6a244fcd2cfbd602717b1
+Chat duration: 49703s (00:13:48:23)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
