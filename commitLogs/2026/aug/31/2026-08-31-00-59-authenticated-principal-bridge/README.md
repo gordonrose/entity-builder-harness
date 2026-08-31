@@ -55,6 +55,10 @@ Implement the missing authenticated-principal bridge so authenticated platform r
 - Read the governed chat-start and platform-runtime implementation workflows; the platform implementation plan; ADRs 0025-0028; platform, capability-layering, and identity/security rules; and the core authn, platform contract, security, runtime, server, and focused test surfaces.
 - No context packet was available. The task remained limited to local platform runtime/security/server code and documentation; no AWS, DNS, secrets, GitHub settings, or production infrastructure were mutated.
 
+
+- Summary: Refreshed the clean chat branch from local main through a rehearsed, conflict-free merge after the separate package-lock housekeeping commit.
+  Durable evidence: Preflight agentic/preflight/chat-2026-08-31-00-59-implement-the-missing-auth-76fe9ca30668/20260831002733 produced 6ebe785f; platform security, runtime, and server checks passed in the preflight worktree; apply-rehearsed-refresh advanced the chat branch to 6ebe785f and removed the preflight worktree.
+
 ## Activity Log
 
 ### 2026-08-30T23:59:38Z - Session started
@@ -91,6 +95,13 @@ Message: feat(platform): bridge authenticated principal to request context
 Summary: Added provider-neutral authenticated principal conversion, request-context propagation, server wiring, focused tests, and implementation-plan documentation.
 
 ADR impact: No new ADR; implements ADR 0025 and existing platform security ownership.
+
+
+### 2026-08-31T00:29:36Z - Context hygiene
+
+Summary: Refreshed the clean chat branch from local main through a rehearsed, conflict-free merge after the separate package-lock housekeeping commit.
+
+Durable evidence: Preflight agentic/preflight/chat-2026-08-31-00-59-implement-the-missing-auth-76fe9ca30668/20260831002733 produced 6ebe785f; platform security, runtime, and server checks passed in the preflight worktree; apply-rehearsed-refresh advanced the chat branch to 6ebe785f and removed the preflight worktree.
 
 ## Sub-Agent Activity
 
