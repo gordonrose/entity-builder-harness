@@ -16,6 +16,7 @@ import {
   permissionsFromClaims,
   platformRateLimitKey,
   platformRateLimitError,
+  principalFromPlatformAuthenticationResult,
   validateAuthzMappingPermissions,
   type PlatformJsonWebKey,
 } from "../src/index";
@@ -34,6 +35,26 @@ async function main(): Promise<void> {
 
   equal(denyByDefaultAuthenticationResult.authenticated, false);
   equal(denyByDefaultAuthenticationResult.permissions.length, 0);
+  equal(principalFromPlatformAuthenticationResult(denyByDefaultAuthenticationResult), undefined);
+  equal(principalFromPlatformAuthenticationResult({ authenticated: true, permissions: [] }), undefined);
+
+  const authenticationPrincipal = principalFromPlatformAuthenticationResult({
+    authenticated: true,
+    permissions: [],
+    principalId: "principal-123",
+    principalType: "user",
+    subject: "subject-123",
+    claims: { sub: "subject-123", "custom:role": "operator" },
+    scopes: ["openid", "platform-smoke/read"],
+  });
+  if (authenticationPrincipal === undefined) {
+    throw new Error("Expected an authenticated principal to convert to a core Principal.");
+  }
+  equal(authenticationPrincipal.id, "principal-123");
+  equal(authenticationPrincipal.type, "user");
+  equal(authenticationPrincipal.subject, "subject-123");
+  deepEqual(authenticationPrincipal.claims, { sub: "subject-123", "custom:role": "operator" });
+  deepEqual(authenticationPrincipal.scopes, ["openid", "platform-smoke/read"]);
 
   const permission = "smoke:read" as Permission;
   equal(authorizePlatformPermissions([permission], [permission]).ok, true);

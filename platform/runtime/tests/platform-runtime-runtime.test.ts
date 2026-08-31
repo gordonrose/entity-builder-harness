@@ -1,4 +1,5 @@
 import { deepEqual, equal } from "node:assert/strict";
+import { principal, principalId } from "@kanbien/core/authn";
 import { recordConfigSource, type ConfigSchema } from "@kanbien/core/config";
 import { healthCheckName, healthCheckResult, monitoringComponent } from "@kanbien/core/monitoring";
 import type { QueueMessageType } from "@kanbien/core/queues";
@@ -130,13 +131,22 @@ async function main(): Promise<void> {
   }
   equal(duplicateApp.error.contractErrors.some((error) => error.code === "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION"), true);
 
+  const requestPrincipal = principal({
+    id: principalId("principal-123"),
+    type: "user",
+    subject: "subject-123",
+    claims: { sub: "subject-123", "custom:role": "operator" },
+    scopes: ["openid", "platform-smoke/read"],
+  });
   const requestContext = createPlatformRuntimeRequestContext({
     requestId: "request-1" as CorrelationId,
     method: "GET",
     path: "/echo",
+    principal: requestPrincipal,
   });
   equal(requestContext.correlationId, "request-1");
   equal(requestContext.now, "2026-07-10T00:00:00.000Z");
+  deepEqual(requestContext.principal, requestPrincipal);
 
   const message = createPlatformTestQueueMessage({
     type: "smoke.rebuild" as QueueMessageType,
