@@ -5,12 +5,10 @@ import { fixedClock } from "@kanbien/core/shared";
 import {
   authzMappingPermissions,
   authorizePlatformPermissions,
-  cognitoIssuer,
-  cognitoJwksUri,
   corsPolicyForOrigin,
-  createCognitoAccessTokenVerifier,
   createInMemoryPlatformRateLimiter,
   createJwtBearerAuthenticationHook,
+  createJwksJwtVerifier,
   createPlatformSecurityHeaders,
   denyByDefaultAuthenticationResult,
   permissionsFromClaims,
@@ -83,12 +81,18 @@ async function main(): Promise<void> {
   equal(platformRateLimitKey({ headers: {} }), "anonymous");
 
   const authz = {
-    groups: {
-      "kanbien-admins": [permission],
-    },
-    scopes: {
-      "platform-smoke/read": [permission],
-    },
+    valueClaims: [
+      {
+        claim: "roles",
+        format: "string-array" as const,
+        values: { administrators: [permission] },
+      },
+      {
+        claim: "scope",
+        format: "space-delimited" as const,
+        values: { "platform-smoke/read": [permission] },
+      },
+    ],
     claims: [
       {
         claim: "custom:role",
@@ -100,73 +104,73 @@ async function main(): Promise<void> {
   deepEqual(authzMappingPermissions(authz), [permission]);
   deepEqual(
     permissionsFromClaims({
-      "cognito:groups": ["kanbien-admins"],
+      roles: ["administrators"],
       scope: "openid platform-smoke/read",
       "custom:role": "operator",
     }, authz),
     [permission],
   );
   equal(validateAuthzMappingPermissions(authz, [permission]).ok, true);
-  const unknownMapping = validateAuthzMappingPermissions({ groups: { bad: ["other:read" as Permission] } }, [permission]);
+  const unknownMapping = validateAuthzMappingPermissions({
+    valueClaims: [{ claim: "roles", format: "string-array", values: { bad: ["other:read" as Permission] } }],
+  }, [permission]);
   equal(unknownMapping.ok, false);
   if (!unknownMapping.ok) {
     equal(unknownMapping.error.code, "PLATFORM_SECURITY_INVALID_AUTHZ_MAPPING");
   }
 
-  const cognito = createCognitoFixture();
-  const verifier = createCognitoAccessTokenVerifier({
-    region: cognito.region,
-    userPoolId: cognito.userPoolId,
-    appClientId: cognito.appClientId,
+  const jwt = createJwtFixture();
+  const verifier = createJwksJwtVerifier({
+    issuer: jwt.issuer,
+    jwksUri: jwt.jwksUri,
+    requiredClaims: [{ claim: "kind", equals: "access" }],
     clock: fixedClock(new Date("2026-07-10T00:00:00.000Z")),
     fetchJwks: {
       fetch: async (uri) => {
-        equal(uri, cognitoJwksUri(cognito.region, cognito.userPoolId));
-        return { keys: [cognito.publicJwk] };
+        equal(uri, jwt.jwksUri);
+        return { keys: [jwt.publicJwk] };
       },
     },
   });
-  const verified = await verifier.verify(cognito.token({
-    "cognito:groups": ["kanbien-admins"],
+  const verified = await verifier.verify(jwt.token({
+    roles: ["administrators"],
     scope: "openid platform-smoke/read",
     "custom:role": "operator",
   }));
   equal(verified.ok, true);
   if (!verified.ok) {
-    throw new Error("Expected Cognito-shaped JWT to verify.");
+    throw new Error("Expected generic JWT to verify.");
   }
-  equal(verified.value.claims["iss"], cognitoIssuer(cognito.region, cognito.userPoolId));
-  equal(verified.value.claims["token_use"], "access");
+  equal(verified.value.claims["iss"], jwt.issuer);
+  equal(verified.value.claims["kind"], "access");
 
-  const badClient = await verifier.verify(cognito.token({ client_id: "wrong-client" }));
-  equal(badClient.ok, false);
-  if (!badClient.ok) {
-    equal(badClient.error.code, "PLATFORM_SECURITY_INVALID_TOKEN");
+  const badRequiredClaim = await verifier.verify(jwt.token({ kind: "other" }));
+  equal(badRequiredClaim.ok, false);
+  if (!badRequiredClaim.ok) {
+    equal(badRequiredClaim.error.code, "PLATFORM_SECURITY_INVALID_TOKEN");
   }
 
   const authHook = createJwtBearerAuthenticationHook({ verifier, authz });
   const unauthenticated = await authHook.authenticate({ headers: {} });
   equal(unauthenticated.authenticated, false);
   const authenticated = await authHook.authenticate({
-    headers: { authorization: `Bearer ${cognito.token({ "cognito:groups": ["kanbien-admins"] })}` },
+    headers: { authorization: `Bearer ${jwt.token({ roles: ["administrators"] })}` },
   });
   equal(authenticated.authenticated, true);
-  equal(authenticated.subject, cognito.subject);
+  equal(authenticated.subject, jwt.subject);
   deepEqual(authenticated.permissions, [permission]);
-  equal(authenticated.rateLimitKey, `principal:${cognito.subject}`);
+  equal(authenticated.rateLimitKey, `principal:${jwt.subject}`);
 }
 
-function createCognitoFixture(): {
-  readonly region: string;
-  readonly userPoolId: string;
-  readonly appClientId: string;
+function createJwtFixture(): {
+  readonly issuer: string;
+  readonly jwksUri: string;
   readonly subject: string;
   readonly publicJwk: PlatformJsonWebKey;
   token(extraClaims?: Readonly<Record<string, unknown>>): string;
 } {
-  const region = "eu-west-1";
-  const userPoolId = "eu-west-1_example";
-  const appClientId = "app-client-123";
+  const issuer = "https://identity.example.test/tenant";
+  const jwksUri = `${issuer}/keys`;
   const subject = "subject-123";
   const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   const publicJwk = {
@@ -177,9 +181,8 @@ function createCognitoFixture(): {
   } as PlatformJsonWebKey;
 
   return {
-    region,
-    userPoolId,
-    appClientId,
+    issuer,
+    jwksUri,
     subject,
     publicJwk,
     token(extraClaims = {}) {
@@ -189,10 +192,9 @@ function createCognitoFixture(): {
         typ: "JWT",
       };
       const payload = {
-        iss: cognitoIssuer(region, userPoolId),
+        iss: issuer,
         sub: subject,
-        token_use: "access",
-        client_id: appClientId,
+        kind: "access",
         exp: 1_784_160_000,
         iat: 1_783_555_200,
         ...extraClaims,

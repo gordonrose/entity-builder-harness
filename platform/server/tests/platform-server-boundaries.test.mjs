@@ -14,7 +14,7 @@ const importSpecifierPatterns = [
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
 const allowedSourceImportPattern = /^(?:node:http|node:net|@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-config|platform-contracts|platform-health|platform-observability|platform-runtime|platform-security))$/;
-const forbiddenProviderWords = /\b(?:S3|Kafka|Redis|Prisma|DynamoDB|CloudWatch)\b/;
+const forbiddenProviderWords = /\b(?:aws|amazon|cognito|auth0|clerk|okta|keycloak|entra|azuread|firebase|s3|kafka|redis|prisma|dynamodb|cloudwatch)\b/i;
 
 async function walk(dir) {
   const entries = await readdir(dir);
@@ -53,6 +53,7 @@ assert.equal(packageJson.name, "@kanbien/platform-server");
 assert.equal(packageJson.exports?.["."], "./src/index.ts", "root package export must point to src/index.ts");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-runtime"], "0.0.0", "platform/server must depend on platform/runtime");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-security"], "0.0.0", "platform/server must depend on platform/security");
+assert.equal(packageJson.dependencies?.["@kanbien/platform-adapter-aws-auth-cognito"], undefined, "platform/server must not select an identity adapter");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-observability"], "0.0.0", "platform/server must depend on platform/observability");
 assert.equal(
   packageJson.dependencies?.["@kanbien/platform-testing"],

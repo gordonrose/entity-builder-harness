@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: platform.adapters.readme
-version: 1
+version: 2
 status: active
 layer: 03.product
 domain: platform
@@ -36,6 +36,7 @@ platform/adapters/aws/queue/sqs/
 platform/adapters/aws/storage/s3/
 platform/adapters/aws/secrets/secrets-manager/
 platform/adapters/aws/observability/cloudwatch/
+platform/adapters/aws/auth/cognito/
 ```
 
 Apps should not import provider adapters from ordinary app code. Apps declare
@@ -44,3 +45,10 @@ deployment requirements through public platform contracts and app manifests.
 
 Infra provisions provider resources. Platform adapters translate provider
 services into platform contracts at approved runtime composition boundaries.
+
+Authentication adapters own provider issuer/JWKS construction, provider claim
+names, token requirements, and provider-named configuration. They return the
+provider-neutral `PlatformAuthenticationHook` from `platform/security`.
+Generic `platform/security` and `platform/server` must not select or name an
+identity provider. A deployment target profile and its approved composition
+entrypoint select the authentication adapter for that target.

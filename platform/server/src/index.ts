@@ -95,9 +95,7 @@ export interface PlatformServerResponse {
 export interface PlatformServerAuthResult extends PlatformAuthenticationResult {
 }
 
-export interface PlatformServerAuthHook extends PlatformAuthenticationHook {
-  authenticate(request: PlatformServerRequest): Promise<PlatformServerAuthResult> | PlatformServerAuthResult;
-}
+export type PlatformServerAuthHook = PlatformAuthenticationHook;
 
 export type PlatformHealthEndpointExposure = "public" | "authenticated";
 
