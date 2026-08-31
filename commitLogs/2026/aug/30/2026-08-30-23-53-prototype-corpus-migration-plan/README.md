@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T12:41:40Z
-latest_commit_sha: e5a4cbd05636d470a3b6a244fcd2cfbd602717b1
-chat_duration: 49703s (00:13:48:23)
+latest_commit_at_utc: 2026-08-31T19:42:58Z
+latest_commit_sha: eac8713
+chat_duration: 74981s (00:20:49:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -801,6 +801,17 @@ rule graph references, source derivation hash updates, the product rules
 retirement record, refreshed recognition sources, runtime freshness, and
 focused selector fixture coverage.
 
+
+### 2026-08-31T19:42:58Z - Commit recorded
+
+Commit: `eac8713`
+
+Message: Move product rules and packs to product corpus
+
+Summary: Moved product structured rules and product task rule packs into docs/03.product/rules and docs/03.product/rule-packs with compatibility pointers, updated harness guidance, rule graph references, source derivation hashes, migration metadata, generated recognition evidence, and rulebook index discovery.
+
+ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product rules, product task packs, and old-path compatibility.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -857,6 +868,13 @@ focused selector fixture coverage.
   Summary: Moved product source-material Markdown files, long-form guide derivatives, and guide originals into docs/03.product/source-material; added product source-material READMEs, old-directory compatibility pointers, product guide corpus-gap tracking, retirement proof for exact old source paths, source projection updates, refreshed recognition evidence, and indexer/path-migration guard fixes.
   ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product source material and guide evidence.
 
+
+- Commit: `eac8713`
+  Time UTC: 2026-08-31T19:42:58Z
+  Message: Move product rules and packs to product corpus
+  Summary: Moved product structured rules and product task rule packs into docs/03.product/rules and docs/03.product/rule-packs with compatibility pointers, updated harness guidance, rule graph references, source derivation hashes, migration metadata, generated recognition evidence, and rulebook index discovery.
+  ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product rules, product task packs, and old-path compatibility.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -873,9 +891,9 @@ policy change.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T12:41:40Z
-Latest commit SHA: e5a4cbd05636d470a3b6a244fcd2cfbd602717b1
-Chat duration: 49703s (00:13:48:23)
+Latest commit at UTC: 2026-08-31T19:42:58Z
+Latest commit SHA: eac8713
+Chat duration: 74981s (00:20:49:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
