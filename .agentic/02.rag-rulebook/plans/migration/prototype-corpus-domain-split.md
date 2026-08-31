@@ -76,6 +76,12 @@ file-level target inventory for this migration plan.
   numbered ADR roots, added `docs/01.harness/adrs/` and
   `docs/03.product/adrs/` READMEs, and moved product-owned ADRs 0024, 0025,
   0026, 0027, and 0031 to `docs/03.product/adrs/` with old-path pointers.
+- 2026-08-31 Slice 3 continued ADR migration. Initialized
+  `docs/02.rag-rulebook/` plus `docs/02.rag-rulebook/adrs/` and
+  `docs/04.deploy/adrs/` README artifacts; moved RAG/rulebook ADRs 0022,
+  0023, and 0029 plus deploy ADRs 0016 and 0028 into owner-aligned ADR roots;
+  updated active deploy evidence that cited ADR 0028; and left old-path
+  compatibility pointers under the prototype ADR root.
 
 ## Target Homes
 
@@ -199,20 +205,20 @@ compatibility until active references are updated.
 | 0013 Create Chat Layer And On-Demand Session Summary | `00.chat` | `docs/00.chat/adrs/` | pending |
 | 0014 Promote Reusable Lessons Upstream | `00.chat` | `docs/00.chat/adrs/` | pending |
 | 0015 Use Shared Upstream Repo Bootstrap Standard | `06.shared` | `docs/06.shared/adrs/` | pending |
-| 0016 Add AWS Layer | `04.deploy` | `docs/04.deploy/adrs/` | pending |
+| 0016 Add AWS Layer | `04.deploy` | `docs/04.deploy/adrs/` | moved in slice 3 |
 | 0017 Organize Scripts By Owner, Domain, And Capability | `01.harness` | `docs/01.harness/adrs/` | pending |
 | 0018 Govern Artifact Path Migrations | `01.harness` | `docs/01.harness/adrs/` | pending |
 | 0019 Use Chat Docs Namespace | `00.chat` | `docs/00.chat/adrs/` | pending |
 | 0020 Use Scripts For Layer Command Surfaces | `01.harness` | `docs/01.harness/adrs/` | pending |
 | 0021 Use Versioned Artifact Metadata For Agent Navigation | `01.harness` | `docs/01.harness/adrs/` | pending |
-| 0022 Add RAG/Rulebook Layer | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | pending |
-| 0023 Require RAG Knowledge Disposition For Code Changes | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | pending |
+| 0022 Add RAG/Rulebook Layer | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | moved in slice 3 |
+| 0023 Require RAG Knowledge Disposition For Code Changes | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | moved in slice 3 |
 | 0024 Use Translation-Ready Message Descriptors | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
 | 0025 Place Composed Runtime Contexts In Platform Contracts | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
 | 0026 Use App Mount As Platform Integration Boundary | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
 | 0027 Use Provider Type Service Adapter Layout | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
-| 0028 Use Client Environment Deployment Target Profiles | `04.deploy` | `docs/04.deploy/adrs/` | pending |
-| 0029 Use Purpose And Authority Aware RAG Retrieval | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | pending |
+| 0028 Use Client Environment Deployment Target Profiles | `04.deploy` | `docs/04.deploy/adrs/` | moved in slice 3 |
+| 0029 Use Purpose And Authority Aware RAG Retrieval | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | moved in slice 3 |
 | 0030 Require Formal Commit Readiness Gate Before Task Commits | `00.chat` | `docs/00.chat/adrs/` | pending |
 | 0031 Use Products As App Composition Boundary | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |
 | 0032 Use Owner-Aligned ADR Roots | `01.harness` | `docs/01.harness/adrs/` | added in slice 2 |

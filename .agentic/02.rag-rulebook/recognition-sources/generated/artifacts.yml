@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 792
-  term_count: 1596
+  indexed_artifacts: 800
+  term_count: 1612
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3108,16 +3108,16 @@ terms:
   canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
   evidence_path: docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
   confidence_weight: 1
-- term: harness.adr.0016-add-aws-layer
+- term: harness.adr.0016-add-aws-layer.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0016-add-aws-layer
+  canonical_id: harness.adr.0016-add-aws-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0016-add-aws-layer.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0016-add-aws-layer.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0016-add-aws-layer
+  canonical_id: harness.adr.0016-add-aws-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0016-add-aws-layer.md
   confidence_weight: 1
 - term: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
@@ -3180,28 +3180,28 @@ terms:
   canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
   evidence_path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   confidence_weight: 1
-- term: harness.adr.0022-add-rag-rulebook-layer
+- term: harness.adr.0022-add-rag-rulebook-layer.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0022-add-rag-rulebook-layer
+  canonical_id: harness.adr.0022-add-rag-rulebook-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0022-add-rag-rulebook-layer.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0022-add-rag-rulebook-layer.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0022-add-rag-rulebook-layer
+  canonical_id: harness.adr.0022-add-rag-rulebook-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0022-add-rag-rulebook-layer.md
   confidence_weight: 1
-- term: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+- term: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes.pointer
   evidence_path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes.pointer
   evidence_path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
   confidence_weight: 1
 - term: harness.architecture.adr.0024-use-translation-ready-message-descriptors.pointer
@@ -3252,28 +3252,28 @@ terms:
   canonical_id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout.pointer
   evidence_path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
   confidence_weight: 1
-- term: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+- term: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles.pointer
   evidence_path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles.pointer
   evidence_path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
   confidence_weight: 1
-- term: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+- term: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval.pointer
   evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval.pointer
   evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
   confidence_weight: 1
 - term: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
@@ -6258,6 +6258,66 @@ terms:
   canonical_id: rag-rulebook.workflow.github-actions.msp-checks
   evidence_path: .github/workflows/rag-rulebook-msp-checks.yml
   confidence_weight: 1
+- term: rag-rulebook.corpus.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.corpus.readme
+  evidence_path: docs/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.corpus.readme
+  evidence_path: docs/02.rag-rulebook/README.md
+  confidence_weight: 1
+- term: harness.adr.0022-add-rag-rulebook-layer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0022-add-rag-rulebook-layer
+  evidence_path: docs/02.rag-rulebook/adrs/0022-add-rag-rulebook-layer.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/adrs/0022-add-rag-rulebook-layer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0022-add-rag-rulebook-layer
+  evidence_path: docs/02.rag-rulebook/adrs/0022-add-rag-rulebook-layer.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  evidence_path: docs/02.rag-rulebook/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0023-require-rag-knowledge-disposition-for-code-changes
+  evidence_path: docs/02.rag-rulebook/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  evidence_path: docs/02.rag-rulebook/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
+  evidence_path: docs/02.rag-rulebook/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+  confidence_weight: 1
+- term: rag-rulebook.adrs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.adrs.readme
+  evidence_path: docs/02.rag-rulebook/adrs/README.md
+  confidence_weight: 1
+- term: docs/02.rag-rulebook/adrs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.adrs.readme
+  evidence_path: docs/02.rag-rulebook/adrs/README.md
+  confidence_weight: 1
 - term: docs.02-rag-rulebook.postman.readme
   category: artifact-id
   match_type: exact
@@ -7853,6 +7913,42 @@ terms:
   match_type: exact
   canonical_id: deploy.corpus.readme
   evidence_path: docs/04.deploy/README.md
+  confidence_weight: 1
+- term: harness.adr.0016-add-aws-layer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0016-add-aws-layer
+  evidence_path: docs/04.deploy/adrs/0016-add-aws-layer.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0016-add-aws-layer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0016-add-aws-layer
+  evidence_path: docs/04.deploy/adrs/0016-add-aws-layer.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  evidence_path: docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
+  evidence_path: docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
+  confidence_weight: 1
+- term: deploy.adrs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adrs.readme
+  evidence_path: docs/04.deploy/adrs/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adrs.readme
+  evidence_path: docs/04.deploy/adrs/README.md
   confidence_weight: 1
 - term: deploy.rules.02-rag-rulebook.readme
   category: artifact-id

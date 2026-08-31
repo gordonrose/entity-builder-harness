@@ -19,7 +19,7 @@
 #   - id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
 #     path: infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
 #   - id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
-#     path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+#     path: docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
 schema: platform-shell/aws-runtime-family-decision/v1
 status: planning-only
 deployment_track: 03.product

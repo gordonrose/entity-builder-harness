@@ -27,7 +27,7 @@ source_change:
   approved_source_state: approved
   changed_paths:
     - docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
-    - docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+    - docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
   summary: >
     Accepted product deploy source material for the platform shell AWS runtime
     family and client/environment target-profile convention was projected into

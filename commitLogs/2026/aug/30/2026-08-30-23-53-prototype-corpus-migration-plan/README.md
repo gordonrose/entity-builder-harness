@@ -56,6 +56,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Started execution slice 2 by adding ADR 0032 for owner-aligned ADR roots,
   updating the commit readiness gate to accept numbered ADR roots, and moving
   the first product-owned ADR batch into `docs/03.product/adrs/`.
+- Started execution slice 3 by initializing the RAG/rulebook docs corpus root,
+  adding RAG/rulebook and deploy ADR root READMEs, and moving ADRs 0016, 0022,
+  0023, 0028, and 0029 into owner-aligned ADR roots with compatibility
+  pointers.
 
 ## Questions Asked
 
@@ -106,6 +110,11 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   compatibility pointers left in `docs/harness/architecture/adrs/`.
 - ADR 0019 remains accepted for the chat docs namespace, but its centralized
   ADR storage clause is superseded by ADR 0032.
+- RAG/rulebook ADRs 0022, 0023, and 0029 are now canonical under
+  `docs/02.rag-rulebook/adrs/`; deploy ADRs 0016 and 0028 are now canonical
+  under `docs/04.deploy/adrs/`.
+- `docs/02.rag-rulebook/` is initialized as the RAG-readable self-corpus root
+  for RAG/rulebook source material, ADRs, and structured rules.
 
 
 - Decision: Record RAG knowledge disposition: covered
@@ -114,6 +123,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Execution slice 2 is covered by ADR 0032, the corpus split migration plan, product ADR canonical files and pointers, updated retrieval evidence, refreshed recognition sources, and focused selector fixture coverage.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 3 is covered by ADR 0032, the corpus split migration plan, canonical RAG/rulebook and deploy ADR roots, old-path compatibility pointers, updated deploy evidence for ADR 0028, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 
 ## Context Hygiene
 
@@ -128,6 +141,8 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   compatibility pointer, not a duplicate plan.
 - Slice 2 work continues in the same chat-owned worktree. Old product ADR
   paths now contain compatibility pointers, not duplicate ADR text.
+- Slice 3 work continues in the same chat-owned worktree. Old RAG/rulebook and
+  deploy ADR paths now contain compatibility pointers, not duplicate ADR text.
 - Historical `commitLogs/**` references to old paths were left as audit
   history.
 
@@ -326,6 +341,53 @@ Summary: Added ADR 0032 for owner-aligned ADR roots, updated commit readiness to
 
 ADR impact: ADR 0032 records the durable owner-aligned ADR root decision.
 
+### 2026-08-31T01:13:09Z - Execution slice 3 started
+
+Initialized `docs/02.rag-rulebook/`, `docs/02.rag-rulebook/adrs/`, and
+`docs/04.deploy/adrs/` corpus README artifacts.
+
+Moved RAG/rulebook ADRs 0022, 0023, and 0029 to
+`docs/02.rag-rulebook/adrs/`. Moved deploy ADRs 0016 and 0028 to
+`docs/04.deploy/adrs/`. Preserved stable artifact IDs on the canonical ADRs
+and left compatibility pointers at the old prototype ADR paths.
+
+Updated active deployment evidence that cited ADR 0028 so source material,
+structured deploy rules, derivation reports, and the planning-only infra
+decision manifest point at the canonical deploy ADR path.
+
+Focused path-migration checks passed for ADRs 0016, 0022, 0023, 0028, and
+0029 with approved active old-path pointer compatibility.
+
+Focused selector validation passed:
+
+- `timeout 300 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-retrieval-source-of-truth.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-index-selection.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-aws-workflow-split.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-commit-gates.yml`
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- `bash scripts/01.harness/check-governed-script-command-drift.sh`
+- `git diff --check`
+
+
+### 2026-08-31T01:17:07Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 3 is covered by ADR 0032, the corpus split migration plan, canonical RAG/rulebook and deploy ADR roots, old-path compatibility pointers, updated deploy evidence for ADR 0028, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -362,9 +424,9 @@ ADR impact: ADR 0032 records the durable owner-aligned ADR root decision.
 
 ADR needed: yes
 ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
-Reason: Execution slice 2 changes the durable ADR storage contract by
-introducing owner-aligned ADR roots and updating the commit readiness gate to
-accept numbered ADR locations.
+Reason: ADR 0032 records the owner-aligned ADR root decision. Execution slice
+3 applies that accepted decision to the RAG/rulebook and deploy ADR batch
+without introducing a new ADR-level policy change.
 
 ## Session Metrics
 
@@ -383,18 +445,18 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 2 is covered by ADR 0032, the corpus split migration plan, product ADR canonical files and pointers, updated retrieval evidence, refreshed recognition sources, and focused selector fixture coverage.
+Reason: Execution slice 3 is covered by ADR 0032, the corpus split migration plan, canonical RAG/rulebook and deploy ADR roots, old-path compatibility pointers, updated deploy evidence for ADR 0028, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 Evidence:
-- docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
-- docs/03.product/adrs/0024-use-translation-ready-message-descriptors.md
-- docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
-- docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
-- docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
-- docs/03.product/adrs/0031-use-products-as-app-composition-boundary.md
+- docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
+- docs/02.rag-rulebook/README.md
+- docs/02.rag-rulebook/adrs/0022-add-rag-rulebook-layer.md
+- docs/02.rag-rulebook/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+- docs/02.rag-rulebook/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+- docs/04.deploy/adrs/0016-add-aws-layer.md
+- docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-product-contract-surface.yml
-- .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
-- scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+- .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
+- docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
 Corpus gaps:
 - None.

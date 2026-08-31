@@ -564,8 +564,14 @@ def used_by_for(path: Path, metadata: dict[str, Any]) -> list[dict[str, str]]:
         ref = ".agentic/01.harness/workflows/change-harness.md"
     elif s.startswith("docs/01.harness/adrs/"):
         ref = "docs/01.harness/adrs/README.md"
+    elif s.startswith("docs/02.rag-rulebook/adrs/"):
+        ref = "docs/02.rag-rulebook/adrs/README.md"
     elif s.startswith("docs/03.product/adrs/"):
         ref = "docs/03.product/adrs/README.md"
+    elif s.startswith("docs/04.deploy/adrs/"):
+        ref = "docs/04.deploy/adrs/README.md"
+    elif s.startswith("docs/06.shared/adrs/"):
+        ref = "docs/06.shared/README.md"
     elif s.startswith("docs/harness/architecture/adrs/"):
         ref = "docs/harness/architecture/adrs/README.md"
     elif s.startswith("docs/harness/architecture/"):

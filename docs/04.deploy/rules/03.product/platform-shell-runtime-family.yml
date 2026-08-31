@@ -36,7 +36,7 @@ source_derivation:
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
   source_material:
     - path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
-      sha256: 4320cc0f9f254d3a5b95d488801eb5e108749763d192b1a360659bb5e60b35a3
+      sha256: de0cd444aeca106099a7fc317e2058732f18f0ba73e600e06a17d34c6202f551
 
 description: >
   Product platform shell deployment planning selects ECS Fargate as the first
@@ -58,7 +58,7 @@ applies_to:
     - "docs/04.deploy/source-material/03.product/**"
     - "docs/04.deploy/rules/03.product/**"
     - "docs/aws/architecture/adrs/**"
-    - "docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md"
+    - "docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md"
     - "platform/adapters/**"
     - "apps/**"
 
