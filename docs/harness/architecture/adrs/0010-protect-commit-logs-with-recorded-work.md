@@ -1,6 +1,6 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
-id: harness.adr.0010-protect-commit-logs-with-recorded-work
+id: harness.adr.0010-protect-commit-logs-with-recorded-work.pointer
 version: 1
 status: active
 layer: 01.harness
@@ -8,49 +8,19 @@ domain: architecture
 disciplines:
 - agentic
 - architecture
-kind: adr
-purpose: Record the 0010 Protect Commit Logs With Recorded Work architecture decision.
+kind: compatibility-pointer
+purpose: Point older ADR 0010 references to the chat-layer canonical ADR.
 portability:
   class: source-only
   targets: []
 used_by:
-- id: harness.readme
-  path: .agentic/01.harness/README.md
+- id: rag-rulebook.migration-plan.prototype-corpus-domain-split
+  path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
 -->
+# ADR 0010 Moved
 
-# 0010 Protect Commit Logs With Recorded Work
+The canonical ADR now lives at
+`docs/00.chat/adrs/0010-protect-commit-logs-with-recorded-work.md`.
 
-Status: accepted
-Date: 2026-06-16
-
-## Context
-
-Chat branch cleanup may remove empty branches and their empty session logs, but
-commit logs are also the durable record of work that produced commits. A branch
-can be superseded, merged, abandoned, or retired while its commit log remains
-valuable historical evidence.
-
-The harness needs to distinguish empty unsaved session logs from logs that
-record committed work. Branch cleanup must not stage deletion of logs that
-contain real commit records.
-
-## Decision
-
-Add a commit gate:
-
-```bash
-bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
-```
-
-The gate inspects staged deletions matching `commitLogs/**/README.md` and reads
-the deleted version from `HEAD`. It blocks deletion when the log has a
-non-empty `latest_commit_sha`, a real `## Commits` entry, or an explicit
-retention marker. It allows deletion of empty, unsaved session logs.
-
-Shared commit preparation runs this gate before allowing a commit.
-
-## Consequences
-
-Cleanup can still remove abandoned empty sessions. Commit logs that represent
-committed work survive branch cleanup unless a future workflow adds a separate,
-explicit archival/delete process with stronger approval.
+This compatibility pointer exists while the prototype architecture ADR corpus
+is split into owner-aligned ADR roots.

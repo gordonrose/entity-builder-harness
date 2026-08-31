@@ -71,12 +71,12 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer source material: `docs/02.rag-rulebook/source-material/`
 - Layer structured rulebook content: `docs/02.rag-rulebook/rules/`
 - Layer command surface: `scripts/02.rag-rulebook/`
-- Current initialized domain corpus roots: `docs/01.harness/`,
-  `docs/02.rag-rulebook/`, `docs/03.product/`, `docs/04.deploy/`, and
-  `docs/06.shared/`
-- Current owner-aligned ADR roots include `docs/01.harness/adrs/`,
-  `docs/02.rag-rulebook/adrs/`, `docs/03.product/adrs/`, and
-  `docs/04.deploy/adrs/`
+- Current initialized domain corpus roots: `docs/00.chat/`,
+  `docs/01.harness/`, `docs/02.rag-rulebook/`, `docs/03.product/`,
+  `docs/04.deploy/`, and `docs/06.shared/`
+- Current owner-aligned ADR roots include `docs/00.chat/adrs/`,
+  `docs/01.harness/adrs/`, `docs/02.rag-rulebook/adrs/`,
+  `docs/03.product/adrs/`, and `docs/04.deploy/adrs/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
 
 The current architecture YAMLs under `docs/harness/architecture/` are treated

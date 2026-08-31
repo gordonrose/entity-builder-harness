@@ -1,6 +1,6 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
-id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start.pointer
 version: 1
 status: active
 layer: 01.harness
@@ -8,61 +8,19 @@ domain: architecture
 disciplines:
 - agentic
 - architecture
-kind: adr
-purpose: Record the 0006 Use Session Metadata For Routing After Chat Start architecture
-  decision.
+kind: compatibility-pointer
+purpose: Point older ADR 0006 references to the chat-layer canonical ADR.
 portability:
   class: source-only
   targets: []
 used_by:
-- id: harness.readme
-  path: .agentic/01.harness/README.md
+- id: rag-rulebook.migration-plan.prototype-corpus-domain-split
+  path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
 -->
+# ADR 0006 Moved
 
-# 0006 Use Session Metadata For Routing After Chat Start
+The canonical ADR now lives at
+`docs/00.chat/adrs/0006-use-session-metadata-for-routing-after-chat-start.md`.
 
-Status: accepted
-Date: 2026-06-16
-
-## Context
-
-The harness classifies each chat by task, layer, mode, and workflow at startup.
-Agents can also infer classification from the latest user message, open files,
-or surrounding repo context. Reclassifying opportunistically can look helpful,
-but it risks changing the workflow, gates, or permission posture after the
-session has already been created.
-
-The session log is durable state for the current branch. It is the only place
-where startup classification, branch identity, and selected workflow are
-recorded together.
-
-## Decision
-
-After chat startup, agents use the current branch's session metadata as the
-source of truth for layer, mode, and workflow.
-
-Agents must not reclassify unless the session metadata is missing, incomplete,
-or marked `unknown`. If a later user request adds a new phase, the agent should
-treat that as a phase within the current chat and still follow the selected
-workflow's gates unless the session metadata itself is invalid.
-
-Recorded sessions are not silently reusable startup context for a new user
-conversation. If the current chat session already has a `latest_commit_sha`,
-the metadata reader must refuse the fast path unless the user explicitly
-approves continuing that existing chat session and worktree.
-
-The routing order remains:
-
-```txt
-task -> layer -> mode -> workflow -> gates
-```
-
-## Consequences
-
-Workflow selection becomes stable and auditable for the lifetime of a chat
-branch. Agents are less likely to bypass gates by reinterpreting the task after
-startup.
-
-This makes session metadata quality more important. Startup classification
-errors must be corrected explicitly instead of silently overridden by later
-agent judgment.
+This compatibility pointer exists while the prototype architecture ADR corpus
+is split into owner-aligned ADR roots.

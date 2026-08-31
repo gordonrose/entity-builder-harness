@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 800
-  term_count: 1612
+  indexed_artifacts: 814
+  term_count: 1640
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -269,6 +269,174 @@ terms:
   match_type: exact
   canonical_id: chat.docs.readme
   evidence_path: docs/00.chat/README.md
+  confidence_weight: 1
+- term: harness.adr.0001-record-harness-session-decisions-before-commit
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0001-record-harness-session-decisions-before-commit
+  evidence_path: docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0001-record-harness-session-decisions-before-commit
+  evidence_path: docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md
+  confidence_weight: 1
+- term: harness.adr.0002-clean-up-duplicate-chat-branches
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches
+  evidence_path: docs/00.chat/adrs/0002-clean-up-duplicate-chat-branches.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0002-clean-up-duplicate-chat-branches.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches
+  evidence_path: docs/00.chat/adrs/0002-clean-up-duplicate-chat-branches.md
+  confidence_weight: 1
+- term: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+  evidence_path: docs/00.chat/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+  evidence_path: docs/00.chat/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
+  confidence_weight: 1
+- term: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+  evidence_path: docs/00.chat/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+  evidence_path: docs/00.chat/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
+  confidence_weight: 1
+- term: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+  evidence_path: docs/00.chat/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+  evidence_path: docs/00.chat/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
+  confidence_weight: 1
+- term: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+  evidence_path: docs/00.chat/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+  evidence_path: docs/00.chat/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
+  confidence_weight: 1
+- term: harness.adr.0009-allow-automatic-session-branch-commit-context
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0009-allow-automatic-session-branch-commit-context
+  evidence_path: docs/00.chat/adrs/0009-allow-automatic-session-branch-commit-context.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0009-allow-automatic-session-branch-commit-context.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0009-allow-automatic-session-branch-commit-context
+  evidence_path: docs/00.chat/adrs/0009-allow-automatic-session-branch-commit-context.md
+  confidence_weight: 1
+- term: harness.adr.0010-protect-commit-logs-with-recorded-work
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0010-protect-commit-logs-with-recorded-work
+  evidence_path: docs/00.chat/adrs/0010-protect-commit-logs-with-recorded-work.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0010-protect-commit-logs-with-recorded-work.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0010-protect-commit-logs-with-recorded-work
+  evidence_path: docs/00.chat/adrs/0010-protect-commit-logs-with-recorded-work.md
+  confidence_weight: 1
+- term: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+  evidence_path: docs/00.chat/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+  evidence_path: docs/00.chat/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+  confidence_weight: 1
+- term: harness.adr.0013-create-chat-layer-and-on-demand-session-summary
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0013-create-chat-layer-and-on-demand-session-summary
+  evidence_path: docs/00.chat/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0013-create-chat-layer-and-on-demand-session-summary
+  evidence_path: docs/00.chat/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+  confidence_weight: 1
+- term: harness.adr.0014-promote-reusable-lessons-upstream
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0014-promote-reusable-lessons-upstream
+  evidence_path: docs/00.chat/adrs/0014-promote-reusable-lessons-upstream.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0014-promote-reusable-lessons-upstream.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0014-promote-reusable-lessons-upstream
+  evidence_path: docs/00.chat/adrs/0014-promote-reusable-lessons-upstream.md
+  confidence_weight: 1
+- term: harness.adr.0019-use-chat-docs-namespace
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0019-use-chat-docs-namespace
+  evidence_path: docs/00.chat/adrs/0019-use-chat-docs-namespace.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0019-use-chat-docs-namespace.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0019-use-chat-docs-namespace
+  evidence_path: docs/00.chat/adrs/0019-use-chat-docs-namespace.md
+  confidence_weight: 1
+- term: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  evidence_path: docs/00.chat/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  evidence_path: docs/00.chat/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  confidence_weight: 1
+- term: chat.adrs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.adrs.readme
+  evidence_path: docs/00.chat/adrs/README.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.adrs.readme
+  evidence_path: docs/00.chat/adrs/README.md
   confidence_weight: 1
 - term: chat.bootstrap.llm-workbench-template.readme
   category: artifact-id
@@ -2928,28 +3096,28 @@ terms:
   canonical_id: harness.adrs.readme
   evidence_path: docs/01.harness/adrs/README.md
   confidence_weight: 1
-- term: harness.adr.0001-record-harness-session-decisions-before-commit
+- term: harness.adr.0001-record-harness-session-decisions-before-commit.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0001-record-harness-session-decisions-before-commit
+  canonical_id: harness.adr.0001-record-harness-session-decisions-before-commit.pointer
   evidence_path: docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0001-record-harness-session-decisions-before-commit
+  canonical_id: harness.adr.0001-record-harness-session-decisions-before-commit.pointer
   evidence_path: docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md
   confidence_weight: 1
-- term: harness.adr.0002-clean-up-duplicate-chat-branches
+- term: harness.adr.0002-clean-up-duplicate-chat-branches.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches
+  canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches.pointer
   evidence_path: docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches
+  canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches.pointer
   evidence_path: docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md
   confidence_weight: 1
 - term: harness.adr.0003-review-process-prose-for-deterministic-gates
@@ -2964,52 +3132,52 @@ terms:
   canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates
   evidence_path: docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md
   confidence_weight: 1
-- term: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+- term: harness.adr.0004-group-chat-logs-and-summarize-session-metrics.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+  canonical_id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics.pointer
   evidence_path: docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics
+  canonical_id: harness.adr.0004-group-chat-logs-and-summarize-session-metrics.pointer
   evidence_path: docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
   confidence_weight: 1
-- term: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+- term: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+  canonical_id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.pointer
   evidence_path: docs/harness/architecture/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+  canonical_id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.pointer
   evidence_path: docs/harness/architecture/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
   confidence_weight: 1
-- term: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+- term: harness.adr.0006-use-session-metadata-for-routing-after-chat-start.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+  canonical_id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start.pointer
   evidence_path: docs/harness/architecture/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start
+  canonical_id: harness.adr.0006-use-session-metadata-for-routing-after-chat-start.pointer
   evidence_path: docs/harness/architecture/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
   confidence_weight: 1
-- term: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+- term: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+  canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception.pointer
   evidence_path: docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception
+  canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception.pointer
   evidence_path: docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
   confidence_weight: 1
 - term: harness.adr.0008-add-education-layer
@@ -3024,40 +3192,40 @@ terms:
   canonical_id: harness.adr.0008-add-education-layer
   evidence_path: docs/harness/architecture/adrs/0008-add-education-layer.md
   confidence_weight: 1
-- term: harness.adr.0009-allow-automatic-session-branch-commit-context
+- term: harness.adr.0009-allow-automatic-session-branch-commit-context.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0009-allow-automatic-session-branch-commit-context
+  canonical_id: harness.adr.0009-allow-automatic-session-branch-commit-context.pointer
   evidence_path: docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0009-allow-automatic-session-branch-commit-context
+  canonical_id: harness.adr.0009-allow-automatic-session-branch-commit-context.pointer
   evidence_path: docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
   confidence_weight: 1
-- term: harness.adr.0010-protect-commit-logs-with-recorded-work
+- term: harness.adr.0010-protect-commit-logs-with-recorded-work.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0010-protect-commit-logs-with-recorded-work
+  canonical_id: harness.adr.0010-protect-commit-logs-with-recorded-work.pointer
   evidence_path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0010-protect-commit-logs-with-recorded-work
+  canonical_id: harness.adr.0010-protect-commit-logs-with-recorded-work.pointer
   evidence_path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
   confidence_weight: 1
-- term: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+- term: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+  canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence.pointer
   evidence_path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence
+  canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence.pointer
   evidence_path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
   confidence_weight: 1
 - term: harness.adr.0012-treat-missing-governance-as-stop-condition
@@ -3072,28 +3240,28 @@ terms:
   canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition
   evidence_path: docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
   confidence_weight: 1
-- term: harness.adr.0013-create-chat-layer-and-on-demand-session-summary
+- term: harness.adr.0013-create-chat-layer-and-on-demand-session-summary.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0013-create-chat-layer-and-on-demand-session-summary
+  canonical_id: harness.adr.0013-create-chat-layer-and-on-demand-session-summary.pointer
   evidence_path: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0013-create-chat-layer-and-on-demand-session-summary
+  canonical_id: harness.adr.0013-create-chat-layer-and-on-demand-session-summary.pointer
   evidence_path: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
   confidence_weight: 1
-- term: harness.adr.0014-promote-reusable-lessons-upstream
+- term: harness.adr.0014-promote-reusable-lessons-upstream.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0014-promote-reusable-lessons-upstream
+  canonical_id: harness.adr.0014-promote-reusable-lessons-upstream.pointer
   evidence_path: docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0014-promote-reusable-lessons-upstream
+  canonical_id: harness.adr.0014-promote-reusable-lessons-upstream.pointer
   evidence_path: docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md
   confidence_weight: 1
 - term: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
@@ -3144,16 +3312,16 @@ terms:
   canonical_id: harness.adr.0018-govern-artifact-path-migrations
   evidence_path: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
   confidence_weight: 1
-- term: harness.adr.0019-use-chat-docs-namespace
+- term: harness.adr.0019-use-chat-docs-namespace.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0019-use-chat-docs-namespace
+  canonical_id: harness.adr.0019-use-chat-docs-namespace.pointer
   evidence_path: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0019-use-chat-docs-namespace
+  canonical_id: harness.adr.0019-use-chat-docs-namespace.pointer
   evidence_path: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
   confidence_weight: 1
 - term: harness.adr.0020-use-scripts-for-layer-command-surfaces
@@ -3276,16 +3444,16 @@ terms:
   canonical_id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval.pointer
   evidence_path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
   confidence_weight: 1
-- term: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+- term: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits.pointer
   evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
+  canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits.pointer
   evidence_path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
   confidence_weight: 1
 - term: harness.architecture.adr.0031-use-products-as-app-composition-boundary.pointer

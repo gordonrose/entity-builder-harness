@@ -60,6 +60,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   adding RAG/rulebook and deploy ADR root READMEs, and moving ADRs 0016, 0022,
   0023, 0028, and 0029 into owner-aligned ADR roots with compatibility
   pointers.
+- Started execution slice 4 by adding `docs/00.chat/adrs/` and moving
+  chat-owned ADRs 0001, 0002, 0004, 0005, 0006, 0007, 0009, 0010, 0011,
+  0013, 0014, 0019, and 0030 into the chat docs corpus with compatibility
+  pointers.
 
 ## Questions Asked
 
@@ -115,6 +119,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   under `docs/04.deploy/adrs/`.
 - `docs/02.rag-rulebook/` is initialized as the RAG-readable self-corpus root
   for RAG/rulebook source material, ADRs, and structured rules.
+- Chat ADRs 0001, 0002, 0004, 0005, 0006, 0007, 0009, 0010, 0011, 0013,
+  0014, 0019, and 0030 are now canonical under `docs/00.chat/adrs/`.
+- Active chat/public/education references to the moved chat ADR batch now use
+  the canonical chat ADR paths.
 
 
 - Decision: Record RAG knowledge disposition: covered
@@ -127,6 +135,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Execution slice 3 is covered by ADR 0032, the corpus split migration plan, canonical RAG/rulebook and deploy ADR roots, old-path compatibility pointers, updated deploy evidence for ADR 0028, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 4 is covered by ADR 0032, the corpus split migration plan, the canonical chat ADR root, old-path compatibility pointers, updated chat/public/education references, refreshed recognition sources, runtime freshness, and focused chat selector fixture coverage.
 
 ## Context Hygiene
 
@@ -143,6 +155,8 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   paths now contain compatibility pointers, not duplicate ADR text.
 - Slice 3 work continues in the same chat-owned worktree. Old RAG/rulebook and
   deploy ADR paths now contain compatibility pointers, not duplicate ADR text.
+- Slice 4 work continues in the same chat-owned worktree. Old chat ADR paths
+  now contain compatibility pointers, not duplicate ADR text.
 - Historical `commitLogs/**` references to old paths were left as audit
   history.
 
@@ -399,6 +413,52 @@ Summary: Moved RAG ADRs 0022, 0023, and 0029 plus deploy ADRs 0016 and 0028 into
 
 ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this slice applies it to the RAG/deploy batch.
 
+### 2026-08-31T01:32:22Z - Execution slice 4 started
+
+Added `docs/00.chat/adrs/README.md` as the owner-aligned ADR root for chat
+lifecycle and portable workbench decisions.
+
+Moved chat-owned ADRs 0001, 0002, 0004, 0005, 0006, 0007, 0009, 0010, 0011,
+0013, 0014, 0019, and 0030 to `docs/00.chat/adrs/`. Preserved stable
+artifact IDs on canonical ADRs and left compatibility pointers at the old
+prototype ADR paths.
+
+Updated active references in chat workflow/public docs, education article
+evidence, and the script-layout ADR to use the canonical chat ADR paths.
+
+Focused path-migration checks passed for all 13 moved chat ADRs with approved
+active old-path pointer compatibility.
+
+Focused selector validation passed:
+
+- `timeout 300 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-public-beta-portability.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-session-metrics.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-upstream-reusable-lesson.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-worktree-recovery.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-chat-local-main-promotion.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-commit-gates.yml`
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- `bash scripts/01.harness/check-governed-script-command-drift.sh`
+- `git diff --check`
+
+
+### 2026-08-31T01:32:52Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 4 is covered by ADR 0032, the corpus split migration plan, the canonical chat ADR root, old-path compatibility pointers, updated chat/public/education references, refreshed recognition sources, runtime freshness, and focused chat selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -443,7 +503,7 @@ ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this s
 ADR needed: yes
 ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
 Reason: ADR 0032 records the owner-aligned ADR root decision. Execution slice
-3 applies that accepted decision to the RAG/rulebook and deploy ADR batch
+4 applies that accepted decision to the chat-owned ADR batch
 without introducing a new ADR-level policy change.
 
 ## Session Metrics
@@ -463,18 +523,24 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 3 is covered by ADR 0032, the corpus split migration plan, canonical RAG/rulebook and deploy ADR roots, old-path compatibility pointers, updated deploy evidence for ADR 0028, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+Reason: Execution slice 4 is covered by ADR 0032, the corpus split migration plan, the canonical chat ADR root, old-path compatibility pointers, updated chat/public/education references, refreshed recognition sources, runtime freshness, and focused chat selector fixture coverage.
 Evidence:
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
 - docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
-- docs/02.rag-rulebook/README.md
-- docs/02.rag-rulebook/adrs/0022-add-rag-rulebook-layer.md
-- docs/02.rag-rulebook/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
-- docs/02.rag-rulebook/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
-- docs/04.deploy/adrs/0016-add-aws-layer.md
-- docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
+- docs/00.chat/adrs/README.md
+- docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md
+- docs/00.chat/adrs/0002-clean-up-duplicate-chat-branches.md
+- docs/00.chat/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
+- docs/00.chat/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
+- docs/00.chat/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
+- docs/00.chat/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
+- docs/00.chat/adrs/0009-allow-automatic-session-branch-commit-context.md
+- docs/00.chat/adrs/0010-protect-commit-logs-with-recorded-work.md
+- docs/00.chat/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+- docs/00.chat/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+- docs/00.chat/adrs/0014-promote-reusable-lessons-upstream.md
+- docs/00.chat/adrs/0019-use-chat-docs-namespace.md
+- docs/00.chat/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
-- .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
-- docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
 Corpus gaps:
 - None.

@@ -26,7 +26,7 @@
 - Source packet: `../source-packet.md`
 - Source evidence:
   - `commitLogs/2026/jun/15/2026-06-15-23-18-i-d-like-to-update-the-harness-so-that-the-chat-duration-is-/README.md`
-  - `docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md`
+  - `docs/00.chat/adrs/0004-group-chat-logs-and-summarize-session-metrics.md`
 - Status: usable
 
 ## Scene

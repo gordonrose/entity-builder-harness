@@ -1,6 +1,6 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
-id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
+id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.pointer
 version: 1
 status: active
 layer: 01.harness
@@ -8,53 +8,19 @@ domain: architecture
 disciplines:
 - agentic
 - architecture
-kind: adr
-purpose: Record the 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading
-  architecture decision.
+kind: compatibility-pointer
+purpose: Point older ADR 0005 references to the chat-layer canonical ADR.
 portability:
   class: source-only
   targets: []
 used_by:
-- id: harness.readme
-  path: .agentic/01.harness/README.md
+- id: rag-rulebook.migration-plan.prototype-corpus-domain-split
+  path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
 -->
+# ADR 0005 Moved
 
-# 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading
+The canonical ADR now lives at
+`docs/00.chat/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md`.
 
-Status: accepted
-Date: 2026-06-16
-
-## Context
-
-New chat startup creates a branch and session log for the next agent. If the
-worktree is already dirty before that branch is created, those changes may
-belong to the user, a previous session, or a partially completed operation.
-
-The normal chat-start flow asks the agent to load session metadata and the
-selected workflow before acting. That is useful when the inherited state is
-clean, but it can be too much when the worktree was already dirty: even
-additional inspection can blur whether later state came from startup, the
-agent, or pre-existing user work.
-
-## Decision
-
-Chat startup records the bootstrap worktree status before switching to the new
-chat branch and includes that status in the first prompt.
-
-When the bootstrap status is dirty, the first agent response must be the
-standard dirty-worktree blocked response for the resolved layer, mode, and
-workflow. The agent must not read workflows, run `git status`, or run the
-dirty-worktree gate before giving that blocked response.
-
-When the bootstrap status is clean, the agent may continue with normal
-chat-start workflow loading and gates.
-
-## Consequences
-
-Inherited dirty state is protected before an agent gathers more context or
-performs additional git inspection. This makes the initial blocked response
-depend on state captured by startup, not on state that may have changed after
-branch creation.
-
-The first prompt becomes more prescriptive, and agents must honor the bootstrap
-status even when they would otherwise prefer to inspect the repo first.
+This compatibility pointer exists while the prototype architecture ADR corpus
+is split into owner-aligned ADR roots.

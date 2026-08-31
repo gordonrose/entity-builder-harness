@@ -36,6 +36,8 @@ portability behavior.
   `scripts/01.harness/` split.
 - `llm-workbench-acceptance-matrix.md` maps the public-beta contract to the
   artifacts and checks that enforce it.
+- `adrs/` records source-repo maintainer decision history for chat lifecycle
+  and portable workbench governance.
 - `bootstrap/llm-workbench-template/` contains starter public repo shell files
   for the first `llm-workbench` bootstrap.
 

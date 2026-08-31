@@ -31,7 +31,7 @@
   vocabulary; no coding knowledge required
 - Source material:
   - `commitLogs/2026/jun/15/2026-06-15-21-27-i-d-like-to-update-my-harness-so-that-whenever-i-commit-some/README.md`
-  - `docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md`
+  - `docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md`
 - Profiles used:
   - `.agentic/education/profiles/audience-profile.md`
   - `.agentic/education/profiles/voice-profile.md`
@@ -250,7 +250,7 @@ Added a better session record and a check before finishing the work.
 
 Explanation status:
 Explanation needed: yes.
-Path: docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md
+Path: docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md
 ```
 
 ### Worksheet

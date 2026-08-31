@@ -385,7 +385,7 @@ Main refresh status/readiness batch result:
   `scripts/shared/git/smoke-test-main-refresh-dirty-classifier.sh`
 - direct callers migrated:
   `.agentic/00.chat/workflows/chat-refresh-from-main.md`,
-  `docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md`,
+  `docs/00.chat/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md`,
   and the retired `scripts/shared/git/smoke-test-main-refresh-preflight.sh`
 - governed runner update:
   `scripts/01.harness/run-governed-script.sh` narrowly allowlists the new
