@@ -2,7 +2,6 @@ import type { Permission } from "@kanbien/core/authz";
 import {
   authzMappingPermissions,
   authorizePlatformPermissions,
-  cognitoJwksUri,
   createJwtBearerAuthenticationHook,
   createInMemoryPlatformRateLimiter,
   createPlatformSecurityHeaders,
@@ -25,18 +24,17 @@ const limiter = createInMemoryPlatformRateLimiter({ limit: 1, windowMs: 1000 });
 void limiter.check("client").allowed;
 
 const authz: PlatformAuthzPermissionMapping = {
-  groups: { admins: [permission] },
+  valueClaims: [{ claim: "roles", format: "string-array", values: { admins: [permission] } }],
 };
 void authzMappingPermissions(authz);
 void platformRateLimitKey({ headers: { authorization: "Bearer token" } });
-void cognitoJwksUri("eu-west-1", "eu-west-1_example");
 
 const verifier: PlatformJwtVerifier = {
   verify: async () => ({
     ok: true,
     value: {
       header: { alg: "RS256" },
-      claims: { sub: "subject", exp: 1, iss: "issuer", token_use: "access" },
+      claims: { sub: "subject", exp: 1, iss: "issuer", kind: "access" },
     },
   }),
 };
@@ -46,6 +44,8 @@ void hook.grantedPermissions?.();
 // @ts-expect-error permissions must use core Permission values
 authorizePlatformPermissions([1], []);
 
-// @ts-expect-error authz maps must grant core Permission values
-const invalidAuthz: PlatformAuthzPermissionMapping = { groups: { admins: [1] } };
+const invalidAuthz: PlatformAuthzPermissionMapping = {
+  // @ts-expect-error authz maps must grant core Permission values
+  valueClaims: [{ claim: "roles", format: "string-array", values: { admins: [1] } }],
+};
 void invalidAuthz;

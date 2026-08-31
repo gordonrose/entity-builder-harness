@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.workflow.platform-runtime-implementation
-version: 1
+version: 2
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -84,6 +84,14 @@ Before editing runtime code:
   adaptation.
 - `platform/adapters/**` owns provider-specific runtime translation and uses
   `platform/adapters/<provider>/<adapter-type>/<service-name>/`.
+- `platform/security/**` owns provider-neutral authentication hook contracts,
+  bearer parsing, generic JWT/JWKS verification, generic claim-to-permission
+  mapping, CORS, headers, and rate limiting. It must not name or configure an
+  identity provider.
+- `platform/server/**` accepts provider-neutral authentication hooks but must
+  not select a provider, import a provider adapter, or parse provider-named
+  configuration. A deployment target profile and its approved target
+  composition entrypoint select and configure a provider adapter.
 - Deployment target profiles under `infra/04.deploy/**/targets/<client>/<environment>/`
   own client, environment, source repo, cloud provider, account/subscription,
   region, runtime family, adapter, and readiness proof selection.
@@ -114,12 +122,18 @@ Minimum expected checks by surface:
 - `platform/testing/**`: mount-helper tests and negative mount tests.
 - `platform/runtime/**`: registry, lifecycle, context factory, error mapping,
   cancellation, and shutdown tests.
+<!-- deterministic-check: allow reason="workflow names the required package-level boundary proof while the deterministic enforcement belongs to package scripts" -->
+- `platform/security/**`: provider-neutral token and permission-mapping tests,
+  plus a boundary check that rejects provider identity vocabulary from source.
 - `platform/server/**`: local server smoke, health routes, route adaptation,
-  middleware order, auth/permission denial, and error response tests.
+  middleware order, auth/permission denial, error response tests, and proof
+  that server accepts an injected provider-neutral authentication hook without
+  selecting a provider.
 - `platform/workers/**`: local worker smoke, job payload validation, retry,
   dead-letter, idempotency, logging, metrics, and shutdown tests.
 - `platform/adapters/**`: adapter contract tests for provider translation,
-  provider error mapping, configuration validation, and lifecycle behavior.
+  provider error mapping, configuration validation, lifecycle behavior, and
+  composition through the relevant generic platform contract.
 - `apps/platform-smoke/**`: app mount contract tests proving one route, one
   job, one health check, one config schema, one lifecycle hook, and one
   manifest.
@@ -145,6 +159,9 @@ Stop before editing or executing if:
 - Platform code would need to import app internals.
 - App internal structure would become part of a platform contract.
 - A check needed to prove the slice is missing and no gap has been recorded.
+- Provider-specific issuer construction, claim names, environment keys, or
+  adapter imports would land in `platform/security/**` or `platform/server/**`
+  instead of a provider adapter and approved target composition root.
 - Runtime behavior depends on an unapproved provider, account, region,
   environment, queue, database, or cloud service.
 - Client, source repository, cloud provider, account/subscription, region,

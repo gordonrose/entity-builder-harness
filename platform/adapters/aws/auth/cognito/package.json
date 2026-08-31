@@ -1,0 +1,22 @@
+{
+  "name": "@kanbien/platform-adapter-aws-auth-cognito",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@kanbien/core": "0.0.0",
+    "@kanbien/platform-security": "0.0.0"
+  },
+  "devDependencies": {
+    "@kanbien/platform-contracts": "0.0.0",
+    "@kanbien/platform-server": "0.0.0",
+    "@kanbien/platform-testing": "0.0.0"
+  }
+}
