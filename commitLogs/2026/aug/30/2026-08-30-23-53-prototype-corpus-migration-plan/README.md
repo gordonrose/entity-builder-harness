@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T00:38:33Z
-latest_commit_sha: 087415a
-chat_duration: 6316s (00:01:45:16)
+latest_commit_at_utc: 2026-08-31T01:07:37Z
+latest_commit_sha: e253afa
+chat_duration: 8060s (00:02:14:20)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -315,6 +315,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Execution slice 2 is covered by ADR 0032, the corpus split migration plan, product ADR canonical files and pointers, updated retrieval evidence, refreshed recognition sources, and focused selector fixture coverage.
 
+
+### 2026-08-31T01:07:37Z - Commit recorded
+
+Commit: `e253afa`
+
+Message: Move product ADRs to product corpus
+
+Summary: Added ADR 0032 for owner-aligned ADR roots, updated commit readiness to accept numbered ADR paths, moved product ADRs 0024, 0025, 0026, 0027, and 0031 to docs/03.product/adrs with compatibility pointers, and refreshed retrieval evidence.
+
+ADR impact: ADR 0032 records the durable owner-aligned ADR root decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -336,6 +347,13 @@ Rationale: Execution slice 2 is covered by ADR 0032, the corpus split migration 
   Summary: Initialized numbered corpus roots, registered root-discovery checks, moved the platform runtime plan to product governance, left a compatibility pointer, and refreshed generated recognition sources.
   ADR impact: No new ADR; this starts the governed corpus split without retiring the prototype root.
 
+
+- Commit: `e253afa`
+  Time UTC: 2026-08-31T01:07:37Z
+  Message: Move product ADRs to product corpus
+  Summary: Added ADR 0032 for owner-aligned ADR roots, updated commit readiness to accept numbered ADR paths, moved product ADRs 0024, 0025, 0026, 0027, and 0031 to docs/03.product/adrs with compatibility pointers, and refreshed retrieval evidence.
+  ADR impact: ADR 0032 records the durable owner-aligned ADR root decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -351,9 +369,9 @@ accept numbered ADR locations.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T00:38:33Z
-Latest commit SHA: 087415a
-Chat duration: 6316s (00:01:45:16)
+Latest commit at UTC: 2026-08-31T01:07:37Z
+Latest commit SHA: e253afa
+Chat duration: 8060s (00:02:14:20)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
