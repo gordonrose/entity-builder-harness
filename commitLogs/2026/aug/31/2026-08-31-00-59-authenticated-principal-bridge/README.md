@@ -10,17 +10,17 @@ status: ready
 raised_at_utc: 2026-08-30T23:59:38Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-59-04-01a0551c-c767-7fa1-8715-a15de9aa58d0.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 954131
+transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-59-04-01a0551c-c767-7fa1-8715-a15de9aa58d0.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-08-31T00:20:28Z
+latest_commit_sha: 33c481e
+chat_duration: 1250s (00:00:20:50)
+estimated_chat_tokens: 238533 estimated from chat transcript bytes (954131 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-59-04-01a0551c-c767-7fa1-8715-a15de9aa58d0.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -81,13 +81,30 @@ Checks passed:
 
 Remaining gap: the platform contract can hold tenant and locale, but this slice does not derive them. Product-specific profile, membership, role, and tenant-account decisions remain app or identity-boundary work.
 
+
+### 2026-08-31T00:20:28Z - Commit recorded
+
+Commit: `33c481e`
+
+Message: feat(platform): bridge authenticated principal to request context
+
+Summary: Added provider-neutral authenticated principal conversion, request-context propagation, server wiring, focused tests, and implementation-plan documentation.
+
+ADR impact: No new ADR; implements ADR 0025 and existing platform security ownership.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `33c481e`
+  Time UTC: 2026-08-31T00:20:28Z
+  Message: feat(platform): bridge authenticated principal to request context
+  Summary: Added provider-neutral authenticated principal conversion, request-context propagation, server wiring, focused tests, and implementation-plan documentation.
+  ADR impact: No new ADR; implements ADR 0025 and existing platform security ownership.
 
 ## Main Refresh Conflicts
 
@@ -102,12 +119,12 @@ Reason: Additive platform plumbing implements the accepted composed-context boun
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T23:59:38Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-08-31T00:20:28Z
+Latest commit SHA: 33c481e
+Chat duration: 1250s (00:00:20:50)
+Estimated chat tokens: 238533 estimated from chat transcript bytes (954131 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-59-04-01a0551c-c767-7fa1-8715-a15de9aa58d0.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
