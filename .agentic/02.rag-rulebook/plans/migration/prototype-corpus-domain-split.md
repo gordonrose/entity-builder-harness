@@ -88,6 +88,12 @@ file-level target inventory for this migration plan.
   0019, and 0030; updated active chat/public/education references to the new
   paths; and left old-path compatibility pointers under the prototype ADR
   root.
+- 2026-08-31 Slice 5 continued ADR migration. Moved harness-owned ADRs 0003,
+  0008, 0012, 0017, 0018, 0020, and 0021 to `docs/01.harness/adrs/`; added
+  `docs/06.shared/adrs/` and moved shared ADR 0015 there; updated active
+  harness, chat, product-migration, retrieval-policy, and selector-fixture
+  references to canonical paths; and left old-path compatibility pointers under
+  the prototype ADR root.
 
 ## Target Homes
 
@@ -198,25 +204,25 @@ compatibility until active references are updated.
 | --- | --- | --- | --- |
 | 0001 Record Harness Session Decisions Before Commit | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0002 Clean Up Duplicate Chat Branches | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
-| 0003 Review Process Prose For Deterministic Gates | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0003 Review Process Prose For Deterministic Gates | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
 | 0004 Group Chat Logs And Summarize Session Metrics | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0006 Use Session Metadata For Routing After Chat Start | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0007 Require Explicit Write Permission With Bookkeeping Exception | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
-| 0008 Add Education Layer | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0008 Add Education Layer | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
 | 0009 Use Isolated Worktrees For Session Commit Boundaries | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0010 Protect Commit Logs With Recorded Work | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0011 Use Chat-Owned Worktrees For Local Convergence | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
-| 0012 Treat Missing Governance As Stop Condition | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0012 Treat Missing Governance As Stop Condition | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
 | 0013 Create Chat Layer And On-Demand Session Summary | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
 | 0014 Promote Reusable Lessons Upstream | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
-| 0015 Use Shared Upstream Repo Bootstrap Standard | `06.shared` | `docs/06.shared/adrs/` | pending |
+| 0015 Use Shared Upstream Repo Bootstrap Standard | `06.shared` | `docs/06.shared/adrs/` | moved in slice 5 |
 | 0016 Add AWS Layer | `04.deploy` | `docs/04.deploy/adrs/` | moved in slice 3 |
-| 0017 Organize Scripts By Owner, Domain, And Capability | `01.harness` | `docs/01.harness/adrs/` | pending |
-| 0018 Govern Artifact Path Migrations | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0017 Organize Scripts By Owner, Domain, And Capability | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
+| 0018 Govern Artifact Path Migrations | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
 | 0019 Use Chat Docs Namespace | `00.chat` | `docs/00.chat/adrs/` | moved in slice 4 |
-| 0020 Use Scripts For Layer Command Surfaces | `01.harness` | `docs/01.harness/adrs/` | pending |
-| 0021 Use Versioned Artifact Metadata For Agent Navigation | `01.harness` | `docs/01.harness/adrs/` | pending |
+| 0020 Use Scripts For Layer Command Surfaces | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
+| 0021 Use Versioned Artifact Metadata For Agent Navigation | `01.harness` | `docs/01.harness/adrs/` | moved in slice 5 |
 | 0022 Add RAG/Rulebook Layer | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | moved in slice 3 |
 | 0023 Require RAG Knowledge Disposition For Code Changes | `02.rag-rulebook` | `docs/02.rag-rulebook/adrs/` | moved in slice 3 |
 | 0024 Use Translation-Ready Message Descriptors | `03.product` | `docs/03.product/adrs/` | moved in slice 2 |

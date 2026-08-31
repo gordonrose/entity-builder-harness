@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 814
-  term_count: 1640
+  indexed_artifacts: 823
+  term_count: 1658
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3072,6 +3072,90 @@ terms:
   canonical_id: harness.corpus.readme
   evidence_path: docs/01.harness/README.md
   confidence_weight: 1
+- term: harness.adr.0003-review-process-prose-for-deterministic-gates
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates
+  evidence_path: docs/01.harness/adrs/0003-review-process-prose-for-deterministic-gates.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0003-review-process-prose-for-deterministic-gates.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates
+  evidence_path: docs/01.harness/adrs/0003-review-process-prose-for-deterministic-gates.md
+  confidence_weight: 1
+- term: harness.adr.0008-add-education-layer
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0008-add-education-layer
+  evidence_path: docs/01.harness/adrs/0008-add-education-layer.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0008-add-education-layer.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0008-add-education-layer
+  evidence_path: docs/01.harness/adrs/0008-add-education-layer.md
+  confidence_weight: 1
+- term: harness.adr.0012-treat-missing-governance-as-stop-condition
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition
+  evidence_path: docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition
+  evidence_path: docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
+  confidence_weight: 1
+- term: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+  evidence_path: docs/01.harness/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+  evidence_path: docs/01.harness/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+  confidence_weight: 1
+- term: harness.adr.0018-govern-artifact-path-migrations
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0018-govern-artifact-path-migrations
+  evidence_path: docs/01.harness/adrs/0018-govern-artifact-path-migrations.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0018-govern-artifact-path-migrations.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0018-govern-artifact-path-migrations
+  evidence_path: docs/01.harness/adrs/0018-govern-artifact-path-migrations.md
+  confidence_weight: 1
+- term: harness.adr.0020-use-scripts-for-layer-command-surfaces
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0020-use-scripts-for-layer-command-surfaces
+  evidence_path: docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0020-use-scripts-for-layer-command-surfaces
+  evidence_path: docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
+  confidence_weight: 1
+- term: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+  evidence_path: docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+  confidence_weight: 1
+- term: docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+  evidence_path: docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+  confidence_weight: 1
 - term: harness.adr.0032-use-owner-aligned-adr-roots
   category: artifact-id
   match_type: exact
@@ -3120,16 +3204,16 @@ terms:
   canonical_id: harness.adr.0002-clean-up-duplicate-chat-branches.pointer
   evidence_path: docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md
   confidence_weight: 1
-- term: harness.adr.0003-review-process-prose-for-deterministic-gates
+- term: harness.adr.0003-review-process-prose-for-deterministic-gates.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates
+  canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates.pointer
   evidence_path: docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates
+  canonical_id: harness.adr.0003-review-process-prose-for-deterministic-gates.pointer
   evidence_path: docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md
   confidence_weight: 1
 - term: harness.adr.0004-group-chat-logs-and-summarize-session-metrics.pointer
@@ -3180,16 +3264,16 @@ terms:
   canonical_id: harness.adr.0007-require-explicit-write-permission-with-bookkeeping-exception.pointer
   evidence_path: docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
   confidence_weight: 1
-- term: harness.adr.0008-add-education-layer
+- term: harness.adr.0008-add-education-layer.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0008-add-education-layer
+  canonical_id: harness.adr.0008-add-education-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0008-add-education-layer.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0008-add-education-layer.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0008-add-education-layer
+  canonical_id: harness.adr.0008-add-education-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0008-add-education-layer.md
   confidence_weight: 1
 - term: harness.adr.0009-allow-automatic-session-branch-commit-context.pointer
@@ -3228,16 +3312,16 @@ terms:
   canonical_id: harness.adr.0011-use-chat-owned-worktrees-for-local-convergence.pointer
   evidence_path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
   confidence_weight: 1
-- term: harness.adr.0012-treat-missing-governance-as-stop-condition
+- term: harness.adr.0012-treat-missing-governance-as-stop-condition.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition
+  canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition.pointer
   evidence_path: docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition
+  canonical_id: harness.adr.0012-treat-missing-governance-as-stop-condition.pointer
   evidence_path: docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
   confidence_weight: 1
 - term: harness.adr.0013-create-chat-layer-and-on-demand-session-summary.pointer
@@ -3264,16 +3348,16 @@ terms:
   canonical_id: harness.adr.0014-promote-reusable-lessons-upstream.pointer
   evidence_path: docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md
   confidence_weight: 1
-- term: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+- term: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+  canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard.pointer
   evidence_path: docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+  canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard.pointer
   evidence_path: docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
   confidence_weight: 1
 - term: harness.adr.0016-add-aws-layer.pointer
@@ -3288,28 +3372,28 @@ terms:
   canonical_id: harness.adr.0016-add-aws-layer.pointer
   evidence_path: docs/harness/architecture/adrs/0016-add-aws-layer.md
   confidence_weight: 1
-- term: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+- term: harness.adr.0017-organize-scripts-by-owner-domain-and-capability.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+  canonical_id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability.pointer
   evidence_path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability
+  canonical_id: harness.adr.0017-organize-scripts-by-owner-domain-and-capability.pointer
   evidence_path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
   confidence_weight: 1
-- term: harness.adr.0018-govern-artifact-path-migrations
+- term: harness.adr.0018-govern-artifact-path-migrations.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0018-govern-artifact-path-migrations
+  canonical_id: harness.adr.0018-govern-artifact-path-migrations.pointer
   evidence_path: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0018-govern-artifact-path-migrations
+  canonical_id: harness.adr.0018-govern-artifact-path-migrations.pointer
   evidence_path: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
   confidence_weight: 1
 - term: harness.adr.0019-use-chat-docs-namespace.pointer
@@ -3324,28 +3408,28 @@ terms:
   canonical_id: harness.adr.0019-use-chat-docs-namespace.pointer
   evidence_path: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
   confidence_weight: 1
-- term: harness.adr.0020-use-scripts-for-layer-command-surfaces
+- term: harness.adr.0020-use-scripts-for-layer-command-surfaces.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0020-use-scripts-for-layer-command-surfaces
+  canonical_id: harness.adr.0020-use-scripts-for-layer-command-surfaces.pointer
   evidence_path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0020-use-scripts-for-layer-command-surfaces
+  canonical_id: harness.adr.0020-use-scripts-for-layer-command-surfaces.pointer
   evidence_path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
   confidence_weight: 1
-- term: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+- term: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+  canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation.pointer
   evidence_path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   confidence_weight: 1
 - term: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   category: file-path
   match_type: exact
-  canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation
+  canonical_id: harness.adr.0021-use-versioned-artifact-metadata-for-agent-navigation.pointer
   evidence_path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   confidence_weight: 1
 - term: harness.adr.0022-add-rag-rulebook-layer.pointer
@@ -9869,6 +9953,30 @@ terms:
   match_type: exact
   canonical_id: shared.corpus.readme
   evidence_path: docs/06.shared/README.md
+  confidence_weight: 1
+- term: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+  evidence_path: docs/06.shared/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
+  confidence_weight: 1
+- term: docs/06.shared/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.adr.0015-use-shared-upstream-repo-bootstrap-standard
+  evidence_path: docs/06.shared/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
+  confidence_weight: 1
+- term: shared.adrs.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: shared.adrs.readme
+  evidence_path: docs/06.shared/adrs/README.md
+  confidence_weight: 1
+- term: docs/06.shared/adrs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: shared.adrs.readme
+  evidence_path: docs/06.shared/adrs/README.md
   confidence_weight: 1
 - term: repo.script.commit-gates.readme
   category: artifact-id

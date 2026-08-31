@@ -17,9 +17,9 @@
   - id: harness.readme
     path: .agentic/01.harness/README.md
   - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+    path: docs/01.harness/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
   - id: harness.architecture.adr.0020-use-scripts-for-layer-command-surfaces
-    path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+    path: docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
 -->
 # Script Layout
 

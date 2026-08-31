@@ -89,7 +89,7 @@ evidence_bundles:
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
   - question_category_id: question.artifact-metadata.headers
     always_source_paths:
-      - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+      - docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
       - .agentic/01.harness/artifact-metadata/README.md
       - .agentic/01.harness/artifact-metadata/standard.md
       - .agentic/01.harness/artifact-metadata/schema.v2.yml
@@ -334,7 +334,7 @@ evidence_bundles:
       - AGENTS.md
       - .agentic/01.harness/standards/missing-governance-stop-condition.md
       - .agentic/shared/workflows/capability-resolution-workflow.md
-      - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+      - docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
     family_source_paths:
       evidence.harness.missing-governance-standard: .agentic/01.harness/standards/missing-governance-stop-condition.md
   - question_category_id: question.harness.governed-script-permissions
@@ -369,7 +369,7 @@ evidence_bundles:
       - .agentic/01.harness/workflows/migrate-artifact-paths.md
       - scripts/01.harness/plan-artifact-path-migration.sh
       - scripts/01.harness/check-artifact-path-migration.sh
-      - docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+      - docs/01.harness/adrs/0018-govern-artifact-path-migrations.md
     family_source_paths:
       evidence.harness.artifact-path-migrations: .agentic/01.harness/standards/artifact-path-migrations.md
   - question_category_id: question.chat.command-shortcuts

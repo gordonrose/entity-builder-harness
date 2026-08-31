@@ -76,7 +76,8 @@ Subcorpora may be introduced when a layer needs more precision, such as
   `docs/04.deploy/`, and `docs/06.shared/`
 - Current owner-aligned ADR roots include `docs/00.chat/adrs/`,
   `docs/01.harness/adrs/`, `docs/02.rag-rulebook/adrs/`,
-  `docs/03.product/adrs/`, and `docs/04.deploy/adrs/`
+  `docs/03.product/adrs/`, `docs/04.deploy/adrs/`, and
+  `docs/06.shared/adrs/`
 - Current prototype rulebook artifacts: `docs/harness/architecture/`
 
 The current architecture YAMLs under `docs/harness/architecture/` are treated

@@ -20,7 +20,7 @@ used_by:
   - id: harness.standard.artifact-metadata-headers-v1
     path: .agentic/01.harness/standards/artifact-metadata-headers.md
   - id: harness.adr.versioned-artifact-metadata
-    path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+    path: docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   - id: harness.script.artifact-metadata.check-headers
     path: scripts/01.harness/artifact-metadata/check-headers/script.sh
 -->

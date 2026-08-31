@@ -30,8 +30,9 @@ This directory is the RAG-readable shared corpus package for
 `corpus.06.shared`.
 
 The governing workflows and standards for shared process primitives live under
-`.agentic/shared/`. This directory contains human-readable corpus material and
-structured rules that intentionally apply across multiple numbered layers.
+`.agentic/shared/`. This directory contains human-readable corpus material,
+shared ADRs, and structured rules that intentionally apply across multiple
+numbered layers.
 
 Use this corpus for cross-layer rules only when the rule cannot honestly be
 owned by chat, harness, RAG/rulebook, product, deploy, or education alone.
@@ -39,6 +40,8 @@ owned by chat, harness, RAG/rulebook, product, deploy, or education alone.
 Prefer a narrower layer corpus when one owner can make and validate the
 decision. Shared placement should be deliberate because shared rules tend to
 create broad coupling.
+
+Shared ADRs live in `adrs/`.
 
 During the prototype corpus migration, old shared or cross-cutting material
 remains under `docs/harness/architecture/**` until a governed artifact path
