@@ -30,7 +30,7 @@ source_change:
   change_type: updated
   approved_source_state: approved
   changed_paths:
-    - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   summary: >
     Approved source material records deferred platform and infra runtime
@@ -59,28 +59,28 @@ semantic_review:
   source_claims:
     - claim_id: platform.contracts.define-app-facing-runtime-boundary
       summary: Before concrete server or worker runtime modules are implemented, platform/contracts should define stable provider-neutral app registration, mount, route, job, health, config schema, lifecycle, feature flag, request context, and job context contracts.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.contexts.compose-core-facts-in-platform-contracts
       summary: Composed request and job contexts may combine core primitives such as correlation id, causation id, tenant, principal, locale, logger, metrics, config, queue message, delivery metadata, flags, and cancellation, but should start in platform/contracts rather than packages/core/shared.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.flags.provider-neutral-reader
       summary: Feature flag access should start as a provider-neutral reader contract and platform adapters may bind it to environment, config, database, or third-party providers later.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.logging.normalizes-rich-runtime-values
       summary: Platform logging adapters should normalize errors, provider failures, framework objects, dates, maps, sets, buffers, streams, circular values, and oversized fields into redacted bounded plain log fields.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.events.use-durable-outbox-when-publication-matters
       summary: Platform event delivery should record outbox messages in the same transaction as important state changes and publish them through a retryable observable platform relay.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.audit.requires-durable-runtime-and-lifecycle
       summary: Platform audit runtime should provide durable recorders with retention, legal hold, export, SIEM integration, access controls, and explicit audit-failure behavior where required.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.payload-metadata-size-budgets-required
       summary: Platform adapters should define size, depth, key-count, truncation, rejection, summary, pointer, checksum, and storage-reference policies for logs, events, audit, prompts, and diagnostics.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: infra.provisions-runtime-obligation-resources
       summary: Infra should provision log sinks, brokers, queues, DLQs, stores, encryption, backups, retention, alarms, dashboards, IAM permissions, and deployment topology that platform adapters need.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   conflicts:
     status: none-found
     search_scope:

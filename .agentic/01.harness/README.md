@@ -57,7 +57,7 @@ New document artifacts should use
 `docs/harness/architecture/**` corpus.
 
 Canonical architecture source remains
-`docs/harness/architecture/guides/markdown`.
+`docs/03.product/source-material/guides/markdown`.
 
 Canonical rules remain `docs/harness/architecture/rules`.
 

@@ -3,7 +3,7 @@
   id: harness.architecture.source-material.packages-core-contract-surface-v1
   version: 17
   status: active
-  layer: 01.harness
+  layer: 03.product
   domain: architecture
   disciplines:
   - architecture

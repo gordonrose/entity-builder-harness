@@ -33,8 +33,8 @@ source_derivation:
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml
   source_material:
-    - path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-      sha256: f69fa378b3152f90527a0f25a645807627623b8e78460b667fc048576c597e0a
+    - path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+      sha256: ae37e97bf9f3805cba1ad24dbd5c840165e24ae93f261cd91b7bf871e34191ba
 
 description: >
   Cross-cutting placement rules for capabilities that span provider-neutral

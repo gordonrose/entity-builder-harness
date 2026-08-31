@@ -3,7 +3,7 @@
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
   version: 7
   status: active
-  layer: 01.harness
+  layer: 03.product
   domain: architecture
   disciplines:
   - architecture

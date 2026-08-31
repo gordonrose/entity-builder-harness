@@ -44,7 +44,7 @@ coverage_statuses:
   deferred-human-decision: "Source content needs human judgment before encoding."
 
 source_guides:
-  - path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
     line_count: 109
     status: covered
     coverage_entries:
@@ -101,7 +101,7 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/infra.yml
         note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
-  - path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: covered
     coverage_entries:
@@ -295,7 +295,7 @@ source_guides:
           - docs/harness/architecture/rules/concerns/notifications.yml
           - docs/harness/architecture/rules/concerns/i18n-localization.yml
         note: "Core v1 prioritization sections are covered by the committed concern rulesets for each named capability."
-  - path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
     line_count: 3136
     status: covered
     coverage_entries:
@@ -385,7 +385,7 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/frontend-kit.yml
         note: "Frontend-kit layer source refs were manually checked while creating docs/harness/architecture/rules/layers/frontend-kit.yml."
-  - path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
     line_count: 218
     status: covered
     coverage_entries:
@@ -450,7 +450,7 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/infra.yml
         note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
-  - path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: covered
     coverage_entries:
@@ -510,7 +510,7 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/infra.yml
         note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
-  - path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
     status: covered
     coverage_entries:
@@ -656,7 +656,7 @@ source_guides:
         artifacts:
           - docs/harness/architecture/rules/layers/infra.yml
         note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
-  - path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+  - path: docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
     line_count: 900
     status: covered
     coverage_entries:

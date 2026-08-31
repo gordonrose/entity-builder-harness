@@ -63,7 +63,7 @@ banned:
   selected_corpora:
     - corpus.00.chat
 source_refs:
-  - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
   - docs/harness/architecture/rules/concerns/dependency-direction.yml
   - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml

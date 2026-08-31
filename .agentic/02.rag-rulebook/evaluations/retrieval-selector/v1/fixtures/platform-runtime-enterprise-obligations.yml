@@ -28,7 +28,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about deferred platform/runtime enterprise obligations retrieve platform rule guidance and related concern rules.
 input:
-  request_text: When we implement the platform runtime, what enterprise obligations must we remember from docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md, docs/harness/architecture/rules/layers/platform.yml, and docs/harness/architecture/rules/concerns/events-messaging-async.yml for platform/contracts app-facing mount contracts, composed request and job context placement, provider-neutral feature flags, logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
+  request_text: When we implement the platform runtime, what enterprise obligations must we remember from docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md, docs/harness/architecture/rules/layers/platform.yml, and docs/harness/architecture/rules/concerns/events-messaging-async.yml for platform/contracts app-facing mount contracts, composed request and job context placement, provider-neutral feature flags, logging normalization, durable outbox event delivery, audit retention legal hold export SIEM, and payload or metadata size budgets?
   session:
     trust_routing: true
     layer: 03.product
@@ -67,7 +67,7 @@ banned:
   selected_corpora:
     - corpus.00.chat
 source_refs:
-  - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   - docs/harness/architecture/rules/layers/platform.yml
   - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
   - docs/harness/architecture/rules/concerns/events-messaging-async.yml

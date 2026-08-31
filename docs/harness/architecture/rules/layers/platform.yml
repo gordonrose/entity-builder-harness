@@ -33,8 +33,8 @@ source_derivation:
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
-    - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-      sha256: f3b564ef3257a91398fe2c75aaa777b57f3217e36b095e42ee20672a5c7344fc
+    - path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+      sha256: 4334d91b0fd09f91294b1e85e559910863e75eb16322b758ed829982432a44d4
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process

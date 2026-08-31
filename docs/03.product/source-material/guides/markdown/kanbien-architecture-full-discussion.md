@@ -3,7 +3,7 @@
   id: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
   version: 1
   status: active
-  layer: 01.harness
+  layer: 03.product
   domain: architecture
   disciplines:
   - architecture

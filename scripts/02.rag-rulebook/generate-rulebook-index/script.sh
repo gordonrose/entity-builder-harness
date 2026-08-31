@@ -1691,9 +1691,11 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         for _, entry in yaml_entries
         if isinstance(entry.get("current_path"), str)
     }
-    supporting_source_entries.extend(discover_process_source_entries(supporting_paths | yaml_paths))
-    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
     explanation_markdown_paths = set(collect_explanation_markdown_paths())
+    supporting_source_entries.extend(
+        discover_process_source_entries(supporting_paths | yaml_paths | markdown_artifact_paths | explanation_markdown_paths)
+    )
+    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
 
     for current_path in explanation_markdown_paths:
         if current_path in markdown_artifact_paths or current_path in supporting_paths:

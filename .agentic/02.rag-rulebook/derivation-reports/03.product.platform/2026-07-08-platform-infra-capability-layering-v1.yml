@@ -29,7 +29,7 @@ source_change:
   change_type: created
   approved_source_state: approved
   changed_paths:
-    - docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    - docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
   summary: >
     Approved source material records the repo-wide ownership split for
     provider-neutral core contracts, provider-neutral platform runtime,
@@ -58,25 +58,25 @@ semantic_review:
   source_claims:
     - claim_id: capability-layering.core-names-contracts
       summary: packages/core should define stable provider-neutral contracts and vocabulary without choosing providers, SDK clients, runtime hosts, resources, or topology.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
     - claim_id: capability-layering.platform-runtime-provider-neutral
       summary: platform runtime should own provider-neutral mechanics such as worker loops, registries, retry decisions, idempotency, observability hooks, resource lifecycle, and shutdown.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
     - claim_id: capability-layering.platform-adapters-provider-specific
       summary: platform adapters should translate provider-neutral runtime contracts into provider-specific SDK or library behavior and return core or platform contracts rather than raw provider clients as the app-facing API.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
     - claim_id: capability-layering.infra-blueprints-provider-neutral
       summary: infra blueprints or contracts should describe provider-neutral resource requirements such as queues, DLQs, encryption, retention, alarms, and access boundaries.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
     - claim_id: capability-layering.infra-providers-and-environments
       summary: infra providers translate blueprints into concrete provider resources, while infra environments hold target-specific values and deployment choices.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
     - claim_id: capability-layering.queues-example
       summary: Queue capabilities split across packages/core queues, app-owned handlers, platform runtime worker mechanics, provider-specific queue adapters, infra queue blueprints, provider resources, and environment values.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
     - claim_id: capability-layering.acceptance-by-owner
       summary: Acceptance evidence should come from the layer that owns the risk rather than using one layer's happy path as proof for the whole capability.
-      evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
   conflicts:
     status: none-found
     search_scope:

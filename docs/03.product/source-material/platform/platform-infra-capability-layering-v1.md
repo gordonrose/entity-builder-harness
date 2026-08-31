@@ -3,7 +3,7 @@
   id: harness.architecture.source-material.platform-infra-capability-layering-v1
   version: 1
   status: active
-  layer: 01.harness
+  layer: 03.product
   domain: architecture
   disciplines:
   - architecture

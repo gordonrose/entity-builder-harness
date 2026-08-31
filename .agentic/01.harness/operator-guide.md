@@ -26,7 +26,7 @@ used_by:
 ## Purpose
 
 Use this guide when continuing architecture rules and rule packs from
-`docs/harness/architecture/guides/markdown`.
+`docs/03.product/source-material/guides/markdown`.
 
 This operating pack is instructional only. It is not the runtime harness and it
 does not create executable checks or generated architecture artifacts by itself.

@@ -26,7 +26,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove a human explanation request can select bounded source material chunks with explanation-support authority.
 input:
-  request_text: Walk me through docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md and explain the platform runtime shell surfaces, especially platform/runtime, platform/server, platform/workers, apps/platform-smoke, and deployment-facing manifests.
+  request_text: Walk me through docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md and explain the platform runtime shell surfaces, especially platform/runtime, platform/server, platform/workers, apps/platform-smoke, and deployment-facing manifests.
   session:
     trust_routing: true
     layer: 03.product
@@ -86,7 +86,7 @@ banned:
   blocking_gaps:
     - gap.selector-fixture.prompt-session-layer-conflict
 source_refs:
-  - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   - docs/harness/architecture/rules/layers/platform.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml
 update_triggers:

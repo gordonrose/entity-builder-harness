@@ -44,7 +44,7 @@ canonical_paths:
   harness_workflows: .agentic/01.harness/workflows
   harness_templates: .agentic/01.harness/templates
   harness_validators: scripts/01.harness
-  source_guides: docs/harness/architecture/guides/markdown
+  source_guides: docs/03.product/source-material/guides/markdown
   layer_rules: docs/harness/architecture/rules/layers
   concern_rules: docs/harness/architecture/rules/concerns
   rule_packs: docs/harness/architecture/rule-packs

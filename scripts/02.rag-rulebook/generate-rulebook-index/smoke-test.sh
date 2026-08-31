@@ -73,7 +73,7 @@ assert source_explanation_candidates
 assert all(candidate["chunk_purpose"] == "source-explanation" for candidate in source_explanation_candidates)
 assert all(candidate["authority"] == "explanation-support" for candidate in source_explanation_candidates)
 assert any(
-    candidate["source_path"] == "docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"
+    candidate["source_path"] == "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md"
     and candidate["heading_path"].endswith("Platform Runtime Shell Surfaces")
     and candidate["line_start"] >= 1
     and candidate["line_end"] >= candidate["line_start"]
@@ -107,12 +107,12 @@ assert aws_runtime_artifact["migration_status"] == "current"
 readiness_artifact = artifacts_by_path["docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml"]
 assert readiness_artifact["corpus_id"] == "corpus.04.deploy"
 assert readiness_artifact["migration_status"] == "current"
-platform_runtime_source = artifacts_by_path["docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"]
+platform_runtime_source = artifacts_by_path["docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md"]
 assert platform_runtime_source["artifact_type"] == "source-material"
 assert platform_runtime_source["corpus_id"] == "corpus.03.product.platform"
 assert platform_runtime_source["migration_status"] == "current"
 path_mappings = {mapping["proposed_path"]: mapping for mapping in data["path_mappings"]}
-assert path_mappings["docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"]["migration_status"] == "current"
+assert path_mappings["docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md"]["migration_status"] == "current"
 
 rule_ids = {rule["rule_id"] for rule in data["rules"]}
 assert "mcp-server-deployment-architecture.uses-validated-context-packets" in rule_ids

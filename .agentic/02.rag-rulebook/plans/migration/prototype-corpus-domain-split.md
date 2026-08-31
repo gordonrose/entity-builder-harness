@@ -94,6 +94,21 @@ file-level target inventory for this migration plan.
   harness, chat, product-migration, retrieval-policy, and selector-fixture
   references to canonical paths; and left old-path compatibility pointers under
   the prototype ADR root.
+- 2026-08-31 Slice 6 moved product source material and long-form product
+  architecture guides. Moved the packages/core, platform runtime, and platform
+  infra source-material Markdown files plus seven guide Markdown derivatives
+  and their original PDFs under `docs/03.product/source-material/`; added
+  product source-material README artifacts, old-directory compatibility
+  pointers, a product guide corpus gap, and a retirement record for the three
+  removed exact source-material paths.
+- 2026-08-31 Slice 6 validation passed for metadata headers, generated
+  recognition freshness, recognition-source validation, YAML syntax, source
+  projections, source-material coverage, retirement records, derivation
+  reports, runtime freshness, corpus-root changes, explanation readiness,
+  index/chunk smoke checks, path-migration helper smoke, governed-script
+  command drift, focused selector fixtures, and diff whitespace. The full
+  selector fixture matrix again ran silently beyond several polling windows and
+  was stopped; focused product source-material selector coverage passed 14/14.
 
 ## Target Homes
 
@@ -327,14 +342,20 @@ bash scripts/00.chat/worktree/check-write-location/script.sh
 bash scripts/01.harness/smoke-test-artifact-path-migration.sh
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
 bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
 bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
 bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
 bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
 bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
+bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current
 bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh
 bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+bash scripts/01.harness/check-governed-script-command-drift.sh
 git diff --check
 ```
 

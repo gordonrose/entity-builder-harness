@@ -64,38 +64,38 @@ inventory_summary:
 
 source_material:
   guides:
-    - current_path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
       proposed_corpus_id: corpus.03.product
       proposed_target_path: corpus.03.product/sources/guides/kanbien-architecture-full-discussion.md
-      migration_status: target-candidate
-    - current_path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+      migration_status: moved-in-slice-6
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
       proposed_corpus_id: corpus.03.product.core
       proposed_target_path: corpus.03.product.core/sources/guides/kanbien-core-architecture-guide.md
-      migration_status: target-candidate
-    - current_path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
+      migration_status: moved-in-slice-6
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
       proposed_corpus_id: corpus.03.product.design-system
       proposed_target_path: corpus.03.product.design-system/sources/guides/kanbien-frontend-design-system-guide.md
-      migration_status: target-candidate
-    - current_path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+      migration_status: moved-in-slice-6
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
       proposed_corpus_id: corpus.03.product
       proposed_target_path: corpus.03.product/sources/guides/kanbien-modular-monorepo-entity-builder.md
-      migration_status: target-candidate
-    - current_path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
+      migration_status: moved-in-slice-6
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/sources/guides/kanbien-platform-layer-architecture.md
-      migration_status: target-candidate
-    - current_path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
+      migration_status: moved-in-slice-6
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
       proposed_corpus_id: corpus.03.product
       proposed_target_path: corpus.03.product/sources/guides/kanbien-typescript-architecture-guide.md
-      migration_status: target-candidate
-    - current_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+      migration_status: moved-in-slice-6
+    - current_path: docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
       proposed_corpus_id: corpus.03.product.platform
       proposed_target_path: corpus.03.product.platform/sources/guides/kanbien-platform-adapter-consumption-model-guide.md
-      migration_status: target-candidate
+      migration_status: moved-in-slice-6
   originals:
-    current_glob: docs/harness/architecture/guides/originals/*.pdf
+    current_glob: docs/03.product/source-material/guides/originals/*.pdf
     proposed_target_pattern: "<matching-corpus>/sources/originals/<current-filename>"
-    migration_status: preserve-with-source-guide
+    migration_status: moved-in-slice-6
     notes:
       - Preserve original PDFs as source evidence when moving generated Markdown guide derivatives.
       - Do not make PDFs primary retrieval chunks until the Markdown derivative and source reference policy are explicit.

@@ -49,6 +49,8 @@ templates, bootstrap exports, and session metadata may name that path.
   exports, or compatibility contracts still require them.
 - Retire old paths only after active references point at the canonical path or a
   documented compatibility surface exists.
+- Treat governed RAG/rulebook retirement records as audit evidence, not active
+  old-path compatibility references.
 - Include the matching `scripts/` owner path in the plan when renaming a harness
   layer or owner namespace.
 - Do not rewrite historical session logs only to modernize old paths.
@@ -89,14 +91,15 @@ Classify old-path references into these buckets:
 | `script` | Runtime scripts, governed runner allowlists, tests, and smoke fixtures |
 | `bootstrap` | Public templates, bootstrap planners, export manifests, and readiness docs |
 | `architecture` | ADRs and architecture docs |
+| `retirement-record` | Governed audit records that intentionally name removed, renamed, superseded, or retained-retired paths |
 | `session-history` | `commitLogs/` and other audit history |
 | `other` | Any remaining reference |
 
-Active references are every bucket except `session-history`. Old-path references
-inside the active `migration-plan` artifact may stay as migration evidence when
-the checker is told which plan file owns them. Historical references may stay if
-they are clearly audit history and do not look like current runnable
-instructions.
+Active references are every bucket except `session-history` and
+`retirement-record`. Old-path references inside the active `migration-plan`
+artifact may stay as migration evidence when the checker is told which plan file
+owns them. Historical references may stay if they are clearly audit history and
+do not look like current runnable instructions.
 
 ## Compatibility Choices
 

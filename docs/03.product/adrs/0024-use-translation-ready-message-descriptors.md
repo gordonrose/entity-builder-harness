@@ -16,7 +16,7 @@
   - id: harness.architecture.rules.layers.packages-core
     path: docs/harness/architecture/rules/layers/packages-core.yml
   - id: harness.architecture.source-material.packages-core-contract-surface-v1
-    path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    path: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
 -->
 # ADR 0024: Use Translation-Ready Message Descriptors
 

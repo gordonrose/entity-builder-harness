@@ -18,7 +18,7 @@
   - id: harness.architecture.rules.layers.packages-core
     path: docs/harness/architecture/rules/layers/packages-core.yml
   - id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-    path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
 -->
 # ADR 0025: Place Composed Runtime Contexts In Platform Contracts
 

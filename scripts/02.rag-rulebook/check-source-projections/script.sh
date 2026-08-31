@@ -52,13 +52,19 @@ MANIFEST_SCHEMA = "rag-rulebook/source-projection-manifest/v1"
 DEFAULT_MANIFEST = ".agentic/02.rag-rulebook/source-projections/v1.yml"
 SOURCE_ROOTS = [
     "docs/harness/architecture/source-material",
+    "docs/01.harness/source-material",
     "docs/02.rag-rulebook/source-material",
+    "docs/03.product/source-material",
     "docs/04.deploy/source-material",
+    "docs/06.shared/source-material",
 ]
 RULE_ROOTS = [
     "docs/harness/architecture/rules",
+    "docs/01.harness/rules",
     "docs/02.rag-rulebook/rules",
+    "docs/03.product/rules",
     "docs/04.deploy/rules",
+    "docs/06.shared/rules",
 ]
 DERIVATION_REPORT_ROOT = ".agentic/02.rag-rulebook/derivation-reports"
 RETIREMENT_RECORD_ROOT = ".agentic/02.rag-rulebook/retirements"

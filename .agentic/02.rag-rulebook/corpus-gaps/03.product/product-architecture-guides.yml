@@ -1,0 +1,131 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.corpus-gap.03-product.product-architecture-guides
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: corpus-gap
+#   purpose: Track source-to-rule and selector proof still needed for long-form product architecture guides.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.check-source-material-coverage
+#     path: scripts/02.rag-rulebook/check-source-material-coverage/script.sh
+#   - id: rag-rulebook.source-projections.v1
+#     path: .agentic/02.rag-rulebook/source-projections/v1.yml
+schema: rag-rulebook/corpus-gap/v1
+gap_id: gap.corpus.03.product.product-architecture-guides
+status: in-progress
+target_corpus_id: corpus.03.product
+owner_layer: 03.product
+owner_path: docs/03.product/source-material/guides/
+summary: >
+  Long-form product architecture guides are now in the product corpus as
+  RAG-readable source material, but their broad source claims have not yet been
+  reviewed into focused structured product rules or selector fixtures.
+observed_prompt: >
+  Agents need product architecture background for Kanbien's core, platform,
+  frontend, TypeScript, modular monorepo, and adapter-consumption choices.
+match_terms:
+  - product architecture guides
+  - Kanbien architecture guide
+  - packages/core architecture guide
+  - frontend design system guide
+  - platform layer architecture
+  - TypeScript architecture guide
+  - platform adapter consumption model
+target_question: >
+  Which long-form product architecture source guides should be reviewed when
+  deriving product rules, rule packs, or selector fixtures for core, platform,
+  frontend, TypeScript, and application architecture?
+source_material:
+  status: present
+  evidence_paths:
+    - docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
+    - docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
+    - docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
+    - docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+    - docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
+    - docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
+    - docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+  expectation: >
+    Keep the guides available for explanation and future rule derivation, but
+    do not treat their full prose as structured rule authority until focused
+    source-to-rule review is complete.
+scope:
+  included:
+    - Product architecture guide source material.
+    - Preserved original PDF evidence under docs/03.product/source-material/guides/originals/.
+    - Future derivation into focused product, platform, core, frontend, and design-system rules.
+  excluded:
+    - Treating every guide statement as a current structured rule.
+    - Replacing existing product source projections for packages/core and platform runtime source material.
+    - Deployment operations that belong under docs/04.deploy/.
+required_coverage:
+  source_material:
+    status: present
+    evidence_paths:
+      - docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
+      - docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
+      - docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
+      - docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+      - docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
+      - docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
+      - docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+    expectation: >
+      Guide source material is present and should remain retrievable for
+      explanation while later derivation slices extract focused rules.
+  structured_rulebook:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      Add or update focused product rules after source review rather than using
+      broad guide prose as direct execution authority.
+  selector_evaluation:
+    status: missing
+    evidence_paths: []
+    expectation: >
+      Add selector fixtures for guide-centered product architecture questions
+      once the first focused guide-derived rule slice is accepted.
+needed_outputs:
+  - focused source-to-rule review for guide claims
+  - derived product rules or explicit no-rule dispositions by guide/topic
+  - selector fixtures for guide-centered product architecture prompts
+  - update to this gap when guide-derived coverage is accepted
+local_query_behavior:
+  should_emit_gap: true
+  blocking: false
+  blocking_by_intent:
+    intent.planning.guidance: false
+    intent.planning.decision-support: false
+    intent.explanation.tutor: false
+    intent.discovery.explanation: false
+    intent.no-action.explanation: false
+    intent.context.retrieve: false
+    intent.implementation.request: false
+    intent.deploy.execution: true
+execution_blocking_gaps:
+  - id: gap.product-guides.structured-rules-missing
+    type: missing-structured-rulebook
+    description: >
+      The moved product guide source material has not yet been reviewed into
+      focused structured rules or explicit no-rule dispositions.
+    suggested_resolution: >
+      Run focused source-to-rule review for each guide/topic before treating
+      guide prose as direct implementation authority.
+suggested_resolution: >
+  Review guide claims in focused batches and derive product rules or no-rule
+  dispositions before closing this gap.
+review:
+  required: true
+  owner: 03.product
+  cadence: Review when product guide-derived rules, rule packs, or selector
+    fixtures are added or retired.

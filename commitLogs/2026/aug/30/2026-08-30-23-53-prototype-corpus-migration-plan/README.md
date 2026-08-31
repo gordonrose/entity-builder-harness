@@ -68,6 +68,20 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   0017, 0018, 0020, and 0021 into `docs/01.harness/adrs/`, adding
   `docs/06.shared/adrs/`, and moving shared ADR 0015 there with compatibility
   pointers.
+- Started execution slice 6 by moving product source-material Markdown files,
+  product architecture guide Markdown derivatives, and guide original PDFs
+  into `docs/03.product/source-material/`.
+- Added product source-material README artifacts, directory-level old-path
+  compatibility pointers, a product architecture guide corpus gap, and a
+  retirement record for removed exact prototype source-material paths.
+- Updated product source projections, derivation reports, selector fixtures,
+  rule source-derivation paths and hashes, recognition sources, source-root
+  checks, explanation-readiness smoke expectations, and rulebook index
+  discovery so moved product source material remains sectioned
+  `source-explanation` evidence.
+- Updated the artifact path migration checker and smoke test so governed
+  RAG/rulebook retirement records can preserve old paths as audit evidence
+  without counting as active old-path references.
 
 ## Questions Asked
 
@@ -84,6 +98,9 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   app-mount fixture needed a clearer prompt phrase to keep the composition-root
   rule selected under the 12-chunk limit. Both fixture issues were corrected
   and the focused set passed 4/4.
+- The full selector fixture matrix again ran silently during slice 6 and was
+  stopped after several polling windows. The focused product source-material
+  selector set passed 14/14 and remains the validation evidence for this slice.
 
 ## Decisions Made
 
@@ -133,6 +150,25 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Active harness, chat, product-migration, retrieval-policy, and selector
   fixture references to the moved harness/shared ADR batch now use canonical
   owner-aligned paths.
+- Product source material for packages/core, platform runtime obligations, and
+  platform infra capability layering is now canonical under
+  `docs/03.product/source-material/core/` and
+  `docs/03.product/source-material/platform/`.
+- Long-form product architecture guides and their original PDFs are now
+  canonical product source evidence under
+  `docs/03.product/source-material/guides/`.
+- The moved long-form guides remain source material for explanation and future
+  derivation; the new product architecture guide corpus gap records that their
+  broad prose has not yet been reviewed into focused structured rules or
+  selector fixtures.
+- `generate-rulebook-index` now prevents explanation Markdown roots from being
+  rediscovered as generic process sources, so moved source material is indexed
+  through sectioned `source-explanation` chunks rather than whole-file
+  `source-excerpt` chunks.
+- Exact retired prototype source-material paths are covered by
+  `.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml`.
+- Artifact path migration checks exclude governed RAG/rulebook retirement
+  records when searching for active old-path references.
 
 
 - Decision: Record RAG knowledge disposition: covered
@@ -154,6 +190,10 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Execution slice 5 is covered by ADR 0032, the corpus split migration plan, canonical harness and shared ADR roots, old-path compatibility pointers, updated active references, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 6 is covered by the corpus split migration plan, product source-material README artifacts, canonical product source-material files, directory compatibility pointers, source projection updates, the product guide corpus gap, the product source-material retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+
 ## Context Hygiene
 
 - Work performed in the chat-owned worktree:
@@ -173,6 +213,14 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   now contain compatibility pointers, not duplicate ADR text.
 - Slice 5 work continues in the same chat-owned worktree. Old harness/shared
   ADR paths now contain compatibility pointers, not duplicate ADR text.
+- Slice 6 work continues in the same chat-owned worktree. Old source-material
+  and guide roots now contain directory-level compatibility pointers, not
+  duplicate source material.
+- The three removed exact source-material paths have an accepted retirement
+  record with prior SHA-256 hashes and replacement product paths.
+- The moved product guide prose is intentionally tracked by a corpus gap until
+  future source-to-rule review extracts focused product rules or explicit
+  no-rule dispositions.
 - Historical `commitLogs/**` references to old paths were left as audit
   history.
 
@@ -545,6 +593,78 @@ Summary: Moved harness ADRs 0003, 0008, 0012, 0017, 0018, 0020, and 0021 to docs
 
 ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this slice applies it to the harness/shared ADR batch.
 
+### 2026-08-31T12:31:51Z - Execution slice 6 started
+
+Moved product source material to the owner-aligned product corpus:
+
+- `docs/03.product/source-material/core/packages-core-contract-surface-v1.md`
+- `docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md`
+- `docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md`
+
+Moved seven long-form product architecture guide Markdown derivatives and their
+original PDFs under `docs/03.product/source-material/guides/`. Added product
+source-material README artifacts and directory-level compatibility pointers
+under the old prototype source-material and guide roots.
+
+Updated source projections, derivation reports, selector fixtures,
+source-derivation paths and hashes, generated recognition sources, source-root
+checks, and explanation-readiness smoke expectations. Added
+`.agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml`
+to track future focused source-to-rule review for broad product guide prose.
+
+Added
+`.agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml`
+for the three removed exact prototype source-material paths, including prior
+SHA-256 hashes and replacement product source paths.
+
+Adjusted `scripts/02.rag-rulebook/generate-rulebook-index/script.sh` so
+migration-map Markdown entries and explanation Markdown roots are not
+rediscovered as generic process-source artifacts. This keeps moved source
+material indexed as bounded `source-explanation` sections instead of
+whole-file `source-excerpt` evidence.
+
+Adjusted `scripts/01.harness/check-artifact-path-migration.sh` and its smoke
+test so RAG/rulebook retirement records are ignored as active old-path
+references. The three direct source-material path migration checks passed
+without an active old-path compatibility override.
+
+Focused selector validation passed:
+
+- `bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml`
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- `bash scripts/01.harness/check-artifact-path-migration.sh --plan .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md docs/harness/architecture/source-material/packages-core-contract-surface-v1.md docs/03.product/source-material/core/packages-core-contract-surface-v1.md`
+- `bash scripts/01.harness/check-artifact-path-migration.sh --plan .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md`
+- `bash scripts/01.harness/check-artifact-path-migration.sh --plan .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md`
+- `bash scripts/01.harness/check-governed-script-command-drift.sh`
+- `git diff --check`
+
+Non-blocking validation note:
+
+- `bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --current` was stopped after several silent polling windows with no report. The focused product source-material selector set passed 14/14.
+
+
+### 2026-08-31T12:33:01Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 6 is covered by the corpus split migration plan, product source-material README artifacts, canonical product source-material files, directory compatibility pointers, source projection updates, the product guide corpus gap, the product source-material retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -603,8 +723,9 @@ ADR impact: ADR 0032 already records the owner-aligned ADR root decision; this s
 ADR needed: yes
 ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
 Reason: ADR 0032 records the owner-aligned ADR root decision. Execution slice
-5 applies that accepted decision to the harness/shared ADR batch
-without introducing a new ADR-level policy change.
+6 applies that accepted decision to product source material, product guide
+source evidence, and old-path compatibility without introducing a new ADR-level
+policy change.
 
 ## Session Metrics
 
@@ -623,19 +744,16 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 5 is covered by ADR 0032, the corpus split migration plan, canonical harness and shared ADR roots, old-path compatibility pointers, updated active references, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+Reason: Execution slice 6 is covered by the corpus split migration plan, product source-material README artifacts, canonical product source-material files, directory compatibility pointers, source projection updates, the product guide corpus gap, the product source-material retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 Evidence:
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
-- docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
-- docs/01.harness/adrs/0003-review-process-prose-for-deterministic-gates.md
-- docs/01.harness/adrs/0008-add-education-layer.md
-- docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
-- docs/01.harness/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-- docs/01.harness/adrs/0018-govern-artifact-path-migrations.md
-- docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
-- docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
-- docs/06.shared/adrs/README.md
-- docs/06.shared/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
+- docs/03.product/source-material/README.md
+- docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+- docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+- docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+- .agentic/02.rag-rulebook/source-projections/v1.yml
+- .agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml
+- .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 Corpus gaps:
 - None.

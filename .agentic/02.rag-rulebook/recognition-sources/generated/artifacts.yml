@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 823
-  term_count: 1658
+  indexed_artifacts: 832
+  term_count: 1676
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3564,89 +3564,29 @@ terms:
   canonical_id: harness.adr.readme
   evidence_path: docs/harness/architecture/adrs/README.md
   confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
+- term: harness.architecture.guides.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+  canonical_id: harness.architecture.guides.pointer
+  evidence_path: docs/harness/architecture/guides/README.md
   confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+- term: docs/harness/architecture/guides/README.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-architecture-full-discussion.md
+  canonical_id: harness.architecture.guides.pointer
+  evidence_path: docs/harness/architecture/guides/README.md
   confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-core-architecture-guide
+- term: harness.architecture.guides.originals.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-core-architecture-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+  canonical_id: harness.architecture.guides.originals.pointer
+  evidence_path: docs/harness/architecture/guides/originals/README.md
   confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
+- term: docs/harness/architecture/guides/originals/README.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-core-architecture-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-core-architecture-guide.md
-  confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
-  confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-frontend-design-system-guide.md
-  confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-modular-monorepo-entity-builder
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-modular-monorepo-entity-builder
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
-  confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-modular-monorepo-entity-builder
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-modular-monorepo-entity-builder.md
-  confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
-  confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-platform-layer-architecture.md
-  confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
-  confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien-typescript-architecture-guide.md
-  confidence_weight: 1
-- term: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
-  confidence_weight: 1
-- term: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
-  evidence_path: docs/harness/architecture/guides/markdown/kanbien_platform_adapter_consumption_model_guide.md
+  canonical_id: harness.architecture.guides.originals.pointer
+  evidence_path: docs/harness/architecture/guides/originals/README.md
   confidence_weight: 1
 - term: harness.architecture.plan.platform-runtime-implementation.pointer
   category: artifact-id
@@ -3984,41 +3924,17 @@ terms:
   canonical_id: harness.architecture.rules.layers.scripts-command-surface
   evidence_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
   confidence_weight: 1
-- term: harness.architecture.source-material.packages-core-contract-surface-v1
+- term: harness.architecture.source-material.pointer
   category: artifact-id
   match_type: exact
-  canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
-  evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  canonical_id: harness.architecture.source-material.pointer
+  evidence_path: docs/harness/architecture/source-material/README.md
   confidence_weight: 1
-- term: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+- term: docs/harness/architecture/source-material/README.md
   category: file-path
   match_type: exact
-  canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
-  evidence_path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-  confidence_weight: 1
-- term: harness.architecture.source-material.platform-infra-capability-layering-v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.source-material.platform-infra-capability-layering-v1
-  evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-  confidence_weight: 1
-- term: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.source-material.platform-infra-capability-layering-v1
-  evidence_path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-  confidence_weight: 1
-- term: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-  confidence_weight: 1
-- term: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  canonical_id: harness.architecture.source-material.pointer
+  evidence_path: docs/harness/architecture/source-material/README.md
   confidence_weight: 1
 - term: harness.script.agents.validate-harness-agents.readme
   category: artifact-id
@@ -4391,6 +4307,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.corpus-gap.02-rag-rulebook.rag-retrieval-source-of-truth
   evidence_path: .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml
+  confidence_weight: 1
+- term: rag-rulebook.corpus-gap.03-product.product-architecture-guides
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gap.03-product.product-architecture-guides
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.corpus-gap.03-product.product-architecture-guides
+  evidence_path: .agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml
   confidence_weight: 1
 - term: rag-rulebook.corpus-gap.04-deploy.github-actions-to-ecs-fargate
   category: artifact-id
@@ -6011,6 +5939,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
   evidence_path: .agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-08-31-product-source-material-paths
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-product-source-material-paths
+  evidence_path: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-product-source-material-paths
+  evidence_path: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml
   confidence_weight: 1
 - term: rag-rulebook.retirements.readme
   category: artifact-id
@@ -8057,6 +7997,174 @@ terms:
   match_type: exact
   canonical_id: product.adrs.readme
   evidence_path: docs/03.product/adrs/README.md
+  confidence_weight: 1
+- term: product.source-material.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.source-material.readme
+  evidence_path: docs/03.product/source-material/README.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.source-material.readme
+  evidence_path: docs/03.product/source-material/README.md
+  confidence_weight: 1
+- term: product.source-material.core.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.source-material.core.readme
+  evidence_path: docs/03.product/source-material/core/README.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/core/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.source-material.core.readme
+  evidence_path: docs/03.product/source-material/core/README.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.packages-core-contract-surface-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
+  evidence_path: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.packages-core-contract-surface-v1
+  evidence_path: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+  confidence_weight: 1
+- term: product.source-material.guides.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.source-material.guides.readme
+  evidence_path: docs/03.product/source-material/guides/README.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.source-material.guides.readme
+  evidence_path: docs/03.product/source-material/guides/README.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-architecture-full-discussion
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-core-architecture-guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-core-architecture-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-core-architecture-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-frontend-design-system-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-modular-monorepo-entity-builder
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-modular-monorepo-entity-builder
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-modular-monorepo-entity-builder
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-platform-adapter-consumption-model-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-platform-layer-architecture
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
+  confidence_weight: 1
+- term: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
+  evidence_path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+  confidence_weight: 1
+- term: product.source-material.platform.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.source-material.platform.readme
+  evidence_path: docs/03.product/source-material/platform/README.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/platform/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.source-material.platform.readme
+  evidence_path: docs/03.product/source-material/platform/README.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.platform-infra-capability-layering-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.platform-infra-capability-layering-v1
+  evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.platform-infra-capability-layering-v1
+  evidence_path: docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+  evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+  evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id

@@ -72,7 +72,7 @@ banned:
   selected_corpora:
     - corpus.00.chat
 source_refs:
-  - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
   - docs/harness/architecture/rules/layers/packages-core.yml
   - packages/core/tests/compatibility/v0-public-contracts.test.ts
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml

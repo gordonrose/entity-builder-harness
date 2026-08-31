@@ -29,8 +29,8 @@ source_derivation:
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml
   source_material:
-    - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-      sha256: 4654a5897730faa0cd2bcc2b7a6e2216ea9f94793955bf8f50c496432b4f2448
+    - path: docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+      sha256: d2934e4ecafbfee52d54fb09cf8e5d06d4d15ca57bf8790c09f4dabaaebb561c
 
 description: >
   Rules governing what may live in packages/core and how agents should treat

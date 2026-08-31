@@ -39,7 +39,8 @@ Use this corpus for product architecture guides, product source material,
 apps rules, packages/core rules, design-system rules, frontend-kit rules,
 platform/runtime rules, product task rule packs, and product-owned ADRs.
 
-Product ADRs live under `adrs/`.
+Product ADRs live under `adrs/`. Product guides and source material live under
+`source-material/`.
 
 Product corpus material may be subdivided by owner topic, including `apps`,
 `core`, `design-system`, `frontend-kit`, and `platform`.
