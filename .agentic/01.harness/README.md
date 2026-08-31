@@ -26,6 +26,9 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 Use `workflows/migrate-artifact-paths.md` for moving, renaming, retiring, or removing committed files or directories.
 
+Use `standards/document-artifact-placement.md` before adding ADRs, guides,
+source material, plans, rules, rule packs, or other document artifacts.
+
 Use `workflows/run-agent-review.md` for single-agent review invocation.
 
 Use `workflows/run-review-board.md` for multi-agent review-board composition.
@@ -48,6 +51,10 @@ capabilities when a workflow or standard assigns them explicit ownership.
 RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
 The architecture rulebook artifacts referenced here remain a prototype corpus
 until a governed migration assigns final domain corpus homes.
+
+New document artifacts should use
+`standards/document-artifact-placement.md` instead of extending the prototype
+`docs/harness/architecture/**` corpus.
 
 Canonical architecture source remains
 `docs/harness/architecture/guides/markdown`.
@@ -73,6 +80,7 @@ workflow.
 - `standards/agent-contracts.md` - defines the contract, authority boundaries, scoring rules, and report expectations for harness review agents.
 - `standards/artifact-metadata-headers.md` - defines the compatibility v1 metadata header format and points to the versioned artifact metadata capability.
 - `standards/artifact-path-migrations.md` - defines compatibility rules for moving, renaming, retiring, or removing repository artifact paths.
+- `standards/document-artifact-placement.md` - defines owner-aligned homes for new document artifacts, corpus material, ADRs, plans, rules, and rule packs.
 - `standards/evaluation-fixtures.md` - defines how harness evaluation fixtures are authored, owned, validated, and evolved.
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.

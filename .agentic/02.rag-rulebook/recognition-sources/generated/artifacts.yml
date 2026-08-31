@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 778
-  term_count: 1568
+  indexed_artifacts: 780
+  term_count: 1572
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2561,6 +2561,18 @@ terms:
   match_type: exact
   canonical_id: harness.standards.artifact-path-migrations
   evidence_path: .agentic/01.harness/standards/artifact-path-migrations.md
+  confidence_weight: 1
+- term: harness.standards.document-artifact-placement
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standards.document-artifact-placement
+  evidence_path: .agentic/01.harness/standards/document-artifact-placement.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/document-artifact-placement.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standards.document-artifact-placement
+  evidence_path: .agentic/01.harness/standards/document-artifact-placement.md
   confidence_weight: 1
 - term: harness.standards.evaluation-fixtures
   category: artifact-id
@@ -5447,6 +5459,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.plan.explanation-aware-chunking-and-retrieval
   evidence_path: .agentic/02.rag-rulebook/plans/explanation-aware-chunking-and-retrieval.md
+  confidence_weight: 1
+- term: rag-rulebook.migration-plan.prototype-corpus-domain-split
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.migration-plan.prototype-corpus-domain-split
+  evidence_path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.migration-plan.prototype-corpus-domain-split
+  evidence_path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
   confidence_weight: 1
 - term: rag-rulebook.plan.prototype-corpus-migration-map
   category: artifact-id

@@ -104,7 +104,9 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      rulesets, concern rulesets, and rule packs to proposed numbered corpus
      packages.
    - Do not move files in this step.
-   - Status: present in `plans/prototype-corpus-migration-map.yml`.
+   - Status: inventory present in `plans/prototype-corpus-migration-map.yml`;
+     execution plan present in
+     `plans/migration/prototype-corpus-domain-split.md`.
 
 4. Design a rulebook index schema.
    - Include corpus IDs, artifact IDs, rule IDs, chunk IDs, path globs,
@@ -1036,6 +1038,9 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
      `corpus.05.education`.
    - Include `corpus.02.rag-rulebook` as a self-corpus for service governance.
    - Use artifact path migration before moving committed files.
+   - Status: present in
+     `plans/migration/prototype-corpus-domain-split.md`; no prototype corpus
+     files have been moved by that planning slice.
 
 10. Only after the above, design a standalone service or repo extraction.
    - The service should consume corpus packages, generated indexes, chunks,

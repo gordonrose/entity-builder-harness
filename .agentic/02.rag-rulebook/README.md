@@ -260,6 +260,9 @@ final homes.
 - `plans/prototype-corpus-migration-map.yml` - inventories the current
   prototype corpus and maps YAML rules, rule packs, source guides, and ADRs to
   proposed numbered corpus packages before any file moves.
+- `plans/migration/prototype-corpus-domain-split.md` - plans the governed,
+  phased split of `docs/harness/architecture/` into numbered domain corpus
+  homes without moving prototype corpus files in the planning slice.
 - `plans/artifact-metadata-retrieval-profile-migration.md` - tracks the
   migration from header coverage to generated retrieval profiles and selector
   evaluations.
