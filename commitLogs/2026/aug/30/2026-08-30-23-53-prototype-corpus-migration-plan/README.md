@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T19:42:58Z
-latest_commit_sha: eac8713
-chat_duration: 74981s (00:20:49:41)
+latest_commit_at_utc: 2026-08-31T21:16:04Z
+latest_commit_sha: 49a3e9e
+chat_duration: 80567s (00:22:22:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -918,6 +918,17 @@ README artifacts, the prototype rules compatibility pointer, owner-specific
 retirement records, updated rule graph references, refreshed recognition
 sources, runtime freshness, and focused selector fixture coverage.
 
+
+### 2026-08-31T21:16:04Z - Commit recorded
+
+Commit: `49a3e9e`
+
+Message: Move deploy harness and shared rules to owner corpora
+
+Summary: Moved the remaining prototype rule YAML into docs/04.deploy/rules/layers, docs/01.harness/rules/layers, and docs/06.shared/rules/concerns; added harness/shared rule READMEs, retirement records, compatibility pointer updates, refreshed recognition/runtime evidence, and updated active rule graph references.
+
+ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to deploy, harness, and shared structured rules.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -981,6 +992,13 @@ sources, runtime freshness, and focused selector fixture coverage.
   Summary: Moved product structured rules and product task rule packs into docs/03.product/rules and docs/03.product/rule-packs with compatibility pointers, updated harness guidance, rule graph references, source derivation hashes, migration metadata, generated recognition evidence, and rulebook index discovery.
   ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product rules, product task packs, and old-path compatibility.
 
+
+- Commit: `49a3e9e`
+  Time UTC: 2026-08-31T21:16:04Z
+  Message: Move deploy harness and shared rules to owner corpora
+  Summary: Moved the remaining prototype rule YAML into docs/04.deploy/rules/layers, docs/01.harness/rules/layers, and docs/06.shared/rules/concerns; added harness/shared rule READMEs, retirement records, compatibility pointer updates, refreshed recognition/runtime evidence, and updated active rule graph references.
+  ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to deploy, harness, and shared structured rules.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -997,9 +1015,9 @@ change.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T19:42:58Z
-Latest commit SHA: eac8713
-Chat duration: 74981s (00:20:49:41)
+Latest commit at UTC: 2026-08-31T21:16:04Z
+Latest commit SHA: 49a3e9e
+Chat duration: 80567s (00:22:22:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
