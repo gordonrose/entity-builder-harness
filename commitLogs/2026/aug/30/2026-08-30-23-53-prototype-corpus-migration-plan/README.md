@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-08-30T22:53:17Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-08-31T00:01:48Z
+latest_commit_sha: 95e7534
+chat_duration: 4111s (00:01:08:31)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -132,13 +132,30 @@ Validation passed:
 - `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
 - `git diff --check`
 
+
+### 2026-08-31T00:01:48Z - Commit recorded
+
+Commit: `95e7534`
+
+Message: Plan prototype corpus domain split
+
+Summary: Added the prototype corpus domain-split migration plan, a harness document-artifact placement standard, and refreshed generated recognition sources.
+
+ADR impact: No ADR created; the slice planned the migration and added governance without moving durable docs roots.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `95e7534`
+  Time UTC: 2026-08-31T00:01:48Z
+  Message: Plan prototype corpus domain split
+  Summary: Added the prototype corpus domain-split migration plan, a harness document-artifact placement standard, and refreshed generated recognition sources.
+  ADR impact: No ADR created; the slice planned the migration and added governance without moving durable docs roots.
 
 ## Main Refresh Conflicts
 
@@ -156,12 +173,12 @@ paths because it changes durable documentation layout.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-08-31T00:01:48Z
+Latest commit SHA: 95e7534
+Chat duration: 4111s (00:01:08:31)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
