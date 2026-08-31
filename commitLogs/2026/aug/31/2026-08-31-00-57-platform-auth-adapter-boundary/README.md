@@ -10,17 +10,17 @@ status: in-progress
 raised_at_utc: 2026-08-30T23:57:15Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-56-58-01a0551a-db7a-7402-93b9-0a75a75ca73d.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 1452383
+transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-56-58-01a0551a-db7a-7402-93b9-0a75a75ca73d.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-08-31T00:32:36Z
+latest_commit_sha: f7eaa9e
+chat_duration: 2121s (00:00:35:21)
+estimated_chat_tokens: 363096 estimated from chat transcript bytes (1452383 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-56-58-01a0551a-db7a-7402-93b9-0a75a75ca73d.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -117,13 +117,30 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: Cognito adapter and generic platform auth boundary are covered by the updated platform runtime plan, ADR, architecture rules, workflow, and staging target composition evidence.
 
+
+### 2026-08-31T00:32:36Z - Commit recorded
+
+Commit: `f7eaa9e`
+
+Message: fix(platform): isolate Cognito auth adapter
+
+Summary: Moved Cognito authentication translation into the AWS Cognito adapter, kept platform security and server provider-neutral, added composition and boundary tests, and hardened the supporting architecture rules.
+
+ADR impact: Updated AWS ADR 0002 implementation boundary; no new ADR.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `f7eaa9e`
+  Time UTC: 2026-08-31T00:32:36Z
+  Message: fix(platform): isolate Cognito auth adapter
+  Summary: Moved Cognito authentication translation into the AWS Cognito adapter, kept platform security and server provider-neutral, added composition and boundary tests, and hardened the supporting architecture rules.
+  ADR impact: Updated AWS ADR 0002 implementation boundary; no new ADR.
 
 ## Main Refresh Conflicts
 
@@ -139,12 +156,12 @@ ADR 0002 was updated in place to correct the adapter and composition boundary.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T23:57:15Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-08-31T00:32:36Z
+Latest commit SHA: f7eaa9e
+Chat duration: 2121s (00:00:35:21)
+Estimated chat tokens: 363096 estimated from chat transcript bytes (1452383 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T00-56-58-01a0551a-db7a-7402-93b9-0a75a75ca73d.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
