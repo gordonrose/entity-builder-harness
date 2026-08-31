@@ -117,7 +117,7 @@
       "agent_id": "harness.agents.senior-backend-architect",
       "rubric_negative_fixture": "dependency_direction_violation",
       "task_text": "A backend feature introduces a dependency-direction violation across platform layers.",
-      "changed_paths": ["docs/harness/architecture/rules/concerns/dependency-direction.yml"],
+      "changed_paths": ["docs/06.shared/rules/concerns/dependency-direction.yml"],
       "expected_decision": "block",
       "expected_blocking_dimension": "dependency_direction",
       "expected_blocker_terms": ["dependency direction", "violation"]

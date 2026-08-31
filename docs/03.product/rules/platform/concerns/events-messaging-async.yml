@@ -31,7 +31,7 @@ description: >
 related_rulesets:
   - docs/03.product/rules/core/layers/packages-core.yml
   - docs/03.product/rules/platform/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 applies_to:
   paths:

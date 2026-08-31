@@ -28,7 +28,7 @@ description: >
   backwards-compatible, and safely consumed by application layers.
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 applies_to:
   paths:

@@ -65,7 +65,7 @@ source_refs:
   - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
   - docs/03.product/rules/core/layers/packages-core.yml
   - docs/03.product/rules/concerns/i18n-localization.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - packages/core i18n or localization ownership rules change.

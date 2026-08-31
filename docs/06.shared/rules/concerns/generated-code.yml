@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.generated-code
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 06.shared
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -28,7 +28,7 @@ description: >
   generated artifact placement, and freshness checks.
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 applies_to:
   paths:
@@ -138,7 +138,7 @@ source_refs:
       - "11. Entity Builder Flow"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/generated-code.yml."
+  - "The file exists at docs/06.shared/rules/concerns/generated-code.yml."
   - "It defines deterministic and idempotent generation rules."
   - "It keeps generator runtime code out of production runtime dependencies."
   - "It distinguishes generated package outputs from package-local generated folders."

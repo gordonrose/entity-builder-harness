@@ -37,11 +37,11 @@ applies_to:
 
 related_rulesets:
   - docs/03.product/rules/platform/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
   - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
-  - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+  - docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
 
 app_surfaces:
   - id: app_mount

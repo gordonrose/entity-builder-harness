@@ -116,7 +116,7 @@ source_refs:
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
   - docs/03.product/rules/apps/layers/apps.yml
   - docs/03.product/rules/platform/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 update_triggers:
   - Retrieval strategy stage order changes.
   - Question-category recognition changes.

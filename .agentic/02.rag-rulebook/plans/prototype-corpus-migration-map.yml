@@ -134,13 +134,13 @@ yaml_artifacts:
       proposed_target_path: corpus.03.product.frontend-kit/rules/layers/frontend-kit.yml
       migration_status: moved-in-slice-7
       reason: Applies to frontend-kit, forms, tables, and reusable entity-page UI shell packages.
-    - current_path: docs/harness/architecture/rules/layers/infra.yml
+    - current_path: docs/04.deploy/rules/layers/infra.yml
       metadata_id: harness.architecture.rules.layers.infra
       rulebook_id: layer.infra
       title: infra layer rules
       proposed_corpus_id: corpus.04.deploy
       proposed_target_path: corpus.04.deploy/rules/layers/infra.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-8
       reason: Applies to `infra/**` infrastructure and deployment definition work.
     - current_path: docs/03.product/rules/core/layers/packages-core.yml
       metadata_id: harness.architecture.rules.layers.packages-core
@@ -158,24 +158,24 @@ yaml_artifacts:
       proposed_target_path: corpus.03.product.platform/rules/layers/platform.yml
       migration_status: moved-in-slice-7
       reason: Applies to `platform/**` runtime composition and platform/app contracts.
-    - current_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
+    - current_path: docs/01.harness/rules/layers/scripts-command-surface.yml
       metadata_id: harness.architecture.rules.layers.scripts-command-surface
       rulebook_id: layer.scripts-command-surface
       title: scripts command-surface layer rules
       proposed_corpus_id: corpus.01.harness
       proposed_target_path: corpus.01.harness/rules/layers/scripts-command-surface.yml
-      migration_status: target-candidate
+      migration_status: moved-in-slice-8
       reason: Governs numbered script command surfaces as harness-owned automation structure.
 
   concern_rulesets:
-    - current_path: docs/harness/architecture/rules/concerns/ci-quality.yml
+    - current_path: docs/06.shared/rules/concerns/ci-quality.yml
       metadata_id: harness.architecture.rules.concerns.ci-quality
       rulebook_id: concern.ci-quality
       title: CI quality rules
       proposed_corpus_id: corpus.06.shared
       proposed_target_path: corpus.06.shared/rules/concerns/ci-quality.yml
-      migration_status: split-review-required
-      reason: Applies across product, deploy, and harness script surfaces; may remain shared or split after index evidence.
+      migration_status: moved-in-slice-8
+      reason: Classified as shared because it applies across product, deploy, and harness script surfaces.
     - current_path: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
       metadata_id: harness.architecture.rules.concerns.config-runtime-settings
       rulebook_id: concern.config-runtime-settings
@@ -184,13 +184,13 @@ yaml_artifacts:
       proposed_target_path: corpus.03.product.platform/rules/concerns/config-runtime-settings.yml
       migration_status: moved-in-slice-7
       reason: Primarily product runtime/platform config, with deployment environment edges.
-    - current_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - current_path: docs/06.shared/rules/concerns/dependency-direction.yml
       metadata_id: harness.architecture.rules.concerns.dependency-direction
       rulebook_id: concern.dependency-direction
       title: Dependency direction rules
       proposed_corpus_id: corpus.06.shared
       proposed_target_path: corpus.06.shared/rules/concerns/dependency-direction.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-8
       reason: Deliberately governs dependency boundaries across product, harness, scripts, and deploy surfaces.
     - current_path: docs/03.product/rules/design-system/concerns/design-label-theming.yml
       metadata_id: harness.architecture.rules.concerns.design-label-theming
@@ -208,13 +208,13 @@ yaml_artifacts:
       proposed_target_path: corpus.03.product.platform/rules/concerns/events-messaging-async.yml
       migration_status: moved-in-slice-7
       reason: Product/platform async behavior with deployment infrastructure edges.
-    - current_path: docs/harness/architecture/rules/concerns/generated-code.yml
+    - current_path: docs/06.shared/rules/concerns/generated-code.yml
       metadata_id: harness.architecture.rules.concerns.generated-code
       rulebook_id: concern.generated-code
       title: Generated code rules
       proposed_corpus_id: corpus.06.shared
       proposed_target_path: corpus.06.shared/rules/concerns/generated-code.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-8
       reason: Applies across product generated outputs and harness/script generator surfaces.
     - current_path: docs/03.product/rules/concerns/i18n-localization.yml
       metadata_id: harness.architecture.rules.concerns.i18n-localization
@@ -280,13 +280,13 @@ yaml_artifacts:
       proposed_target_path: corpus.03.product.platform/rules/concerns/tenancy.yml
       migration_status: moved-in-slice-7
       reason: Product tenant context and isolation with persistence/platform/infrastructure edges.
-    - current_path: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+    - current_path: docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
       metadata_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
       rulebook_id: concern.typescript-monorepo-tooling
       title: TypeScript monorepo tooling rules
       proposed_corpus_id: corpus.06.shared
       proposed_target_path: corpus.06.shared/rules/concerns/typescript-monorepo-tooling.yml
-      migration_status: split-review-required
+      migration_status: moved-in-slice-8
       reason: Tooling rules apply across product, harness, scripts, infra, and root workspace files.
     - current_path: docs/03.product/rules/core/concerns/validation-api-errors.yml
       metadata_id: harness.architecture.rules.concerns.validation-api-errors

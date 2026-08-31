@@ -86,25 +86,25 @@ current_known_artifacts:
     - docs/03.product/rules/apps/layers/apps.yml
     - docs/03.product/rules/design-system/layers/design-system.yml
     - docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
-    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/04.deploy/rules/layers/infra.yml
     - docs/03.product/rules/core/layers/packages-core.yml
     - docs/03.product/rules/platform/layers/platform.yml
-    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+    - docs/01.harness/rules/layers/scripts-command-surface.yml
   concern_rulesets:
     - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
     - docs/03.product/rules/design-system/concerns/design-label-theming.yml
     - docs/03.product/rules/platform/concerns/events-messaging-async.yml
     - docs/03.product/rules/concerns/i18n-localization.yml
     - docs/03.product/rules/platform/concerns/identity-access-security.yml
     - docs/03.product/rules/platform/concerns/notifications.yml
-    - docs/harness/architecture/rules/concerns/ci-quality.yml
-    - docs/harness/architecture/rules/concerns/generated-code.yml
+    - docs/06.shared/rules/concerns/ci-quality.yml
+    - docs/06.shared/rules/concerns/generated-code.yml
     - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
     - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
     - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
     - docs/03.product/rules/platform/concerns/tenancy.yml
-    - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+    - docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
     - docs/03.product/rules/core/concerns/validation-api-errors.yml
   rule_packs:
     - docs/03.product/rule-packs/core/add-core-module.yml

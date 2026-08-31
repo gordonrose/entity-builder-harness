@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.dependency-direction
 #   version: 2
 #   status: active
-#   layer: 01.harness
+#   layer: 06.shared
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -258,7 +258,7 @@ source_refs:
       - "Recommended dependency rules"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/dependency-direction.yml."
+  - "The file exists at docs/06.shared/rules/concerns/dependency-direction.yml."
   - "It defines repo-wide dependency direction rules."
   - "It covers apps, reusable packages, packages/core, platform, design-system, harness, script command surfaces, infra, and generated code."
   - "It includes the platform composition-root exception for importing app mounts."

@@ -91,6 +91,14 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   derivation paths and hashes, migration-map statuses, generated recognition
   sources, rulebook index discovery, runtime smoke expectations, and the
   product rule retirement record.
+- Started execution slice 8 by moving the remaining deploy, harness, and
+  shared structured rule YAML out of `docs/harness/architecture/rules/**`.
+- Added harness and shared rule README artifacts, updated the deploy rules
+  README for deploy-owned layer rules, and turned the old prototype rules root
+  into a final compatibility pointer.
+- Added owner-specific retirement records for the moved infra,
+  scripts-command-surface, CI quality, dependency-direction, generated-code,
+  and TypeScript monorepo tooling rule paths.
 
 ## Questions Asked
 
@@ -192,6 +200,17 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - `generate-rulebook-index` now skips live current-corpus YAML entries already
   represented by the migration map so migrated artifacts keep their mapped
   subcorpus metadata without duplicate discovered entries.
+- `docs/04.deploy/rules/layers/infra.yml` is now the canonical deploy-owned
+  infra layer rule.
+- `docs/01.harness/rules/layers/scripts-command-surface.yml` is now the
+  canonical harness-owned scripts command-surface layer rule.
+- `docs/06.shared/rules/concerns/ci-quality.yml`,
+  `docs/06.shared/rules/concerns/dependency-direction.yml`,
+  `docs/06.shared/rules/concerns/generated-code.yml`, and
+  `docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml` are now the
+  canonical shared cross-layer concern rules.
+- The prototype `docs/harness/architecture/rules/` root now contains only a
+  compatibility pointer README.
 
 
 - Decision: Record RAG knowledge disposition: covered
@@ -221,13 +240,18 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Decision: Record RAG knowledge disposition: covered
   Rationale: Execution slice 7 is covered by the corpus split migration plan, product rules and rule-pack README artifacts, canonical product structured rule YAML, canonical product task packs, old-root compatibility pointers, updated rule graph references, source derivation hash updates, the product rules retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: Execution slice 8 is covered by the corpus split migration plan, canonical deploy/harness/shared structured rule YAML, harness and shared rule README artifacts, the prototype rules compatibility pointer, owner-specific retirement records, updated rule graph references, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+
 ## Context Hygiene
 
 - Work performed in the chat-owned worktree:
   `/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-23-53-is-this-folder-home-owner-projects-entity-builder-harness-00-3903744130`.
 - Root checkout had an unrelated `package-lock.json` modification; it was not
   touched in this slice.
-- `docs/harness/architecture/**` files were not moved or edited.
+- During the planning/governance slice, `docs/harness/architecture/**` files
+  were not moved or edited.
 - Generated recognition sources were updated because new indexed artifacts were
   added.
 - The old platform runtime implementation plan path now contains a
@@ -257,6 +281,12 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   `used_by` paths now point at canonical product rule files.
 - Historical `commitLogs/**` references to old product rule and rule-pack paths
   were left as audit history.
+- Slice 8 work continues in the same chat-owned worktree. The old prototype
+  rules root now contains only a compatibility pointer README.
+- Exact retired deploy, harness, and shared prototype rule paths have accepted
+  retirement records with prior SHA-256 hashes and replacement paths.
+- Historical `commitLogs/**` references to old deploy, harness, and shared
+  rule paths were left as audit history.
 
 ## Activity Log
 
@@ -812,6 +842,82 @@ Summary: Moved product structured rules and product task rule packs into docs/03
 
 ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to product rules, product task packs, and old-path compatibility.
 
+### 2026-08-31T21:08:28Z - Execution slice 8 started
+
+Moved the remaining prototype structured rules into owner-aligned corpus roots:
+
+- `docs/04.deploy/rules/layers/infra.yml`
+- `docs/01.harness/rules/layers/scripts-command-surface.yml`
+- `docs/06.shared/rules/concerns/ci-quality.yml`
+- `docs/06.shared/rules/concerns/dependency-direction.yml`
+- `docs/06.shared/rules/concerns/generated-code.yml`
+- `docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml`
+
+Added `docs/01.harness/rules/README.md` and
+`docs/06.shared/rules/README.md`, updated `docs/04.deploy/rules/README.md`
+for deploy-owned layer rules, and changed
+`docs/harness/architecture/rules/README.md` into a final compatibility
+pointer for the split rules root.
+
+Added owner-specific retirement records:
+
+- `.agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml`
+- `.agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml`
+- `.agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml`
+
+Updated active rule graph references, selector fixtures, generated recognition
+sources, migration-map statuses, harness/deploy/shared corpus READMEs, and the
+infra implementation README `used_by` metadata.
+
+Focused selector validation passed:
+
+- `bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh` with the seven fixtures that cite `docs/01.harness/rules`, `docs/04.deploy/rules/layers/infra.yml`, or `docs/06.shared/rules`.
+
+Validation passed:
+
+- `bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all`
+- `bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check`
+- `bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-projections/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current`
+- `bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current`
+- `bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current`
+- `bash scripts/02.rag-rulebook/audit-explanation-readiness/script.sh --current`
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh`
+- `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh`
+- `bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh`
+- `bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh`
+- `bash scripts/02.rag-rulebook/run-local-service/smoke-test.sh`
+- `bash scripts/01.harness/smoke-test-artifact-path-migration.sh`
+- `bash scripts/01.harness/check-governed-script-command-drift.sh`
+- `git diff --check`
+
+Concrete path-migration checks passed for all six moved deploy, harness, and
+shared rule source/target pairs. A focused stale-reference scan found no
+active old rule references outside governed retirement evidence and historical
+session logs.
+
+Non-blocking validation note:
+
+- `bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh` passed
+  with one unrelated unresolved-reference warning for
+  `.agentic/shared/workflows/deployment-process.md` from
+  `artifact.concern.mcp.server.deployment.architecture`.
+
+
+### 2026-08-31T21:08:58Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: Execution slice 8 is covered by the corpus split migration plan,
+canonical deploy/harness/shared structured rule YAML, harness and shared rule
+README artifacts, the prototype rules compatibility pointer, owner-specific
+retirement records, updated rule graph references, refreshed recognition
+sources, runtime freshness, and focused selector fixture coverage.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -884,9 +990,9 @@ ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus spli
 ADR needed: yes
 ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
 Reason: ADR 0032 records the owner-aligned ADR root decision. Execution slice
-7 applies that accepted decision to product structured rules, product task
-rule packs, and old-path compatibility without introducing a new ADR-level
-policy change.
+8 applies that accepted decision to deploy, harness, and shared structured
+rules plus old-path compatibility without introducing a new ADR-level policy
+change.
 
 ## Session Metrics
 
@@ -905,18 +1011,21 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 7 is covered by the corpus split migration plan, product rules and rule-pack README artifacts, canonical product structured rule YAML, canonical product task packs, old-root compatibility pointers, updated rule graph references, source derivation hash updates, the product rules retirement record, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+Reason: Execution slice 8 is covered by the corpus split migration plan, canonical deploy/harness/shared structured rule YAML, harness and shared rule README artifacts, the prototype rules compatibility pointer, owner-specific retirement records, updated rule graph references, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
 Evidence:
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
-- docs/03.product/rules/README.md
-- docs/03.product/rule-packs/README.md
-- docs/03.product/rules/platform/layers/platform.yml
-- docs/03.product/rules/core/layers/packages-core.yml
-- docs/03.product/rules/apps/layers/apps.yml
-- docs/03.product/rule-packs/platform/add-platform-adapter.yml
-- docs/03.product/rule-packs/core/add-core-module.yml
-- .agentic/02.rag-rulebook/source-projections/v1.yml
-- .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml
+- docs/01.harness/rules/README.md
+- docs/01.harness/rules/layers/scripts-command-surface.yml
+- docs/04.deploy/rules/layers/infra.yml
+- docs/06.shared/rules/README.md
+- docs/06.shared/rules/concerns/ci-quality.yml
+- docs/06.shared/rules/concerns/dependency-direction.yml
+- docs/06.shared/rules/concerns/generated-code.yml
+- docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
+- docs/harness/architecture/rules/README.md
+- .agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml
+- .agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml
+- .agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 Corpus gaps:
 - None.

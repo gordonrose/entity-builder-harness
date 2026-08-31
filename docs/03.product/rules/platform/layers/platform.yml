@@ -47,8 +47,8 @@ applies_to:
     - "platform/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
   - docs/03.product/rules/platform/concerns/events-messaging-async.yml
   - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
   - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml

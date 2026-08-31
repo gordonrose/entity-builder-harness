@@ -341,7 +341,7 @@ semantic_review:
       - docs/03.product/rules/core/layers/packages-core.yml
       - docs/03.product/rules/platform/layers/platform.yml
       - docs/03.product/rules/apps/layers/apps.yml
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
     items: []
   drift:
     status: none-found

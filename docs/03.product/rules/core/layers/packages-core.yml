@@ -41,8 +41,8 @@ applies_to:
     - "packages/core/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 recommended_modules:
   - id: shared

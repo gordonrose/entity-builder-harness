@@ -47,7 +47,7 @@ target:
   affected_rulesets:
     - docs/03.product/rules/core/layers/packages-core.yml
     - docs/03.product/rules/platform/layers/platform.yml
-    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/04.deploy/rules/layers/infra.yml
     - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
     - docs/03.product/rules/platform/concerns/events-messaging-async.yml
   affected_evaluations:
@@ -82,7 +82,7 @@ semantic_review:
     search_scope:
       - docs/03.product/rules/core/layers/packages-core.yml
       - docs/03.product/rules/platform/layers/platform.yml
-      - docs/harness/architecture/rules/layers/infra.yml
+      - docs/04.deploy/rules/layers/infra.yml
       - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
       - docs/03.product/rules/platform/concerns/events-messaging-async.yml
     items: []

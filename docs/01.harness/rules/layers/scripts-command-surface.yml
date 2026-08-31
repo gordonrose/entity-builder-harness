@@ -15,7 +15,7 @@
 #     - llm-workbench
 #   used_by:
 #   - id: harness.architecture.rules.concerns.ci-quality
-#     path: docs/harness/architecture/rules/concerns/ci-quality.yml
+#     path: docs/06.shared/rules/concerns/ci-quality.yml
 #   - id: harness.manifest
 #     path: .agentic/01.harness/manifest.yml
 id: layer.scripts-command-surface
@@ -33,9 +33,9 @@ applies_to:
     - "scripts/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
 
 test_taxonomy:
   - type: unit
@@ -193,7 +193,7 @@ source_refs:
       - "8. Build and Code Generation"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/scripts-command-surface.yml."
+  - "The file exists at docs/01.harness/rules/layers/scripts-command-surface.yml."
   - "It defines numbered scripts layer namespaces as the home for repo automation, generators, migration helpers, lint rules, release tooling, and developer CLI command surfaces."
   - "It keeps scripts out of deployed runtime behavior and product business logic."
   - "It requires script capabilities to be tested, typechecked where applicable, deterministic, and validated when they generate production artifacts."

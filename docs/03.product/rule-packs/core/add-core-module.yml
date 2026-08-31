@@ -16,7 +16,7 @@
 #   - id: harness.architecture.rules.layers.packages-core
 #     path: docs/03.product/rules/core/layers/packages-core.yml
 #   - id: harness.architecture.rules.concerns.dependency-direction
-#     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+#     path: docs/06.shared/rules/concerns/dependency-direction.yml
 id: pack.add-core-module
 title: Add or modify a packages/core module
 version: 1
@@ -34,7 +34,7 @@ applies_when:
 
 required_rulesets:
   - docs/03.product/rules/core/layers/packages-core.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 required_checks:
   - "Confirm the proposed concept is stable, cross-cutting, product-neutral, and genuinely shared."
@@ -112,7 +112,7 @@ must_not:
 success_criteria:
   - "The rule pack exists at docs/03.product/rule-packs/core/add-core-module.yml."
   - "The rule pack references docs/03.product/rules/core/layers/packages-core.yml."
-  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
+  - "The rule pack references docs/06.shared/rules/concerns/dependency-direction.yml."
   - "The rule pack is task-shaped, not layer-shaped."
   - "The rule pack is concise and usable by an agent."
   - "The rule pack requires owner, current consumers, documentation, tests, and framework independence for new core surfaces."

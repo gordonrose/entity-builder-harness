@@ -45,10 +45,10 @@ description: >
 related_rulesets:
   - docs/03.product/rules/core/layers/packages-core.yml
   - docs/03.product/rules/platform/layers/platform.yml
-  - docs/harness/architecture/rules/layers/infra.yml
+  - docs/04.deploy/rules/layers/infra.yml
   - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
   - docs/03.product/rules/platform/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 applies_to:
   paths:

@@ -17,13 +17,16 @@ used_by:
 - id: rag-rulebook.migration-plan.prototype-corpus-domain-split
   path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
 -->
-# Prototype Rules Split In Progress
+# Prototype Rules Moved
 
-The prototype architecture rules root is being split by owner corpus.
+The prototype architecture rules root has been split by owner corpus.
 
-Product rules now live under `docs/03.product/rules/`. Remaining files in this
-legacy root are deploy, harness, or shared candidates that will move in a later
-governed slice.
+Canonical structured rules now live under numbered corpus roots:
+
+- `docs/01.harness/rules/`
+- `docs/03.product/rules/`
+- `docs/04.deploy/rules/`
+- `docs/06.shared/rules/`
 
 This compatibility pointer exists while the prototype architecture corpus is
 split into numbered owner-aligned homes.

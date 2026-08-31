@@ -41,8 +41,8 @@ Prefer a narrower layer corpus when one owner can make and validate the
 decision. Shared placement should be deliberate because shared rules tend to
 create broad coupling.
 
-Shared ADRs live in `adrs/`.
+Shared ADRs live in `adrs/`. Shared structured rules live under `rules/`.
 
-During the prototype corpus migration, old shared or cross-cutting material
-remains under `docs/harness/architecture/**` until a governed artifact path
-migration classifies it and moves a concrete source and target pair.
+During the prototype corpus migration, old shared or cross-cutting prototype
+paths may retain compatibility pointers while remaining corpus content moves in
+governed slices.

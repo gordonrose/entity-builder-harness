@@ -38,12 +38,12 @@ Use this corpus for harness ADRs, harness source material, harness-owned
 structured rules, command-surface rules, metadata migration history, and
 documentation layout decisions.
 
-Harness ADRs live under `adrs/`.
+Harness ADRs live under `adrs/`. Harness structured rules live under `rules/`.
 
 Do not store product runtime contracts, deployment runbooks, reusable
 RAG/rulebook service rules, or general shared-process standards here unless the
 decision owner is the harness layer.
 
-During the prototype corpus migration, old harness-oriented material remains
-under `docs/harness/architecture/**` until a governed artifact path migration
-moves a concrete source and target pair.
+During the prototype corpus migration, old harness-oriented prototype paths may
+retain compatibility pointers while remaining corpus content moves in governed
+slices.

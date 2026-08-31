@@ -889,8 +889,8 @@ minimal_example:
       applies_to_paths:
         - packages/core/**
       related_ruleset_refs:
-        - docs/harness/architecture/rules/concerns/ci-quality.yml
-        - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        - docs/06.shared/rules/concerns/ci-quality.yml
+        - docs/06.shared/rules/concerns/dependency-direction.yml
       required_ruleset_refs: []
       source_ref_ids: []
       diagnostics: []

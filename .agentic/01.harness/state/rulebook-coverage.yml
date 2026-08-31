@@ -60,8 +60,8 @@ source_guides:
           - "11. Entity Builder Flow"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/generated-code.yml
-        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+          - docs/06.shared/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/06.shared/rules/concerns/generated-code.yml."
       - source_sections:
           - "11. Entity Builder Flow"
           - "12. Architectural Recommendations"
@@ -78,7 +78,7 @@ source_guides:
           - "8. Build and Code Generation"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+          - docs/01.harness/rules/layers/scripts-command-surface.yml
         note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
       - source_sections:
           - "2. Front-End Architecture"
@@ -99,8 +99,8 @@ source_guides:
           - "12. Architectural Recommendations"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/infra.yml
-        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+          - docs/04.deploy/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/04.deploy/rules/layers/infra.yml."
   - path: docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md
     line_count: 4310
     status: covered
@@ -114,7 +114,7 @@ source_guides:
         status: covered
         artifacts:
           - docs/03.product/rules/core/layers/packages-core.yml
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
+          - docs/06.shared/rules/concerns/dependency-direction.yml
         note: "Core foundation context is covered by packages-core and dependency-direction rules; source refs were manually checked while refining those artifacts."
       - source_sections:
           - "async-jobs/ deep dive"
@@ -265,8 +265,8 @@ source_guides:
           - "Principles to guide Kanbien for the next 10 years"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+          - docs/06.shared/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/06.shared/rules/concerns/dependency-direction.yml."
       - source_sections:
           - "What a shared core package is"
           - "What problems shared core packages solve"
@@ -340,8 +340,8 @@ source_guides:
           - "Recommended dependency rules"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+          - docs/06.shared/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/06.shared/rules/concerns/dependency-direction.yml."
       - source_sections:
           - "Part 4: Evaluating the design-label architecture"
           - "Do not let builder tokens directly mutate React components at runtime"
@@ -393,8 +393,8 @@ source_guides:
           - "1. Repo root"
         status: duplicate-of
         artifacts:
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
-          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+          - docs/06.shared/rules/concerns/dependency-direction.yml
+          - docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
         note: "Repo-root zone list repeats monorepo structure already covered by dependency-direction and TypeScript monorepo tooling."
       - source_sections:
           - "packages/core"
@@ -409,8 +409,8 @@ source_guides:
           - "11. The core entity flow"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/generated-code.yml
-        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+          - docs/06.shared/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/06.shared/rules/concerns/generated-code.yml."
       - source_sections:
           - "harness/"
           - "11. The core entity flow"
@@ -427,7 +427,7 @@ source_guides:
           - "8. tools/build"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+          - docs/01.harness/rules/layers/scripts-command-surface.yml
         note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
       - source_sections:
           - "3. packages/frontend-kit"
@@ -448,8 +448,8 @@ source_guides:
           - "11. The core entity flow"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/infra.yml
-        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+          - docs/04.deploy/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/04.deploy/rules/layers/infra.yml."
   - path: docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md
     line_count: 3124
     status: covered
@@ -493,8 +493,8 @@ source_guides:
           - "The business app mounting contract"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+          - docs/06.shared/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/06.shared/rules/concerns/dependency-direction.yml."
       - source_sections:
           - "The business app mounting contract"
           - "Worked example: apps/crm/app.mount.ts"
@@ -508,8 +508,8 @@ source_guides:
           - "How /platform differs from infrastructure"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/infra.yml
-        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+          - docs/04.deploy/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/04.deploy/rules/layers/infra.yml."
   - path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
     line_count: 2583
     status: covered
@@ -529,9 +529,9 @@ source_guides:
           - "6. What tradeoffs TypeScript introduces"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+          - docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
           - docs/03.product/rules/core/concerns/validation-api-errors.yml
-          - docs/harness/architecture/rules/concerns/generated-code.yml
+          - docs/06.shared/rules/concerns/generated-code.yml
           - docs/03.product/rule-packs/apps/create-entity.yml
         note: "TypeScript problem/tradeoff material is represented by strict tooling, runtime validation, generated-code, and entity contract-chain rules."
       - source_sections:
@@ -545,8 +545,8 @@ source_guides:
           - "infra/"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/dependency-direction.yml
-        note: "Dependency-direction source refs were manually checked while refining docs/harness/architecture/rules/concerns/dependency-direction.yml."
+          - docs/06.shared/rules/concerns/dependency-direction.yml
+        note: "Dependency-direction source refs were manually checked while refining docs/06.shared/rules/concerns/dependency-direction.yml."
       - source_sections:
           - "My architectural recommendation for Kanbien"
           - "Generated code must be checked, not trusted"
@@ -557,8 +557,8 @@ source_guides:
           - "The key design lesson"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/generated-code.yml
-        note: "Generated-code source refs were manually checked while creating docs/harness/architecture/rules/concerns/generated-code.yml."
+          - docs/06.shared/rules/concerns/generated-code.yml
+        note: "Generated-code source refs were manually checked while creating docs/06.shared/rules/concerns/generated-code.yml."
       - source_sections:
           - "How TypeScript should support the entity-builder idea"
           - "What TypeScript enforces"
@@ -593,7 +593,7 @@ source_guides:
           - "tools/"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+          - docs/01.harness/rules/layers/scripts-command-surface.yml
         note: "Tools source refs were manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
       - source_sections:
           - "platform/"
@@ -611,8 +611,8 @@ source_guides:
           - "tools/"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/ci-quality.yml
-        note: "CI-quality source refs were manually checked while creating docs/harness/architecture/rules/concerns/ci-quality.yml."
+          - docs/06.shared/rules/concerns/ci-quality.yml
+        note: "CI-quality source refs were manually checked while creating docs/06.shared/rules/concerns/ci-quality.yml."
       - source_sections:
           - "My architectural recommendation for Kanbien"
           - "TypeScript configuration setup"
@@ -630,8 +630,8 @@ source_guides:
           - "TypeScript compiler settings"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
-        note: "TypeScript monorepo tooling source refs were manually checked while creating docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml."
+          - docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
+        note: "TypeScript monorepo tooling source refs were manually checked while creating docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml."
       - source_sections:
           - "apps/"
           - "Purpose"
@@ -654,8 +654,8 @@ source_guides:
           - "Build approach"
         status: covered
         artifacts:
-          - docs/harness/architecture/rules/layers/infra.yml
-        note: "Infra layer source refs were manually checked while creating docs/harness/architecture/rules/layers/infra.yml."
+          - docs/04.deploy/rules/layers/infra.yml
+        note: "Infra layer source refs were manually checked while creating docs/04.deploy/rules/layers/infra.yml."
   - path: docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md
     line_count: 900
     status: covered
@@ -689,7 +689,7 @@ artifact_coverage:
   - artifact: docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
     status: covered
     note: "Source refs manually checked while creating the frontend-kit layer ruleset."
-  - artifact: docs/harness/architecture/rules/layers/infra.yml
+  - artifact: docs/04.deploy/rules/layers/infra.yml
     status: covered
     note: "Source refs manually checked while creating the infra layer ruleset."
   - artifact: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
@@ -704,10 +704,10 @@ artifact_coverage:
   - artifact: docs/03.product/rules/platform/layers/platform.yml
     status: covered
     note: "Source refs manually checked while creating the platform layer ruleset."
-  - artifact: docs/harness/architecture/rules/layers/scripts-command-surface.yml
+  - artifact: docs/01.harness/rules/layers/scripts-command-surface.yml
     status: covered
     note: "Source refs manually checked while creating the original tools layer ruleset; ADR 0020 remediated and renamed the active ruleset to target numbered scripts command surfaces."
-  - artifact: docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - artifact: docs/06.shared/rules/concerns/dependency-direction.yml
     status: covered
     note: "Source refs manually checked while refining the dependency-direction concern ruleset."
   - artifact: docs/03.product/rules/design-system/concerns/design-label-theming.yml
@@ -725,10 +725,10 @@ artifact_coverage:
   - artifact: docs/03.product/rules/platform/concerns/notifications.yml
     status: covered
     note: "Source refs manually checked while creating the notifications concern ruleset."
-  - artifact: docs/harness/architecture/rules/concerns/ci-quality.yml
+  - artifact: docs/06.shared/rules/concerns/ci-quality.yml
     status: covered
     note: "Source refs manually checked while creating the CI quality concern ruleset."
-  - artifact: docs/harness/architecture/rules/concerns/generated-code.yml
+  - artifact: docs/06.shared/rules/concerns/generated-code.yml
     status: covered
     note: "Source refs manually checked while creating the generated-code concern ruleset."
   - artifact: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
@@ -743,7 +743,7 @@ artifact_coverage:
   - artifact: docs/03.product/rules/platform/concerns/tenancy.yml
     status: covered
     note: "Source refs manually checked while creating the tenancy concern ruleset."
-  - artifact: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
+  - artifact: docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
     status: covered
     note: "Source refs manually checked while creating the TypeScript monorepo tooling concern ruleset."
   - artifact: docs/03.product/rules/core/concerns/validation-api-errors.yml

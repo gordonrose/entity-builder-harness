@@ -86,7 +86,7 @@ semantic_review:
     search_scope:
       - docs/03.product/rules/platform/layers/platform.yml
       - docs/03.product/rules/core/layers/packages-core.yml
-      - docs/harness/architecture/rules/layers/infra.yml
+      - docs/04.deploy/rules/layers/infra.yml
       - docs/03.product/rules/platform/concerns/events-messaging-async.yml
       - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
       - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml

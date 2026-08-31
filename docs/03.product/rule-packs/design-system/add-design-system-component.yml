@@ -38,8 +38,8 @@ applies_when:
 required_rulesets:
   - docs/03.product/rules/design-system/layers/design-system.yml
   - docs/03.product/rules/design-system/concerns/design-label-theming.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
 
 required_checks:
   - "Confirm the component follows the chain: design label -> foundation tokens -> semantic tokens -> builder tokens -> primitive -> pattern -> component -> application usage."
@@ -108,8 +108,8 @@ success_criteria:
   - "The rule pack exists at docs/03.product/rule-packs/design-system/add-design-system-component.yml."
   - "The rule pack references docs/03.product/rules/design-system/layers/design-system.yml."
   - "The rule pack references docs/03.product/rules/design-system/concerns/design-label-theming.yml."
-  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
-  - "The rule pack references docs/harness/architecture/rules/concerns/ci-quality.yml."
+  - "The rule pack references docs/06.shared/rules/concerns/dependency-direction.yml."
+  - "The rule pack references docs/06.shared/rules/concerns/ci-quality.yml."
   - "The task preserves stable component APIs across design labels."
   - "The task keeps token, primitive, pattern, component, provider, app usage, docs, and tests in their correct owners."
   - "The task validates typecheck, lint, accessibility, token graph, visual regression, and app usage checks where applicable."

@@ -129,6 +129,27 @@ file-level target inventory for this migration plan.
   references passed 27/27. The rulebook index still reports one unrelated
   warning for `.agentic/shared/workflows/deployment-process.md` from
   `artifact.concern.mcp.server.deployment.architecture`.
+- 2026-08-31 Slice 8 moved the remaining prototype structured rules by owner.
+  Moved the infra layer rule to `docs/04.deploy/rules/layers/`, the scripts
+  command-surface layer rule to `docs/01.harness/rules/layers/`, and the
+  cross-layer CI quality, dependency direction, generated-code, and TypeScript
+  monorepo tooling concern rules to `docs/06.shared/rules/concerns/`; added
+  harness and shared rule README artifacts; updated the old prototype rules
+  root into a final compatibility pointer; refreshed active rule graph
+  references, selector fixtures, recognition sources, and migration map
+  statuses; and added owner-specific retirement records for the six removed
+  exact prototype YAML paths.
+- 2026-08-31 Slice 8 validation passed for metadata headers, YAML syntax,
+  generated recognition freshness, recognition-source validation, source
+  projections, source-material coverage, derivation reports, retirement
+  records, corpus-root changes, explanation readiness, rulebook index/chunk
+  smoke checks, local runtime build/freshness, query-local-context smoke,
+  local-service smoke, governed-script command drift, focused selector
+  fixtures, concrete path-migration checks, stale-reference scanning, and diff
+  whitespace. Focused selector coverage for moved shared/deploy/harness rule
+  references passed 7/7. The rulebook index still reports one unrelated
+  warning for `.agentic/shared/workflows/deployment-process.md` from
+  `artifact.concern.mcp.server.deployment.architecture`.
 
 ## Target Homes
 
@@ -221,7 +242,8 @@ families expected by that map:
 - `docs/03.product/rule-packs/core/`
 - `docs/03.product/rule-packs/design-system/`
 - `docs/03.product/rule-packs/platform/`
-- `docs/04.deploy/rules/shared/` for deploy-owned infra rules
+- `docs/04.deploy/rules/layers/` for deploy-owned layer rules
+- `docs/04.deploy/rules/shared/` for deploy rules that apply across deploy tracks
 - `docs/01.harness/rules/` for harness-owned command-surface and harness rules
 - `docs/06.shared/rules/` for truly cross-corpus concerns
 

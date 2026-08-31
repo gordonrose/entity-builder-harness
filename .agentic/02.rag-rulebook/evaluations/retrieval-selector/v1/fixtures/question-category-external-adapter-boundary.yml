@@ -42,7 +42,7 @@ expected:
     required_source_paths:
       - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
       - docs/03.product/rule-packs/platform/add-platform-adapter.yml
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -56,7 +56,7 @@ expected:
 source_refs:
   - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
   - docs/03.product/rule-packs/platform/add-platform-adapter.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 update_triggers:
   - Platform adapter consumption rules change.
   - Add-platform-adapter rule pack changes.

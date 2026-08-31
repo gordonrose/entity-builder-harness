@@ -32,7 +32,7 @@ description: >
 related_rulesets:
   - docs/03.product/rules/core/layers/packages-core.yml
   - docs/03.product/rules/platform/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
   - docs/03.product/rules/concerns/i18n-localization.yml
   - docs/03.product/rules/platform/concerns/identity-access-security.yml
 

@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 837
-  term_count: 1686
+  indexed_artifacts: 842
+  term_count: 1696
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3180,6 +3180,30 @@ terms:
   canonical_id: harness.adrs.readme
   evidence_path: docs/01.harness/adrs/README.md
   confidence_weight: 1
+- term: harness.rules.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.rules.readme
+  evidence_path: docs/01.harness/rules/README.md
+  confidence_weight: 1
+- term: docs/01.harness/rules/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.rules.readme
+  evidence_path: docs/01.harness/rules/README.md
+  confidence_weight: 1
+- term: harness.architecture.rules.layers.scripts-command-surface
+  category: rule-pack-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.scripts-command-surface
+  evidence_path: docs/01.harness/rules/layers/scripts-command-surface.yml
+  confidence_weight: 1
+- term: docs/01.harness/rules/layers/scripts-command-surface.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.scripts-command-surface
+  evidence_path: docs/01.harness/rules/layers/scripts-command-surface.yml
+  confidence_weight: 1
 - term: harness.adr.0001-record-harness-session-decisions-before-commit.pointer
   category: artifact-id
   match_type: exact
@@ -3623,78 +3647,6 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.rules.pointer
   evidence_path: docs/harness/architecture/rules/README.md
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.ci-quality
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.ci-quality
-  evidence_path: docs/harness/architecture/rules/concerns/ci-quality.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/ci-quality.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.ci-quality
-  evidence_path: docs/harness/architecture/rules/concerns/ci-quality.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.dependency-direction
-  category: rule-pack-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.dependency-direction
-  evidence_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/dependency-direction.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.dependency-direction
-  evidence_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.generated-code
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.generated-code
-  evidence_path: docs/harness/architecture/rules/concerns/generated-code.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/generated-code.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.generated-code
-  evidence_path: docs/harness/architecture/rules/concerns/generated-code.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.concerns.typescript-monorepo-tooling
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
-  evidence_path: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
-  evidence_path: docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.infra
-  category: rule-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.infra
-  evidence_path: docs/harness/architecture/rules/layers/infra.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/infra.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.infra
-  evidence_path: docs/harness/architecture/rules/layers/infra.yml
-  confidence_weight: 1
-- term: harness.architecture.rules.layers.scripts-command-surface
-  category: rule-pack-id
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.scripts-command-surface
-  evidence_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
-  confidence_weight: 1
-- term: docs/harness/architecture/rules/layers/scripts-command-surface.yml
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.rules.layers.scripts-command-surface
-  evidence_path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
   confidence_weight: 1
 - term: harness.architecture.source-material.pointer
   category: artifact-id
@@ -5700,6 +5652,18 @@ terms:
   canonical_id: rag-rulebook.recognition-candidate.2026-06-26.mcp-server
   evidence_path: .agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml
   confidence_weight: 1
+- term: rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule
+  evidence_path: .agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule
+  evidence_path: .agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml
+  confidence_weight: 1
 - term: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
   category: artifact-id
   match_type: exact
@@ -5735,6 +5699,30 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.retirement.2026-08-31-product-source-material-paths
   evidence_path: .agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-08-31-deploy-infra-rule
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-deploy-infra-rule
+  evidence_path: .agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-deploy-infra-rule
+  evidence_path: .agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules
+  evidence_path: .agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules
+  evidence_path: .agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml
   confidence_weight: 1
 - term: rag-rulebook.retirements.readme
   category: artifact-id
@@ -8502,6 +8490,18 @@ terms:
   canonical_id: deploy.rules.readme
   evidence_path: docs/04.deploy/rules/README.md
   confidence_weight: 1
+- term: harness.architecture.rules.layers.infra
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.infra
+  evidence_path: docs/04.deploy/rules/layers/infra.yml
+  confidence_weight: 1
+- term: docs/04.deploy/rules/layers/infra.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.layers.infra
+  evidence_path: docs/04.deploy/rules/layers/infra.yml
+  confidence_weight: 1
 - term: deploy.rules.shared.readme
   category: artifact-id
   match_type: exact
@@ -10145,6 +10145,66 @@ terms:
   match_type: exact
   canonical_id: shared.adrs.readme
   evidence_path: docs/06.shared/adrs/README.md
+  confidence_weight: 1
+- term: shared.rules.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: shared.rules.readme
+  evidence_path: docs/06.shared/rules/README.md
+  confidence_weight: 1
+- term: docs/06.shared/rules/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: shared.rules.readme
+  evidence_path: docs/06.shared/rules/README.md
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.ci-quality
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.ci-quality
+  evidence_path: docs/06.shared/rules/concerns/ci-quality.yml
+  confidence_weight: 1
+- term: docs/06.shared/rules/concerns/ci-quality.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.ci-quality
+  evidence_path: docs/06.shared/rules/concerns/ci-quality.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.dependency-direction
+  category: rule-pack-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.dependency-direction
+  evidence_path: docs/06.shared/rules/concerns/dependency-direction.yml
+  confidence_weight: 1
+- term: docs/06.shared/rules/concerns/dependency-direction.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.dependency-direction
+  evidence_path: docs/06.shared/rules/concerns/dependency-direction.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.generated-code
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.generated-code
+  evidence_path: docs/06.shared/rules/concerns/generated-code.yml
+  confidence_weight: 1
+- term: docs/06.shared/rules/concerns/generated-code.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.generated-code
+  evidence_path: docs/06.shared/rules/concerns/generated-code.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.typescript-monorepo-tooling
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
+  evidence_path: docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
+  confidence_weight: 1
+- term: docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.typescript-monorepo-tooling
+  evidence_path: docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
   confidence_weight: 1
 - term: repo.script.commit-gates.readme
   category: artifact-id

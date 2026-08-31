@@ -30,7 +30,7 @@ description: >
 
 related_rulesets:
   - docs/03.product/rules/design-system/layers/design-system.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 applies_to:
   paths:

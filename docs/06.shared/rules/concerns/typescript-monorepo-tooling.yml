@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.typescript-monorepo-tooling
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 06.shared
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -31,9 +31,9 @@ description: >
   orchestration.
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
-  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
   - docs/03.product/rules/core/concerns/validation-api-errors.yml
 
 applies_to:
@@ -205,7 +205,7 @@ source_refs:
       - "TypeScript compiler settings"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml."
+  - "The file exists at docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml."
   - "It requires layered TypeScript configs instead of one magic tsconfig."
   - "It requires strict TypeScript defaults and governance for any, unsafe assertions, and suppressions."
   - "It treats packages as boundaries with package exports, declaration output, workspaces, and public entry points."

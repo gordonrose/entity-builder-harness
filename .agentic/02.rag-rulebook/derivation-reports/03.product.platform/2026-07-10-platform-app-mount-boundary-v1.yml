@@ -22,7 +22,7 @@
 #   - id: harness.architecture.rules.layers.apps
 #     path: docs/03.product/rules/apps/layers/apps.yml
 #   - id: harness.architecture.rules.concerns.dependency-direction
-#     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+#     path: docs/06.shared/rules/concerns/dependency-direction.yml
 
 schema: rag-rulebook/source-to-rule-derivation-report/v1
 report_id: derivation.03.product-platform.2026-07-10.platform-app-mount-boundary-v1
@@ -45,15 +45,15 @@ target:
   expected_rule_paths:
     - docs/03.product/rules/platform/layers/platform.yml
     - docs/03.product/rules/apps/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   affected_rule_paths:
     - docs/03.product/rules/platform/layers/platform.yml
     - docs/03.product/rules/apps/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   affected_rulesets:
     - docs/03.product/rules/platform/layers/platform.yml
     - docs/03.product/rules/apps/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
   affected_corpus_gaps: []
@@ -77,7 +77,7 @@ semantic_review:
     search_scope:
       - docs/03.product/rules/platform/layers/platform.yml
       - docs/03.product/rules/apps/layers/apps.yml
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
     items: []
   drift:
     status: none-found
@@ -93,7 +93,7 @@ proposed_updates:
   rules:
     - docs/03.product/rules/platform/layers/platform.yml
     - docs/03.product/rules/apps/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates: []

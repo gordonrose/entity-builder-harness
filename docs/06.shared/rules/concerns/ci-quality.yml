@@ -3,7 +3,7 @@
 #   id: harness.architecture.rules.concerns.ci-quality
 #   version: 1
 #   status: active
-#   layer: 01.harness
+#   layer: 06.shared
 #   domain: architecture
 #   disciplines:
 #   - architecture
@@ -37,8 +37,8 @@ applies_to:
     - "infra/**"
 
 related_rulesets:
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
 
 test_types:
   - id: unit
@@ -135,8 +135,8 @@ layer_test_taxonomy_scope:
     - docs/03.product/rules/apps/layers/apps.yml
     - docs/03.product/rules/core/layers/packages-core.yml
     - docs/03.product/rules/platform/layers/platform.yml
-    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
-    - docs/harness/architecture/rules/layers/infra.yml
+    - docs/01.harness/rules/layers/scripts-command-surface.yml
+    - docs/04.deploy/rules/layers/infra.yml
     - docs/03.product/rules/design-system/layers/design-system.yml
     - docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
   excluded_paths:
@@ -353,7 +353,7 @@ source_refs:
       - "tools/"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/concerns/ci-quality.yml."
+  - "The file exists at docs/06.shared/rules/concerns/ci-quality.yml."
   - "It defines baseline CI quality gates."
   - "It covers formatting, linting, typecheck, tests, build, generated freshness, dependency boundaries, contracts, migrations, and scans."
   - "It defines shared test_types and test_categories vocabulary."

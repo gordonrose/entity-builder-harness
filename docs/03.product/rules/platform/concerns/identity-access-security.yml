@@ -34,7 +34,7 @@ related_rulesets:
   - docs/03.product/rules/platform/layers/platform.yml
   - docs/03.product/rules/platform/concerns/tenancy.yml
   - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 applies_to:
   paths:

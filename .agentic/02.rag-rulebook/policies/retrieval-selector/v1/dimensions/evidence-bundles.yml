@@ -63,16 +63,16 @@ ranking_effects:
 evidence_bundles:
   - question_category_id: question.architecture-boundary.capability-placement
     always_source_paths:
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
     family_source_paths:
       evidence.layer.apps: docs/03.product/rules/apps/layers/apps.yml
       evidence.layer.platform: docs/03.product/rules/platform/layers/platform.yml
   - question_category_id: question.policy-implementation.explain
     always_source_paths: []
     family_source_paths:
-      evidence.concern.ci-quality: docs/harness/architecture/rules/concerns/ci-quality.yml
+      evidence.concern.ci-quality: docs/06.shared/rules/concerns/ci-quality.yml
       evidence.concern.config-runtime-settings: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
-      evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
+      evidence.concern.dependency-direction: docs/06.shared/rules/concerns/dependency-direction.yml
       evidence.concern.events-messaging-async: docs/03.product/rules/platform/concerns/events-messaging-async.yml
       evidence.concern.identity-access-security: docs/03.product/rules/platform/concerns/identity-access-security.yml
       evidence.concern.reporting-analytics-audit: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
@@ -103,7 +103,7 @@ evidence_bundles:
       - docs/04.deploy/rules/shared/container-image-management.yml
       - docs/04.deploy/source-material/shared/container-image-management.md
       - scripts/04.deploy/validate-container-boundaries/script.sh
-      - docs/harness/architecture/rules/layers/infra.yml
+      - docs/04.deploy/rules/layers/infra.yml
     family_source_paths:
       evidence.deploy.container-image-management: docs/04.deploy/rules/shared/container-image-management.yml
   - question_category_id: question.rag-retrieval.source-of-truth
@@ -213,11 +213,11 @@ evidence_bundles:
     always_source_paths:
       - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
       - docs/03.product/rule-packs/platform/add-platform-adapter.yml
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
     family_source_paths:
       evidence.platform-adapter.consumption: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
       evidence.platform-adapter.rule-pack: docs/03.product/rule-packs/platform/add-platform-adapter.yml
-      evidence.concern.dependency-direction: docs/harness/architecture/rules/concerns/dependency-direction.yml
+      evidence.concern.dependency-direction: docs/06.shared/rules/concerns/dependency-direction.yml
   - question_category_id: question.chat.session-metrics
     always_source_paths:
       - scripts/00.chat/session-log/record-chat-commit/script.sh
@@ -394,7 +394,7 @@ evidence_bundles:
       - .agentic/01.harness/workflows/continue-rulebook.workflow.md
       - .agentic/01.harness/state/rulebook-coverage.yml
       - .agentic/01.harness/state/rulebook-progress.yml
-      - docs/harness/architecture/rules/concerns/generated-code.yml
+      - docs/06.shared/rules/concerns/generated-code.yml
     family_source_paths:
       evidence.harness.rulebook-coverage-state: .agentic/01.harness/state/rulebook-coverage.yml
   - question_category_id: question.deploy.rag-readiness-workflow

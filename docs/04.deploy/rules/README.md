@@ -34,6 +34,8 @@ a separate RAG/rulebook follow-up.
 
 Track-specific rules:
 
+- `layers/` for deploy-owned repo layer rules such as `infra/**`.
 - `02.rag-rulebook/` for RAG/rulebook services and MCP exposure.
 - `03.product/` for product applications, product services, and platform
   runtime services.
+- `shared/` for deploy rules that apply across multiple deploy tracks.

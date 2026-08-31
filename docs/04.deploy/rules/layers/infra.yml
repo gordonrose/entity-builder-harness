@@ -3,8 +3,8 @@
 #   id: harness.architecture.rules.layers.infra
 #   version: 1
 #   status: active
-#   layer: 01.harness
-#   domain: architecture
+#   layer: 04.deploy
+#   domain: infra.ci-cd
 #   disciplines:
 #   - architecture
 #   - sre
@@ -39,8 +39,8 @@ related_rulesets:
   - docs/03.product/rules/apps/layers/apps.yml
   - docs/03.product/rules/platform/layers/platform.yml
   - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
-  - docs/harness/architecture/rules/concerns/ci-quality.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/ci-quality.yml
 
 deployment_surfaces:
   - id: infrastructure_as_code
@@ -274,7 +274,7 @@ source_refs:
       - "How /platform differs from infrastructure"
 
 success_criteria:
-  - "The file exists at docs/harness/architecture/rules/layers/infra.yml."
+  - "The file exists at docs/04.deploy/rules/layers/infra.yml."
   - "It defines infra/ as Kanbien's infrastructure-as-code and deployment definition layer."
   - "It keeps cloud resources, networking, IAM, secrets, databases, queues, storage, DNS, deployment topology, and CI/CD infrastructure in infra."
   - "It requires infra to consume app manifests, config packages, platform config validation packages, or generated deployment metadata instead of app internals."

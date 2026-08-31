@@ -35,8 +35,8 @@ applies_when:
   - "A task regenerates backend schema, API contracts, frontend config, migrations, or entity tests."
 
 required_rulesets:
-  - docs/harness/architecture/rules/concerns/generated-code.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 
 required_checks:
   - "Confirm the entity definition is the source of truth for downstream artifacts."
@@ -92,8 +92,8 @@ must_not:
 
 success_criteria:
   - "The rule pack exists at docs/03.product/rule-packs/apps/create-entity.yml."
-  - "The rule pack references docs/harness/architecture/rules/concerns/generated-code.yml."
-  - "The rule pack references docs/harness/architecture/rules/concerns/dependency-direction.yml."
+  - "The rule pack references docs/06.shared/rules/concerns/generated-code.yml."
+  - "The rule pack references docs/06.shared/rules/concerns/dependency-direction.yml."
   - "The entity definition is treated as the source of truth."
   - "Generated artifacts are placed according to ownership and sharing scope."
   - "Generated migrations enter an ordered app migration stream."

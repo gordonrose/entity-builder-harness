@@ -113,7 +113,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.dependency-direction
-    evidence_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    evidence_path: docs/06.shared/rules/concerns/dependency-direction.yml
     aliases:
       - dependency boundary
       - import direction
@@ -335,7 +335,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.ci-quality
-    evidence_path: docs/harness/architecture/rules/concerns/ci-quality.yml
+    evidence_path: docs/06.shared/rules/concerns/ci-quality.yml
     aliases:
       - ci
       - quality gates

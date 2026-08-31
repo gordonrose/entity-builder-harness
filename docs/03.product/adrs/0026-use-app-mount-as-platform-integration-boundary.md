@@ -18,7 +18,7 @@
   - id: harness.architecture.rules.layers.apps
     path: docs/03.product/rules/apps/layers/apps.yml
   - id: harness.architecture.rules.concerns.dependency-direction
-    path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    path: docs/06.shared/rules/concerns/dependency-direction.yml
 -->
 # ADR 0026: Use App Mount As Platform Integration Boundary
 
