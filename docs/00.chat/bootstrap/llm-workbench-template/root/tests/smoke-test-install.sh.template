@@ -22,7 +22,7 @@ test -d "$TARGET_REPO/.agentic/00.chat"
 test -d "$TARGET_REPO/scripts/00.chat"
 test -d "$TARGET_REPO/scripts/01.harness"
 test ! -e "$TARGET_REPO/docs/00.chat/public-chat-workbench-adrs.md"
-test ! -e "$TARGET_REPO/docs/harness/architecture/adrs"
+test ! -e "$TARGET_REPO/docs/00.chat/adrs"
 
 for required_path in \
   scripts/01.harness/run-governed-script.sh \

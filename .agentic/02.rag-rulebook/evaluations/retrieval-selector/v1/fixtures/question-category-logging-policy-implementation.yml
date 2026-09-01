@@ -109,8 +109,8 @@ banned:
 source_refs:
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
-  - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/platform/layers/platform.yml
 update_triggers:
   - Policy-plus-implementation question-category recognition changes.
   - Platform runtime module names or artifact IDs change.

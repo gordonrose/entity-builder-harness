@@ -44,8 +44,10 @@ LOG_FILE="$LOG_DIR/README.md"
 
 mkdir -p \
   "$REPO/.agentic/00.chat/checklists" \
+  "$REPO/docs/00.chat/adrs" \
+  "$REPO/docs/01.harness/adrs" \
+  "$REPO/docs/02.rag-rulebook/adrs" \
   "$REPO/docs/aws/architecture/adrs" \
-  "$REPO/docs/harness/architecture/adrs" \
   "$REPO/scripts/00.chat/session-log/check-commit-prerequisites" \
   "$REPO/scripts/00.chat/session-log/check-commitlog-deletions" \
   "$REPO/scripts/00.chat/session-log/paths" \
@@ -79,7 +81,7 @@ cat > "$REPO/.agentic/00.chat/checklists/before-commit.md" <<'EOF'
 # Before Commit
 EOF
 
-cat > "$REPO/docs/harness/architecture/adrs/0001-first-decision.md" <<'EOF'
+cat > "$REPO/docs/00.chat/adrs/0001-first-decision.md" <<'EOF'
 # ADR 0001: First Decision
 
 ## Status
@@ -87,7 +89,7 @@ cat > "$REPO/docs/harness/architecture/adrs/0001-first-decision.md" <<'EOF'
 Accepted.
 EOF
 
-cat > "$REPO/docs/harness/architecture/adrs/0002-second-decision.md" <<'EOF'
+cat > "$REPO/docs/02.rag-rulebook/adrs/0002-second-decision.md" <<'EOF'
 # ADR 0002: Second Decision
 
 ## Status
@@ -97,6 +99,14 @@ EOF
 
 cat > "$REPO/docs/aws/architecture/adrs/0001-aws-decision.md" <<'EOF'
 # ADR 0001: AWS Decision
+
+## Status
+
+Accepted.
+EOF
+
+cat > "$REPO/docs/01.harness/adrs/0032-owner-aligned-decision.md" <<'EOF'
+# ADR 0032: Owner Aligned Decision
 
 ## Status
 
@@ -194,9 +204,10 @@ test prepare context hygiene
 
 ADR needed: yes
 ADR paths:
-- docs/harness/architecture/adrs/0001-first-decision.md
-- docs/harness/architecture/adrs/0002-second-decision.md
+- docs/00.chat/adrs/0001-first-decision.md
+- docs/02.rag-rulebook/adrs/0002-second-decision.md
 - docs/aws/architecture/adrs/0001-aws-decision.md
+- docs/01.harness/adrs/0032-owner-aligned-decision.md
 Reason: This smoke test covers multiple ADR paths in one session log.
 EOF
 

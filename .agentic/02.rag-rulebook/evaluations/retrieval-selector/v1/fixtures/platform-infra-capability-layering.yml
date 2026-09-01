@@ -27,14 +27,14 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about platform-level capability placement retrieve the repo-wide ownership split and queue example.
 input:
-  request_text: Using corpus.03.product.platform and docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml, explain platform-infra-capability-layering capability-layering.contract-runtime-adapter-infra-split and capability-layering.queues-follow-the-same-split.
+  request_text: Using corpus.03.product.platform and docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml, explain platform-infra-capability-layering capability-layering.contract-runtime-adapter-infra-split and capability-layering.queues-follow-the-same-split.
   session:
     trust_routing: true
     layer: 01.harness
     mode: discovery
     workflow: .agentic/01.harness/workflows/change-harness.md
   focused_paths:
-    - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
+    - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
   max_chunks: 10
 expected:
   routing:
@@ -66,10 +66,10 @@ banned:
   selected_corpora:
     - corpus.00.chat
 source_refs:
-  - docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
-  - docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+  - docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+  - docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - Platform and infra capability layering rules change.

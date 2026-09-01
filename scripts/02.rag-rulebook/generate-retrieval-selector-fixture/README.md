@@ -50,7 +50,7 @@ Missing or partial coverage candidates may produce `missing-corpus` gaps. They
 do not select corpora, add chunks, or act as evidence that the corpus already
 covers a term.
 
-Generate a fixture from the current prototype chunks:
+Generate a fixture from the current numbered-corpus chunks:
 
 ```bash
 bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh \

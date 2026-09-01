@@ -26,7 +26,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove explicit request context beats session continuity for retrieval while preserving session provenance.
 input:
-  request_text: Explain the corpus.03.product.platform rules in docs/harness/architecture/rules/layers/platform.yml using the exact product platform corpus.
+  request_text: Explain the corpus.03.product.platform rules in docs/03.product/rules/platform/layers/platform.yml using the exact product platform corpus.
   session:
     layer: 02.rag-rulebook
     mode: implementation

@@ -25,34 +25,34 @@ status: active
 
 created_artifacts:
   layer_rulesets:
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/layers/design-system.yml
-    - docs/harness/architecture/rules/layers/frontend-kit.yml
-    - docs/harness/architecture/rules/layers/infra.yml
-    - docs/harness/architecture/rules/layers/packages-core.yml
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/scripts-command-surface.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/03.product/rules/design-system/layers/design-system.yml
+    - docs/03.product/rules/frontend-kit/layers/frontend-kit.yml
+    - docs/04.deploy/rules/layers/infra.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/01.harness/rules/layers/scripts-command-surface.yml
   concern_rulesets:
-    - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
-    - docs/harness/architecture/rules/concerns/design-label-theming.yml
-    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-    - docs/harness/architecture/rules/concerns/i18n-localization.yml
-    - docs/harness/architecture/rules/concerns/identity-access-security.yml
-    - docs/harness/architecture/rules/concerns/notifications.yml
-    - docs/harness/architecture/rules/concerns/ci-quality.yml
-    - docs/harness/architecture/rules/concerns/generated-code.yml
-    - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-    - docs/harness/architecture/rules/concerns/tenancy.yml
-    - docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml
-    - docs/harness/architecture/rules/concerns/validation-api-errors.yml
+    - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
+    - docs/03.product/rules/design-system/concerns/design-label-theming.yml
+    - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+    - docs/03.product/rules/concerns/i18n-localization.yml
+    - docs/03.product/rules/platform/concerns/identity-access-security.yml
+    - docs/03.product/rules/platform/concerns/notifications.yml
+    - docs/06.shared/rules/concerns/ci-quality.yml
+    - docs/06.shared/rules/concerns/generated-code.yml
+    - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+    - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+    - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+    - docs/03.product/rules/platform/concerns/tenancy.yml
+    - docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
+    - docs/03.product/rules/core/concerns/validation-api-errors.yml
   rule_packs:
-    - docs/harness/architecture/rule-packs/add-core-module.yml
-    - docs/harness/architecture/rule-packs/add-design-system-component.yml
-    - docs/harness/architecture/rule-packs/create-entity.yml
-    - docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    - docs/03.product/rule-packs/core/add-core-module.yml
+    - docs/03.product/rule-packs/design-system/add-design-system-component.yml
+    - docs/03.product/rule-packs/apps/create-entity.yml
+    - docs/03.product/rule-packs/platform/add-platform-adapter.yml
 
 recommended_next_artifacts: []
 

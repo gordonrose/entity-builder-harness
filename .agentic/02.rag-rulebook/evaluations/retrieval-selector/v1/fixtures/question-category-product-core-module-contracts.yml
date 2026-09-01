@@ -50,9 +50,9 @@ expected:
         matched_input: prompt
   selected_chunks:
     required_source_paths:
-      - docs/harness/architecture/rules/layers/packages-core.yml
-      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
+      - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+      - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
       - packages/core/README.md
       - platform/contracts/README.md
   selector_trace:
@@ -66,9 +66,9 @@ expected:
   gaps:
     no_unexpected: true
 source_refs:
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-  - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+  - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
   - packages/core/README.md
   - platform/contracts/README.md
 update_triggers:

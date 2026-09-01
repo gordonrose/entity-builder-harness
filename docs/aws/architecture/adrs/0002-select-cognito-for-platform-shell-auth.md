@@ -18,7 +18,7 @@
   - id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
     path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
   - id: harness.architecture.plan.platform-runtime-implementation
-    path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+    path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
 -->
 # ADR 0002: Select Cognito For Platform Shell Auth
 

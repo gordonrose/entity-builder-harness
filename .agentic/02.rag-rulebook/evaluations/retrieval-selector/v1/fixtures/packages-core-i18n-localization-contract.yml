@@ -26,7 +26,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove prompts about translation-ready messages and locale-sensitive formatting retrieve i18n/localization contract boundaries.
 input:
-  request_text: Explain how product and platform code should use packages/core/src/i18n/index.ts and packages/core/src/localization/index.ts contracts for translating validation errors, policy denials, and API display messages with locale tags, message catalogs, translator ports, fallback default messages, currency codes, region codes, time zones, localizable date/number/currency values, and localizer ports without putting final product copy, locale negotiation, catalog loading, Intl/FormatJS/i18next implementation, CLDR loading, currency conversion, or UI display rules in core; use docs/harness/architecture/rules/layers/packages-core.yml and docs/harness/architecture/rules/concerns/i18n-localization.yml for the package-core and i18n/localization boundaries.
+  request_text: Explain how product and platform code should use packages/core/src/i18n/index.ts and packages/core/src/localization/index.ts contracts for translating validation errors, policy denials, and API display messages with locale tags, message catalogs, translator ports, fallback default messages, currency codes, region codes, time zones, localizable date/number/currency values, and localizer ports without putting final product copy, locale negotiation, catalog loading, Intl/FormatJS/i18next implementation, CLDR loading, currency conversion, or UI display rules in core; use docs/03.product/rules/core/layers/packages-core.yml and docs/03.product/rules/concerns/i18n-localization.yml for the package-core and i18n/localization boundaries.
   session:
     trust_routing: true
     layer: 03.product
@@ -62,10 +62,10 @@ banned:
   selected_corpora:
     - corpus.00.chat
 source_refs:
-  - docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
-  - docs/harness/architecture/rules/layers/packages-core.yml
-  - docs/harness/architecture/rules/concerns/i18n-localization.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/concerns/i18n-localization.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml
 update_triggers:
   - packages/core i18n or localization ownership rules change.

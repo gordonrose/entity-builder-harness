@@ -46,7 +46,7 @@ description: >
   definitions so deployable image behavior does not sprawl across the repo.
 
 related_rulesets:
-  - docs/harness/architecture/rules/layers/infra.yml
+  - docs/04.deploy/rules/layers/infra.yml
   - docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml
   - docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml
   - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml

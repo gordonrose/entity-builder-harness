@@ -55,7 +55,8 @@ Add `--json` for machine-readable output.
 - accepted `removed`, `renamed`, and `superseded` paths no longer exist
 - accepted `retained-retired` paths still exist and match the recorded hash
 - renamed and superseded artifacts name existing replacement paths
-- accepted retirements include checked roots and no remaining active references
+- accepted retirements include checked roots as audit scope and no remaining
+  active references
 - accepted retirements have checks run and no pending checks
 - duplicate retirement IDs are rejected
 

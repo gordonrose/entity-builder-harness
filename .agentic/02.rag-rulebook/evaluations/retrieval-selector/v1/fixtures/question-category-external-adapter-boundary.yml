@@ -40,9 +40,9 @@ expected:
         matched_input: prompt
   selected_chunks:
     required_source_paths:
-      - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-      - docs/harness/architecture/rule-packs/add-platform-adapter.yml
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+      - docs/03.product/rule-packs/platform/add-platform-adapter.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -54,9 +54,9 @@ expected:
   gaps:
     no_unexpected: true
 source_refs:
-  - docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
-  - docs/harness/architecture/rule-packs/add-platform-adapter.yml
-  - docs/harness/architecture/rules/concerns/dependency-direction.yml
+  - docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
+  - docs/03.product/rule-packs/platform/add-platform-adapter.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
 update_triggers:
   - Platform adapter consumption rules change.
   - Add-platform-adapter rule pack changes.

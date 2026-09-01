@@ -12,7 +12,7 @@ set -euo pipefail
 #     - agentic
 #     - architecture
 #   kind: script
-#   purpose: Generate a read-only JSON rulebook index from prototype and numbered corpus rule roots.
+#   purpose: Generate a read-only JSON rulebook index from numbered corpus rule roots and migration history.
 #   portability:
 #     class: reusable
 #     targets:
@@ -51,9 +51,12 @@ except ImportError:  # pragma: no cover - environment gate
     sys.exit(2)
 
 
-DEFAULT_SOURCE_ROOT = "docs/harness/architecture"
+DEFAULT_SOURCE_ROOT = "docs/03.product/source-material"
+DEFAULT_HARNESS_CORPUS_ROOT = "docs/01.harness"
 DEFAULT_RULEBOOK_RULES_ROOT = "docs/02.rag-rulebook/rules"
+DEFAULT_PRODUCT_CORPUS_ROOT = "docs/03.product"
 DEFAULT_DEPLOY_RULES_ROOT = "docs/04.deploy/rules"
+DEFAULT_SHARED_CORPUS_ROOT = "docs/06.shared"
 DEFAULT_MIGRATION_MAP = ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml"
 INDEX_SCHEMA = "rag-rulebook/rulebook-index/v1"
 GENERATOR_VERSION = "prototype-v1"
@@ -61,14 +64,21 @@ CURRENT_RULEBOOK_CORPUS_ID = "corpus.02.rag-rulebook"
 MIN_MARKDOWN_SECTION_WORDS = 10
 HARNESS_CORPUS_ID = "corpus.01.harness"
 DEFAULT_CORPUS_RULE_ROOTS = (
+    (HARNESS_CORPUS_ID, DEFAULT_HARNESS_CORPUS_ROOT),
     (CURRENT_RULEBOOK_CORPUS_ID, DEFAULT_RULEBOOK_RULES_ROOT),
+    ("corpus.03.product", DEFAULT_PRODUCT_CORPUS_ROOT),
     ("corpus.04.deploy", DEFAULT_DEPLOY_RULES_ROOT),
+    ("corpus.06.shared", DEFAULT_SHARED_CORPUS_ROOT),
 )
 DEFAULT_EXPLANATION_MARKDOWN_ROOTS = (
-    "docs/harness/architecture/source-material",
-    "docs/harness/architecture/guides/markdown",
+    "docs/01.harness/source-material",
+    "docs/01.harness/guides",
     "docs/02.rag-rulebook/source-material",
+    "docs/03.product/source-material",
+    "docs/03.product/guides",
     "docs/04.deploy/source-material",
+    "docs/06.shared/source-material",
+    "docs/06.shared/guides",
     ".agentic/02.rag-rulebook/guides",
 )
 PROCESS_SOURCE_GLOBS = (
@@ -111,6 +121,9 @@ PROCESS_SOURCE_GLOBS = (
     ".agentic/shared/standards/**/*.md",
     ".agentic/shared/workflows/**/*.md",
     "docs/00.chat/**/*.md",
+    "docs/01.harness/**/*.md",
+    "docs/03.product/**/*.md",
+    "docs/06.shared/**/*.md",
     "docs/education/architecture/**/*.md",
     "infra/04.deploy/**/*.md",
     "infra/04.deploy/**/*.yml",
@@ -818,8 +831,9 @@ def usage() -> str:
   generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--rulebook-rules-root <path>] [--corpus-rules-root <corpus-id=path>] [--pretty]
 
 Emits a rag-rulebook/rulebook-index/v1 JSON document to stdout.
-The command is read-only: it parses current prototype corpus files and prints
-the index without moving files or writing generated artifacts.
+The command is read-only: it parses numbered corpus roots and migration
+history, then prints the index without moving files or writing generated
+artifacts.
 """
 
 
@@ -1010,10 +1024,26 @@ def markdown_corpus_id(path: str, metadata: dict[str, Any], guide_corpus_by_path
     normalized = normalize_path(path)
     if normalized in guide_corpus_by_path:
         return guide_corpus_by_path[normalized]
+    if normalized.startswith("docs/01.harness/"):
+        return "corpus.01.harness"
     if normalized.startswith("docs/02.rag-rulebook/") or normalized.startswith(".agentic/02.rag-rulebook/"):
         return "corpus.02.rag-rulebook"
+    if normalized.startswith("docs/03.product/"):
+        if "/platform/" in normalized or "platform" in normalized:
+            return "corpus.03.product.platform"
+        if "/core/" in normalized or "packages-core" in normalized:
+            return "corpus.03.product.core"
+        if "/design-system/" in normalized or "design-system" in normalized:
+            return "corpus.03.product.design-system"
+        if "/frontend-kit/" in normalized or "frontend-kit" in normalized:
+            return "corpus.03.product.frontend-kit"
+        if "/apps/" in normalized:
+            return "corpus.03.product.apps"
+        return "corpus.03.product"
     if normalized.startswith("docs/04.deploy/"):
         return "corpus.04.deploy"
+    if normalized.startswith("docs/06.shared/"):
+        return "corpus.06.shared"
     if "packages-core" in normalized:
         return "corpus.03.product.core"
     if "platform" in normalized:
@@ -1131,6 +1161,12 @@ def root_id_for_corpus_rules(corpus_id: str) -> str:
     if corpus_id == CURRENT_RULEBOOK_CORPUS_ID:
         return "root.rulebook-rules"
     return f"root.{safe_id(corpus_id)}.rules"
+
+
+def is_current_rulebook_yaml_path(path: str) -> bool:
+    return path.endswith((".yml", ".yaml")) and (
+        "/rules/" in path or "/rule-packs/" in path
+    )
 
 
 def default_manifest_path_for_corpus(corpus_id: str, rules_root: str) -> str | None:
@@ -1265,7 +1301,11 @@ def collect_current_rulebook_entries(corpus_id: str, rulebook_rules_root: str) -
         return []
 
     entries: list[tuple[str, dict[str, Any]]] = []
-    paths = sorted({*root.rglob("*.yml"), *root.rglob("*.yaml")})
+    paths = sorted(
+        path
+        for path in {*root.rglob("*.yml"), *root.rglob("*.yaml")}
+        if is_current_rulebook_yaml_path(normalize_path(path))
+    )
     for path in paths:
         current_path = normalize_path(path)
         yaml_data = load_yaml(current_path)
@@ -1310,7 +1350,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             "owner_layer": owner_layer_for_corpus(entry["corpus_id"]),
             "status": "proposed",
             "purpose": entry.get("purpose", ""),
-            "source_root_ids": ["root.prototype", "root.migration-map"],
+            "source_root_ids": ["root.product-source-material", "root.migration-map"],
         }
         for entry in list_of_dicts(migration_map.get("target_corpora"))
         if isinstance(entry.get("corpus_id"), str)
@@ -1357,13 +1397,21 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
 
     known_corpora = {entry["corpus_id"] for entry in corpus_packages}
     yaml_entries: list[tuple[str, dict[str, Any]]] = []
+    mapped_yaml_paths: set[str] = set()
     yaml_artifacts = migration_map.get("yaml_artifacts") or {}
     if isinstance(yaml_artifacts, dict):
         for group_name in ("layer_rulesets", "concern_rulesets", "rule_packs"):
             for entry in list_of_dicts(yaml_artifacts.get(group_name)):
+                current_path = entry.get("current_path")
+                if isinstance(current_path, str):
+                    mapped_yaml_paths.add(normalize_path(current_path))
                 yaml_entries.append((group_name, entry))
     for root in current_corpus_rule_roots:
-        yaml_entries.extend(collect_current_rulebook_entries(root["corpus_id"], root["rules_root"]))
+        for group_name, entry in collect_current_rulebook_entries(root["corpus_id"], root["rules_root"]):
+            current_path = entry.get("current_path")
+            if isinstance(current_path, str) and normalize_path(current_path) in mapped_yaml_paths:
+                continue
+            yaml_entries.append((group_name, entry))
     guide_corpus_by_path = {
         normalize_path(str(guide.get("current_path"))): str(guide.get("proposed_corpus_id"))
         for guide in list_of_dicts((migration_map.get("source_material") or {}).get("guides"))
@@ -1650,9 +1698,11 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         for _, entry in yaml_entries
         if isinstance(entry.get("current_path"), str)
     }
-    supporting_source_entries.extend(discover_process_source_entries(supporting_paths | yaml_paths))
-    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
     explanation_markdown_paths = set(collect_explanation_markdown_paths())
+    supporting_source_entries.extend(
+        discover_process_source_entries(supporting_paths | yaml_paths | markdown_artifact_paths | explanation_markdown_paths)
+    )
+    supporting_paths = {normalize_path(str(entry["current_path"])) for entry in supporting_source_entries}
 
     for current_path in explanation_markdown_paths:
         if current_path in markdown_artifact_paths or current_path in supporting_paths:
@@ -2035,10 +2085,11 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
 
     source_roots = [
         {
-            "root_id": "root.prototype",
+            "root_id": "root.product-source-material",
             "path": source_root,
-            "role": "prototype-corpus",
+            "role": "source-material",
             "migration_status": "current",
+            "corpus_id": "corpus.03.product",
         },
         {
             "root_id": "root.migration-map",

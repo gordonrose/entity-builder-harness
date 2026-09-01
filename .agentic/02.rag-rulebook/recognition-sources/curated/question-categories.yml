@@ -99,13 +99,13 @@ terms:
     category: evidence-family
     match_type: exact
     canonical_id: evidence.layer.platform
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     confidence_weight: 0.65
   - term: apps
     category: evidence-family
     match_type: exact
     canonical_id: evidence.layer.apps
-    evidence_path: docs/harness/architecture/rules/layers/apps.yml
+    evidence_path: docs/03.product/rules/apps/layers/apps.yml
     aliases:
       - app
     confidence_weight: 0.65
@@ -113,7 +113,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.dependency-direction
-    evidence_path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+    evidence_path: docs/06.shared/rules/concerns/dependency-direction.yml
     aliases:
       - dependency boundary
       - import direction
@@ -122,7 +122,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.contracts
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - contracts
       - app contract
@@ -134,7 +134,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.config
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - config
       - configuration
@@ -146,7 +146,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.config-runtime-settings
-    evidence_path: docs/harness/architecture/rules/concerns/config-runtime-settings.yml
+    evidence_path: docs/03.product/rules/platform/concerns/config-runtime-settings.yml
     aliases:
       - runtime setting
       - settings
@@ -157,7 +157,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.runtime
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - runtime
       - request context
@@ -169,7 +169,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.server
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - server
       - middleware
@@ -182,7 +182,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.security
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - security
       - authentication
@@ -196,7 +196,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.identity-access-security
-    evidence_path: docs/harness/architecture/rules/concerns/identity-access-security.yml
+    evidence_path: docs/03.product/rules/platform/concerns/identity-access-security.yml
     aliases:
       - identity
       - access security
@@ -207,7 +207,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.observability
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - observability
       - logs
@@ -223,7 +223,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.reporting-analytics-audit
-    evidence_path: docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    evidence_path: docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
     aliases:
       - audit
       - analytics
@@ -235,7 +235,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.layer.packages-core
-    evidence_path: docs/harness/architecture/rules/layers/packages-core.yml
+    evidence_path: docs/03.product/rules/core/layers/packages-core.yml
     aliases:
       - logger contract
       - logging contract
@@ -247,7 +247,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.health
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - health
       - liveness
@@ -261,7 +261,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.workers
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - workers
       - worker
@@ -277,7 +277,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.events-messaging-async
-    evidence_path: docs/harness/architecture/rules/concerns/events-messaging-async.yml
+    evidence_path: docs/03.product/rules/platform/concerns/events-messaging-async.yml
     aliases:
       - event
       - events
@@ -322,7 +322,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform.testing
-    evidence_path: docs/harness/architecture/rules/layers/platform.yml
+    evidence_path: docs/03.product/rules/platform/layers/platform.yml
     aliases:
       - testing
       - tests
@@ -335,7 +335,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.concern.ci-quality
-    evidence_path: docs/harness/architecture/rules/concerns/ci-quality.yml
+    evidence_path: docs/06.shared/rules/concerns/ci-quality.yml
     aliases:
       - ci
       - quality gates
@@ -578,7 +578,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform-contracts.composed-runtime-contexts-adr
-    evidence_path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    evidence_path: docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
     aliases:
       - composed runtime context ADR
       - place composed runtime contexts
@@ -601,7 +601,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform-adapter.consumption
-    evidence_path: docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml
+    evidence_path: docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml
     aliases:
       - adapter consumption
       - provider-specific imports
@@ -613,7 +613,7 @@ terms:
     category: evidence-family
     match_type: phrase
     canonical_id: evidence.platform-adapter.rule-pack
-    evidence_path: docs/harness/architecture/rule-packs/add-platform-adapter.yml
+    evidence_path: docs/03.product/rule-packs/platform/add-platform-adapter.yml
     aliases:
       - add-platform-adapter
       - platform adapter rule pack

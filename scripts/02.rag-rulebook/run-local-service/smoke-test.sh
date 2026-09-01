@@ -125,7 +125,7 @@ async function main() {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      requestText: "Explain the product platform rules in docs/harness/architecture/rules/layers/platform.yml for this prompt.",
+      requestText: "Explain the product platform rules in docs/03.product/rules/platform/layers/platform.yml for this prompt.",
       session: {
         id: "service-smoke-session",
         branch: "chat/service-smoke-session",
@@ -168,7 +168,7 @@ async function main() {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       requestText: "Explain prompt context",
-      focusedPaths: ["docs/harness/architecture/rules/layers/platform.yml"],
+      focusedPaths: ["docs/03.product/rules/platform/layers/platform.yml"],
       maxChunks: 6,
       format: "compact",
     }),

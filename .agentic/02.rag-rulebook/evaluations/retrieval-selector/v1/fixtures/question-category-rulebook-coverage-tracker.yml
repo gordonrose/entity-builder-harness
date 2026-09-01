@@ -48,7 +48,7 @@ expected:
       - .agentic/01.harness/workflows/continue-rulebook.workflow.md
       - .agentic/01.harness/state/rulebook-coverage.yml
       - .agentic/01.harness/state/rulebook-progress.yml
-      - docs/harness/architecture/rules/concerns/generated-code.yml
+      - docs/06.shared/rules/concerns/generated-code.yml
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -63,7 +63,7 @@ source_refs:
   - .agentic/01.harness/workflows/continue-rulebook.workflow.md
   - .agentic/01.harness/state/rulebook-coverage.yml
   - .agentic/01.harness/state/rulebook-progress.yml
-  - docs/harness/architecture/rules/concerns/generated-code.yml
+  - docs/06.shared/rules/concerns/generated-code.yml
 update_triggers:
   - Rulebook coverage workflow or state changes.
   - Rulebook harvest process changes.

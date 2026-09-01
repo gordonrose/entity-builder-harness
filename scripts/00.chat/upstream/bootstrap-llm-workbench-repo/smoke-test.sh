@@ -64,7 +64,7 @@ grep -q '^CREATE scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh
 if grep -q '^CREATE \.agentic/01\.harness/' "$TMP_ROOT/empty.out"; then
   fail "empty repo planned source-maintenance .agentic/01.harness files"
 fi
-if grep -Eq '^CREATE docs/00\.chat/public-chat-workbench-adrs\.md$|^CREATE docs/harness/architecture/adrs/' "$TMP_ROOT/empty.out"; then
+if grep -Eq '^CREATE docs/00\.chat/public-chat-workbench-adrs\.md$|^CREATE docs/00\.chat/adrs/' "$TMP_ROOT/empty.out"; then
   fail "empty repo planned public ADR export files"
 fi
 grep -q '^conflicts: 0$' "$TMP_ROOT/empty.out" || fail "empty repo reported conflicts"
@@ -74,7 +74,7 @@ test -f "$EMPTY_REPO/package.json" || fail "apply did not create package.json"
 test -f "$EMPTY_REPO/scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh" || fail "apply did not create planner script"
 test ! -e "$EMPTY_REPO/.agentic/01.harness" || fail "apply created source-maintenance .agentic/01.harness"
 test ! -e "$EMPTY_REPO/docs/00.chat/public-chat-workbench-adrs.md" || fail "apply created public ADR manifest"
-test ! -e "$EMPTY_REPO/docs/harness/architecture/adrs" || fail "apply created ADR docs"
+test ! -e "$EMPTY_REPO/docs/00.chat/adrs" || fail "apply created ADR docs"
 for source_only_path in \
   scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh \
   scripts/01.harness/artifact-metadata/generate-index/script.sh \

@@ -19,7 +19,7 @@ set -euo pipefail
 #     - llm-workbench
 #   used_by:
 #   - id: harness.architecture.rules.concerns.ci-quality
-#     path: docs/harness/architecture/rules/concerns/ci-quality.yml
+#     path: docs/06.shared/rules/concerns/ci-quality.yml
 #   - id: harness.readme
 #     path: .agentic/01.harness/README.md
 #   effects:
@@ -34,7 +34,7 @@ from pathlib import Path
 import yaml
 
 
-CI_QUALITY_PATH = Path("docs/harness/architecture/rules/concerns/ci-quality.yml")
+CI_QUALITY_PATH = Path("docs/06.shared/rules/concerns/ci-quality.yml")
 VALID_ROLES = {"primary", "secondary", "conditional"}
 GENERIC_EVIDENCE = {
     "test important behavior",

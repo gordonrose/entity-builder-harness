@@ -17,7 +17,7 @@ used_by:
 - id: harness.workflows.migrate-artifact-paths
   path: .agentic/01.harness/workflows/migrate-artifact-paths.md
 - id: harness.architecture.adr.0018-govern-artifact-path-migrations
-  path: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+  path: docs/01.harness/adrs/0018-govern-artifact-path-migrations.md
 -->
 # 03.product Agentic Namespace Migration
 

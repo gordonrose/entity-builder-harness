@@ -22,7 +22,7 @@ used_by:
 - id: harness.standards.agentic-artifact-standards
   path: .agentic/01.harness/standards/agentic-artifact-standards.md
 - id: harness.adr.0020-use-scripts-for-layer-command-surfaces
-  path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+  path: docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
 -->
 
 # Build Capability Workflow

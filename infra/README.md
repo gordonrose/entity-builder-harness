@@ -15,7 +15,7 @@ portability:
   targets: []
 used_by:
 - id: harness.architecture.rules.layers.infra
-  path: docs/harness/architecture/rules/layers/infra.yml
+  path: docs/04.deploy/rules/layers/infra.yml
 - id: rag-rulebook.plan.repo
   path: .agentic/02.rag-rulebook/plans/repo-plan.md
 -->
@@ -40,4 +40,3 @@ Use `infra/**` for concrete deployable definitions such as:
 
 Do not store secrets, private keys, credentials, live tokens, or sensitive
 runtime dumps here.
-

@@ -104,6 +104,9 @@ is_historical_path() {
     commitLogs/*)
       return 0
       ;;
+    .agentic/02.rag-rulebook/retirements/*)
+      return 0
+      ;;
     *)
       return 1
       ;;

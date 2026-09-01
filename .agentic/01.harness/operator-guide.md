@@ -26,7 +26,7 @@ used_by:
 ## Purpose
 
 Use this guide when continuing architecture rules and rule packs from
-`docs/harness/architecture/guides/markdown`.
+`docs/03.product/source-material/guides/markdown`.
 
 This operating pack is instructional only. It is not the runtime harness and it
 does not create executable checks or generated architecture artifacts by itself.
@@ -56,23 +56,28 @@ A rule pack answers: "What rules and steps apply to this task?"
 
 ## Decision Model
 
-Layer rules belong in:
+Structured rulebook YAML belongs in the narrowest owner corpus:
 
 ```text
-docs/harness/architecture/rules/layers/*.yml
+docs/01.harness/rules/
+docs/02.rag-rulebook/rules/
+docs/03.product/rules/
+docs/04.deploy/rules/
+docs/06.shared/rules/
 ```
 
-Concern rules belong in:
+Product rules and rule packs use owner topic subdirectories such as:
 
 ```text
-docs/harness/architecture/rules/concerns/*.yml
+docs/03.product/rules/<topic>/concerns/*.yml
+docs/03.product/rules/<topic>/layers/*.yml
+docs/03.product/rule-packs/<topic>/*.yml
 ```
 
-Rule packs belong in:
-
-```text
-docs/harness/architecture/rule-packs/*.yml
-```
+Do not add new rule artifacts to retired prototype corpus locations. If an old
+prototype architecture reference is encountered, follow
+`standards/document-artifact-placement.md` and the prototype corpus migration
+plan before changing it.
 
 ## Default Flow
 

@@ -27,8 +27,8 @@ used_by:
 This directory is the RAG-readable deploy corpus package for `corpus.04.deploy`.
 
 The governing workflows for deploy work live under `.agentic/aws/`. This
-directory contains source material and future structured rules that the
-RAG/rulebook service can index, chunk, cite, and evaluate.
+directory contains source material, deployment ADRs, and structured rules that
+the RAG/rulebook service can index, chunk, cite, and evaluate.
 
 Use this corpus for infrastructure, release, runtime environment, GitHub
 deployment, AWS deployment, observability, rollback, and deployment stop
@@ -42,6 +42,8 @@ Deploy knowledge is organized by deploy track:
 - `source-material/03.product/` for product and application deployment
 
 Structured deploy rules live under matching tracks in `rules/`.
+
+Deployment and operations ADRs live in `adrs/`.
 
 These are not separate owning layers. `04.deploy` owns deployment governance;
 the track name identifies the system being deployed.

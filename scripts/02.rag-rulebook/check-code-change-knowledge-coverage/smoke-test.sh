@@ -47,7 +47,7 @@ git add README.md scripts/02.rag-rulebook/check-code-change-knowledge-coverage/s
 git commit --quiet -m "initial"
 
 git switch --quiet -c chat/2026-07-04-12-00-rag-knowledge-smoke
-mkdir -p commitLogs/2026/jul/04/2026-07-04-12-00-rag-knowledge-smoke packages/core docs/harness/architecture/source-material
+mkdir -p commitLogs/2026/jul/04/2026-07-04-12-00-rag-knowledge-smoke packages/core docs/03.product/source-material/core
 cat > commitLogs/2026/jul/04/2026-07-04-12-00-rag-knowledge-smoke/README.md <<'LOG'
 # Chat Session
 
@@ -75,12 +75,12 @@ cat >> commitLogs/2026/jul/04/2026-07-04-12-00-rag-knowledge-smoke/README.md <<'
 Status: covered
 Reason: Core contract source was projected.
 Evidence:
-- docs/harness/architecture/source-material/example.md
+- docs/03.product/source-material/core/example.md
 Corpus gaps:
 - None.
 LOG
 
-echo "# source" > docs/harness/architecture/source-material/example.md
+echo "# source" > docs/03.product/source-material/core/example.md
 bash scripts/02.rag-rulebook/check-code-change-knowledge-coverage/script.sh --current >/dev/null
 
 perl -0pi -e 's/Status: covered/Status: deferred-with-gap/' commitLogs/2026/jul/04/2026-07-04-12-00-rag-knowledge-smoke/README.md
