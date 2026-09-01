@@ -381,9 +381,13 @@ entrypoint composes that adapter into `platform/server`; generic
 authenticated app routes by default, and converts a complete authenticated
 `PlatformAuthenticationResult` into the core `Principal` that
 `platform/runtime` places on authenticated route `context.principal`. Public
-and unauthenticated routes do not receive a principal. Tenant/locale derivation
-and product-specific profile, membership, and role enrichment remain separate
-app or identity-boundary work. Public deployment remains blocked until the
+and unauthenticated routes do not receive a principal. The platform now has an
+opt-in provider-neutral tenant-context and resource-authorization seam:
+routes without either declaration preserve the permission-only path, while a
+route that declares a required tenant or resource decision fails closed if its
+resolver or `Authorizer` is absent. Tenant/locale derivation and product-specific
+profile, membership, and role enrichment remain separate app or identity-boundary
+work. Public deployment remains blocked until the
 Kanbien staging Cognito user pool/client, CORS origins, secret/config source,
 product app permission source, and deployed protected dummy-route smoke proof
 are recorded in the target profile.
@@ -436,8 +440,11 @@ Acceptance:
   selection is implemented by the Cognito adapter.
 - Authenticated route handlers receive a provider-neutral core `Principal` on
   `context.principal`, including id, type, subject, claims, and scopes; public
-  and unauthenticated routes do not receive one. Tenant/locale derivation and
-  product profile, membership, and role enrichment remain separate gaps.
+  and unauthenticated routes do not receive one. Routes may opt into an
+  optional or required tenant context and an app-provided resource contribution.
+  Generic platform binds the verified tenant and principal to the core
+  `Authorizer`; product profile, membership, role, region, clearance, and
+  residency decisions remain separate gaps.
 - Permission vocabularies are app-owned. Target-specific authz maps may grant
   only permissions declared by the apps included in the product target, and
   startup/deploy validation must fail on unknown permissions.

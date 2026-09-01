@@ -1,4 +1,5 @@
 import { deepEqual, equal } from "node:assert/strict";
+import type { Permission } from "@kanbien/core/authz";
 import type { QueueMessageType } from "@kanbien/core/queues";
 import {
   definePlatformApp,
@@ -66,7 +67,7 @@ async function main(): Promise<void> {
   mutableFlags["crm.deals.bulk-import"] = true;
   equal(await snapshotFlags.isEnabled(flagName.value), false);
 
-  const dealReadPermission = "deal:read";
+  const dealReadPermission: Permission = "deal:read";
   deepEqual(validatePlatformPermissionDeclaration({ permission: dealReadPermission }), { ok: true, value: undefined });
   expectContractError(
     validatePlatformPermissionDeclaration({ permission: "deal read" as never }),
@@ -84,6 +85,32 @@ async function main(): Promise<void> {
     ok: true,
     value: undefined,
   });
+  const tenantAndResourceRoute = {
+    ...validRoute,
+    tenant: "required" as const,
+    resourceAuthorization: {
+      permission: dealReadPermission,
+      resolve: () => ({ kind: "authorize" as const, facts: { source: "contract-test" } }),
+    },
+  };
+  deepEqual(validatePlatformRouteRegistration(tenantAndResourceRoute, { declaredPermissions: [dealReadPermission] }), {
+    ok: true,
+    value: undefined,
+  });
+  expectContractError(
+    validatePlatformRouteRegistration({ ...validRoute, auth: { kind: "public" }, tenant: "required" }, { declaredPermissions: [dealReadPermission] }),
+    "PLATFORM_CONTRACT_MALFORMED_ROUTE",
+  );
+  expectContractError(
+    validatePlatformRouteRegistration({
+      ...validRoute,
+      resourceAuthorization: {
+        permission: "record:read" as never,
+        resolve: () => ({ kind: "authorize" as const }),
+      },
+    }, { declaredPermissions: [dealReadPermission] }),
+    "PLATFORM_CONTRACT_UNKNOWN_PERMISSION",
+  );
   expectContractError(
     validatePlatformRouteRegistration({ ...validRoute, path: "/readyz" }, { declaredPermissions: [dealReadPermission] }),
     "PLATFORM_CONTRACT_RESERVED_PATH",
