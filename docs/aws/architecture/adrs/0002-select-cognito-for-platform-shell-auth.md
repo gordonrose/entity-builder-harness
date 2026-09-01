@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: aws.architecture.adr.0002-select-cognito-for-platform-shell-auth
-  version: 1
+  version: 2
   status: active
   layer: 04.deploy
   domain: infra.ci-cd
@@ -37,7 +37,7 @@ target.
 The first deployment planning target is Kanbien staging on AWS ECS Fargate.
 That target needs both human login and machine/API auth over time, but the
 initial platform shell proof only needs a concrete JWT validation path that can
-be hidden behind `platform/security`.
+be translated into provider-neutral platform security contracts.
 
 The platform must remain portable. App code should declare app-owned
 permissions and route auth requirements; it should not import Cognito clients,
@@ -50,10 +50,15 @@ Kanbien staging platform shell.
 
 The implementation boundary is:
 
-- `platform/security` validates Cognito-issued access tokens through
-  provider-neutral JWT/JWKS interfaces.
-- `platform/server` wires the auth hook from config/environment values and
-  keeps authenticated app routes denied by default.
+- `platform/security` owns provider-neutral JWT/JWKS verification, generic
+  claim-to-permission mapping, and authentication-hook contracts.
+- `platform/adapters/aws/auth/cognito/` owns Cognito issuer/JWKS derivation,
+  access-token claim requirements, `cognito:groups` extraction, and
+  Cognito-named configuration parsing. It returns a provider-neutral platform
+  authentication hook.
+- Generic `platform/server` accepts an injected authentication hook and keeps
+  authenticated app routes denied by default. The Kanbien staging target
+  composition entrypoint selects the Cognito adapter from target configuration.
 - App routes keep using app-declared `Permission` values.
 - Target authz mappings translate Cognito groups, scopes, or claims into
   permissions declared by the apps included in the product target.
@@ -72,7 +77,8 @@ Kanbien staging can use an AWS-native identity service that fits the selected
 AWS ECS Fargate planning target.
 
 The platform gets real JWT signature, issuer, token-use, expiry, and app-client
-validation without exposing Cognito as an app-facing API.
+validation without exposing Cognito as an app-facing API or placing Cognito
+identity behavior in generic platform packages.
 
 Permission vocabulary remains app-owned. Cognito groups/scopes/claims are
 target identity facts; they grant app-declared permissions but do not define
@@ -85,6 +91,11 @@ smoke, and public exposure proof are recorded.
 Future products or clients can select Auth0, Clerk, custom OIDC, private
 network auth, or another provider through a new ADR and provider adapter
 without changing ordinary app feature code.
+
+This ADR corrects the implementation boundary in place rather than superseding
+the provider-selection decision: Cognito remains the selected Kanbien staging
+provider, while its runtime translation is now owned by the canonical adapter
+package and target composition root.
 
 ## Non-Goals
 

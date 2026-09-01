@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.concerns.dependency-direction
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 06.shared
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/03.product/rule-packs/core/add-core-module.yml
 id: concern.dependency-direction
 title: Dependency direction rules
-version: 2
+version: 3
 status: active
 
 description: >
@@ -108,7 +108,8 @@ rules:
       infrastructure resources.
     must:
       - "Use platform for process startup, HTTP server creation, route registration, middleware, auth integration, request context, error mapping, logging, health checks, config loading, job execution, and shutdown."
-      - "Let platform depend on packages/core and approved runtime/provider clients."
+      - "Let provider adapter packages depend on provider clients and translate them into platform or core contracts."
+      - "Keep generic platform packages dependent only on packages/core, platform contracts, and provider-neutral platform packages."
       - "Expose platform contracts that apps can implement or consume at approved boundaries."
       - "Keep app mounting imports in composition roots such as platform/server/mount.ts."
     must_not:
@@ -116,11 +117,15 @@ rules:
       - "Do not import app-specific services, repositories, routes, jobs, or business logic from platform internals."
       - "Do not make platform modules depend on app-internal service, feature, capability, domain, use-case, route, job, health, config, or workflow structure."
       - "Do not put Terraform, Pulumi, Kubernetes manifests, cloud provisioning, or IAM resource definitions in platform."
+      - "Do not put provider identity names, issuer or endpoint construction, provider claim names, provider token rules, provider-named environment keys, or provider adapter imports in generic platform packages such as platform/security or platform/server."
       - "Do not make normal product features require platform changes unless the runtime contract itself is changing."
     agent_guidance: >
       If platform code starts answering product questions instead of runtime
       questions, move that code into the owning app or package and keep only the
-      runtime contract in platform.
+      runtime contract in platform. If it starts naming a provider identity or
+      provider configuration, move that behavior into
+      platform/adapters/<provider>/<adapter-type>/<service-name>/ and select it
+      only from an approved target or platform composition root.
 
   - id: dependency.platform-composition-root-exception
     title: Platform may import app mounts only at the composition root
@@ -263,6 +268,7 @@ success_criteria:
   - "It covers apps, reusable packages, packages/core, platform, design-system, harness, script command surfaces, infra, and generated code."
   - "It includes the platform composition-root exception for importing app mounts."
   - "It keeps app-internal structure opaque behind approved public mount modules and manifests."
+  - "It confines provider identity behavior and provider clients to canonical platform adapter packages, with selection only at approved composition roots."
   - "It includes manually verified source_refs back to the relevant markdown guides."
   - "It does not duplicate the full contents of packages-core.yml, but it may reference overlapping core dependency principles."
   - "No unrelated files are changed."

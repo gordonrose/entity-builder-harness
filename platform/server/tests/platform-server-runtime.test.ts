@@ -1,4 +1,5 @@
 import { deepEqual, equal } from "node:assert/strict";
+import type { Principal } from "@kanbien/core/authn";
 import type { Permission } from "@kanbien/core/authz";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
 import { validationIssue } from "@kanbien/core/validation";
@@ -18,7 +19,8 @@ import { createPlatformServerShell } from "../src/index";
 async function main(): Promise<void> {
   const appId = platformAppId("smoke");
   const routeName = platformRouteName("smoke.echo");
-  if (!appId.ok || !routeName.ok) {
+  const publicRouteName = platformRouteName("smoke.public");
+  if (!appId.ok || !routeName.ok || !publicRouteName.ok) {
     throw new Error("Expected valid server test primitives.");
   }
 
@@ -26,11 +28,26 @@ async function main(): Promise<void> {
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   const deps = createPlatformTestMountDeps({ logger, metrics });
+  let authenticatedPrincipal: Principal | undefined;
+  let publicRoutePrincipal: Principal | undefined;
+  let protectedHandlerCalls = 0;
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
     mount(registry) {
       registry.registerPermission({ permission });
+      registry.registerRoute({
+        name: publicRouteName.value,
+        method: "GET",
+        path: "/public",
+        auth: { kind: "public" },
+        handler: {
+          handle: (_request, context) => {
+            publicRoutePrincipal = context.principal;
+            return { status: 200, body: { public: true } };
+          },
+        },
+      });
       registry.registerRoute({
         name: routeName.value,
         method: "POST",
@@ -42,10 +59,14 @@ async function main(): Promise<void> {
           && "message" in value
           && typeof (value as { readonly message?: unknown }).message === "string"),
         handler: {
-          handle: (request) => ({
-            status: 200,
-            body: { id: request.params["id"], message: (request.body as { readonly message: string }).message },
-          }),
+          handle: (request, context) => {
+            protectedHandlerCalls += 1;
+            authenticatedPrincipal = context.principal;
+            return {
+              status: 200,
+              body: { id: request.params["id"], message: (request.body as { readonly message: string }).message },
+            };
+          },
         },
       });
     },
@@ -58,7 +79,16 @@ async function main(): Promise<void> {
       grantedPermissions: () => [permission],
       authenticate: (request) => {
         if (request.headers?.authorization === "Bearer ok") {
-          return { authenticated: true, permissions: [permission], subject: "subject-ok", rateLimitKey: "principal:subject-ok" };
+          return {
+            authenticated: true,
+            permissions: [permission],
+            principalId: "principal-ok",
+            principalType: "user",
+            subject: "subject-ok",
+            claims: { sub: "subject-ok", "custom:role": "operator" },
+            scopes: ["openid", "platform-smoke/read"],
+            rateLimitKey: "principal:subject-ok",
+          };
         }
         if (request.headers?.authorization === "Bearer no-permission") {
           return { authenticated: true, permissions: [], subject: "subject-no-permission", rateLimitKey: "principal:subject-no-permission" };
@@ -99,6 +129,18 @@ async function main(): Promise<void> {
   equal(ready.status, 200);
   equal((ready.body as { readonly status: string }).status, "ready");
 
+  const publicRoute = await shell.value.handle({ method: "GET", path: "/public" });
+  equal(publicRoute.status, 200);
+  deepEqual(publicRoute.body, { public: true });
+  equal(publicRoutePrincipal, undefined);
+  const publicRouteWithCredentials = await shell.value.handle({
+    method: "GET",
+    path: "/public",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(publicRouteWithCredentials.status, 200);
+  equal(publicRoutePrincipal, undefined);
+
   const denied = await shell.value.handle({
     method: "POST",
     path: "/echo/123",
@@ -106,6 +148,7 @@ async function main(): Promise<void> {
   });
   equal(denied.status, 401);
   equal((denied.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_UNAUTHENTICATED");
+  equal(protectedHandlerCalls, 0);
 
   const invalid = await shell.value.handle({
     method: "POST",
@@ -124,6 +167,7 @@ async function main(): Promise<void> {
   });
   equal(forbidden.status, 403);
   equal((forbidden.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(protectedHandlerCalls, 0);
 
   const ok = await shell.value.handle({
     method: "POST",
@@ -133,6 +177,15 @@ async function main(): Promise<void> {
   });
   equal(ok.status, 200);
   deepEqual(ok.body, { id: "123", message: "hello" });
+  equal(protectedHandlerCalls, 1);
+  if (authenticatedPrincipal === undefined) {
+    throw new Error("Expected an authenticated route handler to receive a principal.");
+  }
+  equal(authenticatedPrincipal.id, "principal-ok");
+  equal(authenticatedPrincipal.type, "user");
+  equal(authenticatedPrincipal.subject, "subject-ok");
+  deepEqual(authenticatedPrincipal.claims, { sub: "subject-ok", "custom:role": "operator" });
+  deepEqual(authenticatedPrincipal.scopes, ["openid", "platform-smoke/read"]);
   deepEqual(ok.middleware, [
     "request-id",
     "request-logging",

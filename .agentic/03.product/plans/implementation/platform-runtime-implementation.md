@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 3
+version: 4
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -370,17 +370,41 @@ evidence.
 Current status: locally implemented and deployment-blocked. Cognito is selected
 as the first provider path in
 `docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md`.
-`platform/security` validates Cognito-shaped access tokens through
-provider-neutral JWT/JWKS interfaces, maps groups/scopes/claims to app-declared
-permissions, derives non-global rate-limit keys, and validates target authz
-maps against mounted app permissions. `platform/server` wires the auth hook
-from config/environment values, denies authenticated app routes by default,
-supports target-profile CORS allowlists, supports explicit `/livez` and
-`/readyz` exposure policy, and proves protected-route `401`, `403`, and
-success paths with local mounted-smoke tests. Public deployment remains blocked
-until the Kanbien staging Cognito user pool/client, CORS origins, secret/config
-source, product app permission source, and deployed protected dummy-route smoke
-proof are recorded in the target profile.
+`platform/security` provides provider-neutral JWT/JWKS verification,
+claim-to-permission mapping, rate-limit keying, and mounted-app permission-map
+validation. The Cognito adapter at
+`platform/adapters/aws/auth/cognito/` owns Cognito issuer/JWKS construction,
+access-token claim requirements, `cognito:groups` extraction, and
+Cognito-named environment parsing. The target-specific Kanbien Platform
+entrypoint composes that adapter into `platform/server`; generic
+`platform/server` only accepts the resulting authentication hook, denies
+authenticated app routes by default, and converts a complete authenticated
+`PlatformAuthenticationResult` into the core `Principal` that
+`platform/runtime` places on authenticated route `context.principal`. Public
+and unauthenticated routes do not receive a principal. Tenant/locale derivation
+and product-specific profile, membership, and role enrichment remain separate
+app or identity-boundary work. Public deployment remains blocked until the
+Kanbien staging Cognito user pool/client, CORS origins, secret/config source,
+product app permission source, and deployed protected dummy-route smoke proof
+are recorded in the target profile.
+
+#### Boundary Correction Audit (2026-08-31)
+
+The initial local implementation placed Cognito issuer/JWKS helpers,
+access-token validation, and the `cognito:groups` claim in
+`platform/security`, then made `platform/server/src/main.ts` select Cognito
+and parse Cognito-named environment values. This crossed the provider-adapter
+boundary.
+
+The drift was not stopped because the `platform/security` boundary test did not
+recognize Cognito, AWS, or identity-provider vocabulary; this plan and AWS ADR
+0002 described Cognito as hidden behind `platform/security`; the
+dependency-direction rule allowed platform modules to use provider clients too
+broadly; and the root workspace pattern omitted nested
+`platform/adapters/<provider>/<type>/<service>` packages, so a canonical
+adapter would not have been checked by normal npm wiring. The corrected slice
+adds explicit provider-identity checks, adapter workspace scripts, generic
+security mapping, and target-composition-only provider selection.
 
 This milestone uses AWS Cognito for the first Kanbien staging provider path.
 Future targets may choose Auth0, Clerk, a custom OIDC provider, private
@@ -394,16 +418,26 @@ Acceptance:
   the target client/environment. Status: Cognito selected for Kanbien staging
   in AWS ADR 0002.
 - `platform/security` validates tokens or sessions through provider-neutral
-  interfaces and does not expose raw provider clients as ordinary app-facing
-  APIs. Status: implemented with JWT/JWKS verification and Cognito issuer/JWKS
-  helpers.
-- `platform/server/src/main.ts` wires a production auth hook from config,
-  target profile, or provider adapter; unauthenticated app routes remain
-  denied by default. Status: implemented with `PLATFORM_AUTH_PROVIDER=cognito`
-  and Cognito/JWT environment inputs.
+  interfaces and does not name provider issuer patterns, claim names, or
+  provider configuration. Status: implemented with generic JWT/JWKS
+  verification and configured claim-value mapping.
+- A provider adapter owns provider issuer/JWKS helpers, token claim
+  requirements, provider claim extraction, and provider-named configuration.
+  Status: implemented for Cognito at `platform/adapters/aws/auth/cognito/`.
+- Generic `platform/server/src/main.ts` accepts an injected authentication hook
+  and has no provider adapter dependency. A target profile's approved
+  composition entrypoint selects and configures the provider adapter;
+  unauthenticated app routes remain denied by default. Status: implemented in
+  `infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts` for
+  the Cognito-selected Kanbien staging target.
 - Claims, roles, groups, scopes, or entitlements map deterministically into
-  platform `Permission` values. Status: implemented for Cognito groups,
-  scopes, and claims.
+  platform `Permission` values. Status: generic claim-value and equality
+  mapping is implemented in `platform/security`; Cognito group and scope claim
+  selection is implemented by the Cognito adapter.
+- Authenticated route handlers receive a provider-neutral core `Principal` on
+  `context.principal`, including id, type, subject, claims, and scopes; public
+  and unauthenticated routes do not receive one. Tenant/locale derivation and
+  product profile, membership, and role enrichment remain separate gaps.
 - Permission vocabularies are app-owned. Target-specific authz maps may grant
   only permissions declared by the apps included in the product target, and
   startup/deploy validation must fail on unknown permissions.

@@ -20,11 +20,13 @@ used_by:
 # Image
 
 This directory owns the provider-neutral container packaging boundary for the
-platform runtime shell.
+platform runtime shell. A target-specific entrypoint may compose a provider
+adapter; that selection does not make `platform/server` provider-specific.
 
-The image packages `platform/server/src/main.ts`, which starts the platform
-server shell with no product app mounted yet. This proves container startup,
-liveness, and readiness before AWS deployment readiness.
+The image packages the Kanbien Platform target entrypoint, which mounts the
+product shell and may select its authentication adapter from target environment
+configuration. Without a selected provider it still proves local container
+startup, liveness, and readiness before AWS deployment readiness.
 
 ## Files
 

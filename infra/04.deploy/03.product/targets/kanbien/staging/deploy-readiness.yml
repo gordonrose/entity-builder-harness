@@ -234,6 +234,8 @@ product:
 auth:
   provider: cognito
   provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
+  adapter: platform/adapters/aws/auth/cognito/
+  composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
   token_validation:
     mode: jwt-jwks
     issuer: https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_EQaXioA1n
@@ -241,7 +243,7 @@ auth:
     app_client_id: 4n7kuqstbvb97ur3btbur8afjt
     token_url: https://kanbien-staging-platform-shell-337159794548.auth.eu-west-1.amazoncognito.com/oauth2/token
     token_use: access
-    validator: platform/security.createCognitoAccessTokenVerifier
+    validator: "@kanbien/platform-adapter-aws-auth-cognito.createCognitoAccessTokenVerifier"
     local_tests_passed: true
   permission_mapping:
     source: target-profile

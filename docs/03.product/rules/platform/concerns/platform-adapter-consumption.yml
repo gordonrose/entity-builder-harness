@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.concerns.platform-adapter-consumption
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 03.product
 #   domain: architecture
@@ -20,7 +20,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: concern.platform-adapter-consumption
 title: Platform adapter consumption rules
-version: 1
+version: 2
 status: active
 
 description: >
@@ -97,24 +97,27 @@ rules:
       that startup configuration can be validated before handling requests.
 
   - id: adapter-consumption.profiles-compose-adapters
-    title: Platform profiles compose individual adapters
+    title: Platform profiles and target composition roots compose adapters
     severity: error
     summary: >
-      With one package per adapter, platform profiles should assemble adapter
-      packages into stable app-facing platform objects so apps do not wire
-      many individual adapters themselves.
+      With one package per adapter, platform profiles or target-specific
+      composition roots should assemble adapter packages into stable app-facing
+      platform objects so apps do not wire many individual adapters themselves.
     must:
       - "Create platform profiles such as local-dev, aws-standard, aws-enterprise, azure-standard, or oss-local when app bootstrap would otherwise wire many adapter packages directly."
       - "Let profiles import individual adapter packages and compose them into app-facing platform objects."
       - "Define app-appropriate platform surfaces such as ApiPlatform or WorkerPlatform instead of one giant universal platform object."
       - "Keep profile contracts stable enough for app bootstrap to consume safely."
+      - "Select identity providers only from a deployment target profile, platform profile, or approved target composition entrypoint."
     must_not:
       - "Do not require every app bootstrap file to manually wire 10-20 individual adapter packages."
       - "Do not expose every provider capability to every app type when the app only needs a smaller platform surface."
       - "Do not make feature code import a profile just to access one adapter."
     agent_guidance: >
       If direct adapter imports accumulate in app bootstrap, consider whether a
-      platform profile should own that deployment recipe.
+      platform profile should own that deployment recipe. When identity provider
+      selection is target-specific, keep it in the target composition entrypoint
+      rather than generic platform/server code.
 
   - id: adapter-consumption.capabilities-avoid-vendor-leakage
     title: Capability interfaces avoid vendor-specific leakage
@@ -175,6 +178,28 @@ rules:
       If shared platform helper code starts naming product concepts or a
       provider SDK, move it to the correct core, app, or adapter owner.
 
+  - id: adapter-consumption.authentication-adapters-own-provider-identity
+    title: Authentication adapters own provider identity translation
+    severity: error
+    summary: >
+      Generic platform security must expose authentication contracts and
+      provider-neutral mechanics, while provider adapters own issuer patterns,
+      provider claim shapes, token requirements, and provider-named
+      configuration.
+    must:
+      - "Keep bearer extraction, generic JWT/JWKS verification, generic claim-to-permission mapping, CORS, headers, and rate limiting in platform/security."
+      - "Place provider issuer/JWKS construction, provider token claim requirements, provider claim extraction, and provider-named configuration parsing in platform/adapters/<provider>/<adapter-type>/<service-name>/ packages."
+      - "Have authentication adapters return the provider-neutral PlatformAuthenticationHook or another documented platform contract."
+      - "Select an authentication adapter only from an approved platform profile or target composition root."
+    must_not:
+      - "Do not name an identity provider, its claim names, issuer pattern, endpoint pattern, or provider-named environment keys in platform/security or platform/server."
+      - "Do not make generic platform/server depend on a provider adapter."
+      - "Do not place provider selection in app feature code."
+    agent_guidance: >
+      When an auth provider is selected, first preserve the generic
+      platform/security contract, then create or modify the canonical adapter,
+      and finally wire it in a target composition root with configuration tests.
+
 source_refs:
   - doc: "kanbien_platform_adapter_consumption_model_guide.md"
     sections:
@@ -197,10 +222,11 @@ source_refs:
 success_criteria:
   - "The file exists at docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml."
   - "Feature code consumes packages/core contracts and avoids platform, adapter, and vendor SDK imports."
-  - "App bootstrap is treated as the provider selection boundary."
+  - "App bootstrap is treated as a provider selection boundary only when it is an approved composition root; target-specific provider selection may instead live in a target composition entrypoint."
   - "Adapter packages expose predictable factories, config types and schemas, metadata, health checks where useful, and lifecycle hooks where useful."
   - "Platform profiles compose one-package-per-adapter implementations into stable app-facing platform objects."
   - "Capability interfaces avoid vendor-specific leakage into core contracts."
   - "Backwards compatibility is managed at core contract and platform profile boundaries."
   - "platform/shared remains provider-neutral and domain-neutral."
+  - "Authentication adapters own provider identity translation while generic platform/security and platform/server remain provider-neutral."
   - "The ruleset includes manually verified source_refs back to the platform adapter consumption guide."
