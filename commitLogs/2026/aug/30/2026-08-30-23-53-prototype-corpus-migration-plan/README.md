@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-08-31T21:16:04Z
-latest_commit_sha: 49a3e9e
-chat_duration: 80567s (00:22:22:47)
+latest_commit_at_utc: 2026-09-01T01:44:42Z
+latest_commit_sha: 7b1b8dd
+chat_duration: 96685s (01:02:51:25)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -929,6 +929,17 @@ Summary: Moved the remaining prototype rule YAML into docs/04.deploy/rules/layer
 
 ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to deploy, harness, and shared structured rules.
 
+
+### 2026-09-01T01:44:42Z - Commit recorded
+
+Commit: `7b1b8dd`
+
+Message: Collapse prototype architecture compatibility pointers
+
+Summary: Collapsed docs/harness/architecture child compatibility pointers to one root pointer, retired old pointer artifacts with hashes, refreshed recognition/runtime surfaces, and updated document-routing guidance.
+
+ADR impact: ADR not needed: this implements the approved prototype corpus migration plan and existing owner-aligned ADR decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -999,6 +1010,13 @@ ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus spli
   Summary: Moved the remaining prototype rule YAML into docs/04.deploy/rules/layers, docs/01.harness/rules/layers, and docs/06.shared/rules/concerns; added harness/shared rule READMEs, retirement records, compatibility pointer updates, refreshed recognition/runtime evidence, and updated active rule graph references.
   ADR impact: No new ADR; this slice applies ADR 0032 and the accepted corpus split migration plan to deploy, harness, and shared structured rules.
 
+
+- Commit: `7b1b8dd`
+  Time UTC: 2026-09-01T01:44:42Z
+  Message: Collapse prototype architecture compatibility pointers
+  Summary: Collapsed docs/harness/architecture child compatibility pointers to one root pointer, retired old pointer artifacts with hashes, refreshed recognition/runtime surfaces, and updated document-routing guidance.
+  ADR impact: ADR not needed: this implements the approved prototype corpus migration plan and existing owner-aligned ADR decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1015,9 +1033,9 @@ change.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-08-31T21:16:04Z
-Latest commit SHA: 49a3e9e
-Chat duration: 80567s (00:22:22:47)
+Latest commit at UTC: 2026-09-01T01:44:42Z
+Latest commit SHA: 7b1b8dd
+Chat duration: 96685s (01:02:51:25)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
