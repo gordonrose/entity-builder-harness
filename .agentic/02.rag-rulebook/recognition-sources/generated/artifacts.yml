@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 778
-  term_count: 1568
+  indexed_artifacts: 779
+  term_count: 1570
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7541,6 +7541,18 @@ terms:
   match_type: exact
   canonical_id: product.readme
   evidence_path: .agentic/03.product/README.md
+  confidence_weight: 1
+- term: product.plan.tenant-resource-authorization-platform-seam
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.tenant-resource-authorization-platform-seam
+  evidence_path: .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.tenant-resource-authorization-platform-seam
+  evidence_path: .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md
   confidence_weight: 1
 - term: product.migration-plan.agentic-product-namespace
   category: artifact-id
