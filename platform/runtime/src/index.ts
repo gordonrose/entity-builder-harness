@@ -1,7 +1,9 @@
 import { recordConfigSource, type ConfigSchema, type ConfigSource } from "@kanbien/core/config";
+import type { Principal } from "@kanbien/core/authn";
 import { noopLogger, type Logger } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics } from "@kanbien/core/monitoring";
 import type { QueueMessage } from "@kanbien/core/queues";
+import type { TenantContext } from "@kanbien/core/tenancy";
 import {
   fixedClock,
   isoDateTimeFromDate,
@@ -102,6 +104,8 @@ export interface PlatformRuntimeRequestContextInput extends PlatformRuntimeConte
   readonly requestId: CorrelationId;
   readonly correlationId?: CorrelationId;
   readonly now?: ISODateTime;
+  readonly tenant?: TenantContext;
+  readonly principal?: Principal;
   readonly method: PlatformRequestContext["method"];
   readonly path: string;
   readonly abortSignal?: AbortSignal;
@@ -112,6 +116,7 @@ export interface PlatformRuntimeJobContextInput extends PlatformRuntimeContextDe
   readonly message: QueueMessage;
   readonly correlationId: CorrelationId;
   readonly now?: ISODateTime;
+  readonly tenant?: TenantContext;
   readonly abortSignal?: AbortSignal;
 }
 
@@ -246,6 +251,13 @@ export function createPlatformRuntimeRegistry(options: PlatformRuntimeRegistryOp
             validationErrors.push(unknownPlatformPermission(permission, declaredPermissions));
           }
         }
+
+        if (
+          route.resourceAuthorization !== undefined
+          && !declaredPermissions.includes(route.resourceAuthorization.permission)
+        ) {
+          validationErrors.push(unknownPlatformPermission(route.resourceAuthorization.permission, declaredPermissions));
+        }
       }
 
       return validationErrors;
@@ -326,6 +338,8 @@ export function createPlatformRuntimeRequestContext(input: PlatformRuntimeReques
     config: deps.config,
     flags: deps.flags,
     clock: deps.clock,
+    ...(input.tenant === undefined ? {} : { tenant: input.tenant }),
+    ...(input.principal === undefined ? {} : { principal: input.principal }),
     method: input.method,
     path: input.path,
     ...(input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal }),
@@ -346,6 +360,7 @@ export function createPlatformRuntimeJobContext(input: PlatformRuntimeJobContext
     config: deps.config,
     flags: deps.flags,
     clock: deps.clock,
+    ...(input.tenant === undefined ? {} : { tenant: input.tenant }),
     ...(input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal }),
   };
 }

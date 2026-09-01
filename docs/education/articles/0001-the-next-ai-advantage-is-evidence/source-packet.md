@@ -28,8 +28,8 @@
   - `reader-world-research-packet.md`
   - `commitLogs/2026/jun/15/2026-06-15-21-27-i-d-like-to-update-my-harness-so-that-whenever-i-commit-some/README.md`
   - `commitLogs/2026/jun/15/2026-06-15-23-18-i-d-like-to-update-the-harness-so-that-the-chat-duration-is-/README.md`
-  - `docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md`
-  - `docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md`
+  - `docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md`
+  - `docs/00.chat/adrs/0004-group-chat-logs-and-summarize-session-metrics.md`
 - Reader-world research packet: `reader-world-research-packet.md`
 - Requested audience: hype-adjacent, non-technical or lightly technical AI
   readers

@@ -20,7 +20,7 @@
 #     - design-system-builder
 #   used_by:
 #   - id: harness.architecture.rules.layers.platform
-#     path: docs/harness/architecture/rules/layers/platform.yml
+#     path: docs/03.product/rules/platform/layers/platform.yml
 #   - id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
 #     path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
 
@@ -32,7 +32,8 @@ source_change:
   change_type: updated
   approved_source_state: approved
   changed_paths:
-    - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+    - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
     - .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
   summary: >
     Approved source material now defines semantic platform-contract identifier
@@ -45,13 +46,13 @@ target:
   corpus_id: corpus.03.product.platform
   owner_layer: 03.product
   expected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
   affected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
   affected_rulesets:
-    - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-    - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-    - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
+    - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+    - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+    - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
@@ -61,49 +62,49 @@ semantic_review:
   source_claims:
     - claim_id: platform.contracts.define-app-facing-runtime-boundary
       summary: Before concrete server or worker runtime modules are implemented, platform/contracts should define stable provider-neutral app registration, mount, route, job, health, config schema, lifecycle, feature flag, request context, and job context contracts.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.contexts.compose-core-facts-in-platform-contracts
       summary: Composed request and job contexts may combine core primitives such as correlation id, causation id, tenant, principal, locale, logger, metrics, config, queue message, delivery metadata, flags, and cancellation, but should start in platform/contracts rather than packages/core/shared.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.flags.provider-neutral-reader
       summary: Feature flag access should start as a provider-neutral reader contract and platform adapters may bind it to environment, config, database, or third-party providers later.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.contract-identifiers-name-owner-and-capability
       summary: Platform-contract types, fields, and registries carry functional category; app-owned route, job, flag, health, and permission values carry stable app ownership and capability without repeating the category.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.contract-permissions-exclude-policy-facts
       summary: Stable permission and contribution names must not encode tenant, region, group, role, customer, provider, claim, scope, API version, personal data, or secret information; those are evaluation facts, not identifier vocabulary.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.registry-validates-app-identifier-ownership
       summary: Constructors validate local identifier syntax, while a later platform registry implementation validates that app-owned declarations begin with the mounting app id; migrations require compatibility evidence and no silent renames.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.logging.normalizes-rich-runtime-values
       summary: Platform logging adapters should normalize errors, provider failures, framework objects, dates, maps, sets, buffers, streams, circular values, and oversized fields into redacted bounded plain log fields.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.events.use-durable-outbox-when-publication-matters
       summary: Platform event delivery should record outbox messages in the same transaction as important state changes and publish them through a retryable observable platform relay.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.audit.requires-durable-runtime-and-lifecycle
       summary: Platform audit runtime should provide durable recorders with retention, legal hold, export, SIEM integration, access controls, and explicit audit-failure behavior where required.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.payload-metadata-size-budgets-required
       summary: Platform adapters should define size, depth, key-count, truncation, rejection, summary, pointer, checksum, and storage-reference policies for logs, events, audit, prompts, and diagnostics.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: infra.provisions-runtime-obligation-resources
       summary: Infra should provision log sinks, brokers, queues, DLQs, stores, encryption, backups, retention, alarms, dashboards, IAM permissions, and deployment topology that platform adapters need.
-      evidence_path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   conflicts:
     status: none-found
     search_scope:
-      - docs/harness/architecture/rules/layers/platform.yml
-      - docs/harness/architecture/rules/layers/packages-core.yml
-      - docs/harness/architecture/rules/layers/infra.yml
-      - docs/harness/architecture/rules/concerns/events-messaging-async.yml
-      - docs/harness/architecture/rules/concerns/persistence-files-storage.yml
-      - docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml
-      - docs/harness/architecture/rules/concerns/config-runtime-settings.yml
-      - docs/harness/architecture/rules/concerns/identity-access-security.yml
-      - docs/harness/architecture/rules/concerns/tenancy.yml
+      - docs/03.product/rules/platform/layers/platform.yml
+      - docs/03.product/rules/core/layers/packages-core.yml
+      - docs/04.deploy/rules/layers/infra.yml
+      - docs/03.product/rules/platform/concerns/events-messaging-async.yml
+      - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
+      - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+      - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+      - docs/03.product/rules/platform/concerns/identity-access-security.yml
+      - docs/03.product/rules/platform/concerns/tenancy.yml
     items: []
   drift:
     status: expected
@@ -120,7 +121,7 @@ semantic_review:
 
 proposed_updates:
   rules:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates: []

@@ -27,7 +27,7 @@ status: active
 owner_layer: 02.rag-rulebook
 purpose: Prove a platform-contract naming request retrieves the ownership-and-capability naming rule without treating policy facts as identifier text.
 input:
-  request_text: I need to implement the semantic identifier standard in platform/contracts and docs/harness/architecture/rules/layers/platform.yml. How should a PlatformAppId and app-mounted routes, jobs, feature flags, health checks, permissions, config keys, and error codes express app ownership and capability without repeating the category or exposing tenant, role, group, provider, or customer policy facts?
+  request_text: I need to implement the semantic identifier standard in platform/contracts and docs/03.product/rules/platform/layers/platform.yml. How should a PlatformAppId and app-mounted routes, jobs, feature flags, health checks, permissions, config keys, and error codes express app ownership and capability without repeating the category or exposing tenant, role, group, provider, or customer policy facts?
   session:
     trust_routing: true
     layer: 03.product
@@ -63,10 +63,10 @@ banned:
   selected_corpora:
     - corpus.04.deploy
 source_refs:
-  - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-  - docs/harness/architecture/rules/layers/platform.yml
-  - docs/harness/architecture/rules/concerns/identity-access-security.yml
-  - docs/harness/architecture/rules/concerns/tenancy.yml
+  - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/platform/concerns/identity-access-security.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
 update_triggers:
   - Platform-contract identifier naming rules change.
   - The source material changes its naming, policy-fact, migration, or enforcement guidance.

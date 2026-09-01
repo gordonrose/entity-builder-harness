@@ -109,7 +109,7 @@ These paths currently own the detailed rules for related terms:
 
 | Term family | Owning source |
 | --- | --- |
-| artifact placement | `.agentic/01.harness/standards/agentic-artifact-standards.md` |
+| artifact placement | `.agentic/01.harness/standards/agentic-artifact-standards.md`; `.agentic/01.harness/standards/document-artifact-placement.md` for document paths |
 | artifact metadata fields | `.agentic/01.harness/artifact-metadata/standard.md` |
 | controlled metadata values | `.agentic/01.harness/artifact-metadata/taxonomy.yml` |
 | chat lifecycle | `.agentic/00.chat/README.md` |

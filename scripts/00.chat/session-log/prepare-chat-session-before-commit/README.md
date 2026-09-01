@@ -62,7 +62,8 @@ Then it validates the current chat session:
 - `## ADR Disposition` must have a real entry
 - `ADR needed` must be `yes` or `no`
 - when `ADR needed: yes`, each ADR path must point to an existing file under a
-  governed architecture ADR root such as `docs/<track>/architecture/adrs/`
+  governed ADR root such as `docs/<numbered-layer>/adrs/`, or a legacy
+  transition root such as `docs/<track>/architecture/adrs/`
 - when `ADR needed` is `yes` or `no`, the reason must be present
 
 ## What This Does Not Do

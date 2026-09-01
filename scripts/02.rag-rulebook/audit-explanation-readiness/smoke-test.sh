@@ -50,7 +50,7 @@ assert report["ok"] is True
 assert report["counts"]["sources"] >= 8
 assert report["counts"]["source_explanation_chunks"] > 0
 paths = {item["path"]: item for item in report["sources"]}
-platform = paths["docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"]
+platform = paths["docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md"]
 assert platform["readiness_status"] == "ready"
 assert platform["chunked"] is True
 assert platform["source_explanation_chunk_count"] > 0

@@ -1,0 +1,92 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.retirement.2026-08-31-product-source-material-paths
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: retirement-record
+#   purpose: Record renamed prototype product source-material paths after moving them to the product corpus.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+#     - id: rag-rulebook.script.check-corpus-root-changes
+#       path: scripts/02.rag-rulebook/check-corpus-root-changes/script.sh
+
+schema: rag-rulebook/retirement-record/v1
+retirement_id: rag-rulebook.retirement.2026-08-31-product-source-material-paths
+status: accepted
+owner_layer: 03.product
+corpus_id: corpus.03.product
+retired_at_utc: "2026-08-31T12:22:12Z"
+retired_artifacts:
+  - path: docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+    kind: source-material
+    path_state: renamed
+    previous_sha256: 4654a5897730faa0cd2bcc2b7a6e2216ea9f94793955bf8f50c496432b4f2448
+    replacement_paths:
+      - docs/03.product/source-material/core/packages-core-contract-surface-v1.md
+  - path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    kind: source-material
+    path_state: renamed
+    previous_sha256: f3b564ef3257a91398fe2c75aaa777b57f3217e36b095e42ee20672a5c7344fc
+    replacement_paths:
+      - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+  - path: docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md
+    kind: source-material
+    path_state: renamed
+    previous_sha256: f69fa378b3152f90527a0f25a645807627623b8e78460b667fc048576c597e0a
+    replacement_paths:
+      - docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md
+reason:
+  - Product-owned source material moved out of the prototype harness architecture tree into the owner-aligned product corpus.
+  - Structured product rules, derivation reports, selector fixtures, and source projections now reference the new product source-material paths.
+  - Directory-level compatibility pointers remain at the old source-material root for orientation, but the exact retired source files are no longer active artifacts.
+reference_checks:
+  checked_roots:
+    - .agentic/01.harness
+    - .agentic/02.rag-rulebook
+    - .agentic/aws
+    - docs/harness/architecture
+    - docs/01.harness
+    - docs/02.rag-rulebook
+    - docs/03.product
+    - docs/04.deploy
+    - docs/06.shared
+    - scripts/01.harness
+    - scripts/02.rag-rulebook
+  remaining_references: []
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+    - bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: accept
+  reviewer: Gordon Rose

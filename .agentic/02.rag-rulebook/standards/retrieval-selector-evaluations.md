@@ -112,8 +112,8 @@ An active retrieval selector evaluation suite should include:
 - corpus boundary case where unrelated corpora are not selected
 - required checks surviving ranking and trimming
 - citation resolution for every selected chunk
-- prototype bridge case while current chunks still come from
-  `docs/harness/architecture/`
+- retired-path guard case proving old compatibility pointers are not selected
+  as current evidence
 
 Semantic recall fixtures must not be active until semantic recall is enabled in
 the policy pack.

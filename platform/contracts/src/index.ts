@@ -1,6 +1,13 @@
 import type { AuditRecorder } from "@kanbien/core/audit";
 import type { Authenticator, Principal } from "@kanbien/core/authn";
-import type { Authorizer, Permission } from "@kanbien/core/authz";
+import type {
+  AuthorizationAttributes,
+  AuthorizationFacts,
+  AuthorizationRelation,
+  Authorizer,
+  Permission,
+  ResourceRef,
+} from "@kanbien/core/authz";
 import type { ConfigSchema, ConfigSource } from "@kanbien/core/config";
 import type { EventBus } from "@kanbien/core/events";
 import type { LocaleTag } from "@kanbien/core/i18n";
@@ -16,7 +23,7 @@ import type {
   JsonValue,
   Result,
 } from "@kanbien/core/shared";
-import type { TenantContext } from "@kanbien/core/tenancy";
+import type { TenantContext, TenantResolver } from "@kanbien/core/tenancy";
 import type { Validator } from "@kanbien/core/validation";
 
 export type PlatformAppId = Brand<string, "PlatformAppId">;
@@ -92,6 +99,10 @@ export type RouteAuthRequirement =
       readonly permissions?: readonly Permission[];
     };
 
+export type PlatformTenantRequirement = "optional" | "required";
+
+export type PlatformResourceNotFoundDisclosure = "not-found" | "forbidden";
+
 export interface PlatformPermissionDeclaration {
   readonly permission: Permission;
   readonly description?: string;
@@ -102,6 +113,31 @@ export interface PlatformRequest<TBody = unknown> {
   readonly query: Readonly<Record<string, string | readonly string[]>>;
   readonly headers: Readonly<Record<string, string | readonly string[]>>;
   readonly body?: TBody;
+}
+
+export interface PlatformResourceAuthorizationInput<TBody = unknown> {
+  readonly request: PlatformRequest<TBody>;
+  readonly context: PlatformRequestContext;
+}
+
+export type PlatformResourceAuthorizationResolution =
+  | {
+      readonly kind: "not-found";
+      readonly disclosure: PlatformResourceNotFoundDisclosure;
+    }
+  | {
+      readonly kind: "authorize";
+      readonly resource?: ResourceRef;
+      readonly relations?: readonly AuthorizationRelation[];
+      readonly attributes?: AuthorizationAttributes;
+      readonly facts?: AuthorizationFacts;
+    };
+
+export interface PlatformResourceAuthorization<TBody = unknown> {
+  readonly permission: Permission;
+  resolve(
+    input: PlatformResourceAuthorizationInput<TBody>,
+  ): Promise<PlatformResourceAuthorizationResolution> | PlatformResourceAuthorizationResolution;
 }
 
 export interface PlatformResponse<TBody = unknown> {
@@ -123,9 +159,19 @@ export interface PlatformRouteRegistration<TBody = unknown, TResponse = unknown>
   readonly path: string;
   readonly apiVersion?: PlatformApiVersion;
   readonly auth: RouteAuthRequirement;
+  readonly tenant?: PlatformTenantRequirement;
+  readonly resourceAuthorization?: PlatformResourceAuthorization<TBody>;
   readonly validator?: Validator<TBody>;
   readonly handler: PlatformRouteHandler<TBody, TResponse>;
 }
+
+export interface PlatformTenantResolutionInput {
+  readonly route: Pick<PlatformRouteRegistration, "name" | "method" | "path" | "apiVersion">;
+  readonly request: PlatformRequest;
+  readonly principal: Principal;
+}
+
+export type PlatformTenantResolver = TenantResolver<PlatformTenantResolutionInput>;
 
 export interface PlatformJobHandler<TMessage extends QueueMessage = QueueMessage> {
   handle(message: TMessage, context: PlatformJobContext): Promise<void> | void;
@@ -307,6 +353,20 @@ export function validatePlatformRouteRegistration(
     return contractFailure(malformedPlatformRoute("Route auth requirement must be public or authenticated."));
   }
 
+  const tenantRequirement = route["tenant"];
+  if (tenantRequirement !== undefined && !isTenantRequirement(tenantRequirement)) {
+    return contractFailure(malformedPlatformRoute("Route tenant requirement must be optional or required."));
+  }
+
+  const resourceAuthorization = route["resourceAuthorization"];
+  if (resourceAuthorization !== undefined && !isPlatformResourceAuthorization(resourceAuthorization)) {
+    return contractFailure(malformedPlatformRoute("Route resource authorization must declare a permission and resolve function."));
+  }
+
+  if (auth.kind === "public" && (tenantRequirement !== undefined || resourceAuthorization !== undefined)) {
+    return contractFailure(malformedPlatformRoute("Public routes cannot declare tenant or resource authorization controls."));
+  }
+
   if (auth.kind === "authenticated") {
     const routePermissions = auth.permissions ?? [];
     for (const routePermission of routePermissions) {
@@ -320,6 +380,20 @@ export function validatePlatformRouteRegistration(
 
       if (options.declaredPermissions !== undefined && !options.declaredPermissions.includes(routePermission)) {
         return contractFailure(unknownPlatformPermission(routePermission, options.declaredPermissions));
+      }
+    }
+
+    if (resourceAuthorization !== undefined) {
+      if (!isPermission(resourceAuthorization.permission)) {
+        return contractFailure(
+          malformedPlatformRoute("Route resource authorization permission must use a core resource:action permission string.", {
+            permission: stringifyDetail(resourceAuthorization.permission),
+          }),
+        );
+      }
+
+      if (options.declaredPermissions !== undefined && !options.declaredPermissions.includes(resourceAuthorization.permission)) {
+        return contractFailure(unknownPlatformPermission(resourceAuthorization.permission, options.declaredPermissions));
       }
     }
   }
@@ -464,6 +538,14 @@ function isRouteAuthRequirement(value: unknown): value is RouteAuthRequirement {
 
   const permissions = value["permissions"];
   return permissions === undefined || Array.isArray(permissions);
+}
+
+function isTenantRequirement(value: unknown): value is PlatformTenantRequirement {
+  return value === "optional" || value === "required";
+}
+
+function isPlatformResourceAuthorization(value: unknown): value is PlatformResourceAuthorization {
+  return isRecord(value) && typeof value["permission"] === "string" && typeof value["resolve"] === "function";
 }
 
 function isValidator(value: unknown): value is Validator<unknown> {

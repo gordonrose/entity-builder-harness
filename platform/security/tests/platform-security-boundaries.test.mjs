@@ -13,7 +13,7 @@ const importSpecifierPatterns = [
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
 const allowedSourceImportPattern = /^(?:node:crypto|@kanbien\/core(?:\/[a-z][a-z0-9-]*)?)$/;
-const forbiddenProviderWords = /\b(?:S3|Kafka|Redis|Prisma|DynamoDB|CloudWatch|SQS|EventBridge)\b/;
+const forbiddenProviderWords = /\b(?:aws|amazon|cognito|auth0|clerk|okta|keycloak|entra|azuread|firebase|s3|kafka|redis|prisma|dynamodb|cloudwatch|sqs|eventbridge)\b/i;
 
 async function walk(dir) {
   const entries = await readdir(dir);

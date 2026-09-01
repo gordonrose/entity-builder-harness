@@ -67,7 +67,7 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "Explain the corpus.03.product.platform rules in docs/harness/architecture/rules/layers/platform.yml using the exact product platform corpus." \
+  --request-text "Explain the corpus.03.product.platform rules in docs/03.product/rules/platform/layers/platform.yml using the exact product platform corpus." \
   --session-id chat-test-session \
   --session-branch chat/test-session \
   --session-worktree /tmp/chat-test-session \
@@ -77,7 +77,7 @@ bash scripts/02.rag-rulebook/query-local-context/script.sh \
 
 bash scripts/02.rag-rulebook/query-local-context/script.sh \
   --runtime-dir "$RUNTIME_DIR" \
-  --request-text "Explain the product platform rules in docs/harness/architecture/rules/layers/platform.yml for this prompt." \
+  --request-text "Explain the product platform rules in docs/03.product/rules/platform/layers/platform.yml for this prompt." \
   --session-id chat-test-session \
   --session-branch chat/test-session \
   --session-worktree /tmp/chat-test-session \

@@ -116,7 +116,7 @@ auth:
     jwks_uri: https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_EXAMPLE/.well-known/jwks.json
     app_client_id: 1example23456789
     token_use: access
-    validator: platform/security.createCognitoAccessTokenVerifier
+    validator: "@kanbien/platform-adapter-aws-auth-cognito.createCognitoAccessTokenVerifier"
     local_tests_passed: true
   permission_mapping:
     source: target-profile

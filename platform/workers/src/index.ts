@@ -1,4 +1,5 @@
 import type { QueueMessage } from "@kanbien/core/queues";
+import { tenantContext } from "@kanbien/core/tenancy";
 import {
   correlationId,
   isoDateTimeFromDate,
@@ -272,6 +273,7 @@ export async function createPlatformWorkerShell(
         jobName: job.name,
         message: entry.message,
         correlationId: entry.message.correlationId ?? correlationId(String(entry.message.id)),
+        ...(entry.message.tenantId === undefined ? {} : { tenant: tenantContext({ tenantId: entry.message.tenantId }) }),
         logger: options.deps.logger,
         metrics: options.deps.metrics,
         config: options.deps.config,

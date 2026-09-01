@@ -29,7 +29,7 @@ Examples:
 ```bash
 bash scripts/02.rag-rulebook/record-knowledge-disposition/script.sh covered \
   "Updated source material and selector proof for packages/core." \
-  docs/harness/architecture/source-material/packages-core-contract-surface-v1.md
+  docs/03.product/source-material/core/packages-core-contract-surface-v1.md
 
 bash scripts/02.rag-rulebook/record-knowledge-disposition/script.sh no-impact \
   "Changed implementation details only; no retrieval guidance changed."

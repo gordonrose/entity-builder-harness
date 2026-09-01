@@ -77,8 +77,12 @@ rule applies, score current task risk separately from durable rulebook coverage.
 
 ## Evidence Sources
 
-- `docs/harness/architecture/rules/**`
-- `docs/harness/architecture/rule-packs/**`
+- `docs/01.harness/rules/**`
+- `docs/02.rag-rulebook/rules/**`
+- `docs/03.product/rules/**`
+- `docs/03.product/rule-packs/**`
+- `docs/04.deploy/rules/**`
+- `docs/06.shared/rules/**`
 - `.agentic/01.harness/workflows/implement-backend-architecture-guideline.md`
 - `.agentic/02.rag-rulebook` context packets and recognition outputs
 - product or backend implementation paths under review

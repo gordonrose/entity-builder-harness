@@ -17,9 +17,9 @@
 #     targets: []
 #   used_by:
 #   - id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-#     path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+#     path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
 #   - id: harness.architecture.rules.layers.platform
-#     path: docs/harness/architecture/rules/layers/platform.yml
+#     path: docs/03.product/rules/platform/layers/platform.yml
 #   - id: rag-rulebook.workflow.derive-rules-from-source
 #     path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
 
@@ -28,13 +28,13 @@ review_id: review.2026-09-01.03-product-platform.platform-contract-identifier-na
 status: accepted
 
 source_material:
-  path: docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   corpus_id: corpus.03.product.platform
   vertical: platform-contract-identifier-naming
   source_state: accepted
-  sha256: 586461bca4a5e76eb817c8c0548216e51f1e25a8af395ad7443e5770b832d75f
+  sha256: b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4
   target_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
+    - docs/03.product/rules/platform/layers/platform.yml
 
 threshold:
   passing_score: 9.5
@@ -48,7 +48,7 @@ threshold:
 iterations:
   - iteration: 1
     source_revision_summary: >
-      Reviewed source revision 7 of the platform-runtime enterprise-obligations
+      Reviewed source revision 8 of the platform-runtime enterprise-obligations
       material. It already established the app-facing contract boundary and
       app-owned permission vocabulary, but did not define semantic naming,
       scope-sensitive permission names, flat operational identifiers, or the
@@ -74,8 +74,8 @@ iterations:
             priority: high
             summary: Define the identifier rule that separates functional category from app ownership and capability, with accepted and rejected examples for every app-mount contribution kind.
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-          - docs/harness/architecture/rules/layers/platform.yml
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/layers/platform.yml
       - role: agentic-engineer
         overall_score: 9.2
         decision: revise
@@ -96,7 +96,7 @@ iterations:
             priority: high
             summary: State the naming grammar, the ownership-validation point, and the staged implementation boundary so an agent need not infer when constructors versus registries enforce the rule.
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
           - platform/contracts/src/index.ts
       - role: secops-engineer
         overall_score: 9.3
@@ -118,9 +118,9 @@ iterations:
             priority: high
             summary: Prohibit tenant, group, role, provider, identity-claim, personal-data, and secret detail in stable identifiers, and state that naming does not create wildcard permission semantics.
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-          - docs/harness/architecture/rules/concerns/identity-access-security.yml
-          - docs/harness/architecture/rules/concerns/tenancy.yml
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - docs/03.product/rules/platform/concerns/tenancy.yml
       - role: senior-sre
         overall_score: 9.4
         decision: revise
@@ -141,7 +141,7 @@ iterations:
             priority: high
             summary: Define compatibility and migration expectations so existing names are not silently rewritten, and require later registry tests before runtime enforcement is claimed.
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
           - platform/contracts/tests/platform-contracts-runtime.test.ts
     cross_review_summary:
       agreement:
@@ -188,8 +188,8 @@ iterations:
           token_optimization: 9.8
         recommendations: []
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-          - docs/harness/architecture/rules/layers/platform.yml
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/layers/platform.yml
       - role: agentic-engineer
         overall_score: 9.7
         decision: pass
@@ -207,7 +207,7 @@ iterations:
           token_optimization: 9.8
         recommendations: []
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
           - platform/contracts/src/index.ts
           - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
       - role: secops-engineer
@@ -227,9 +227,9 @@ iterations:
           token_optimization: 9.8
         recommendations: []
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
-          - docs/harness/architecture/rules/concerns/identity-access-security.yml
-          - docs/harness/architecture/rules/concerns/tenancy.yml
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - docs/03.product/rules/platform/concerns/tenancy.yml
       - role: senior-sre
         overall_score: 9.7
         decision: pass
@@ -247,9 +247,9 @@ iterations:
           token_optimization: 9.8
         recommendations: []
         evidence:
-          - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
           - platform/contracts/tests/platform-contracts-runtime.test.ts
-          - docs/harness/architecture/rules/layers/platform.yml
+          - docs/03.product/rules/platform/layers/platform.yml
     cross_review_summary:
       agreement:
         - The source now names the stable ownership information that belongs in each identifier and leaves category information in contract context.
@@ -278,9 +278,9 @@ final_decision:
     policy boundaries, makes security and migration constraints explicit, and
     is ready for narrow structured-rule derivation. Runtime prefix enforcement
     remains a separate future implementation slice.
-  accepted_source_sha256: 586461bca4a5e76eb817c8c0548216e51f1e25a8af395ad7443e5770b832d75f
+  accepted_source_sha256: b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4
   accepted_at_utc: "2026-09-01T21:51:49Z"
   required_before_derivation:
-    - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+    - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
     - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml

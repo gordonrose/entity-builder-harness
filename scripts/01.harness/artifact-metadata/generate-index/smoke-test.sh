@@ -34,7 +34,7 @@ json_output="$(bash "$generator" --paths \
   scripts/01.harness/check-artifact-metadata-headers.sh \
   docs/02.rag-rulebook/rules/README.md \
   docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml \
-  docs/harness/architecture/rules/layers/packages-core.yml)"
+  docs/03.product/rules/core/layers/packages-core.yml)"
 
 python3 -c '
 import json, sys

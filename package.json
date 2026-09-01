@@ -5,7 +5,8 @@
     "apps/*",
     "products/*",
     "packages/*",
-    "platform/*"
+    "platform/*",
+    "platform/adapters/*/*/*"
   ],
   "scripts": {
     "chat": "bash scripts/00.chat/command/dispatcher/script.sh",
@@ -66,6 +67,11 @@
     "platform:security:check": "npm run platform:security:typecheck && npm run platform:security:build && npm run platform:security:test && npm run platform:security:boundary",
     "platform:security:test": "tsc -p platform/security/tsconfig.runtime-test.json && node platform/security/tests/run-runtime-tests.mjs",
     "platform:security:typecheck": "tsc -p platform/security/tsconfig.check.json",
+    "platform:adapter:aws:auth:cognito:boundary": "node platform/adapters/aws/auth/cognito/tests/cognito-adapter-boundaries.test.mjs",
+    "platform:adapter:aws:auth:cognito:build": "tsc -p platform/adapters/aws/auth/cognito/tsconfig.json",
+    "platform:adapter:aws:auth:cognito:check": "npm run platform:adapter:aws:auth:cognito:typecheck && npm run platform:adapter:aws:auth:cognito:build && npm run platform:adapter:aws:auth:cognito:test && npm run platform:adapter:aws:auth:cognito:boundary",
+    "platform:adapter:aws:auth:cognito:test": "tsc -p platform/adapters/aws/auth/cognito/tsconfig.runtime-test.json && node platform/adapters/aws/auth/cognito/tests/run-runtime-tests.mjs",
+    "platform:adapter:aws:auth:cognito:typecheck": "tsc -p platform/adapters/aws/auth/cognito/tsconfig.check.json",
     "platform:server:boundary": "node platform/server/tests/platform-server-boundaries.test.mjs",
     "platform:server:build": "tsc -p platform/server/tsconfig.json",
     "platform:server:check": "npm run platform:server:typecheck && npm run platform:server:build && npm run platform:server:test && npm run platform:server:boundary",

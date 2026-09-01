@@ -71,9 +71,9 @@ expected:
   selected_chunks:
     first_artifact_id: artifact.harness.script.artifact.metadata.backfill.v2.headers
     required_artifact_ids:
-      - artifact.path.docs.harness.architecture.adrs.0021.use.versioned.artifact.metadata.for.agent.navigation.md
+      - artifact.harness.adr.0021.use.versioned.artifact.metadata.for.agent.navigation
     required_source_paths:
-      - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+      - docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
       - .agentic/01.harness/artifact-metadata/README.md
       - .agentic/01.harness/artifact-metadata/standard.md
       - .agentic/01.harness/artifact-metadata/schema.v2.yml
@@ -101,7 +101,7 @@ source_refs:
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
   - .agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml
   - .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml
-  - docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+  - docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   - .agentic/01.harness/artifact-metadata/README.md
   - .agentic/01.harness/artifact-metadata/standard.md
   - .agentic/01.harness/artifact-metadata/schema.v2.yml

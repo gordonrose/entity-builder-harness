@@ -129,7 +129,9 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat
 ## ADR Disposition
 
 - If the chat made a durable architecture decision, create or update an ADR
-  under the owning ADR root, such as `docs/<track>/architecture/adrs/`.
+  under the owning ADR root, such as `docs/<numbered-layer>/adrs/`, or a
+  legacy transition root such as `docs/<track>/architecture/adrs/` while an
+  approved migration is still in progress.
 - If no ADR is needed, record a short reason in the session log.
 
 ## Gate

@@ -778,7 +778,7 @@ capability.
 Yes. This is a small **platform-contract naming standard**, not a new security
 policy and not a product-harness convention. Its proposed home is the existing
 `platform.contracts-are-the-app-boundary` rule in
-`docs/harness/architecture/rules/layers/platform.yml`. That rule already says
+`docs/03.product/rules/platform/layers/platform.yml`. That rule already says
 that apps declare routes, permissions, jobs, health checks, and config schemas
 through `platform/contracts`, and that platform validates app identity and
 route namespacing before traffic is served.
@@ -819,7 +819,7 @@ rewritten.
 
 The profile is now codified as the warning-level
 `platform.contract-identifiers-are-semantic` rule in
-`docs/harness/architecture/rules/layers/platform.yml`. Its source material,
+`docs/03.product/rules/platform/layers/platform.yml`. Its source material,
 two-iteration source review record, derivation report, refreshed provenance,
 and focused retrieval-selector fixture provide the evidence chain.
 
@@ -1127,7 +1127,7 @@ failure, the message is dead-lettered with its error and attempt count.
 - [Platform worker source](../../../platform/workers/src/index.ts)
 - [Smoke app mount](../../../apps/platform-smoke/src/app.mount.ts)
 - [Product harness foundation plan](../../../.agentic/03.product/plans/implementation/product-harness-foundation.md)
-- [Core-module authoring rule pack](../../../docs/harness/architecture/rule-packs/add-core-module.yml)
+- [Core-module authoring rule pack](../../../docs/03.product/rule-packs/core/add-core-module.yml)
 
 ## Continuation Protocol
 

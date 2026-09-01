@@ -55,8 +55,12 @@ PATH_PREFIXES = (
     ".github/workflows/",
     ".agentic/",
     "docs/00.chat/",
+    "docs/01.harness/",
     "docs/02.rag-rulebook/",
+    "docs/03.product/",
     "docs/harness/",
+    "docs/04.deploy/",
+    "docs/06.shared/",
     "infra/",
     "scripts/",
 )
@@ -220,8 +224,11 @@ def collect_all_paths() -> list[str]:
         ROOT / ".github/workflows",
         ROOT / ".agentic",
         ROOT / "docs/00.chat",
+        ROOT / "docs/01.harness",
         ROOT / "docs/02.rag-rulebook",
+        ROOT / "docs/03.product",
         ROOT / "docs/04.deploy",
+        ROOT / "docs/06.shared",
         ROOT / "docs/aws",
         ROOT / "docs/education",
         ROOT / "docs/harness",
@@ -248,8 +255,11 @@ def is_markdown_artifact(path: str) -> bool:
     return path.endswith(".md") and (
         path.startswith(".agentic/")
         or path.startswith("docs/00.chat/")
+        or path.startswith("docs/01.harness/")
         or path.startswith("docs/02.rag-rulebook/")
+        or path.startswith("docs/03.product/")
         or path.startswith("docs/04.deploy/")
+        or path.startswith("docs/06.shared/")
         or path.startswith("docs/aws/")
         or path.startswith("docs/education/")
         or path.startswith("docs/harness/")
@@ -262,8 +272,11 @@ def is_yaml_artifact(path: str) -> bool:
     return path.endswith((".yml", ".yaml")) and (
         path.startswith(".agentic/")
         or path.startswith(".github/workflows/")
+        or path.startswith("docs/01.harness/")
         or path.startswith("docs/02.rag-rulebook/")
+        or path.startswith("docs/03.product/")
         or path.startswith("docs/04.deploy/")
+        or path.startswith("docs/06.shared/")
         or path.startswith("docs/aws/")
         or path.startswith("docs/education/")
         or path.startswith("docs/harness/")

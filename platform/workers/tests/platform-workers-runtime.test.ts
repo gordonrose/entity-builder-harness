@@ -1,6 +1,7 @@
 import { equal } from "node:assert/strict";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
 import type { QueueIdempotencyKey, QueueMessageType } from "@kanbien/core/queues";
+import { tenantId, type TenantContext } from "@kanbien/core/tenancy";
 import { validationIssue } from "@kanbien/core/validation";
 import {
   definePlatformApp,
@@ -28,7 +29,9 @@ async function main(): Promise<void> {
   }
 
   let handled = 0;
+  let handledTenant: TenantContext | undefined;
   let failingAttempts = 0;
+  let tenantlessJobTenant: TenantContext | undefined;
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   const deps = createPlatformTestMountDeps({ logger, metrics });
@@ -45,8 +48,9 @@ async function main(): Promise<void> {
           && "rebuild" in value
           && typeof (value as { readonly rebuild?: unknown }).rebuild === "boolean"),
         handler: {
-          handle: () => {
+          handle: (_message, context) => {
             handled += 1;
+            handledTenant = context.tenant;
           },
         },
       });
@@ -54,8 +58,9 @@ async function main(): Promise<void> {
         name: failingJobName.value,
         messageType: "smoke.failing" as QueueMessageType,
         handler: {
-          handle: () => {
+          handle: (_message, context) => {
             failingAttempts += 1;
+            tenantlessJobTenant = context.tenant;
             throw new Error("fail");
           },
         },
@@ -88,6 +93,7 @@ async function main(): Promise<void> {
       payload: { rebuild: true },
     }),
     idempotencyKey: "idem-1" as QueueIdempotencyKey,
+    tenantId: tenantId("tenant-123"),
   };
   equal(shell.value.enqueue(successMessage).ok, true);
   const success = await shell.value.runNext();
@@ -101,6 +107,7 @@ async function main(): Promise<void> {
   }
   equal(success.value.idempotency, "processed");
   equal(handled, 1);
+  equal(handledTenant?.tenantId, "tenant-123");
 
   equal(shell.value.enqueue(successMessage).ok, true);
   const skipped = await shell.value.runNext();
@@ -143,6 +150,7 @@ async function main(): Promise<void> {
   }
   equal(deadLetter.value.error.code, "PLATFORM_WORKER_HANDLER_FAILED");
   equal(failingAttempts, 2);
+  equal(tenantlessJobTenant, undefined);
   equal(shell.value.queue.deadLetters().length, 2);
   equal(metrics.points().length, 5);
   equal(logger.records().some((record) => record.message === "platform.worker.job.dead_lettered"), true);

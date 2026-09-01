@@ -142,7 +142,7 @@ agent only when that lane can independently block the outcome.
       "when_any": [
         "backend|architecture|platform capability|entity|feature|capability boundary|dependency",
         "src/platform/",
-        "docs/harness/architecture/"
+        "docs/(01\\.harness|02\\.rag-rulebook|03\\.product|04\\.deploy|06\\.shared)/(adrs|rules|rule-packs|source-material)/"
       ],
       "blocking_scope": "Backend boundary, dependency-direction, and durable architecture-rule gaps can block the work."
     },

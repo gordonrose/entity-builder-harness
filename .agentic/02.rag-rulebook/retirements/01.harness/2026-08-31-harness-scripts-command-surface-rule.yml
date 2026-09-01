@@ -1,0 +1,82 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: retirement-record
+#   purpose: Record the renamed prototype scripts command-surface rule after moving it to the harness corpus.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+#     - id: rag-rulebook.script.check-corpus-root-changes
+#       path: scripts/02.rag-rulebook/check-corpus-root-changes/script.sh
+
+schema: rag-rulebook/retirement-record/v1
+retirement_id: rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule
+status: accepted
+owner_layer: 01.harness
+corpus_id: corpus.01.harness
+retired_at_utc: "2026-08-31T21:03:18Z"
+retired_artifacts:
+  - path: docs/harness/architecture/rules/layers/scripts-command-surface.yml
+    kind: rule
+    path_state: renamed
+    previous_sha256: 46a4421ad61f9bde032e183c9abef5ae1939685c5bfaad4482f81c0ab985c0b6
+    replacement_paths:
+      - docs/01.harness/rules/layers/scripts-command-surface.yml
+reason:
+  - The scripts command-surface rule governs harness-owned repository automation and numbered script command boundaries, so it moved from the prototype architecture corpus to the owner-aligned harness corpus.
+  - Active references now point at the canonical harness rule path.
+reference_checks:
+  checked_roots:
+    - .agentic/01.harness
+    - .agentic/02.rag-rulebook
+    - .agentic/03.product
+    - .agentic/aws
+    - docs/harness/architecture
+    - docs/00.chat
+    - docs/01.harness
+    - docs/02.rag-rulebook
+    - docs/03.product
+    - docs/04.deploy
+    - docs/06.shared
+    - scripts/01.harness
+    - scripts/02.rag-rulebook
+  remaining_references: []
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+    - bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: accept
+  reviewer: Gordon Rose

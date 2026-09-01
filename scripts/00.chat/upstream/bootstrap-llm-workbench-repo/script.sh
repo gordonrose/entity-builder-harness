@@ -164,6 +164,9 @@ plan_tree() {
       docs/00.chat/chat-workbench-public-repo-readiness.md)
         continue
         ;;
+      docs/00.chat/adrs/*)
+        continue
+        ;;
       docs/00.chat/public-chat-workbench-adrs.md)
         continue
         ;;

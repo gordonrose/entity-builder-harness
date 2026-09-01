@@ -36,7 +36,7 @@ index_schema: rag-rulebook/rulebook-index/v1
 purpose: Define the catalogue a RAG/rulebook service uses to find rulebook artifacts, rules, chunks, references, corpus ownership, and migration targets.
 
 principles:
-  - Index current prototype paths and proposed corpus paths at the same time.
+- Index current corpus paths while preserving migration history.
   - Preserve stable metadata IDs and rulebook IDs separately from current file paths.
   - Represent rule-pack dependencies and related rulesets as graph edges.
   - Report unresolved references instead of silently dropping them.
@@ -96,11 +96,11 @@ fields:
         role:
           type: enum
           allowed_values:
-            - prototype-corpus
             - corpus-package
             - migration-map
             - generated-index
             - source-material
+            - supporting-source
         migration_status:
           type: enum
           allowed_values:
@@ -857,9 +857,9 @@ minimal_example:
   index_id: index.example.rulebook
   generated_at: "2026-06-25T00:00:00Z"
   source_roots:
-    - root_id: root.prototype
-      path: docs/harness/architecture
-      role: prototype-corpus
+    - root_id: root.product-source-material
+      path: docs/03.product/source-material
+      role: source-material
       migration_status: current
     - root_id: root.migration-map
       path: .agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml
@@ -872,7 +872,7 @@ minimal_example:
       proposed_root: corpus.03.product.core
       purpose: Stable product-neutral core contracts and shared primitives.
       source_root_ids:
-        - root.prototype
+        - root.product-source-material
         - root.migration-map
   artifacts:
     - artifact_ref: artifact.layer.packages-core
@@ -883,14 +883,14 @@ minimal_example:
       status: active
       version: 1
       corpus_id: corpus.03.product.core
-      current_path: docs/harness/architecture/rules/layers/packages-core.yml
+      current_path: docs/03.product/rules/core/layers/packages-core.yml
       proposed_path: corpus.03.product.core/rules/layers/packages-core.yml
       migration_status: target-candidate
       applies_to_paths:
         - packages/core/**
       related_ruleset_refs:
-        - docs/harness/architecture/rules/concerns/ci-quality.yml
-        - docs/harness/architecture/rules/concerns/dependency-direction.yml
+        - docs/06.shared/rules/concerns/ci-quality.yml
+        - docs/06.shared/rules/concerns/dependency-direction.yml
       required_ruleset_refs: []
       source_ref_ids: []
       diagnostics: []
@@ -916,7 +916,7 @@ minimal_example:
       chunk_purpose: rule
       authority: execution-authority
       section_path: rules[0]
-      source_path: docs/harness/architecture/rules/layers/packages-core.yml
+      source_path: docs/03.product/rules/core/layers/packages-core.yml
       token_estimate: 80
       source_ref_ids: []
   graph_edges:
@@ -928,7 +928,7 @@ minimal_example:
       source_ref_ids: []
   source_references: []
   path_mappings:
-    - current_path: docs/harness/architecture/rules/layers/packages-core.yml
+    - current_path: docs/03.product/rules/core/layers/packages-core.yml
       proposed_path: corpus.03.product.core/rules/layers/packages-core.yml
       proposed_corpus_id: corpus.03.product.core
       migration_status: target-candidate
@@ -954,5 +954,5 @@ minimal_example:
     generator_version: design-only
     git_commit: unknown
     inputs:
-      - path: docs/harness/architecture/rules/layers/packages-core.yml
+      - path: docs/03.product/rules/core/layers/packages-core.yml
         role: prototype-ruleset

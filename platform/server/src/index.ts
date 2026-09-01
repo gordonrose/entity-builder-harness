@@ -3,12 +3,15 @@ import type { AddressInfo } from "node:net";
 import type { Permission } from "@kanbien/core/authz";
 import type { Logger } from "@kanbien/core/logging";
 import { correlationId, type CorrelationId, type JsonValue, type Result } from "@kanbien/core/shared";
+import type { TenantContext } from "@kanbien/core/tenancy";
 import {
   type PlatformApp,
   type PlatformMountDeps,
   type PlatformRequest,
+  type PlatformResourceAuthorizationResolution,
   type PlatformResponse,
   type PlatformRouteRegistration,
+  type PlatformTenantResolver,
 } from "@kanbien/platform-contracts";
 import {
   createPlatformRuntimeLifecycle,
@@ -35,6 +38,7 @@ import {
   denyByDefaultAuthenticationResult,
   platformRateLimitKey,
   platformRateLimitError,
+  principalFromPlatformAuthenticationResult,
   validateAuthzMappingPermissions,
   type PlatformAuthenticationHook,
   type PlatformAuthenticationResult,
@@ -65,6 +69,9 @@ export type PlatformServerErrorCode =
   | "PLATFORM_SERVER_RATE_LIMITED"
   | "PLATFORM_SERVER_UNAUTHENTICATED"
   | "PLATFORM_SERVER_FORBIDDEN"
+  | "PLATFORM_SERVER_RESOURCE_NOT_FOUND"
+  | "PLATFORM_SERVER_TENANT_RESOLVER_REQUIRED"
+  | "PLATFORM_SERVER_AUTHORIZER_REQUIRED"
   | "PLATFORM_SERVER_AUTHZ_MAPPING_INVALID"
   | "PLATFORM_SERVER_INVALID_REQUEST"
   | "PLATFORM_SERVER_HANDLER_FAILED";
@@ -94,9 +101,7 @@ export interface PlatformServerResponse {
 export interface PlatformServerAuthResult extends PlatformAuthenticationResult {
 }
 
-export interface PlatformServerAuthHook extends PlatformAuthenticationHook {
-  authenticate(request: PlatformServerRequest): Promise<PlatformServerAuthResult> | PlatformServerAuthResult;
-}
+export type PlatformServerAuthHook = PlatformAuthenticationHook;
 
 export type PlatformHealthEndpointExposure = "public" | "authenticated";
 
@@ -109,6 +114,7 @@ export interface PlatformServerOptions {
   readonly apps: readonly PlatformApp[];
   readonly deps: PlatformMountDeps;
   readonly auth?: PlatformServerAuthHook;
+  readonly tenantResolver?: PlatformTenantResolver;
   readonly logger?: Logger;
   readonly corsOrigin?: string;
   readonly corsAllowlist?: readonly string[];
@@ -163,6 +169,15 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
     return authzMapping;
   }
 
+  const richerAuthorizationConfiguration = validateRicherAuthorizationConfiguration({
+    routes: mounted.value.routes,
+    hasAuthorizer: options.deps.authorizer !== undefined,
+    ...(options.tenantResolver === undefined ? {} : { tenantResolver: options.tenantResolver }),
+  });
+  if (!richerAuthorizationConfiguration.ok) {
+    return richerAuthorizationConfiguration;
+  }
+
   const config = assertPlatformConfigValid({
     source: options.deps.config,
     schemas: mounted.value.configSchemas,
@@ -201,6 +216,7 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
         ...(options.corsAllowlist === undefined ? {} : { corsAllowlist: options.corsAllowlist }),
         ...(options.healthExposure === undefined ? {} : { healthExposure: options.healthExposure }),
         ...(options.auth === undefined ? {} : { auth: options.auth }),
+        ...(options.tenantResolver === undefined ? {} : { tenantResolver: options.tenantResolver }),
       }),
       listen: (listenOptions = {}) => listenPlatformServer({
         handle: (request) => handlePlatformServerRequest({
@@ -215,6 +231,7 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
           ...(options.corsAllowlist === undefined ? {} : { corsAllowlist: options.corsAllowlist }),
           ...(options.healthExposure === undefined ? {} : { healthExposure: options.healthExposure }),
           ...(options.auth === undefined ? {} : { auth: options.auth }),
+          ...(options.tenantResolver === undefined ? {} : { tenantResolver: options.tenantResolver }),
         }),
         options: listenOptions,
       }),
@@ -226,6 +243,7 @@ async function handlePlatformServerRequest(input: {
   readonly request: PlatformServerRequest;
   readonly routes: readonly CompiledRoute[];
   readonly auth?: PlatformServerAuthHook;
+  readonly tenantResolver?: PlatformTenantResolver;
   readonly deps: PlatformMountDeps;
   readonly logger: Logger;
   readonly corsOrigin?: string;
@@ -334,16 +352,25 @@ async function handlePlatformServerRequest(input: {
 
     const { route, params } = routeMatch;
     const routeName = String(route.registration.name);
+    const platformRequest: PlatformRequest = {
+      params,
+      query: input.request.query ?? {},
+      headers: input.request.headers ?? {},
+      ...(input.request.body === undefined ? {} : { body: input.request.body }),
+    };
     middleware.push("auth");
     const auth = await authenticateRequest(input.auth, input.request);
-    if (route.registration.auth.kind === "authenticated" && !auth.authenticated) {
+    const principal = route.registration.auth.kind === "authenticated"
+      ? principalFromPlatformAuthenticationResult(auth)
+      : undefined;
+    if (route.registration.auth.kind === "authenticated" && (!auth.authenticated || principal === undefined)) {
       middleware.push("error-mapping", "response-logging");
       const error = serverError("PLATFORM_SERVER_UNAUTHENTICATED", 401, "Authentication is required.");
       return finish(errorResponse(error, headers, middleware), routeName, error);
     }
 
-    middleware.push("context", "authorization");
     if (route.registration.auth.kind === "authenticated") {
+      middleware.push("authorization");
       const authorized = authorizePlatformPermissions(route.registration.auth.permissions ?? [], auth.permissions ?? []);
       if (!authorized.ok) {
         middleware.push("error-mapping", "response-logging");
@@ -356,6 +383,39 @@ async function handlePlatformServerRequest(input: {
       }
     }
 
+    const tenantResolution = route.registration.tenant === undefined || input.tenantResolver === undefined || principal === undefined
+      ? undefined
+      : await input.tenantResolver.resolve({
+        route: {
+          name: route.registration.name,
+          method: route.registration.method,
+          path: route.registration.path,
+          ...(route.registration.apiVersion === undefined ? {} : { apiVersion: route.registration.apiVersion }),
+        },
+        request: platformRequest,
+        principal,
+      });
+    const tenant = isTenantContext(tenantResolution) ? tenantResolution : undefined;
+    if (route.registration.tenant === "required" && (tenant === null || tenant === undefined)) {
+      middleware.push("error-mapping", "response-logging");
+      const error = serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this route is forbidden.");
+      return finish(errorResponse(error, headers, middleware), routeName, error);
+    }
+
+    middleware.push("context");
+    const context = createPlatformRuntimeRequestContext({
+      requestId,
+      method: input.request.method,
+      path: input.request.path,
+      ...(principal === undefined ? {} : { principal }),
+      ...(tenant === undefined || tenant === null ? {} : { tenant }),
+      logger: input.deps.logger,
+      metrics: input.deps.metrics,
+      config: input.deps.config,
+      flags: input.deps.flags,
+      clock: input.deps.clock,
+    });
+
     middleware.push("validation");
     if (route.registration.validator !== undefined && !route.registration.validator.validate(input.request.body)) {
       middleware.push("error-mapping", "response-logging");
@@ -363,23 +423,49 @@ async function handlePlatformServerRequest(input: {
       return finish(errorResponse(error, headers, middleware), routeName, error);
     }
 
+    if (route.registration.resourceAuthorization !== undefined) {
+      middleware.push("authorization");
+      const resourceResolution = await route.registration.resourceAuthorization.resolve({
+        request: platformRequest,
+        context,
+      });
+      if (!isPlatformResourceAuthorizationResolution(resourceResolution)) {
+        middleware.push("error-mapping", "response-logging");
+        const error = serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this resource is forbidden.");
+        return finish(errorResponse(error, headers, middleware), routeName, error);
+      }
+      if (resourceResolution.kind === "not-found") {
+        middleware.push("error-mapping", "response-logging");
+        const error = resourceResolution.disclosure === "forbidden"
+          ? serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this resource is forbidden.")
+          : serverError("PLATFORM_SERVER_RESOURCE_NOT_FOUND", 404, "The requested resource was not found.");
+        return finish(errorResponse(error, headers, middleware), routeName, error);
+      }
+
+      const authorizer = input.deps.authorizer;
+      if (authorizer === undefined || principal === undefined) {
+        middleware.push("error-mapping", "response-logging");
+        const error = serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this resource is forbidden.");
+        return finish(errorResponse(error, headers, middleware), routeName, error);
+      }
+
+      const decision = await authorizer.decide({
+        principal,
+        permission: route.registration.resourceAuthorization.permission,
+        ...(context.tenant === undefined ? {} : { tenantId: context.tenant.tenantId }),
+        ...(resourceResolution.resource === undefined ? {} : { resource: resourceResolution.resource }),
+        ...(resourceResolution.relations === undefined ? {} : { relations: resourceResolution.relations }),
+        ...(resourceResolution.attributes === undefined ? {} : { attributes: resourceResolution.attributes }),
+        ...(resourceResolution.facts === undefined ? {} : { facts: resourceResolution.facts }),
+      });
+      if (!decision.allowed) {
+        middleware.push("error-mapping", "response-logging");
+        const error = serverError("PLATFORM_SERVER_FORBIDDEN", 403, "Access to this resource is forbidden.");
+        return finish(errorResponse(error, headers, middleware), routeName, error);
+      }
+    }
+
     middleware.push("handler");
-    const context = createPlatformRuntimeRequestContext({
-      requestId,
-      method: input.request.method,
-      path: input.request.path,
-      logger: input.deps.logger,
-      metrics: input.deps.metrics,
-      config: input.deps.config,
-      flags: input.deps.flags,
-      clock: input.deps.clock,
-    });
-    const platformRequest: PlatformRequest = {
-      params,
-      query: input.request.query ?? {},
-      headers: input.request.headers ?? {},
-      ...(input.request.body === undefined ? {} : { body: input.request.body }),
-    };
     const handled = await route.registration.handler.handle(platformRequest, context);
 
     middleware.push("response-logging");
@@ -546,6 +632,62 @@ function validateServerAuthzMapping(
       ...(validation.error.details === undefined ? {} : { details: validation.error.details }),
     },
   };
+}
+
+function validateRicherAuthorizationConfiguration(input: {
+  readonly routes: readonly PlatformRouteRegistration[];
+  readonly tenantResolver?: PlatformTenantResolver;
+  readonly hasAuthorizer: boolean;
+}): Result<void, PlatformServerError> {
+  if (input.tenantResolver === undefined && input.routes.some((route) => route.tenant === "required")) {
+    return {
+      ok: false,
+      error: serverError(
+        "PLATFORM_SERVER_TENANT_RESOLVER_REQUIRED",
+        500,
+        "A tenant resolver is required by a registered route.",
+      ),
+    };
+  }
+
+  if (!input.hasAuthorizer && input.routes.some((route) => route.resourceAuthorization !== undefined)) {
+    return {
+      ok: false,
+      error: serverError(
+        "PLATFORM_SERVER_AUTHORIZER_REQUIRED",
+        500,
+        "An authorizer is required by a registered route.",
+      ),
+    };
+  }
+
+  return { ok: true, value: undefined };
+}
+
+function isTenantContext(value: unknown): value is TenantContext {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Readonly<Record<string, unknown>>;
+  return typeof candidate["tenantId"] === "string"
+    && candidate["tenantId"].length > 0
+    && typeof candidate["isolationKey"] === "string"
+    && candidate["isolationKey"].length > 0;
+}
+
+function isPlatformResourceAuthorizationResolution(value: unknown): value is PlatformResourceAuthorizationResolution {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Readonly<Record<string, unknown>>;
+  if (candidate["kind"] === "authorize") {
+    return true;
+  }
+
+  return candidate["kind"] === "not-found"
+    && (candidate["disclosure"] === "not-found" || candidate["disclosure"] === "forbidden");
 }
 
 function requestIdFromHeaders(headers: Readonly<Record<string, string | readonly string[]>>): CorrelationId {

@@ -1,5 +1,15 @@
 import { createHash, createPublicKey, createVerify, type JsonWebKey, type KeyObject } from "node:crypto";
-import { principalId, type Clock, type JsonValue, type Permission, type PrincipalClaims, type PrincipalType, type Result } from "@kanbien/core";
+import {
+  principal,
+  principalId,
+  type Clock,
+  type JsonValue,
+  type Permission,
+  type Principal,
+  type PrincipalClaims,
+  type PrincipalType,
+  type Result,
+} from "@kanbien/core";
 
 export type PlatformSecurityErrorCode =
   | "PLATFORM_SECURITY_UNAUTHENTICATED"
@@ -68,20 +78,15 @@ export interface PlatformRateLimitKeyInput {
 export interface PlatformJwtVerificationOptions {
   readonly issuer: string;
   readonly jwksUri: string;
-  readonly clientId?: string;
-  readonly tokenUse?: "access" | "id";
+  readonly requiredClaims?: readonly PlatformJwtClaimRequirement[];
   readonly clock?: Clock;
   readonly clockSkewSeconds?: number;
   readonly fetchJwks?: PlatformJwksFetcher;
 }
 
-export interface CognitoAccessTokenVerifierOptions {
-  readonly region: string;
-  readonly userPoolId: string;
-  readonly appClientId: string;
-  readonly clock?: Clock;
-  readonly clockSkewSeconds?: number;
-  readonly fetchJwks?: PlatformJwksFetcher;
+export interface PlatformJwtClaimRequirement {
+  readonly claim: string;
+  readonly equals: string | number | boolean;
 }
 
 export interface PlatformJwtVerifier {
@@ -111,9 +116,14 @@ export interface PlatformJwksFetcher {
 }
 
 export interface PlatformAuthzPermissionMapping {
-  readonly groups?: Readonly<Record<string, readonly Permission[]>>;
-  readonly scopes?: Readonly<Record<string, readonly Permission[]>>;
+  readonly valueClaims?: readonly PlatformClaimValuePermissionMapping[];
   readonly claims?: readonly PlatformClaimPermissionMapping[];
+}
+
+export interface PlatformClaimValuePermissionMapping {
+  readonly claim: string;
+  readonly format: "string-array" | "space-delimited";
+  readonly values: Readonly<Record<string, readonly Permission[]>>;
 }
 
 export interface PlatformClaimPermissionMapping {
@@ -137,6 +147,27 @@ export const denyByDefaultAuthenticationResult: PlatformAuthenticationResult = {
   authenticated: false,
   permissions: [],
 };
+
+export function principalFromPlatformAuthenticationResult(
+  authentication: PlatformAuthenticationResult,
+): Principal | undefined {
+  if (
+    !authentication.authenticated
+    || authentication.principalId === undefined
+    || authentication.principalType === undefined
+    || authentication.subject === undefined
+  ) {
+    return undefined;
+  }
+
+  return principal({
+    id: principalId(authentication.principalId),
+    type: authentication.principalType,
+    subject: authentication.subject,
+    claims: authentication.claims ?? {},
+    scopes: authentication.scopes ?? [],
+  });
+}
 
 export function createJwtBearerAuthenticationHook(
   options: JwtBearerAuthenticationHookOptions,
@@ -174,28 +205,6 @@ export function createJwtBearerAuthenticationHook(
       };
     },
   };
-}
-
-export function createCognitoAccessTokenVerifier(
-  options: CognitoAccessTokenVerifierOptions,
-): PlatformJwtVerifier {
-  return createJwksJwtVerifier({
-    issuer: cognitoIssuer(options.region, options.userPoolId),
-    jwksUri: cognitoJwksUri(options.region, options.userPoolId),
-    clientId: options.appClientId,
-    tokenUse: "access",
-    ...(options.clock === undefined ? {} : { clock: options.clock }),
-    ...(options.clockSkewSeconds === undefined ? {} : { clockSkewSeconds: options.clockSkewSeconds }),
-    ...(options.fetchJwks === undefined ? {} : { fetchJwks: options.fetchJwks }),
-  });
-}
-
-export function cognitoIssuer(region: string, userPoolId: string): string {
-  return `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
-}
-
-export function cognitoJwksUri(region: string, userPoolId: string): string {
-  return `${cognitoIssuer(region, userPoolId)}/.well-known/jwks.json`;
 }
 
 export function createJwksJwtVerifier(options: PlatformJwtVerificationOptions): PlatformJwtVerifier {
@@ -249,8 +258,7 @@ export function createJwksJwtVerifier(options: PlatformJwtVerificationOptions): 
 
       const claimsValidation = validateJwtClaims(decoded.value.claims, {
         issuer: options.issuer,
-        ...(options.clientId === undefined ? {} : { clientId: options.clientId }),
-        tokenUse: options.tokenUse ?? "access",
+        ...(options.requiredClaims === undefined ? {} : { requiredClaims: options.requiredClaims }),
         clock,
         clockSkewSeconds,
       });
@@ -404,15 +412,11 @@ export function permissionsFromClaims(
 ): readonly Permission[] {
   const permissions = new Set<Permission>();
 
-  for (const group of stringArrayClaim(claims, "cognito:groups")) {
-    for (const permission of mapping.groups?.[group] ?? []) {
-      permissions.add(permission);
-    }
-  }
-
-  for (const scope of scopesFromClaims(claims)) {
-    for (const permission of mapping.scopes?.[scope] ?? []) {
-      permissions.add(permission);
+  for (const valueClaim of mapping.valueClaims ?? []) {
+    for (const value of valuesFromClaim(claims, valueClaim.claim, valueClaim.format)) {
+      for (const permission of valueClaim.values[value] ?? []) {
+        permissions.add(permission);
+      }
     }
   }
 
@@ -432,15 +436,11 @@ export function permissionsFromClaims(
 export function authzMappingPermissions(mapping: PlatformAuthzPermissionMapping): readonly Permission[] {
   const permissions = new Set<Permission>();
 
-  for (const permissionList of Object.values(mapping.groups ?? {})) {
-    for (const permission of permissionList) {
-      permissions.add(permission);
-    }
-  }
-
-  for (const permissionList of Object.values(mapping.scopes ?? {})) {
-    for (const permission of permissionList) {
-      permissions.add(permission);
+  for (const valueClaim of mapping.valueClaims ?? []) {
+    for (const permissionList of Object.values(valueClaim.values)) {
+      for (const permission of permissionList) {
+        permissions.add(permission);
+      }
     }
   }
 
@@ -479,8 +479,7 @@ function validateJwtClaims(
   claims: PrincipalClaims,
   options: {
     readonly issuer: string;
-    readonly clientId?: string;
-    readonly tokenUse: "access" | "id";
+    readonly requiredClaims?: readonly PlatformJwtClaimRequirement[];
     readonly clock: Clock;
     readonly clockSkewSeconds: number;
   },
@@ -489,14 +488,9 @@ function validateJwtClaims(
     return invalidToken("JWT issuer does not match the configured issuer.");
   }
 
-  if (stringClaim(claims, "token_use") !== options.tokenUse) {
-    return invalidToken("JWT token_use does not match the configured token use.");
-  }
-
-  if (options.clientId !== undefined) {
-    const clientClaim = options.tokenUse === "access" ? stringClaim(claims, "client_id") : stringClaim(claims, "aud");
-    if (clientClaim !== options.clientId) {
-      return invalidToken("JWT client id does not match the configured app client.");
+  for (const requiredClaim of options.requiredClaims ?? []) {
+    if (claims[requiredClaim.claim] !== requiredClaim.equals) {
+      return invalidToken(`JWT claim ${requiredClaim.claim} does not match the configured value.`);
     }
   }
 
@@ -593,9 +587,17 @@ function scopesFromClaims(claims: PrincipalClaims): readonly string[] {
   return scope.split(/\s+/).filter((item) => item.length > 0);
 }
 
-function stringArrayClaim(claims: PrincipalClaims, name: string): readonly string[] {
+function valuesFromClaim(
+  claims: PrincipalClaims,
+  name: string,
+  format: PlatformClaimValuePermissionMapping["format"],
+): readonly string[] {
   const value = claims[name];
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  if (format === "string-array") {
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  }
+
+  return typeof value === "string" ? value.split(/\s+/).filter((item) => item.length > 0) : [];
 }
 
 function stringClaim(claims: PrincipalClaims, name: string): string | undefined {

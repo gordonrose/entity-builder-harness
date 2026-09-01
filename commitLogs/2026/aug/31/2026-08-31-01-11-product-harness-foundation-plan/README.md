@@ -209,6 +209,39 @@ Mode: stopped
 
 Action: Stopped before reconciliation; a later approved resolution must keep the canonical 03.product rule path and migrate the naming-policy rule with refreshed provenance.
 
+
+### 2026-09-01T22:33:28Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept canonical 03.product paths, migrated semantic-naming claims and review evidence, and validated the reconciled report.
+
+
+### 2026-09-01T22:33:34Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Resolved source evidence first, then regenerated artifacts.yml and verified it is current.
+
+
+### 2026-09-01T22:33:39Z - Main refresh conflict recorded
+
+Path: `docs/03.product/rules/platform/layers/platform.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept the canonical 03.product rule, preserved the semantic identifier rule, and refreshed source provenance from the migrated source material.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -258,6 +291,39 @@ Action: Stopped before reconciliation; a later approved resolution must keep the
   Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710-20260901222515`
   Files changed by resolution: platform layer rule; source provenance; semantic identifier rule
   Checks: refresh preflight; classifier
+
+
+- Path: `.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Authored derivation evidence and the owner-path migration changed concurrently.
+  Action: Kept canonical 03.product paths, migrated semantic-naming claims and review evidence, and validated the reconciled report.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-a7292ed53093/20260901222711`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-a7292ed53093-20260901222711`
+  Files changed by resolution: derivation report; source-material review; naming fixture; canonical source and rule references
+  Checks: source projections; coverage; source review; derivation report; derived-rule projection; focused selector fixtures
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: The generated inventory reflected incompatible pre-migration and owner-aligned artifact sets.
+  Action: Resolved source evidence first, then regenerated artifacts.yml and verified it is current.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-a7292ed53093/20260901222711`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-a7292ed53093-20260901222711`
+  Files changed by resolution: generated recognition artifact inventory
+  Checks: recognition generation; recognition current check; focused selector fixtures
+
+
+- Path: `docs/03.product/rules/platform/layers/platform.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Main moved the rule to its canonical owner path while the chat branch added the semantic identifier policy.
+  Action: Kept the canonical 03.product rule, preserved the semantic identifier rule, and refreshed source provenance from the migrated source material.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-a7292ed53093/20260901222711`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-a7292ed53093-20260901222711`
+  Files changed by resolution: platform layer rule; canonical source provenance; semantic identifier rule
+  Checks: source projections; derived-rule current check; focused selector fixtures
 
 ## ADR Disposition
 
