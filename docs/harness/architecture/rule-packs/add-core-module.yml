@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rule-packs.add-core-module
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -19,7 +19,7 @@
 #     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
 id: pack.add-core-module
 title: Add or modify a packages/core module
-version: 1
+version: 2
 status: active
 description: >
   A task rule pack for safely adding or changing shared core contracts,
@@ -48,6 +48,8 @@ required_checks:
   - "Confirm the concept has a real owner, current consumers, documentation, and tests, not only imagined reuse."
   - "Confirm reuse has been observed in real code, preferably after the second or third real consumer."
   - "Confirm the module belongs to a known core capability family or records why a new family is needed."
+  - "Confirm whether the module is small and cohesive enough to remain in one file or needs named capability files with an explicit index.ts barrel."
+  - "Confirm existing package-root and module-root imports remain compatible, and treat any new subpath export as an intentional public contract."
 
 agent_steps:
   - id: classify-core-change
@@ -75,6 +77,14 @@ agent_steps:
       files, audit, reporting, analytics, i18n, localization, or testing. If
       no family fits, record why a new family is justified.
 
+  - id: design-capability-file-layout
+    instruction: >
+      Group independently meaningful core concepts into named files only when
+      that improves discoverability or ownership. Use a thin index.ts barrel to
+      export approved public contracts, preserve existing imports, and avoid
+      publishing internal file paths by accident. Do not split a small cohesive
+      module or create one file per trivial type merely for symmetry.
+
   - id: check-dependency-direction
     instruction: >
       Validate the proposed core code against the dependency-direction concern
@@ -91,7 +101,9 @@ agent_steps:
 
   - id: propose-files
     instruction: >
-      Propose the exact files to create or edit before editing them.
+      Propose the exact files to create or edit before editing them. For a
+      split module, identify the capability each named file owns, public exports
+      retained by index.ts, and any intentional new subpath exports.
 
   - id: validate-output
     instruction: >
@@ -108,6 +120,9 @@ must_not:
   - "Do not use packages/core as a dumping ground for anything shared."
   - "Do not move CRMUser, SalesPipeline, LeadStatus, BillingPlan, InvoiceLifecycle, or other business domain concepts into core."
   - "Do not put HTTP servers, Redis clients, Fastify plugins, background workers, cloud SDKs, or ORM implementations in core."
+  - "Do not create one file per trivial type or helper solely to make a module look modular."
+  - "Do not leave substantial implementation in index.ts after a module has been split into named capability files."
+  - "Do not make internal core file paths public imports without an explicit compatibility decision and tests."
 
 success_criteria:
   - "The rule pack exists at docs/harness/architecture/rule-packs/add-core-module.yml."
@@ -117,6 +132,7 @@ success_criteria:
   - "The rule pack is concise and usable by an agent."
   - "The rule pack requires owner, current consumers, documentation, tests, and framework independence for new core surfaces."
   - "The rule pack routes runtime implementations to platform and product workflows to apps or feature packages."
+  - "The rule pack requires an explicit capability-file layout decision and preserves approved public imports when a core module is split."
   - "The rule pack includes manually verified source_refs pointing back to the relevant markdown guides/sections."
   - "No unrelated files are changed."
 

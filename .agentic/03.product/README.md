@@ -33,6 +33,8 @@ planning and AWS mutation remain governed by `04.deploy`.
 - Product workflows: `.agentic/03.product/workflows/`
 - Product migration plans: `.agentic/03.product/plans/migration/`
 - Product implementation plans: `.agentic/03.product/plans/implementation/`
+- Product harness foundation plan:
+  `.agentic/03.product/plans/implementation/product-harness-foundation.md`
 - Runtime contracts: `platform/contracts/`
 - Product composition: `products/`
 - Application source: `apps/`

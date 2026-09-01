@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 17
+#   version: 18
 #   status: active
 #   layer: 01.harness
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/harness/architecture/rule-packs/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 17
+version: 18
 status: active
 
 source_derivation:
@@ -321,6 +321,35 @@ rules:
       When adding a core module, choose the smallest contract-shaped surface
       that names the Kanbien concept clearly and leaves implementation details
       to apps, platform, or infrastructure.
+
+  - id: core.capability-files-keep-module-structure-visible
+    title: Core capability files keep module structure visible
+    severity: error
+    summary: >
+      When a core capability module contains multiple independently meaningful
+      concepts, organize those concepts into named TypeScript files and keep
+      index.ts as a thin, deliberate public barrel. The file structure should
+      reveal the module's capabilities without publishing every internal file
+      as a public contract.
+    must:
+      - "Keep a small, cohesive capability module in one file when splitting would add ceremony without improving ownership or discoverability."
+      - "Split a growing capability module into named files when types, ports, errors, policy, helpers, testing fakes, or another cohesive capability can be understood and changed independently."
+      - "Name files after the capability they own, such as types.ts, ports.ts, errors.ts, policy.ts, classification.ts, residency.ts, or testing.ts."
+      - "Use index.ts as the explicit module entry point that re-exports approved public contracts after a module is split."
+      - "Preserve supported package-root and module-root imports through explicit barrel exports unless a breaking change is approved, documented, and migrated."
+      - "Expose a subpath import only when it is intentionally part of the supported public contract and has compatibility tests."
+      - "Keep tests and documentation aligned with the named capability layout so readers can locate the contract, behavior, and proof together."
+    must_not:
+      - "Do not split one trivial type or helper into its own file merely to satisfy a file-count convention."
+      - "Do not leave substantial capability implementation in index.ts after the module has a named file layout."
+      - "Do not treat every internal file as an automatically supported package subpath."
+      - "Do not use a file split to hide provider clients, product policy, runtime implementations, or breaking public-contract changes inside packages/core."
+    agent_guidance: >
+      Start from the reader's question: which stable concept, port, error,
+      policy, or helper do they need to find? Group code by those capabilities,
+      then make index.ts a concise map of the contracts intentionally available
+      to other modules. Keep the existing public import path stable while the
+      internal layout improves.
 
   - id: core.shared-primitives-stay-strict-and-portable
     title: Shared primitives stay strict and portable

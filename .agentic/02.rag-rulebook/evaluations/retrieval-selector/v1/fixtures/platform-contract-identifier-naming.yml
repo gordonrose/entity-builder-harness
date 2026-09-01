@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   kind: evaluation-fixture
+#   purpose: Prove platform-contract naming questions retrieve the semantic identifier rule and its source context.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.platform-contract-identifier-naming
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove a platform-contract naming request retrieves the ownership-and-capability naming rule without treating policy facts as identifier text.
+input:
+  request_text: I need to implement the semantic identifier standard in platform/contracts and docs/harness/architecture/rules/layers/platform.yml. How should a PlatformAppId and app-mounted routes, jobs, feature flags, health checks, permissions, config keys, and error codes express app ownership and capability without repeating the category or exposing tenant, role, group, provider, or customer policy facts?
+  session:
+    trust_routing: true
+    layer: 03.product
+    mode: implementation
+    workflow: .agentic/03.product/workflows/default.md
+  max_chunks: 8
+expected:
+  routing:
+    layer: 03.product
+    mode: implementation
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.03.product.platform
+  selected_corpora:
+    required:
+      - corpus.03.product.platform
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_artifact_ids:
+      - artifact.layer.platform
+    required_rule_ids:
+      - platform.contract-identifiers-are-semantic
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.04.deploy
+source_refs:
+  - docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md
+  - docs/harness/architecture/rules/layers/platform.yml
+  - docs/harness/architecture/rules/concerns/identity-access-security.yml
+  - docs/harness/architecture/rules/concerns/tenancy.yml
+update_triggers:
+  - Platform-contract identifier naming rules change.
+  - The source material changes its naming, policy-fact, migration, or enforcement guidance.
+  - Selector policy changes platform contract retrieval behavior.

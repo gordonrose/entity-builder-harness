@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 778
-  term_count: 1568
+  indexed_artifacts: 782
+  term_count: 1576
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -4584,6 +4584,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.platform-infra-capability-layering
   category: artifact-id
   match_type: exact
@@ -5969,6 +5981,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.skills.ab-context-evaluation
   evidence_path: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
   confidence_weight: 1
 - term: rag-rulebook.source-material-review.04-deploy.github-actions-to-ecs-fargate.2026-06-29
   category: artifact-id
@@ -7541,6 +7565,18 @@ terms:
   match_type: exact
   canonical_id: product.readme
   evidence_path: .agentic/03.product/README.md
+  confidence_weight: 1
+- term: product.plan.product-harness-foundation
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.product-harness-foundation
+  evidence_path: .agentic/03.product/plans/implementation/product-harness-foundation.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/product-harness-foundation.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.product-harness-foundation
+  evidence_path: .agentic/03.product/plans/implementation/product-harness-foundation.md
   confidence_weight: 1
 - term: product.migration-plan.agentic-product-namespace
   category: artifact-id
@@ -9353,6 +9389,18 @@ terms:
   match_type: exact
   canonical_id: education.teaching-notes.0001-evidence-before-judgment
   evidence_path: docs/education/teaching-notes/0001-evidence-before-judgment.md
+  confidence_weight: 1
+- term: education.teaching-notes.0002-architecture-learning-handbook
+  category: artifact-id
+  match_type: exact
+  canonical_id: education.teaching-notes.0002-architecture-learning-handbook
+  evidence_path: docs/education/teaching-notes/0002-architecture-learning-handbook.md
+  confidence_weight: 1
+- term: docs/education/teaching-notes/0002-architecture-learning-handbook.md
+  category: file-path
+  match_type: exact
+  canonical_id: education.teaching-notes.0002-architecture-learning-handbook
+  evidence_path: docs/education/teaching-notes/0002-architecture-learning-handbook.md
   confidence_weight: 1
 - term: education.title-banks.ai-orientation-title-bank
   category: artifact-id

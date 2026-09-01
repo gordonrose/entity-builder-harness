@@ -290,6 +290,7 @@ projection_sets:
     expected_selector_evaluations:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
+      - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
     required_checks:
       - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
