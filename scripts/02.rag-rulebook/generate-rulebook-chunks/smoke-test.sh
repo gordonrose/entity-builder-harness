@@ -70,7 +70,7 @@ assert all(chunk["authority"] == "explanation-support" for chunk in chunk_set["c
 rule_chunks = [chunk for chunk in chunk_set["chunks"] if chunk["content_kind"] == "rule"]
 source_explanation_chunks = [chunk for chunk in chunk_set["chunks"] if chunk["content_kind"] == "source-explanation"]
 assert any(
-    chunk["source_path"] == "docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md"
+    chunk["source_path"] == "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md"
     and chunk["heading_path"].endswith("Platform Runtime Shell Surfaces")
     and chunk["line_start"] >= 1
     and chunk["line_end"] >= chunk["line_start"]

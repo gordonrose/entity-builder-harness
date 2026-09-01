@@ -104,6 +104,17 @@ Summary: Checkpointed the user-facing walkthrough, provider-neutral platform pla
 
 ADR impact: No architecture decision was adopted; the plan preserves the existing governance-repair review for the missing ADR reference.
 
+
+### 2026-09-01T20:50:38Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `generated-artifact-conflict`
+
+Mode: manual
+
+Action: Regenerated the inventory from merged source artifacts; did not preserve either stale generated version.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -120,7 +131,17 @@ ADR impact: No architecture decision was adopted; the plan preserves the existin
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `generated-artifact-conflict`
+  Mode: manual
+  Reason: The classifier conservatively returned normal-repo-conflict, but this tracked output is reproducible from merged artifact metadata; the user explicitly approved the governed generated-artifact action.
+  Action: Regenerated the inventory from merged source artifacts; did not preserve either stale generated version.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-22-11-we-currently-don-t-have-ap-50797a09460e/20260901202032`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-22-11-we-currently-don-t-have-ap-50797a09460e-20260901202032`
+  Files changed by resolution: Regenerated .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml; updated this session README with the conflict audit.
+  Checks: Recognition-source generator freshness check passed; generated artifact whitespace check passed. A general cached-diff whitespace scan reports four trailing spaces already present in main's unrelated prototype-corpus session log.
 
 ## ADR Disposition
 

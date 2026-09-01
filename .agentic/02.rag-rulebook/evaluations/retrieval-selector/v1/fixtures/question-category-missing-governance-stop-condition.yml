@@ -48,7 +48,7 @@ expected:
       - AGENTS.md
       - .agentic/01.harness/standards/missing-governance-stop-condition.md
       - .agentic/shared/workflows/capability-resolution-workflow.md
-      - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+      - docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
   selector_trace:
     strategy_id: retrieval-selector.v1.hybrid-deterministic-first
     required_applied_stage_ids:
@@ -63,9 +63,8 @@ source_refs:
   - AGENTS.md
   - .agentic/01.harness/standards/missing-governance-stop-condition.md
   - .agentic/shared/workflows/capability-resolution-workflow.md
-  - docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+  - docs/01.harness/adrs/0012-treat-missing-governance-as-stop-condition.md
 update_triggers:
   - Missing governance stop condition changes.
   - Capability resolution workflow changes.
   - Repo-level agent instructions change.
-

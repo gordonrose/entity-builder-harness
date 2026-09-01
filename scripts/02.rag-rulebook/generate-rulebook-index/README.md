@@ -24,14 +24,16 @@ used_by:
 -->
 # Generate Rulebook Index
 
-`script.sh` emits a read-only JSON index for the current prototype rulebook
-and numbered corpus rule roots.
+`script.sh` emits a read-only JSON index for the numbered corpus roots and the
+migration map.
 
 It reads:
 
-- `docs/harness/architecture/`
+- `docs/01.harness/`
 - `docs/02.rag-rulebook/rules/`
+- `docs/03.product/`
 - `docs/04.deploy/rules/`
+- `docs/06.shared/`
 - `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml`
 
 It emits:

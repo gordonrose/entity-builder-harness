@@ -134,11 +134,11 @@ Token trimming must respect prompt intent:
 
 Start with existing knowledge rather than rewriting everything:
 
-- `docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md`
+- `docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md`
   - includes platform runtime shell surfaces and runtime surface boundaries
-- `docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md`
+- `docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md`
   - explains contract/runtime/adapter/infra/environment ownership
-- `docs/harness/architecture/source-material/packages-core-contract-surface-v1.md`
+- `docs/03.product/source-material/core/packages-core-contract-surface-v1.md`
   - explains core contract placement and provider-neutral limits
 - `docs/04.deploy/source-material/**`
   - explains deploy readiness, AWS, container, and production operations context

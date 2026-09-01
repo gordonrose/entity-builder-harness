@@ -170,7 +170,16 @@ import yaml
 
 batch = int(sys.argv[1])
 EXTENSIONS = {".md", ".yml", ".yaml", ".sh"}
-ALLOWED_REF_PREFIXES = (".agentic/", "docs/00.chat/", "docs/harness/", "scripts/")
+ALLOWED_REF_PREFIXES = (
+    ".agentic/",
+    "docs/00.chat/",
+    "docs/01.harness/",
+    "docs/02.rag-rulebook/",
+    "docs/03.product/",
+    "docs/04.deploy/",
+    "docs/06.shared/",
+    "scripts/",
+)
 ALL_TARGETS = ["llm-workbench", "entity-builder", "design-system-builder"]
 
 SPECIAL_IDS = {
@@ -295,11 +304,11 @@ def selected_for_batch(path: Path) -> bool:
             ".agentic/01.harness/workflows/",
         )) or s == ".agentic/01.harness/operator-guide.md"
     if batch == 3:
-        return s.startswith("docs/harness/architecture/adrs/")
+        return False
     if batch == 4:
-        return s.startswith("docs/harness/architecture/rules/")
+        return False
     if batch == 5:
-        return s.startswith("docs/harness/architecture/") and not s.startswith("docs/harness/architecture/adrs/") and not s.startswith("docs/harness/architecture/rules/")
+        return False
     if batch == 6:
         return s.startswith(".agentic/00.chat/") or s.startswith("docs/00.chat/")
     if batch == 7:
@@ -355,11 +364,9 @@ def purpose_for(path: Path, metadata: dict[str, Any]) -> str:
         return f"Run the {leaf} governed helper."
     if path.suffix in {".yml", ".yaml"}:
         leaf = humanize(path.stem)
-        if s.startswith("docs/harness/architecture/rules/"):
-            return f"Define the {leaf} architecture rule artifact."
         return f"Define the {leaf} configuration artifact."
     title = title_from_markdown(path) or humanize(path.stem)
-    if s.startswith("docs/harness/architecture/adrs/"):
+    if "/adrs/" in s:
         return f"Record the {title} architecture decision."
     return f"Document {title}."
 
@@ -371,13 +378,13 @@ def layer_for(path: Path, metadata: dict[str, Any]) -> str:
     s = path.as_posix()
     if s.startswith((".agentic/00.chat/", "docs/00.chat/", "scripts/00.chat/")):
         return "00.chat"
-    if s.startswith((".agentic/01.harness/", "docs/harness/", "scripts/01.harness/")):
+    if s.startswith((".agentic/01.harness/", "docs/01.harness/", "scripts/01.harness/")):
         return "01.harness"
-    if s.startswith((".agentic/02.rag-rulebook/", "scripts/02.rag-rulebook/")):
+    if s.startswith((".agentic/02.rag-rulebook/", "docs/02.rag-rulebook/", "scripts/02.rag-rulebook/")):
         return "02.rag-rulebook"
-    if s.startswith(".agentic/03.product/"):
+    if s.startswith((".agentic/03.product/", "docs/03.product/")):
         return "03.product"
-    if s.startswith((".agentic/aws/", "docs/aws/")):
+    if s.startswith((".agentic/aws/", "docs/04.deploy/", "docs/aws/")):
         return "04.deploy"
     if s.startswith((".agentic/education/", "docs/education/")):
         return "05.education"
@@ -391,8 +398,16 @@ def domain_for(path: Path, metadata: dict[str, Any]) -> str:
     s = path.as_posix()
     if "artifact-metadata" in s:
         return "metadata"
-    if s.startswith("docs/harness/architecture/"):
-        return "architecture"
+    if s.startswith("docs/01.harness/"):
+        return "governance"
+    if s.startswith("docs/02.rag-rulebook/"):
+        return "corpus"
+    if s.startswith("docs/03.product/"):
+        return "requirements"
+    if s.startswith("docs/04.deploy/"):
+        return "infra.ci-cd"
+    if s.startswith("docs/06.shared/"):
+        return "governance"
     if s.startswith(".agentic/03.product/"):
         return "requirements"
     if s.startswith((".agentic/aws/", "docs/aws/")):
@@ -419,7 +434,9 @@ def kind_for(path: Path, metadata: dict[str, Any]) -> str:
     if path.suffix == ".sh":
         return "script"
     if path.suffix in {".yml", ".yaml"}:
-        return "rule" if s.startswith("docs/harness/architecture/rules/") else "config"
+        if "/rule-packs/" in s:
+            return "rule-pack"
+        return "rule" if "/rules/" in s else "config"
     if "template" in s:
         return "template"
     if "workflow" in s:
@@ -538,12 +555,18 @@ def used_by_for(path: Path, metadata: dict[str, Any]) -> list[dict[str, str]]:
             unique[ref["path"]] = ref
         return list(unique.values())
     s = path.as_posix()
-    if s.startswith("docs/harness/architecture/rules/"):
-        ref = ".agentic/01.harness/workflows/change-harness.md"
-    elif s.startswith("docs/harness/architecture/adrs/"):
-        ref = "docs/harness/architecture/adrs/README.md"
-    elif s.startswith("docs/harness/architecture/"):
-        ref = ".agentic/01.harness/workflows/change-harness.md"
+    if s.startswith("docs/00.chat/adrs/"):
+        ref = "docs/00.chat/adrs/README.md"
+    elif s.startswith("docs/01.harness/adrs/"):
+        ref = "docs/01.harness/adrs/README.md"
+    elif s.startswith("docs/02.rag-rulebook/adrs/"):
+        ref = "docs/02.rag-rulebook/adrs/README.md"
+    elif s.startswith("docs/03.product/adrs/"):
+        ref = "docs/03.product/adrs/README.md"
+    elif s.startswith("docs/04.deploy/adrs/"):
+        ref = "docs/04.deploy/adrs/README.md"
+    elif s.startswith("docs/06.shared/adrs/"):
+        ref = "docs/06.shared/README.md"
     elif s.startswith((".agentic/00.chat/", "docs/00.chat/")):
         ref = "AGENTS.md"
     elif s.startswith("docs/aws/"):

@@ -20,7 +20,7 @@ used_by:
   - id: harness.standard.artifact-metadata-headers-v1
     path: .agentic/01.harness/standards/artifact-metadata-headers.md
   - id: harness.adr.versioned-artifact-metadata
-    path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+    path: docs/01.harness/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
   - id: harness.script.artifact-metadata.check-headers
     path: scripts/01.harness/artifact-metadata/check-headers/script.sh
 -->
@@ -90,7 +90,7 @@ YAML artifacts should use the same fields as YAML comments:
 #     targets: []
 #   used_by:
 #     - id: harness.rulepack.add-core-module
-#       path: docs/harness/architecture/rule-packs/add-core-module.yml
+#       path: docs/03.product/rule-packs/core/add-core-module.yml
 ```
 
 Script artifacts are also in scope for v2. They should eventually use the same

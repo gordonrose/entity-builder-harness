@@ -17,7 +17,7 @@
   - id: infra.04-deploy.03-product.aws-runtime-family-decision
     path: infra/04.deploy/03.product/aws-runtime-family.decision.yml
   - id: harness.architecture.plan.platform-runtime-implementation
-    path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+    path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
 -->
 # ADR 0001: Select ECS Fargate For Platform Shell Planning
 

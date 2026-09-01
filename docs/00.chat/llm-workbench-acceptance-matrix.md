@@ -49,6 +49,6 @@ Source-only public-export exclusions include `.agentic/agentic`, `.docs`,
 `.scripts`, `.agentic/01.harness`, `.agentic/docs`, `.agentic/scripts`, and
 `scripts/00.chat/classification`, plus maintainer-history ADR surfaces such as
 `docs/00.chat/public-chat-workbench-adrs.md` and
-`docs/harness/architecture/adrs/`. Public `scripts/01.harness` is limited to
+retired prototype ADR directories. Public `scripts/01.harness` is limited to
 portable validation and governed-runner helpers; source-maintenance migration,
 taxonomy-generation, and rule-test scripts must not be exported or installed.

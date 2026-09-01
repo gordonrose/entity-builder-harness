@@ -35,7 +35,7 @@ to the upstream workbench repo that owns reusable chat harness behavior.
 The workflow documents and opens the upstream task. It does not silently copy
 files, edit the source repo, push to remotes, or mutate both repos in one step.
 
-Architecture decision: `docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md`.
+Architecture decision: `docs/00.chat/adrs/0014-promote-reusable-lessons-upstream.md`.
 
 When the reusable lesson affects public `llm-workbench` startup, install,
 assistant adapters, metrics, portability, or export behavior, it must preserve

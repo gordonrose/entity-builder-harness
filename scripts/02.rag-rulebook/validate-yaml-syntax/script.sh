@@ -77,8 +77,11 @@ done
 if [ "${#PATHS[@]}" -eq 0 ]; then
   PATHS=(
     ".agentic/02.rag-rulebook"
+    "docs/01.harness"
     "docs/02.rag-rulebook"
+    "docs/03.product"
     "docs/04.deploy"
+    "docs/06.shared"
     ".agentic/aws"
   )
 fi

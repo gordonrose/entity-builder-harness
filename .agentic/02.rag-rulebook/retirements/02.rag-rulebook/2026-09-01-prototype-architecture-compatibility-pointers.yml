@@ -1,0 +1,337 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: retirement-record
+#   purpose: Record retired prototype architecture child compatibility pointers after collapsing them to a root pointer.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+
+schema: rag-rulebook/retirement-record/v1
+retirement_id: rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers
+status: accepted
+owner_layer: 02.rag-rulebook
+corpus_id: corpus.02.rag-rulebook
+retired_at_utc: "2026-09-01T01:26:46Z"
+retired_artifacts:
+  - path: docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 0af5afaaea475564341b21e79213c1fbac4cf464384a693fcb79aae8fff449f8
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 19b241a4fe7eb69e0a382560ec5f0e5d639929e713f5d5cd49d3b22df4bb8acb
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 47182ac262e9243df424e8988c265e4ac7a0e102d545c058838226875748de2b
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 4738a1c3e20fd6908df4af92015ca258a877f65a12c444c26685a7b67607e911
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md
+    kind: other
+    path_state: superseded
+    previous_sha256: daa24bba98582f2d22a7f70dcbb6b87accc4ca4f90ba229c134a00b25e7998e3
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0006-use-session-metadata-for-routing-after-chat-start.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 8b47b71f89b155d9e972b3cf9c4e48c58b7f15e1da7bd6d15555640805394a90
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 2d19fdaf73e51c75ae71520891dae9f0dccb7740309669b96ea735c27e545dd0
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0008-add-education-layer.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 1708586b09bdde036b71c472eb2e7ad23dc6e0eb772c62d1825650d03ae32a79
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md
+    kind: other
+    path_state: superseded
+    previous_sha256: b4115285d518c454f66e99d3a826f1c7bfc3c80d3c12ecb634af48f702c5755a
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 7f480bf1c9f6e82b8485c20a0ee6bd10490d8ac6709e58acfe8db47f418a613d
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md
+    kind: other
+    path_state: superseded
+    previous_sha256: ee9ce1f64868c5560310cb9288642528db6bc0a645dc3da5d5a53d33ded5f2b1
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md
+    kind: other
+    path_state: superseded
+    previous_sha256: cce961d75a80c6e3d772f8211fd5d94dd9eaa8c4142e8a550afe75852098559a
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md
+    kind: other
+    path_state: superseded
+    previous_sha256: c557782c9f590ad2f3b7dcdc48309f4f65c455f36526cf8b96a2251c45b5cdb0
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 8de8b51668845be70cfd3a415a5b62460002f5f7e3d9da20b6708540eaedad0a
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 7605b3a554f5f7da8c37858a6167dc990c6321b3599844c23bc3e2b4a105bdad
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0016-add-aws-layer.md
+    kind: other
+    path_state: superseded
+    previous_sha256: f134a5dc6f33e4f480cd9cfe75078eb2faf9bcd24384d57cf0add9d387ab2311
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 42639f04f4602a2acf492810409ca18c1a4760d813f459095fc97dc02d88814a
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 22dfac826be16f9d608216b6df4ecaf04dae5b21b63c9bdc6e4629946851a27d
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md
+    kind: other
+    path_state: superseded
+    previous_sha256: e70605b8e5b85df072e380bf0d188bc9464da05c9ab577df9bffecdf5bbae6cf
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 0264e280a1e0a0920f963133719c3f9e44e27c225f0841fb76aaba1474ab34d6
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 145553dfd0c7b3b0d9ea80d9c605472690305ab55c5e147724e699fb57529649
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0022-add-rag-rulebook-layer.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 318aef732eaca6a3be6722f792acf2ba1b9c50dbb2dcdbcb9149a3b5ae9588a0
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md
+    kind: other
+    path_state: superseded
+    previous_sha256: ef1e92852538d9440de3114d5f0651499dd7713e72dfa2d2b0a3fefbec807474
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 1660c89932a651708d13d52bbc744ae16218884afa111edd1741cd83cb2ec999
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 4853153daa15ea21dcb410b1770bf05160c1c4cc4999cd94c3c785c54b576859
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 714fdb3cd048dd49917724965acc513d3554419035d52bc8ffe4d889e2db693e
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 63f7e9b88737a571e9670fe35905bc91c3313f7138af3f09058571b881a89135
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 6380469de06030c6a033fad4175d873cab754376227e4947a14c6b40d483bfb6
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md
+    kind: other
+    path_state: superseded
+    previous_sha256: a9afd4a1d0ef6b67a56ebed06aea318defa952bcd788f2cd545bb79cdf5d0f82
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 6436a864ad214109b76f8e7554ae888376e763d1cac8afadc97ad329bfd38805
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md
+    kind: other
+    path_state: superseded
+    previous_sha256: a89fc8ac931660c7f69acebf4a788a0fe7e46bd5d5b8ca0b04dc7fcb6847f338
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/adrs/README.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 307cb23f3e7900ed2e64e44a20b291504c26e8ca88c9eca09aa4a49ae17ff172
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/guides/README.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 793f686e51a54fecfe22f3dd72c2325fabf5695dc59a0c24aa39bcaa723b986d
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/guides/originals/README.md
+    kind: other
+    path_state: superseded
+    previous_sha256: b8d1c17d897020c30b6aba26ffbb16120be43be9e9766a2204b5b07925de2a45
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+    kind: other
+    path_state: superseded
+    previous_sha256: c606049775bd1db7c8b7e8c4d92b0386a4fda9d0192c6e1f66107f68dc9d0487
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/rule-packs/README.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 81e2485fada6a9a3ceb5b9e26292b7e26adfb839defad38e3add2a9eff5ba362
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/rules/README.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 9da37fe515406d51725f70c8cc65b77ef8c690efdb6c73b5fac67aa34081e80f
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+  - path: docs/harness/architecture/source-material/README.md
+    kind: other
+    path_state: superseded
+    previous_sha256: 7bc1ca763a7e3106325020e9d7be9bae236cdbd6729ca421da72b873525457fd
+    replacement_paths:
+      - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+reason:
+  - The child compatibility pointers were temporary migration scaffolding after the actual ADRs, source material, plans, rules, and rule packs moved to owner-aligned homes.
+  - The prototype architecture root now has a single short compatibility pointer that lists the canonical numbered roots.
+  - Generated recognition sources and local RAG runtime inputs should no longer index the old child pointer artifacts as independent evidence.
+reference_checks:
+  checked_roots:
+    - .agentic/01.harness
+    - .agentic/02.rag-rulebook
+    - .agentic/aws
+    - docs/harness/architecture
+    - docs/01.harness
+    - docs/02.rag-rulebook
+    - docs/03.product
+    - docs/04.deploy
+    - docs/06.shared
+    - scripts/01.harness
+    - scripts/02.rag-rulebook
+  remaining_references: []
+validation:
+  required_checks:
+    - bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+    - bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+    - bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh
+    - bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+    - bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-domain-corpus-package.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-artifact-path-migration.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-generated-recognition-repair.yml
+    - bash scripts/01.harness/check-governed-script-command-drift.sh
+    - bash scripts/01.harness/agents/validate-harness-agents/script.sh
+    - bash scripts/00.chat/worktree/check-write-location/script.sh
+    - git diff --check
+  checks_run:
+    - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-local-runtime/script.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-runtime-freshness/script.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-domain-corpus-package.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-harness-artifact-path-migration.yml --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/question-category-rag-generated-recognition-repair.yml
+      result: passed
+    - command: bash scripts/01.harness/check-governed-script-command-drift.sh
+      result: passed
+    - command: bash scripts/01.harness/agents/validate-harness-agents/script.sh
+      result: passed
+    - command: bash scripts/00.chat/worktree/check-write-location/script.sh
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: accept
+  reviewer: Gordon Rose

@@ -23,7 +23,7 @@ used_by:
 
 # Source Reference Checklist
 
-- Source docs are from `docs/harness/architecture/guides/markdown`.
+- Source docs are from `docs/03.product/source-material/guides/markdown`.
 - Every major rule has a `source_ref`.
 - `source_refs` use doc filenames and section names.
 - Do not cite vague "architecture docs" generally.

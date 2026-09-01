@@ -212,7 +212,7 @@
       "task_text": "Product backend work adds a platform, app, entity, feature, or capability boundary.",
       "changed_paths": [
         "src/platform/capabilities/example/index.ts",
-        "docs/harness/architecture/rules/platform-capability-boundaries.yml"
+        "docs/03.product/rules/platform/layers/platform.yml"
       ],
       "expected_agents": [
         "harness.agents.senior-backend-architect"
@@ -246,8 +246,8 @@
       "type": "single_agent",
       "task_text": "A repeated backend architecture ambiguity is not covered by an existing rulebook rule.",
       "changed_paths": [
-        "docs/harness/architecture/rule-packs/backend-platform.yml",
-        "docs/harness/architecture/rules/dependency-direction.yml"
+        "docs/03.product/rule-packs/platform/add-platform-adapter.yml",
+        "docs/06.shared/rules/concerns/dependency-direction.yml"
       ],
       "expected_agents": [
         "harness.agents.senior-backend-architect"
@@ -494,7 +494,7 @@
         ".github/workflows/deploy-rag-rulebook.yml",
         ".agentic/aws/workflows/deploy-service.md",
         "src/server/rag-rulebook-service.ts",
-        "docs/harness/architecture/rules/service-boundaries.yml"
+        "docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml"
       ],
       "expected_agents": [
         "harness.agents.senior-sre-engineer",

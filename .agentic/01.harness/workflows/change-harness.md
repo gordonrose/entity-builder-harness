@@ -34,6 +34,7 @@ required_gates:
 rules:
   - Keep AGENTS.md as a router only.
   - Consult .agentic/01.harness/standards/agentic-artifact-standards.md before adding or changing harness artifacts.
+  - Consult .agentic/01.harness/standards/document-artifact-placement.md before adding or moving document artifacts, corpus material, ADRs, plans, rules, or rule packs.
   - Use .agentic/01.harness/workflows/migrate-artifact-paths.md when moving, renaming, retiring, or removing committed files or directories.
   - Consult .agentic/01.harness/standards/missing-governance-stop-condition.md when a required harness action, recovery path, workaround, or substitution is not already governed.
   - Prefer scripts over prose where checks can be deterministic.

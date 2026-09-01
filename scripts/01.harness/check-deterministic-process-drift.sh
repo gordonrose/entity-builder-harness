@@ -106,10 +106,7 @@ is_scannable_path() {
   local path="$1"
 
   case "$path" in
-    docs/harness/architecture/adrs/*.md)
-      return 1
-      ;;
-    AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
+    AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/01.harness/*.md|docs/01.harness/**/*.md|docs/03.product/*.md|docs/03.product/**/*.md|docs/06.shared/*.md|docs/06.shared/**/*.md)
       return 0
       ;;
     *)
@@ -122,7 +119,9 @@ collect_all_paths() {
   {
     [ -f AGENTS.md ] && printf '%s\n' AGENTS.md
     [ -d .agentic ] && find .agentic -type f
-    [ -d docs/harness ] && find docs/harness -type f
+    [ -d docs/01.harness ] && find docs/01.harness -type f
+    [ -d docs/03.product ] && find docs/03.product -type f
+    [ -d docs/06.shared ] && find docs/06.shared -type f
   } | sort -u
 }
 

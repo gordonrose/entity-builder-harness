@@ -18,11 +18,11 @@
 #     - design-system-builder
 #   used_by:
 #   - id: harness.architecture.rules.layers.platform
-#     path: docs/harness/architecture/rules/layers/platform.yml
+#     path: docs/03.product/rules/platform/layers/platform.yml
 #   - id: harness.architecture.rules.layers.apps
-#     path: docs/harness/architecture/rules/layers/apps.yml
+#     path: docs/03.product/rules/apps/layers/apps.yml
 #   - id: harness.architecture.rules.concerns.dependency-direction
-#     path: docs/harness/architecture/rules/concerns/dependency-direction.yml
+#     path: docs/06.shared/rules/concerns/dependency-direction.yml
 
 schema: rag-rulebook/source-to-rule-derivation-report/v1
 report_id: derivation.03.product-platform.2026-07-10.platform-app-mount-boundary-v1
@@ -32,7 +32,7 @@ source_change:
   change_type: created
   approved_source_state: approved
   changed_paths:
-    - docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+    - docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
   summary: >
     ADR 0026 records that apps expose one approved public app mount module as
     the platform integration boundary, while app-internal service, feature,
@@ -43,17 +43,17 @@ target:
   corpus_id: corpus.03.product.platform
   owner_layer: 03.product
   expected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   affected_rule_paths:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   affected_rulesets:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
   affected_corpus_gaps: []
@@ -62,22 +62,22 @@ semantic_review:
   source_claims:
     - claim_id: platform.app-mount-is-integration-boundary
       summary: Apps expose platform integration through one approved public mount module, normally apps/<app>/app.mount.ts.
-      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+      evidence_path: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
     - claim_id: platform.composition-roots-import-only-mounts
       summary: Platform composition roots may import app mount modules, but other platform code must stay unaware of app internals.
-      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+      evidence_path: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
     - claim_id: apps.internal-structure-is-app-owned
       summary: App mount modules may aggregate service, feature, capability, domain, use-case, route, job, health, config, or workflow modules, but that structure is not part of the platform contract.
-      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+      evidence_path: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
     - claim_id: layers.consume-public-surfaces-not-internals
       summary: Other layers should consume approved public mounts, manifests, generated deployment metadata, or contracts rather than inspecting app internals.
-      evidence_path: docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md
+      evidence_path: docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md
   conflicts:
     status: none-found
     search_scope:
-      - docs/harness/architecture/rules/layers/platform.yml
-      - docs/harness/architecture/rules/layers/apps.yml
-      - docs/harness/architecture/rules/concerns/dependency-direction.yml
+      - docs/03.product/rules/platform/layers/platform.yml
+      - docs/03.product/rules/apps/layers/apps.yml
+      - docs/06.shared/rules/concerns/dependency-direction.yml
     items: []
   drift:
     status: none-found
@@ -91,9 +91,9 @@ semantic_review:
 
 proposed_updates:
   rules:
-    - docs/harness/architecture/rules/layers/platform.yml
-    - docs/harness/architecture/rules/layers/apps.yml
-    - docs/harness/architecture/rules/concerns/dependency-direction.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+    - docs/06.shared/rules/concerns/dependency-direction.yml
   rule_packs: []
   recognition_sources: []
   recognition_candidates: []

@@ -26,7 +26,7 @@
 - Source packet: `../source-packet.md`
 - Source evidence:
   - `commitLogs/2026/jun/15/2026-06-15-21-27-i-d-like-to-update-my-harness-so-that-whenever-i-commit-some/README.md`
-  - `docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md`
+  - `docs/00.chat/adrs/0001-record-harness-session-decisions-before-commit.md`
 - Status: usable
 
 ## Scene

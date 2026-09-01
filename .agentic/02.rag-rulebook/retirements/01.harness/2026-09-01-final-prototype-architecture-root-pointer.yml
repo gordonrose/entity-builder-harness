@@ -1,0 +1,86 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.retirement.2026-09-01-final-prototype-architecture-root-pointer
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#     - agentic
+#     - architecture
+#   kind: retirement-record
+#   purpose: Record retirement of the final prototype architecture root compatibility pointer.
+#   portability:
+#     class: reusable
+#     targets:
+#       - llm-workbench
+#       - entity-builder
+#       - design-system-builder
+#   used_by:
+#     - id: rag-rulebook.script.validate-retirement-records
+#       path: scripts/02.rag-rulebook/validate-retirement-records/script.sh
+#     - id: rag-rulebook.migration-plan.prototype-corpus-domain-split
+#       path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
+
+schema: rag-rulebook/retirement-record/v1
+retirement_id: rag-rulebook.retirement.2026-09-01-final-prototype-architecture-root-pointer
+status: accepted
+owner_layer: 01.harness
+corpus_id: corpus.01.harness
+retired_at_utc: "2026-09-01T17:21:17Z"
+retired_artifacts:
+  - path: docs/harness/architecture/README.md
+    kind: other
+    path_state: removed
+    previous_sha256: 16eda6428356a74b198da0aa01511bd0ca1e15ccdb64f79b4b5d1880703e57a4
+    replacement_paths:
+      - docs/00.chat/README.md
+      - docs/01.harness/README.md
+      - docs/02.rag-rulebook/README.md
+      - docs/03.product/README.md
+      - docs/04.deploy/README.md
+      - docs/06.shared/README.md
+      - .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+reason:
+  - The final prototype architecture root pointer no longer needs to be an active compatibility surface because corpus content has moved to owner-aligned numbered roots.
+  - Current docs, scripts, generated recognition sources, and local runtime inputs now use the numbered corpus roots or migration history instead of the retired pointer path.
+reference_checks:
+  checked_roots:
+    - .agentic/01.harness
+    - .agentic/02.rag-rulebook
+    - docs/00.chat
+    - docs/01.harness
+    - docs/02.rag-rulebook
+    - docs/03.product
+    - docs/04.deploy
+    - docs/06.shared
+    - scripts/00.chat
+    - scripts/01.harness
+    - scripts/02.rag-rulebook
+  remaining_references: []
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+    - bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+    - bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-retirement-records/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-corpus-root-changes/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/smoke-test.sh
+      result: passed
+    - command: bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
+      result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: accept
+  reviewer: Gordon Rose

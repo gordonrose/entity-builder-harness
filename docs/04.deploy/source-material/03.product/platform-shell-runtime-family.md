@@ -17,7 +17,7 @@ used_by:
 - id: deploy.rules.03-product.platform-shell-runtime-family
   path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
 - id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
-  path: docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md
+  path: docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
 -->
 # Platform Shell Runtime Family
 

@@ -26,6 +26,9 @@ Use `workflows/change-harness.md` for changes to AGENTS.md, CLAUDE.md, .agentic 
 
 Use `workflows/migrate-artifact-paths.md` for moving, renaming, retiring, or removing committed files or directories.
 
+Use `standards/document-artifact-placement.md` before adding ADRs, guides,
+source material, plans, rules, rule packs, or other document artifacts.
+
 Use `workflows/run-agent-review.md` for single-agent review invocation.
 
 Use `workflows/run-review-board.md` for multi-agent review-board composition.
@@ -46,15 +49,23 @@ rubrics, executable fixtures, and deterministic validators are also governed
 capabilities when a workflow or standard assigns them explicit ownership.
 
 RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
-The architecture rulebook artifacts referenced here remain a prototype corpus
-until a governed migration assigns final domain corpus homes.
+The prototype architecture corpus has been split into owner-aligned corpus
+homes. Its legacy root has been retired.
 
-Canonical architecture source remains
-`docs/harness/architecture/guides/markdown`.
+New document artifacts should use
+`standards/document-artifact-placement.md` instead of extending or recreating
+retired prototype corpus locations.
 
-Canonical rules remain `docs/harness/architecture/rules`.
+Canonical product architecture source remains
+`docs/03.product/source-material/guides/markdown`.
 
-Canonical rule packs remain `docs/harness/architecture/rule-packs`.
+Canonical product rules now live under `docs/03.product/rules`.
+
+Canonical product rule packs now live under `docs/03.product/rule-packs`.
+
+Canonical harness, deploy, and shared rules now live under
+`docs/01.harness/rules`, `docs/04.deploy/rules`, and
+`docs/06.shared/rules`.
 
 Future Codex sessions continuing harness-governance work should start by
 reading `manifest.yml`, the relevant workflow, and any standard named by that
@@ -73,6 +84,7 @@ workflow.
 - `standards/agent-contracts.md` - defines the contract, authority boundaries, scoring rules, and report expectations for harness review agents.
 - `standards/artifact-metadata-headers.md` - defines the compatibility v1 metadata header format and points to the versioned artifact metadata capability.
 - `standards/artifact-path-migrations.md` - defines compatibility rules for moving, renaming, retiring, or removing repository artifact paths.
+- `standards/document-artifact-placement.md` - defines owner-aligned homes for new document artifacts, corpus material, ADRs, plans, rules, and rule packs.
 - `standards/evaluation-fixtures.md` - defines how harness evaluation fixtures are authored, owned, validated, and evolved.
 - `standards/governed-script-permissions.md` - defines how persistent vendor command permissions target the governed script runner instead of broad shell access.
 - `standards/missing-governance-stop-condition.md` - defines how agents stop and report when a necessary action, recovery path, workaround, or substitution is not governed by the current workflow, gate, script, or standard.

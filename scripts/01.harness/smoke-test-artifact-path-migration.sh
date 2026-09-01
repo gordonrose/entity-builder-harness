@@ -41,6 +41,7 @@ git -C "$REPO" init -q
 
 mkdir -p \
   "$REPO/.agentic/01.harness/workflows" \
+  "$REPO/.agentic/02.rag-rulebook/retirements/example" \
   "$REPO/.agentic/harness-renamed/plans/migration" \
   "$REPO/scripts/01.harness" \
   "$REPO/docs/00.chat/bootstrap" \
@@ -97,6 +98,12 @@ EOF
     .agentic/01.harness/workflows/change-harness.md \
     scripts/01.harness/example.sh \
     docs/00.chat/bootstrap/example.md
+
+  cat > .agentic/02.rag-rulebook/retirements/example/retired-path.yml <<'EOF'
+schema: rag-rulebook/retirement-record/v1
+retired_artifacts:
+  - path: .agentic/01.harness
+EOF
 
   if bash "$SOURCE_ROOT/scripts/01.harness/check-artifact-path-migration.sh" .agentic/01.harness .agentic/harness-renamed >"$TMP_ROOT/plan-missing.out" 2>"$TMP_ROOT/plan-missing.err"; then
     fail "checker allowed migration-plan old-path references without an explicit plan path"

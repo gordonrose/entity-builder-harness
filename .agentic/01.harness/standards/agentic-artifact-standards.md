@@ -23,6 +23,8 @@ used_by:
   path: .agentic/01.harness/workflows/build-capability-workflow.md
 - id: harness.readme
   path: .agentic/01.harness/README.md
+- id: harness.standards.document-artifact-placement
+  path: .agentic/01.harness/standards/document-artifact-placement.md
 -->
 
 # Agentic Artifact Standards
@@ -36,8 +38,12 @@ The goal is to keep always-loaded instructions small while giving repeatable
 work a clear home.
 
 Use `.agentic/01.harness/standards/repo-terminology.md` as the canonical source
-for repo-wide term definitions. This standard decides artifact placement; it
-does not create a second glossary.
+for repo-wide term definitions. This standard decides artifact type and owner;
+it does not create a second glossary.
+
+Use `.agentic/01.harness/standards/document-artifact-placement.md` for the
+owner-aligned path of ADRs, guides, source material, plans, rules, rule packs,
+READMEs, runbooks, and curated corpus material.
 
 ## Core Rule
 
@@ -93,6 +99,9 @@ reason to exist.
 - Put repo-wide term definitions in
   `.agentic/01.harness/standards/repo-terminology.md`; local artifacts may
   describe usage, but they must not redefine canonical terms.
+- Put document artifacts in the owner-aligned path named by
+  `.agentic/01.harness/standards/document-artifact-placement.md` once the
+  artifact type and owner are known.
 - Define artifacts by stable purpose, not by a current vendor implementation.
 - Put a rule in one place. Standards explain intent, templates provide shape,
   scripts validate mechanics, and workflows say when to consult them.

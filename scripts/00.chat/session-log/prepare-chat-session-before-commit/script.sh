@@ -126,6 +126,19 @@ adr_paths() {
   ' "$LOG_FILE"
 }
 
+is_governed_adr_path() {
+  local path="$1"
+
+  case "$path" in
+    docs/[0-9][0-9].*/adrs/*.md|docs/*/architecture/adrs/*.md)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 require_section_entry() {
   local section="$1"
   local description="$2"
@@ -154,8 +167,8 @@ case "$ADR_NEEDED" in
       fail "ADR needed is yes, but ADR path is empty"
     else
       for ADR_PATH in "${ADR_PATHS[@]}"; do
-        if [[ "$ADR_PATH" != docs/*/architecture/adrs/*.md ]]; then
-          fail "ADR path must be under docs/<track>/architecture/adrs/: $ADR_PATH"
+        if ! is_governed_adr_path "$ADR_PATH"; then
+          fail "ADR path must be under docs/<numbered-layer>/adrs/ or docs/<track>/architecture/adrs/: $ADR_PATH"
         elif [ ! -f "$ADR_PATH" ]; then
           fail "ADR path does not exist: $ADR_PATH"
         fi

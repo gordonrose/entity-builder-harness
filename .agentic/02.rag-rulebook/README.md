@@ -71,11 +71,18 @@ Subcorpora may be introduced when a layer needs more precision, such as
 - Layer source material: `docs/02.rag-rulebook/source-material/`
 - Layer structured rulebook content: `docs/02.rag-rulebook/rules/`
 - Layer command surface: `scripts/02.rag-rulebook/`
-- Current prototype rulebook artifacts: `docs/harness/architecture/`
+- Current initialized domain corpus roots: `docs/00.chat/`,
+  `docs/01.harness/`, `docs/02.rag-rulebook/`, `docs/03.product/`,
+  `docs/04.deploy/`, and `docs/06.shared/`
+- Current owner-aligned ADR roots include `docs/00.chat/adrs/`,
+  `docs/01.harness/adrs/`, `docs/02.rag-rulebook/adrs/`,
+  `docs/03.product/adrs/`, `docs/04.deploy/adrs/`, and
+  `docs/06.shared/adrs/`
+- Retired prototype architecture corpus history:
+  `.agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md`
 
-The current architecture YAMLs under `docs/harness/architecture/` are treated
-as a prototype corpus until a governed migration gives domain rulebooks their
-final homes.
+Domain corpus rulebook artifacts now live under their owner-aligned numbered
+docs roots. The legacy prototype root has been retired.
 
 ## Workflows
 
@@ -120,9 +127,9 @@ final homes.
 - `schemas/context-packet.schema.yml` - defines the v1 context-packet contract
   returned by the portable RAG/rulebook service.
 - `schemas/rulebook-index.schema.yml` - defines the v1 rulebook index
-  contract for current prototype paths, proposed corpus paths, artifacts,
-  rules, rule packs, chunk candidates, graph edges, references, diagnostics,
-  and provenance.
+  contract for current corpus paths, migration history, artifacts, rules, rule
+  packs, chunk candidates, graph edges, references, diagnostics, and
+  provenance.
 - `schemas/retrieval-policy-pack.schema.yml` - defines the v1 policy-pack
   contract used by retrieval selectors.
 - `schemas/retrieval-policy-dimension.schema.yml` - defines the v1 imported
@@ -257,9 +264,11 @@ final homes.
 
 - `plans/repo-plan.md` - records the ordered plan for turning the prototype
   rulebook into modular RAG-ready corpora and service inputs.
-- `plans/prototype-corpus-migration-map.yml` - inventories the current
-  prototype corpus and maps YAML rules, rule packs, source guides, and ADRs to
-  proposed numbered corpus packages before any file moves.
+- `plans/prototype-corpus-migration-map.yml` - records the prototype corpus
+  inventory and the numbered corpus packages used by the completed split.
+- `plans/migration/prototype-corpus-domain-split.md` - plans the governed,
+  phased split of the retired prototype architecture corpus into numbered
+  domain corpus homes.
 - `plans/artifact-metadata-retrieval-profile-migration.md` - tracks the
   migration from header coverage to generated retrieval profiles and selector
   evaluations.
@@ -267,10 +276,10 @@ final homes.
 ## Commands
 
 - `scripts/02.rag-rulebook/generate-rulebook-index/script.sh` - emits a
-  read-only `rag-rulebook/rulebook-index/v1` JSON index from the current
-  prototype architecture rulebook, numbered corpus rule roots such as
-  `docs/02.rag-rulebook/rules/` and `docs/04.deploy/rules/`, and migration
-  map.
+  read-only `rag-rulebook/rulebook-index/v1` JSON index from numbered corpus
+  roots such as `docs/01.harness/`, `docs/02.rag-rulebook/rules/`,
+  `docs/03.product/`, `docs/04.deploy/rules/`, and `docs/06.shared/`, plus
+  the migration map.
 - `scripts/02.rag-rulebook/validate-rulebook-index/script.sh` - validates a
   `rag-rulebook/rulebook-index/v1` JSON index without modifying files.
 - `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh` - emits
