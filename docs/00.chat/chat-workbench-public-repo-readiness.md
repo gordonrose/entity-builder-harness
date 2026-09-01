@@ -142,7 +142,7 @@ These are known issues to resolve before pushing an initial public bootstrap:
   as migration history, but public onboarding docs should point to canonical
   paths and package commands only.
 - ADRs are source-side maintainer history only. Public `llm-workbench` exports
-  should not copy ADR manifests or `docs/harness/architecture/adrs/`; current
+  should not copy ADR manifests or retired prototype ADR directories; current
   install and operation behavior must be explained in public docs instead.
 
 ## Readiness Checklist

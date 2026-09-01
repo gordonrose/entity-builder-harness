@@ -52,7 +52,6 @@ except ImportError:
 
 REPORT_SCHEMA = "rag-rulebook/source-material-coverage-report/v1"
 SOURCE_ROOTS = [
-    "docs/harness/architecture/source-material",
     "docs/01.harness/source-material",
     "docs/02.rag-rulebook/source-material",
     "docs/03.product/source-material",
@@ -60,8 +59,6 @@ SOURCE_ROOTS = [
     "docs/06.shared/source-material",
 ]
 RULE_ROOTS = [
-    "docs/harness/architecture/rules",
-    "docs/harness/architecture/rule-packs",
     "docs/01.harness/rules",
     "docs/01.harness/rule-packs",
     "docs/02.rag-rulebook/rules",
@@ -96,11 +93,10 @@ def usage() -> str:
     return """Usage:
   check-source-material-coverage/script.sh --current [--json]
 
-Checks governed source material under docs/harness/architecture/source-material,
-docs/02.rag-rulebook/source-material, and docs/04.deploy/source-material. Each
-non-README Markdown source must have at least one governed outcome: structured
-rule YAML, source-to-rule derivation report, or corpus-gap evidence. Structured
-rule outcomes must be present in the generated index and chunk set.
+Checks governed source material under the numbered corpus source-material
+roots. Each non-README Markdown source must have at least one governed outcome:
+structured rule YAML, source-to-rule derivation report, or corpus-gap evidence.
+Structured rule outcomes must be present in the generated index and chunk set.
 """
 
 

@@ -101,7 +101,7 @@ reject_public_adrs() {
 
   [ ! -e "$repo/docs/00.chat/public-chat-workbench-adrs.md" ] ||
     fail "target contains public ADR export manifest"
-  [ ! -e "$repo/docs/harness/architecture/adrs" ] ||
+  [ ! -e "$repo/docs/00.chat/adrs" ] ||
     fail "target contains exported ADR docs"
 
   if [ -d "$repo/docs" ]; then

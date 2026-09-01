@@ -38,7 +38,6 @@ REPO="$TMP_ROOT/repo"
 mkdir -p \
   "$REPO/.agentic/00.chat/checklists" \
   "$REPO/.agentic/00.chat/workflows" \
-  "$REPO/docs/harness/architecture/adrs" \
   "$REPO/scripts/00.chat/session-log/checkpoint-chat-session-log" \
   "$REPO/scripts/01.harness"
 
@@ -120,17 +119,5 @@ EOF
 bash scripts/01.harness/check-governed-script-command-drift.sh \
   --paths .agentic/00.chat/workflows/basename-prose.md \
   > "$TMP_ROOT/basename-prose.out"
-
-cat > docs/harness/architecture/adrs/0001-example.md <<'EOF'
-# Historical ADR
-
-```bash
-bash scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
-```
-EOF
-
-bash scripts/01.harness/check-governed-script-command-drift.sh \
-  --paths docs/harness/architecture/adrs/0001-example.md \
-  > "$TMP_ROOT/adr.out"
 
 echo "governed script command drift smoke test passed"

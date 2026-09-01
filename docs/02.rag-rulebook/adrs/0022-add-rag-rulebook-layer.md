@@ -84,7 +84,8 @@ from product, deploy, education, and shared process artifacts.
 
 The later prototype corpus migration assigned final homes to harness,
 RAG/rulebook, product/apps, design-system, deploy, and shared corpora. The old
-`docs/harness/architecture/` root remains only as a compatibility pointer.
+The old prototype root was retained temporarily as a compatibility pointer and
+later retired after numbered corpus roots and runtime surfaces were current.
 
 Future command surfaces should reserve:
 

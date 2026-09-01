@@ -78,11 +78,11 @@ Subcorpora may be introduced when a layer needs more precision, such as
   `docs/01.harness/adrs/`, `docs/02.rag-rulebook/adrs/`,
   `docs/03.product/adrs/`, `docs/04.deploy/adrs/`, and
   `docs/06.shared/adrs/`
-- Legacy prototype architecture corpus pointer:
-  `docs/harness/architecture/README.md`
+- Retired prototype architecture corpus history:
+  `.agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md`
 
 Domain corpus rulebook artifacts now live under their owner-aligned numbered
-docs roots. The legacy prototype root remains only as a compatibility pointer.
+docs roots. The legacy prototype root has been retired.
 
 ## Workflows
 
@@ -127,8 +127,8 @@ docs roots. The legacy prototype root remains only as a compatibility pointer.
 - `schemas/context-packet.schema.yml` - defines the v1 context-packet contract
   returned by the portable RAG/rulebook service.
 - `schemas/rulebook-index.schema.yml` - defines the v1 rulebook index
-  contract for legacy prototype paths, current corpus paths, artifacts, rules,
-  rule packs, chunk candidates, graph edges, references, diagnostics, and
+  contract for current corpus paths, migration history, artifacts, rules, rule
+  packs, chunk candidates, graph edges, references, diagnostics, and
   provenance.
 - `schemas/retrieval-policy-pack.schema.yml` - defines the v1 policy-pack
   contract used by retrieval selectors.
@@ -267,8 +267,8 @@ docs roots. The legacy prototype root remains only as a compatibility pointer.
 - `plans/prototype-corpus-migration-map.yml` - records the prototype corpus
   inventory and the numbered corpus packages used by the completed split.
 - `plans/migration/prototype-corpus-domain-split.md` - plans the governed,
-  phased split of `docs/harness/architecture/` into numbered domain corpus
-  homes.
+  phased split of the retired prototype architecture corpus into numbered
+  domain corpus homes.
 - `plans/artifact-metadata-retrieval-profile-migration.md` - tracks the
   migration from header coverage to generated retrieval profiles and selector
   evaluations.
@@ -279,7 +279,7 @@ docs roots. The legacy prototype root remains only as a compatibility pointer.
   read-only `rag-rulebook/rulebook-index/v1` JSON index from numbered corpus
   roots such as `docs/01.harness/`, `docs/02.rag-rulebook/rules/`,
   `docs/03.product/`, `docs/04.deploy/rules/`, and `docs/06.shared/`, plus
-  the legacy prototype root pointer and migration map.
+  the migration map.
 - `scripts/02.rag-rulebook/validate-rulebook-index/script.sh` - validates a
   `rag-rulebook/rulebook-index/v1` JSON index without modifying files.
 - `scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh` - emits

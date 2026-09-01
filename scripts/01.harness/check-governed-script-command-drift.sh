@@ -78,9 +78,6 @@ collect_default_paths() {
     if [ -d docs/06.shared ]; then
       find docs/06.shared -type f
     fi
-    if [ -d docs/harness ]; then
-      find docs/harness -type f
-    fi
   } | sort -u
 }
 
@@ -102,10 +99,7 @@ is_scannable_path() {
   local path="$1"
 
   case "$path" in
-    docs/harness/architecture/adrs/*.md)
-      return 1
-      ;;
-    AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/01.harness/*.md|docs/01.harness/**/*.md|docs/03.product/*.md|docs/03.product/**/*.md|docs/06.shared/*.md|docs/06.shared/**/*.md|docs/harness/*.md|docs/harness/**/*.md)
+    AGENTS.md|.agentic/*.md|.agentic/**/*.md|docs/01.harness/*.md|docs/01.harness/**/*.md|docs/03.product/*.md|docs/03.product/**/*.md|docs/06.shared/*.md|docs/06.shared/**/*.md)
       return 0
       ;;
     *)

@@ -33,7 +33,5 @@ checklists stay under `.agentic/00.chat/`; public workbench documentation stays
 under `docs/00.chat/`; generated or per-chat session logs stay under
 `commitLogs/`.
 
-The old prototype ADR child pointers have been retired. Legacy references to
-the prototype architecture corpus should start at
-`docs/harness/architecture/README.md` and then follow this owner-aligned ADR
-root.
+The old prototype ADR pointers have been retired. Use this owner-aligned ADR
+root directly for chat-owned decision history.

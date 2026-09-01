@@ -99,6 +99,24 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
 - Added owner-specific retirement records for the moved infra,
   scripts-command-surface, CI quality, dependency-direction, generated-code,
   and TypeScript monorepo tooling rule paths.
+- Updated the prototype corpus migration plan with Slice 10, which retires the
+  final `docs/harness/architecture/README.md` compatibility pointer and makes
+  the old prototype root absent after active references, recognition sources,
+  and local runtime inputs stop requiring it.
+- Executed Slice 10 by deleting the final prototype root compatibility pointer,
+  removing the empty `docs/harness/architecture` directory tree, updating active
+  guidance, fixtures, recognition/runtime inputs, and retirement history so the
+  old root is no longer a live corpus source.
+- Fixed the public workbench bootstrap planner so owner-aligned chat ADRs under
+  `docs/00.chat/adrs/` remain source-side history instead of being exported to
+  portable workbench targets.
+- Validated Slice 10 with metadata headers, generated recognition freshness,
+  recognition-source validation, YAML syntax, source projections,
+  source-material coverage, derivation reports, retirement records,
+  corpus-root changes, explanation readiness, rulebook index/chunk smoke
+  checks, local runtime freshness, local context query smoke, governed-script
+  command drift, public workbench bootstrap/portability smoke, edited fixture
+  smoke tests, stale-reference scans, and diff whitespace.
 
 ## Questions Asked
 
@@ -211,6 +229,11 @@ is this folder (/home/owner/projects/entity-builder-harness-001/docs/harness/arc
   canonical shared cross-layer concern rules.
 - The prototype `docs/harness/architecture/rules/` root now contains only a
   compatibility pointer README.
+- Slice 10 retires the final `docs/harness/architecture/README.md`
+  compatibility pointer after active docs, scripts, recognition sources, and
+  local runtime inputs no longer depend on it. Remaining old prototype path
+  references are historical ADR prose, migration-plan evidence, commit-log
+  audit history, or governed retirement records.
 
 
 - Decision: Record RAG knowledge disposition: covered
@@ -1023,12 +1046,11 @@ ADR impact: ADR not needed: this implements the approved prototype corpus migrat
 
 ## ADR Disposition
 
-ADR needed: yes
-ADR path: docs/01.harness/adrs/0032-use-owner-aligned-adr-roots.md
-Reason: ADR 0032 records the owner-aligned ADR root decision. Execution slice
-8 applies that accepted decision to deploy, harness, and shared structured
-rules plus old-path compatibility without introducing a new ADR-level policy
-change.
+ADR needed: no
+ADR path:
+Reason: Slice 10 completes the accepted prototype corpus migration plan and
+applies ADR 0032's owner-aligned roots without adding a new architecture
+decision.
 
 ## Session Metrics
 
@@ -1047,21 +1069,20 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: Execution slice 8 is covered by the corpus split migration plan, canonical deploy/harness/shared structured rule YAML, harness and shared rule README artifacts, the prototype rules compatibility pointer, owner-specific retirement records, updated rule graph references, refreshed recognition sources, runtime freshness, and focused selector fixture coverage.
+Reason: Execution slice 10 is covered by the corpus split migration plan,
+canonical numbered docs roots, the final root-pointer retirement record,
+updated active guidance and smoke fixtures, refreshed recognition sources,
+runtime freshness, retirement validation, and stale-reference scans.
 Evidence:
 - .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
-- docs/01.harness/rules/README.md
-- docs/01.harness/rules/layers/scripts-command-surface.yml
-- docs/04.deploy/rules/layers/infra.yml
-- docs/06.shared/rules/README.md
-- docs/06.shared/rules/concerns/ci-quality.yml
-- docs/06.shared/rules/concerns/dependency-direction.yml
-- docs/06.shared/rules/concerns/generated-code.yml
-- docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml
-- docs/harness/architecture/rules/README.md
-- .agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml
-- .agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml
-- .agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml
+- .agentic/01.harness/standards/document-artifact-placement.md
+- .agentic/02.rag-rulebook/retirements/01.harness/2026-09-01-final-prototype-architecture-root-pointer.yml
+- docs/00.chat/adrs/README.md
+- docs/01.harness/README.md
+- docs/02.rag-rulebook/README.md
+- docs/03.product/README.md
+- docs/04.deploy/adrs/README.md
+- docs/06.shared/README.md
 - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 Corpus gaps:
 - None.

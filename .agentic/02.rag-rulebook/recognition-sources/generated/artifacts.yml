@@ -3204,18 +3204,6 @@ terms:
   canonical_id: harness.architecture.rules.layers.scripts-command-surface
   evidence_path: docs/01.harness/rules/layers/scripts-command-surface.yml
   confidence_weight: 1
-- term: harness.architecture.prototype-corpus.pointer
-  category: artifact-id
-  match_type: exact
-  canonical_id: harness.architecture.prototype-corpus.pointer
-  evidence_path: docs/harness/architecture/README.md
-  confidence_weight: 1
-- term: docs/harness/architecture/README.md
-  category: file-path
-  match_type: exact
-  canonical_id: harness.architecture.prototype-corpus.pointer
-  evidence_path: docs/harness/architecture/README.md
-  confidence_weight: 1
 - term: harness.script.agents.validate-harness-agents.readme
   category: artifact-id
   match_type: exact
@@ -5219,6 +5207,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule
   evidence_path: .agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml
+  confidence_weight: 1
+- term: rag-rulebook.retirement.2026-09-01-final-prototype-architecture-root-pointer
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-09-01-final-prototype-architecture-root-pointer
+  evidence_path: .agentic/02.rag-rulebook/retirements/01.harness/2026-09-01-final-prototype-architecture-root-pointer.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/retirements/01.harness/2026-09-01-final-prototype-architecture-root-pointer.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.retirement.2026-09-01-final-prototype-architecture-root-pointer
+  evidence_path: .agentic/02.rag-rulebook/retirements/01.harness/2026-09-01-final-prototype-architecture-root-pointer.yml
   confidence_weight: 1
 - term: rag-rulebook.retirement.2026-07-07-focused-paths-dimension
   category: artifact-id

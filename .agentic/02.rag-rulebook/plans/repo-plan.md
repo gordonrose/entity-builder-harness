@@ -101,18 +101,18 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
    - Status: present in `schemas/context-packet.schema.yml`.
 
 3a. Inventory the prototype corpus and migration targets.
-   - Map old `docs/harness/architecture/` source guides, ADRs, YAML layer
-     rulesets, concern rulesets, and rule packs to numbered corpus packages.
+   - Map old prototype source guides, ADRs, YAML layer rulesets, concern
+     rulesets, and rule packs to numbered corpus packages.
    - Status: inventory present in `plans/prototype-corpus-migration-map.yml`;
      execution plan present in
      `plans/migration/prototype-corpus-domain-split.md`; physical migration
-     completed through governed slices, and the old root remains only as a
-     compatibility pointer.
+     completed through governed slices, and the old root has been retired.
 
 4. Design a rulebook index schema.
    - Include corpus IDs, artifact IDs, rule IDs, chunk IDs, path globs,
      source refs, required rulesets, related rulesets, and graph edges.
-   - Support both legacy prototype paths and numbered corpus package paths.
+   - Preserve migration history while indexing current numbered corpus package
+     paths.
    - Status: present in `schemas/rulebook-index.schema.yml`.
 
 5. Add a read-only index generator.
@@ -1164,8 +1164,8 @@ YAML, chunks, selector evaluations, or deploy guidance are treated as current.
 - Do not execute AWS or GitHub mutations without the approved AWS execution
   workflow and explicit current-chat approval for the exact commands.
 - Do not build an MCP server.
-- Do not recreate ordinary content under `docs/harness/architecture/`; use the
-  root compatibility pointer and owner-aligned numbered homes instead.
+- Do not recreate ordinary content under retired prototype corpus paths; use
+  owner-aligned numbered homes instead.
 - Do not introduce embeddings before deterministic indexes and chunks exist.
 - Do not merge domain corpora into one instruction set.
 - Do not deploy RAG to AWS before local runtime behavior, deploy-corpus checks,

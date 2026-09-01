@@ -51,7 +51,6 @@ REPORT_SCHEMA = "rag-rulebook/source-projection-check-report/v1"
 MANIFEST_SCHEMA = "rag-rulebook/source-projection-manifest/v1"
 DEFAULT_MANIFEST = ".agentic/02.rag-rulebook/source-projections/v1.yml"
 SOURCE_ROOTS = [
-    "docs/harness/architecture/source-material",
     "docs/01.harness/source-material",
     "docs/02.rag-rulebook/source-material",
     "docs/03.product/source-material",
@@ -59,7 +58,6 @@ SOURCE_ROOTS = [
     "docs/06.shared/source-material",
 ]
 RULE_ROOTS = [
-    "docs/harness/architecture/rules",
     "docs/01.harness/rules",
     "docs/02.rag-rulebook/rules",
     "docs/03.product/rules",

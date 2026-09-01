@@ -36,7 +36,7 @@ index_schema: rag-rulebook/rulebook-index/v1
 purpose: Define the catalogue a RAG/rulebook service uses to find rulebook artifacts, rules, chunks, references, corpus ownership, and migration targets.
 
 principles:
-  - Index legacy prototype paths and current corpus paths at the same time.
+- Index current corpus paths while preserving migration history.
   - Preserve stable metadata IDs and rulebook IDs separately from current file paths.
   - Represent rule-pack dependencies and related rulesets as graph edges.
   - Report unresolved references instead of silently dropping them.
@@ -96,11 +96,11 @@ fields:
         role:
           type: enum
           allowed_values:
-            - prototype-corpus
             - corpus-package
             - migration-map
             - generated-index
             - source-material
+            - supporting-source
         migration_status:
           type: enum
           allowed_values:
@@ -857,9 +857,9 @@ minimal_example:
   index_id: index.example.rulebook
   generated_at: "2026-06-25T00:00:00Z"
   source_roots:
-    - root_id: root.prototype
-      path: docs/harness/architecture
-      role: prototype-corpus
+    - root_id: root.product-source-material
+      path: docs/03.product/source-material
+      role: source-material
       migration_status: current
     - root_id: root.migration-map
       path: .agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml
@@ -872,7 +872,7 @@ minimal_example:
       proposed_root: corpus.03.product.core
       purpose: Stable product-neutral core contracts and shared primitives.
       source_root_ids:
-        - root.prototype
+        - root.product-source-material
         - root.migration-map
   artifacts:
     - artifact_ref: artifact.layer.packages-core

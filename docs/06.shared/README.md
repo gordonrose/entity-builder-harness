@@ -43,5 +43,5 @@ create broad coupling.
 
 Shared ADRs live in `adrs/`. Shared structured rules live under `rules/`.
 
-The legacy prototype architecture corpus now retains only the root
-compatibility pointer at `docs/harness/architecture/README.md`.
+The legacy prototype architecture corpus has been retired after its content
+moved to owner-aligned roots.

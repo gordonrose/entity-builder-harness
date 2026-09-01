@@ -14,12 +14,8 @@
     targets:
     - llm-workbench
   used_by:
-  - id: harness.readme
-    path: .agentic/01.harness/README.md
-  - id: harness.architecture.adr.0017-organize-scripts-by-owner-domain-and-capability
-    path: docs/01.harness/adrs/0017-organize-scripts-by-owner-domain-and-capability.md
-  - id: harness.architecture.adr.0020-use-scripts-for-layer-command-surfaces
-    path: docs/01.harness/adrs/0020-use-scripts-for-layer-command-surfaces.md
+  - id: chat.docs.readme
+    path: docs/00.chat/README.md
 -->
 # Script Layout
 

@@ -42,5 +42,5 @@ Do not store product runtime contracts, deployment operations, or generic
 harness governance here unless the material is specifically about how the
 RAG/rulebook layer retrieves, indexes, chunks, validates, or serves context.
 
-The legacy prototype architecture corpus now retains only the root
-compatibility pointer at `docs/harness/architecture/README.md`.
+The legacy prototype architecture corpus has been retired after its content
+moved to owner-aligned roots.

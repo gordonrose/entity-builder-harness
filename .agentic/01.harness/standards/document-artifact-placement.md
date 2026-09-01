@@ -35,8 +35,7 @@ guides, source material, plans, rules, rule packs, READMEs, runbooks, and
 curated corpus material.
 
 The goal is to route new documents to the owner-aligned layer or corpus home
-instead of extending legacy prototype locations such as
-`docs/harness/architecture`.
+instead of extending retired prototype corpus locations.
 
 ## Core Rule
 
@@ -48,9 +47,9 @@ corpus material belongs under `docs/<owner-layer>/` when that numbered corpus
 root exists. If the target root does not exist, create it through a governed
 slice before adding ordinary content there.
 
-Do not add new documents under `docs/harness/architecture/**` unless the change
-is an approved compatibility pointer, migration update, or reference-preserving
-step named by a governed artifact path migration plan.
+Do not add new documents under retired prototype corpus locations unless the
+change is an approved migration update or reference-preserving step named by a
+governed artifact path migration plan.
 
 ## Owner Routing
 
@@ -88,18 +87,18 @@ decide the path once the artifact type and owner are known.
 
 ## Migration-Period Rules
 
-`docs/harness/architecture/**` is the legacy prototype corpus root. After the
-domain split, it should contain only approved compatibility pointers.
+The legacy prototype corpus root was retired after the domain split. It must
+not be recreated for ordinary content.
 
 - do not add ordinary ADRs, guides, source material, plans, rules, rule packs,
-  runbooks, or corpus docs under the old prototype path;
-- add or edit only approved compatibility pointers, migration-plan updates, or
-  reference-preserving edits named by a governed artifact path migration;
+  runbooks, or corpus docs under retired prototype paths;
+- add or edit only migration-plan updates or reference-preserving edits named by
+  a governed artifact path migration;
 - route new product source material, product rules, and product rule packs to
   the product layer or stop and create the required `docs/03.product/` root
   through the migration plan first;
 - route new RAG/rulebook machinery docs to `docs/02.rag-rulebook/` or
-  `.agentic/02.rag-rulebook/`, not to the prototype product corpus;
+  `.agentic/02.rag-rulebook/`, not to retired prototype paths;
 - classify ADRs by the layer that owns the decision before choosing a target
   path.
 

@@ -147,7 +147,7 @@ if [ "$PUBLIC_MODE" = "yes" ]; then
   require_absent_dir ".docs"
   require_absent_dir ".scripts"
   require_absent_dir "scripts/00.chat/classification"
-  require_absent_dir "docs/harness/architecture/adrs"
+  require_absent_dir "docs/00.chat/adrs"
   require_absent_file "docs/00.chat/chat-workbench-public-repo-readiness.md"
   require_absent_file "docs/00.chat/public-chat-workbench-adrs.md"
 

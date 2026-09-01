@@ -12,7 +12,7 @@ set -euo pipefail
 #     - agentic
 #     - architecture
 #   kind: script
-#   purpose: Generate a read-only JSON rulebook index from prototype and numbered corpus rule roots.
+#   purpose: Generate a read-only JSON rulebook index from numbered corpus rule roots and migration history.
 #   portability:
 #     class: reusable
 #     targets:
@@ -51,7 +51,7 @@ except ImportError:  # pragma: no cover - environment gate
     sys.exit(2)
 
 
-DEFAULT_SOURCE_ROOT = "docs/harness/architecture"
+DEFAULT_SOURCE_ROOT = "docs/03.product/source-material"
 DEFAULT_HARNESS_CORPUS_ROOT = "docs/01.harness"
 DEFAULT_RULEBOOK_RULES_ROOT = "docs/02.rag-rulebook/rules"
 DEFAULT_PRODUCT_CORPUS_ROOT = "docs/03.product"
@@ -71,8 +71,6 @@ DEFAULT_CORPUS_RULE_ROOTS = (
     ("corpus.06.shared", DEFAULT_SHARED_CORPUS_ROOT),
 )
 DEFAULT_EXPLANATION_MARKDOWN_ROOTS = (
-    "docs/harness/architecture/source-material",
-    "docs/harness/architecture/guides/markdown",
     "docs/01.harness/source-material",
     "docs/01.harness/guides",
     "docs/02.rag-rulebook/source-material",
@@ -833,9 +831,9 @@ def usage() -> str:
   generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--rulebook-rules-root <path>] [--corpus-rules-root <corpus-id=path>] [--pretty]
 
 Emits a rag-rulebook/rulebook-index/v1 JSON document to stdout.
-The command is read-only: it parses the legacy prototype root pointer,
-numbered corpus roots, and migration map, then prints the index without moving
-files or writing generated artifacts.
+The command is read-only: it parses numbered corpus roots and migration
+history, then prints the index without moving files or writing generated
+artifacts.
 """
 
 
@@ -1352,7 +1350,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             "owner_layer": owner_layer_for_corpus(entry["corpus_id"]),
             "status": "proposed",
             "purpose": entry.get("purpose", ""),
-            "source_root_ids": ["root.prototype", "root.migration-map"],
+            "source_root_ids": ["root.product-source-material", "root.migration-map"],
         }
         for entry in list_of_dicts(migration_map.get("target_corpora"))
         if isinstance(entry.get("corpus_id"), str)
@@ -2087,10 +2085,11 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
 
     source_roots = [
         {
-            "root_id": "root.prototype",
+            "root_id": "root.product-source-material",
             "path": source_root,
-            "role": "prototype-corpus",
+            "role": "source-material",
             "migration_status": "current",
+            "corpus_id": "corpus.03.product",
         },
         {
             "root_id": "root.migration-map",

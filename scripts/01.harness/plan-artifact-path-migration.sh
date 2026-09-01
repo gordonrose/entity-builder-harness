@@ -76,7 +76,7 @@ bucket_for_path() {
     scripts/*)
       printf '%s\n' "script"
       ;;
-    docs/[0-9][0-9].*/adrs/*|docs/harness/architecture/adrs/*|docs/harness/architecture/*)
+    docs/[0-9][0-9].*/adrs/*)
       printf '%s\n' "architecture"
       ;;
     commitLogs/*)

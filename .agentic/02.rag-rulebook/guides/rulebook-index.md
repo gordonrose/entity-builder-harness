@@ -35,7 +35,8 @@ rulebook index is how the service finds that evidence.
 
 ## Why It Came Before Migration
 
-The prototype corpus used to live under `docs/harness/architecture/`.
+The prototype architecture corpus used to live in one mixed documentation
+root.
 
 The target structure uses numbered corpus packages such as
 `corpus.03.product.platform` or `corpus.04.deploy`.
@@ -51,8 +52,8 @@ That is the difference between a tidy folder move and a safe corpus migration.
 
 Start with `source_roots`.
 
-These tell you what was scanned: legacy prototype paths, migration maps,
-current corpus package roots, or generated outputs.
+These tell you what was scanned: migration maps, current corpus package roots,
+source-material roots, supporting sources, or generated outputs.
 
 Then read `corpus_packages`.
 
@@ -135,8 +136,8 @@ survive a file move.
 A good index is graph-aware. Required rulesets and related rulesets are edges,
 not just strings buried in YAML.
 
-A good index is migration-aware. It can represent both legacy prototype paths
-and current corpus package paths.
+A good index is migration-aware. It can preserve retired-path history while
+current corpus package paths own live retrieval.
 
 A good index is honest. Unresolved references are reported.
 

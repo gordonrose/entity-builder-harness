@@ -9,7 +9,7 @@
 #     - agentic
 #     - architecture
 #   kind: plan
-#   purpose: Inventory the prototype architecture corpus and map it to future numbered corpus packages before any file moves.
+#   purpose: Preserve the completed prototype architecture corpus migration inventory and numbered corpus package mapping.
 #   portability:
 #     class: internal
 #     targets: []
@@ -22,13 +22,13 @@
 #       path: .agentic/02.rag-rulebook/plans/migration/prototype-corpus-domain-split.md
 
 schema: rag-rulebook-prototype-corpus-migration-map/v1
-status: active
-source_root: docs/harness/architecture
+status: completed
+source_root: retired-prototype-architecture-corpus
 
 policy:
-  - This map is read-only planning. It does not authorize moving files.
+  - This map is read-only migration history. It does not authorize moving files.
   - The prototype corpus has been split into owner-aligned homes through governed migration slices.
-  - The old `docs/harness/architecture/` root may remain only as approved compatibility pointer material.
+  - The old prototype root has been retired and must not be recreated without a new approved compatibility decision.
   - Target paths record the package locations used by the migration.
   - Mixed concerns should be split only after the rulebook index can prove current references, related rulesets, and rule-pack dependencies.
   - Any future migration must update metadata headers, relative references, rule-pack required rulesets, README links, and generated indexes together.
@@ -101,13 +101,13 @@ source_material:
       - Preserve original PDFs as source evidence when moving generated Markdown guide derivatives.
       - Do not make PDFs primary retrieval chunks until the Markdown derivative and source reference policy are explicit.
   adrs:
-    current_glob: docs/harness/architecture/adrs/*.md
+    retired_source: prototype architecture ADR root
     proposed_corpus_id: corpus.01.harness
     proposed_target_pattern: corpus.01.harness/sources/adrs/<current-filename>
     migration_status: moved-in-slices-2-through-5
     notes:
       - ADRs were classified by decision owner and moved to numbered ADR roots.
-      - The old prototype ADR child pointers have been retired in favor of the root compatibility pointer.
+      - The old prototype ADR child pointers and final root pointer have been retired.
 
 yaml_artifacts:
   layer_rulesets:

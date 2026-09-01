@@ -31,7 +31,7 @@ validation, and standalone service adapters.
   `rag-rulebook/rulebook-index/v1` JSON index for numbered corpus roots such
   as `docs/01.harness/`, `docs/02.rag-rulebook/rules/`,
   `docs/03.product/`, `docs/04.deploy/rules/`, and `docs/06.shared/`, plus
-  the legacy prototype root pointer and migration map.
+  the migration map.
 - `validate-rulebook-index/script.sh` validates a
   `rag-rulebook/rulebook-index/v1` JSON index for duplicate IDs, broken
   references, count drift, graph-edge resolution, path existence, and

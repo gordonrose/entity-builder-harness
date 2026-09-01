@@ -94,6 +94,7 @@ ACTIVE_REFERENCE_ROOTS = [
     "scripts/02.rag-rulebook",
 ]
 EXCLUDED_REFERENCE_ROOTS = [
+    ".agentic/02.rag-rulebook/plans/migration",
     ".agentic/02.rag-rulebook/retirements",
 ]
 REQUIRED_TOP_LEVEL = [
@@ -455,9 +456,6 @@ def validate_record(path: Path, data: dict[str, Any], errors: list[str], warning
             reference_checks.get("remaining_references"),
             errors,
         )
-        for checked_root in checked_roots:
-            if not repo_path(checked_root).exists():
-                warnings.append(f"{owner}.reference_checks.checked_roots entry does not exist: {checked_root}")
         if status == "accepted" and declared_remaining:
             errors.append(f"{owner}.reference_checks.remaining_references must be empty for accepted records")
         if status == "accepted":

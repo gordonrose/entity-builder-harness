@@ -140,9 +140,8 @@ Before moving files, create a migration plan that names:
 
 ## First Corpus Candidate
 
-The old `docs/harness/architecture/` tree was the prototype corpus. After the
+The old prototype architecture tree was the first mixed corpus. After the
 domain split, corpus material should live in numbered corpora such as
 `corpus.01.harness`, `corpus.02.rag-rulebook`, `corpus.03.product`,
 `corpus.03.product.design-system`, `corpus.04.deploy`, and
-`corpus.06.shared`; the old root should contain only approved compatibility
-pointers.
+`corpus.06.shared`; the old root should remain retired.

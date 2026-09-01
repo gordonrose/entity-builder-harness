@@ -799,8 +799,6 @@ def layer_from_path(path: str) -> str:
         return "01.harness"
     if path.startswith(".agentic/02.rag-rulebook/") or path.startswith("docs/02.rag-rulebook/"):
         return "02.rag-rulebook"
-    if path.startswith("docs/harness/architecture/"):
-        return "03.product"
     if path.startswith(".agentic/03.product/") or path.startswith("docs/03.product/") or "/03.product/" in path:
         return "03.product"
     if path.startswith(".agentic/aws/") or path.startswith("docs/04.deploy/") or "/04.deploy/" in path:

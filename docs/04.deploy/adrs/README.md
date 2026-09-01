@@ -36,7 +36,5 @@ governance stays under `.agentic/aws/`; deployable definitions and target
 profiles stay under `infra/04.deploy/`; deploy source material and structured
 rules stay under the matching `docs/04.deploy/` corpus subdirectories.
 
-The old prototype ADR child pointers have been retired. Legacy references to
-the prototype architecture corpus should start at
-`docs/harness/architecture/README.md` and then follow this owner-aligned ADR
-root.
+The old prototype ADR pointers have been retired. Use this owner-aligned ADR
+root directly for deploy-owned decision history.

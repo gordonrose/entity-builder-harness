@@ -55,8 +55,10 @@ The inventory map at
 `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml` remains the
 file-level target inventory for this migration plan.
 
-After the governed execution slices complete, the old root should contain only
-`docs/harness/architecture/README.md` as a compatibility pointer.
+After Slice 10, `docs/harness/architecture` is retired and absent from the
+working tree. The prototype corpus has no live compatibility pointer; historical
+references remain only as ADR, migration, retirement, and commit-log audit
+evidence.
 
 ## Execution Status
 
@@ -167,6 +169,19 @@ After the governed execution slices complete, the old root should contain only
   smoke checks, local runtime build/freshness, query-local-context smoke,
   governed-script command drift, harness-agent validation, focused selector
   fixtures, and diff whitespace.
+- 2026-09-01 Slice 10 retired the final
+  `docs/harness/architecture/README.md` compatibility pointer, removed the old
+  prototype root from the working tree, updated active docs and script fixtures
+  that still named the pointer or recreated child paths, redirected retirement
+  history away from the deleted pointer, refreshed generated recognition
+  sources, and rebuilt the local runtime cache.
+- 2026-09-01 Slice 10 validation passed for metadata headers, generated
+  recognition freshness, recognition-source validation, YAML syntax,
+  source projections, source-material coverage, derivation reports, retirement
+  records, corpus-root changes, explanation readiness, rulebook index/chunk
+  smoke checks, local runtime build/freshness, local context query smoke,
+  governed-script command drift, public workbench bootstrap/portability smoke,
+  edited fixture smoke tests, stale-reference scans, and diff whitespace.
 
 ## Target Homes
 
@@ -201,6 +216,52 @@ and path before creating it. If the correct numbered docs root does not exist
 yet, create the root README, metadata allowlist support, and corpus wiring in
 the same governed slice before placing content there.
 
+## Slice 10: Retire Final Prototype Root
+
+Retire `docs/harness/architecture/README.md` as the last tracked file under the
+legacy prototype root. This is a retirement slice, not a rename: the old
+prototype root has already been split across the numbered corpus homes and has
+no single replacement path.
+
+Compatibility disposition: `retired`.
+
+The slice must update or remove active references that currently depend on the
+root pointer:
+
+- corpus and ADR READMEs that tell users to start at
+  `docs/harness/architecture/README.md`;
+- harness guidance that still describes the pointer as present;
+- RAG/rulebook index, runtime, source-material, source-projection,
+  explanation-readiness, selector-fixture, and coverage scripts that enumerate
+  the old root or old child roots as live inputs;
+- generated recognition sources and runtime caches that cite
+  `harness.architecture.prototype-corpus.pointer` or
+  `docs/harness/architecture/README.md`;
+- bootstrap or smoke fixtures that can assert absence of old child roots without
+  creating a current compatibility obligation.
+
+Historical ADR prose, `commitLogs/**`, governed retirement records, and this
+migration plan may continue to name old prototype paths as audit evidence.
+Other old-root references must either be updated to canonical numbered roots or
+explicitly classified as historical/migration evidence before the pointer is
+deleted.
+
+Slice 10 is complete only when:
+
+- `git ls-files 'docs/harness/architecture/**'` prints no tracked files;
+- no untracked files remain under `docs/harness/architecture/`;
+- active references outside this migration plan no longer require
+  `docs/harness/architecture` or
+  `harness.architecture.prototype-corpus.pointer`;
+- generated recognition sources no longer emit the pointer artifact;
+- a fresh rulebook index and local runtime do not list the old root as a live
+  source, structured-rule root, or evidence path.
+
+Working-tree note: before the Slice 10 commit is staged, `git ls-files
+'docs/harness/architecture/**'` still reports the deleted tracked pointer from
+the index. The working tree is already absent at that path, and staging or
+committing the deletion clears the tracked listing.
+
 ## Reference Inventory
 
 Planner output was collected on 2026-08-30 with
@@ -224,7 +285,8 @@ rewritten only to modernize paths.
 
 ## Compatibility Choice
 
-Use `pointer` compatibility for the old prototype paths during the migration.
+Use `pointer` compatibility for old prototype paths during the migration until
+Slice 10 retires the final root pointer.
 
 Pointer files should be human-readable Markdown indexes that say the prototype
 corpus has split, list the new canonical roots, and link to this migration
@@ -239,6 +301,10 @@ Retire old path pointers only after:
 - a fresh rulebook index proves all related rulesets and required rulesets
   resolve from canonical paths;
 - local RAG runtime build, freshness, and query smoke checks pass.
+
+After Slice 10, do not recreate a compatibility pointer under
+`docs/harness/architecture/**` unless a later ADR explicitly reopens that
+compatibility promise.
 
 ## Target Mapping
 
@@ -391,6 +457,21 @@ compatibility until active references are updated.
    - Remove pointers only when active references outside historical session
      logs and this migration plan are gone.
 
+10. Retire the final prototype root pointer.
+    - Delete `docs/harness/architecture/README.md` after active pointer
+      references are updated or classified as historical/migration evidence.
+    - Remove the old prototype root from live RAG/rulebook root discovery,
+      local-runtime fingerprint inputs, generated recognition sources, and
+      selector-fixture fallback logic.
+    - Validate the retirement with stale-reference scans for both
+      `docs/harness/architecture/README.md` and
+      `harness.architecture.prototype-corpus.pointer`, plus a root-level scan
+      for active `docs/harness/architecture` references outside the migration
+      plan, retirement records, and historical session logs.
+    - If any active tool still needs the old path, restore the root pointer and
+      keep the compatibility disposition as `pointer` until that tool is
+      updated.
+
 ## Required Checks
 
 At minimum, each execution slice should run:
@@ -422,6 +503,20 @@ Also run a focused path-migration checker for each moved source/target pair.
 For a split move, validate the concrete child paths rather than treating the
 root as a one-to-one rename.
 
+For Slice 10, also run:
+
+```bash
+git ls-files 'docs/harness/architecture/**'
+find docs/harness/architecture -mindepth 1 -print
+rg -n 'docs/harness/architecture/README.md|harness\.architecture\.prototype-corpus\.pointer' .agentic docs scripts packages platform apps infra AGENTS.md LLM_WORKBENCH.md package.json package-lock.json --glob '!**/node_modules/**' --glob '!.agentic/02.rag-rulebook/retirements/**'
+rg -n 'docs/harness/architecture' .agentic docs scripts packages platform apps infra AGENTS.md LLM_WORKBENCH.md package.json package-lock.json --glob '!**/node_modules/**' --glob '!.agentic/02.rag-rulebook/retirements/**'
+```
+
+The Slice 10 `rg` scans should return only this migration plan and clearly
+historical ADR/bootstrap prose. Any live workflow, standard, script, generated
+recognition source, cache manifest, or corpus README hit is a blocker unless
+the slice deliberately updates that surface.
+
 ## Stop Conditions
 
 Stop before moving files if:
@@ -431,6 +526,8 @@ Stop before moving files if:
 - a target root collides with an existing incompatible path;
 - an active old-path reference remains without a pointer or approved reference
   update;
+- Slice 10 still finds an active runtime, recognition, workflow, standard,
+  script, or corpus README reference to the final prototype pointer;
 - moving a rule breaks `related_rulesets` or rule-pack `required_rulesets`;
 - moving source material breaks source projection, derivation report, selector
   fixture, generated recognition-source, or local runtime freshness checks;
@@ -454,8 +551,7 @@ The migration is complete when:
 
 - all prototype corpus content has a canonical numbered docs or agentic plan
   home;
-- `docs/harness/architecture` is either absent or contains only an approved
-  short compatibility pointer;
+- `docs/harness/architecture` is absent after Slice 10;
 - active references outside this migration plan no longer require the old
   prototype path;
 - metadata headers, source projections, derivation reports, selector fixtures,

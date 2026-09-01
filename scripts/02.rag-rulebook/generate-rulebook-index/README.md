@@ -25,11 +25,10 @@ used_by:
 # Generate Rulebook Index
 
 `script.sh` emits a read-only JSON index for the numbered corpus roots and the
-legacy prototype architecture pointer.
+migration map.
 
 It reads:
 
-- `docs/harness/architecture/README.md`
 - `docs/01.harness/`
 - `docs/02.rag-rulebook/rules/`
 - `docs/03.product/`

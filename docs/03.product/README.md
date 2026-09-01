@@ -50,5 +50,5 @@ Do not store deployment operations, infrastructure runbooks, or RAG/rulebook
 service machinery here unless the material is product-facing source evidence
 for a product rule.
 
-The legacy prototype architecture corpus now retains only the root
-compatibility pointer at `docs/harness/architecture/README.md`.
+The legacy prototype architecture corpus has been retired after its content
+moved to owner-aligned roots.

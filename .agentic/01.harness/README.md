@@ -50,12 +50,11 @@ capabilities when a workflow or standard assigns them explicit ownership.
 
 RAG/rulebook machinery now has its own layer at `.agentic/02.rag-rulebook/`.
 The prototype architecture corpus has been split into owner-aligned corpus
-homes. Its legacy root remains only as the compatibility pointer at
-`docs/harness/architecture/README.md`.
+homes. Its legacy root has been retired.
 
 New document artifacts should use
 `standards/document-artifact-placement.md` instead of extending or recreating
-the prototype `docs/harness/architecture/**` corpus.
+retired prototype corpus locations.
 
 Canonical product architecture source remains
 `docs/03.product/source-material/guides/markdown`.

@@ -74,8 +74,8 @@ docs/03.product/rules/<topic>/layers/*.yml
 docs/03.product/rule-packs/<topic>/*.yml
 ```
 
-Do not add new rule artifacts to the legacy prototype root. If an old
-`docs/harness/architecture/**` reference is encountered, follow
+Do not add new rule artifacts to retired prototype corpus locations. If an old
+prototype architecture reference is encountered, follow
 `standards/document-artifact-placement.md` and the prototype corpus migration
 plan before changing it.
 

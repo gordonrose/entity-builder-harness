@@ -35,7 +35,5 @@ Use this root for RAG/rulebook-owned ADRs that are corpus history. Agent-facing
 workflows, policies, schemas, validators, and service implementation plans stay
 under `.agentic/02.rag-rulebook/`.
 
-The old prototype ADR child pointers have been retired. Legacy references to
-the prototype architecture corpus should start at
-`docs/harness/architecture/README.md` and then follow this owner-aligned ADR
-root.
+The old prototype ADR pointers have been retired. Use this owner-aligned ADR
+root directly for RAG/rulebook decision history.

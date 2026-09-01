@@ -43,8 +43,7 @@ The script validates the input index before generating chunks. It does not
 modify files, write generated chunk files, call the network, use embeddings, or
 split files by arbitrary character windows.
 
-Generate chunks from the current numbered corpus roots and legacy prototype
-root pointer:
+Generate chunks from the current numbered corpus roots:
 
 ```bash
 bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh --generate-current --pretty

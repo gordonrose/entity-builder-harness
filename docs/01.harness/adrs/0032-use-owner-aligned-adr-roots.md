@@ -68,8 +68,9 @@ docs/06.shared/adrs/
 
 The prototype `docs/harness/architecture/adrs/` root is now a legacy migration
 source. Do not add ordinary new ADRs there. After the prototype corpus split,
-legacy compatibility starts at `docs/harness/architecture/README.md` instead
-of per-ADR pointer files.
+legacy compatibility was consolidated into a temporary root pointer, and that
+final pointer was later retired once active references moved to owner-aligned
+roots.
 
 Existing specialized roots such as `docs/aws/architecture/adrs/` and
 `docs/education/architecture/adrs/` remain valid until their owning migration
