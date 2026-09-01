@@ -1,7 +1,15 @@
 import { deepEqual, equal } from "node:assert/strict";
 import type { Principal } from "@kanbien/core/authn";
-import type { Permission } from "@kanbien/core/authz";
+import {
+  allow,
+  deny,
+  resourceRef,
+  type AuthorizationRequest,
+  type Permission,
+} from "@kanbien/core/authz";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
+import { messageDescriptor } from "@kanbien/core/shared";
+import { tenantContext, tenantId, type TenantContext } from "@kanbien/core/tenancy";
 import { validationIssue } from "@kanbien/core/validation";
 import {
   definePlatformApp,
@@ -20,22 +28,64 @@ async function main(): Promise<void> {
   const appId = platformAppId("smoke");
   const routeName = platformRouteName("smoke.echo");
   const publicRouteName = platformRouteName("smoke.public");
-  if (!appId.ok || !routeName.ok || !publicRouteName.ok) {
+  const tenantRouteName = platformRouteName("smoke.tenant");
+  const resourceRouteName = platformRouteName("smoke.resource");
+  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok) {
     throw new Error("Expected valid server test primitives.");
   }
 
   const permission = "smoke:read" as Permission;
+  const tenantPermission = "tenant:read" as Permission;
+  const resourcePermission = "record:read" as Permission;
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
-  const deps = createPlatformTestMountDeps({ logger, metrics });
   let authenticatedPrincipal: Principal | undefined;
   let publicRoutePrincipal: Principal | undefined;
+  let requiredTenantContext: TenantContext | undefined;
+  let resourceTenantContext: TenantContext | undefined;
+  let resourcePrincipal: Principal | undefined;
   let protectedHandlerCalls = 0;
+  let requiredTenantHandlerCalls = 0;
+  let resourceHandlerCalls = 0;
+  let tenantResolverCalls = 0;
+  let resourceResolutionCalls = 0;
+  const authorizationRequests: AuthorizationRequest[] = [];
+  const deps = {
+    ...createPlatformTestMountDeps({ logger, metrics }),
+    authorizer: {
+      decide: async (request: AuthorizationRequest) => {
+        authorizationRequests.push(request);
+        if (request.resource?.id === "denied") {
+          return deny({
+            reason: messageDescriptor({ code: "authorization.denied", defaultMessage: "Access is denied." }),
+            evidence: { internal: "do-not-return" },
+          });
+        }
+
+        return allow({ evidence: { internal: "do-not-return" } });
+      },
+    },
+  };
+  const tenantResolver = {
+    resolve: async ({ principal }: { readonly principal: Principal }) => {
+      tenantResolverCalls += 1;
+      if (principal.subject === "subject-tenantless") {
+        return null;
+      }
+      if (principal.subject === "subject-malformed-tenant") {
+        return {} as never;
+      }
+
+      return tenantContext({ tenantId: tenantId("tenant-benelux") });
+    },
+  };
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
     mount(registry) {
       registry.registerPermission({ permission });
+      registry.registerPermission({ permission: tenantPermission });
+      registry.registerPermission({ permission: resourcePermission });
       registry.registerRoute({
         name: publicRouteName.value,
         method: "GET",
@@ -69,38 +119,138 @@ async function main(): Promise<void> {
           },
         },
       });
+      registry.registerRoute({
+        name: tenantRouteName.value,
+        method: "GET",
+        path: "/tenant",
+        auth: { kind: "authenticated", permissions: [tenantPermission] },
+        tenant: "required",
+        handler: {
+          handle: (_request, context) => {
+            requiredTenantHandlerCalls += 1;
+            requiredTenantContext = context.tenant;
+            return { status: 200, body: { tenant: String(context.tenant?.tenantId) } };
+          },
+        },
+      });
+      registry.registerRoute({
+        name: resourceRouteName.value,
+        method: "GET",
+        path: "/records/:id",
+        auth: { kind: "authenticated", permissions: [resourcePermission] },
+        tenant: "required",
+        resourceAuthorization: {
+          permission: resourcePermission,
+          resolve: ({ request }) => {
+            resourceResolutionCalls += 1;
+            const id = request.params["id"] ?? "";
+            if (id === "missing") {
+              return { kind: "not-found", disclosure: "not-found" };
+            }
+            if (id === "hidden") {
+              return { kind: "not-found", disclosure: "forbidden" };
+            }
+            if (id === "malformed") {
+              return { kind: "malformed" } as never;
+            }
+
+            return {
+              kind: "authorize",
+              resource: resourceRef({ type: "record", id }),
+              facts: { source: "test" },
+            };
+          },
+        },
+        handler: {
+          handle(_request, context) {
+            resourceHandlerCalls += 1;
+            resourceTenantContext = context.tenant;
+            resourcePrincipal = context.principal;
+            return { status: 200, body: { allowed: true } };
+          },
+        },
+      });
     },
   });
+
+  const auth = {
+    grantedPermissions: () => [permission, tenantPermission, resourcePermission],
+    authenticate: (request: { readonly headers?: Readonly<Record<string, string | readonly string[]>> }) => {
+      if (request.headers?.authorization === "Bearer ok") {
+        return {
+          authenticated: true,
+          permissions: [permission, tenantPermission, resourcePermission],
+          principalId: "principal-ok",
+          principalType: "user" as const,
+          subject: "subject-ok",
+          claims: { sub: "subject-ok", "custom:role": "operator" },
+          scopes: ["openid", "platform-smoke/read"],
+          rateLimitKey: "principal:subject-ok",
+        };
+      }
+      if (request.headers?.authorization === "Bearer tenantless") {
+        return {
+          authenticated: true,
+          permissions: [tenantPermission],
+          principalId: "principal-tenantless",
+          principalType: "user" as const,
+          subject: "subject-tenantless",
+        };
+      }
+      if (request.headers?.authorization === "Bearer malformed-tenant") {
+        return {
+          authenticated: true,
+          permissions: [tenantPermission],
+          principalId: "principal-malformed-tenant",
+          principalType: "user" as const,
+          subject: "subject-malformed-tenant",
+        };
+      }
+      if (request.headers?.authorization === "Bearer no-permission") {
+        return {
+          authenticated: true,
+          permissions: [],
+          principalId: "principal-no-permission",
+          principalType: "user" as const,
+          subject: "subject-no-permission",
+          rateLimitKey: "principal:subject-no-permission",
+        };
+      }
+      return { authenticated: false, permissions: [] };
+    },
+  };
 
   const shell = await createPlatformServerShell({
     apps: [app],
     deps,
-    auth: {
-      grantedPermissions: () => [permission],
-      authenticate: (request) => {
-        if (request.headers?.authorization === "Bearer ok") {
-          return {
-            authenticated: true,
-            permissions: [permission],
-            principalId: "principal-ok",
-            principalType: "user",
-            subject: "subject-ok",
-            claims: { sub: "subject-ok", "custom:role": "operator" },
-            scopes: ["openid", "platform-smoke/read"],
-            rateLimitKey: "principal:subject-ok",
-          };
-        }
-        if (request.headers?.authorization === "Bearer no-permission") {
-          return { authenticated: true, permissions: [], subject: "subject-no-permission", rateLimitKey: "principal:subject-no-permission" };
-        }
-        return { authenticated: false, permissions: [] };
-      },
-    },
+    auth,
+    tenantResolver,
     corsAllowlist: ["https://app.example.test"],
   });
   equal(shell.ok, true);
   if (!shell.ok) {
     throw new Error("Expected server shell to mount.");
+  }
+
+  const missingTenantResolverShell = await createPlatformServerShell({
+    apps: [app],
+    deps,
+    auth,
+  });
+  equal(missingTenantResolverShell.ok, false);
+  if (!missingTenantResolverShell.ok) {
+    equal(missingTenantResolverShell.error.code, "PLATFORM_SERVER_TENANT_RESOLVER_REQUIRED");
+  }
+
+  const missingAuthorizerShell = await createPlatformServerShell({
+    apps: [app],
+    deps: createPlatformTestMountDeps(),
+    auth,
+    tenantResolver,
+  });
+  equal(missingAuthorizerShell.ok, false);
+  if (!missingAuthorizerShell.ok) {
+    equal(missingAuthorizerShell.error.code, "PLATFORM_SERVER_AUTHORIZER_REQUIRED");
   }
 
   const live = await shell.value.handle({ method: "GET", path: "/livez" });
@@ -169,6 +319,99 @@ async function main(): Promise<void> {
   equal((forbidden.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
   equal(protectedHandlerCalls, 0);
 
+  const tenantCallsBeforePermissionDenied = tenantResolverCalls;
+  const resourceCallsBeforePermissionDenied = resourceResolutionCalls;
+  const resourcePermissionDenied = await shell.value.handle({
+    method: "GET",
+    path: "/records/record-123",
+    headers: { authorization: "Bearer no-permission" },
+  });
+  equal(resourcePermissionDenied.status, 403);
+  equal((resourcePermissionDenied.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(tenantResolverCalls, tenantCallsBeforePermissionDenied);
+  equal(resourceResolutionCalls, resourceCallsBeforePermissionDenied);
+  equal(resourceHandlerCalls, 0);
+
+  const tenantless = await shell.value.handle({
+    method: "GET",
+    path: "/tenant",
+    headers: { authorization: "Bearer tenantless" },
+  });
+  equal(tenantless.status, 403);
+  equal((tenantless.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(requiredTenantHandlerCalls, 0);
+
+  const malformedTenant = await shell.value.handle({
+    method: "GET",
+    path: "/tenant",
+    headers: { authorization: "Bearer malformed-tenant" },
+  });
+  equal(malformedTenant.status, 403);
+  equal((malformedTenant.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(requiredTenantHandlerCalls, 0);
+
+  const tenantAllowed = await shell.value.handle({
+    method: "GET",
+    path: "/tenant",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(tenantAllowed.status, 200);
+  equal(requiredTenantHandlerCalls, 1);
+  equal(requiredTenantContext?.tenantId, "tenant-benelux");
+
+  const resourceAllowed = await shell.value.handle({
+    method: "GET",
+    path: "/records/record-123",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(resourceAllowed.status, 200);
+  equal(resourceHandlerCalls, 1);
+  equal(resourceTenantContext?.tenantId, "tenant-benelux");
+  equal(resourcePrincipal?.subject, "subject-ok");
+  const allowedAuthorizationRequest = authorizationRequests.at(-1);
+  equal(allowedAuthorizationRequest?.principal.subject, "subject-ok");
+  equal(allowedAuthorizationRequest?.tenantId, "tenant-benelux");
+  equal(allowedAuthorizationRequest?.permission, resourcePermission);
+  equal(allowedAuthorizationRequest?.resource?.id, "record-123");
+  deepEqual(allowedAuthorizationRequest?.facts, { source: "test" });
+
+  const missingResource = await shell.value.handle({
+    method: "GET",
+    path: "/records/missing",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(missingResource.status, 404);
+  equal((missingResource.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_RESOURCE_NOT_FOUND");
+  equal(resourceHandlerCalls, 1);
+
+  const hiddenResource = await shell.value.handle({
+    method: "GET",
+    path: "/records/hidden",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(hiddenResource.status, 403);
+  equal((hiddenResource.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(resourceHandlerCalls, 1);
+
+  const malformedResource = await shell.value.handle({
+    method: "GET",
+    path: "/records/malformed",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(malformedResource.status, 403);
+  equal((malformedResource.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(resourceHandlerCalls, 1);
+
+  const deniedResource = await shell.value.handle({
+    method: "GET",
+    path: "/records/denied",
+    headers: { authorization: "Bearer ok" },
+  });
+  equal(deniedResource.status, 403);
+  equal((deniedResource.body as { readonly error: { readonly code: string; readonly details: unknown } }).error.code, "PLATFORM_SERVER_FORBIDDEN");
+  equal(JSON.stringify(deniedResource.body).includes("do-not-return"), false);
+  equal(resourceHandlerCalls, 1);
+
   const ok = await shell.value.handle({
     method: "POST",
     path: "/echo/123",
@@ -194,8 +437,8 @@ async function main(): Promise<void> {
     "rate-limit",
     "parse",
     "auth",
-    "context",
     "authorization",
+    "context",
     "validation",
     "handler",
     "response-logging",
@@ -211,7 +454,8 @@ async function main(): Promise<void> {
   const rateLimitKeys: string[] = [];
   const keyedRateLimitShell = await createPlatformServerShell({
     apps: [app],
-    deps: createPlatformTestMountDeps(),
+    deps,
+    tenantResolver,
     rateLimiter: {
       check: (key) => {
         rateLimitKeys.push(key);
@@ -232,7 +476,8 @@ async function main(): Promise<void> {
 
   const privateHealthShell = await createPlatformServerShell({
     apps: [app],
-    deps: createPlatformTestMountDeps(),
+    deps,
+    tenantResolver,
     auth: {
       grantedPermissions: () => [permission],
       authenticate: (request) => request.headers?.authorization === "Bearer ok"
@@ -257,7 +502,8 @@ async function main(): Promise<void> {
 
   const rateLimitedShell = await createPlatformServerShell({
     apps: [app],
-    deps: createPlatformTestMountDeps(),
+    deps,
+    tenantResolver,
     rateLimiter: { check: () => ({ allowed: false, retryAfterMs: 10 }) },
   });
   equal(rateLimitedShell.ok, true);

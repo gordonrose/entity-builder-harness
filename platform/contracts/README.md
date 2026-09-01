@@ -26,6 +26,28 @@ use case, or another app-owned structure. Platform contracts do not prescribe
 that structure. The platform consumes the approved public app mount module and
 registered contributions, not app-internal files.
 
+## Optional Tenant And Resource Authorization
+
+Authenticated routes may opt into `tenant: "optional"` or
+`tenant: "required"`. Routes with no tenant declaration preserve the existing
+permission-only behavior. The server may enrich an optional route when a
+provider-neutral `PlatformTenantResolver` is configured; a required route
+cannot start without one and returns a generic `403` when it cannot resolve a
+verified tenant.
+
+An authenticated route may also declare `resourceAuthorization`. The app
+provides an app-declared permission and a contribution that supplies only
+resource, relationship, attribute, and fact inputs. The platform always binds
+the authenticated principal and resolved tenant before it calls the core
+`Authorizer`. The contribution can return a deliberate `not-found` outcome
+with either `not-found` or `forbidden` disclosure; an `Authorizer` denial is
+always a generic `403` and never exposes decision evidence.
+
+These contracts do not define roles, groups, regions, clearance levels,
+residency rules, resource storage, or an authorization-policy language. Those
+are app or product concerns. Platform supplies the opt-in mechanics and fails
+closed only when a route declares that it needs them.
+
 Every public contract change should keep the source, type tests, runtime tests,
 boundary test, README, and RAG evidence in sync when the contract meaning
 changes.

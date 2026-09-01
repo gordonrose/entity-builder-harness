@@ -4,6 +4,7 @@ import { recordConfigSource, type ConfigSchema } from "@kanbien/core/config";
 import { healthCheckName, healthCheckResult, monitoringComponent } from "@kanbien/core/monitoring";
 import type { QueueMessageType } from "@kanbien/core/queues";
 import type { CorrelationId } from "@kanbien/core/shared";
+import { tenantContext, tenantId } from "@kanbien/core/tenancy";
 import {
   definePlatformApp,
   platformAppId,
@@ -143,10 +144,12 @@ async function main(): Promise<void> {
     method: "GET",
     path: "/echo",
     principal: requestPrincipal,
+    tenant: tenantContext({ tenantId: tenantId("tenant-123") }),
   });
   equal(requestContext.correlationId, "request-1");
   equal(requestContext.now, "2026-07-10T00:00:00.000Z");
   deepEqual(requestContext.principal, requestPrincipal);
+  equal(requestContext.tenant?.tenantId, "tenant-123");
 
   const message = createPlatformTestQueueMessage({
     type: "smoke.rebuild" as QueueMessageType,

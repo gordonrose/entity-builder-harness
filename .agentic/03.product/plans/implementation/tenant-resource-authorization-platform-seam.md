@@ -18,7 +18,7 @@ used_by:
 - id: product.workflow.platform-runtime-implementation
   path: .agentic/03.product/workflows/platform-runtime-implementation.md
 - id: harness.architecture.plan.platform-runtime-implementation
-  path: docs/harness/architecture/plans/platform-runtime-implementation-plan.md
+  path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
 -->
 # Tenant And Resource Authorization Platform Seam
 
@@ -35,9 +35,10 @@ request.
 
 ## Status
 
-Planned. This artifact records the implementation boundary only; it does not
-authorize a tenancy database, group storage, a policy engine, a provider
-adapter, AWS mutation, or a real tenant-aware application.
+Implemented locally on 2026-09-01. This artifact records the implementation
+boundary only; it does not authorize a tenancy database, group storage, a
+policy engine, a provider adapter, AWS mutation, or a real tenant-aware
+application.
 
 ## Baseline
 
@@ -85,15 +86,13 @@ The following invariants are non-negotiable:
 
 ## Governance Prerequisite
 
-Before runtime code is edited, reconcile the required ADR 0027 reference in
-`.agentic/03.product/workflows/platform-runtime-implementation.md`. The
-workflow names `docs/harness/architecture/adrs/0027-keep-cross-cutting-platform-operations-provider-neutral.md`, but that artifact is absent from the
-current worktree.
-
-This is a `01.harness` governance repair or an explicit replacement decision;
-it is not a reason to invent a substitute during platform implementation. The
-runtime slice remains blocked until that reference is repaired and the workflow
-can be followed as written.
+Resolved before implementation on 2026-09-01. The owner-aligned documentation
+migration places ADR 0027 at
+`docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md` and
+ADR 0028 at
+`docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md`.
+The active platform-runtime workflow now references the canonical owner paths,
+so this slice followed that workflow without inventing a replacement ADR.
 
 ## Implementation Plan
 
@@ -116,11 +115,10 @@ requirement:
   not an access-control failure;
 - `required` means a verified tenant must be present before the handler runs.
 
-Add an optional app-owned resource-authorization contribution that returns a
-provider-neutral authorization-request fragment: an app-declared permission,
-resource reference, relationships, attributes, and plain facts. The platform
-binds the authenticated principal and resolved tenant; the contribution cannot
-replace them.
+Add an optional app-owned resource-authorization contribution. It declares an
+app-owned permission and returns provider-neutral resource, relationship,
+attribute, and fact inputs. The platform binds the authenticated principal and
+resolved tenant; the contribution cannot replace them.
 
 The contract must represent a deliberate resource-not-found outcome separately
 from an authorization denial, so an app can choose its resource-disclosure
@@ -170,7 +168,7 @@ run tenant policy. The server is responsible for supplying a verified value.
 
 **Change**
 
-Add an optional `TenantResolver` server dependency using a
+Add an optional `PlatformTenantResolver` server dependency using a
 platform-contract-defined input shape containing the matched route, normalized
 request data, and authenticated principal. Treat the request data as untrusted;
 the resolver must prove membership or authority from trusted sources before it
@@ -247,8 +245,7 @@ requirement in its own job contract.
 **Files**
 
 - `platform/contracts/README.md`
-- `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`
-  or its canonical successor after the governance prerequisite is resolved
+- `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`
 - `.agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md`
 - `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
   when governed-artifact regeneration recognizes the new plan
@@ -288,7 +285,6 @@ merely to prove this platform mechanism.
 
 Stop and obtain a separately governed decision if:
 
-- the ADR 0027 governance prerequisite is still unresolved;
 - implementation would require a real application, membership store, database,
   provider-specific policy engine, or cloud resource;
 - platform code would import app internals rather than receive a public route

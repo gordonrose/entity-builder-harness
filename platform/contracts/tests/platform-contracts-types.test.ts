@@ -13,6 +13,7 @@ import type {
   TenantContext,
   Validator,
 } from "@kanbien/core";
+import { tenantContext, tenantId } from "@kanbien/core/tenancy";
 import {
   definePlatformApp,
   featureFlagName,
@@ -32,6 +33,7 @@ import {
   type PlatformRequestContext,
   type PlatformResponse,
   type PlatformRouteRegistration,
+  type PlatformTenantResolver,
 } from "../src/index";
 
 const appId = platformAppId("crm");
@@ -114,6 +116,29 @@ const route: PlatformRouteRegistration = {
   },
 };
 void route.handler.handle(request, requestContext);
+
+const tenantResolver: PlatformTenantResolver = {
+  resolve: async ({ request: tenantRequest, principal: tenantPrincipal }) => {
+    void tenantRequest;
+    void tenantPrincipal;
+    return tenantContext({ tenantId: tenantId("tenant-123") });
+  },
+};
+void tenantResolver;
+
+const tenantAndResourceRoute: PlatformRouteRegistration = {
+  ...route,
+  tenant: "required",
+  resourceAuthorization: {
+    permission: dealReadPermission,
+    resolve: ({ request: authorizationRequest, context }) => {
+      void authorizationRequest;
+      void context;
+      return { kind: "authorize", facts: { source: "type-test" } };
+    },
+  },
+};
+void tenantAndResourceRoute;
 
 const message = {
   id: "queue-message-123",

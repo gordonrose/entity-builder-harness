@@ -45,6 +45,10 @@ We currently don't have applications or DBs that need tenants or richer authz mo
   artifact is absent. The durable plan records this as a pre-implementation
   governance blocker; no substitute was invented.
 
+
+- Raised: The original ADR-path blocker was superseded by the owner-aligned documentation migration
+  Resolution: After the governed refresh, ADR 0027 and ADR 0028 were read from their canonical 03.product and 04.deploy paths before implementation.
+
 ## Decisions Made
 
 - The first implementation slice will add provider-neutral platform seams only:
@@ -52,12 +56,24 @@ We currently don't have applications or DBs that need tenants or richer authz mo
 - Product roles, memberships, region/residency rules, clearance rules, policy
   storage, and provider selection remain outside this slice.
 
+
+- Decision: Implemented opt-in tenant context and resource authorization platform seams
+  Rationale: Routes without declarations retain permission-only behavior; declared required controls fail closed without a resolver or Authorizer, while all product policy remains app-owned.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: The implementation activates the existing provider-neutral tenant propagation and explicit authorization-decision rules without adding a product policy, provider binding, or new knowledge gap.
+
 ## Context Hygiene
 
 
 
 - Summary: Checkpoint contains the tenant/resource authorization walkthrough, bounded platform plan, session evidence, and regenerated rulebook inventory; it has not yet changed runtime code.
   Durable evidence: Durable scope: commitLogs/2026/aug/31/2026-08-31-22-11-tenant-resource-authorization-platform-p/tenant-resource-authorization-walkthrough.md, .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md, and the session README.
+
+
+- Summary: The completed slice adds only opt-in tenant resolution/context propagation and dynamic resource-authorization contribution. Normal routes and tenantless jobs preserve their existing fallback behavior; required declarations fail closed.
+  Durable evidence: platform/contracts/src/index.ts, platform/runtime/src/index.ts, platform/server/src/index.ts, platform/workers/src/index.ts; their focused runtime/type tests; platform/contracts/README.md; and .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md.
 
 ## Activity Log
 
@@ -115,6 +131,41 @@ Mode: manual
 
 Action: Regenerated the inventory from merged source artifacts; did not preserve either stale generated version.
 
+
+### 2026-09-01T21:05:05Z - Decision
+
+Decision: Implemented opt-in tenant context and resource authorization platform seams
+
+Rationale: Routes without declarations retain permission-only behavior; declared required controls fail closed without a resolver or Authorizer, while all product policy remains app-owned.
+
+
+### 2026-09-01T21:05:05Z - Issue
+
+Raised: The original ADR-path blocker was superseded by the owner-aligned documentation migration
+
+Resolution: After the governed refresh, ADR 0027 and ADR 0028 were read from their canonical 03.product and 04.deploy paths before implementation.
+
+
+### 2026-09-01T21:05:48Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: The implementation activates the existing provider-neutral tenant propagation and explicit authorization-decision rules without adding a product policy, provider binding, or new knowledge gap.
+
+
+### 2026-09-01T21:48:28Z - ADR disposition
+
+ADR needed: no
+
+Reason: The change implements the already-approved provider-neutral platform direction from ADRs 0027 and 0028; it introduces no provider, storage, product-policy, or deployment-target decision that needs a new ADR.
+
+
+### 2026-09-01T21:48:28Z - Context hygiene
+
+Summary: The completed slice adds only opt-in tenant resolution/context propagation and dynamic resource-authorization contribution. Normal routes and tenantless jobs preserve their existing fallback behavior; required declarations fail closed.
+
+Durable evidence: Durable evidence: platform/contracts/src/index.ts, platform/runtime/src/index.ts, platform/server/src/index.ts, platform/workers/src/index.ts; their focused runtime/type tests; platform/contracts/README.md; and .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -145,9 +196,9 @@ Action: Regenerated the inventory from merged source artifacts; did not preserve
 
 ## ADR Disposition
 
-ADR needed: governance repair review required
-ADR path: docs/harness/architecture/adrs/0027-keep-cross-cutting-platform-operations-provider-neutral.md
-Reason: The active platform-runtime workflow requires this ADR, but it is absent from the current worktree. Reconcile the reference before editing runtime code.
+ADR needed: no
+ADR path:
+Reason: The change implements the already-approved provider-neutral platform direction from ADRs 0027 and 0028; it introduces no provider, storage, product-policy, or deployment-target decision that needs a new ADR.
 
 ## Session Metrics
 
@@ -165,3 +216,14 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
   `commitLogs/2026/aug/31/2026-08-31-22-11-tenant-resource-authorization-platform-p/tenant-resource-authorization-walkthrough.md`
 - Durable implementation plan:
   `.agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md`
+
+## RAG Knowledge Disposition
+
+Status: covered
+Reason: The implementation activates the existing provider-neutral tenant propagation and explicit authorization-decision rules without adding a product policy, provider binding, or new knowledge gap.
+Evidence:
+- docs/03.product/rules/platform/concerns/identity-access-security.yml
+- docs/03.product/rules/platform/concerns/tenancy.yml
+- .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md
+Corpus gaps:
+- None.
