@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-08-31T21:11:12Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-01T20:20:19Z
+latest_commit_sha: 10ad45a
+chat_duration: 83347s (00:23:09:07)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -93,13 +93,30 @@ Summary: Checkpoint contains the tenant/resource authorization walkthrough, boun
 
 Durable evidence: Durable scope: commitLogs/2026/aug/31/2026-08-31-22-11-tenant-resource-authorization-platform-p/tenant-resource-authorization-walkthrough.md, .agentic/03.product/plans/implementation/tenant-resource-authorization-platform-seam.md, and the session README.
 
+
+### 2026-09-01T20:20:19Z - Commit recorded
+
+Commit: `10ad45a`
+
+Message: docs(product): checkpoint tenant authz platform plan
+
+Summary: Checkpointed the user-facing walkthrough, provider-neutral platform plan, session evidence, and regenerated recognition-source inventory before the governed main refresh.
+
+ADR impact: No architecture decision was adopted; the plan preserves the existing governance-repair review for the missing ADR reference.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `10ad45a`
+  Time UTC: 2026-09-01T20:20:19Z
+  Message: docs(product): checkpoint tenant authz platform plan
+  Summary: Checkpointed the user-facing walkthrough, provider-neutral platform plan, session evidence, and regenerated recognition-source inventory before the governed main refresh.
+  ADR impact: No architecture decision was adopted; the plan preserves the existing governance-repair review for the missing ADR reference.
 
 ## Main Refresh Conflicts
 
@@ -114,12 +131,12 @@ Reason: The active platform-runtime workflow requires this ADR, but it is absent
 ## Session Metrics
 
 Raised at UTC: 2026-08-31T21:11:12Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-01T20:20:19Z
+Latest commit SHA: 10ad45a
+Chat duration: 83347s (00:23:09:07)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
