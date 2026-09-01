@@ -27,8 +27,8 @@ used_by:
 
 ## Purpose
 
-Split the current prototype architecture corpus at `docs/harness/architecture`
-into numbered domain corpus homes without losing source provenance, retrieval
+Split the prototype architecture corpus at `docs/harness/architecture` into
+numbered domain corpus homes without losing source provenance, retrieval
 coverage, rule graph edges, or compatibility for older references.
 
 This plan authorizes planning only. Moving committed files, retiring old paths,
@@ -41,8 +41,8 @@ prototype corpus does not continue to grow while it is being split.
 
 ## Current State
 
-`docs/harness/architecture` is the prototype corpus named by ADR 0022 and the
-domain corpus package standard. It currently mixes:
+`docs/harness/architecture` was the prototype corpus named by ADR 0022 and the
+domain corpus package standard. Before the split it mixed:
 
 - original and Markdown product architecture guides;
 - product/platform/core source material;
@@ -54,6 +54,9 @@ domain corpus package standard. It currently mixes:
 The inventory map at
 `.agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml` remains the
 file-level target inventory for this migration plan.
+
+After the governed execution slices complete, the old root should contain only
+`docs/harness/architecture/README.md` as a compatibility pointer.
 
 ## Execution Status
 
@@ -150,6 +153,20 @@ file-level target inventory for this migration plan.
   references passed 7/7. The rulebook index still reports one unrelated
   warning for `.agentic/shared/workflows/deployment-process.md` from
   `artifact.concern.mcp.server.deployment.architecture`.
+- 2026-09-01 Slice 9 collapsed the remaining child compatibility pointers
+  under `docs/harness/architecture/**` into one root pointer at
+  `docs/harness/architecture/README.md`; retired the old ADR, guide,
+  source-material, plan, rule, and rule-pack pointer files with SHA-256
+  evidence; updated active guidance to route new documents and rulebook work
+  to numbered owner roots; refreshed generated recognition sources; and
+  rebuilt the local runtime cache.
+- 2026-09-01 Slice 9 validation passed for metadata headers, YAML syntax,
+  generated recognition freshness, recognition-source validation, source
+  projections, source-material coverage, derivation reports, retirement
+  records, corpus-root changes, explanation readiness, rulebook index/chunk
+  smoke checks, local runtime build/freshness, query-local-context smoke,
+  governed-script command drift, harness-agent validation, focused selector
+  fixtures, and diff whitespace.
 
 ## Target Homes
 
@@ -294,7 +311,7 @@ compatibility until active references are updated.
 
 ## Ordered Execution Plan
 
-1. Preflight the current prototype corpus.
+1. Preflight each migration slice.
    - Run the artifact path planner for every source/target pair in the slice.
    - Run artifact metadata header checks.
    - Generate and validate the current rulebook index.
@@ -312,8 +329,8 @@ compatibility until active references are updated.
      roots only as each child path becomes empty.
 
 3. Move the platform runtime implementation plan first.
-   - Move `docs/harness/architecture/plans/platform-runtime-implementation-plan.md`
-     to `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
+   - Move the old prototype platform runtime implementation plan to
+     `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
    - Preserve the stable artifact ID unless the plan is split.
    - Update `.agentic/03.product/workflows/platform-runtime-implementation.md`,
      deploy blueprints, AWS/deploy ADR references, recognition sources, and

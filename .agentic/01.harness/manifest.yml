@@ -47,7 +47,10 @@ canonical_paths:
   product_source_guides: docs/03.product/source-material/guides/markdown
   product_rules: docs/03.product/rules
   product_rule_packs: docs/03.product/rule-packs
-  legacy_rules: docs/harness/architecture/rules
+  harness_rules: docs/01.harness/rules
+  rag_rulebook_rules: docs/02.rag-rulebook/rules
+  deploy_rules: docs/04.deploy/rules
+  shared_rules: docs/06.shared/rules
 
 generated_by_human_or_codex: codex
 

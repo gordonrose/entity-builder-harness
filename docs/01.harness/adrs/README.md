@@ -32,6 +32,7 @@ Use this root for harness-owned ADRs that are corpus history. Agent-facing
 workflow, standard, checklist, gate, and policy artifacts stay under
 `.agentic/01.harness/`.
 
-During the prototype corpus migration, older harness ADRs may remain under
-`docs/harness/architecture/adrs/` until a governed path migration moves them
-and leaves pointer compatibility.
+The old prototype ADR child pointers have been retired. Legacy references to
+the prototype architecture corpus should start at
+`docs/harness/architecture/README.md` and then follow this owner-aligned ADR
+root.

@@ -56,27 +56,28 @@ A rule pack answers: "What rules and steps apply to this task?"
 
 ## Decision Model
 
-Product layer rules belong in owner topic subdirectories such as:
+Structured rulebook YAML belongs in the narrowest owner corpus:
 
 ```text
-docs/03.product/rules/<topic>/layers/*.yml
+docs/01.harness/rules/
+docs/02.rag-rulebook/rules/
+docs/03.product/rules/
+docs/04.deploy/rules/
+docs/06.shared/rules/
 ```
 
-Product concern rules belong in owner topic subdirectories such as:
+Product rules and rule packs use owner topic subdirectories such as:
 
 ```text
 docs/03.product/rules/<topic>/concerns/*.yml
-```
-
-Product rule packs belong in owner topic subdirectories such as:
-
-```text
+docs/03.product/rules/<topic>/layers/*.yml
 docs/03.product/rule-packs/<topic>/*.yml
 ```
 
-Legacy deploy, harness, and shared rule candidates remain under
-`docs/harness/architecture/rules` until later migration slices move or split
-them. Do not add new product rule artifacts to the legacy prototype root.
+Do not add new rule artifacts to the legacy prototype root. If an old
+`docs/harness/architecture/**` reference is encountered, follow
+`standards/document-artifact-placement.md` and the prototype corpus migration
+plan before changing it.
 
 ## Default Flow
 

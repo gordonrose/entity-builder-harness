@@ -34,6 +34,7 @@ Use this root when the decision defines a reusable primitive that multiple
 layers must apply. Prefer a narrower numbered ADR root when one layer can own,
 validate, and evolve the decision.
 
-During the prototype corpus migration, older shared ADRs may retain pointer
-files under `docs/harness/architecture/adrs/` until active references have
-been updated or retired.
+The old prototype ADR child pointers have been retired. Legacy references to
+the prototype architecture corpus should start at
+`docs/harness/architecture/README.md` and then follow this owner-aligned ADR
+root.

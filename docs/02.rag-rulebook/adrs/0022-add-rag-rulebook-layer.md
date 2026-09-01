@@ -82,9 +82,9 @@ maintenance.
 The artifact metadata taxonomy can distinguish reusable RAG/rulebook machinery
 from product, deploy, education, and shared process artifacts.
 
-Existing prototype rulebook artifacts under `docs/harness/architecture/` remain
-in place until a separate governed corpus migration assigns final homes to
-harness, product/apps, design-system, deploy, and education corpora.
+The later prototype corpus migration assigned final homes to harness,
+RAG/rulebook, product/apps, design-system, deploy, and shared corpora. The old
+`docs/harness/architecture/` root remains only as a compatibility pointer.
 
 Future command surfaces should reserve:
 

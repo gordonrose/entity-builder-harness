@@ -58,7 +58,9 @@ Before editing runtime code:
 
 1. Read `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
 2. Read ADR 0025, ADR 0026, ADR 0027, and ADR 0028.
-3. Read the relevant platform rules under `docs/harness/architecture/rules/`.
+3. Read the relevant platform, shared, and deployment rules under
+   `docs/03.product/rules/`, `docs/06.shared/rules/`, and
+   `docs/04.deploy/rules/`.
 4. State the implementation milestone and bounded file scope.
 5. Stop if the slice requires AWS mutation, production DNS, secrets, account
    configuration, or real product app behavior.

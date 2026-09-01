@@ -42,6 +42,5 @@ Do not store product runtime contracts, deployment operations, or generic
 harness governance here unless the material is specifically about how the
 RAG/rulebook layer retrieves, indexes, chunks, validates, or serves context.
 
-During the prototype corpus migration, older RAG/rulebook-oriented material
-may remain under `docs/harness/architecture/**` until a governed artifact path
-migration moves it and leaves pointer compatibility.
+The legacy prototype architecture corpus now retains only the root
+compatibility pointer at `docs/harness/architecture/README.md`.

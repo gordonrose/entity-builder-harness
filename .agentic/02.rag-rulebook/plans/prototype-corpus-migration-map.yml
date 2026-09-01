@@ -27,8 +27,9 @@ source_root: docs/harness/architecture
 
 policy:
   - This map is read-only planning. It does not authorize moving files.
-  - Existing prototype corpus files remain under `docs/harness/architecture/` until a governed artifact path migration is approved.
-  - Target paths are proposed package locations, not current repository paths.
+  - The prototype corpus has been split into owner-aligned homes through governed migration slices.
+  - The old `docs/harness/architecture/` root may remain only as approved compatibility pointer material.
+  - Target paths record the package locations used by the migration.
   - Mixed concerns should be split only after the rulebook index can prove current references, related rulesets, and rule-pack dependencies.
   - Any future migration must update metadata headers, relative references, rule-pack required rulesets, README links, and generated indexes together.
 
@@ -103,10 +104,10 @@ source_material:
     current_glob: docs/harness/architecture/adrs/*.md
     proposed_corpus_id: corpus.01.harness
     proposed_target_pattern: corpus.01.harness/sources/adrs/<current-filename>
-    migration_status: target-candidate
+    migration_status: moved-in-slices-2-through-5
     notes:
-      - Current ADRs are harness architecture decisions even when they introduce other layers.
-      - ADR 0022 should be related from `corpus.02.rag-rulebook` because it creates the RAG/Rulebook layer.
+      - ADRs were classified by decision owner and moved to numbered ADR roots.
+      - The old prototype ADR child pointers have been retired in favor of the root compatibility pointer.
 
 yaml_artifacts:
   layer_rulesets:
@@ -352,4 +353,4 @@ next_decision_points:
   - Decide whether `corpus.06.shared` should own cross-corpus architecture concerns or whether those concerns should split per corpus.
   - Decide whether product subcorpora should become physical top-level corpus packages or manifest-declared subcorpora under `corpus.03.product`.
   - Decide how ADR 0022 should be related to both `corpus.01.harness` and `corpus.02.rag-rulebook`.
-  - Design the rulebook index schema so it can represent both current prototype paths and proposed corpus package paths.
+  - Design the rulebook index schema so it can represent both legacy prototype paths and numbered corpus package paths.

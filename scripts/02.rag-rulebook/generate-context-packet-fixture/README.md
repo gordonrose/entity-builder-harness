@@ -32,7 +32,8 @@ ranked chunk subset from request terms, preserves chunk and citation references,
 adds checks, forbidden actions, stop conditions, budgets, confidence, and
 provenance, then validates the packet before printing it.
 
-Generate a fixture from the current prototype corpus:
+Generate a fixture from the current numbered corpus roots and legacy prototype
+root pointer:
 
 ```bash
 bash scripts/02.rag-rulebook/generate-context-packet-fixture/script.sh \

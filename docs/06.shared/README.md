@@ -43,6 +43,5 @@ create broad coupling.
 
 Shared ADRs live in `adrs/`. Shared structured rules live under `rules/`.
 
-During the prototype corpus migration, old shared or cross-cutting prototype
-paths may retain compatibility pointers while remaining corpus content moves in
-governed slices.
+The legacy prototype architecture corpus now retains only the root
+compatibility pointer at `docs/harness/architecture/README.md`.

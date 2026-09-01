@@ -2412,7 +2412,7 @@ def build_packet(
             {
                 "id": "gap.selector-fixture.prototype-corpus-bridge",
                 "type": "missing-corpus",
-                "description": "The current prototype chunks do not yet contain corpus.02.rag-rulebook, so the fixture bridges through harness/shared prototype corpus chunks until migration.",
+                "description": "The selector did not choose corpus.02.rag-rulebook for a trusted RAG/rulebook session route; inspect recognition and policy coverage before relying on another corpus bridge.",
                 "blocking": False,
             }
         )

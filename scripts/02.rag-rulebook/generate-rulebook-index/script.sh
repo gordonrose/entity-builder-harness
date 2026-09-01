@@ -833,8 +833,9 @@ def usage() -> str:
   generate-rulebook-index/script.sh [--source-root <path>] [--migration-map <path>] [--rulebook-rules-root <path>] [--corpus-rules-root <corpus-id=path>] [--pretty]
 
 Emits a rag-rulebook/rulebook-index/v1 JSON document to stdout.
-The command is read-only: it parses current prototype corpus files and prints
-the index without moving files or writing generated artifacts.
+The command is read-only: it parses the legacy prototype root pointer,
+numbered corpus roots, and migration map, then prints the index without moving
+files or writing generated artifacts.
 """
 
 

@@ -84,7 +84,7 @@ against it; do not duplicate a separate prose-only routing table elsewhere.
       "reason": "backend architecture, platform/app/entity/feature/capability boundary, dependency direction, or durable architecture rule gap",
       "match_patterns": [
         "backend|architecture|platform capability|entity|feature|capability boundary|rulebook gap",
-        "docs/harness/architecture/",
+        "docs/(01\\.harness|02\\.rag-rulebook|03\\.product|04\\.deploy|06\\.shared)/(adrs|rules|rule-packs|source-material)/",
         "src/platform/"
       ]
     },

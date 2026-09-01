@@ -68,8 +68,9 @@ semantic_review:
     status: none-found
     search_scope:
       - .agentic/03.product/plans/implementation/platform-runtime-implementation.md
-      - docs/harness/architecture/rules/
+      - docs/03.product/rules/
       - docs/04.deploy/rules/
+      - docs/06.shared/rules/
       - infra/04.deploy/
       - platform/adapters/
     items: []

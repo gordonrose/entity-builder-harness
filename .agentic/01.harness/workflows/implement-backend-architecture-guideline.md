@@ -61,8 +61,9 @@ create or edit:
 
 - `docs/03.product/rules/**`
 - `docs/03.product/rule-packs/**`
-- legacy `docs/harness/architecture/rules/**` files only when the current
-  migration plan or owner classification says the artifact still belongs there
+- `docs/01.harness/rules/**`, `docs/02.rag-rulebook/rules/**`,
+  `docs/04.deploy/rules/**`, and `docs/06.shared/rules/**` only when the
+  accepted gap is owned by that corpus
 - `.agentic/01.harness/workflows/*rule*.md`
 - `.agentic/01.harness/templates/*rule*.yml`
 - narrowly related harness documentation that indexes or explains those

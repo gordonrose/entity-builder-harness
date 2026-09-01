@@ -33,14 +33,14 @@ which chunks can be generated, and which references connect it to other rules.
 The context packet is the small evidence bundle returned to the model. The
 rulebook index is how the service finds that evidence.
 
-## Why It Comes Before Migration
+## Why It Came Before Migration
 
-The current prototype corpus lives under `docs/harness/architecture/`.
+The prototype corpus used to live under `docs/harness/architecture/`.
 
-The proposed target structure uses numbered corpus packages such as
+The target structure uses numbered corpus packages such as
 `corpus.03.product.platform` or `corpus.04.deploy`.
 
-Before moving files, the index needs to prove that current artifacts, rule IDs,
+Before moving files, the index needed to prove that current artifacts, rule IDs,
 rule-pack dependencies, related rulesets, and path mappings are understood.
 After migration, the same index shape should prove that the moved files still
 resolve.
@@ -51,8 +51,8 @@ That is the difference between a tidy folder move and a safe corpus migration.
 
 Start with `source_roots`.
 
-These tell you what was scanned: current prototype corpus paths, migration maps,
-future corpus package roots, or generated outputs.
+These tell you what was scanned: legacy prototype paths, migration maps,
+current corpus package roots, or generated outputs.
 
 Then read `corpus_packages`.
 
@@ -135,8 +135,8 @@ survive a file move.
 A good index is graph-aware. Required rulesets and related rulesets are edges,
 not just strings buried in YAML.
 
-A good index is migration-aware. It can represent both the current prototype
-path and the future corpus package path.
+A good index is migration-aware. It can represent both legacy prototype paths
+and current corpus package paths.
 
 A good index is honest. Unresolved references are reported.
 
@@ -178,9 +178,10 @@ The retrieval flow should be:
 
 ## Relationship To Migration
 
-Before moving files, generate an index from current prototype paths.
+Before moving files, generate an index from the old prototype paths.
 
-After moving files, generate an index from the new corpus package paths.
+After moving files, generate an index from the new corpus package paths and
+legacy compatibility pointer.
 
 Then compare:
 

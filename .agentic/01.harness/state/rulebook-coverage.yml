@@ -768,7 +768,7 @@ deferred_human_decisions:
   - id: harness-layer-ownership
     title: Decide whether harness is test/development support, entity-builder governance/generation, or split into separate layers.
     status: open
-    affected_candidate: docs/harness/architecture/rules/layers/harness.yml
+    affected_candidate: docs/01.harness/rules/layers/harness.yml
     source_refs:
       - doc: "kanbien-typescript-architecture-guide.md"
         sections:

@@ -32,6 +32,7 @@ workflows, standards, and implementation plans stay under `.agentic/03.product/`
 Product source material, structured rules, and rule packs stay under the
 matching `docs/03.product/` corpus subdirectories.
 
-During the prototype corpus migration, older product ADRs may retain pointer
-files under `docs/harness/architecture/adrs/` until active references have
-been updated or retired.
+The old prototype ADR child pointers have been retired. Legacy references to
+the prototype architecture corpus should start at
+`docs/harness/architecture/README.md` and then follow this owner-aligned ADR
+root.

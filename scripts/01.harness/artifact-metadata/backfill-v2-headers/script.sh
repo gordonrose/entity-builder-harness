@@ -575,7 +575,7 @@ def used_by_for(path: Path, metadata: dict[str, Any]) -> list[dict[str, str]]:
     elif s.startswith("docs/06.shared/adrs/"):
         ref = "docs/06.shared/README.md"
     elif s.startswith("docs/harness/architecture/adrs/"):
-        ref = "docs/harness/architecture/adrs/README.md"
+        ref = "docs/harness/architecture/README.md"
     elif s.startswith("docs/harness/architecture/"):
         ref = ".agentic/01.harness/workflows/change-harness.md"
     elif s.startswith((".agentic/00.chat/", "docs/00.chat/")):

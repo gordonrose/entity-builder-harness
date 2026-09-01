@@ -80,7 +80,7 @@ workflow, standard, migration plan, or ADR.
 | Structured ruleset | `docs/<owner-layer>/rules/` |
 | Rule pack | `docs/<owner-layer>/rule-packs/` |
 | Runbook or guide | `docs/<owner-layer>/` for human/corpus docs; `.agentic/<owner-layer>/guides/` for agent-facing harness operation |
-| Compatibility pointer | The retired source path, with a link to the canonical target and migration plan |
+| Compatibility pointer | The retired source path or approved legacy root, with a link to the canonical target and migration plan |
 
 Use `.agentic/01.harness/standards/agentic-artifact-standards.md` to decide
 which artifact type should own the rule or procedure. Use this standard to
@@ -88,13 +88,13 @@ decide the path once the artifact type and owner are known.
 
 ## Migration-Period Rules
 
-`docs/harness/architecture/**` is the current prototype corpus. During its
-domain split:
+`docs/harness/architecture/**` is the legacy prototype corpus root. After the
+domain split, it should contain only approved compatibility pointers.
 
-- keep existing files in place until a governed artifact path migration moves
-  a concrete source and target pair;
-- add only compatibility pointers, migration plans, or reference-preserving
-  edits under the old prototype path;
+- do not add ordinary ADRs, guides, source material, plans, rules, rule packs,
+  runbooks, or corpus docs under the old prototype path;
+- add or edit only approved compatibility pointers, migration-plan updates, or
+  reference-preserving edits named by a governed artifact path migration;
 - route new product source material, product rules, and product rule packs to
   the product layer or stop and create the required `docs/03.product/` root
   through the migration plan first;

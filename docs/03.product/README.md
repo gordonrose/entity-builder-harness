@@ -50,6 +50,5 @@ Do not store deployment operations, infrastructure runbooks, or RAG/rulebook
 service machinery here unless the material is product-facing source evidence
 for a product rule.
 
-During the prototype corpus migration, old product-oriented prototype paths may
-retain compatibility pointers while the remaining deploy, harness, and shared
-artifacts move in later governed slices.
+The legacy prototype architecture corpus now retains only the root
+compatibility pointer at `docs/harness/architecture/README.md`.

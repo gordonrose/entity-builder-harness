@@ -36,7 +36,7 @@ index_schema: rag-rulebook/rulebook-index/v1
 purpose: Define the catalogue a RAG/rulebook service uses to find rulebook artifacts, rules, chunks, references, corpus ownership, and migration targets.
 
 principles:
-  - Index current prototype paths and proposed corpus paths at the same time.
+  - Index legacy prototype paths and current corpus paths at the same time.
   - Preserve stable metadata IDs and rulebook IDs separately from current file paths.
   - Represent rule-pack dependencies and related rulesets as graph edges.
   - Report unresolved references instead of silently dropping them.

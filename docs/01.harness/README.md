@@ -44,6 +44,5 @@ Do not store product runtime contracts, deployment runbooks, reusable
 RAG/rulebook service rules, or general shared-process standards here unless the
 decision owner is the harness layer.
 
-During the prototype corpus migration, old harness-oriented prototype paths may
-retain compatibility pointers while remaining corpus content moves in governed
-slices.
+The legacy prototype architecture corpus now retains only the root
+compatibility pointer at `docs/harness/architecture/README.md`.
