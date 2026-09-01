@@ -176,6 +176,39 @@ Summary: Checkpointed the core security module split, product-harness foundation
 
 ADR impact: No new ADR; the naming policy extends an existing platform rule.
 
+
+### 2026-09-01T22:25:57Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: Stopped before reconciliation; a later approved resolution must retain canonical owner paths and migrate the naming-policy evidence.
+
+
+### 2026-09-01T22:25:57Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: Stopped before regeneration; regenerate only after the source-path and rule-content conflicts are resolved.
+
+
+### 2026-09-01T22:25:57Z - Main refresh conflict recorded
+
+Path: `docs/03.product/rules/platform/layers/platform.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: stopped
+
+Action: Stopped before reconciliation; a later approved resolution must keep the canonical 03.product rule path and migrate the naming-policy rule with refreshed provenance.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -192,7 +225,39 @@ ADR impact: No new ADR; the naming policy extends an existing platform rule.
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: The classifier found authored derivation-report content with concurrent owner-path migration on main and naming-policy additions on the chat branch.
+  Action: Stopped before reconciliation; a later approved resolution must retain canonical owner paths and migrate the naming-policy evidence.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710/20260901222515`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710-20260901222515`
+  Files changed by resolution: derivation report; canonical source/rule paths; naming-policy review and claims
+  Checks: refresh preflight; classifier
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: The classifier found the generated artifact conflicted because its independently changed source inventories have not yet been reconciled.
+  Action: Stopped before regeneration; regenerate only after the source-path and rule-content conflicts are resolved.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710/20260901222515`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710-20260901222515`
+  Files changed by resolution: generated recognition artifact inventory
+  Checks: refresh preflight; classifier
+
+
+- Path: `docs/03.product/rules/platform/layers/platform.yml`
+  Type: `normal-repo-conflict`
+  Mode: stopped
+  Reason: The classifier found authored platform-rule content where main moved the canonical path and the chat branch added a semantic identifier policy to the legacy path.
+  Action: Stopped before reconciliation; a later approved resolution must keep the canonical 03.product rule path and migrate the naming-policy rule with refreshed provenance.
+  Preflight branch: `agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710/20260901222515`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710-20260901222515`
+  Files changed by resolution: platform layer rule; source provenance; semantic identifier rule
+  Checks: refresh preflight; classifier
 
 ## ADR Disposition
 
