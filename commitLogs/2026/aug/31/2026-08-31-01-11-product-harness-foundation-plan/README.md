@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-08-31T00:11:19Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-01T22:23:13Z
+latest_commit_sha: 86e0c5a
+chat_duration: 166314s (01:22:11:54)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -165,13 +165,30 @@ retry, and dead-letter handling. It also records the current in-memory queue's
 delayed-delivery limitation and the distinct roles of tenant context and
 end-user authorization. No runtime source files were changed.
 
+
+### 2026-09-01T22:23:13Z - Commit recorded
+
+Commit: `86e0c5a`
+
+Message: feat(core): organize security contracts and platform guidance
+
+Summary: Checkpointed the core security module split, product-harness foundation plan, source-reviewed platform naming standard, and printable architecture handbook before the governed main refresh.
+
+ADR impact: No new ADR; the naming policy extends an existing platform rule.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `86e0c5a`
+  Time UTC: 2026-09-01T22:23:13Z
+  Message: feat(core): organize security contracts and platform guidance
+  Summary: Checkpointed the core security module split, product-harness foundation plan, source-reviewed platform naming standard, and printable architecture handbook before the governed main refresh.
+  ADR impact: No new ADR; the naming policy extends an existing platform rule.
 
 ## Main Refresh Conflicts
 
@@ -189,12 +206,12 @@ an implemented cross-layer architecture decision in this checkpoint.
 ## Session Metrics
 
 Raised at UTC: 2026-08-31T00:11:19Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-01T22:23:13Z
+Latest commit SHA: 86e0c5a
+Chat duration: 166314s (01:22:11:54)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
