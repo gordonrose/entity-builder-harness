@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-01T01:44:42Z
-latest_commit_sha: 7b1b8dd
-chat_duration: 96685s (01:02:51:25)
+latest_commit_at_utc: 2026-09-01T17:38:21Z
+latest_commit_sha: afa29cf
+chat_duration: 153904s (01:18:45:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -963,6 +963,17 @@ Summary: Collapsed docs/harness/architecture child compatibility pointers to one
 
 ADR impact: ADR not needed: this implements the approved prototype corpus migration plan and existing owner-aligned ADR decision.
 
+
+### 2026-09-01T17:38:21Z - Commit recorded
+
+Commit: `afa29cf`
+
+Message: Retire prototype architecture root
+
+Summary: Retired the final docs/harness/architecture compatibility pointer, removed the old prototype root, updated active docs/scripts/generated recognition/runtime surfaces, added the final retirement record, and fixed the public workbench export to keep current chat ADRs source-side.
+
+ADR impact: ADR not needed: this completes the approved prototype corpus split plan and applies ADR 0032 owner-aligned roots without a new architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1040,6 +1051,13 @@ ADR impact: ADR not needed: this implements the approved prototype corpus migrat
   Summary: Collapsed docs/harness/architecture child compatibility pointers to one root pointer, retired old pointer artifacts with hashes, refreshed recognition/runtime surfaces, and updated document-routing guidance.
   ADR impact: ADR not needed: this implements the approved prototype corpus migration plan and existing owner-aligned ADR decision.
 
+
+- Commit: `afa29cf`
+  Time UTC: 2026-09-01T17:38:21Z
+  Message: Retire prototype architecture root
+  Summary: Retired the final docs/harness/architecture compatibility pointer, removed the old prototype root, updated active docs/scripts/generated recognition/runtime surfaces, added the final retirement record, and fixed the public workbench export to keep current chat ADRs source-side.
+  ADR impact: ADR not needed: this completes the approved prototype corpus split plan and applies ADR 0032 owner-aligned roots without a new architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1055,9 +1073,9 @@ decision.
 ## Session Metrics
 
 Raised at UTC: 2026-08-30T22:53:17Z
-Latest commit at UTC: 2026-09-01T01:44:42Z
-Latest commit SHA: 7b1b8dd
-Chat duration: 96685s (01:02:51:25)
+Latest commit at UTC: 2026-09-01T17:38:21Z
+Latest commit SHA: afa29cf
+Chat duration: 153904s (01:18:45:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
