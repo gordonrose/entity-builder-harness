@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.product-harness-foundation
-version: 1
+version: 4
 status: active
 layer: 03.product
 domain: governance
@@ -54,6 +54,11 @@ consumer needs, rather than by guessing a final application architecture.
 - `apps/**` owns product behavior, feature organization, routes, jobs,
   permissions, app config meaning, migrations, resource authorization, and
   tenant-specific product behavior.
+- A product capability must remain independent of any one interaction channel.
+  Traditional web UI, chat, and voice may each become consumers of the same
+  governed capability, identity, authorization, validation, audit, and
+  consequence-control path. A channel must not become a second backend with
+  its own business or access-control rules.
 - `products/**` composes public app modules into named products. It does not
   contain cloud account, region, DNS, secret value, provider-resource, or image
   selection data.
@@ -98,6 +103,7 @@ Initial planning assumptions are:
 | Verified principal and tenant context in real app handlers | Not yet a general live app-consumption guarantee | Do not make a tenant-aware handler template claim this is available. Record a platform gap first. |
 | Resource, relationship, and attribute-based authorization | Core vocabulary exists; a general runtime path and product policy engine are not yet proven | Do not scaffold regional/team membership policy as a working default. Require a bounded product/platform implementation plan. |
 | Persistence, files, events, queues, and external integrations | Core contracts exist, but provider/runtime availability varies | Each requires its own capability playbook and an explicit availability check. |
+| Interaction channels: web UI, chat, and voice | The web/API-oriented platform shell is the current first consumer shape. Chat and voice have no approved general runtime, provider, conversation model, or repository convention. | Treat chat and voice as planning-only consumers of future capability contracts. Do not present a web-only feature template as a universal interaction architecture. |
 | Tenant policy storage and membership administration | Product behavior, not a core or harness data store | Govern the design and validation path; do not put live tenant values in `.agentic`. |
 
 The inventory is a required first implementation slice because it keeps later
@@ -143,6 +149,8 @@ is approved. Likely initial artifacts are:
 - a security-baseline adoption standard;
 - a workflow for creating a platform-consumable app;
 - a workflow for composing a product from public app surfaces;
+- a capability-first interaction-channel standard and, when a real consumer
+  requires it, a focused web, chat, or voice adaptation playbook;
 - a capability inventory or registry with maturity and evidence;
 - a minimal app template; and
 - validators for app manifests, mount declarations, policy adoption, and
@@ -167,10 +175,48 @@ capability. A feature does not automatically require every playbook.
 | Add persistence | App schema, repositories, queries, and ordered migrations | Tenant scoping, transaction/concurrency decision, migration review, failure behavior, and integration proof. |
 | Add integration | Product use of a provider-neutral port | Adapter boundary, config/secret references, timeout/retry/error mapping, health/observability, and provider-availability check. |
 | Add tenant-scoped authorization | Product membership, role, group, scope, and resource policy | Separation of principal, tenant, permissions, relations, attributes, policy decision, deny proof, and audit evidence. |
+| Add interaction channel | A web UI, chat, or voice adaptation of an existing product capability | Channel declaration, verified identity/session context, same capability authorization path, untrusted-input handling, confirmation for consequential actions, privacy/retention decisions, accessibility or human handoff, and channel-specific proof. |
 | Compose product | Product app list and product-level policy choices | Public-surface-only composition, permission/reference validation, profile adoption, and no target-specific deploy values. |
 
 Each playbook must state when to use it, ownership boundaries, defaults,
 mandatory decisions, required checks, output, and stop conditions.
+
+## Future Capability Declaration Direction
+
+An app's route, job, health, configuration, and lifecycle registrations state
+how it participates in the platform runtime. They do not fully describe a
+product capability. Before the harness generates real feature work, define a
+small, versioned capability declaration/profile that brings together the
+capability's stable meaning and references to the decisions it requires. Its
+repository location and exact machine-readable shape remain deferred until a
+bounded first consumer is selected.
+
+The declaration must be a reference-and-allowlist surface, not a second copy of
+business logic or an unbounded metadata document. A capability should be able
+to declare only the facets it uses:
+
+| Facet | What the declaration contributes | What it must not become |
+| --- | --- | --- |
+| Identity and purpose | Stable capability ID, owner, version, concise human/machine-readable description, and intended outcome. | A prompt that grants authority or an unbounded product specification. |
+| Inputs and interfaces | References to approved schemas, errors, route/job/event registrations, and supported interaction-channel adapters. | A second route handler, queue worker, or channel-specific business path. |
+| Authorization and consequences | Permission, tenant/resource-policy, confirmation, approval, and delegation requirements by reference. | Live role/group membership, a policy-engine implementation, or implied authority from a chat/voice prompt. |
+| Data and lifecycle | Data classifications plus retention, residency, persistence, and integration requirements by reference. | Raw tenant data, credentials, provider settings, or deployment resources. |
+| Accountability and observability | Separate audit, security-signal, and operational-observability profile references. Each profile classifies its allowlisted facts, permissible values, bounds/cardinality, audience, and retention/residency justification. | A free-form log/audit payload or a duplicate sensitive-data store. |
+| LLM or agent discovery | A bounded description of the capability's user-facing intent, supported input/output form, and approved invocation path. | Tool permission, direct provider access, hidden instructions, retrieved-content trust, or a bypass of independent authorization and validation. |
+
+The capability declaration belongs to the app/product-harness boundary, not to
+the generic `platform/contracts` runtime registration surface. Platform
+contracts remain narrow and reusable: a route needs its handler and runtime
+requirements; a capability profile explains why the route, job, or channel
+exists and which approved policies apply. A future registry may link the two
+for validation, but one must not silently generate or override the other.
+
+An LLM-facing description is discovery metadata only. It can help a governed
+assistant explain or select a capability after permission-scoped retrieval, but
+the capability boundary must still authenticate the caller, resolve tenant and
+resource scope, validate input, enforce approval rules, and authorise every
+tool or side effect. The description must not contain secrets, raw prompts,
+tenant data, signed URLs, or instructions that let a model infer authority.
 
 ## Security Baseline Direction
 
@@ -193,6 +239,56 @@ Initial policy topics to evaluate include:
 An app or product adopts a named baseline version. A tenant may tighten it;
 provider details such as AWS KMS keys, certificates, and IAM policies remain
 deployment concerns.
+
+## Interaction Channel Direction
+
+The original web/API-oriented implementation pipeline remains valuable, but it
+is a **first consumer**, not the definition of a feature. The product harness
+must treat a feature capability as the stable centre, then let approved
+interaction-channel adapters invoke it.
+
+For every supported channel, the path is the same in principle:
+
+1. The channel adapter validates and normalises web, chat, or voice input.
+2. The shared feature capability applies identity, tenant, authorization, and
+   policy.
+3. The channel adapter renders an appropriate response or a human handoff.
+
+The exact repository folders and transport contracts are deliberately deferred.
+When the first real consumer is chosen, the harness should make three scopes
+visible rather than mixing them:
+
+| Scope | Owns | Must not own |
+| --- | --- | --- |
+| Feature capability | Product command/query meaning, validation, authorization request, tenant/resource scope, outcome, and audit requirement. | Browser components, prompt wording, speech-provider clients, or channel session details. |
+| Channel adapter | Web request/UI mapping, conversational turn handling, or voice input/output normalisation and rendering. | A bypass of feature authorization or a separate copy of business logic. |
+| Channel/session policy | Verified identity association, consent, transcript/audio classification, retention, streaming/session limits, confirmation/handoff, and accessibility. | Authority inferred merely from natural-language text, model output, a transcript, or a caller-provided tenant value. |
+
+Chat messages, voice transcripts, retrieved content, and model output are
+untrusted input. A conversational or voice interface may help a user formulate
+an intention, but it must never turn that text directly into a privileged tool
+or database action. The verified principal, tenant context, permission and
+resource checks, approval rules, and audit path remain independently enforced
+at the shared capability boundary.
+
+Before the harness offers a channel adaptation, it must ask:
+
+1. Which existing capability is this channel consuming, and is it actually
+   available in the capability inventory?
+2. How is the human or machine identity verified and bound to the conversation
+   or voice session?
+3. Which data is retained—text transcript, audio, generated response, or none—
+   and what classification, consent, residency, encryption, access, and
+   retention rules apply?
+4. Which actions need an explicit confirmation, a human handoff, or a
+   non-conversational review screen before any side effect occurs?
+5. How will the channel prove the same tenant/resource authorization and
+   denied behaviour as its web/API counterpart?
+
+Do not build generic voice, chat, agent, telephony, speech-to-text,
+text-to-speech, transcript store, model, or prompt infrastructure merely to
+reserve a future option. Start with one bounded consumer and add only the
+channel contracts, adapters, and policies it demonstrably requires.
 
 ## Implementation Sequence
 
@@ -248,6 +344,52 @@ Acceptance:
 - Tenant restrictions can tighten but not silently weaken baseline rules.
 - No policy artifact contains raw credentials, keys, or provider resource
   configuration.
+
+### 3a. Define The Capability-First Interaction Boundary
+
+Before a web template is described as the default feature shape, define how a
+feature capability can be consumed by more than one interaction channel without
+duplicating business logic or weakening controls.
+
+Acceptance:
+
+- The app/feature guidance distinguishes capability semantics from web, chat,
+  and voice adaptation.
+- The capability inventory represents chat and voice as unavailable or
+  planning-only until an approved runtime and first consumer provide evidence.
+- The future channel playbook requires verified identity, tenant/resource
+  authorization, untrusted-input handling, confirmation/handoff decisions,
+  audit expectations, and privacy/retention decisions appropriate to the
+  channel.
+- Repository conventions keep channel adapters discoverable without locking a
+  universal feature folder structure before a consumer proves it.
+- A web UI implementation pipeline remains supported as a first consumer, but
+  does not define a second authorization or business-logic path.
+
+### 3b. Define The Capability Declaration Profile
+
+Before feature generators, LLM-facing discovery, or channel adapters create
+capability artifacts, define the versioned declaration/profile that connects
+app-owned capability meaning to its approved runtime registrations and policy
+references.
+
+Acceptance:
+
+- The profile has an explicit version, stable capability identity, owner, and
+  bounded purpose description.
+- It references rather than duplicates schemas, routes, jobs, persistence,
+  integrations, permissions, tenant/resource policy, and channel adapters.
+- It declares separate audit, security-signal, and operational-observability
+  profiles with allowlisted safe facts; an absent profile is deliberate. Each
+  selected profile records field purpose, classification, permissible values,
+  bounds/cardinality, audience, and retention/residency justification.
+- Any LLM/agent discovery fields are explicitly non-authoritative and cannot
+  confer access, tool permission, tenant scope, or side-effect authority.
+- Validators reject secrets, raw tenant data, provider configuration, unbounded
+  metadata, undeclared runtime registrations, and references to unavailable
+  platform capabilities.
+- The first real consumer determines the repository location and exact schema;
+  do not create an empty universal capability package in advance.
 
 ### 4. Add Focused Workflows And Checklists
 
@@ -350,6 +492,9 @@ For later implementation slices:
 - The first approved persistence, event, file-storage, and integration adapter
   set for real apps.
 - The first pilot app and its feature scope.
+- The first approved chat or voice consumer, its provider/runtime, identity and
+  session model, transcript/audio handling, retention/residency policy, and
+  human-handoff model.
 - Exact template, workflow, validator, and script path names after capability
   inventory review.
 
