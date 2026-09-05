@@ -29,9 +29,9 @@ async function main(): Promise<void> {
     PLATFORM_AUTH_COGNITO_REGION: fixture.region,
     PLATFORM_AUTH_COGNITO_USER_POOL_ID: fixture.userPoolId,
     PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: fixture.appClientId,
-    PLATFORM_AUTHZ_GROUP_PERMISSIONS: JSON.stringify({ "kanbien-admins": ["smoke:read"] }),
-    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: JSON.stringify({ "platform-smoke/read": ["smoke:read"] }),
-    PLATFORM_AUTHZ_CLAIM_PERMISSIONS: JSON.stringify([{ claim: "custom:role", equals: "operator", permissions: ["smoke:read"] }]),
+    PLATFORM_AUTHZ_GROUP_PERMISSIONS: JSON.stringify({ "kanbien-admins": ["adapter-smoke.smoke:read"] }),
+    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: JSON.stringify({ "platform-smoke/read": ["adapter-smoke.smoke:read"] }),
+    PLATFORM_AUTHZ_CLAIM_PERMISSIONS: JSON.stringify([{ claim: "custom:role", equals: "operator", permissions: ["adapter-smoke.smoke:read"] }]),
   }, {
     clock: fixedClock(new Date("2026-07-10T00:00:00.000Z")),
     fetchJwks,
@@ -47,7 +47,7 @@ async function main(): Promise<void> {
     equal(missingConfiguration.error.code, "PLATFORM_ADAPTER_AWS_COGNITO_CONFIG_INVALID");
   }
 
-  const permission = "smoke:read" as Permission;
+  const permission = "adapter-smoke.smoke:read" as Permission;
   const appId = platformAppId("adapter-smoke");
   const routeName = platformRouteName("adapter-smoke.protected");
   if (!appId.ok || !routeName.ok) {

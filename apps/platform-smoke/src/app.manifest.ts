@@ -11,7 +11,7 @@ export interface PlatformSmokeAppManifest {
   readonly requiredConfig: readonly string[];
 }
 
-export const platformSmokeReadPermission = "smoke:read" as Permission;
+export const platformSmokeReadPermission = "platform-smoke.smoke:read" as Permission;
 export const platformSmokeConfigKeys = ["PLATFORM_SMOKE_APP_NAME"] as const;
 
 export const platformSmokeAppManifest: PlatformSmokeAppManifest = {

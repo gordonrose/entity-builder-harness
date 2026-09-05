@@ -34,9 +34,9 @@ async function main(): Promise<void> {
     throw new Error("Expected valid server test primitives.");
   }
 
-  const permission = "smoke:read" as Permission;
-  const tenantPermission = "tenant:read" as Permission;
-  const resourcePermission = "record:read" as Permission;
+  const permission = "smoke.smoke:read" as Permission;
+  const tenantPermission = "smoke.tenant:read" as Permission;
+  const resourcePermission = "smoke.record:read" as Permission;
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   let authenticatedPrincipal: Principal | undefined;

@@ -9,6 +9,7 @@ import {
   duplicatePlatformRegistration,
   fixedFeatureFlagReader,
   platformAppId,
+  platformRegistrationNamespaceMismatch,
   unknownPlatformPermission,
   validatePlatformJobRegistration,
   validatePlatformPermissionDeclaration,
@@ -16,6 +17,7 @@ import {
   type FeatureFlagReader,
   type PlatformApp,
   type PlatformAppRegistry,
+  type PlatformAppId,
   type PlatformContractError,
   type PlatformHealthRegistration,
   type PlatformJobContext,
@@ -23,6 +25,7 @@ import {
   type PlatformJobRegistration,
   type PlatformMountDeps,
   type PlatformPermissionDeclaration,
+  type PlatformRegistrationKind,
   type PlatformRequestContext,
   type PlatformRouteRegistration,
 } from "@kanbien/platform-contracts";
@@ -52,6 +55,7 @@ export interface PlatformTestMetrics extends Metrics {
 }
 
 export interface PlatformTestRegistry extends PlatformAppRegistry {
+  forApp(appId: PlatformAppId): PlatformAppRegistry;
   permissions(): readonly PlatformPermissionDeclaration[];
   routes(): readonly PlatformRouteRegistration[];
   jobs(): readonly PlatformJobRegistration[];
@@ -170,7 +174,7 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
     return { ok: false, error };
   }
 
-  return {
+  const registry: PlatformTestRegistry = {
     registerPermission(permissionDeclaration) {
       const validation = validatePlatformPermissionDeclaration(permissionDeclaration);
       if (!validation.ok) {
@@ -222,6 +226,27 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
       configSchemas.push(schema as ConfigSchema<unknown>);
       return contractSuccess();
     },
+    forApp(appId) {
+      return {
+        registerPermission(permissionDeclaration) {
+          return registerInAppNamespace(appId, "permission", permissionDeclaration.permission, () =>
+            registry.registerPermission(permissionDeclaration));
+        },
+        registerRoute(route) {
+          return registerInAppNamespace(appId, "route", String(route.name), () => registry.registerRoute(route));
+        },
+        registerJob(job) {
+          return registerInAppNamespace(appId, "job", String(job.name), () => registry.registerJob(job));
+        },
+        registerHealthCheck(healthCheck) {
+          return registerInAppNamespace(appId, "health", String(healthCheck.name), () =>
+            registry.registerHealthCheck(healthCheck));
+        },
+        registerConfigSchema(schema) {
+          return registry.registerConfigSchema(schema);
+        },
+      };
+    },
     permissions: () => permissions.map((permission) => ({ ...permission })),
     routes: () => [...routes],
     jobs: () => [...jobs],
@@ -247,6 +272,21 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
       return validationErrors;
     },
   };
+
+  function registerInAppNamespace(
+    appId: PlatformAppId,
+    kind: PlatformRegistrationKind,
+    name: string,
+    register: () => Result<void, PlatformContractError>,
+  ): Result<void, PlatformContractError> {
+    if (!name.startsWith(`${appId}.`)) {
+      return track(platformRegistrationNamespaceMismatch(kind, appId, name));
+    }
+
+    return register();
+  }
+
+  return registry;
 }
 
 export async function mountPlatformAppForTest(
@@ -262,7 +302,7 @@ export async function mountPlatformAppForTest(
   }
 
   try {
-    await app.mount(registry, deps);
+    await app.mount(registry.forApp(appId.value), deps);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown app mount failure.";
     return mountFailure(registry.errors(), { reason: message });

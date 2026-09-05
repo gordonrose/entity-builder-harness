@@ -25,12 +25,15 @@ async function main(): Promise<void> {
   const routeName = platformRouteName("smoke.echo");
   const jobName = platformJobName("smoke.rebuild");
   const healthName = platformHealthName("smoke.readiness");
+  const foreignRouteName = platformRouteName("billing.invoice.list");
+  const foreignJobName = platformJobName("billing.invoice.export");
+  const foreignHealthName = platformHealthName("billing.readiness");
 
-  if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok) {
+  if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok || !foreignRouteName.ok || !foreignJobName.ok || !foreignHealthName.ok) {
     throw new Error("Expected valid platform runtime primitives.");
   }
 
-  const permission = "smoke:read";
+  const permission = "smoke.smoke:read";
   const configSchema: ConfigSchema<{ readonly enabled: boolean }> = {
     parse: () => ({ ok: true, value: { enabled: true } }),
   };
@@ -121,6 +124,89 @@ async function main(): Promise<void> {
   }
   equal(invalidMount.error.code, "PLATFORM_RUNTIME_REGISTRY_INVALID");
   equal(invalidMount.error.contractErrors.some((error) => error.code === "PLATFORM_CONTRACT_UNKNOWN_PERMISSION"), true);
+
+  const namespaceMismatch = await mountPlatformRuntimeApps({
+    apps: [
+      definePlatformApp({
+        id: appId.value,
+        name: "Namespace mismatch",
+        mount(registry) {
+          registry.registerPermission({ permission: "billing.invoice:read" });
+          registry.registerRoute({
+            name: foreignRouteName.value,
+            method: "GET",
+            path: "/billing-invoice",
+            auth: { kind: "public" },
+            handler: { handle: () => ({ status: 200 }) },
+          });
+          registry.registerJob({
+            name: foreignJobName.value,
+            messageType: "billing.invoice.export" as QueueMessageType,
+            handler: { handle: () => undefined },
+          });
+          registry.registerHealthCheck({
+            name: foreignHealthName.value,
+            check: { check: () => undefined as never },
+          });
+        },
+      }),
+    ],
+    deps: createPlatformTestMountDeps(),
+  });
+  equal(namespaceMismatch.ok, false);
+  if (namespaceMismatch.ok) {
+    throw new Error("Expected cross-app registrations to fail.");
+  }
+  const namespaceErrors = namespaceMismatch.error.contractErrors.filter(
+    (error) => error.code === "PLATFORM_CONTRACT_NAMESPACE_MISMATCH",
+  );
+  equal(namespaceErrors.length, 4);
+  deepEqual(namespaceErrors.map((error) => error.details?.["kind"]), ["permission", "route", "job", "health"]);
+  deepEqual(namespaceErrors.map((error) => error.details?.["appId"]), ["smoke", "smoke", "smoke", "smoke"]);
+
+  const billingAppId = platformAppId("billing");
+  const customerServiceAppId = platformAppId("customer-service");
+  const billingRouteName = platformRouteName("billing.invoice.list");
+  const customerServiceRouteName = platformRouteName("customer-service.case.list");
+  if (!billingAppId.ok || !customerServiceAppId.ok || !billingRouteName.ok || !customerServiceRouteName.ok) {
+    throw new Error("Expected valid cross-app registry primitives.");
+  }
+  const crossAppDuplicate = await mountPlatformRuntimeApps({
+    apps: [
+      definePlatformApp({
+        id: billingAppId.value,
+        name: "Billing",
+        mount(registry) {
+          registry.registerRoute({
+            name: billingRouteName.value,
+            method: "GET",
+            path: "/shared",
+            auth: { kind: "public" },
+            handler: { handle: () => ({ status: 200 }) },
+          });
+        },
+      }),
+      definePlatformApp({
+        id: customerServiceAppId.value,
+        name: "Customer Service",
+        mount(registry) {
+          registry.registerRoute({
+            name: customerServiceRouteName.value,
+            method: "GET",
+            path: "/shared",
+            auth: { kind: "public" },
+            handler: { handle: () => ({ status: 200 }) },
+          });
+        },
+      }),
+    ],
+    deps: createPlatformTestMountDeps(),
+  });
+  equal(crossAppDuplicate.ok, false);
+  if (crossAppDuplicate.ok) {
+    throw new Error("Expected duplicate route registration across apps to fail.");
+  }
+  equal(crossAppDuplicate.error.contractErrors.some((error) => error.code === "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION"), true);
 
   const duplicateApp = await mountPlatformRuntimeApps({
     apps: [app, app],

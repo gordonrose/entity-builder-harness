@@ -38,7 +38,9 @@ const deps = createPlatformTestMountDeps({ logger, metrics, config });
 void deps;
 
 const registry = createPlatformTestRegistry();
-registry.registerPermission({ permission: "smoke:read" });
+registry.registerPermission({ permission: "smoke.smoke:read" });
+const appRegistry = registry.forApp(appId.value);
+void appRegistry;
 void registry.permissions();
 
 const requestContext: PlatformRequestContext = createPlatformTestRequestContext({ path: "/smoke" });

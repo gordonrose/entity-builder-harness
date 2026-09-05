@@ -127,6 +127,8 @@ function authHookForPermission(permission: Permission) {
         return {
           authenticated: true,
           permissions: [permission],
+          principalId: "smoke-user",
+          principalType: "user" as const,
           subject: "smoke-user",
           rateLimitKey: "principal:smoke-user",
         };
@@ -135,6 +137,8 @@ function authHookForPermission(permission: Permission) {
         return {
           authenticated: true,
           permissions: [],
+          principalId: "smoke-limited",
+          principalType: "user" as const,
           subject: "smoke-limited",
           rateLimitKey: "principal:smoke-limited",
         };

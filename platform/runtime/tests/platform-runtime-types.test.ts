@@ -29,6 +29,8 @@ const deps = createPlatformRuntimeContextDeps();
 void deps;
 
 const registry = createPlatformRuntimeRegistry();
+const appRegistry = registry.forApp(appId.value);
+void appRegistry;
 void registry.routes();
 void registry.configSchemas();
 
