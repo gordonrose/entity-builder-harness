@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-05T15:19:33Z
-latest_commit_sha: 174421b
-chat_duration: 486494s (05:15:08:14)
+latest_commit_at_utc: 2026-09-05T15:26:15Z
+latest_commit_sha: 19f14c4
+chat_duration: 486896s (05:15:14:56)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -899,6 +899,17 @@ Summary: Separated platform security failures, authentication, JWT verification,
 
 ADR impact: No ADR: the change preserves existing security mechanism behaviour and public imports; it does not select a provider or introduce a new security control.
 
+
+### 2026-09-05T15:26:15Z - Commit recorded
+
+Commit: `19f14c4`
+
+Message: docs(architecture): record platform learning direction
+
+Summary: Recorded the product-harness foundation, platform implementation follow-ups, printable learning handbook, and durable session evidence for security, audit, contracts, runtime, workers, adapters, and source organisation decisions.
+
+ADR impact: No ADR: the documentation records existing implementation slices and deferred directions; it does not adopt a new cross-layer runtime architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -933,6 +944,13 @@ ADR impact: No ADR: the change preserves existing security mechanism behaviour a
   Message: refactor(platform): organize security mechanisms
   Summary: Separated platform security failures, authentication, JWT verification, authorization mapping, headers, and rate limiting behind the unchanged public barrel, with local package/source guides and passing security, server, Cognito, and smoke-app proof.
   ADR impact: No ADR: the change preserves existing security mechanism behaviour and public imports; it does not select a provider or introduce a new security control.
+
+
+- Commit: `19f14c4`
+  Time UTC: 2026-09-05T15:26:15Z
+  Message: docs(architecture): record platform learning direction
+  Summary: Recorded the product-harness foundation, platform implementation follow-ups, printable learning handbook, and durable session evidence for security, audit, contracts, runtime, workers, adapters, and source organisation decisions.
+  ADR impact: No ADR: the documentation records existing implementation slices and deferred directions; it does not adopt a new cross-layer runtime architecture.
 
 ## Main Refresh Conflicts
 
@@ -1015,9 +1033,9 @@ an implemented cross-layer architecture decision in this checkpoint.
 ## Session Metrics
 
 Raised at UTC: 2026-08-31T00:11:19Z
-Latest commit at UTC: 2026-09-05T15:19:33Z
-Latest commit SHA: 174421b
-Chat duration: 486494s (05:15:08:14)
+Latest commit at UTC: 2026-09-05T15:26:15Z
+Latest commit SHA: 19f14c4
+Chat duration: 486896s (05:15:14:56)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
