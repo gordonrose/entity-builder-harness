@@ -1,0 +1,156 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: review-record
+#   purpose: Record the OKF source-material review loop for package documentation guidance.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: harness.architecture.source-material.package-documentation-v1
+#     path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+#   - id: harness.architecture.rules.concerns.package-documentation
+#     path: docs/03.product/rules/concerns/package-documentation.yml
+
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-09-02.03-product.package-documentation-v1
+status: accepted
+
+source_material:
+  path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  corpus_id: corpus.03.product
+  vertical: package-documentation
+  source_state: accepted
+  sha256: 099dc9bb1eb69a7977817ee4b8768d1b40898fef1402b7606335107686dd8979
+  target_rule_paths:
+    - docs/03.product/rules/concerns/package-documentation.yml
+
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - secops-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+
+iterations:
+  - iteration: 1
+    source_revision_summary: >
+      Reviewed the proposed package documentation policy after it defined the
+      package-boundary threshold, local multi-file module threshold, minimum
+      README content, barrel and test relationship, same-change maintenance,
+      security constraints, and incremental adoption posture.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.8
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.8
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.8
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+          - docs/03.product/rules/core/layers/packages-core.yml
+          - docs/03.product/rules/platform/layers/platform.yml
+      - role: agentic-engineer
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.8
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.7
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+          - packages/core/README.md
+          - platform/contracts/README.md
+      - role: secops-engineer
+        overall_score: 9.8
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.8
+          production_grade_gaps: 9.8
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.9
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - docs/03.product/rules/platform/concerns/tenancy.yml
+      - role: senior-sre
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.8
+          machine_readability: 9.7
+          cost_optimization: 9.8
+          security: 9.8
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+          - docs/03.product/rules/concerns/package-documentation.yml
+          - docs/03.product/rules/apps/layers/apps.yml
+    cross_review_summary:
+      agreement:
+        - The policy makes package and multi-file capability ownership easier to scan without turning every directory into a documentation obligation.
+        - The source separates the roles of public barrels, responsibility maps, dependency boundaries, and behavioural tests.
+        - Compact, security-safe, same-change documentation with incremental adoption avoids disclosure, cost, and drift problems.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied: []
+      rejected: []
+    rerun_required: false
+
+final_decision:
+  status: accepted
+  summary: >
+    Accepted after role-based review. The source is clear, bounded, security
+    aware, and deterministic enough to derive one product-wide rule while
+    preserving existing package ownership and a staged rollout.
+  accepted_source_sha256: 099dc9bb1eb69a7977817ee4b8768d1b40898fef1402b7606335107686dd8979
+  accepted_at_utc: "2026-09-02T18:57:19Z"
+  required_before_derivation:
+    - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+    - .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml

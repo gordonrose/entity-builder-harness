@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 8
+#   version: 9
 #   status: active
 #   layer: 03.product
 #   domain: architecture
@@ -21,7 +21,7 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 11
+version: 13
 status: active
 
 source_derivation:
@@ -47,6 +47,8 @@ applies_to:
     - "platform/**"
 
 related_rulesets:
+  - docs/03.product/rules/concerns/package-documentation.yml
+  - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
   - docs/06.shared/rules/concerns/ci-quality.yml
   - docs/06.shared/rules/concerns/dependency-direction.yml
   - docs/03.product/rules/platform/concerns/events-messaging-async.yml

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.packages-core
-#   version: 18
+#   version: 20
 #   status: active
 #   layer: 03.product
 #   domain: architecture
@@ -17,7 +17,7 @@
 #     path: docs/03.product/rule-packs/core/add-core-module.yml
 id: layer.packages-core
 title: packages/core rules
-version: 18
+version: 20
 status: active
 
 source_derivation:
@@ -41,6 +41,8 @@ applies_to:
     - "packages/core/**"
 
 related_rulesets:
+  - docs/03.product/rules/concerns/package-documentation.yml
+  - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
   - docs/06.shared/rules/concerns/ci-quality.yml
   - docs/06.shared/rules/concerns/dependency-direction.yml
 

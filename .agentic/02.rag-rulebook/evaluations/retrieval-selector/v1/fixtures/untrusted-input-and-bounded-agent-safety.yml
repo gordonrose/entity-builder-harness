@@ -1,0 +1,87 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   kind: evaluation-fixture
+#   purpose: Prove untrusted-input and bounded-agent safety requests retrieve the canonical product concern rule.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+status: active
+owner_layer: 02.rag-rulebook
+purpose: >
+  Prove a request to add a tenant-aware agent or model-facing tool retrieves the
+  canonical product policy for prompt injection, code injection, tool
+  authorization, retrieval scope, approval, and adversarial proof.
+input:
+  request_text: >
+    I want to add an agent that reads dead-letter evidence, retrieves tenant
+    runbooks, recommends fixes, and may replay a message. How do I stop a queue
+    payload or retrieved document from prompt-injecting the agent, prevent the
+    agent from running arbitrary commands or queries, keep tenants isolated,
+    and require approval before a consequential replay?
+  session:
+    trust_routing: true
+    layer: 03.product
+    mode: implementation
+    workflow: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  max_chunks: 10
+expected:
+  routing:
+    layer: 03.product
+    mode: implementation
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.03.product
+  selected_corpora:
+    required:
+      - corpus.03.product
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_rule_ids:
+      - untrusted-input-and-bounded-agent-safety.untrusted-content-is-data
+      - untrusted-input-and-bounded-agent-safety.execution-boundaries-are-typed
+      - untrusted-input-and-bounded-agent-safety.agents-have-bounded-capabilities
+      - untrusted-input-and-bounded-agent-safety.tools-authorize-independently
+      - untrusted-input-and-bounded-agent-safety.retrieval-preserves-access-boundaries
+      - untrusted-input-and-bounded-agent-safety.consequential-actions-require-policy
+      - untrusted-input-and-bounded-agent-safety.adversarial-proof-is-required
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.04.deploy
+source_refs:
+  - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+  - .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  - docs/03.product/rules/platform/concerns/identity-access-security.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+update_triggers:
+  - The untrusted-input or bounded-agent safety source, concern rule, or workflow changes.
+  - A new agent/tool authority, retrieval, approval, or adversarial-proof requirement changes retrieval selection.
+  - Selector policy changes product-rule retrieval behavior.

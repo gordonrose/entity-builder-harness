@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 114
-  workflow_files: 35
+  term_count: 116
+  workflow_files: 36
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -457,6 +457,12 @@ terms:
   canonical_id: 03.product.workflow.platform-runtime-implementation
   evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
+- term: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -738,6 +744,12 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
+  confidence_weight: 1
+- term: untrusted-input-and-bounded-agent-safety.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
   confidence_weight: 1
 validation_rules:
 - Generated routing terms must retain evidence paths.

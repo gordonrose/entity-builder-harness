@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 811
-  term_count: 1634
+  indexed_artifacts: 822
+  term_count: 1656
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3696,6 +3696,30 @@ terms:
   canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   category: artifact-id
   match_type: exact
@@ -3935,6 +3959,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-audit-contract
   category: artifact-id
@@ -4764,6 +4800,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-explain
   category: artifact-id
   match_type: exact
@@ -5585,6 +5633,30 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
   evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
   confidence_weight: 1
 - term: rag-rulebook.source-material-review.04-deploy.github-actions-to-ecs-fargate.2026-06-29
   category: artifact-id
@@ -7302,6 +7374,18 @@ terms:
   canonical_id: product.workflow.platform-runtime-implementation
   evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
+- term: product.workflow.untrusted-input-and-bounded-agent-safety
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.workflow.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  confidence_weight: 1
+- term: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.workflow.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  confidence_weight: 1
 - term: product.corpus.readme
   category: artifact-id
   match_type: exact
@@ -7481,6 +7565,30 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.rules.concerns.i18n-localization
   evidence_path: docs/03.product/rules/concerns/i18n-localization.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.package-documentation
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.package-documentation
+  evidence_path: docs/03.product/rules/concerns/package-documentation.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/concerns/package-documentation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.package-documentation
+  evidence_path: docs/03.product/rules/concerns/package-documentation.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+  evidence_path: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+  evidence_path: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
   confidence_weight: 1
 - term: harness.architecture.rules.concerns.validation-api-errors
   category: rule-id
@@ -7793,6 +7901,30 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
   evidence_path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.package-documentation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.package-documentation-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.package-documentation-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
   confidence_weight: 1
 - term: product.source-material.platform.readme
   category: artifact-id
