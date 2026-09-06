@@ -72,6 +72,15 @@ writePackageShim("@kanbien/platform-server", {
   ".": join(runtimeRoot, "platform/server/src/index.js"),
   "./main": join(runtimeRoot, "platform/server/src/main.js"),
 });
+writePackageShim("@kanbien/platform-adapter-aws-auth-cognito", {
+  ".": join(runtimeRoot, "platform/adapters/aws/auth/cognito/src/index.js"),
+});
+writePackageShim("@kanbien/platform-adapter-aws-runtime-ecs-fargate", {
+  ".": join(runtimeRoot, "platform/adapters/aws/runtime/ecs-fargate/src/index.js"),
+});
+writePackageShim("@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter", {
+  ".": join(runtimeRoot, "platform/adapters/aws/security/dynamodb-rate-limiter/src/index.js"),
+});
 
 console.log(`Prepared platform shell image runtime at ${runtimeRoot}`);
 

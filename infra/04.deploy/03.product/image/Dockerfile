@@ -22,7 +22,7 @@
 #     path: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
 
 ARG NODE_IMAGE=node:22-bookworm-slim
-FROM ${NODE_IMAGE}
+FROM ${NODE_IMAGE} AS build
 ARG SOURCE_COMMIT_SHA=unknown
 
 LABEL org.opencontainers.image.title="platform-shell"
@@ -47,12 +47,32 @@ COPY scripts/04.deploy/build-platform-shell-image/ ./scripts/04.deploy/build-pla
 
 RUN npm ci --ignore-scripts \
   && npm run platform:server:image-build \
-  && rm -rf node_modules \
-  && chown -R node:node /app/.cache \
-  && find /app -path /app/.cache -prune -o -type d -exec chmod 0755 {} + \
-  && find /app -path /app/.cache -prune -o -type f -exec chmod 0644 {} + \
+  && npm prune --omit=dev --ignore-scripts \
+  && rm -rf /app/node_modules/@kanbien
+
+FROM ${NODE_IMAGE}
+ARG SOURCE_COMMIT_SHA=unknown
+
+LABEL org.opencontainers.image.title="platform-shell"
+LABEL org.opencontainers.image.description="Provider-neutral Kanbien platform runtime shell"
+
+USER root
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    dumb-init \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=build /app/.cache/ ./.cache/
+COPY --from=build /app/node_modules/ ./node_modules/
+
+RUN chown -R node:node /app/.cache /app/node_modules \
   && find /app/.cache -type d -exec chmod 0755 {} + \
-  && find /app/.cache -type f -exec chmod 0644 {} +
+  && find /app/.cache -type f -exec chmod 0644 {} + \
+  && find /app/node_modules -type d -exec chmod 0755 {} + \
+  && find /app/node_modules -type f -exec chmod 0644 {} +
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0

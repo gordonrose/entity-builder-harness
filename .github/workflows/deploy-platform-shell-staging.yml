@@ -50,6 +50,11 @@ env:
   AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
   ECR_REPOSITORY: platform-shell
   ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
+  FOUNDATION_STACK: kanbien-staging-platform-shell-foundation
+  FOUNDATION_TEMPLATE: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+  SERVICE_STACK: kanbien-staging-platform-shell-service
+  SERVICE_TEMPLATE: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+  SERVICE_DEPLOYMENT_ROLE_ARN: arn:aws:iam::337159794548:role/kanbien-staging-platform-shell-service-deploy
   READINESS_MANIFEST: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
   SERVICE_URL: https://staging.platform.kanbien.com
 
@@ -95,7 +100,9 @@ jobs:
       - name: Run platform shell checks
         run: |
           npm run platform:server:check
+          npm run platform:server:image-runtime-check
           npm run product:kanbien-platform:check
+          npm run platform:shell:infrastructure:check
           bash scripts/04.deploy/validate-container-boundaries/script.sh
 
       - name: Verify blocked deploy-readiness manifest
@@ -116,6 +123,12 @@ jobs:
       - name: Log in to Amazon ECR
         if: ${{ inputs.publish_image }}
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Validate CloudFormation templates in the selected account
+        if: ${{ inputs.publish_image }}
+        run: |
+          aws cloudformation validate-template --template-body "file://$FOUNDATION_TEMPLATE" >/dev/null
+          aws cloudformation validate-template --template-body "file://$SERVICE_TEMPLATE" >/dev/null
 
       - name: Resolve digest-pinned base image
         id: base-image
@@ -210,6 +223,46 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "uri=$ECR_URI@$digest" >> "$GITHUB_OUTPUT"
 
+      - name: Verify the manually governed foundation stack
+        if: ${{ inputs.publish_image }}
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name "$FOUNDATION_STACK" \
+            --query "Stacks[0].StackStatus" \
+            --output text | grep -E '^(CREATE_COMPLETE|UPDATE_COMPLETE|IMPORT_COMPLETE)$'
+
+      - name: Deploy immutable image digest to the platform-shell service stack
+        if: ${{ inputs.publish_image }}
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$SERVICE_STACK" \
+            --template-file "$SERVICE_TEMPLATE" \
+            --role-arn "$SERVICE_DEPLOYMENT_ROLE_ARN" \
+            --parameter-overrides \
+              FoundationStackName="$FOUNDATION_STACK" \
+              ImageUri="${{ steps.image.outputs.uri }}" \
+            --no-fail-on-empty-changeset
+
+      - name: Prove the public health and authentication boundary
+        if: ${{ inputs.publish_image }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error --max-time 5 "$SERVICE_URL/livez" >/dev/null; then
+              break
+            fi
+            if [ "$attempt" = "30" ]; then
+              echo "Platform-shell liveness endpoint did not become healthy." >&2
+              exit 1
+            fi
+            sleep 10
+          done
+          status="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 5 "$SERVICE_URL/smoke/deploy-probe")"
+          if [ "$status" != "401" ]; then
+            echo "Expected unauthenticated smoke route to return 401, got $status." >&2
+            exit 1
+          fi
+
       - name: Read ECR scan finding counts
         if: ${{ inputs.publish_image }}
         id: scan
@@ -276,5 +329,11 @@ jobs:
             fi
             echo "- Service URL: $SERVICE_URL"
             echo ""
-            echo "ECS service, ALB target group, DNS proof, deployed smoke, and rollback proof remain blocked until the runtime target slice is executed."
+            if [ "${{ inputs.publish_image }}" = "true" ]; then
+              echo "- ECS service stack: $SERVICE_STACK"
+              echo "- Health and unauthenticated-route smoke: passed in this workflow"
+            else
+              echo "- Service deployment: skipped because image publishing was skipped"
+            fi
+            echo "Authorized-route, shared-rate-limit, WAF, alarm-delivery, and rollback proof remain separate governed deployment evidence."
           } >> "$GITHUB_STEP_SUMMARY"

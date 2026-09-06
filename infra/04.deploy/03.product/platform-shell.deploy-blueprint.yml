@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
-#   version: 1
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -73,6 +73,29 @@ config:
     - HOST
     - PORT
     - PLATFORM_SMOKE_APP_NAME
+  conditionally_required_environment:
+    cognito:
+      - PLATFORM_AUTH_COGNITO_REGION
+      - PLATFORM_AUTH_COGNITO_USER_POOL_ID
+      - PLATFORM_AUTH_COGNITO_APP_CLIENT_ID
+    public_aws_ecs_target:
+      - PLATFORM_DEPLOYMENT_EXPOSURE
+      - PLATFORM_RATE_LIMIT_PROVIDER
+      - PLATFORM_RATE_LIMIT_DYNAMODB_TABLE
+      - PLATFORM_RATE_LIMIT_DYNAMODB_REGION
+      - PLATFORM_RATE_LIMIT_LIMIT
+      - PLATFORM_RATE_LIMIT_WINDOW_MS
+      - PLATFORM_TRUSTED_INGRESS_MODE
+      - PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES
+      - PLATFORM_SERVER_MAX_HEADER_BYTES
+      - PLATFORM_SERVER_MAX_HEADERS_COUNT
+      - PLATFORM_SERVER_HEADERS_TIMEOUT_MS
+      - PLATFORM_SERVER_REQUEST_TIMEOUT_MS
+      - PLATFORM_SERVER_KEEP_ALIVE_TIMEOUT_MS
+      - PLATFORM_SERVER_HANDLER_TIMEOUT_MS
+      - PLATFORM_SERVER_SHUTDOWN_DRAIN_TIMEOUT_MS
+      - PLATFORM_SERVER_MAX_CONCURRENT_REQUESTS
+      - PLATFORM_SERVER_MAX_REQUESTS_PER_SOCKET
   optional_environment:
     - PLATFORM_CORS_ORIGIN
     - PLATFORM_CORS_ALLOWLIST
@@ -92,7 +115,7 @@ auth:
   token_validation: jwt-jwks
   token_use: access
   provider_neutral_boundary: platform/security
-  server_wiring: platform/server/src/main.ts
+  server_wiring: infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
   route_default: authenticated-deny-by-default
   permission_mapping:
     source: target-profile-env
@@ -101,7 +124,12 @@ auth:
     livez: public
     readyz: authenticated-when-auth-provider-enabled
   cors_source: target-profile-env
-  rate_limit_keying: principal-token-or-forwarded-ip
+  rate_limit_keying: principal-token-or-target-resolved-client-address
+  public_rate_limit_requirements:
+    - shared-rate-limit-adapter
+    - trusted-ingress-client-address-policy
+    - reviewed-target-transport-limits
+    - edge-protection-proof
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
   apps:
@@ -110,7 +138,7 @@ product:
       mount_module: "@kanbien/app-platform-smoke"
       route_base_path: /smoke
       declared_permissions:
-        - smoke:read
+        - platform-smoke.smoke:read
       required_config:
         - PLATFORM_SMOKE_APP_NAME
 secrets:

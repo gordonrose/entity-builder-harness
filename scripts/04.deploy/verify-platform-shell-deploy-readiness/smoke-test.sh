@@ -143,8 +143,20 @@ auth:
     allowed_origins:
       - https://staging.kanbien.example
   rate_limiting:
-    keying: principal-token-or-forwarded-ip
-    fallback: anonymous-local-only
+    keying: principal-token-or-target-resolved-client-address
+    generic_server_peer_address: socket-peer-only
+    shared_adapter:
+      status: implemented
+      required_before_public_exposure: true
+    trusted_ingress_client_address_policy:
+      status: implemented
+      required_before_public_exposure: true
+    target_transport_limits:
+      status: implemented
+      required_before_public_exposure: true
+    edge_protection:
+      status: implemented
+      required_before_public_exposure: true
     local_tests_passed: true
   secrets:
     source: aws-secrets-manager
