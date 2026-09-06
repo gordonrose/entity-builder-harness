@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 6
+version: 7
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -52,23 +52,22 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
   deployed application smoke evidence exists.
 - The existing default certificate covers `*.kanbien.com`, which matches one
   label such as `staging.kanbien.com`, but it does **not** cover the two-label
-  host `staging.platform.kanbien.com`. A real TLS client rejected that
-  hostname. The selected repair is a new foundation-owned DNS-validated ACM
-  certificate for `platform.kanbien.com` and `*.platform.kanbien.com`, added
-  as an SNI certificate without replacing the shared listener's default
-  certificate.
-- The review-only `public-tls-repair-20260906-2152` foundation update change
-  set is `CREATE_COMPLETE` and `AVAILABLE`. It contains exactly two additions:
-  the ACM certificate and its additional HTTPS-listener certificate attachment.
-  It contains no replacement or modification. It was rendered from the current
-  chat branch, so it is evidence of the intended resource graph only; a fresh
-  change set must be created from reviewed `origin/main` before execution.
+  host `staging.platform.kanbien.com`. The approved repair is complete: the
+  foundation owns an `ISSUED` DNS-validated ACM certificate for
+  `platform.kanbien.com` and `*.platform.kanbien.com`, attached as a
+  non-default SNI certificate without replacing the shared listener's default
+  certificate. An external client now verifies the staging hostname.
+- The `public-tls-repair-main-20260906-2212` change set was recreated from
+  pushed `origin/main`, reviewed with exactly two additions and no replacement
+  or modification, then executed successfully. The foundation stack is
+  `UPDATE_COMPLETE`.
 - Local adapter, target-composition, static infrastructure-policy, rendered
   foundation-template validation, and the real read-only container smoke now
   pass. This proves a local image can start and serve `/livez` and `/readyz`;
   it does not prove an AWS change set or deployed workload.
-- The existing ALB has no WAF web ACL. Its current routes serve legacy
-  workloads and must not be changed as a side effect of this proof.
+- The shared ALB serves legacy workloads and has the foundation WAF associated
+  with host-scoped rules for this platform hostname only. Its existing routes
+  and default certificate remain unchanged.
 - The current platform source is committed and present on `origin/main`.
   Official deployment images must come from reviewed, pushed `origin/main`,
   never a local working tree.
@@ -88,12 +87,14 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    deploys only the service stack through a dedicated CloudFormation execution
    role, and performs public liveness plus unauthenticated-route smoke. On
    2026-09-06, the live GitHub role was updated and verified against the
-   reviewed narrowed CloudFormation-policy boundary. The foundation now created
-   the service deployment role, but this path must wait for the TLS repair.
-5. The deployed WAF, rate-limit table, alert subscription, and host route have
-   configuration proof. A deployed negative-rate-limit test, verified public
-   TLS/routing proof, and a rollback exercise remain absent. The local
-   container-engine smoke is not a substitute for those proofs.
+   reviewed narrowed CloudFormation-policy boundary. The foundation created the
+   service deployment role and public TLS is now verified; the path still needs
+   a remote-main workflow run and service deployment proof.
+5. The deployed WAF, rate-limit table, alert subscription, host route, and
+   public TLS have configuration or external-verification proof. A deployed
+   negative-rate-limit test, application route proof, and a rollback exercise
+   remain absent. The local container-engine smoke is not a substitute for
+   those proofs.
 6. New resources are consistently tagged `service=platform-shell`, but the
    account has not activated that cost-allocation tag or proven the intended
    tag-scoped monthly budget. This account-level Billing action cannot be
@@ -144,14 +145,14 @@ locally before the first AWS execution approval.
 7. Completed on 2026-09-06: render, review, and execute the foundation CREATE
    change set `foundation-initial-20260906-1915`. The stack reached
    `CREATE_COMPLETE` with its expected 16 additions.
-8. Selected on 2026-09-06: repair the TLS mismatch by adding a
+8. Completed on 2026-09-06: repaired the TLS mismatch by adding a
    foundation-owned `platform.kanbien.com` / `*.platform.kanbien.com` ACM
    certificate and attaching it as an additional SNI certificate to the shared
-   HTTPS listener. A local-source review change set confirmed exactly two
-   additions and no replacement or modification. Commit, merge, and push the
-   source; recreate and review the change set from `origin/main`; then obtain
-   separate execution approval and verify public DNS and TLS before service
-   deployment.
+   HTTPS listener. The pushed-source change set had exactly two additions and
+   no replacement or modification; it reached `UPDATE_COMPLETE`. ACM reports
+   the certificate `ISSUED`, and external TLS verification now passes for
+   `staging.platform.kanbien.com`. An application `503` remains expected until
+   the service is deployed.
 9. Run deployed smoke proof: DNS/TLS, public `/livez`, unauthenticated `401`,
    wrong-permission `403`, correctly scoped `200`, `429` from the shared
    limiter, WAF/routing evidence, log delivery, alarm configuration, and a
@@ -195,10 +196,10 @@ that attachment.
   a safe operational signal, and roll back to the previous known-good task
   definition. Do not silently fall back to the process-local limiter on a
   public target.
-- **TLS repair:** before execution, delete the unexecuted change set and no AWS
-  resource changes. After execution, a separately approved stack update can
-  remove only the platform-hostname certificate attachment and certificate;
-  the existing shared listener default certificate remains untouched.
+- **TLS repair:** the certificate and SNI attachment were created without
+  replacing the existing default certificate. A future retirement requires a
+  separately approved stack update that removes only the platform-hostname
+  certificate attachment and certificate.
 
 ## Execution approval checklist
 

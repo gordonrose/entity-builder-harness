@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T22:00:57Z
-latest_commit_sha: 43f09dd
-chat_duration: 14622s (00:04:03:42)
+latest_commit_at_utc: 2026-09-06T22:23:49Z
+latest_commit_sha: 291dcf2
+chat_duration: 15994s (00:04:26:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -75,6 +75,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 - Decision: Keep `staging.platform.kanbien.com` and repair its TLS coverage with a foundation-owned certificate for `platform.kanbien.com` and `*.platform.kanbien.com`.
   Rationale: A `*.kanbien.com` certificate covers only one left-most label and cannot secure the selected two-label host. An additional SNI certificate preserves the hostname and leaves the shared listener's default certificate unchanged.
 
+
+- Decision: Execute the pushed-source public-TLS foundation update.
+  Rationale: The reviewed change set contained only an ACM certificate for the platform hostname space and its non-default SNI attachment. The user explicitly approved execution after reviewing the two additions, no replacements, target account, region, and rollback behaviour.
+
 ## Context Hygiene
 
 - Performed all task edits in the chat-owned worktree, leaving the root
@@ -100,6 +104,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 
 - Summary: Refreshed the TLS chat branch from current main through a clean governed preflight.
   Durable evidence: Remote main was current with origin/main; preflight branch agentic/preflight/chat-2026-09-06-18-57-refactor-the-kanbien-stagi-41210ca9fa05/20260906220508 merged without conflicts, passed the platform-shell infrastructure check, and applied commit 3da3415ac2e617a35d240568c019a4ef99ad1b08. The disposable worktree and branch were removed; no stash, push, main change, or AWS mutation occurred.
+
+
+- Summary: Completed and externally verified the platform-hostname TLS repair.
+  Durable evidence: The foundation stack is UPDATE_COMPLETE; the certificate is ISSUED with successful DNS validation; the shared listener has it as a non-default SNI certificate; curl verified staging.platform.kanbien.com with TLS result 0 and expected HTTP 503 because the target group has zero registered tasks. Durable evidence is recorded in the target profile, readiness manifest, and deployment plan.
 
 ## Activity Log
 
@@ -231,6 +239,31 @@ Summary: Refreshed the TLS chat branch from current main through a clean governe
 
 Durable evidence: Remote main was current with origin/main; preflight branch agentic/preflight/chat-2026-09-06-18-57-refactor-the-kanbien-stagi-41210ca9fa05/20260906220508 merged without conflicts, passed the platform-shell infrastructure check, and applied commit 3da3415ac2e617a35d240568c019a4ef99ad1b08. The disposable worktree and branch were removed; no stash, push, main change, or AWS mutation occurred.
 
+
+### 2026-09-06T22:20:52Z - Decision
+
+Decision: Execute the pushed-source public-TLS foundation update.
+
+Rationale: The reviewed change set contained only an ACM certificate for the platform hostname space and its non-default SNI attachment. The user explicitly approved execution after reviewing the two additions, no replacements, target account, region, and rollback behaviour.
+
+
+### 2026-09-06T22:20:52Z - Context hygiene
+
+Summary: Completed and externally verified the platform-hostname TLS repair.
+
+Durable evidence: The foundation stack is UPDATE_COMPLETE; the certificate is ISSUED with successful DNS validation; the shared listener has it as a non-default SNI certificate; curl verified staging.platform.kanbien.com with TLS result 0 and expected HTTP 503 because the target group has zero registered tasks. Durable evidence is recorded in the target profile, readiness manifest, and deployment plan.
+
+
+### 2026-09-06T22:23:49Z - Commit recorded
+
+Commit: `291dcf2`
+
+Message: chore(deploy): record public TLS verification
+
+Summary: Recorded the completed foundation TLS update: issued DNS-validated certificate, non-default SNI attachment, successful external hostname verification, expected pre-service 503, and the remaining workload-dependent readiness gaps.
+
+ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -259,6 +292,13 @@ Durable evidence: Remote main was current with origin/main; preflight branch age
   Summary: Added the foundation-owned DNS-validated ACM certificate and additional SNI listener attachment for the platform hostname space, strengthened its static guardrails, recorded the no-replacement review change set, and removed raw alert contact addresses from repository records.
   ADR impact: Implements the existing staging target boundary; no ADR is needed.
 
+
+- Commit: `291dcf2`
+  Time UTC: 2026-09-06T22:23:49Z
+  Message: chore(deploy): record public TLS verification
+  Summary: Recorded the completed foundation TLS update: issued DNS-validated certificate, non-default SNI attachment, successful external hostname verification, expected pre-service 503, and the remaining workload-dependent readiness gaps.
+  ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -273,9 +313,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-06T22:00:57Z
-Latest commit SHA: 43f09dd
-Chat duration: 14622s (00:04:03:42)
+Latest commit at UTC: 2026-09-06T22:23:49Z
+Latest commit SHA: 291dcf2
+Chat duration: 15994s (00:04:26:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
