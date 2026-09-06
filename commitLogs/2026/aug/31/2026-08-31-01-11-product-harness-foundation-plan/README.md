@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T11:41:39Z
-latest_commit_sha: b767499
-chat_duration: 559820s (06:11:30:20)
+latest_commit_at_utc: 2026-09-06T11:45:24Z
+latest_commit_sha: bf92725
+chat_duration: 560045s (06:11:34:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1336,6 +1336,17 @@ Summary: Added Cognito/DynamoDB/ECS target composition, sealed image packaging p
 
 ADR impact: No ADR: this implements the already selected ECS Fargate/Cognito production-reference target and records a governed deployment path; it does not change that target decision.
 
+
+### 2026-09-06T11:45:24Z - Commit recorded
+
+Commit: `bf92725`
+
+Message: docs(platform): record production shell readiness
+
+Summary: Recorded the production-reference target baseline, implementation/deployment planning, AWS read-only inspection evidence, local container smoke proof, printable learning handbook updates, and regenerated artifact discovery index.
+
+ADR impact: No ADR: these records document and operationalize existing decisions; no new architecture decision was made by the documentation checkpoint.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1391,6 +1402,13 @@ ADR impact: No ADR: this implements the already selected ECS Fargate/Cognito pro
   Message: feat(deploy): define AWS platform shell target
   Summary: Added Cognito/DynamoDB/ECS target composition, sealed image packaging proof, validated staging CloudFormation foundation and service templates, narrowly scoped deployment workflow and policy definitions, and static deployment/readiness gates. No AWS resources were changed.
   ADR impact: No ADR: this implements the already selected ECS Fargate/Cognito production-reference target and records a governed deployment path; it does not change that target decision.
+
+
+- Commit: `bf92725`
+  Time UTC: 2026-09-06T11:45:24Z
+  Message: docs(platform): record production shell readiness
+  Summary: Recorded the production-reference target baseline, implementation/deployment planning, AWS read-only inspection evidence, local container smoke proof, printable learning handbook updates, and regenerated artifact discovery index.
+  ADR impact: No ADR: these records document and operationalize existing decisions; no new architecture decision was made by the documentation checkpoint.
 
 ## Main Refresh Conflicts
 
@@ -1473,9 +1491,9 @@ an implemented cross-layer architecture decision in this checkpoint.
 ## Session Metrics
 
 Raised at UTC: 2026-08-31T00:11:19Z
-Latest commit at UTC: 2026-09-06T11:41:39Z
-Latest commit SHA: b767499
-Chat duration: 559820s (06:11:30:20)
+Latest commit at UTC: 2026-09-06T11:45:24Z
+Latest commit SHA: bf92725
+Chat duration: 560045s (06:11:34:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
