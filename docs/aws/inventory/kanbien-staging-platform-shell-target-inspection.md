@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.inventory.kanbien-staging-platform-shell-target-inspection
-version: 1
+version: 3
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -26,55 +26,75 @@ Read-only inspection for the platform shell staging target.
 - Workflow: `.agentic/aws/workflows/inspect-aws-state.md`
 - Profile: `kanbien-dev`
 - Region: `eu-west-1`
-- Inspected at UTC: `2026-07-11T22:24:12Z`
+- Inspected at UTC: `2026-09-05T22:48:00Z`
 - Mutation: none
 
 ## Inspected State
 
-The existing Kanbien staging AWS boundary is real and active:
+The existing Kanbien staging AWS boundary is real and active. The caller was
+the approved `kanbien-dev` SSO role in account `337159794548`.
 
-- Account: `337159794548`
-- ECS cluster: `arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging`
-- Cluster status: `ACTIVE`
-- Active services: `rag-rulebook-staging`, `service-platform`
-- ALB: `arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357`
-- ALB DNS: `kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com`
-- ALB scheme: `internet-facing`
-- VPC: `vpc-0063b6c3d2d781f3c`
-- ALB security group: `sg-08d590b0aee6e2e60`
-- ALB subnets: `subnet-05d385e4d57b18032`, `subnet-0397df802e31ff6fe`
-- HTTPS certificate: `arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631`
+- ECS cluster: `kanbien-staging`
+- Existing ECS services: `rag-rulebook-staging`, `service-platform`
+- Existing ALB listeners: HTTP on port 80 redirects; HTTPS on port 443 has
+  host rules for `kanbien.com` and `rag.kanbien.com`, plus the existing default
+  forward action.
 
-The existing `service-platform` ECS service is not selected as the product
-platform shell target:
+The existing `service-platform` service remains unrelated to the product
+platform shell. It is not a substitute for a new shell service because its
+runtime, image, health endpoint, and mounted product composition differ.
 
-- Service: `arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/service-platform`
-- Current task definition: `arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12`
-- Container image: `337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien/service-platform:public-site-brochure-20260529-7`
-- Target group: `arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb`
-- Target group health path: `/v1/health`
-- Log group: `/ecs/kanbien-staging-service-platform`
+### Existing public-site boundary
 
-This differs from the platform shell proof, which expects the product platform
-shell image, `/livez`, `/readyz`, and the `products/kanbien-platform` smoke
-composition.
+The customer-facing `kanbien.com` and `www.kanbien.com` names are not an S3 or
+CloudFront static-site deployment. Both authoritative Route 53 A-alias records
+point to the shared internet-facing ALB. HTTP redirects to HTTPS and the ALB
+then redirects `kanbien.com` to `www.kanbien.com`; its default HTTPS action
+forwards the request to the `kanbien-staging-app-tg` target group.
 
-Other inspected deployment facts:
+That target group had no registered targets at inspection time. The existing
+`service-platform` ECS service requested one task but had zero running tasks.
+Its container starts by running database migrations and exits with code `1`
+when its PostgreSQL connection times out. The configured RDS instance reports
+status `inaccessible-encryption-credentials`, so the database is unavailable
+to the old service. The resulting ALB response is therefore a `503` because
+there is no healthy application target; it is not a DNS failure and is not
+caused by the unbuilt platform-shell workload.
 
-- Existing ECR repositories: `rag-rulebook-service`, `kanbien/service-platform`
-- No platform shell ECR repository was found during this inspection.
-- Existing Route 53 aliases to the staging ALB: `kanbien.com`, `www.kanbien.com`, `rag.kanbien.com`
-- HTTPS host rule exists for `rag.kanbien.com`.
-- No platform shell hostname or host rule is selected.
-- Cognito user pools returned by `list-user-pools`: none.
+The `rag.kanbien.com` HTTPS rule is a separate route to the
+`rag-rulebook-staging` target group. The old site's associated Valkey cache is
+available, but that does not restore its unavailable database.
 
-## Post-Inspection Planning Decisions
+**Retention decision:** keep the authoritative `kanbien.com` hosted zone and
+the `kanbien.com`, `www.kanbien.com`, and `rag.kanbien.com` records. Do not
+delete or repurpose the shared ALB, legacy ECS service, target groups, RDS
+instance, Valkey cache, certificate, or their access configuration as part of
+the platform-shell proof. Recovery or replacement of the old public site must
+have its own governed change plan, dependency/back-up assessment, rollback,
+and explicit approval.
+
+### Product platform-shell resources
+
+- ECR repository `platform-shell` exists. It has immutable tags and
+  scan-on-push enabled, but contains **zero images**.
+- The selected machine-to-machine Cognito user pool, client, and
+  `platform-shell/smoke.read` scope exist. The client uses only the
+  `client_credentials` grant; this is not a human identity implementation.
+- No `kanbien-staging-platform-shell` ECS service exists.
+- No platform-shell task-definition family exists.
+- No platform-shell ALB target group exists.
+- No `staging.platform.kanbien.com` Route 53 record exists, and no matching
+  HTTPS ALB host rule exists.
+- No `/ecs/kanbien-staging-platform-shell` log group exists.
+- No `kanbien-staging-platform-shell` CloudWatch alarms exist.
+
+The result is a real shared staging boundary with selected supporting
+resources, but no running or routable platform-shell workload.
+
+## Decisions Already Recorded
 
 - Selected ECR repository name: `platform-shell`
-- Expected ECR repository URI:
-  `337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell`
-- Creation status: pending governed AWS mutation
-- Expected ECR policy: immutable tags with scan-on-push enabled
+- ECR policy: immutable tags with scan-on-push enabled
 - Selected build source policy: only images built from pushed `origin/main`
   count as deployable staging images; local builds are smoke-only.
 - Selected tag format:
@@ -91,23 +111,21 @@ Other inspected deployment facts:
 
 ## Planning Conclusion
 
-The product platform shell can likely reuse the existing Kanbien staging AWS
-boundary as a candidate account, region, cluster, VPC, ALB, subnets, and
-certificate boundary, but this inspection does not select or mutate the runtime
-target.
+The product platform shell can reuse the existing Kanbien staging AWS boundary
+as a candidate account, region, cluster, ALB, and certificate boundary. The
+readiness blocker is no longer uncertainty about whether an ECR repository or
+machine client exists. It is the unexecuted runtime-target slice.
 
-The platform shell still needs explicit selection or creation of:
+The next AWS change plan must select and create a minimal server-first ECS
+target: a task definition, service, security group, target group, HTTPS host
+rule, Route 53 record, log group, alarms, and deployment configuration by
+immutable image digest. It must also state source/deploy evidence, safe
+machine-client secret injection, ingress/rate-limit controls, rollback, and
+post-deployment smoke checks. Worker resources, human identity, tenant data,
+and business application resources remain out of scope.
 
-- GitHub deployment workflow and OIDC role;
-- creation of selected ECR repository `platform-shell` and immutable image
-  provenance;
-- ECS server service, task definition, target group, and host rule;
-- server-first, worker-capable ECS project shape with a reserved worker
-  service/task-family slot and explicit worker activation condition;
-- Cognito user pool, app client, issuer, and JWKS URI;
-- CORS origins and product shell hostname;
-- secret/config source;
-- log group, alarms, budget, owner, escalation path, rollback target, rollback
-  authority, and rollback runbook;
-- deployed smoke proof for `/livez`, `/readyz`, protected dummy route, logs,
-  routing, and rollback.
+The separate public-site recovery decision comes first for the existing
+`www.kanbien.com` experience: either repair the legacy service and database
+under a dedicated recovery plan, or replace the brochure site through a
+separately designed and tested cutover. Neither path authorises unplanned
+deletion of the old resources.

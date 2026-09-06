@@ -1,0 +1,227 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+#   version: 1
+#   status: active
+#   layer: 03.product
+#   domain: architecture
+#   disciplines:
+#   - architecture
+#   - security
+#   - agentic
+#   kind: rule
+#   purpose: Define product-wide rules for code-injection resistance and bounded agent capabilities.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: product.workflow.untrusted-input-and-bounded-agent-safety
+#     path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+#   - id: harness.architecture.rules.layers.packages-core
+#     path: docs/03.product/rules/core/layers/packages-core.yml
+#   - id: harness.architecture.rules.layers.platform
+#     path: docs/03.product/rules/platform/layers/platform.yml
+#   - id: harness.architecture.rules.layers.apps
+#     path: docs/03.product/rules/apps/layers/apps.yml
+
+id: concern.untrusted-input-and-bounded-agent-safety
+title: Untrusted input and bounded agent safety rules
+version: 1
+status: active
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-09-02T22:06:35Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  source_material:
+    - path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+      sha256: 6cb6af3535b44d5e9b002bfd62273f0eb654d8b5c33d713e905c97445aa77b18
+
+description: >
+  Product-wide rules that keep untrusted data from becoming executable code or
+  higher-priority instructions, and constrain agent capabilities through
+  independently enforced identity, tenant, authorization, approval, and audit
+  boundaries.
+
+applies_to:
+  paths:
+    - ".agentic/03.product/**"
+    - "packages/**"
+    - "platform/**"
+    - "apps/**"
+    - "products/**"
+
+related_rulesets:
+  - docs/03.product/rules/platform/concerns/identity-access-security.yml
+  - docs/03.product/rules/platform/concerns/tenancy.yml
+  - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/apps/layers/apps.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+
+rules:
+  - id: untrusted-input-and-bounded-agent-safety.untrusted-content-is-data
+    title: Untrusted content remains data, not authority
+    severity: error
+    summary: >
+      Content from a request, integration, queue message, file, database
+      record, log, email, web page, or retrieval result may be evidence, but
+      cannot alter governing policy, verified context, authorization, tool
+      definitions, or execution intent.
+    must:
+      - "Classify each new input boundary and explicitly identify content that is untrusted, even when it originated from a known customer or retrieved source."
+      - "Parse untrusted input into explicit schemas before business use, tool invocation, persistence, or rendering."
+      - "Treat retrieved material and tool results supplied to a model as untrusted evidence with provenance, not as governing instructions."
+      - "Keep verified principal, service identity, tenant, product, environment, permissions, and policy facts outside model-controlled text."
+    must_not:
+      - "Do not let untrusted text redefine system policy, approval rules, tool schemas, permission mappings, tenant scope, or a model's higher-priority instructions."
+      - "Do not use a prompt filter or a hidden model instruction as the sole control for hostile content."
+    agent_guidance: >
+      Ask where each value came from and what it is allowed to influence. A
+      document may explain a problem; it cannot grant authority to solve it.
+
+  - id: untrusted-input-and-bounded-agent-safety.execution-boundaries-are-typed
+    title: Execution boundaries are typed and constrained
+    severity: error
+    summary: >
+      Code must preserve the distinction between data and executable
+      interpreter input at database, process, browser, template, file, network,
+      and infrastructure boundaries.
+    must:
+      - "Use parameterized database interfaces and validated values instead of assembling executable query text from untrusted input."
+      - "Use context-appropriate output encoding for untrusted values rendered into HTML, URLs, templates, logs, or similar interpreters."
+      - "Use fixed executable selection, structured argument validation, and a narrow allowlist when an approved process invocation is necessary."
+      - "Validate model-generated tool arguments against the same structured schemas used by non-model callers."
+    must_not:
+      - "Do not expose arbitrary SQL, shell commands, code evaluation, dynamic imports, arbitrary file paths, arbitrary network destinations, or infrastructure administration through untrusted or model-generated text."
+      - "Do not pass untrusted strings through a shell, query builder escape hatch, template evaluator, deserializer, or other interpreter merely because a model generated them."
+    agent_guidance: >
+      Prefer an API that accepts a typed intent, such as a declared invoice id,
+      over one that accepts a language for doing anything.
+
+  - id: untrusted-input-and-bounded-agent-safety.agents-have-bounded-capabilities
+    title: Agents receive named, least-privilege capabilities
+    severity: error
+    summary: >
+      An agent has a narrow named task and receives only the tools, data,
+      credentials, time, and request scope needed for that task.
+    must:
+      - "Declare each agent's purpose, allowed tools, read/write scope, expected tenant scope, data classifications, timeouts, rate limits, and kill-switch owner."
+      - "Give read-only investigation and advice capabilities separate from state-changing capabilities."
+      - "Keep provider credentials and broad administrator authority outside model context and outside general-purpose model-facing tools."
+      - "Use a product- and target-specific allowlist for any automated action that is not read-only."
+    must_not:
+      - "Do not create a general agent-admin, execute-anything, query-anything, browse-anywhere, or production-credentials tool as a shortcut."
+      - "Do not grant an agent cross-tenant visibility or action authority merely because it has access to a shared runtime."
+    agent_guidance: >
+      Design the tool list as if every tool will eventually be invoked from a
+      confused or manipulated model. Reduce what that invocation can affect.
+
+  - id: untrusted-input-and-bounded-agent-safety.tools-authorize-independently
+    title: Tools enforce authority independently of the model
+    severity: error
+    summary: >
+      A model output is a proposal. A tool that reads or changes data must
+      validate its structured arguments and independently enforce the verified
+      identity, tenant, permission, resource, and product policy.
+    must:
+      - "Obtain principal, service identity, tenant, and product context from verified runtime context rather than model-provided fields."
+      - "Evaluate required permission and resource/tenant policy at the tool or handler boundary before sensitive reads or state changes."
+      - "Return a safe deny result when context, permission, policy, or required approval is absent."
+      - "Record audit evidence for privileged, denied, or consequential attempts where policy requires it."
+    must_not:
+      - "Do not let a tool trust a model assertion that a caller is authorized, belongs to a tenant, owns a resource, or has obtained approval."
+      - "Do not bypass server-side authorization because an agent UI or prompt already appears to have limited the action."
+    agent_guidance: >
+      The same tool must deny an unauthorized model proposal and an
+      unauthorized ordinary API call for the same reason.
+
+  - id: untrusted-input-and-bounded-agent-safety.retrieval-preserves-access-boundaries
+    title: Retrieval preserves access and provenance boundaries
+    severity: error
+    summary: >
+      Retrieval filtering happens before content reaches a model, and retrieved
+      text retains enough provenance to remain evidence rather than authority.
+    must:
+      - "Filter retrieval by verified tenant, product, data classification, residency, and resource policy where those facts apply."
+      - "Minimize, classify, and redact prompt and tool-result content before it crosses the model boundary."
+      - "Preserve source identity and relevant trust/provenance facts for evidence, audit, and later review."
+    must_not:
+      - "Do not rely on answer post-processing to repair cross-tenant or sensitive retrieval that was already exposed to a model."
+      - "Do not construct system instructions, executable queries, deployment commands, secret values, authorization mappings, or tool definitions from retrieved content."
+    agent_guidance: >
+      Retrieval is a permission-scoped read operation before it is a relevance
+      operation.
+
+  - id: untrusted-input-and-bounded-agent-safety.consequential-actions-require-policy
+    title: Consequential actions require explicit policy and approval
+    severity: error
+    summary: >
+      State-changing actions need a declared risk class, target scope,
+      idempotency/replay behaviour, audit evidence, and an approval path when
+      a safely bounded automatic case is not explicitly approved.
+    must:
+      - "Classify a tool as read-only, reversible, or consequential and declare the resources and tenant scope it may affect."
+      - "Require an explicit allowlist, safe idempotency/replay behaviour, timeouts, audit evidence, and kill switch for an automated consequential action."
+      - "Require recorded human approval for financial, destructive, cross-tenant, identity/security-policy, infrastructure, or data-export actions unless a later approved policy defines a narrower automatic case."
+      - "Make approval evidence specific to the actor, action, target scope, reason, decision, and expiry or one-time-use condition."
+    must_not:
+      - "Do not treat model confidence, a natural-language request, or an explanation as approval."
+      - "Do not let a broad queue, batch, or tenant-wide action occur because one item or one model response suggested it."
+    agent_guidance: >
+      When the safe action is unclear, stop at diagnosis and recommend the next
+      human decision rather than inventing a remediation.
+
+  - id: untrusted-input-and-bounded-agent-safety.adversarial-proof-is-required
+    title: Agent and input boundaries have adversarial proof
+    severity: error
+    summary: >
+      A happy-path demonstration cannot prove a secure input or agent boundary.
+      Relevant changes require focused negative cases or an explicit gap when
+      the necessary platform capability is unavailable.
+    must:
+      - "Test or explicitly record a gap for hostile retrieved text, malformed model/tool arguments, unauthorized identity or service context, cross-tenant access, sensitive-data exposure, missing approval, and retry/timeout/kill-switch behavior where the changed capability makes them relevant."
+      - "Prove that a rejected request produces no prohibited side effect and does not expose secret or unnecessary sensitive data."
+      - "Record the current platform/product gap and stop before implementation when a required principal, tenant, resource-policy, approval, audit, or safe-tool seam is unavailable."
+    must_not:
+      - "Do not claim prompt injection resistance from a happy-path prompt, a model disclaimer, or a test that omits independent tool authorization."
+      - "Do not add an app-local bypass merely because the platform control has not yet been implemented."
+    agent_guidance: >
+      Start the test plan with “what if the evidence tries to redirect the
+      agent?” and “what if this request belongs to another tenant?”
+
+ownership:
+  core: >
+    May add provider-neutral classification, authority-context, policy-decision,
+    and safe-tool contracts after a real consumer proves the seam; it does not
+    own product roles, live tenant data, provider clients, or a universal policy
+    engine.
+  platform: >
+    Owns generic enforcement seams and provider-neutral runtime mechanics;
+    adapters and target composition own provider-specific LLM, identity, queue,
+    storage, and credential translation.
+  apps_and_products: >
+    Own product permission vocabulary, agent task meaning, resource rules, data
+    classification choices, and human approval experience.
+  product_harness: >
+    Owns the workflow, source-derived rule, retrieval proof, and stop conditions
+    that prevent unsupported agent controls from being claimed as implemented.
+  rag_rulebook: >
+    Owns reusable retrieval machinery and must preserve the separation between
+    source evidence and governing instructions.
+
+success_criteria:
+  - "A relevant change identifies untrusted inputs and their interpreter or model boundaries."
+  - "Model output cannot directly execute code, expand tenant scope, grant authority, or select an undeclared tool."
+  - "Each relevant tool independently validates typed arguments and verified authority before sensitive reads or changes."
+  - "Consequential actions have explicit allowlist, approval, audit, and kill-switch decisions."
+  - "Relevant negative cases are proven or the missing platform seam is recorded as a stop condition."
+  - "The policy does not claim an already-implemented general agent runtime, approval service, static scanner, or distributed policy engine."

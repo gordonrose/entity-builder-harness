@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
-  version: 7
+  version: 8
   status: active
   layer: 03.product
   domain: architecture
@@ -518,6 +518,74 @@ Feature flag access should start as a provider-neutral reader contract.
 Platform adapters may bind that reader to environment, config, database, or
 third-party flag providers later, but apps should not receive concrete flag
 clients or provider SDKs through their mount dependencies.
+
+### Platform Contract Identifier Naming
+
+Platform-contract identifiers must be readable without making their values
+repeat information that the surrounding TypeScript contract already supplies.
+The functional category belongs in a file, type, registry, or explicit field;
+the identifier value names the stable owner and capability.
+
+This convention applies to names declared through an app mount: the app id,
+route name, job name, feature-flag name, health-check name, and permission.
+
+| Contract context | Preferred value | Avoid | Reason |
+| --- | --- | --- | --- |
+| `PlatformAppId` | `billing` | `app.billing` | The type already says this is an app id. |
+| `PlatformRouteName` | `billing.invoice.show` | `route.billing.invoice.show` | The route declaration supplies the category. |
+| `PlatformJobName` | `billing.invoice.generate-statement` | `job.billing.invoice.generate-statement` | The job registry supplies the category. |
+| `FeatureFlagName` | `billing.invoice.bulk-import` | `flag.billing.invoice.bulk-import` | The flag reader supplies the category. |
+| `PlatformHealthName` | `billing.readiness` | `health.billing.readiness` | The health registry supplies the category. |
+| `Permission` | `billing.invoice:read` | `permission.billing.invoice:read` | The permission declaration and evaluator supply the category. |
+
+App-owned values use the app id as their first segment. A permission uses the
+same app-owned resource prefix followed by a truthful action:
+`<app>.<resource>:<action>`. Start with a small action vocabulary such as
+`create`, `read`, `list`, `update`, `delete`, and `export`; use a specific
+business action such as `approve` or `submit` only when it is more accurate.
+Do not use vague actions such as `do`, `access`, or `manage` without an
+explicit, narrow definition.
+
+Some values appear in flat operational contexts, such as environment-variable
+lists, dashboards, logs, and support tickets. Those values need a stable
+subsystem and subject, but still do not need a redundant functional-category
+prefix:
+
+```text
+Prefer: PLATFORM_AUTH_PROVIDER
+Avoid:  CONFIG_PLATFORM_AUTH_PROVIDER
+
+Prefer: PLATFORM_CONTRACT_INVALID_NAME
+Avoid:  ERROR_PLATFORM_CONTRACT_INVALID_NAME
+```
+
+The environment mechanism already identifies a value as configuration, and an
+error object's `code` field already identifies an error. `PLATFORM`, `AUTH`,
+and `CONTRACT` convey the information that is otherwise missing. If a generic,
+untyped registry must carry several kinds of identifiers, use an explicit
+`kind` field rather than embedding `job`, `flag`, or another category into
+every value.
+
+Identifier values name a protected capability; they do not encode the policy
+facts used to decide who receives that capability. Do not include tenant,
+region, group, role, customer, identity provider, claim, scope, API version,
+or personal data in a stable route, job, flag, health, or permission name.
+For example, `billing.invoice:read` is stable. A Benelux accountant group's
+membership is a context fact used when evaluating that permission for a
+particular invoice, not part of the permission string.
+
+Name constructors can validate local syntax because they see only one value.
+The platform registry or mount process sees both an app id and its
+declarations, so it is the later implementation point that must validate
+app-prefix ownership. A naming rule does not itself change runtime behaviour:
+a separately approved compatibility-preserving implementation slice must add
+registry validation and accepted/rejected contract tests. Existing identifiers
+must be migrated deliberately; they are never silently rewritten.
+
+Names may be surfaced in logs, errors, audits, metrics, and support tools.
+They must therefore avoid secrets, personal data, tenant-specific details, and
+provider implementation details. Exact identifier matching remains the default;
+this naming convention does not grant wildcard permission semantics.
 
 ## Logging Normalization
 

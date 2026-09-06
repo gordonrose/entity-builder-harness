@@ -1,0 +1,211 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.service
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - security
+#   - sre
+#   - architecture
+#   kind: cloudformation-template
+#   purpose: Deploy an immutable platform-shell image digest into the dedicated Kanbien staging ECS Fargate service.
+#   portability:
+#     class: target-specific
+#     targets:
+#     - kanbien/staging
+#   used_by:
+#   - id: aws.plan.kanbien-staging-platform-shell-initial-deployment
+#     path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ECS Fargate service for the Kanbien staging platform shell.
+
+Parameters:
+  FoundationStackName:
+    Type: String
+    Default: kanbien-staging-platform-shell-foundation
+    Description: Name of the foundation stack that owns the service dependencies.
+  ClusterArn:
+    Type: String
+    Default: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+    Description: Existing ECS cluster ARN.
+  ServiceName:
+    Type: String
+    Default: kanbien-staging-platform-shell
+  ImageUri:
+    Type: String
+    AllowedPattern: ^.+@sha256:[0-9a-f]{64}$
+    ConstraintDescription: ImageUri must be an immutable repository@sha256 digest reference.
+  DesiredCount:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    MaxValue: 3
+  Cpu:
+    Type: String
+    Default: "256"
+    AllowedValues:
+      - "256"
+  Memory:
+    Type: String
+    Default: "512"
+    AllowedValues:
+      - "512"
+
+Resources:
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref ServiceName
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskRoleArn
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: platform-shell
+          Image: !Ref ImageUri
+          Essential: true
+          ReadonlyRootFilesystem: true
+          StopTimeout: 30
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: HOST
+              Value: 0.0.0.0
+            - Name: PORT
+              Value: "3000"
+            - Name: PLATFORM_DEPLOYMENT_EXPOSURE
+              Value: public
+            - Name: PLATFORM_AUTH_PROVIDER
+              Value: cognito
+            - Name: PLATFORM_AUTH_COGNITO_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_AUTH_COGNITO_USER_POOL_ID
+              Value: eu-west-1_EQaXioA1n
+            - Name: PLATFORM_AUTH_COGNITO_APP_CLIENT_ID
+              Value: 4n7kuqstbvb97ur3btbur8afjt
+            - Name: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+              Value: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}'
+            - Name: PLATFORM_CORS_ALLOWLIST
+              Value: https://staging.platform.kanbien.com
+            - Name: PLATFORM_HEALTH_LIVEZ_EXPOSURE
+              Value: public
+            - Name: PLATFORM_HEALTH_READYZ_EXPOSURE
+              Value: authenticated
+            - Name: PLATFORM_RATE_LIMIT_PROVIDER
+              Value: dynamodb
+            - Name: PLATFORM_RATE_LIMIT_DYNAMODB_TABLE
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RateLimitTableName
+            - Name: PLATFORM_RATE_LIMIT_DYNAMODB_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_RATE_LIMIT_LIMIT
+              Value: "120"
+            - Name: PLATFORM_RATE_LIMIT_WINDOW_MS
+              Value: "60000"
+            - Name: PLATFORM_TRUSTED_INGRESS_MODE
+              Value: alb-security-group-only
+            - Name: PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES
+              Value: "1048576"
+            - Name: PLATFORM_SERVER_MAX_HEADER_BYTES
+              Value: "16384"
+            - Name: PLATFORM_SERVER_MAX_HEADERS_COUNT
+              Value: "100"
+            - Name: PLATFORM_SERVER_HEADERS_TIMEOUT_MS
+              Value: "10000"
+            - Name: PLATFORM_SERVER_REQUEST_TIMEOUT_MS
+              Value: "30000"
+            - Name: PLATFORM_SERVER_KEEP_ALIVE_TIMEOUT_MS
+              Value: "5000"
+            - Name: PLATFORM_SERVER_HANDLER_TIMEOUT_MS
+              Value: "30000"
+            - Name: PLATFORM_SERVER_SHUTDOWN_DRAIN_TIMEOUT_MS
+              Value: "30000"
+            - Name: PLATFORM_SERVER_MAX_CONCURRENT_REQUESTS
+              Value: "100"
+            - Name: PLATFORM_SERVER_MAX_REQUESTS_PER_SOCKET
+              Value: "1000"
+            - Name: PLATFORM_SMOKE_APP_NAME
+              Value: Kanbien Platform Smoke
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-LogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: platform-shell
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - node -e "fetch('http://127.0.0.1:3000/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn: TaskDefinition
+    Properties:
+      ServiceName: !Ref ServiceName
+      Cluster: !Ref ClusterArn
+      DesiredCount: !Ref DesiredCount
+      LaunchType: FARGATE
+      PlatformVersion: LATEST
+      EnableExecuteCommand: false
+      EnableECSManagedTags: true
+      PropagateTags: SERVICE
+      HealthCheckGracePeriodSeconds: 30
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${FoundationStackName}-ServiceSecurityGroupId
+          Subnets: !Split
+            - ","
+            - Fn::ImportValue: !Sub ${FoundationStackName}-PublicSubnetIdsCsv
+      LoadBalancers:
+        - ContainerName: platform-shell
+          ContainerPort: 3000
+          TargetGroupArn:
+            Fn::ImportValue: !Sub ${FoundationStackName}-TargetGroupArn
+      TaskDefinition: !Ref TaskDefinition
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+Outputs:
+  ServiceArn:
+    Value: !Ref Service
+  TaskDefinitionArn:
+    Value: !Ref TaskDefinition

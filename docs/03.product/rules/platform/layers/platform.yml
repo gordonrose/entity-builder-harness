@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.layers.platform
-#   version: 7
+#   version: 9
 #   status: active
 #   layer: 03.product
 #   domain: architecture
@@ -21,20 +21,20 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: layer.platform
 title: platform layer rules
-version: 10
+version: 13
 status: active
 
 source_derivation:
   provenance_version: rag-rulebook/source-derivation-provenance/v1
-  mode: direct-source-material
+  mode: generated-projection
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-08T18:25:48Z"
+  generated_at_utc: '2026-09-01T22:31:02Z'
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
   derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
   source_material:
-    - path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
-      sha256: 1d3ad22ace3401b00bf94247f6976606f29e55f70943c2fbb0a1db4aa516e689
+  - path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+    sha256: b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4
 
 description: >
   Rules governing platform/ as Kanbien's runtime composition layer: process
@@ -47,6 +47,8 @@ applies_to:
     - "platform/**"
 
 related_rulesets:
+  - docs/03.product/rules/concerns/package-documentation.yml
+  - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
   - docs/06.shared/rules/concerns/ci-quality.yml
   - docs/06.shared/rules/concerns/dependency-direction.yml
   - docs/03.product/rules/platform/concerns/events-messaging-async.yml
@@ -243,6 +245,31 @@ rules:
       Preserve the contract boundary. Apps register intent; platform translates
       it into concrete server, worker, health, and operational behavior.
 
+  - id: platform.contract-identifiers-are-semantic
+    title: Platform contract identifiers express ownership and capability
+    severity: warning
+    summary: >
+      App-mounted identifiers should make the stable owning app and capability
+      apparent without repeating a functional category that the surrounding
+      contract already supplies or leaking authorization-policy facts.
+    must:
+      - "Use a file, TypeScript type, registry, or explicit field to identify whether a value is an app, route, job, flag, health check, configuration value, or error code."
+      - "For app-owned route, job, feature-flag, and health names, use the app id as the first dot-separated segment and name the capability after it; for example billing.invoice.show or billing.invoice.generate-statement."
+      - "For app-owned permissions, use <app>.<resource>:<action> with a small truthful action vocabulary; for example billing.invoice:read."
+      - "Use stable subsystem and subject names for flat operational values; for example PLATFORM_AUTH_PROVIDER and PLATFORM_CONTRACT_INVALID_NAME."
+      - "Keep local syntax checks in name constructors and add app-prefix ownership validation only where the mounting app id and its declarations are both visible, normally the platform registry."
+      - "Treat an identifier rename as a compatibility migration with explicit accepted/rejected contract-test evidence."
+    must_not:
+      - "Do not repeat a functional category in an identifier value when its type, field, or registry already provides it; avoid app.billing, route.billing.invoice.show, job.billing.invoice.generate-statement, flag.billing.invoice.bulk-import, permission.billing.invoice:read, CONFIG_PLATFORM_AUTH_PROVIDER, and ERROR_PLATFORM_CONTRACT_INVALID_NAME."
+      - "Do not encode tenant, region, group, role, customer, provider, identity claim, scope, API version, personal data, secret, or credential detail into stable app-owned identifiers or permissions."
+      - "Do not treat a readable permission name as wildcard authorization or as a substitute for resource-level policy evaluation."
+      - "Do not silently rewrite existing public identifiers when introducing this convention."
+    agent_guidance: >
+      Put functional category in the container and stable ownership/capability
+      in the value. This rule defines the target vocabulary only; current
+      platform/contracts runtime behavior remains unchanged until a separate
+      compatibility-preserving registry implementation and tests are approved.
+
   - id: platform.composition-root-is-the-only-app-importer
     title: Only composition roots import app mounts
     severity: error
@@ -430,6 +457,7 @@ source_refs:
     sections:
       - "Platform Runtime Shell Surfaces"
       - "App-Facing Contracts and Composed Context Placement"
+      - "Platform Contract Identifier Naming"
       - "Logging Normalization"
       - "Durable Outbox and Event Delivery"
       - "Audit Runtime, Retention, and Export"
@@ -456,3 +484,4 @@ success_criteria:
   - "It includes manually verified source_refs back to the platform layer guide."
   - "It records enterprise runtime obligations for logging normalization, durable event delivery, audit retention/export/SIEM, and payload/metadata size budgets."
   - "It places composed request/job contexts, app mount contracts, registries, and feature-flag reader contracts in platform/contracts before server and worker runtime implementation."
+  - "It requires platform-contract identifier values to express stable ownership and capability without repeating category context or leaking policy facts."

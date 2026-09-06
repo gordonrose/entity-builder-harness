@@ -67,7 +67,7 @@ async function main(): Promise<void> {
   mutableFlags["crm.deals.bulk-import"] = true;
   equal(await snapshotFlags.isEnabled(flagName.value), false);
 
-  const dealReadPermission: Permission = "deal:read";
+  const dealReadPermission: Permission = "crm.deal:read";
   deepEqual(validatePlatformPermissionDeclaration({ permission: dealReadPermission }), { ok: true, value: undefined });
   expectContractError(
     validatePlatformPermissionDeclaration({ permission: "deal read" as never }),

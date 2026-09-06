@@ -24,13 +24,16 @@ async function main(): Promise<void> {
   const routeName = platformRouteName("smoke.echo");
   const jobName = platformJobName("smoke.rebuild");
   const healthName = platformHealthName("smoke.readiness");
+  const foreignRouteName = platformRouteName("billing.invoice.list");
+  const foreignJobName = platformJobName("billing.invoice.export");
+  const foreignHealthName = platformHealthName("billing.readiness");
 
-  if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok) {
+  if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok || !foreignRouteName.ok || !foreignJobName.ok || !foreignHealthName.ok) {
     throw new Error("Expected valid platform test primitives.");
   }
 
   const lifecycleCalls: string[] = [];
-  const permission = "smoke:read";
+  const permission = "smoke.smoke:read";
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
@@ -131,6 +134,42 @@ async function main(): Promise<void> {
     }),
     "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION",
   );
+
+  const namespaceMismatch = await mountPlatformAppForTest(
+    definePlatformApp({
+      id: appId.value,
+      name: "Namespace mismatch",
+      mount(registry) {
+        registry.registerPermission({ permission: "billing.invoice:read" });
+        registry.registerRoute({
+          name: foreignRouteName.value,
+          method: "GET",
+          path: "/billing-invoice",
+          auth: { kind: "public" },
+          handler: { handle: () => ({ status: 200 }) },
+        });
+        registry.registerJob({
+          name: foreignJobName.value,
+          messageType: "billing.invoice.export" as QueueMessageType,
+          handler: { handle: () => undefined },
+        });
+        registry.registerHealthCheck({
+          name: foreignHealthName.value,
+          check: { check: () => undefined as never },
+        });
+      },
+    }),
+  );
+  equal(namespaceMismatch.ok, false);
+  if (namespaceMismatch.ok) {
+    throw new Error("Expected cross-app registrations to fail.");
+  }
+  const namespaceErrors = namespaceMismatch.error.contractErrors.filter(
+    (error) => error.code === "PLATFORM_CONTRACT_NAMESPACE_MISMATCH",
+  );
+  equal(namespaceErrors.length, 4);
+  deepEqual(namespaceErrors.map((error) => error.details?.["kind"]), ["permission", "route", "job", "health"]);
+  deepEqual(namespaceErrors.map((error) => error.details?.["appId"]), ["smoke", "smoke", "smoke", "smoke"]);
 
   await assertMountContractError(
     definePlatformApp({

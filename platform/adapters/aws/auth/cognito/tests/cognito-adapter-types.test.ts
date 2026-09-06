@@ -8,7 +8,7 @@ import {
   type CognitoAuthzPermissionMapping,
 } from "../src/index";
 
-const permission = "smoke:read" as Permission;
+const permission = "adapter-smoke.smoke:read" as Permission;
 const authz: CognitoAuthzPermissionMapping = {
   groups: { administrators: [permission] },
   scopes: { "platform-smoke/read": [permission] },

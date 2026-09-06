@@ -1,4 +1,4 @@
-import { deepEqual, equal, match } from "node:assert/strict";
+import { deepEqual, equal, match, throws } from "node:assert/strict";
 import { createSign, generateKeyPairSync } from "node:crypto";
 import type { Permission } from "@kanbien/core/authz";
 import { fixedClock } from "@kanbien/core/shared";
@@ -75,10 +75,23 @@ async function main(): Promise<void> {
   equal(limited.retryAfterMs, 1000);
   equal(platformRateLimitError(limited.retryAfterMs).code, "PLATFORM_SECURITY_RATE_LIMITED");
 
-  const rateLimitKey = platformRateLimitKey({ headers: { authorization: "Bearer sensitive-token" } });
+  const rateLimitKey = platformRateLimitKey({ bearerToken: "sensitive-token" });
   match(rateLimitKey, /^token:[0-9a-f]{64}$/);
-  equal(platformRateLimitKey({ headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" } }), "ip:203.0.113.10");
-  equal(platformRateLimitKey({ headers: {} }), "anonymous");
+  equal(platformRateLimitKey({ clientAddress: "203.0.113.10" }), "ip:203.0.113.10");
+  equal(platformRateLimitKey({}), "anonymous");
+
+  const boundedBuckets = createInMemoryPlatformRateLimiter({
+    limit: 1,
+    windowMs: 1_000,
+    maxBuckets: 1,
+    clock: fixedClock(new Date("2026-07-10T00:00:00.000Z")),
+  });
+  equal(boundedBuckets.check("first-client").allowed, true);
+  equal(boundedBuckets.check("unbounded-keyspace-attempt").allowed, false);
+  throws(
+    () => createInMemoryPlatformRateLimiter({ maxBuckets: 0 }),
+    /maxBuckets must be a positive integer/,
+  );
 
   const authz = {
     valueClaims: [

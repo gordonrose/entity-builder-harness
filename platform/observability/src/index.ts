@@ -81,16 +81,19 @@ export function normalizePlatformError(error: unknown): PlatformSafeLogFields {
   if (error instanceof Error) {
     return {
       name: error.name,
-      message: error.message,
       ...(hasStringProperty(error, "code") ? { code: error["code"] } : {}),
     };
   }
 
   if (isObjectLike(error)) {
-    return normalizePlatformLogFields(error as Readonly<Record<string, unknown>>);
+    return {
+      type: "non-error-object",
+      ...(hasStringProperty(error, "code") ? { code: error["code"] } : {}),
+      ...(hasStringProperty(error, "name") ? { name: error["name"] } : {}),
+    };
   }
 
-  return { message: String(error) };
+  return { type: "non-error-value" };
 }
 
 export function platformErrorClass(error: unknown): string {

@@ -27,7 +27,7 @@ const authz: PlatformAuthzPermissionMapping = {
   valueClaims: [{ claim: "roles", format: "string-array", values: { admins: [permission] } }],
 };
 void authzMappingPermissions(authz);
-void platformRateLimitKey({ headers: { authorization: "Bearer token" } });
+void platformRateLimitKey({ bearerToken: "token" });
 
 const verifier: PlatformJwtVerifier = {
   verify: async () => ({

@@ -1,0 +1,286 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: review-record
+#   purpose: Record the OKF source-material review loop for platform-contract identifier naming guidance.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
+#     path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+#   - id: harness.architecture.rules.layers.platform
+#     path: docs/03.product/rules/platform/layers/platform.yml
+#   - id: rag-rulebook.workflow.derive-rules-from-source
+#     path: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-09-01.03-product-platform.platform-contract-identifier-naming
+status: accepted
+
+source_material:
+  path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+  corpus_id: corpus.03.product.platform
+  vertical: platform-contract-identifier-naming
+  source_state: accepted
+  sha256: b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4
+  target_rule_paths:
+    - docs/03.product/rules/platform/layers/platform.yml
+
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - secops-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+
+iterations:
+  - iteration: 1
+    source_revision_summary: >
+      Reviewed source revision 8 of the platform-runtime enterprise-obligations
+      material. It already established the app-facing contract boundary and
+      app-owned permission vocabulary, but did not define semantic naming,
+      scope-sensitive permission names, flat operational identifiers, or the
+      division between local syntax validation and registry ownership checks.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.3
+        decision: revise
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.2
+          necessity: 9.7
+          production_grade_gaps: 9.2
+          execution_variables: 9.3
+          human_readability: 9.6
+          machine_readability: 9.4
+          cost_optimization: 9.5
+          security: 9.4
+          performance: 9.6
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: ARCH-REC-001
+            priority: high
+            summary: Define the identifier rule that separates functional category from app ownership and capability, with accepted and rejected examples for every app-mount contribution kind.
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/layers/platform.yml
+      - role: agentic-engineer
+        overall_score: 9.2
+        decision: revise
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.2
+          necessity: 9.6
+          production_grade_gaps: 9.2
+          execution_variables: 9.1
+          human_readability: 9.5
+          machine_readability: 9.3
+          cost_optimization: 9.6
+          security: 9.4
+          performance: 9.5
+          token_optimization: 9.4
+        recommendations:
+          - recommendation_id: AGENTIC-REC-001
+            priority: high
+            summary: State the naming grammar, the ownership-validation point, and the staged implementation boundary so an agent need not infer when constructors versus registries enforce the rule.
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - platform/contracts/src/index.ts
+      - role: secops-engineer
+        overall_score: 9.3
+        decision: revise
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.3
+          necessity: 9.7
+          production_grade_gaps: 9.3
+          execution_variables: 9.4
+          human_readability: 9.5
+          machine_readability: 9.4
+          cost_optimization: 9.5
+          security: 9.2
+          performance: 9.5
+          token_optimization: 9.5
+        recommendations:
+          - recommendation_id: SEC-REC-001
+            priority: high
+            summary: Prohibit tenant, group, role, provider, identity-claim, personal-data, and secret detail in stable identifiers, and state that naming does not create wildcard permission semantics.
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - docs/03.product/rules/platform/concerns/tenancy.yml
+      - role: senior-sre
+        overall_score: 9.4
+        decision: revise
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.4
+          necessity: 9.7
+          production_grade_gaps: 9.4
+          execution_variables: 9.4
+          human_readability: 9.6
+          machine_readability: 9.4
+          cost_optimization: 9.6
+          security: 9.5
+          performance: 9.5
+          token_optimization: 9.6
+        recommendations:
+          - recommendation_id: SRE-REC-001
+            priority: high
+            summary: Define compatibility and migration expectations so existing names are not silently rewritten, and require later registry tests before runtime enforcement is claimed.
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - platform/contracts/tests/platform-contracts-runtime.test.ts
+    cross_review_summary:
+      agreement:
+        - The source already names app mounts and permission ownership, but lacks a compact semantic identifier policy.
+        - The policy belongs at the platform-contract boundary, while tenant and role facts remain runtime policy inputs.
+        - Source material must state the staged distinction between documentation, local syntax validation, and future registry enforcement.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-REC-001
+          summary: Added the Platform Contract Identifier Naming section with a category-context table and accepted/rejected examples.
+        - recommendation_id: AGENTIC-REC-001
+          summary: Added app-owned naming grammar plus the distinction between local constructor syntax checks and future registry prefix validation.
+        - recommendation_id: SEC-REC-001
+          summary: Added the prohibited policy and sensitive-data facts plus exact-match and no-wildcard semantics.
+        - recommendation_id: SRE-REC-001
+          summary: Added explicit migration, compatibility, and later contract-test requirements without asserting a runtime implementation already exists.
+      rejected: []
+    rerun_required: true
+
+  - iteration: 2
+    source_revision_summary: >
+      Added the Platform Contract Identifier Naming section. It defines category
+      context, app-owned value grammar, permission action vocabulary, flat
+      operational identifiers, prohibited policy facts, security constraints,
+      registry-level ownership validation, and compatibility-preserving future
+      enforcement.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.8
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.8
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.8
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/layers/platform.yml
+      - role: agentic-engineer
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.8
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.7
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - platform/contracts/src/index.ts
+          - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+      - role: secops-engineer
+        overall_score: 9.8
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.8
+          production_grade_gaps: 9.8
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.9
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - docs/03.product/rules/platform/concerns/tenancy.yml
+      - role: senior-sre
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.8
+          machine_readability: 9.7
+          cost_optimization: 9.8
+          security: 9.8
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+          - platform/contracts/tests/platform-contracts-runtime.test.ts
+          - docs/03.product/rules/platform/layers/platform.yml
+    cross_review_summary:
+      agreement:
+        - The source now names the stable ownership information that belongs in each identifier and leaves category information in contract context.
+        - The source keeps tenant, role, group, provider, and customer facts in authorization policy rather than permission strings.
+        - The source is derivation-ready without overstating current runtime enforcement or silently changing existing identifiers.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-REC-001
+          summary: Verified as applied in the revised source material.
+        - recommendation_id: AGENTIC-REC-001
+          summary: Verified as applied in the revised source material.
+        - recommendation_id: SEC-REC-001
+          summary: Verified as applied in the revised source material.
+        - recommendation_id: SRE-REC-001
+          summary: Verified as applied in the revised source material.
+      rejected: []
+    rerun_required: false
+
+final_decision:
+  status: accepted
+  summary: >
+    Accepted after two role-based review iterations. The revised source defines
+    semantic platform-contract identifiers, preserves the platform/app and
+    policy boundaries, makes security and migration constraints explicit, and
+    is ready for narrow structured-rule derivation. Runtime prefix enforcement
+    remains a separate future implementation slice.
+  accepted_source_sha256: b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4
+  accepted_at_utc: "2026-09-01T21:51:49Z"
+  required_before_derivation:
+    - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+    - .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+    - .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml

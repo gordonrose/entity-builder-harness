@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: retrieval
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: evaluation-fixture
+#   purpose: Prove package documentation policy requests retrieve the canonical product concern rule.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: rag-rulebook.script.evaluate-retrieval-selector-fixtures
+#     path: scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh
+
+schema: rag-rulebook/retrieval-selector-evaluation/v1
+fixture_id: retrieval-selector.v1.package-documentation
+status: active
+owner_layer: 02.rag-rulebook
+purpose: Prove a package documentation request retrieves the product-wide package and multi-file module README policy.
+input:
+  request_text: I am splitting a TypeScript package index.ts into responsibility files. Which README documentation belongs at the package root and which belongs beside a multi-file capability module? Explain how the package README, local module README, public barrel, dependency boundary, and tests should stay aligned without requiring a README for every directory.
+  session:
+    trust_routing: true
+    layer: 03.product
+    mode: implementation
+    workflow: .agentic/03.product/workflows/default.md
+  max_chunks: 8
+expected:
+  routing:
+    layer: 03.product
+    mode: implementation
+    status: ready
+  matched_corpora:
+    required:
+      - corpus.03.product
+  selected_corpora:
+    required:
+      - corpus.03.product
+  selected_content_kinds:
+    required:
+      - rule
+  selected_chunks:
+    required_rule_ids:
+      - package-documentation.root-readmes-describe-package-boundaries
+      - package-documentation.multi-file-modules-have-local-maps
+      - package-documentation.file-map-changes-with-code
+  required_checks:
+    min_count: 1
+  citations:
+    min_count: 1
+  gaps:
+    no_unexpected: true
+banned:
+  selected_corpora:
+    - corpus.04.deploy
+source_refs:
+  - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  - docs/03.product/rules/concerns/package-documentation.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/apps/layers/apps.yml
+update_triggers:
+  - Package or multi-file module documentation rules change.
+  - The package documentation source material changes its boundary, security, or adoption guidance.
+  - Selector policy changes product-rule retrieval behavior.

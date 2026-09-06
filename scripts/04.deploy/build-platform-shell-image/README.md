@@ -29,6 +29,19 @@ infra/04.deploy/03.product/image/Dockerfile
 The command builds a local image only. It does not publish, deploy, call AWS,
 or mutate GitHub.
 
+Before a container engine is available, the deployable JavaScript payload can
+also be checked without Docker:
+
+```bash
+npm run platform:server:image-runtime-check
+```
+
+That check starts the compiled entrypoint with the non-secret public-target
+configuration and temporarily hides local `@kanbien` workspace links. It proves
+the runtime resolves generated compiled-package shims, rather than silently
+falling back to TypeScript source files. It does not contact AWS or call the
+DynamoDB rate-limit table.
+
 If `DOCKER_CONFIG` is unset, the script uses
 `.cache/04.deploy/docker-config` so Docker CLI metadata remains writable in
 sandboxed local shells.

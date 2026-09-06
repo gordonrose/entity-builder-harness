@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.derivation-report.03-product-platform.2026-07-07-platform-runtime-enterprise-obligations-v1
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: rulebook
@@ -21,6 +21,8 @@
 #   used_by:
 #   - id: harness.architecture.rules.layers.platform
 #     path: docs/03.product/rules/platform/layers/platform.yml
+#   - id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+#     path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
 
 schema: rag-rulebook/source-to-rule-derivation-report/v1
 report_id: derivation.03.product-platform.2026-07-07.platform-runtime-enterprise-obligations-v1
@@ -32,13 +34,13 @@ source_change:
   changed_paths:
     - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md
+    - .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
   summary: >
-    Approved source material records deferred platform and infra runtime
-    obligations for logging normalization, durable outbox/event delivery, audit
-    retention/export/SIEM handling, payload/metadata size budgets, app-facing
-    platform/contracts placement, composed request/job context placement, and
-    provider-neutral feature flag access before concrete runtime
-    implementation.
+    Approved source material now defines semantic platform-contract identifier
+    naming: functional category in contract context; stable app ownership and
+    capability in values; policy and sensitive facts excluded from stable
+    identifiers; and registry-level ownership validation deferred to a later
+    compatibility-preserving runtime implementation slice.
 
 target:
   corpus_id: corpus.03.product.platform
@@ -53,6 +55,7 @@ target:
     - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
   affected_evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
   affected_corpus_gaps: []
 
 semantic_review:
@@ -65,6 +68,15 @@ semantic_review:
       evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.flags.provider-neutral-reader
       summary: Feature flag access should start as a provider-neutral reader contract and platform adapters may bind it to environment, config, database, or third-party providers later.
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: platform.contract-identifiers-name-owner-and-capability
+      summary: Platform-contract types, fields, and registries carry functional category; app-owned route, job, flag, health, and permission values carry stable app ownership and capability without repeating the category.
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: platform.contract-permissions-exclude-policy-facts
+      summary: Stable permission and contribution names must not encode tenant, region, group, role, customer, provider, claim, scope, API version, personal data, or secret information; those are evaluation facts, not identifier vocabulary.
+      evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
+    - claim_id: platform.registry-validates-app-identifier-ownership
+      summary: Constructors validate local identifier syntax, while a later platform registry implementation validates that app-owned declarations begin with the mounting app id; migrations require compatibility evidence and no silent renames.
       evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
     - claim_id: platform.logging.normalizes-rich-runtime-values
       summary: Platform logging adapters should normalize errors, provider failures, framework objects, dates, maps, sets, buffers, streams, circular values, and oversized fields into redacted bounded plain log fields.
@@ -90,10 +102,16 @@ semantic_review:
       - docs/03.product/rules/platform/concerns/events-messaging-async.yml
       - docs/03.product/rules/platform/concerns/persistence-files-storage.yml
       - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+      - docs/03.product/rules/platform/concerns/config-runtime-settings.yml
+      - docs/03.product/rules/platform/concerns/identity-access-security.yml
+      - docs/03.product/rules/platform/concerns/tenancy.yml
     items: []
   drift:
-    status: none-found
-    items: []
+    status: expected
+    items:
+      - topic: platform-contract-identifier-enforcement
+        impact: Existing platform-contract constructors and tests currently validate syntax but do not enforce app-prefix ownership; the rule documents the target convention without claiming that runtime enforcement is already present.
+        handling: A later implementation slice must preserve public imports, add registry-level accepted/rejected tests, and migrate any existing nonconforming identifiers deliberately.
   ownership:
     status: ok
     notes:
@@ -110,35 +128,57 @@ proposed_updates:
   corpus_gaps: []
   evaluations:
     - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
   notes:
     - Existing concern rules already cover outbox, persistence/storage, logging, audit, observability, and retention concepts.
     - This update keeps composed runtime context placement in platform/contracts before platform/server and platform/workers implementation begins.
     - This update adds and refines platform-layer rules that make deferred enterprise runtime obligations explicit for future implementation slices.
+    - The accepted OKF review record establishes source-review evidence for the platform-contract identifier naming addition.
+    - The rule update is documentation and retrieval governance only; it does not modify platform/contracts runtime code or change existing identifier values.
 
 downstream_effects:
-  index_required: false
-  chunks_required: false
-  selector_evaluation_required: false
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
   publish_required: false
-  stale_artifacts: []
+  stale_artifacts:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+    - .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 
 validation:
   required_checks:
     - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
     - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
     - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
+    - bash scripts/02.rag-rulebook/generate-derived-rules/script.sh --current --check
     - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+    - bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh --pretty
+    - bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh --generate-current
     - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
     - git diff --check
-  checks_run: []
   checks_run:
     - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
       result: passed
     - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
       result: passed
+    - command: bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+      result: passed
     - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml
       result: passed
+    - command: bash scripts/02.rag-rulebook/generate-derived-rules/script.sh --current --check
+      result: passed
     - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh --pretty
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh --generate-current
       result: passed
     - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check
       result: passed
@@ -150,8 +190,9 @@ review:
   required: true
   decision: approved
   reviewer: codex
-  reviewed_at_utc: "2026-07-07T00:00:00Z"
+  reviewed_at_utc: "2026-09-01T21:51:49Z"
   notes:
     - This record captures deferred platform/runtime obligations identified while hardening packages/core event and audit contracts.
     - This revision captures the pre-runtime platform/contracts placement decision for app mounts, composed contexts, and provider-neutral feature flag access.
-    - Future platform implementation slices should replace pending check entries with actual validation evidence.
+    - This revision accepts the source-reviewed semantic identifier naming addition and its narrow platform-rule projection.
+    - Future platform implementation slices must add runtime registry enforcement and contract tests before claiming namespacing is enforced at mount time.

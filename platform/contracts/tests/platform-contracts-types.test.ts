@@ -98,7 +98,7 @@ const jobPayloadValidator: Validator<QueueMessage["payload"]> = {
   validate: (_value): _value is QueueMessage["payload"] => true,
   explain: () => ({ valid: true, issues: [] }),
 };
-const dealReadPermission = "deal:read";
+const dealReadPermission = "crm.deal:read";
 const permissionDeclaration: PlatformPermissionDeclaration = {
   permission: dealReadPermission,
   description: "Read deals.",

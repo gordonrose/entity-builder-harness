@@ -1,0 +1,159 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: review-record
+#   purpose: Record the OKF review loop for untrusted-input and bounded-agent safety guidance.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+#     path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+#   - id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+#     path: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-09-02.03-product.untrusted-input-and-bounded-agent-safety-v1
+status: accepted
+
+source_material:
+  path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  corpus_id: corpus.03.product
+  vertical: untrusted-input-and-bounded-agent-safety
+  source_state: accepted
+  sha256: 6cb6af3535b44d5e9b002bfd62273f0eb654d8b5c33d713e905c97445aa77b18
+  target_rule_paths:
+    - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - secops-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+
+iterations:
+  - iteration: 1
+    source_revision_summary: >
+      Reviewed the proposed policy after it separated code injection from
+      prompt injection, defined the authority hierarchy, bounded tool and
+      retrieval access, required independently authorized actions, and stated
+      testing and capability-gap stop conditions without claiming an existing
+      general agent runtime.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.8
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.9
+          production_grade_gaps: 9.7
+          execution_variables: 9.8
+          human_readability: 9.8
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.9
+          performance: 9.7
+          token_optimization: 9.7
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - .agentic/03.product/plans/implementation/product-harness-foundation.md
+      - role: agentic-engineer
+        overall_score: 9.8
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.9
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.8
+          performance: 9.7
+          token_optimization: 9.8
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+          - .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+          - .agentic/02.rag-rulebook/standards/okf-source-material-quality.md
+      - role: secops-engineer
+        overall_score: 9.9
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.9
+          necessity: 9.9
+          production_grade_gaps: 9.8
+          execution_variables: 9.8
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.9
+          performance: 9.7
+          token_optimization: 9.7
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+          - docs/03.product/rules/platform/concerns/identity-access-security.yml
+          - docs/03.product/rules/platform/concerns/tenancy.yml
+          - .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+      - role: senior-sre
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.7
+          cost_optimization: 9.8
+          security: 9.8
+          performance: 9.8
+          token_optimization: 9.7
+        recommendations: []
+        evidence:
+          - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+          - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+          - .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+    cross_review_summary:
+      agreement:
+        - The policy protects both deterministic code-execution boundaries and probabilistic model-instruction boundaries without implying either is solved by one text filter.
+        - The authority hierarchy and independently authorized tool boundary preserve existing authentication, authorization, tenancy, audit, and target-composition ownership.
+        - The workflow provides practical implementation and adversarial-proof steps while truthfully stopping where a general agent runtime, approval service, or provider capability is absent.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied: []
+      rejected: []
+    rerun_required: false
+
+final_decision:
+  status: accepted
+  summary: >
+    Accepted as a bounded, source-derived cross-cutting security policy. It is
+    specific enough to govern future agent and untrusted-input changes while
+    leaving product, tenant, provider, and deployment decisions with their
+    established owners.
+  accepted_source_sha256: 6cb6af3535b44d5e9b002bfd62273f0eb654d8b5c33d713e905c97445aa77b18
+  accepted_at_utc: "2026-09-02T22:06:35Z"
+  required_before_derivation:
+    - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+    - .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml

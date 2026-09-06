@@ -20,7 +20,7 @@ if (!appId.ok || !routeName.ok) {
   throw new Error("Expected valid server type primitives.");
 }
 
-const permission = "smoke:read" as Permission;
+const permission = "smoke.smoke:read" as Permission;
 const auth: PlatformServerAuthHook = {
   grantedPermissions: () => [permission],
   authenticate: () => ({ authenticated: true, permissions: [permission], subject: "subject", rateLimitKey: "principal:subject" }),

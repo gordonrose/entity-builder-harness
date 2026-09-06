@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 1
+#   version: 6
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -44,8 +44,8 @@ deployment:
       aws_profile: kanbien-dev
       governing_workflow: .agentic/aws/workflows/execute-approved-aws-change.md
       allowed_initial_mutations:
-        - create-ecr-repository
-        - create-github-oidc-deploy-role
+        - create-platform-shell-foundation-stack
+        - create-platform-shell-runtime-service
     repeatable_deploy:
       mutation_style: github-actions-oidc
       workflow: .github/workflows/deploy-platform-shell-staging.yml
@@ -53,16 +53,16 @@ deployment:
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
 inspection:
-  last_read_only_inspection_at_utc: "2026-07-13T13:28:31Z"
+  last_read_only_inspection_at_utc: "2026-09-05T22:32:59Z"
   workflow: .agentic/aws/workflows/inspect-aws-state.md
   profile: kanbien-dev
   region: eu-west-1
   inventory_note: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
-  mutation_performed: true
+  mutation_performed: false
   conclusion:
     existing_kanbien_staging_boundary_candidate: true
     product_platform_shell_target_selected: false
-    reason: Existing staging account, cluster, ALB, network, and certificate were inspected, but the product platform shell ECS services, Cognito target, image provenance, deployment identity, and deployed proof remain unselected.
+    reason: The staging boundary, immutable ECR repository, and machine-to-machine Cognito client exist, but no platform-shell image, ECS task definition/service, target group, DNS/host route, log group, alarm, or deployed proof exists.
   existing_boundary:
     account_id: "337159794548"
     cluster_arn: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
@@ -92,6 +92,7 @@ inspection:
     existing_repositories:
       - rag-rulebook-service
       - kanbien/service-platform
+      - platform-shell
     platform_shell_repository_found: true
     selected_platform_shell_repository: platform-shell
     selected_platform_shell_repository_arn: arn:aws:ecr:eu-west-1:337159794548:repository/platform-shell
@@ -100,6 +101,22 @@ inspection:
     repository_created_at_utc: "2026-07-13T13:28:30.347000Z"
     tag_mutability_expected: IMMUTABLE
     scan_on_push_expected: true
+    inspected_image_count: 0
+  platform_shell_runtime:
+    ecs_service_found: false
+    task_definition_found: false
+    alb_target_group_found: false
+    route53_record_found: false
+    https_host_rule_found: false
+    log_group_found: false
+    metric_alarms_found: false
+    planned_cloudformation:
+      foundation_stack: kanbien-staging-platform-shell-foundation
+      foundation_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+      service_stack: kanbien-staging-platform-shell-service
+      service_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+      static_policy_check: passed-local
+      aws_template_validation: passed-local-2026-09-06
   route53:
     hosted_zone_id: Z0909415EFV969Z95D5F
     existing_aliases_to_staging_alb:
@@ -151,6 +168,9 @@ github:
     workflow_has_id_token_permission: true
     trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-trust.json
     permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
+    live_policy_last_inspected_at_utc: "2026-09-06T00:00:00Z"
+    live_policy_matches_repository_policy: false
+    required_policy_update: Add the repository's narrowed CloudFormation service-stack permissions before the repeatable deployment workflow is run.
 artifacts:
   source_commit_sha: pending
   build_policy:
@@ -187,6 +207,8 @@ artifacts:
     build_context: .
     local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
     local_smoke_passed: true
+    local_smoke_completed_at_utc: "2026-09-06T11:15:40Z"
+    compiled_runtime_payload_check: passed-local-2026-09-06
     image_digest: pending
     base_image_digest: pending
     sbom: pending
@@ -211,8 +233,8 @@ runtime:
       readiness: /readyz
       alb_health_check_path: /livez
     container_port: 3000
-    task_definition: pending
-    service: pending
+    task_definition: service-template-draft
+    service: kanbien-staging-platform-shell
   worker:
     status: deferred-worker-capable-project
     task_definition_family_candidate: kanbien-staging-platform-shell-worker
@@ -228,7 +250,7 @@ product:
       package: "@kanbien/app-platform-smoke"
       route_base_path: /smoke
       declared_permissions:
-        - smoke:read
+        - platform-smoke.smoke:read
       required_config:
         - PLATFORM_SMOKE_APP_NAME
 auth:
@@ -269,15 +291,22 @@ auth:
     allowlist_source: target-profile-env
     env: PLATFORM_CORS_ALLOWLIST
     allowed_origins:
-      - https://kanbien.com
-      - http://localhost:3000
-    allowed_origin_patterns:
-      - https://*.kanbien.com
-    local_dev_origins:
-      - http://localhost:3000
+      - https://staging.platform.kanbien.com
   rate_limiting:
-    keying: principal-token-or-forwarded-ip
-    fallback: anonymous-local-only
+    keying: principal-token-or-target-resolved-client-address
+    generic_server_peer_address: socket-peer-only
+    shared_adapter:
+      status: implemented-and-tested-locally
+      required_before_public_exposure: true
+    trusted_ingress_client_address_policy:
+      status: implemented-and-tested-locally
+      required_before_public_exposure: true
+    target_transport_limits:
+      status: selected-and-startup-validated-locally
+      required_before_public_exposure: true
+    edge_protection:
+      status: host-scoped-cloudformation-template-validated-locally
+      required_before_public_exposure: true
     local_tests_passed: true
   secrets:
     source: aws-secrets-manager
@@ -331,11 +360,12 @@ operations:
   rollback_runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
 proof:
   static_validation: passed-local
-  policy_checks: pending
-  generated_output_review: pending
+  policy_checks: passed-local
+  generated_output_review: pending-reviewed-cloudformation-change-set
   image_smoke: passed-local
+  compiled_runtime_payload: passed-local-2026-09-06
   local_runtime_smoke: passed-product-smoke-local
-  aws_read_only_inspection: partial-kanbien-staging-boundary-inspected
+  aws_read_only_inspection: platform-shell-resources-inspected-2026-09-05
   deployment_smoke: blocked
   rollback_proof: blocked
 blockers:
@@ -347,8 +377,8 @@ blockers:
   - id: platform-shell-readiness.github-detail
     severity: blocking
     path: github
-    reason: GitHub workflow, source policy, OIDC permission, and environment protection settings are selected, but no workflow run id or deploy execution proof exists yet.
-    resolution: Run the selected manual GitHub workflow after ECS target planning, then record the workflow run id and proof.
+    reason: GitHub workflow, source policy, OIDC trust, and environment protection settings are selected, but the live deployment role still has its older direct-service policy rather than the repository's narrowed CloudFormation service-stack policy. No workflow run id or deploy proof exists yet.
+    resolution: Apply the reviewed IAM inline-policy update through a separate governed AWS change, inspect the live policy, then run the selected manual GitHub workflow after the foundation stack exists.
   - id: platform-shell-readiness.image-provenance
     severity: blocking
     path: artifacts
@@ -357,20 +387,30 @@ blockers:
   - id: platform-shell-readiness.runtime-target
     severity: blocking
     path: runtime
-    reason: The existing service-platform ECS service was inspected but is not selected as the product platform shell target; the target profile now records a server-first worker-capable project shape, but concrete ECS Fargate task definitions, services, CPU/memory, target group, and host rule remain unselected.
-    resolution: Record the product platform shell server task/service target for first exposure, keep the reserved worker service slot deferred until an app-declared background workload exists, and select concrete ECS task families before deployment execution.
+    reason: The existing service-platform ECS service remains unselected. The new platform-shell target is now defined by validated CloudFormation templates, but no task definition, ECS service, target group, host rule, or DNS record has been created.
+    resolution: Review the rendered foundation change set, create the new target through the governed AWS plan, then deploy the immutable image-digest service stack. Keep the worker slot deferred until an app-declared background workload exists.
   - id: platform-shell-readiness.aws-detail
     severity: blocking
     path: aws
-    reason: Existing staging cluster, VPC, subnets, ALB, security group, certificate, hostname, secret store, log group, and alarm names are selected, but the product platform shell target group and creation proof remain pending.
-    resolution: Record the product platform shell ECS target group and creation/inspection proof after target planning.
+    reason: The existing staging cluster, ALB, certificate, ECR repository, and machine Cognito configuration are confirmed, but platform-shell service security, target group, DNS/host route, log group, alarms, and creation proof do not exist.
+    resolution: Select and create the platform-shell ECS/ALB runtime target through a governed AWS change plan, then record creation and inspection proof.
   - id: platform-shell-readiness.smoke-proof
     severity: blocking
     path: proof
-    reason: Partial AWS read-only boundary inspection exists, but deployment smoke, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require a selected platform shell AWS target.
+    reason: A current read-only inspection confirms no platform-shell workload or operational delivery resources exist. Deployment smoke, logs/metrics proof, DNS/routing proof, dummy route proof, and rollback proof require the selected runtime target to be created.
     resolution: Complete target inspection, deploy through the governed workflow, verify health and dummy app behavior, and record rollback proof.
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke
     reason: Local server tests prove 401, 403, and success paths, but deployed protected dummy-route smoke proof does not exist yet.
     resolution: After the smoke app and staging target are deployed, record deployment smoke proof for unauthenticated, forbidden, and authorized requests.
+  - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
+    severity: blocking
+    path: auth.rate_limiting
+    reason: The shared DynamoDB limiter, ALB-only client-address resolver, explicit transport limits, and host-scoped WAF template now have local proof. They have no deployed infrastructure, negative rate-limit proof, or reviewed shared-ALB change set.
+    resolution: Review the rendered foundation change set, confirm the ALB-only security-group precondition and WAF host scope, then complete deployed rate-limit, WAF, and routing smoke evidence before public exposure.
+  - id: platform-shell-readiness.cost-allocation-and-budget
+    severity: blocking
+    path: operations.budget.cost_allocation
+    reason: Platform-shell resources carry the service=platform-shell tag, but the account has not yet activated that user-defined cost-allocation tag or proven the intended monthly budget and alert delivery.
+    resolution: After the foundation resources exist, activate the service tag in Billing and Cost Management, allow billing data to appear, configure and verify the tag-scoped monthly budget and forecast alerts, then record the evidence without placing billing data in source control.

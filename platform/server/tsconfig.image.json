@@ -46,6 +46,15 @@
       ],
       "@kanbien/platform-security": [
         "platform/security/src/index.ts"
+      ],
+      "@kanbien/platform-adapter-aws-auth-cognito": [
+        "platform/adapters/aws/auth/cognito/src/index.ts"
+      ],
+      "@kanbien/platform-adapter-aws-runtime-ecs-fargate": [
+        "platform/adapters/aws/runtime/ecs-fargate/src/index.ts"
+      ],
+      "@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter": [
+        "platform/adapters/aws/security/dynamodb-rate-limiter/src/index.ts"
       ]
     },
     "rootDir": "../..",
@@ -63,6 +72,9 @@
     "../health/src/**/*.ts",
     "../observability/src/**/*.ts",
     "../runtime/src/**/*.ts",
-    "../security/src/**/*.ts"
+    "../security/src/**/*.ts",
+    "../adapters/aws/auth/cognito/src/**/*.ts",
+    "../adapters/aws/runtime/ecs-fargate/src/**/*.ts",
+    "../adapters/aws/security/dynamodb-rate-limiter/src/**/*.ts"
   ]
 }

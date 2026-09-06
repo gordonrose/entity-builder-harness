@@ -1,0 +1,125 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.architecture.rules.concerns.package-documentation
+#   version: 1
+#   status: active
+#   layer: 03.product
+#   domain: architecture
+#   disciplines:
+#   - architecture
+#   kind: rule
+#   purpose: Define package documentation rules for navigable product code boundaries.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.rules.layers.packages-core
+#     path: docs/03.product/rules/core/layers/packages-core.yml
+#   - id: harness.architecture.rules.layers.platform
+#     path: docs/03.product/rules/platform/layers/platform.yml
+#   - id: harness.architecture.rules.layers.apps
+#     path: docs/03.product/rules/apps/layers/apps.yml
+
+id: concern.package-documentation
+title: Package documentation rules
+version: 1
+status: active
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-09-02T18:57:19Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  source_material:
+    - path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+      sha256: 099dc9bb1eb69a7977817ee4b8768d1b40898fef1402b7606335107686dd8979
+
+description: >
+  Rules for concise, truthful README documentation at package and multi-file
+  module boundaries, so readers can identify ownership without relying on a
+  large parent catalogue or repository-wide search.
+
+applies_to:
+  paths:
+    - "packages/**"
+    - "platform/**"
+    - "apps/**"
+    - "products/**"
+
+related_rulesets:
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - docs/03.product/rules/platform/layers/platform.yml
+  - docs/03.product/rules/apps/layers/apps.yml
+  - docs/06.shared/rules/concerns/dependency-direction.yml
+
+rules:
+  - id: package-documentation.root-readmes-describe-package-boundaries
+    title: Package root READMEs make boundaries visible
+    severity: warning
+    summary: >
+      A newly created, independently consumable, runnable, deployed, or public
+      package boundary needs a concise root README so its purpose, public
+      surface, responsibility map, dependency direction, and verification route
+      are visible at the point of use.
+    must:
+      - "Add a root README when creating or materially reorganising a package boundary under packages/**, platform/**, or apps/**, or a separately consumed/deployed product composition module under products/**."
+      - "State the package purpose and nearby non-goals."
+      - "State the approved public import, entry-point, or runtime-target boundary."
+      - "Include a short map of substantive files or named modules, their responsibilities, and the closest verification route."
+      - "Describe important allowed and forbidden dependency directions where the package has a layer or provider boundary."
+      - "Keep the README truthful to current paths and implemented behaviour; label future work as future."
+    must_not:
+      - "Do not treat every directory as a package boundary or require boilerplate README files beside one obvious private source file."
+      - "Do not use a parent catalogue as the only detailed explanation of a package's internal responsibilities."
+      - "Do not copy secrets, credentials, tenant/customer data, private endpoints, or production access steps into package documentation."
+      - "Do not claim provider integrations, security controls, runtime targets, or public imports that the current package does not support."
+    agent_guidance: >
+      The root README is a navigational contract, not a duplicate of the code.
+      Keep it short enough to stay current and link to deeper material when the
+      reader needs operational or architectural history.
+
+  - id: package-documentation.multi-file-modules-have-local-maps
+    title: Multi-file capability modules have a local responsibility map
+    severity: warning
+    summary: >
+      When a named capability module has several responsibility files whose
+      relationship is not obvious from names alone, a local README should
+      explain the split and the role of its public barrel.
+    must:
+      - "Add or update a local module README when splitting a named capability into multiple substantive responsibility files."
+      - "Name each substantive file's responsibility and explain the reason for the boundary where a future maintainer could otherwise merge concerns back together."
+      - "State what the module index.ts deliberately exports and link to the package README for package-level boundary and verification guidance."
+      - "Keep the local README aligned with file additions, moves, removals, and material responsibility changes."
+    must_not:
+      - "Do not add a local README solely because a directory contains a single obvious index.ts, generated output, fixture, or unambiguous private helper."
+      - "Do not duplicate the package README's full purpose, dependency, and verification sections in every child module."
+      - "Do not treat index.ts as the sole explanation of an internal multi-file responsibility layout."
+    agent_guidance: >
+      Use a local README only where it reduces real search and inference cost.
+      For example, a multi-file core security module benefits from one; a
+      one-file simple primitive normally does not.
+
+  - id: package-documentation.file-map-changes-with-code
+    title: Documentation changes with responsibility changes
+    severity: warning
+    summary: >
+      A package or module file map is reliable only when it changes with the
+      code boundary it describes.
+    must:
+      - "Update the nearest relevant README in the same change that creates, splits, moves, removes, or materially reassigns a substantive responsibility file."
+      - "Review README path references, public-boundary claims, and verification instructions against the changed package before completion."
+      - "Add documentation for existing packages incrementally as their owned capability changes; do not use this policy to justify an unreviewed repository-wide documentation rewrite."
+      - "Keep package root catalogues abridged and link them to local module READMEs when those exist."
+    must_not:
+      - "Do not leave a file map that refers to nonexistent paths, old responsibility ownership, or a removed public entry point."
+      - "Do not move the detailed package explanation into a distant parent README merely to avoid maintaining the nearest README."
+    agent_guidance: >
+      Treat a stale file map like a stale type signature: it causes confident but
+      incorrect use. The policy is review-enforced initially; add deterministic
+      presence or section checks only after real package coverage stabilises.

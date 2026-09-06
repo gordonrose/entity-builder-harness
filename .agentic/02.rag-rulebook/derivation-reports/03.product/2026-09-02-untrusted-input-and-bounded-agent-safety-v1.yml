@@ -1,0 +1,174 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for untrusted-input and bounded-agent safety guidance.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+#     path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+#   - id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+#     path: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.03.product.2026-09-02.untrusted-input-and-bounded-agent-safety-v1
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  summary: >
+    Created source material that governs code-injection resistance and bounded
+    agent capabilities through trust boundaries, typed execution interfaces,
+    independently authorized tools, permission-scoped retrieval, approval, and
+    adversarial proof.
+
+target:
+  corpus_id: corpus.03.product
+  owner_layer: 03.product
+  expected_rule_paths:
+    - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+  affected_rule_paths:
+    - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+  affected_rulesets:
+    - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+    - docs/03.product/rules/platform/concerns/identity-access-security.yml
+    - docs/03.product/rules/platform/concerns/tenancy.yml
+    - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: untrusted-input-and-bounded-agent-safety.data-is-not-authority
+      summary: Untrusted input and retrieved material remain data or evidence, never executable code, authorization policy, tool definition, or higher-priority instruction.
+      evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+    - claim_id: untrusted-input-and-bounded-agent-safety.execution-is-typed
+      summary: Interpreter boundaries require schemas, parameterization, context-specific encoding, fixed allowlists, and structured arguments instead of free-form execution.
+      evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+    - claim_id: untrusted-input-and-bounded-agent-safety.model-output-is-a-proposal
+      summary: Agents receive least-privilege named capabilities and independently authorized tools enforce verified identity, tenant, resource, permission, approval, and audit requirements.
+      evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+    - claim_id: untrusted-input-and-bounded-agent-safety.retrieval-is-scoped
+      summary: Retrieval filters access before model exposure, preserves provenance, and never constructs policy, secrets, tool definitions, or executable instructions from retrieved text.
+      evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+    - claim_id: untrusted-input-and-bounded-agent-safety.consequential-actions-and-proof
+      summary: Consequential actions require explicit bounded policy and approval; adversarial negative cases or a governed capability gap prove the boundary.
+      evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/03.product/rules/platform/concerns/identity-access-security.yml
+      - docs/03.product/rules/platform/concerns/tenancy.yml
+      - docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml
+      - docs/03.product/rules/concerns/
+      - .agentic/03.product/plans/implementation/product-harness-foundation.md
+      - .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+    items: []
+  drift:
+    status: expected
+    items:
+      - type: cross-cutting-concern
+        summary: The new canonical concern supplements existing identity/access, tenancy, and audit rules without duplicating their ownership.
+      - type: product-workflow
+        summary: A focused workflow makes the policy actionable for future agent or interpreter-boundary changes without claiming a generic agent runtime exists.
+      - type: retrieval-coverage
+        summary: The new source and rule require active source projection, generated recognition material, and focused retrieval-selector proof.
+  ownership:
+    status: ok
+    notes:
+      - The policy spans packages, platform, apps, products, and product harness, so it belongs in docs/03.product/rules/concerns rather than a platform-only ruleset.
+      - The source belongs in the product source-material corpus; review and derivation evidence remain in the RAG/rulebook governance layer.
+      - The workflow belongs in .agentic/03.product because it governs future product/runtime implementation choices; it does not provide or select a runtime provider.
+      - Existing identity, tenancy, audit, adapter, and deployment rules retain their own normative ownership.
+
+proposed_updates:
+  rules:
+    - docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+  rule_packs: []
+  recognition_sources:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  notes:
+    - The new concern is the normative source of truth; existing layer rules reference it without duplicating its requirements.
+    - The focused workflow adds task guidance but does not create a planned generic agent runtime, approval service, or static injection scanner.
+
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check --source all
+    - bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check --source all
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current
+      result: passed
+    - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: product owner through explicit chat approval
+  reviewed_at_utc: "2026-09-02T22:06:35Z"
+  notes:
+    - The user explicitly asked to implement the canonical policy and harness enforcement path before the next lesson.
+    - The policy is governance and proof only; it does not claim implementation of unavailable runtime capabilities.

@@ -26,6 +26,32 @@ use case, or another app-owned structure. Platform contracts do not prescribe
 that structure. The platform consumes the approved public app mount module and
 registered contributions, not app-internal files.
 
+## Source map
+
+The package's only public import is `@kanbien/platform-contracts`. Its
+`src/index.ts` barrel deliberately re-exports the approved contracts below; it
+does not create public topic subpath imports. The topic files make the internal
+responsibilities easier to scan while preserving that one package boundary.
+The [local source map](src/README.md) explains why those responsibilities stay
+separate.
+
+| File | Responsibility | Verified by |
+| --- | --- | --- |
+| `src/errors.ts` | Stable contract error vocabulary and error constructors, including app-namespace ownership mismatches. | `npm run platform:contracts:check` |
+| `src/identifiers.ts` | Branded app, route, job, health, and API-version names plus their constructors. | `npm run platform:contracts:check` |
+| `src/flags.ts` | Feature-flag name, context, reader, and fixed test reader. | `npm run platform:contracts:check` |
+| `src/contexts.ts` | Composed runtime, request, and job contexts. | `npm run platform:contracts:check` |
+| `src/routes.ts` | HTTP request/response, route registration, and route auth, tenant, and resource-authorization declarations. | `npm run platform:contracts:check` |
+| `src/jobs.ts` | Job handler and job-registration declarations. | `npm run platform:contracts:check` |
+| `src/app.ts` | App mount, registry, permission, health, lifecycle, and mount-dependency declarations. | `npm run platform:contracts:check` |
+| `src/validation.ts` | Cross-declaration registration validation and reserved-route rules; it does not execute runtime work. | `npm run platform:contracts:check` |
+| `src/index.ts` | Deliberate public barrel only. | `npm run platform:contracts:check` |
+
+Dependencies flow one way: stable errors and identifiers first; flags,
+contexts, and declarations next; cross-declaration validation after that; and
+the public barrel last. Internal topic files may use local relative imports or
+public `@kanbien/core` exports only.
+
 ## Optional Tenant And Resource Authorization
 
 Authenticated routes may opt into `tenant: "optional"` or

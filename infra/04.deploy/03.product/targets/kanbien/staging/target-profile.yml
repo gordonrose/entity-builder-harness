@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 1
+#   version: 4
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -34,14 +34,27 @@ product:
       package: "@kanbien/app-platform-smoke"
       route_base_path: /smoke
       declared_permissions:
-        - smoke:read
+        - platform-smoke.smoke:read
       required_config:
         - PLATFORM_SMOKE_APP_NAME
 deployment:
   service_id: platform-shell
   runtime_target: aws.ecs-fargate.platform-shell-staging
   mutation_authorized_by_profile: false
-  first_mutation_candidate: create-ecr-repository
+  first_mutation_candidate: create-platform-shell-foundation-stack
+  cloudformation:
+    foundation_stack: kanbien-staging-platform-shell-foundation
+    foundation_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+    service_stack: kanbien-staging-platform-shell-service
+    service_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    service_execution_role_name: kanbien-staging-platform-shell-service-deploy
+    service_execution_role_arn: arn:aws:iam::337159794548:role/kanbien-staging-platform-shell-service-deploy
+    first_apply_capabilities:
+      - CAPABILITY_NAMED_IAM
+    validation:
+      static_policy_gate: npm run platform:shell:infrastructure:check
+      aws_template_validation: aws cloudformation validate-template
+      execution_gate: reviewed-cloudformation-change-set-and-explicit-current-chat-approval
   execution_policy:
     style: hybrid-bootstrap-manual-then-github-oidc
     bootstrap:
@@ -49,14 +62,16 @@ deployment:
       aws_profile: kanbien-dev
       governing_workflow: .agentic/aws/workflows/execute-approved-aws-change.md
       allowed_initial_mutations:
-        - create-ecr-repository
-        - create-github-oidc-deploy-role
+        - create-platform-shell-foundation-stack
+        - create-platform-shell-runtime-service
     repeatable_deploy:
       mutation_style: github-actions-oidc
       workflow: .github/workflows/deploy-platform-shell-staging.yml
       approval: github-environment-manual
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
+      role_policy_deployment_status: pending-governed-iam-policy-update
 source:
   provider: github
   repository: gordonrose/entity-builder-harness
@@ -161,10 +176,12 @@ aws:
   alb:
     arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
     reuse_existing: true
-    listener_https: pending
+    listener_https: arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750
+    canonical_hosted_zone_id: Z32O12XQLNTSW2
     certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
-    target_group: pending
+    target_group: kanbien-stg-platform-shell
     host_rule: staging.platform.kanbien.com
+    host_rule_priority: 20
   route53:
     hosted_zone_id: Z0909415EFV969Z95D5F
     hostname: staging.platform.kanbien.com
@@ -190,7 +207,7 @@ auth:
     identifier: platform-shell
     scopes:
       - name: smoke.read
-        maps_to_permission: smoke:read
+        maps_to_permission: platform-smoke.smoke:read
   token_validation:
     mode: jwt-jwks
     token_use: access
@@ -203,33 +220,98 @@ auth:
     source: target-profile
     scope_permissions:
       platform-shell/smoke.read:
-        - smoke:read
+        - platform-smoke.smoke:read
     group_permissions: {}
     claim_permissions: {}
 cors:
   source: target-profile-env
   env: PLATFORM_CORS_ALLOWLIST
-  allow_credentials: true
+  allow_credentials: false
   origin_reflection: allowlist-match-only
   allowed_origins:
-    - https://kanbien.com
-  allowed_origin_patterns:
-    - https://*.kanbien.com
+    - https://staging.platform.kanbien.com
   local_dev_origins:
     - http://localhost:3000
+rate_limiting:
+  keying: principal-token-or-target-resolved-client-address
+  generic_server_peer_address: socket-peer-only
+  process_local_baseline: bounded-development-and-private-use-only
+  shared_adapter:
+    package: "@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter"
+    provider: dynamodb
+    table_name: kanbien-staging-platform-shell-rate-limits
+    table_key_policy: versioned-sha256-rate-key-and-fixed-window
+    ttl_attribute: expiresAt
+    failure_policy: fail-closed-service-unavailable
+  trusted_ingress_client_address_policy:
+    package: "@kanbien/platform-adapter-aws-runtime-ecs-fargate"
+    mode: alb-security-group-only
+    forwarded_header: x-forwarded-for
+    accepted_address: final-alb-appended-valid-ip
+    network_precondition: service-security-group-allows-port-3000-from-alb-security-group-only
+  target_transport_limits:
+    max_request_body_bytes: 1048576
+    max_header_bytes: 16384
+    max_headers_count: 100
+    headers_timeout_ms: 10000
+    request_timeout_ms: 30000
+    keep_alive_timeout_ms: 5000
+    handler_timeout_ms: 30000
+    shutdown_drain_timeout_ms: 30000
+    max_concurrent_requests: 100
+    max_requests_per_socket: 1000
+  edge_protection:
+    provider: aws-wafv2
+    scope: staging.platform.kanbien.com-only
+    rate_rule: ip-300-per-five-minutes
+    alb_request_body_inspection_max_bytes: 8192
+    application_request_body_limit_bytes: 1048576
+    body_protection_note: ALB WAF inspection is capped at 8 KiB, so platform transport limits and route validation remain mandatory.
+    managed_rule_groups:
+      - AWSManagedRulesAmazonIpReputationList
+      - AWSManagedRulesCommonRuleSet
+      - AWSManagedRulesKnownBadInputsRuleSet
+  public_exposure_requirements:
+    shared_adapter: required
+    trusted_ingress_client_address_policy: required
+    target_transport_limits: required
+    edge_protection: required
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager
   committed_secret_values: false
   non_secret_env:
+    PLATFORM_DEPLOYMENT_EXPOSURE: public
     PLATFORM_AUTH_PROVIDER: cognito
-    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["smoke:read"]}'
-    PLATFORM_CORS_ALLOWLIST: "https://kanbien.com,https://*.kanbien.com,http://localhost:3000"
+    PLATFORM_AUTH_COGNITO_REGION: eu-west-1
+    PLATFORM_AUTH_COGNITO_USER_POOL_ID: eu-west-1_EQaXioA1n
+    PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: 4n7kuqstbvb97ur3btbur8afjt
+    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}'
+    PLATFORM_CORS_ALLOWLIST: https://staging.platform.kanbien.com
+    PLATFORM_HEALTH_LIVEZ_EXPOSURE: public
+    PLATFORM_HEALTH_READYZ_EXPOSURE: authenticated
+    PLATFORM_RATE_LIMIT_PROVIDER: dynamodb
+    PLATFORM_RATE_LIMIT_DYNAMODB_TABLE: kanbien-staging-platform-shell-rate-limits
+    PLATFORM_RATE_LIMIT_DYNAMODB_REGION: eu-west-1
+    PLATFORM_RATE_LIMIT_LIMIT: "120"
+    PLATFORM_RATE_LIMIT_WINDOW_MS: "60000"
+    PLATFORM_TRUSTED_INGRESS_MODE: alb-security-group-only
+    PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES: "1048576"
+    PLATFORM_SERVER_MAX_HEADER_BYTES: "16384"
+    PLATFORM_SERVER_MAX_HEADERS_COUNT: "100"
+    PLATFORM_SERVER_HEADERS_TIMEOUT_MS: "10000"
+    PLATFORM_SERVER_REQUEST_TIMEOUT_MS: "30000"
+    PLATFORM_SERVER_KEEP_ALIVE_TIMEOUT_MS: "5000"
+    PLATFORM_SERVER_HANDLER_TIMEOUT_MS: "30000"
+    PLATFORM_SERVER_SHUTDOWN_DRAIN_TIMEOUT_MS: "30000"
+    PLATFORM_SERVER_MAX_CONCURRENT_REQUESTS: "100"
+    PLATFORM_SERVER_MAX_REQUESTS_PER_SOCKET: "1000"
     PLATFORM_SMOKE_APP_NAME: Kanbien Platform Smoke
   secret_refs:
     cognito_machine_client_secret:
       name: kanbien/staging/platform-shell/cognito-machine-client
       arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
+      delivery: controlled-smoke-token-acquisition-only-not-ecs-task-environment
 observability:
   log_group: /ecs/kanbien-staging-platform-shell
   log_retention_days: 14
@@ -242,6 +324,7 @@ observability:
     - ecs-running-count-mismatch
     - ecs-high-cpu
     - ecs-high-memory
+  waf_request_logging: deferred-until-an-observability-owned-redaction-and-retention-profile-is-implemented
 operations:
   owner: Gordon Rose
   escalation_path: Gordon Rose / LLM-assisted operations
@@ -258,6 +341,12 @@ operations:
     alert_destination:
       type: email
       value: gordonrose164@hotmail.com
+    cost_allocation:
+      resource_tag_key: service
+      resource_tag_value: platform-shell
+      billing_report_dimension: user:service
+      activation_status: pending-account-billing-activation
+      budget_proof_requirement: Tag-scoped budget and alert configuration are valid only after the account activates the user-defined service cost-allocation tag and billing data becomes available.
   rollback:
     authority: Gordon Rose
     assisted_by: LLM

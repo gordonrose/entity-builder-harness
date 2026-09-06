@@ -1,0 +1,164 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: derivation-report
+#   purpose: Record source-to-rule derivation for package documentation guidance.
+#   portability:
+#     class: reusable
+#     targets:
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
+#   used_by:
+#   - id: harness.architecture.source-material.package-documentation-v1
+#     path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+#   - id: harness.architecture.rules.concerns.package-documentation
+#     path: docs/03.product/rules/concerns/package-documentation.yml
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.03.product.2026-09-02.package-documentation-v1
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  summary: >
+    Created source material that establishes concise root README and selective
+    multi-file module README expectations for product code boundaries. The
+    source is accepted through the package-documentation OKF review record.
+
+target:
+  corpus_id: corpus.03.product
+  owner_layer: 03.product
+  expected_rule_paths:
+    - docs/03.product/rules/concerns/package-documentation.yml
+  affected_rule_paths:
+    - docs/03.product/rules/concerns/package-documentation.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+  affected_rulesets:
+    - docs/03.product/rules/concerns/package-documentation.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+  affected_evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: package-documentation.root-readme-at-a-package-boundary
+      summary: New or materially reorganised package boundaries need concise root README documentation of purpose, public surface, responsibility map, dependency direction, and verification.
+      evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+    - claim_id: package-documentation.local-readme-for-multi-file-capability
+      summary: A named multi-file capability module needs a local README only when it reduces genuine search and inference cost.
+      evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+    - claim_id: package-documentation.barrel-readme-and-tests-have-distinct-roles
+      summary: index.ts defines supported exports, README explains responsibility layout, and tests prove behaviour; none replaces the others.
+      evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+    - claim_id: package-documentation-maintenance-is-same-change
+      summary: The nearest relevant README must be updated when a substantive responsibility file changes, with security-safe and incremental adoption constraints.
+      evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/03.product/rules/core/layers/packages-core.yml
+      - docs/03.product/rules/platform/layers/platform.yml
+      - docs/03.product/rules/apps/layers/apps.yml
+      - docs/03.product/rules/concerns/
+      - packages/core/README.md
+      - platform/**/README.md
+    items: []
+  drift:
+    status: expected
+    items:
+      - type: layer-rule-reference
+        summary: Core, platform, and app layer rules now reference the single canonical concern instead of carrying independent README conventions.
+      - type: retrieval-coverage
+        summary: New source and rule require a source projection, generated recognition material, and a focused selector fixture.
+      - type: staged-adoption
+        summary: Existing package documentation is not retroactively rewritten; coverage grows with material package or capability changes.
+  ownership:
+    status: ok
+    notes:
+      - The policy is product-wide architecture guidance, so it belongs in docs/03.product/rules/concerns rather than a core-only or platform-only ruleset.
+      - The source material belongs in docs/03.product/source-material and review/derivation evidence belongs in .agentic/02.rag-rulebook.
+      - The rule governs package documentation; individual package README files remain adjacent to the packages they explain.
+
+proposed_updates:
+  rules:
+    - docs/03.product/rules/concerns/package-documentation.yml
+    - docs/03.product/rules/core/layers/packages-core.yml
+    - docs/03.product/rules/platform/layers/platform.yml
+    - docs/03.product/rules/apps/layers/apps.yml
+  rule_packs: []
+  recognition_sources:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations:
+    - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  notes:
+    - The new concern owns the normative policy; layer rules link to it without duplicating the requirements.
+    - A deterministic README presence checker is intentionally deferred until real package coverage stabilises.
+
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+    - .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+    - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all
+    - bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check --source all
+    - bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --write-all
+      result: passed
+    - command: bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check --source all
+      result: passed
+    - command: bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: product owner through explicit chat approval
+  reviewed_at_utc: "2026-09-02T18:57:19Z"
+  notes:
+    - The user explicitly approved creating this policy and its governed source-to-rule artifacts.
+    - The policy is review-enforced initially and does not claim a completed repository-wide README rollout.

@@ -22,3 +22,6 @@ used_by:
   do not use for real implementation work.
 - `platform-runtime-implementation.md` - govern platform runtime shell
   implementation slices before real product app work begins.
+- `untrusted-input-and-bounded-agent-safety.md` - govern changes that add
+  untrusted-input interpreter boundaries, LLM/agent/retrieval capability, or
+  model-facing tools before implementation proceeds.

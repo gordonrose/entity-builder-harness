@@ -50,9 +50,9 @@ async function main(): Promise<void> {
   });
   equal(records[1]?.correlationId, "corr-1");
   deepEqual(records[1]?.fields?.["headers"], { cookie: "[REDACTED]", accept: "json" });
-  deepEqual(records[1]?.fields?.["error"], { name: "Error", message: "nope", code: "E_NOPE" });
+  deepEqual(records[1]?.fields?.["error"], { name: "Error", code: "E_NOPE" });
   equal(platformErrorClass(Object.assign(new Error("nope"), { code: "E_NOPE" })), "E_NOPE");
-  deepEqual(normalizePlatformError("plain"), { message: "plain" });
+  deepEqual(normalizePlatformError("plain"), { type: "non-error-value" });
 
   const points: MetricPoint[] = [];
   const metrics: Metrics = {

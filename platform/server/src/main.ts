@@ -9,12 +9,15 @@ import {
 } from "@kanbien/platform-contracts";
 import {
   type PlatformAuthenticationHook,
+  type PlatformRateLimiter,
 } from "@kanbien/platform-security";
 import {
   createPlatformServerShell,
   type PlatformServerError,
   type PlatformServerHandle,
+  type PlatformClientAddressResolver,
   type PlatformServerShell,
+  type PlatformServerTransportOptions,
 } from "./index";
 
 export interface PlatformServerProcessOptions {
@@ -26,6 +29,9 @@ export interface PlatformServerProcessOptions {
   readonly host?: string;
   readonly installSignalHandlers?: boolean;
   readonly auth?: PlatformAuthenticationHook;
+  readonly rateLimiter?: PlatformRateLimiter;
+  readonly clientAddressResolver?: PlatformClientAddressResolver;
+  readonly transport?: PlatformServerTransportOptions;
 }
 
 export interface PlatformServerProcess {
@@ -44,6 +50,9 @@ export async function startPlatformServerProcess(
     apps: options.apps ?? [],
     deps,
     ...(options.auth === undefined ? {} : { auth: options.auth }),
+    ...(options.rateLimiter === undefined ? {} : { rateLimiter: options.rateLimiter }),
+    ...(options.clientAddressResolver === undefined ? {} : { clientAddressResolver: options.clientAddressResolver }),
+    ...(options.transport === undefined ? {} : { transport: options.transport }),
     ...(env["PLATFORM_CORS_ORIGIN"] === undefined ? {} : { corsOrigin: env["PLATFORM_CORS_ORIGIN"] }),
     ...(env["PLATFORM_CORS_ALLOWLIST"] === undefined ? {} : { corsAllowlist: csvEnv(env["PLATFORM_CORS_ALLOWLIST"]) }),
     healthExposure: {
@@ -69,16 +78,36 @@ export async function startPlatformServerProcess(
     };
   }
 
-  const handle = await shell.value.listen({
-    port: options.port ?? numberFromEnv(env, "PORT", 3000),
-    host: options.host ?? env["HOST"] ?? "0.0.0.0",
-  });
+  let handle: PlatformServerHandle;
+  try {
+    handle = await shell.value.listen({
+      port: options.port ?? numberFromEnv(env, "PORT", 3000),
+      host: options.host ?? env["HOST"] ?? "0.0.0.0",
+    });
+  } catch {
+    await shell.value.lifecycle.shutdown();
+    return {
+      ok: false,
+      error: {
+        code: "PLATFORM_SERVER_START_FAILED",
+        defaultMessage: "Platform server failed to listen.",
+        status: 500,
+      },
+    };
+  }
   const processHandle = {
     shell: shell.value,
     handle,
     close: async () => {
-      await handle.close();
-      await shell.value.lifecycle.shutdown();
+      const draining = shell.value.lifecycle.beginDrain();
+      if (!draining.ok) {
+        logger.write({ level: "warn", message: "platform.server.drain_failed", fields: { code: draining.error.code } });
+      }
+      try {
+        await handle.close();
+      } finally {
+        await shell.value.lifecycle.shutdown();
+      }
     },
   };
 

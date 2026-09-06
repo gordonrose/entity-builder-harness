@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-deploy-readiness
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -518,8 +518,10 @@ def validate(data: dict[str, Any]) -> None:
         block("auth.health_exposure.readyz", "readiness exposure must be explicit", "Set readiness exposure to public or authenticated.")
     if get(data, "auth.cors.allowlist_source") != "target-profile-env":
         block("auth.cors.allowlist_source", "CORS allowlist must come from target profile or equivalent environment config", "Set CORS allowlist source to target-profile-env.")
-    if get(data, "auth.rate_limiting.keying") != "principal-token-or-forwarded-ip":
-        block("auth.rate_limiting.keying", "rate limits must not use one global in-memory bucket", "Use principal, token/session identity, trusted forwarded IP, or an approved fallback.")
+    if get(data, "auth.rate_limiting.keying") != "principal-token-or-target-resolved-client-address":
+        block("auth.rate_limiting.keying", "rate-limit keying must use a principal, token/session identity, or target-resolved trusted client address", "Use principal-token-or-target-resolved-client-address and keep unverified forwarded headers out of generic server code.")
+    if get(data, "auth.rate_limiting.generic_server_peer_address") != "socket-peer-only":
+        block("auth.rate_limiting.generic_server_peer_address", "generic server transport must not trust caller-controlled forwarded-address headers", "Record socket-peer-only; select forwarded-address trust only through a target-owned ingress policy.")
     require_bool_ready(data, "auth.rate_limiting.local_tests_passed")
     if get(data, "auth.secrets.committed_secret_values") is not False:
         block("auth.secrets.committed_secret_values", "secret values must not be committed", "Keep Cognito secrets and provider credentials in the target secret store or environment.")
@@ -568,6 +570,14 @@ def validate(data: dict[str, Any]) -> None:
         require_string(data, "auth.permission_mapping.declared_app_permissions_source")
         if is_pending(get(data, "auth.cors.allowed_origins")):
             block("auth.cors.allowed_origins", "ready public targets need a concrete CORS allowlist", "Record one or more allowed origins before public deployment.")
+        for path in (
+            "auth.rate_limiting.shared_adapter.status",
+            "auth.rate_limiting.trusted_ingress_client_address_policy.status",
+            "auth.rate_limiting.target_transport_limits.status",
+            "auth.rate_limiting.edge_protection.status",
+        ):
+            if get(data, path) != "implemented":
+                block(path, "ready public targets require implemented rate-limit and ingress protection", "Select and prove the target-specific shared limiter, ingress address policy, transport limits, and edge protection before setting readiness to ready.")
         require_string(data, "auth.secrets.source")
     else:
         if get(data, "proof.image_smoke") != "passed-local":

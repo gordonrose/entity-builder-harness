@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 807
-  term_count: 1626
+  indexed_artifacts: 829
+  term_count: 1670
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3696,6 +3696,30 @@ terms:
   canonical_id: rag-rulebook.derivation-report.03-product-platform.2026-07-10-platform-app-mount-boundary-v1
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-report.04-deploy.2026-06-26-mcp-server-deployment
   category: artifact-id
   match_type: exact
@@ -3936,6 +3960,18 @@ terms:
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.intent-form-planning-mcp-server
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml
   confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.package-documentation
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml
+  confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.packages-core-audit-contract
   category: artifact-id
   match_type: exact
@@ -4079,6 +4115,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-app-mount-boundary
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-app-mount-boundary.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.platform-infra-capability-layering
   category: artifact-id
@@ -4751,6 +4799,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.request-context-exact-corpus-cross-session
   evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/request-context-exact-corpus-cross-session.yml
+  confidence_weight: 1
+- term: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.evaluation.retrieval-selector.v1.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml
   confidence_weight: 1
 - term: rag-rulebook.evaluation.retrieval-selector.v1.user-intent-context-packet-validation-explain
   category: artifact-id
@@ -5561,6 +5621,42 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.skills.ab-context-evaluation
   evidence_path: .agentic/02.rag-rulebook/skills/ab-context-evaluation.md
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product-platform.2026-09-01-platform-contract-identifier-naming
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-package-documentation-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.03-product.2026-09-02-untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml
   confidence_weight: 1
 - term: rag-rulebook.source-material-review.04-deploy.github-actions-to-ecs-fargate.2026-06-29
   category: artifact-id
@@ -7206,6 +7302,30 @@ terms:
   canonical_id: harness.architecture.plan.platform-runtime-implementation
   evidence_path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
   confidence_weight: 1
+- term: product.plan.product-harness-foundation
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.product-harness-foundation
+  evidence_path: .agentic/03.product/plans/implementation/product-harness-foundation.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/product-harness-foundation.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.product-harness-foundation
+  evidence_path: .agentic/03.product/plans/implementation/product-harness-foundation.md
+  confidence_weight: 1
+- term: product.plan.production-reference-target-baseline
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.production-reference-target-baseline
+  evidence_path: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.production-reference-target-baseline
+  evidence_path: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  confidence_weight: 1
 - term: product.plan.tenant-resource-authorization-platform-seam
   category: artifact-id
   match_type: exact
@@ -7229,6 +7349,18 @@ terms:
   match_type: exact
   canonical_id: product.migration-plan.agentic-product-namespace
   evidence_path: .agentic/03.product/plans/migration/agentic-product-namespace.md
+  confidence_weight: 1
+- term: product.standard.identity-security-baseline.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.standard.identity-security-baseline.v1
+  evidence_path: .agentic/03.product/standards/identity-security-baseline.v1.md
+  confidence_weight: 1
+- term: .agentic/03.product/standards/identity-security-baseline.v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.standard.identity-security-baseline.v1
+  evidence_path: .agentic/03.product/standards/identity-security-baseline.v1.md
   confidence_weight: 1
 - term: product.workflows.readme
   category: artifact-id
@@ -7265,6 +7397,18 @@ terms:
   match_type: exact
   canonical_id: product.workflow.platform-runtime-implementation
   evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
+  confidence_weight: 1
+- term: product.workflow.untrusted-input-and-bounded-agent-safety
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.workflow.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  confidence_weight: 1
+- term: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.workflow.untrusted-input-and-bounded-agent-safety
+  evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
   confidence_weight: 1
 - term: product.corpus.readme
   category: artifact-id
@@ -7445,6 +7589,30 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.rules.concerns.i18n-localization
   evidence_path: docs/03.product/rules/concerns/i18n-localization.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.package-documentation
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.package-documentation
+  evidence_path: docs/03.product/rules/concerns/package-documentation.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/concerns/package-documentation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.package-documentation
+  evidence_path: docs/03.product/rules/concerns/package-documentation.yml
+  confidence_weight: 1
+- term: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+  category: rule-id
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+  evidence_path: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+  confidence_weight: 1
+- term: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.rules.concerns.untrusted-input-and-bounded-agent-safety
+  evidence_path: docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml
   confidence_weight: 1
 - term: harness.architecture.rules.concerns.validation-api-errors
   category: rule-id
@@ -7757,6 +7925,30 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.guides.markdown.kanbien-typescript-architecture-guide
   evidence_path: docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.package-documentation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.package-documentation-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.package-documentation-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/package-documentation-v1.md
+  confidence_weight: 1
+- term: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  confidence_weight: 1
+- term: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
+  evidence_path: docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md
   confidence_weight: 1
 - term: product.source-material.platform.readme
   category: artifact-id
@@ -8262,6 +8454,18 @@ terms:
   canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
   evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
   confidence_weight: 1
+- term: aws.plan.kanbien-staging-platform-shell-initial-deployment
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-initial-deployment
+  evidence_path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-initial-deployment
+  evidence_path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  confidence_weight: 1
 - term: aws.runbooks.platform-shell-staging-rollback
   category: artifact-id
   match_type: exact
@@ -8358,6 +8562,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.image.readme
   evidence_path: infra/04.deploy/03.product/image/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.readme
   category: artifact-id
   match_type: exact
@@ -8429,6 +8645,18 @@ terms:
   match_type: exact
   canonical_id: deploy.script.build-platform-shell-image
   evidence_path: scripts/04.deploy/build-platform-shell-image/script.sh
+  confidence_weight: 1
+- term: deploy.script.build-platform-shell-image.verify-runtime-payload
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
+  evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
+  evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
   confidence_weight: 1
 - term: deploy.script.smoke-test-platform-shell-image.readme
   category: artifact-id
@@ -8525,6 +8753,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
   evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-infrastructure.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-infrastructure/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-infrastructure
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id
@@ -9605,6 +9857,18 @@ terms:
   match_type: exact
   canonical_id: education.teaching-notes.0001-evidence-before-judgment
   evidence_path: docs/education/teaching-notes/0001-evidence-before-judgment.md
+  confidence_weight: 1
+- term: education.teaching-notes.0002-architecture-learning-handbook
+  category: artifact-id
+  match_type: exact
+  canonical_id: education.teaching-notes.0002-architecture-learning-handbook
+  evidence_path: docs/education/teaching-notes/0002-architecture-learning-handbook.md
+  confidence_weight: 1
+- term: docs/education/teaching-notes/0002-architecture-learning-handbook.md
+  category: file-path
+  match_type: exact
+  canonical_id: education.teaching-notes.0002-architecture-learning-handbook
+  evidence_path: docs/education/teaching-notes/0002-architecture-learning-handbook.md
   confidence_weight: 1
 - term: education.title-banks.ai-orientation-title-bank
   category: artifact-id

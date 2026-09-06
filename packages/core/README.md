@@ -274,6 +274,14 @@ secret storage, encryption providers, IAM, KMS keys, rate limits, middleware,
 or concrete hashing algorithms. Apps decide product policy, platform enforces
 runtime policy, and infra provisions cloud security resources.
 
+Within the module, `classification.ts` owns data sensitivities and
+sensitive-value kinds, `secrets.ts` owns `SecretString`, `hashing.ts` owns
+hash contracts and the `Hasher` port, and `policy.ts` owns policy evaluators,
+decisions, violations, and policy ids. `residency.ts` is the reserved home for
+the first real data-residency contract rather than an empty placeholder. The
+module's `index.ts` is the intentional public entry point; consumers should
+continue to import from `@kanbien/core/security`, not internal file paths.
+
 ## Tenancy Contracts
 
 `tenancy` defines the shared way core consumers name tenant ownership and
