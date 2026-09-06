@@ -40,6 +40,7 @@ permissions:
   contents: read
   id-token: write
   attestations: write
+  artifact-metadata: write
 
 concurrency:
   group: platform-shell-staging
@@ -103,6 +104,7 @@ jobs:
           npm run platform:server:image-runtime-check
           npm run product:kanbien-platform:check
           npm run platform:shell:infrastructure:check
+          npm run platform:shell:deployment-workflow:check
           bash scripts/04.deploy/validate-container-boundaries/script.sh
 
       - name: Verify blocked deploy-readiness manifest
@@ -227,6 +229,92 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "uri=$ECR_URI@$digest" >> "$GITHUB_OUTPUT"
 
+      - name: Read ECR scan finding counts
+        if: ${{ inputs.publish_image }}
+        id: scan
+        run: |
+          set -euo pipefail
+
+          if ! aws ecr wait image-scan-complete \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-id imageDigest="${{ steps.image.outputs.digest }}"; then
+            echo "Image scan did not complete for the immutable image digest." >&2
+            exit 1
+          fi
+
+          scan_status="$(
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --query "imageScanStatus.status" \
+              --output text
+          )"
+          critical="$(
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --query "imageScanFindings.findingSeverityCounts.CRITICAL || \`0\`" \
+              --output text
+          )"
+          high="$(
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --query "imageScanFindings.findingSeverityCounts.HIGH || \`0\`" \
+              --output text
+          )"
+
+          critical="${critical:-0}"
+          high="${high:-0}"
+          echo "status=$scan_status" >> "$GITHUB_OUTPUT"
+          echo "critical=$critical" >> "$GITHUB_OUTPUT"
+          echo "high=$high" >> "$GITHUB_OUTPUT"
+
+          if [ "$scan_status" != "COMPLETE" ]; then
+            echo "Image scan did not report COMPLETE: $scan_status" >&2
+            exit 1
+          fi
+          if [ "$critical" != "0" ]; then
+            echo "Image scan found CRITICAL vulnerabilities: $critical" >&2
+            exit 1
+          fi
+          if [ "$high" != "0" ]; then
+            echo "Image scan found HIGH vulnerabilities: $high. Fix them before deployment; this initial public target has no risk-acceptance mechanism." >&2
+            exit 1
+          fi
+
+      - name: Generate image SBOM
+        if: ${{ inputs.publish_image }}
+        id: sbom
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.image.outputs.uri }}
+          format: spdx-json
+          output-file: ${{ runner.temp }}/platform-shell.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest image provenance
+        if: ${{ inputs.publish_image }}
+        id: provenance-attestation
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
+
+      - name: Attest image SBOM
+        if: ${{ inputs.publish_image }}
+        id: sbom-attestation
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/platform-shell.sbom.spdx.json
+          push-to-registry: true
+          create-storage-record: false
+
       - name: Verify the manually governed foundation stack
         if: ${{ inputs.publish_image }}
         run: |
@@ -267,51 +355,6 @@ jobs:
             exit 1
           fi
 
-      - name: Read ECR scan finding counts
-        if: ${{ inputs.publish_image }}
-        id: scan
-        run: |
-          set +e
-          aws ecr wait image-scan-complete \
-            --repository-name "$ECR_REPOSITORY" \
-            --image-id imageDigest="${{ steps.image.outputs.digest }}"
-          wait_status=$?
-          set -e
-
-          scan_status="$(
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --query "imageScanStatus.status" \
-              --output text 2>/dev/null || true
-          )"
-          critical="$(
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --query "imageScanFindings.findingSeverityCounts.CRITICAL || \`0\`" \
-              --output text 2>/dev/null || true
-          )"
-          high="$(
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --query "imageScanFindings.findingSeverityCounts.HIGH || \`0\`" \
-              --output text 2>/dev/null || true
-          )"
-
-          critical="${critical:-0}"
-          high="${high:-0}"
-          echo "wait-status=$wait_status" >> "$GITHUB_OUTPUT"
-          echo "status=${scan_status:-unavailable}" >> "$GITHUB_OUTPUT"
-          echo "critical=$critical" >> "$GITHUB_OUTPUT"
-          echo "high=$high" >> "$GITHUB_OUTPUT"
-
-          if [ "$critical" != "0" ]; then
-            echo "Image scan found CRITICAL vulnerabilities: $critical" >&2
-            exit 1
-          fi
-
       - name: Record deployment summary
         run: |
           {
@@ -328,6 +371,9 @@ jobs:
               echo "- ECR scan status: ${{ steps.scan.outputs.status }}"
               echo "- ECR scan CRITICAL: ${{ steps.scan.outputs.critical }}"
               echo "- ECR scan HIGH: ${{ steps.scan.outputs.high }}"
+              echo "- SBOM: attested from SPDX JSON before deployment"
+              echo "- Provenance attestation: ${{ steps.provenance-attestation.outputs.attestation-url }}"
+              echo "- SBOM attestation: ${{ steps.sbom-attestation.outputs.attestation-url }}"
             else
               echo "- Image publish: skipped by workflow input"
             fi

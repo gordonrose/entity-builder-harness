@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 7
+version: 8
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -83,13 +83,16 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    exist and passed AWS template validation. The reviewed foundation CREATE
    change set executed successfully with 16 additions and no modifications or
    deletions. The foundation stack exists; the service does not.
-4. The GitHub workflow validates templates, publishes an immutable image,
-   deploys only the service stack through a dedicated CloudFormation execution
-   role, and performs public liveness plus unauthenticated-route smoke. On
-   2026-09-06, the live GitHub role was updated and verified against the
-   reviewed narrowed CloudFormation-policy boundary. The foundation created the
-   service deployment role and public TLS is now verified; the path still needs
-   a remote-main workflow run and service deployment proof.
+4. The GitHub workflow validates templates, publishes an immutable image, then
+   waits for a complete ECR scan and blocks both critical and high findings.
+   It generates an SPDX SBOM and writes provenance plus SBOM attestations for
+   the exact image digest before deploying only the service stack through a
+   dedicated CloudFormation execution role. It then performs public liveness
+   plus unauthenticated-route smoke. On 2026-09-06, the live GitHub role was
+   updated and verified against the reviewed narrowed CloudFormation-policy
+   boundary. The foundation created the service deployment role and public TLS
+   is now verified; the path still needs a remote-main workflow run and service
+   deployment proof.
 5. The deployed WAF, rate-limit table, alert subscription, host route, and
    public TLS have configuration or external-verification proof. A deployed
    negative-rate-limit test, application route proof, and a rollback exercise
