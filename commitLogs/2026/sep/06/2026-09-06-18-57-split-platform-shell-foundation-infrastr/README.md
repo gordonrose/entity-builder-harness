@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-06T17:57:15Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-06T18:45:53Z
+latest_commit_sha: e39c691
+chat_duration: 2918s (00:00:48:38)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -102,13 +102,30 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: The foundation split, deterministic renderer, and fixture repair are covered by the staging deployment plan, the target profile, and readiness evidence; they preserve the reviewed single-stack resource graph without adding a new platform policy.
 
+
+### 2026-09-06T18:45:53Z - Commit recorded
+
+Commit: `e39c691`
+
+Message: refactor(deploy): split platform shell foundation
+
+Summary: Split the Kanbien staging foundation into focused authored units rendered into the same validated CloudFormation stack, and repaired the rulebook coverage smoke fixtures so metadata validation no longer masks their intended assertions.
+
+ADR impact: Covered by the existing single-stack target decision; no ADR is needed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `e39c691`
+  Time UTC: 2026-09-06T18:45:53Z
+  Message: refactor(deploy): split platform shell foundation
+  Summary: Split the Kanbien staging foundation into focused authored units rendered into the same validated CloudFormation stack, and repaired the rulebook coverage smoke fixtures so metadata validation no longer masks their intended assertions.
+  ADR impact: Covered by the existing single-stack target decision; no ADR is needed.
 
 ## Main Refresh Conflicts
 
@@ -124,12 +141,12 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-06T18:45:53Z
+Latest commit SHA: e39c691
+Chat duration: 2918s (00:00:48:38)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
