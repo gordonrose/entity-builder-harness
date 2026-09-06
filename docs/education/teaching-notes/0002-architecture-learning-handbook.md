@@ -2767,11 +2767,11 @@ require a preflight check before they are sent, but that does not turn CORS
 into identity verification.
 
 There is a useful present-state boundary here: the server now emits CORS
-response policy for exact allowed origins; it does not yet implement explicit
-`OPTIONS` preflight handling. A browser-facing target that needs non-simple
-cross-origin requests needs that further work, tests, and a deliberate
-credential policy. In particular, a real credentialed browser policy should
-use named allowed origins, never a casual wide-open origin.
+response policy for exact allowed origins and explicitly handles `OPTIONS`
+preflight. For an approved origin it emits `Vary: Origin`, so a shared cache
+does not reuse one origin's CORS response for another. A browser-facing target
+still needs a deliberate credential policy: a real credentialed browser policy
+should use named allowed origins, never a casual wide-open origin.
 
 ### Security headers: instructions for browsers receiving a response
 
@@ -2812,14 +2812,17 @@ Its current key selection is intentionally privacy-aware:
 1. If a caller's authentication result has a safe `rateLimitKey`, use it.
 2. Otherwise, if there is a bearer token, use a SHA-256 hash of it—never the
    raw token—as `token:<hash>`.
-3. Otherwise, use the first `x-forwarded-for` address, then `x-real-ip`.
+3. Otherwise, use only a client address supplied by a trusted host boundary.
+   The generic Node listener supplies its socket peer address and never reads a
+   caller-controlled forwarding header.
 4. If none is available, share the `anonymous` bucket.
 
 There is a subtle implementation detail worth noticing. The current server
-performs rate limiting *before* authentication, so its present request path
-passes headers only to the key selector. That means the raw-token hash, IP, or
-anonymous paths are used today; the authenticated `rateLimitKey` branch is a
-capability for a later arrangement that has already established identity.
+performs a transport admission limit *before* authentication, so malformed or
+oversized input cannot force identity work. The generic Node listener uses its
+socket peer address at that first gate. After a protected route has established
+identity, it also applies a principal-specific limit when the authentication
+result provides a safe `rateLimitKey`.
 
 This baseline is valuable but has limits:
 
@@ -2828,9 +2831,10 @@ This baseline is valuable but has limits:
   limits must apply across instances.
 - A fixed window permits a boundary burst: a caller can use their quota at the
   end of one minute and again immediately at the start of the next.
-- Forwarded-IP headers are trustworthy only when the service is behind a
-  trusted proxy that overwrites or normalizes them. A directly reachable
-  service must not treat arbitrary client-supplied forwarding headers as fact.
+- Forwarded-IP headers are trustworthy only when a target-owned ingress policy
+  proves that a proxy removes caller values and writes a trusted replacement.
+  The generic server refuses to interpret them; a directly reachable service
+  must never treat arbitrary client-supplied forwarding headers as fact.
 - It limits request pressure; it does not make a denial-of-service attack
   impossible and it does not grant permissions.
 
@@ -4693,12 +4697,1521 @@ future live migration. That distinction matters: a clean repository literal
 replacement is not evidence that a customer-facing permission rename can skip
 compatibility analysis.
 
-## 44. Next Lesson Queue
+## 44. Public Navigation: A Product Address, Not a Source Folder
 
-1. Map future queue-adapter requirements from the worker's provider-neutral
-   queue boundary and its safe shutdown policy.
-2. Continue through platform runtime, server, adapters, apps, product, and
-   infrastructure at the learner's pace.
+Public URLs are part of the product's information architecture. A customer may
+bookmark, share, dictate, support, or automate against an address long after
+the implementation behind it has changed. That makes a public browser address
+a durable product interface.
+
+The same business capability has three related but different forms:
+
+| Form | Question it answers | Invoice export example |
+|---|---|---|
+| Public navigation address | “Where is the user in the product?” | `/finance/invoices/INV-123/export` |
+| Backend API route | “Which HTTP request asks the system to do or return something?” | `POST /api/v1/invoices/INV-123/export` |
+| Shared capability | “What product meaning, validation, authority, and consequence controls apply?” | `invoice.export` |
+
+The first may display an export-review page. The second asks for the export.
+The third is the shared product boundary that web, chat, voice, workers, and
+CLI consumers should reach through their own approved adapters.
+
+### Product classification is valid public language
+
+Names such as `finance`, `support`, `invoices`, and
+`customer-queries` may be useful path segments when they are stable,
+outward-facing product classifications. They are not implementation leaks
+merely because an app or module happens to implement them.
+
+The question is whether the name survives an implementation rewrite:
+
+```text
+stable public product language
+  finance → invoices → INV-123
+
+replaceable implementation
+  one app today → several apps later → another UI technology later
+```
+
+Avoid a path label only when it reports a transient technical choice, such as
+a source folder, component, provider, internal service, or temporary project
+name. A product area is appropriate when users, support staff, and product
+owners would still use the term after those technical details change.
+
+### The recommended baseline
+
+- The host/origin carries deployment addressing. Production, staging, preview,
+  DNS, TLS, and custom-domain resources remain deployment decisions.
+- The path carries stable product navigation: product area, resource, resource
+  identity, view, or a user-visible workflow step.
+- Query fields are limited to safe, bounded view state such as page, sort, or
+  selected tab; they are not a place for credentials, personal data, authority,
+  or destructive commands.
+- A URL is not authorization evidence. The server still verifies identity,
+  resolves trusted tenant context, and enforces permission and resource policy.
+- A safe browser read must not produce a consequential side effect. An
+  action-looking browser address can present a confirmation view, while the
+  protected API/capability path performs the action only after confirmation.
+
+Tenant custom domains, subdomains, and path prefixes are all possible later
+models. None of them proves access to a tenant; each requires trusted
+resolution and the ordinary authorization path.
+
+### Planning result
+
+The product-harness foundation plan now records a deferred public-navigation
+and addressing direction. When the first real web consumer is chosen, it must
+define a versioned navigation declaration, product-level namespace ownership
+and collision checks, safe addressing rules, bookmarked-address compatibility
+or redirects, tenant-addressing policy, and proof that navigation cannot bypass
+the shared capability controls. No frontend router, public URL package, or
+specific hostname grammar has been implemented.
+
+### Misconception to avoid
+
+> “If the URL names the product area, it must be coupled to one app module.”
+
+No. The product owns the durable public namespace. An app contributes an
+approved view/capability mapping inside it. The implementation may move behind
+that address while the public product language remains stable.
+
+### Study question
+
+Why may `/finance/invoices/INV-123/export` be a suitable browser address
+without allowing a `GET` request to export the invoice?
+
+Because the address can identify an export-review view. The separate protected
+action request, after the required confirmation and authorization checks,
+creates the export.
+
+## 45. Server Pipeline, Part 1: Establishing a Safe Request Envelope
+
+The platform server has two timescales. At startup it mounts apps, validates
+configuration, prepares routes, and creates lifecycle control. For every
+individual request, it creates a small safe envelope before considering the
+caller’s identity or an app handler.
+
+Incoming HTTP requests first gain a request identity and outcome trail, then
+pass browser-origin and response-safety rules, rate-limit capacity protection,
+and health or route selection. Only after those steps does the server consider
+authentication and authorization.
+
+The current server records these early pipeline stages as request ID, request
+logging, CORS, security headers, rate limiting, and parsing. Its in-memory
+handle entry receives an already normalised platform request for tests; the
+real Node listener first adapts raw HTTP into that request shape.
+
+### One request ID, one outcome trail
+
+At the beginning, the server accepts or creates a request ID and uses it as
+the correlation ID for its final request record. Its finish step records only
+safe operational facts: route, method, status, latency, and a bounded error
+class when there was an error. It does not make a raw request body, bearer
+token, cookie, or customer data part of the ordinary request record.
+
+This lets an operator answer “what happened to this request?” without turning
+operational logs into a second database of sensitive inputs.
+
+### CORS and security headers come before identity
+
+CORS answers a browser-specific question: “may a page from this origin read
+this response?” The current server allows an origin only when it is in the
+configured allowlist. It is not authentication—an allowed browser origin does
+not make the human using that browser trusted.
+
+Security headers are added to the response envelope before later success or
+error outcomes. This makes a denied or failed response receive the same
+browser-safety baseline as a successful response.
+
+### Rate limiting comes before authentication
+
+The current rate limit is checked before body parsing, health handling, route
+matching, and authentication. This is deliberate: a flood of anonymous or
+malformed requests should consume as little downstream work as possible. The
+generic listener derives its early key from the actual socket peer address, not
+from caller-supplied forwarded-address headers; after authentication it can
+also apply a verified principal-specific key.
+
+If the limit is exceeded, the server returns a safe 429 response, records the
+bounded rate-limit outcome, and does not run an app handler.
+
+### Health endpoints are a small early branch
+
+After the rate-limit check, /livez and /readyz are handled before ordinary
+route matching. They can be public or require authentication according to
+their exposure policy. Liveness answers whether the process is alive;
+readiness also considers lifecycle state and registered health checks.
+
+### Misconception to avoid
+
+> “The request logger must log the whole request so we can debug it later.”
+
+No. A useful operational record explains the outcome with correlation ID,
+route, method, status, latency, and bounded failure class. Raw request content
+belongs only in a deliberately authorised diagnostic path, if one is needed at
+all.
+
+### Study question
+
+Why does the server rate-limit before authentication, even though an
+authenticated principal could provide a more precise key?
+
+Because authentication itself costs work and may depend on remote identity
+infrastructure. An early anonymous request limit protects capacity before an
+attacker can force the later pipeline to run.
+
+## 46. Server Pipeline, Part 2: Route, Identity, Permission, and Tenant
+
+After the early request envelope, the server finds a route by HTTP method and
+path. A match means only “this declaration describes the request.” It does not
+mean the caller may use the route.
+
+A matched protected route follows this sequence: authenticate the caller, check
+the route's declared broad permission, resolve trusted tenant context when
+required, construct the app request context, and only then continue to
+validation, resource authorization, and handler invocation.
+
+### Route matching is not access
+
+The server compiles the mounted route patterns and extracts path parameters.
+An unknown route returns a safe not-found response without invoking an app
+handler. A public route also does not authenticate an optional credential just
+because the caller sent one; its handler receives no principal. This prevents
+an accidental optional-identity behaviour from becoming part of the public
+route contract.
+
+### Authentication answers “who is this caller?”
+
+For an authenticated route, the server calls the configured authentication
+hook. That hook belongs at the platform security/provider boundary: it may
+verify a bearer token and translate verified claims into a provider-neutral
+principal and granted permissions.
+
+If there is no authentication hook, the server denies by default. If the hook
+reports an unauthenticated caller, the server returns 401 and the route handler
+does not run. A missing/invalid identity is different from an identity that is
+known but not permitted.
+
+### Permission authorization answers “may this identity attempt this kind of action?”
+
+The route declares its required permission. The server compares that
+declaration with the authenticated result before tenant or resource work. A
+missing permission produces 403, and the current tests prove that neither the
+tenant resolver, the resource resolver, nor the handler run afterward.
+
+This is the broad capability gate. It answers, for example, whether Bill may
+attempt to read invoices at all. It does not yet decide whether this particular
+invoice is in Bill's authorised regional scope.
+
+### Tenant resolution supplies a trusted scope
+
+If a route requires a tenant, the server asks the configured tenant resolver
+to derive tenant context from the matched route, prepared request, and verified
+principal. It accepts only a complete tenant context with a tenant ID and
+isolation key. A missing or malformed result is denied with 403 before the
+handler runs.
+
+The server checks configuration earlier too: if any mounted route requires a
+tenant but no resolver was supplied, the server shell fails during startup
+rather than listening with an accidental tenant bypass.
+
+For Bill, the sequence is: his verified identity has the broad invoice-read
+permission; the resolver establishes trusted Benelux tenant context; the
+handler receives both principal and tenant facts; then later resource policy
+decides access to the particular invoice.
+
+Group, role, and regional membership policy are not hardcoded into the server.
+They may help the provider map claims to permissions or help the app/product
+authorizer decide a later resource request. The server enforces their results
+at the correct point in the request pipeline.
+
+### Planning disposition
+
+No plan change is required. This lesson explains the already implemented
+provider-neutral server sequence and its startup guard; it does not introduce a
+new tenancy model, role/group policy engine, or route contract.
+
+### Study question
+
+Why does the server check broad permission before asking the tenant or resource
+resolver for facts about a particular invoice?
+
+Because a caller who cannot attempt invoice access should not cause policy work
+or receive information that a tenant/resource resolver might reveal. The early
+permission gate is both cheaper and a smaller information-disclosure surface.
+
+## 47. Server Pipeline, Part 3: Validation, Resource Policy, Handler, and Response
+
+The later request stages answer different questions in a deliberate order:
+
+| Stage | Question | Failed outcome |
+| --- | --- | --- |
+| Request validation | “Is the supplied request shaped correctly?” | Safe 400 |
+| Resource resolution | “Can we identify the target and its policy facts?” | Safe 403 or 404, by disclosure policy |
+| Resource authorization | “May this verified principal perform this permission on this resource in this tenant?” | Safe 403 |
+| Handler | “Perform the permitted product behaviour.” | Its declared response or safe 500 |
+
+### Validation comes before resource work
+
+Once the server has constructed the request context, it calls the route's
+declared validator. The validator checks the request body shape, not whether a
+caller deserves access. A malformed export request is a client-input problem,
+so it receives 400 and never reaches resource resolution or the app handler.
+
+This is different from business validation inside a handler. Route validation
+asks whether the input can safely cross the boundary; the handler may still
+reject a well-shaped request because the requested export options conflict with
+product rules.
+
+### Resource resolution identifies facts; it does not grant access
+
+For a route that declares resource authorization, its resolver receives the
+prepared request and trusted request context. It may return a resource
+reference plus relationship, attribute, or other bounded policy facts.
+
+The platform then asks the configured authorizer to decide using the verified
+principal, declared permission, tenant ID where present, resource reference,
+and those facts. The resolver finds and classifies the target; the authorizer
+decides whether the action is allowed. Neither responsibility should silently
+replace the other.
+
+For Bill's invoice export, the resolver might identify invoice INV-123 and its
+customer/region facts. The authorizer then decides whether Bill's verified
+principal, Benelux tenant scope, and accountant policy permit export of that
+invoice.
+
+### Not found and hidden are deliberately different
+
+A resolver can say that a target is genuinely absent and permit a 404 response.
+It can instead say that existence must not be disclosed; the server then
+returns 403. A malformed resolver result also fails closed with 403.
+
+This makes resource disclosure an explicit product policy. It is not an
+accidental side effect of a database lookup.
+
+### The handler is now allowed to run
+
+Only after all prior checks pass does the server invoke the app-owned handler.
+The handler receives the prepared request and its runtime context, including
+the verified principal and tenant context when applicable. It returns an HTTP
+status, body, and optional response headers; the server preserves its safety
+headers and adds only the handler's permitted response headers.
+
+If the handler throws unexpectedly, the server returns a generic 500 response.
+The detailed thrown error is classified for the bounded operational record,
+not returned to the caller as an implementation leak.
+
+Every ending—400, 403, 404, 500, or success—passes through the same finish
+step. It records route, method, status, latency, correlation ID, and bounded
+error class, then emits the response.
+
+### Misconception to avoid
+
+> “Resource authorization is just another permission check.”
+
+No. Broad permission answers whether Bill may attempt invoice export at all.
+Resource authorization answers whether Bill may export this invoice, for this
+tenant, with these policy facts. It is the difference between a building pass
+and permission to enter one particular locked room.
+
+### Planning disposition
+
+No plan change is required. The lesson explains the existing route declaration,
+resource-resolution, authorizer, and error-response seams. A general live
+product policy engine and durable audit/record pipeline remain explicitly
+future work.
+
+### Study question
+
+Why is the resource resolver allowed to choose between 404 and 403 for a
+missing-looking target?
+
+Because resource existence can itself be sensitive. The product decides
+whether telling a caller that a target exists would reveal information beyond
+their authority.
+
+## 48. Server Pipeline, Part 4: The HTTP Transport Gate
+
+The earlier lessons began with a prepared platform request. A real server has
+an earlier, more defensive stage: **the transport gate**. It handles bytes and
+connections from the network before the request is safe enough for the normal
+route, identity, and authorization pipeline.
+
+Think of the system as two entrances:
+
+```text
+network bytes and sockets
+        ↓
+transport gate: bounded, recognised, cancellable HTTP request
+        ↓
+platform request pipeline: route, identity, permission, tenant, policy, handler
+```
+
+The distinction matters because a malicious or simply broken request may never
+be suitable for the usual request pipeline. For example, the server should not
+read a 10 GB body, parse invalid JSON, or invoke a remote identity provider
+before it can say that the request is too large or under rate limit pressure.
+
+### The transport gate, one small decision at a time
+
+| Transport decision | What it prevents | Why it happens here |
+| --- | --- | --- |
+| Create or validate a request ID | An app can neither invent nor replace the common correlation identity. | This is the first shared fact about a request. |
+| Recognise the HTTP method | `TRACE`, a typo, or an unexpected method cannot become `GET` by accident. | The route matcher must receive an intentional method. |
+| Rate-limit admission | A denied caller cannot spend body-parser, authentication, or handler capacity. | This is the cheapest useful capacity decision. |
+| Enforce header/body limits | A single client cannot make the process retain unbounded bytes. | The data is still raw network input. |
+| Require JSON before parsing a non-empty mutation body | An XML, form, or ambiguous payload does not quietly reach a JSON route. | The transport owns media-type interpretation. |
+| Map malformed input safely | Invalid JSON becomes a bounded 400 rather than a framework stack trace. | The app has not run and cannot safely explain it. |
+| Apply time and concurrency limits | Slow connections and stuck handlers cannot consume all process capacity forever. | Socket/request lifetime is a host concern. |
+| Create cancellation and drain gracefully | A handler can stop work when the caller disappears or the process is stopping. | The transport sees connection closure and listener shutdown. |
+
+The current `platform/server` listener proves these cases through a real local
+TCP listener, not only by passing convenient objects directly to a function.
+That is important: an in-process test is excellent for route policy, but it
+cannot prove how Node handles headers, connections, bodies, or a listening
+socket.
+
+### Request IDs and header ownership
+
+If a trusted upstream already sends a syntactically valid request ID, the
+server keeps it so logs across services can be connected. Otherwise it makes a
+fresh one. The app handler may add an ordinary response header, but it may not
+replace `x-request-id`, CORS decisions, or security headers such as the
+content-security policy.
+
+That is a useful general rule: **the layer that owns a cross-cutting security
+decision owns the resulting header**. Allowing every handler to overwrite the
+final header would let one feature silently weaken a protection shared by the
+whole product.
+
+### CORS preflight is a real request, not an app route
+
+A browser often sends `OPTIONS` before a cross-origin write. The server checks
+whether the path exists, determines the methods actually registered there, and
+returns a short preflight response. For an approved browser origin it also
+sends `Vary: Origin`, which tells shared caches that the response can differ by
+origin.
+
+The preflight does not prove the person may perform the later write. It only
+answers the browser question: “may code from this origin attempt to make this
+kind of request?” The later `POST` still needs authentication, permission,
+tenant, validation, and resource authorization.
+
+### Why the server does not trust `X-Forwarded-For`
+
+A newcomer often hears “use the forwarded IP for rate limiting” and assumes it
+is automatically safe. It is not. Any ordinary caller can send a fabricated
+forwarded-address header unless the specific ingress removes it and writes a
+trusted replacement.
+
+The generic server therefore uses its actual socket peer address only. That is
+safe from a caller spoofing a header, but it may be too coarse behind a load
+balancer because many users appear to come from the same ingress. A public
+target must make a separate, documented decision about trusted ingress address
+resolution. That decision belongs to the target/adaptor boundary because it
+depends on the chosen proxy, network, and deployment topology.
+
+### A safe local limiter is not yet a scalable public limiter
+
+The current in-memory limiter has two worthwhile properties: its bucket map is
+bounded, and it never uses the raw bearer token as a key. Those prevent an
+unbounded-memory attack and avoid making a credential appear in a likely log or
+debugging surface.
+
+However, each server replica has its own memory. If two replicas each allow
+100 requests, a caller may obtain roughly 200 requests by being sent to both.
+That is not a bug in JavaScript; it is the meaning of process-local state. A
+public multi-replica deployment therefore needs a selected shared limiter and
+an approved target-specific client-address rule. The plan and readiness record
+now treat those as public-exposure gates rather than quietly claiming that the
+local fallback is production scaling.
+
+### Draining is more careful than “close the server”
+
+When a process receives a shutdown signal, it first marks itself not ready.
+The load balancer can then stop sending new requests. The listener also stops
+accepting new work, while already-running requests get a bounded period to
+finish. If that deadline expires, their cancellation signals are aborted and
+the remaining connections are closed.
+
+This is kinder to legitimate in-flight work than immediately killing the
+process, but it still has a limit. A handler must honour its cancellation
+signal; the server cannot safely undo an external side effect that the handler
+already began.
+
+If a handler ignores that signal and outlives its request deadline, the client
+still receives a safe timeout response. But the server keeps that handler in
+the concurrency count until it settles. Otherwise an attacker could repeatedly
+cause timeouts and turn a maximum of 100 concurrent requests into unlimited
+background work merely by making handlers ignore cancellation.
+
+### Misconception to avoid
+
+> “Once route authentication is robust, raw HTTP handling is just plumbing.”
+
+No. Authentication protects *who may act*. Transport hardening protects the
+finite CPU, memory, sockets, and time that are needed even to decide whether a
+request may act. Both are security boundaries.
+
+### Study question
+
+Why must a public target use a target-owned trusted-ingress address policy
+instead of letting every app read `X-Forwarded-For` directly?
+
+Because whether that header is trustworthy depends on the actual proxy and
+network path. If every app interprets it independently, a caller may spoof it
+or different features may disagree about identity and rate-limit scope. One
+target-owned resolver makes the trust boundary explicit and testable.
+
+## 49. Composition Is More Than Authentication
+
+We have used Cognito as a concrete example, so it would be easy to form this
+mistaken picture:
+
+```text
+target composition entrypoint = the file that connects Cognito
+```
+
+That is too narrow. A target composition entrypoint is the place where a
+particular running target answers a larger question:
+
+> “Which real implementations, host facilities, and operating rules make this
+> product run safely in *this* environment?”
+
+Authentication is one answer to that question. It is not the whole question.
+
+### A small analogy
+
+Think of `platform/server` as a standardised empty control room. It has labelled
+connections for the things a service needs, and it knows the order in which to
+operate safely. It does **not** decide which company supplies electricity,
+which alarm service is used, or which building it is installed in.
+
+The target composition entrypoint is the installation plan for one building.
+It says which approved services are connected there and makes the choices
+auditable. The infrastructure then provisions the actual building facilities.
+
+```text
+platform contracts and shell       target composition              infrastructure
+----------------------------       ------------------              --------------
+“a logger can be used”        ->   “this target emits JSON”   ->   container collector,
+“a rate limiter can be used”  ->   “this target uses X”        ->   network/service rules
+“an identity can be verified” ->   “this target uses Cognito”  ->   Cognito configuration
+```
+
+### The three pieces that must not be confused
+
+| Piece | It answers | Example |
+| --- | --- | --- |
+| **Port or platform seam** | “What capability does the application need?” | `Logger`, `PlatformRateLimiter`, authentication facts, an audit-record contract |
+| **Adapter or host delivery** | “How is that capability supplied here?” | a Cognito adapter; a Redis-backed limiter; stdout collected by the container host |
+| **Target/infrastructure choice** | “Where, under what operating rules, and with what evidence?” | allowed log destination, retention, access controls, WAF, secret injection, a queue resource |
+
+An adapter is often TypeScript code, but it does not have to be. Writing safe
+structured JSON to stdout is a platform behaviour; a container log driver
+collecting it can be an infrastructure delivery mechanism. Both sides must be
+specified before we can honestly say “observability is present.”
+
+### What the current Kanbien shell has — and does not yet have
+
+| Capability | Current position | Important limitation |
+| --- | --- | --- |
+| Authentication | The target composition selects the approved Cognito adapter. | It proves one identity choice, not logging, quotas, queues, or storage. |
+| Observability | The platform can create safe structured records and has metric/trace seams. | No external exporter or durable observability sink has been selected. ECS collection alone is not a complete observability design. |
+| Rate limiting | The generic shell has a bounded local in-memory limiter. | It cannot enforce one quota across multiple service replicas; public readiness remains blocked until a shared adapter and ingress trust policy are selected. |
+| Client address | The listener can use the direct socket peer address. | A public proxy path requires a target-owned trusted-ingress resolver; individual apps must not read forwarded headers themselves. |
+| Queues and workers | The platform has provider-neutral job/worker mechanics. | No queue provider has been selected or provisioned. |
+| Secrets and configuration | Process configuration can be consumed by the runtime. | Target-level secret injection is not the same as a completed secrets-management strategy. |
+| Audit/security records | The platform has record shapes and safe normalisation. | No durable, queryable record sink has been selected. |
+
+### The useful inventory
+
+For each target-relevant capability, we will record six facts:
+
+1. The **port/contract**: what the product or platform asks for.
+2. The **selected implementation or host delivery**: what actually provides it.
+3. The **composition owner**: who is accountable for making that choice.
+4. The **infrastructure resource**: what must exist outside the process.
+5. The **failure behaviour**: what happens if it is unavailable, slow, or unsafe.
+6. The **readiness proof**: what test, configuration check, or operational evidence proves the target is safe to expose.
+
+This is deliberately stronger than a list of installed packages. A package can
+exist while nothing has selected or configured it. Conversely, a container host
+may deliver a capability without a new TypeScript package. The inventory makes
+either situation visible.
+
+### Misconceptions to avoid
+
+> “The service runs in ECS and sends logs to CloudWatch, so observability is
+> complete.”
+
+Not yet. We still need an agreed safe record shape, redaction, delivery path,
+access and retention rules, metrics/traces where needed, alert ownership, and
+evidence that those controls are active.
+
+> “We should immediately add one adapter folder for every possible capability.”
+
+Also no. An empty adapter is only architecture-shaped clutter. We create a
+bounded adapter slice when there is a chosen provider, an owner, a failure
+model, acceptance tests, and target readiness evidence.
+
+### Study question
+
+Why is a target entrypoint still accountable for log delivery when a container
+platform performs the collection rather than a TypeScript logging adapter?
+
+Because the target must explicitly choose and prove the destination, access,
+retention, and failure behaviour. Moving the delivery mechanism outside the
+process does not remove the operating decision.
+
+### Plan record
+
+The target capability inventory and the explicit current gaps have been added
+to the [Platform Runtime Implementation Plan](../../../.agentic/03.product/plans/implementation/platform-runtime-implementation.md).
+This is a clarification of ownership and future readiness work; it does not
+pretend that unselected observability, shared-rate-limit, queue, secret, or
+audit providers now exist.
+
+## 50. Cognito Is An Adapter, Not The Whole Identity Operation
+
+Yes: Cognito needs the same operational layer as rate limiting. We already
+have more of it recorded than for a shared rate limiter, but it is not yet
+complete or proven for a public deployment.
+
+The Cognito adapter answers a deliberately narrow technical question:
+
+```text
+Given a bearer token, can this process verify that Cognito issued an acceptable
+access token and translate its approved claims into platform identity facts?
+```
+
+It constructs the Cognito issuer and JWKS address, requires an access token for
+the expected client, extracts Cognito groups/scopes when configured, and
+returns the provider-neutral authentication result that the server understands.
+That is important—but it is only the in-process verification step.
+
+### Compare the two layers
+
+| Layer | Cognito adapter owns it | Target operational model owns it |
+| --- | --- | --- |
+| Token verification | issuer, JWKS lookup, access-token and client requirements | key-rotation and cache-failure operating policy |
+| Permission facts | extracting configured groups/scopes and mapping them | who may change mappings, least privilege, review and rollback |
+| Client credentials | reading the selected configuration names | secret injection, rotation, revocation, emergency recovery |
+| Exposure | returning authenticated facts to the generic server | public/private access, CORS, TLS, ingress, rate limits and WAF |
+| Evidence | safe local contract and adapter tests | deployed protected-route smoke, monitoring, audit access and alert ownership |
+
+### What is already recorded
+
+The Kanbien staging target profile has an initial Cognito provider choice, user
+pool, confidential machine-to-machine client, resource-server scope, scope to
+permission map, client-secret storage location, and CORS intent. This is why
+Cognito is further along than the shared-rate-limiter adapter.
+
+But the target and its readiness manifest are still draft/blocked. Recording a
+user-pool identifier is not proof that its operation is ready for public use.
+
+### The important limitation of the present example
+
+The selected Cognito path is **machine-to-machine**. It is suitable for a
+service presenting a client-credentials access token. It is not yet Bill the
+accountant in a Benelux group.
+
+That later human-user scenario needs additional, explicit decisions:
+
+```text
+identity provider verifies Bill
+        ↓
+product/identity boundary establishes Bill's tenant and group membership
+        ↓
+app/resource authorisation decides whether Bill may read this Benelux invoice
+```
+
+Parsing a Cognito group claim alone cannot safely provide that complete model.
+The platform must still determine the membership source, change/revocation
+flow, tenant binding, and resource-level decision.
+
+### Operational questions we must answer before public exposure
+
+1. Who owns the user pool, client, permissions, and emergency access?
+2. How are client credentials injected, rotated, revoked, and recovered?
+3. What happens when keys rotate, a JWKS lookup fails, or a token is suspected
+   compromised?
+4. How long may an issued token remain valid, and what is the response when it
+   must stop being trusted sooner?
+5. Who reviews group/scope-to-permission changes, and how are they rolled back?
+6. What authentication events are safely recorded, monitored, retained, and
+   alerted on without storing bearer tokens?
+7. What deployed test proves a real protected route rejects invalid,
+   unauthorised, and allowed requests?
+
+### Misconception to avoid
+
+> “JWT verification passed locally, so authentication is production-ready.”
+
+Local verification proves only that the process can validate a correctly
+configured token. Production readiness additionally depends on credential and
+key lifecycle, abuse controls, target configuration, operational ownership,
+and deployed evidence.
+
+### Study question
+
+Why does a machine-to-machine scope mapping not automatically solve the
+earlier example of Bill accessing only invoices for Benelux clients?
+
+Because it says what a calling client may generally do. It does not, by itself,
+prove Bill's current group membership, tenant assignment, geographic scope, or
+the relationship between an individual invoice and the Benelux region.
+
+### Plan record
+
+The [Platform Runtime Implementation Plan](../../../.agentic/03.product/plans/implementation/platform-runtime-implementation.md)
+now explicitly separates the Cognito adapter from target operational readiness.
+It assigns the latter to target profile, deployment readiness, infrastructure,
+and runbook work rather than expanding the adapter into an identity-management
+system.
+
+## 51. Resetting The Learning Map: Define The Target Before Declaring Layers Complete
+
+The concern that prompted this reset is important: following the folder tree
+can teach us how a module works, but it cannot prove that a real deployed
+system has every dependency it needs.
+
+We are therefore changing the question from:
+
+```text
+“Have we finished platform/security?”
+```
+
+to:
+
+```text
+“For the intended production target, is every required capability complete
+from contract through operating proof?”
+```
+
+### The first target we are designing
+
+The initial reference target is a real public-internet production target for
+the future Entity Builder on AWS ECS Fargate in `eu-west-1`. Its first release
+starts with API capability, profile image/document handling, safe bulk
+upload/download, and later agent workflow. Its long-term design keeps web,
+desktop, mobile, tablet, chat, and voice as different clients of the same
+governed capability path.
+
+It must anticipate personal and medical/sensitive data, tenant/group/resource
+authorisation, EU/UK data-residency requirements, hundreds of concurrent users,
+and a cost-aware single-operator beginning. Those facts make a local
+server-and-JWT demo plainly insufficient as the definition of ready.
+
+### The new reading rule
+
+Every platform capability now has a maturity state:
+
+| State | Plain meaning |
+| --- | --- |
+| Requirements captured | We know it is needed, but have not built its boundary. |
+| Contract/local proof | We can prove the provider-neutral behaviour locally. |
+| Adapter selected | A real provider/host mechanism has been chosen. |
+| Infrastructure planned | We know the target resources and controls needed, without creating them. |
+| Target configured | The target explicitly selects the capability. |
+| Operationally proven | It works, fails safely, is observable, recoverable, and has target-level evidence. |
+
+For example, the current rate limiter is at **contract/local proof**. That is
+good progress—not an AWS multi-replica production quota. Cognito has a real
+adapter, but the current example is machine-to-machine and does not yet solve
+human membership, tenant, or resource authorisation. This wording lets us be
+honest without discarding useful earlier work.
+
+### A crucial distinction
+
+We are not trying to build every possible cloud service before making a
+product. We will build every capability required by the first release to its
+complete vertical slice, then build future capabilities before the feature that
+needs them ships.
+
+```text
+first real file upload
+  requires storage + access control + retention + safe upload path
+  + observability/audit + recovery proof
+
+first agent workflow
+  additionally requires durable work + prompt/tool safety
+  + provider data-boundary decision + evaluation/incident controls
+```
+
+### The remaining decisions are visible, not forgotten
+
+The baseline intentionally marks several decisions as open: human onboarding
+and MFA/recovery model, first-tenancy model, precise EU-versus-UK residency,
+sensitive-data onboarding approval, document threat model, AI/voice data
+boundary, recovery objectives, and initial cost ceiling. We will decide these
+in small batches before selecting providers or provisioning infrastructure.
+
+### Plan record
+
+The complete matrix is now the
+[Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md).
+The platform-runtime and product-harness plans now point to it, so a package
+cannot be called a production default merely because it has local tests.
+
+## 52. Multi-Tenancy, Root Approval, And Residency Homes
+
+Three decisions now make the first reference target much more concrete:
+
+1. The first `PlatformRoot` is securely bootstrapped and root identities are
+   invite-only. A self-service admin/app-user signup is only a request; it has
+   no active tenant access or privileged grant until a verified root approves
+   it.
+2. The product must support multiple independent tenants from the first real
+   release.
+3. Each tenant has an EU or UK residency home. Cross-boundary processing is
+   denied by default.
+
+### Why signup is not access
+
+It is tempting to picture a signup as this:
+
+```text
+person signs up -> person can use the application
+```
+
+For a multi-tenant sensitive-data system, the safer model is:
+
+```text
+person signs up -> pending identity/application
+                    -> root approval
+                    -> tenant membership and granted role
+                    -> resource-level authorisation on each action
+```
+
+The first arrow proves only that an identity wants an account. It does not
+prove that the person belongs to a tenant, should receive a role, or may read
+any tenant data.
+
+`PlatformRoot` is deliberately unusual. It is an operator/product authority
+for bootstrap and approval, not a shorthand for unrestricted everyday access to
+every tenant's business or medical data. Any exceptional access must be narrow,
+audited, and separately designed.
+
+### Why `eu-west-1` is not enough for a UK-residency tenant
+
+The initial EU target is intended for `eu-west-1`. If a tenant is UK-resident
+and the policy says no cross-boundary processing by default, that tenant's
+sensitive data cannot simply be put in the EU target to save money.
+
+This is not only the primary database. The residency home follows the data:
+
+```text
+tenant data -> database, file store, backups, logs, audit records,
+               queues, caches, search, support access, and AI/voice processing
+```
+
+Therefore, support for UK-residency tenants requires a separately planned and
+proved UK-residency production target. If that is not affordable for the first
+launch, the honest low-cost choice is an explicitly EU-only launch that refuses
+UK-residency onboarding until the UK target is complete.
+
+### Misconception to avoid
+
+> “Tenant isolation means putting a `tenantId` column on every table.”
+
+That column can be part of the design, but it is not the proof. Isolation must
+hold at identity/membership resolution, every query and object key, queue/job
+payload, signed download, log/audit record, operator tool, backup, and AI/tool
+call. A tenant-looking value sent by the browser, chat, or URL is untrusted
+input—not authority.
+
+### Study question
+
+Why must a self-service signup remain unable to access a tenant even after it
+has passed email verification?
+
+Email verification proves control of an email address. It does not prove a
+tenant membership, approved role, regional residency home, or access to a
+specific resource.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now records root approval, first-release multi-tenancy, and EU/UK residency
+homes as target requirements. It also makes the cost-safe constraint explicit:
+an EU-only launch is permissible if UK-residency onboarding is refused until a
+separate UK target is proven; silently placing UK data in the EU target is not.
+
+## 53. Administrative Roles Have Scopes, Not Just Names
+
+The initial EU-only launch and the three administrative role concepts are now
+defined:
+
+| Role | Scope | Primary responsibility | Cannot do by implication |
+| --- | --- | --- | --- |
+| `PlatformRoot` | Platform | Manage tenants, tenant roots, and platform-level tenant administration. | Read every tenant's business/medical data merely because it is powerful. |
+| `TenantRoot` | One verified tenant | Manage that tenant's app users and tenant administration. | Administer another tenant, create tenants, or manage platform roots. |
+| `TenantAppUser` | One verified tenant and assigned resources | Use authorised front-office and back-office business capabilities. | Administer the tenant or platform merely by consuming the app. |
+
+### The central rule: scope is part of the authority
+
+The word `root` alone does not decide what an action may touch. A request must
+still carry a verified principal, a verified tenant where applicable, a
+declared permission, and any required resource facts.
+
+```text
+PlatformRoot + platform tenant-management permission
+  -> may create or administer a tenant record
+
+TenantRoot + tenant-user-management permission + tenant A membership
+  -> may administer users in tenant A
+  -> may not administer users in tenant B
+
+TenantAppUser + business permission + tenant A membership + resource approval
+  -> may use the permitted business capability in tenant A
+```
+
+This is why roles should be permission bundles at an explicit scope, rather
+than magic labels scattered through route handlers. It also lets one human have
+more than one deliberate assignment if needed without silently widening a
+lower-scope grant into a higher-scope one.
+
+### Signup and tenant administration
+
+The earlier rule remains: a self-service signup is a pending request, not
+access. `PlatformRoot` approval is the initial gate. The remaining policy
+question is whether a `TenantRoot` may later approve app-user requests *after*
+that initial gate. We will decide it explicitly, with an audit trail, rather
+than assuming that “manage app users” automatically means “approve all
+signups.”
+
+### EU-only initial launch
+
+The first launch accepts EU-residency tenants only. This is a cost-conscious
+scope reduction, not a relaxation of the no-cross-boundary rule. UK support is
+a later capability that needs its own target and evidence before any UK tenant
+is onboarded.
+
+### Study question
+
+Why is `TenantRoot` not simply a less powerful `PlatformRoot`?
+
+Because they are authorities over different scopes. A tenant root's
+administrative power is bounded by verified membership of one tenant; it must
+not be able to traverse or enumerate other tenants at all.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now records the three scope-bound role concepts and makes the first production
+launch explicitly EU-only.
+
+## 54. Creation By The Parent Is Approval
+
+The approval hierarchy is now explicit:
+
+```text
+PlatformRoot creates/approves tenant + appoints TenantRoot
+  -> TenantRoot creates/approves TenantAppUser for that tenant
+    -> TenantAppUser uses explicitly granted business capabilities
+```
+
+There is no separate approval click after an authorised parent directly creates
+the lower-scope record. The creation itself is the approval and must produce an
+audit record such as `created-and-approved`.
+
+Self-service requests work differently:
+
+| Request | Starts as | Required parent action |
+| --- | --- | --- |
+| Prospective tenant / tenant-root request | Pending | `PlatformRoot` approves and activates the tenant/root relationship. |
+| Prospective tenant app-user request | Pending in one verified tenant | That tenant's `TenantRoot` approves and activates membership. |
+| Direct authorised creation | Active only after validation | The parent actor's creation is the approval. |
+
+### The safety catch
+
+“A user created another user” is not sufficient on its own. We must always ask:
+
+> Did the actor have the explicit user-management permission at the parent
+> scope?
+
+An ordinary `TenantAppUser` does not gain the ability to approve another user
+just because a browser, API client, or chat request says “create user.” A
+`TenantRoot` may do so only for the tenant resolved from verified membership;
+it can never use a supplied tenant ID to create someone in another tenant.
+
+### Study question
+
+Why should direct creation be recorded as `created-and-approved` rather than
+only `user-created`?
+
+Because the record needs to explain why the new identity became active without
+a separate approval event. It captures the approving actor, their scope, the
+tenant, the resulting role, and the decision in one accountable action.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now owns this parent-scope approval rule. It replaces the previous open question
+about whether a tenant root may approve app users.
+
+## 55. Deferred MFA And Controlled Root Recovery
+
+The initial decision is not to require MFA for `PlatformRoot` or `TenantRoot`.
+This is allowed as a consciously recorded early-stage risk decision, but it
+does **not** make single-factor privileged access a secure default or a future
+compliance claim.
+
+The practical consequence is that the later human-identity design must make
+the compensating controls visible: chosen primary credential, reset policy,
+session duration, privileged-login rate limits, safe authentication alerts,
+and recovery evidence. MFA remains a deliberate future upgrade rather than an
+unfulfilled promise hidden in a plan.
+
+### Replacement root through a controlled migration
+
+If the only `PlatformRoot` becomes unavailable, the recovery policy is to
+create a replacement root through a governed one-shot migration.
+
+That word needs care. This must **not** mean:
+
+```text
+ordinary deployment automatically creates a root
+application API can create a root
+chat or voice command can recover root access
+operator edits the database without evidence
+```
+
+Instead, the recovery operation must be deliberately invoked through a
+protected recovery/deployment path and answer these questions:
+
+```text
+Who authorised recovery?
+Which new identity becomes the replacement root?
+What happened to the prior root?
+Which preconditions were checked?
+What immutable audit evidence proves the action?
+```
+
+The migration should be idempotent: retrying it must not accidentally create
+several platform roots. It must also avoid becoming a routine schema migration
+that runs whenever the application deploys.
+
+### Misconception to avoid
+
+> “A database migration is automatically safer than an admin screen.”
+
+Not necessarily. A migration may be more tightly governed than an app route,
+but if every routine deploy can invoke it without special control, it becomes a
+very powerful hidden route. Safety comes from its protected invocation,
+preconditions, audit evidence, and recovery governance.
+
+### Study question
+
+Why must a root-recovery migration consider the previous root's state?
+
+Because creating a replacement without disabling or accounting for a
+compromised prior root can leave two uncontrolled high-privilege identities
+active at once.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now records MFA as deferred for the initial release and root recovery as a
+governed one-shot migration, with its required controls still visible.
+
+## 56. Email And Password Is The Sign-In Method, Not The Full Policy
+
+The initial human sign-in method is email and password. This answers the
+experience question—what a person enters to sign in—but it does not yet answer
+all the security questions around that credential.
+
+```text
+email + password
+  -> email verification rule
+  -> password strength/reuse/breach rule
+  -> reset and recovery rule
+  -> session lifetime rule
+  -> login rate-limit and alert rule
+  -> approval and tenant-assignment rule
+```
+
+The existing Cognito example validates machine-to-machine access tokens. It is
+not yet evidence that the human email/password flow, reset flow, or approval
+state machine is implemented. A later selected human Cognito configuration and
+adapter behaviour must translate that human identity safely into the same
+provider-neutral principal and scoped-authorisation path.
+
+### Misconception to avoid
+
+> “Email/password means the identity problem is solved.”
+
+No. It chooses the first door into the system. Verification, credential reset,
+sessions, abuse resistance, privilege approval, tenant membership, and
+revocation decide whether that door is safe to use.
+
+### Study question
+
+Why must password-reset policy be considered alongside the no-MFA decision?
+
+Because reset is another way to obtain the credential. If its proof and
+rate-limit rules are weaker than normal sign-in, it becomes the easiest path to
+take over a privileged account.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now records email/password as the selected initial human sign-in method while
+keeping the remaining credential-policy controls visible.
+
+## 57. Verification Links And Password-Reset Links Prove Different Things
+
+Email verification is mandatory before a self-service signup may enter the
+pending approval workflow. Password reset also uses an email link.
+
+The links use the same delivery channel, but they must not be interchangeable:
+
+| Link purpose | What it may do | What it must not do |
+| --- | --- | --- |
+| `verify-email` | Mark that an identity controls the stated email address. | Reset a password or approve membership. |
+| `reset-password` | Allow one password-reset flow for the requested identity. | Verify an unrelated address, approve membership, or act as a normal session. |
+
+Each link must be purpose-bound, one-time, and short-lived. The token inside a
+link is credential-like: it must never appear in normal logs, audit records,
+analytics, error reports, or referrer-bearing outbound requests. The system
+must never email a password.
+
+### Why this matters more while MFA is deferred
+
+For an email/password account, a reset link is another way to become that
+account. If it can be replayed, lasts too long, or leaks through logs, it can
+be used to take over a privileged identity. The reset policy therefore needs
+its own rate limits, session-invalidation decision, and safe notification path.
+
+### Study question
+
+Why does verified email still not make a new tenant app user active?
+
+It proves control of an email address. It does not prove that the person belongs
+to the tenant or should receive the requested role; `TenantRoot` approval or
+direct authorised creation still establishes that membership.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now makes email verification mandatory and defines verification/reset links as
+separate, purpose-bound credential flows.
+
+## 58. Password Reset Ends Old Sessions
+
+When password reset succeeds, every existing session for that identity is
+revoked. The reset browser does **not** receive an authenticated session; the
+identity signs in normally with the new password, and receives a safe post-reset
+notification.
+
+```text
+password reset succeeds
+  -> previous browser, mobile, API, and remembered sessions become invalid
+  -> reset browser must perform normal sign-in with the new password
+  -> safe notification helps the identity notice unexpected recovery
+```
+
+This is especially valuable while MFA is deferred. If someone else had already
+obtained a session using the old credential, the legitimate person can remove
+that access by resetting their password.
+
+The notification says that a reset happened. It never contains the password,
+reset link/token, or other credential material.
+
+### Study question
+
+Why is it unsafe to revoke only the session that requested the reset?
+
+Because a compromise may be occurring in a different browser, device, or API
+client. Revoking only one session leaves that unknown session active.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now makes full existing-session revocation, normal post-reset sign-in, and safe
+post-reset notification the initial reset policy.
+
+## 59. Tenant Configuration Uses A Security Floor, Not A Security Escape Hatch
+
+The identity-policy settings will be tenant-configurable, with defaults
+implemented as a versioned baseline. That is the right direction—but “tenant
+configurable” must not mean “a tenant may turn off platform safety.”
+
+```text
+platform invariants
+        + product baseline version
+        + tenant restriction
+        = effective identity policy
+```
+
+Every applicable requirement must pass. A tenant can make its own policy
+stricter, but cannot lower the shared floor merely by choosing a value in a
+configuration screen.
+
+| Policy control | Tenant may do | Tenant may not do |
+| --- | --- | --- |
+| MFA | Require it sooner for that tenant. | Disable it if a later platform/product baseline makes it mandatory. |
+| Password strength | Require a stronger rule. | Set a weaker rule than the platform floor. |
+| Session lifetime | Shorten it. | Extend it beyond the platform maximum. |
+| Login/reset limits | Choose stricter limits. | Remove the anti-abuse floor. |
+| Notifications | Add tenant notifications. | Remove required security/recovery evidence. |
+| Email verification and reset safety | Use the standard flow. | Disable verification, reuse a link, or retain old sessions after reset. |
+
+`PlatformRoot` owns the floor, baseline versions, and any formal exception
+path. `TenantRoot` can choose an approved baseline and tighten settings for its
+tenant. Any requested relaxation needs an explicit exception with an owner,
+reason, expiry, and evidence—it cannot be a hidden checkbox.
+
+### Why policy changes are security events
+
+Changing a password/session policy may affect active sessions, pending users,
+and recovery behaviour. Therefore every policy change needs an authorised
+actor, scope, before/after version, validation result, effective time, and
+audit record. The policy record contains settings and version references, never
+passwords, reset links, or provider secrets.
+
+### Study question
+
+Why is “set tenant policy to a weaker password rule” not just another tenant
+configuration choice?
+
+Because it weakens a shared security boundary and can expose the whole product
+to account takeover or compliance risk. That is an exception to a platform
+baseline, not ordinary tenant preference.
+
+### Plan record
+
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now applies the existing versioned-baseline and tenant-tightening model to
+identity policy.
+
+## 60. Identity Security Baseline v1
+
+We have now turned the earlier identity decisions into one named, versioned
+policy: `identity-security-baseline.v1`. Naming the policy matters. It lets a
+product say exactly which security promise it adopted, lets a tenant make that
+promise stricter without inventing its own model, and gives future changes a
+clear migration point.
+
+The policy is intentionally not “a Cognito configuration file.” It describes
+the result the implementation must produce, regardless of whether the eventual
+human identity adapter is Cognito or another approved provider.
+
+| Area | Baseline default | Why it exists |
+| --- | --- | --- |
+| Password | Minimum 15 characters, accepts at least 64, allows spaces/Unicode/paste/password managers, and screens breached/common/contextual passwords. | Longer unique passwords are useful; awkward character rules and password-manager bans usually make passwords worse rather than safer. |
+| Password lifetime | No routine expiry; force a change for compromise, recovery, or authorised revocation. | Arbitrary expiry teaches predictable minor changes, while compromise signals point to a real reason to act. |
+| Verification and reset | Separate one-time `verify-email` and `reset-password` tokens, each limited to 15 minutes. | Possession of a reset link must not accidentally become email approval, a normal session, or a reusable credential. |
+| Reset result | Revoke all sessions, then require normal sign-in with the new password. | Someone holding an old cookie or token loses access; a stolen reset link does not itself leave an authenticated session behind. |
+| Sessions | 15-minute idle limit, 8-hour absolute limit, server-side enforcement, identifier rotation after authentication and privilege change. | A browser timer alone cannot revoke a copied token; the server must decide whether the session still exists. |
+| High-risk actions | Reauthenticate with the current password for credential changes, role changes, tenant-policy changes, and ordinary privileged recovery actions. | A temporarily unattended but authenticated browser should not be enough to alter the account's security boundary. |
+| Abuse resistance | Generic responses plus progressive server-side delay after repeated sign-in failures; no permanent automatic lockout. Reset requests are rate-limited without revealing whether an account exists. | It raises the cost of guessing and reset-email abuse without turning an attacker into the person who can permanently lock out a legitimate user. |
+| Audit and alerts | Audit lifecycle/grant/policy/reset completion facts; create separate security signals for escalating abuse; send safe success notices, not one email per failed attempt. | We need a reliable compliance trail and meaningful operator signal without filling logs and inboxes with sensitive or noisy data. |
+
+### The important correction to our earlier reset explanation
+
+Earlier we said that the reset browser could continue as the only new session.
+The approved baseline is stricter: reset invalidates every session and then
+requires a normal sign-in. A reset token proves recovery permission for one
+short-lived action; it is not a durable login credential.
+
+### What a tenant can and cannot change
+
+```text
+platform floor
+  + adopted baseline v1
+  + stricter tenant setting
+  = effective identity policy
+```
+
+A tenant can shorten a session lifetime, require an available extra factor,
+or reduce permitted reset attempts. It cannot lower the password minimum,
+disable email verification, extend reset-token lifetime, retain sessions after
+reset, or remove required evidence. A formal exception has an owner, reason,
+scope, expiry, approval, and audit trail; it does not silently change the
+platform floor.
+
+### A crucial implementation boundary
+
+The policy is active, but the human identity capability is still only
+`requirements captured`. We have not built a human Cognito adapter, a tenant
+policy resolver, verification/reset delivery, session revocation, or MFA.
+The policy tells the next implementation slice how to prove itself; it does
+not make the system protected merely by existing in a Markdown file.
+
+Medical or other special-category data remains behind an additional gate: an
+MFA-capable identity baseline and target must be available and applied to the
+relevant privileged roles, alongside the separate privacy, residency, and
+operating evidence.
+
+### Study questions
+
+Why is a reset token not used as a normal login session after the password was
+changed?
+
+Because recovery permission is narrower and more short-lived than an ordinary
+session. Requiring the new password at normal sign-in limits what a stolen or
+misdirected recovery link can achieve.
+
+Why do we distinguish an audit event from a security signal after failed
+sign-ins?
+
+An audit event explains a completed accountable action, such as a password
+reset. A security signal highlights a concerning pattern, such as repeated
+failures. Combining them blindly creates a large, sensitive, and noisy record
+that is useful for neither purpose.
+
+### Plan record
+
+The approved policy is now recorded in the
+[Identity Security Baseline v1](../../../.agentic/03.product/standards/identity-security-baseline.v1.md).
+The [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+keeps the honest implementation state and completion gate.
+
+## 61. Scope Correction: Platform Proof Before Application Work
+
+We were beginning to design a future identity-and-access application too soon.
+That architecture is worth recording, but it is **not** the next implementation
+task.
+
+The immediate goal is smaller and more disciplined: prove a production-shaped
+platform layer with the deliberately boring `platform-smoke` app.
+
+```text
+now
+  platform shell + smoke app + target/deployment proof
+
+later
+  identity-and-access app + tenant membership + business features
+```
+
+The smoke app is not a business application. It is a controlled probe that
+lets us test whether the platform can mount an app, start a server/worker,
+validate configuration, apply the selected machine authentication boundary,
+produce health and safe records, package itself, and eventually run in an
+approved target.
+
+This distinction resolves the apparent conflict in the earlier discussion:
+the future identity-and-access app will reuse platform mechanisms, but it must
+not be built merely to prove those mechanisms. Building user profiles, tenant
+membership, groups, approvals, or entity data now would blur the platform
+proof and make failures much harder to diagnose.
+
+### What a successful smoke deployment does—and does not—prove
+
+| A smoke deployment can prove | It does not prove |
+| --- | --- |
+| The image starts in the selected target. | Human registration, sign-in, verification, reset, or MFA. |
+| The public edge, health endpoints, configuration, and selected machine-token boundary work together. | Tenant approval, group membership, or invoice/resource authorisation. |
+| A mounted app can receive a safe authenticated request and return a response. | That the Entity Builder is ready for real users or personal/medical data. |
+| Logs, metrics, alerts, rollback, and operational evidence can be exercised for that narrow slice. | That every future product capability has a provider, persistence model, or compliance evidence. |
+
+### Study question
+
+Why not build the identity-and-access app first if every later product will need
+it?
+
+Because it would test too many unknowns at once: the platform, the target,
+human credentials, mail delivery, session revocation, persistence, tenant
+policy, approval logic, and product authorisation. A smoke proof keeps the
+first question answerable: “Can our platform foundation deploy and run safely?”
+
+### Plan record
+
+The [Platform Runtime Implementation Plan](../../../.agentic/03.product/plans/implementation/platform-runtime-implementation.md)
+and [Production Reference Target Baseline](../../../.agentic/03.product/plans/implementation/production-reference-target-baseline.md)
+now explicitly hold this boundary.
+
+## 62. A Read-Only Inspection Separates Planned From Real
+
+We inspected the existing Kanbien staging AWS boundary without changing any
+resource. This is the first operational lesson in practice: a target profile
+is a promise about what should exist, while a cloud inspection tells us what
+does exist.
+
+The inspection found a mixed result:
+
+| Exists now | Does not exist yet |
+| --- | --- |
+| Shared ECS cluster and ALB boundary | Platform-shell ECS task definition and service |
+| Immutable, scan-on-push `platform-shell` ECR repository | Any platform-shell image in that repository |
+| Machine Cognito client and `smoke.read` scope | Platform-shell target group, host rule, and DNS record |
+| Existing HTTPS listener for other services | Platform-shell log group and alarms |
+| Rollback procedure written down | A deployed workload, smoke result, or rollback exercise |
+
+This is why operational work cannot be inferred from TypeScript or even from a
+target profile. The source code can be correct, the desired AWS design can be
+written down, and the service can still be absent.
+
+The next change is not “add more logging code.” It is a bounded AWS runtime
+target plan that makes the smoke app a real, observable ECS service by
+immutable image digest. Only after that target exists can we prove delivery of
+logs, alarms, health behaviour, protected-route responses, and rollback.
+
+### Study question
+
+Why is the empty ECR repository useful evidence but not a deployable platform?
+
+It proves a controlled place for immutable images exists. It does not prove an
+image was built from approved source, that ECS can run it, that traffic reaches
+it, or that an operator can detect and recover from failure.
+
+### Evidence record
+
+The fresh [AWS target inspection](../../../docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md)
+and the [staging readiness manifest](../../../infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml)
+now reflect these verified facts.
+
+## 63. A Hostname Can Point to an Application, Not Just a Static File Store
+
+The word “website” describes what a person experiences. It does not tell us
+how that experience is delivered.
+
+In this case, the public route worked like this:
+
+```text
+kanbien.com / www.kanbien.com
+        ↓ DNS alias
+shared public load balancer
+        ↓ default HTTPS route
+old service-platform container
+        ↓ startup migration
+PostgreSQL database
+```
+
+The first two steps were healthy. The last two were not: the container tried
+to migrate its database on startup, the database could not be reached, the
+container exited, and the load balancer had no target to forward to. A `503`
+here means “the gateway exists, but it currently has no healthy application
+behind it.” It does **not** mean “the domain name has disappeared.”
+
+This also explains why “keep the DNS records” does not automatically mean
+“keep every old resource forever.” DNS is the stable public address. Behind it
+we may eventually repair the old application or deliberately switch the
+address to a replacement. We must first know which resources form the running
+site and what recovery evidence exists; deletion before that is not cleanup,
+it is an uncontrolled outage.
+
+For now, the record is deliberately conservative: preserve the hosted zone and
+public records, make no deletion, and keep public-site recovery separate from
+the platform-shell smoke proof.
+
+### Study question
+
+Why does an empty load-balancer target group create a `503` even though DNS and
+TLS are working?
+
+DNS only tells the browser where to connect, and TLS establishes a protected
+connection to the load balancer. The load balancer still needs a healthy target
+that can answer the request. With no target, it has nowhere safe to send it.
+
+## 64. A Deployment Profile Is Executable Security Policy
+
+A target profile can look like “just configuration,” but it is part of the
+security boundary. It tells a deployed process which identity provider to
+trust, which permissions a token scope grants, which browser origins may call
+it, and which health endpoints are public.
+
+The smoke target revealed two useful mistakes before anything reached AWS:
+
+- the app declared `platform-smoke.smoke:read`, while the target had tried to
+  grant a different permission called `smoke:read`;
+- the target selected Cognito but omitted the non-secret identifiers the
+  Cognito adapter needs to verify tokens.
+
+Neither error is dramatic in a text file. In a live process, the first would
+turn a valid smoke token into an unexpected `403`; the second would prevent
+the process from starting. This is why a deploy profile needs the same review
+and validation discipline as source code.
+
+The broader lesson is that a secure public deployment is a chain, not a single
+container: an immutable image, dedicated IAM and network rules, exact runtime
+configuration, shared rate limiting, a trusted ingress policy, edge defence,
+observability, and rollback must all agree. A healthy `/livez` endpoint proves
+only one link in that chain.
+
+## 65. A Compiled Program Is Not Yet a Deployable Program
+
+We found a useful deployment failure before AWS: the TypeScript compiler had
+successfully produced the target entrypoint, but when Node tried to start it,
+one imported AWS adapter resolved back to its workspace TypeScript file. Node
+cannot execute TypeScript source directly, so the process failed before it
+could listen for health checks.
+
+The important distinction is:
+
+```text
+source code compiles
+        is not the same as
+the packaged runtime can resolve every dependency and start
+```
+
+In a development workspace, a package name such as
+`@kanbien/platform-adapter-aws-auth-cognito` is often a helpful symbolic link
+to a nearby source directory. That is convenient for editing, but it is not a
+safe assumption for a production container. A container should have a sealed
+runtime payload: compiled JavaScript for every internal package it uses,
+deliberate package shims that resolve those compiled files, and only the
+external production dependencies it needs.
+
+The image build now follows that shape:
+
+```text
+TypeScript sources
+        ↓ compile
+compiled platform, app, product, and AWS-adapter JavaScript
+        ↓ prepare
+generated internal package shims + production external dependencies
+        ↓ copy into final image stage
+small runtime image with no source-tree fallback
+```
+
+The new runtime-payload check temporarily hides the normal workspace package
+links before starting the compiled entrypoint with the public target's
+non-secret configuration. If a shim were missing, Node could not quietly fall
+back to source code; the check would fail. This is a stronger proof than
+compilation alone.
+
+On 2026-09-06 we completed the next proof as well: Docker built the actual
+image, ran it with a read-only root filesystem, temporary `/tmp`, dropped Linux
+capabilities, and no-new-privileges, then successfully checked `/livez` and
+`/readyz`. That proves the sealed local container can start under its intended
+runtime restrictions. It still does **not** prove AWS networking, the ALB/WAF
+path, an ECS deployment, real Cognito tokens, or rollback; those require a
+separately reviewed cloud change and deployed smoke tests.
+
+### Misconception check
+
+“`tsc` passed, so the Docker image must work.”
+
+Not necessarily. The compiler proves that TypeScript can be transformed and
+type-checked. It does not prove the final filesystem layout, package exports,
+production-only dependency set, image user, network behaviour, or health check
+can work together. Those are deployment concerns, so they need deployment
+proofs as well.
+
+### Study question
+
+Why did hiding the workspace links make this test more valuable?
+
+Because a missing production shim would otherwise be hidden by the development
+workspace. The test deliberately removes that accidental safety net and asks
+the same question the final sealed runtime needs to answer: “Can every import
+be resolved from the artifact I am actually shipping?”
+
+Planning triage: this changed the platform-runtime implementation plan and the
+staging deployment readiness record. It did not change a public app contract.
+
+## 66. Next Lesson Queue
+
+1. Walk through the foundation stack one resource at a time: service security
+   group, rate-limit table, task roles, target group, DNS route, WAF, and
+   operational alarms.
+2. Learn why a shared ALB makes a WAF association a carefully bounded change,
+   even when every WAF rule is scoped to one new hostname.
+3. Learn how stdout JSON becomes durable operational logs through an ECS host
+   facility, and why that is different from an application CloudWatch adapter.
 
 ## Repository Evidence
 
@@ -4709,6 +6222,8 @@ compatibility analysis.
 - [Platform contracts source](../../../platform/contracts/src/index.ts)
 - [Platform runtime source](../../../platform/runtime/src/index.ts)
 - [Platform server source](../../../platform/server/src/index.ts)
+- [Platform server package guide](../../../platform/server/README.md)
+- [Platform server source guide](../../../platform/server/src/README.md)
 - [Platform worker source](../../../platform/workers/src/index.ts)
 - [Smoke app mount](../../../apps/platform-smoke/src/app.mount.ts)
 - [Product harness foundation plan](../../../.agentic/03.product/plans/implementation/product-harness-foundation.md)
@@ -4744,6 +6259,11 @@ After each completed learning chunk:
 - 2026-09-01: Created from the architecture tutoring session. Covers the
   completed core/security and platform/contracts lessons; future lessons will
   be appended rather than rewritten.
+- 2026-09-06: Added the deployment-artifact lesson after a strict runtime probe
+  caught an internal adapter resolving from workspace TypeScript rather than
+  the compiled image payload. The platform plan and target readiness record
+  now distinguish compiled-runtime proof from an unavailable Docker-engine
+  smoke test; no AWS resource was changed.
 - 2026-09-01: Added the proposed natural-topic grouping for
   `platform/contracts`. This is a design decision record, not a source-file
   refactor.

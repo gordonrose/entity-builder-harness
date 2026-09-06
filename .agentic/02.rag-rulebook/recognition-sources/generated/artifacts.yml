@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 822
-  term_count: 1656
+  indexed_artifacts: 829
+  term_count: 1670
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7314,6 +7314,18 @@ terms:
   canonical_id: product.plan.product-harness-foundation
   evidence_path: .agentic/03.product/plans/implementation/product-harness-foundation.md
   confidence_weight: 1
+- term: product.plan.production-reference-target-baseline
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.production-reference-target-baseline
+  evidence_path: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.production-reference-target-baseline
+  evidence_path: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  confidence_weight: 1
 - term: product.plan.tenant-resource-authorization-platform-seam
   category: artifact-id
   match_type: exact
@@ -7337,6 +7349,18 @@ terms:
   match_type: exact
   canonical_id: product.migration-plan.agentic-product-namespace
   evidence_path: .agentic/03.product/plans/migration/agentic-product-namespace.md
+  confidence_weight: 1
+- term: product.standard.identity-security-baseline.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.standard.identity-security-baseline.v1
+  evidence_path: .agentic/03.product/standards/identity-security-baseline.v1.md
+  confidence_weight: 1
+- term: .agentic/03.product/standards/identity-security-baseline.v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.standard.identity-security-baseline.v1
+  evidence_path: .agentic/03.product/standards/identity-security-baseline.v1.md
   confidence_weight: 1
 - term: product.workflows.readme
   category: artifact-id
@@ -8430,6 +8454,18 @@ terms:
   canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
   evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
   confidence_weight: 1
+- term: aws.plan.kanbien-staging-platform-shell-initial-deployment
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-initial-deployment
+  evidence_path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-initial-deployment
+  evidence_path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  confidence_weight: 1
 - term: aws.runbooks.platform-shell-staging-rollback
   category: artifact-id
   match_type: exact
@@ -8526,6 +8562,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.image.readme
   evidence_path: infra/04.deploy/03.product/image/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.readme
   category: artifact-id
   match_type: exact
@@ -8597,6 +8645,18 @@ terms:
   match_type: exact
   canonical_id: deploy.script.build-platform-shell-image
   evidence_path: scripts/04.deploy/build-platform-shell-image/script.sh
+  confidence_weight: 1
+- term: deploy.script.build-platform-shell-image.verify-runtime-payload
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
+  evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
+  evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
   confidence_weight: 1
 - term: deploy.script.smoke-test-platform-shell-image.readme
   category: artifact-id
@@ -8693,6 +8753,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
   evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-infrastructure.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-infrastructure/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-infrastructure
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-infrastructure
+  evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id

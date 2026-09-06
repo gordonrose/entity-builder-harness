@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-05T15:26:15Z
-latest_commit_sha: 19f14c4
-chat_duration: 486896s (05:15:14:56)
+latest_commit_at_utc: 2026-09-06T11:41:39Z
+latest_commit_sha: b767499
+chat_duration: 559820s (06:11:30:20)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -910,6 +910,432 @@ Summary: Recorded the product-harness foundation, platform implementation follow
 
 ADR impact: No ADR: the documentation records existing implementation slices and deferred directions; it does not adopt a new cross-layer runtime architecture.
 
+### 2026-09-05T16:07:18Z - Public navigation and addressing direction recorded
+
+Recorded the learner's clarified public-navigation model in the product-harness
+foundation plan and printable handbook. Stable outward-facing product areas,
+concepts, resources, views, and workflow steps may form public browser paths;
+they are not implementation leaks merely because apps/modules implement them
+behind the scenes. The plan now distinguishes public navigation addresses,
+backend API routes, and shared capabilities; assigns namespace ownership to
+product composition; reserves hosts/DNS/TLS for deployment; and defers concrete
+tenant-addressing, hostname, router, and declaration-schema choices until the
+first real web consumer.
+
+No runtime, frontend, API, or deployment behaviour changed. The future web
+playbook must define the versioned navigation declaration, collision and
+reserved-path validation, safe query/identifier rules, redirect compatibility,
+tenant-addressing model, and proof that navigation cannot bypass shared
+identity, tenant, authorization, validation, confirmation, audit, or
+consequence controls. No ADR is required: this refines the already deferred
+capability-first channel direction without adopting a concrete web architecture.
+
+### 2026-09-05T16:09:11Z - Platform server request-envelope lesson recorded
+
+Added the first request-time server lesson to the handbook. It traces the
+current early pipeline: request/correlation ID, bounded request outcome
+logging, exact-origin CORS, security headers, rate limiting, and the early
+health-endpoint branch before ordinary authentication and app-handler work.
+It distinguishes the in-memory test handle from the Node HTTP adapter and
+records why early rate limiting protects downstream identity and application
+capacity. No plan change is required: this lesson explains the already
+implemented server pipeline without altering its ownership, public contract,
+or behaviour.
+
+### 2026-09-05T16:14:08Z - Platform server identity, permission, and tenant lesson recorded
+
+Added the next server-pipeline lesson to the handbook. It separates route
+matching from access, 401 authentication failure from 403 broad-permission
+denial, trusted tenant resolution from caller-provided URL facts, and later
+resource-policy authorization. It records the current fail-closed startup
+guard for routes requiring a tenant resolver, as well as the proof that a
+broad permission denial does not invoke tenant, resource, or app-handler work.
+No plan change is required: this teaches existing provider-neutral sequencing
+and introduces no tenant model, role/group policy engine, or route contract.
+
+### 2026-09-05T16:20:07Z - Platform server validation and resource-policy lesson recorded
+
+Added the final request-time server lesson to the handbook. It distinguishes
+boundary request validation from business validation, resource resolution from
+authorization, deliberate 403 versus 404 disclosure, app-handler invocation,
+safe 500 mapping, and the common bounded finish record. No plan change is
+required: it explains existing contract and platform seams without implementing
+a live product policy engine, audit pipeline, or new runtime behaviour.
+
+### 2026-09-05T17:19:35Z - HTTP transport hardening implemented and recorded
+
+Implemented the provider-neutral HTTP transport hardening identified during
+the server review. `platform/server` now separates route policy from raw Node
+transport adaptation: it validates transport configuration, rejects unknown
+methods rather than defaulting them to GET, rate-limits before body parsing,
+bounds headers/bodies/time/concurrency/connections, accepts non-empty JSON
+bodies only with a JSON media type, maps malformed input through safe response
+handling, and propagates cancellation into the request context. It explicitly
+handles CORS preflight and `Vary: Origin`, generates valid request IDs, preserves
+valid upstream IDs, prevents app headers from replacing platform-owned headers,
+and drains listener work after lifecycle readiness becomes false.
+
+A follow-up listener-level edge-case test found and closed a timeout accounting
+hole during the same slice: when a handler ignores cancellation after a 504,
+it now retains its in-flight concurrency slot until it actually settles. This
+prevents repeated timeouts from bypassing the configured concurrency bound.
+
+The in-memory rate limiter now bounds its keyspace and uses only a supplied
+client address, hashed bearer token, or verified principal key. The generic
+Node listener deliberately refuses to trust caller-controlled forwarded-address
+headers. `platform/observability` no longer emits arbitrary `Error.message`
+content in its normalized error shape, avoiding a common diagnostic data leak.
+
+Corrected Milestone 5: a target/product composition entrypoint—not a
+non-existent `platform/server/mount.ts`—imports the chosen public app modules
+and provider adapters. Added server package/source maps and Handbook Lesson 48
+to explain the transport gate in small teaching steps. The implementation plan,
+Kanbien staging target profile, and readiness verifier now make a shared
+rate-limit adapter, trusted-ingress client-address policy, target transport
+limits, and edge protection mandatory evidence before an internet-facing target
+may become ready. The readiness manifest remains deliberately blocked and now
+records this as its eighth explicit blocker.
+
+Validation passed: `platform:server:typecheck`, `platform:server:build`,
+`platform:server:boundary`, elevated local-listener `platform:server:test`,
+`platform:security:check`, `platform:observability:check`,
+`platform:runtime:check`, `platform:server:image-build`,
+`app:platform-smoke:check`, `product:kanbien-platform:check`, blocked-mode
+deploy-readiness validation, and `git diff --check`. The product runtime test
+also exposed and corrected a fake authenticated subject that omitted the
+complete principal facts now correctly required by the server. Local Docker
+image smoke could not run because the Docker daemon is unavailable; no image
+was published and no cloud, DNS, secret, or deployment state was changed.
+
+ADR impact: No ADR. The slice implements bounded provider-neutral server
+mechanics and corrects plan/target readiness evidence. It deliberately does
+not select a shared limiter provider, a proxy trust list, an edge/WAF product,
+or infrastructure resources; those require a separate target/adapter decision.
+
+### 2026-09-05T20:08:51Z - Target composition scope clarified for the learning record
+
+Recorded the next architecture-learning clarification in the handbook and the
+Platform Runtime Implementation Plan. A target composition entrypoint is an
+accountability and assembly point for all target-selected capabilities, not an
+authentication-only file. The plan now requires a visible capability inventory
+for the port/contract, selected adapter or host delivery, composition owner,
+infrastructure resource, failure behaviour, and readiness evidence.
+
+The inventory explicitly distinguishes current Cognito selection from gaps
+that remain intentionally unselected: external observability/audit delivery,
+shared rate limiting and trusted ingress address resolution, queue provider,
+and secrets-management delivery. It also records that infrastructure-hosted
+facilities such as stdout collection or secret injection need not be forced
+into empty TypeScript adapter packages, but must still have an explicit target
+decision and evidence. No runtime behaviour changed; no validation beyond the
+documentation integrity check is required for this clarification.
+
+### 2026-09-05T20:26:32Z - Cognito operational readiness made explicit
+
+Recorded the distinction between the implemented Cognito adapter and the
+operating model required to expose it publicly. The adapter verifies expected
+Cognito access tokens and translates approved claims into provider-neutral
+facts. Target-profile, readiness, infrastructure, and runbook work must still
+govern identity model and ownership, credential/key lifecycle and recovery,
+token/JWKS failure behaviour, authorisation-change review, ingress and abuse
+controls, safe audit/monitoring, deployed protected-route smoke, and rollback
+evidence.
+
+The record also makes clear that the current target is machine-to-machine; it
+does not yet implement human tenant/group/resource authorisation such as the
+earlier Bill/Benelux example. The existing platform-runtime plan already owns
+the relevant readiness milestone, so this clarification extends that plan
+rather than creating a separate identity plan. No runtime behaviour changed;
+documentation integrity validation remains the appropriate check.
+
+### 2026-09-05T20:48:32Z - Production reference target baseline created from user requirements
+
+Created `.agentic/03.product/plans/implementation/production-reference-target-baseline.md`
+as the authoritative completeness map for the first public production Entity
+Builder target: AWS ECS Fargate in `eu-west-1`; API-first with image/document
+and bulk-transfer support; later agent workflow; full human tenant/group/resource
+authorisation; sensitive personal/medical data expectation; EU/UK residency;
+hundreds of concurrent users; and a cost-aware single-operator beginning.
+
+The baseline separates first-release requirements from the architectural need
+for web, desktop, mobile, tablet, chat, and voice to use the same governed
+capability path. It records required capability maturity states from
+requirements through operational proof, current evidence, completion gates,
+and the explicit decisions still needed before provider/infrastructure
+selection. The platform-runtime and product-harness plans now link to this
+baseline, preventing local proof from being described as a production default.
+No AWS mutation, production target relabelling, cloud resource selection, or
+runtime code change occurred. The existing Kanbien staging scaffold remains
+planning-only and distinct from a future production target.
+
+### 2026-09-05T20:56:32Z - Multi-tenant root-approval and residency decisions recorded
+
+Updated the production reference target baseline from the user's next decision
+set. The first real product is multi-tenant. The first `PlatformRoot` is
+securely bootstrapped and root identities are invite-only; self-service
+admin/app-user signup creates an inactive request until a verified root grants
+approval. The decision explicitly keeps root approval distinct from automatic
+read access to every tenant's business data.
+
+Each tenant now has an EU or UK residency home and cross-boundary processing is
+denied by default. `eu-west-1` is the initial EU target, so UK-residency
+onboarding requires a separately planned/proven UK target covering all
+residency-inheriting stores and processing paths. If cost requires it, an
+explicit EU-only launch may refuse UK-residency tenants; cost is not an
+unrecorded reason to place UK-residency data in the EU target. No cloud service,
+provider, or concrete UK region was selected, and no AWS mutation occurred.
+
+### 2026-09-05T21:04:52Z - Initial EU-only launch and administrative scopes recorded
+
+Updated the production reference target baseline with the user's decision to
+launch EU-only initially. The `eu-west-1` target must reject UK-residency
+onboarding until a separately planned and proven UK-residency target exists.
+
+Recorded three product-level role concepts with non-interchangeable scopes:
+`PlatformRoot` administers tenants and tenant roots; `TenantRoot` administers
+only its verified tenant's app users and tenant administration; and
+`TenantAppUser` consumes authorised tenant business capabilities. The baseline
+expressly rejects implied upward privilege escalation and keeps the initial
+self-service approval gate with `PlatformRoot`. Whether/when a tenant root may
+approve app-user requests is an explicit remaining policy decision. No runtime
+code, provider selection, or AWS state changed.
+
+### 2026-09-05T21:10:23Z - Hierarchical approval policy clarified
+
+Recorded the user's parent-scope approval rule in the production reference
+target baseline. `PlatformRoot` directly creates/approves a tenant and its
+tenant root; `TenantRoot` directly creates/approves a tenant app user. Direct
+creation by the authorised immediate parent is implicit approval and must be
+audited as one `created-and-approved` action. A self-service request remains
+pending until the same parent scope approves it.
+
+The record adds the necessary non-escalation condition: creation counts as
+approval only when the actor already holds the explicit management permission
+at that parent scope. A normal tenant app user cannot acquire approval power by
+calling a create-user endpoint or submitting a chat/voice instruction. No
+runtime code, provider selection, or AWS state changed.
+
+### 2026-09-05T21:32:11Z - Initial no-MFA posture and root-recovery migration recorded
+
+Recorded the user's decision that MFA is not required initially for
+`PlatformRoot` or `TenantRoot`. The baseline treats this as an explicit
+early-stage risk decision, not a production-security recommendation: primary
+credential/reset, session, privileged-login rate limit, alerting, and recovery
+controls remain visible and MFA must be reconsidered before sensitive-data
+onboarding or a changed risk posture.
+
+Root loss recovery is now a governed one-shot replacement-root migration. It
+must not be an automatic schema migration, application endpoint, chat/voice
+tool, or untracked database edit. The later recovery design must use a protected
+invocation path, preconditions, previous-root disposition, idempotence, and
+durable audit evidence. No runtime code, provider selection, or AWS state
+changed.
+
+### 2026-09-05T21:36:29Z - Email/password initial human sign-in selected
+
+Recorded email/password as the initial human sign-in method in the production
+reference target baseline. The existing Cognito machine-to-machine adapter does
+not yet prove a human sign-in, verification, reset, session, or approval path,
+so the baseline retains email verification, password quality/reuse/breach,
+reset, session, privileged-login rate limit, and authentication-alert policy
+as explicit required design work while MFA is deferred. No runtime code,
+provider selection, or AWS state changed.
+
+### 2026-09-05T21:42:10Z - Mandatory email verification and reset-link policy recorded
+
+Recorded mandatory email verification before a self-service signup can enter
+the pending approval workflow. Password reset also uses an email link, but the
+baseline makes verification and reset separate purpose-bound, one-time,
+short-lived credential flows. Link tokens must not enter logs, audit payloads,
+analytics, error reports, or referrer-bearing requests, and passwords are never
+sent by email. Reset rate limiting, session invalidation, and post-reset
+notification remain explicit design decisions. No runtime code, provider
+selection, or AWS state changed.
+
+### 2026-09-05T21:44:45Z - Password-reset session revocation recorded
+
+Recorded the initial reset policy: a successful password reset revokes every
+prior session for the identity, permits only the newly reset session to
+continue, and sends a safe post-reset notification without credential or token
+material. This closes the open reset-session-invalidation and notification
+decisions while retaining password quality, session-lifetime, login-rate-limit,
+and alerting policy as explicit follow-up work. No runtime code, provider
+selection, or AWS state changed.
+
+### 2026-09-05T21:48:43Z - Versioned tenant identity-policy model applied
+
+Recorded the user's decision that identity controls should have implemented
+defaults and tenant-level configuration. The baseline now applies the existing
+versioned-baseline model: `PlatformRoot` owns non-weakenable invariants and
+baseline versions; `TenantRoot` may adopt an approved version and configure
+stricter tenant requirements. Email verification, purpose-bound reset links,
+reset-session revocation, and required audit evidence cannot be disabled by a
+tenant setting. Any relaxation requires an explicit time-bound exception with
+owner and evidence. Policy changes are scoped, validated, versioned, and
+audited without recording credential material. No runtime code, provider
+selection, or AWS state changed.
+
+### 2026-09-05T21:56:59Z - Identity security baseline v1 approved
+
+Recorded the approved `identity-security-baseline.v1` in
+`.agentic/03.product/standards/`. It fixes the first human identity defaults:
+15-character minimum passwords that remain usable with password managers and
+Unicode; contextual/breached-password screening; no routine expiry; mandatory
+email verification; distinct one-time 15-minute verification/reset links;
+server-side session limits; current-password reauthentication for privileged
+changes; progressive abuse controls without permanent automatic lockout; and
+separate audit, security-signal, and operational-record duties.
+
+The prior reset wording is superseded: a successful reset revokes every active
+session and does **not** create an authenticated reset-browser session. The
+user must sign in normally with the new password. The policy also records that
+medical/special-category data remains gated on a later MFA-capable baseline and
+target for applicable privileged roles.
+
+Updated the production-reference and product-harness plans so the active policy
+is findable, tenant settings can only tighten it, and the remaining human
+identity adapter/policy-resolver work remains explicitly `requirements
+captured`. No runtime code, provider selection, AWS state, or production
+identity configuration changed.
+
+### 2026-09-05T22:18:10Z - Platform-smoke proof scope restored
+
+Recorded the user's scope correction: current work is to prove the
+production-shaped platform layer through `apps/platform-smoke`, not to start a
+human identity, identity-and-access, user-profile, tenant-membership,
+group-assignment, approval-workflow, or other business/application app.
+
+The smoke app is a bounded integration probe for mounting, startup, health,
+configuration, selected machine authentication, request handling, safe
+failure, packaging, target deployment, and operational evidence. A successful
+smoke deployment proves that narrow platform/deployment slice only; it does
+not prove Entity Builder product readiness, human identity, tenant
+authorisation, or suitability for personal/medical data.
+
+Updated the production-reference and platform-runtime plans and the printable
+handbook to make the immediate scope and the later application boundary
+unambiguous. No runtime code, provider configuration, AWS state, or business
+application work changed.
+
+### 2026-09-05T22:32:59Z - Staging platform-shell AWS boundary re-inspected
+
+Performed the governed, read-only AWS inspection using profile `kanbien-dev`,
+region `eu-west-1`, and the `kanbien-staging` candidate boundary. The shared
+cluster, ALB, immutable/scan-on-push `platform-shell` ECR repository, and
+machine-to-machine Cognito client/scope exist. The ECR repository has no
+images, and there is no platform-shell ECS task definition, ECS service, ALB
+target group, hostname/host rule, log group, alarm, deployed smoke proof, or
+rollback exercise.
+
+Updated the AWS inventory, readiness manifest, and handbook to distinguish
+selected/planned facts from verified live resources. The next bounded
+operational task is an AWS change plan for the minimal server-first platform
+shell target. It must cover image provenance, ECS/ALB runtime resources,
+safe configuration and machine-secret delivery, ingress/rate-limit controls,
+log/alarm delivery, rollback, and smoke proof; it must not add business apps,
+human identity, or tenant data. No AWS resource, secret, DNS record, image,
+or deployment was changed.
+
+### 2026-09-05T22:48:00Z - Existing public-site boundary and 503 diagnosed
+
+After the decision to retain the `kanbien.com` DNS records, performed a
+governed, read-only inspection of the public route and its old workload. The
+zone's `kanbien.com`, `www.kanbien.com`, and `rag.kanbien.com` A-alias records
+point to the shared public ALB. `kanbien.com` redirects to `www.kanbien.com`,
+whose default HTTPS route forwards to the legacy `service-platform` target
+group. That group had no registered targets: the service wanted one task, but
+every recent task exited with code `1` while its startup migration timed out
+connecting to PostgreSQL. The corresponding RDS instance reports
+`inaccessible-encryption-credentials`; the available Valkey cache does not
+make the unavailable database recoverable. This explains the observed `503`.
+
+Recorded the separation of concerns in the production baseline, AWS inventory,
+and handbook: retain the public DNS boundary; do not remove or repurpose the
+shared ALB, legacy service, target groups, RDS, cache, certificate, or related
+access configuration as part of the platform-smoke work; and plan legacy-site
+recovery or replacement as its own governed, reversible change. No AWS
+resource, DNS record, data, image, or deployment was changed.
+
+### 2026-09-06T00:15:00Z - Platform-smoke staging deployment planning began
+
+Kept the brochure-site recovery separate and inspected the selected
+`kanbien/staging` platform-shell boundary for a new smoke workload. The
+wildcard certificate can cover `staging.platform.kanbien.com`, but the shared
+ALB has no WAF and no shell runtime resources exist. The local target profile
+also had two deployment-stopping configuration defects: it mapped the Cognito
+scope to `smoke:read` instead of the smoke app's declared
+`platform-smoke.smoke:read`, and it omitted the Cognito identifiers required
+when `PLATFORM_AUTH_PROVIDER=cognito` is selected.
+
+Added the bounded initial AWS deployment plan and corrected those declarative
+target facts. The plan proposes an isolated Fargate workload, dedicated IAM
+and network boundary, host-scoped WAF, DynamoDB-backed shared rate limiter,
+trusted-ALB client-address resolver, CloudWatch/SNS delivery, repeatable
+CloudFormation, immutable-image promotion, and reversible verification. These
+are planning decisions only: the current branch remains uncommitted and ahead
+of `origin/main`, no AWS resource, DNS record, secret, image, or deployment
+was changed, and explicit approval remains required before any cloud apply.
+
+### 2026-09-05T23:32:53Z - Platform-shell deployable-artifact and infrastructure slice completed locally
+
+Continued the bounded platform-smoke deployment work without touching the
+separate brochure-site recovery. A strict public-target startup probe exposed a
+real packaging defect: the compiled entrypoint resolved the new AWS adapters
+through development workspace TypeScript exports. The image payload now compiles
+and shims the Cognito, ECS/Fargate trusted-ingress, and DynamoDB shared-rate-limit
+adapters; its final Docker stage receives only the generated payload and
+production dependencies. The runtime-payload test hides the workspace package
+links and starts the compiled target successfully with non-secret staging
+configuration. Docker Desktop WSL integration is unavailable, so the actual
+container-engine smoke remains honestly blocked.
+
+Added target-specific CloudFormation foundation and service templates. The
+foundation creates new platform-shell roles, ALB-only task security group,
+DynamoDB rate-limit table, target group, host route, DNS alias, host-scoped WAF,
+log group, SNS alarms, and the narrowly scoped service-stack execution role.
+The service template accepts an immutable image digest, runs one 256/512 Fargate
+task with a read-only filesystem, and selects the reviewed Cognito, DynamoDB,
+trusted-ingress, transport, health, and CORS configuration. Static policy
+checks, AWS CloudFormation template validation, and AWS Access Analyzer policy
+validation passed.
+
+Read-only AWS checks confirmed listener priority `20` was unused, the ALB alias
+zone ID is `Z32O12XQLNTSW2`, no regional WAF ACL currently exists, and the live
+GitHub deploy role still has its older policy. The repository now contains a
+narrower desired policy and workflow; a separately approved IAM policy update
+is required before the repeatable GitHub service deployment path can run.
+
+Updated the target profile, readiness manifest, AWS plan, runtime plan, and
+handbook together. No AWS resource, IAM policy, DNS record, secret, ECR image,
+change set, stack, task definition, or deployment was created or modified.
+
+The review also retained a cost-control blocker: resource tags do not become
+cost evidence automatically. The account must activate the `service` cost
+allocation tag and prove the scoped monthly/forecast budget after the tagged
+foundation resources exist.
+
+
+### 2026-09-06T11:32:24Z - Commit recorded
+
+Commit: `7324442`
+
+Message: feat(platform): harden server runtime boundary
+
+Summary: Hardened the provider-neutral HTTP boundary with bounded request transport, trusted client-address injection, safe response handling, rate-limit contract improvements, privacy-safe error logging, lifecycle draining, a reviewed identity-security baseline, and focused runtime tests.
+
+ADR impact: No ADR: this implements the already selected platform boundary and security policy; it does not introduce a new durable architecture decision.
+
+
+### 2026-09-06T11:41:39Z - Commit recorded
+
+Commit: `b767499`
+
+Message: feat(deploy): define AWS platform shell target
+
+Summary: Added Cognito/DynamoDB/ECS target composition, sealed image packaging proof, validated staging CloudFormation foundation and service templates, narrowly scoped deployment workflow and policy definitions, and static deployment/readiness gates. No AWS resources were changed.
+
+ADR impact: No ADR: this implements the already selected ECS Fargate/Cognito production-reference target and records a governed deployment path; it does not change that target decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -951,6 +1377,20 @@ ADR impact: No ADR: the documentation records existing implementation slices and
   Message: docs(architecture): record platform learning direction
   Summary: Recorded the product-harness foundation, platform implementation follow-ups, printable learning handbook, and durable session evidence for security, audit, contracts, runtime, workers, adapters, and source organisation decisions.
   ADR impact: No ADR: the documentation records existing implementation slices and deferred directions; it does not adopt a new cross-layer runtime architecture.
+
+
+- Commit: `7324442`
+  Time UTC: 2026-09-06T11:32:24Z
+  Message: feat(platform): harden server runtime boundary
+  Summary: Hardened the provider-neutral HTTP boundary with bounded request transport, trusted client-address injection, safe response handling, rate-limit contract improvements, privacy-safe error logging, lifecycle draining, a reviewed identity-security baseline, and focused runtime tests.
+  ADR impact: No ADR: this implements the already selected platform boundary and security policy; it does not introduce a new durable architecture decision.
+
+
+- Commit: `b767499`
+  Time UTC: 2026-09-06T11:41:39Z
+  Message: feat(deploy): define AWS platform shell target
+  Summary: Added Cognito/DynamoDB/ECS target composition, sealed image packaging proof, validated staging CloudFormation foundation and service templates, narrowly scoped deployment workflow and policy definitions, and static deployment/readiness gates. No AWS resources were changed.
+  ADR impact: No ADR: this implements the already selected ECS Fargate/Cognito production-reference target and records a governed deployment path; it does not change that target decision.
 
 ## Main Refresh Conflicts
 
@@ -1033,9 +1473,9 @@ an implemented cross-layer architecture decision in this checkpoint.
 ## Session Metrics
 
 Raised at UTC: 2026-08-31T00:11:19Z
-Latest commit at UTC: 2026-09-05T15:26:15Z
-Latest commit SHA: 19f14c4
-Chat duration: 486896s (05:15:14:56)
+Latest commit at UTC: 2026-09-06T11:41:39Z
+Latest commit SHA: b767499
+Chat duration: 559820s (06:11:30:20)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -1067,3 +1507,17 @@ Evidence:
 Corpus gaps:
 
 - None.
+
+### 2026-09-06T11:15:40Z - Local platform-shell container smoke passed
+
+After Docker Desktop WSL integration became available, the governed local image
+smoke test built the sealed platform-shell image and ran it with a read-only
+filesystem, temporary `/tmp`, dropped Linux capabilities, and
+`no-new-privileges`. Its `/livez` and `/readyz` checks passed. The staging
+readiness record, AWS change plan, runtime plan, and learning handbook now
+record this as local container evidence rather than a Docker blocker.
+
+No AWS resource, IAM policy, DNS record, secret, ECR image, change set, stack,
+task definition, or deployment was created or modified. The target remains
+blocked on the separately governed IAM update, foundation change-set review,
+official image provenance, and deployed smoke/rollback proof.

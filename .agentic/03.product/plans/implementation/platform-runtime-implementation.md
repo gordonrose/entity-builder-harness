@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 11
+version: 18
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -33,6 +33,20 @@ The shell should prove that platform contracts, app mounting, server startup,
 worker startup, health, config, observability, security hooks, lifecycle,
 testing helpers, container packaging, and AWS production deployment readiness
 can work together without depending on product app internals.
+
+This plan proves individual platform-shell slices. The authoritative
+definition of what must be complete before a public production target is called
+operationally ready is
+`production-reference-target-baseline.md`. A local slice in this plan may be
+implemented while its corresponding reference-target capability remains
+incomplete.
+
+The immediate scope remains the platform shell and `apps/platform-smoke` only.
+It must not be expanded into a human-identity, tenant-membership,
+identity-and-access, user-profile, or other business application merely because
+those future consumers will reuse platform capabilities. The production
+reference baseline records those requirements separately until the platform
+proof is complete and product/application work is deliberately started.
 
 ## Locked Direction
 
@@ -99,7 +113,7 @@ The first production-shaped shell should include these modules:
 | `platform/contracts` | App mount, registries, request context, job context, feature flags, config, health, route and job contracts | Type tests and app mount contract tests |
 | `platform/testing` | Fakes for app contract tests, fake registries, fake contexts, fake queues, fake health checks | Reusable tests for valid and invalid mounts |
 | `platform/runtime` | Registry validation, context factories, lifecycle, resources, error mapping, shutdown primitives | Unit and integration tests |
-| `platform/server` | HTTP entrypoint, app mounting composition root, middleware order, route adaptation, health routes | Local smoke server with dummy app |
+| `platform/server` | HTTP process, bounded transport, middleware order, route adaptation, health routes | Local smoke server with dummy app |
 | `platform/workers` | Worker entrypoint, app mounting composition root, job registry, retry/dead-letter mechanics, shutdown | Local worker smoke with dummy job |
 | `platform/security` | Auth parsing hook, token/session validation contracts, permission enforcement, CORS/rate-limit policy surfaces | Denied and allowed route tests |
 | `platform/observability` | Structured logging, redaction, metrics/tracing hooks, request/job ids | Safe log and metric assertions |
@@ -341,18 +355,124 @@ Acceptance:
 
 Add the HTTP runtime entrypoint and app route adaptation.
 
+Status: implemented for the provider-neutral server shell. The generic server
+receives a product-composed app list; it is not the place that imports a
+particular product's app modules. The first target composition entrypoint is
+`infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts`, which
+selects `products/kanbien-platform` and its approved Cognito authentication
+adapter. Generic `platform/server` remains unaware of either selection.
+
+#### Target Composition Is A Complete Capability Inventory
+
+A target composition entrypoint is an assembly and accountability point for
+*all* target-selected capabilities, not an authentication-only file. It must
+make each selected capability and its failure boundary traceable, whether the
+selection is expressed as a TypeScript adapter, a target configuration value,
+or an infrastructure-hosted facility.
+
+For every target-relevant capability, record the following before a target is
+called ready: the platform port or contract (where one exists), selected
+provider or host-delivery mechanism, composition owner, provisioned
+infrastructure, failure behaviour, and readiness evidence. The baseline
+inventory includes authentication/authorisation, observability export and
+record delivery, shared rate limiting, trusted client-address resolution,
+queues and workers, persistence/storage, configuration and secret delivery,
+feature flags, and durable audit/security records.
+
+Not every integration should be forced into a TypeScript provider adapter. For
+example, structured logs written to stdout may be collected by the container
+host, and secrets may be injected by the deployment target. Those are still
+explicit target choices with evidence and failure behaviour; a generic helper
+or an ECS deployment must not be treated as proof that the capability has been
+selected, secured, or operated.
+
+Current state is intentionally incomplete and must remain visible:
+
+| Capability | Current generic mechanism | Target-selected evidence | Readiness position |
+| --- | --- | --- | --- |
+| Authentication | platform security contracts and Cognito adapter | Kanbien target composition selects Cognito | selected for the current shell |
+| Observability | safe structured records, logging, metric/trace seams | no external exporter/sink adapter selected | not a complete production observability path |
+| Rate limiting | bounded in-memory limiter | no durable shared adapter or ingress address resolver | blocks public multi-replica readiness |
+| Queue processing | provider-neutral worker/job mechanics | no queue provider selected | deferred target/adapter slice |
+| Configuration and secrets | process configuration contracts | target host can inject values; no secrets-manager adapter selected | target-specific evidence still required |
+| Durable audit/security records | normalised record contracts | no durable provider/sink selected | deferred target/adapter slice |
+
+Do not create empty provider packages simply to make this table look complete.
+Create a bounded adapter/target decision only when a capability has a chosen
+provider, owner, acceptance criteria, and readiness proof.
+
 Acceptance:
 
 - `platform/server/main.ts` or an approved entrypoint performs deterministic
   startup: load config, create logger/resources, mount apps, validate
   registries, create server, install middleware, register health, register app
-  routes, listen, and install shutdown handlers.
-- `platform/server/mount.ts` is the only server-side app importer and imports
-  only public `app.mount.ts` modules.
+  routes, listen, and install shutdown handlers. A failed listen returns a
+  stable startup failure and returns lifecycle state to shutdown rather than
+  leaving a false-ready process behind.
+- A product/deployment composition entrypoint is the only server-side importer
+  of a particular product's approved public app modules and selected adapters.
+  Generic `platform/server` accepts the composed list and must not import app
+  internals, product modules, provider adapters, or target profiles.
 - Middleware order covers request id, logging, CORS/security headers, parsing,
   rate limiting, auth, context, authorization, validation, handler execution,
   error mapping, and response logging.
-- Local smoke proves `/livez`, `/readyz`, and the dummy route.
+- Local smoke proves `/livez`, `/readyz`, the dummy route, a real listener,
+  malformed/oversized request handling, explicit method rejection, CORS
+  preflight, request-ID ownership, and graceful listener draining.
+
+### 5a. Harden The HTTP Transport Before Any Public Exposure
+
+Status: implemented for the provider-neutral Node transport. This is a
+separate concern from route policy: a request must first become a bounded,
+well-formed, cancellable platform request before authentication or an app
+handler consumes work.
+
+The current transport has the following enforced baseline:
+
+- It permits only declared platform methods (`GET`, `POST`, `PUT`, `PATCH`,
+  `DELETE`, and explicit `OPTIONS`); an unknown method is never silently
+  treated as `GET`.
+- It gives every request a valid correlation/request ID, preserves a valid
+  upstream ID, and prevents an app handler from replacing platform-owned
+  request, CORS, or security headers.
+- It performs rate-limit admission before body reading and JSON parsing, then
+  applies a second authenticated-principal limit when a verified principal key
+  is available.
+- It bounds request body size, header size/count, header/request/handler time,
+  concurrent work, and requests per socket. It accepts a non-empty body only
+  for body-carrying methods with a JSON media type, and maps invalid JSON,
+  unsupported media type, and over-limit input through the same safe error
+  response/log/metric path. A handler that ignores cancellation after its
+  timeout retains its concurrency slot until it settles, so a timeout cannot
+  become a parallel-work bypass.
+- It uses exact-origin CORS, emits `Vary: Origin` for an allowed origin, handles
+  valid preflight explicitly, and has one response-header owner.
+- It supplies a cancellation signal to the runtime context. Shutdown first
+  makes readiness false and stops accepting new work, then drains existing
+  requests for a bounded period before cancelling/closing the remainder.
+- It uses only the Node socket peer address. It never trusts an unverified
+  `X-Forwarded-For` or similar caller-controlled header.
+- It bounds the local in-memory limiter's keyspace. It hashes bearer tokens
+  before a token-derived key is used and does not log the token itself.
+
+The following are explicit public-exposure gates, not TODOs hidden in generic
+server code: a multi-replica/public target must select and inject a durable
+shared rate-limit adapter, define a trusted-ingress client-address resolver,
+set target-appropriate transport limits, and prove edge/WAF/ingress policy.
+Those are deployment target and adapter decisions; choosing Redis, an AWS
+service, a proxy trust list, or cloud resources without that approved target
+slice would violate the platform boundary. The default in-memory limiter is
+per-process and is not evidence that a target has a shared quota.
+
+Acceptance:
+
+- Listener-level tests prove the baseline controls above, rather than only
+  passing already-normalised request objects to `shell.handle`.
+- The generic package remains provider-neutral and cannot import app internals,
+  provider SDKs, cloud infrastructure, or an identity adapter.
+- Target readiness treats a shared rate-limit adapter and trusted ingress
+  address policy as mandatory before an internet-facing deployment is marked
+  ready.
 
 ### 6. Build The Worker Shell
 
@@ -743,6 +863,15 @@ Acceptance:
 - Image smoke proves startup and health endpoints.
 - IaC or governed equivalent ownership is named before production readiness.
 
+Current status (2026-09-06): the deployable JavaScript payload is proven to
+start with generated package shims even when its TypeScript workspace links are
+hidden. The target has a tested DynamoDB shared limiter, a target-owned
+ALB-only client-address resolver, explicit transport limits, two statically
+checked CloudFormation templates, and AWS template validation. The real local
+container-engine smoke now passes with the intended read-only filesystem,
+temporary `/tmp`, dropped Linux capabilities, and liveness/readiness checks.
+No AWS resource has been created by this work.
+
 ### 9. Select AWS Runtime Family
 
 Choose the production AWS runtime only after current-state inspection and a
@@ -800,6 +929,15 @@ GitHub-to-AWS identity, immutable image provenance, ECS task/service targets,
 AWS account/region/network/ingress/secrets/logs/alarms, operations ownership,
 deployment smoke, and rollback proof.
 
+The current target-specific implementation lives in
+`infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/`. The
+foundation template creates only new platform-shell resources and treats the
+existing ALB, certificate, hosted zone, cluster, ECR repository, and Cognito
+configuration as inputs. Its WAF rules are exact-host scoped because the ALB
+is shared with legacy workloads. The service template accepts only an immutable
+image digest and is intentionally the only stack GitHub may update after the
+human-governed foundation exists.
+
 Acceptance:
 
 - Source commit, image digest, build context, base image digest, SBOM/scan or
@@ -841,10 +979,53 @@ routes without either declaration preserve the permission-only path, while a
 route that declares a required tenant or resource decision fails closed if its
 resolver or `Authorizer` is absent. Tenant/locale derivation and product-specific
 profile, membership, and role enrichment remain separate app or identity-boundary
-work. Public deployment remains blocked until the
-Kanbien staging Cognito user pool/client, CORS origins, secret/config source,
-product app permission source, and deployed protected dummy-route smoke proof
-are recorded in the target profile.
+work. The Kanbien staging Cognito user pool/client, exact CORS origin,
+non-secret task configuration, and product permission source are now recorded
+in the target profile and mirrored by the service template. Public deployment
+remains blocked on a reviewed foundation change set, deployment IAM-policy
+update, official image provenance, and deployed protected dummy-route smoke
+proof.
+
+#### Cognito Operational Readiness Is Separate From The Adapter
+
+The Cognito adapter proves the code-level identity boundary: issuer/JWKS
+construction, access-token requirements, provider claim extraction, and
+translation into provider-neutral platform facts. It is not a complete
+operating model for an identity service.
+
+The Kanbien staging target profile already records an initial provider, user
+pool, confidential machine-to-machine app client, scope mapping, client-secret
+storage location, and CORS intent. Its readiness manifest remains blocked.
+Before internet-facing readiness, the target must also make the following
+operational choices explicit and prove them:
+
+- **Exposure and identity model:** the present target is machine-to-machine.
+  A later human-user/tenant/group model is a distinct decision and must define
+  its membership source, lifecycle, and resource-authorisation contribution;
+  it is not supplied merely by Cognito group parsing.
+- **Lifecycle and recovery:** owner, provisioning/change control across
+  environments, app-client and secret injection, secret rotation, credential
+  revocation/disablement, emergency access, and a recovery/rollback procedure.
+- **Token and key behaviour:** allowed token use and audience/client binding,
+  token lifetime and the consequence that a valid bearer token normally remains
+  valid until expiry, clock-skew policy, JWKS cache refresh/rotation/failure
+  behaviour, and an incident response for compromised credentials or keys.
+- **Authorisation governance:** reviewed claim/group/scope-to-permission maps,
+  least privilege, a controlled change path for grants, and an explicit
+  separation between platform permission mapping and app-owned tenant,
+  membership, region, clearance, or resource decisions.
+- **Abuse and boundary controls:** shared rate limiting, trusted ingress client
+  address resolution, CORS/exposure policy, IAM least privilege, network
+  controls, and TLS/secret-at-rest controls.
+- **Evidence and operation:** safe authentication/audit records without raw
+  tokens, monitoring and alert ownership for authentication/JWKS failures or
+  abuse, retention/access policy, deployed protected-route smoke, and rollback
+  proof.
+
+These are target-profile, readiness-manifest, infrastructure, and operating
+runbook concerns. Do not enlarge the Cognito adapter into an unauditable
+identity-management framework. The adapter supplies the verified facts; the
+target governs whether those facts can be safely relied upon in production.
 
 #### Boundary Correction Audit (2026-08-31)
 
@@ -909,8 +1090,11 @@ Acceptance:
   is decided for `/livez` and `/readyz` instead of assumed.
 - CORS allowlists come from deployment target profiles or equivalent
   environment config, not hardcoded platform defaults.
-- Rate limiting is keyed by principal, token/session identity, trusted
-  forwarded IP, or an approved fallback, not only one global in-memory bucket.
+- Rate limiting is keyed by principal, token/session identity, or a
+  target-resolved trusted client address—not an unverified forwarded header.
+  The generic process-local limiter is bounded but insufficient for a public
+  multi-replica target; target readiness requires a shared adapter and an
+  explicit ingress-address trust policy before public exposure.
 - Secrets and provider config are loaded from the target profile, environment,
   or secret store without committing secret values.
 - The deployment readiness manifest records auth provider, protected exposure
@@ -924,17 +1108,22 @@ Acceptance:
 Only start real app work after the platform shell is proven enough that app
 teams can build against contracts instead of guesses.
 
-Current status: local product composition is implemented and deploy-image
-smoke tested. `apps/platform-smoke` registers the smoke route, app-owned
+Current status: local product composition is implemented and its compiled
+deployment payload has been started with public-target configuration. The
+container-engine smoke has now passed with Docker Desktop WSL integration
+available; it proves the sealed local image can start with the intended runtime
+restrictions and serve its health endpoints.
+`apps/platform-smoke` registers the smoke route, app-owned
 permission, config schema, health check, lifecycle hooks, and queue job through
 `platform/contracts`. `products/kanbien-platform` composes that app through the
 public app package and publishes the product manifest used by deployment
 readiness. The local app check, product check, server check, image-build
-entrypoint, direct product server entrypoint smoke, container boundary check,
-deploy-readiness blocked-mode check, and platform shell image smoke have
-passed. AWS deployment, deployed protected-route smoke, CORS origins, Cognito
-target values, secret/config source, ECS task/service targets, and rollback
-proof remain blocked in the Kanbien staging target profile.
+entrypoint, direct product server entrypoint smoke, runtime-payload isolation
+check, container boundary check, infrastructure static-policy check, and
+deploy-readiness blocked-mode check, and actual container smoke have passed.
+AWS deployment, deployed protected-route smoke, GitHub deployment-role policy
+update, official image provenance, and rollback proof remain blocked in the
+Kanbien staging target profile.
 
 Entry criteria:
 
@@ -966,7 +1155,7 @@ Entry criteria:
 | AWS target is ambiguous | AWS inspect/plan evidence naming profile/account, region, environment, target, runtime family |
 | Production cannot roll back | Rollback target, authority, command/workflow, and post-rollback health proof |
 | Public route exposure bypasses auth | Auth provider decision, token/session validation tests, permission mapping, protected dummy route smoke, and deployment readiness auth blockers |
-| CORS or rate limits are unsafe for production | Target-profile CORS allowlist, principal/IP rate-limit keying proof, and explicit private/public exposure decision |
+| CORS or rate limits are unsafe for production | Exact-origin CORS/preflight listener tests; target-profile shared rate-limit adapter, trusted-ingress client-address policy, target transport limits, and explicit private/public exposure decision |
 
 ## Stop Conditions
 
@@ -980,19 +1169,17 @@ Entry criteria:
 - A URL or DNS convention is treated as locked without an infra/AWS decision.
 - Deployment readiness is claimed from local tests alone.
 - Internet-facing deployment is claimed while real auth/authz provider choice,
-  token/session validation, permission mapping, CORS allowlist, rate-limit
-  keying, health exposure policy, or auth readiness blockers are unresolved.
+  token/session validation, permission mapping, CORS allowlist, shared
+  rate-limit adapter, trusted-ingress client-address policy, transport limits,
+  health exposure policy, or auth readiness blockers are unresolved.
 - Secrets, tokens, credentials, private keys, or connection strings with values
   appear in source, logs, docs, fixtures, or generated packets.
 
 ## First Slice Recommendation
 
-Current next slice: after committing Milestone 11, choose between starting real
-application-layer work against the local platform contracts or continuing AWS
-target planning for Kanbien staging. Public deployment still needs target
-Cognito values, CORS origins, secret/config source, ECS server/worker targets,
-deployment smoke, rollback evidence, and operations ownership before exposure.
-For the Kanbien staging target, record a server-first, worker-capable project
-shape before deployment execution: server ingress can be selected first, but a
-future worker service must already have an explicit naming/configuration slot
-and activation condition.
+Current next slice: commit and merge the reviewed platform/deployment work,
+then obtain a separate explicit AWS approval to update the GitHub deployment role
+and create a reviewed foundation change set. The first AWS apply must remain
+server-first and worker-capable: it may create only the HTTP server resources;
+the future worker retains its explicit naming/configuration slot and activation
+condition but no empty worker service is deployed.

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.product-harness-foundation
-version: 4
+version: 7
 status: active
 layer: 03.product
 domain: governance
@@ -91,7 +91,10 @@ When the foundation is implemented, an agent receiving a request such as
 The harness must publish an explicit capability inventory before it produces
 templates or defaults. Each capability is classified as `available`,
 `planning-only`, `experimental`, or `unavailable` with evidence and a required
-workflow.
+workflow. Its production-capable availability claims must be reconciled with
+the reference-target maturity states in
+`production-reference-target-baseline.md`; a locally proven platform seam is
+not automatically a production default for app builders.
 
 Initial planning assumptions are:
 
@@ -142,11 +145,17 @@ catch-all default workflow.
   checklists/                         human-readable review evidence
 ```
 
-The exact folder set and file names are deferred until the capability inventory
-is approved. Likely initial artifacts are:
+The approved production-reference baseline has now introduced one focused
+standard: `standards/identity-security-baseline.v1.md`. It records an initial
+identity-security floor and adoption rules; it is not a generic feature
+template and does not claim a human identity implementation exists.
+
+The remaining folder set and file names are deferred until the capability
+inventory is approved. Likely next artifacts are:
 
 - an app/platform adoption standard;
-- a security-baseline adoption standard;
+- a broader security-baseline adoption standard, extending the identity
+  baseline only when a real capability requires it;
 - a workflow for creating a platform-consumable app;
 - a workflow for composing a product from public app surfaces;
 - a capability-first interaction-channel standard and, when a real consumer
@@ -290,6 +299,61 @@ text-to-speech, transcript store, model, or prompt infrastructure merely to
 reserve a future option. Start with one bounded consumer and add only the
 channel contracts, adapters, and policies it demonstrably requires.
 
+## Public Navigation And Addressing Direction
+
+A public browser URL is a durable product interface, not a reflection of the
+repository, frontend component tree, or deployment implementation. The harness
+must distinguish three related but separate concepts:
+
+| Concept | Meaning | Example |
+| --- | --- | --- |
+| Public navigation address | The stable browser location and user-facing information architecture. | `/finance/invoices/INV-123` |
+| Backend API route | The HTTP interface through which a web adapter or another machine client obtains data or requests an action. | `POST /api/v1/invoices/INV-123/export` |
+| Capability | The shared product meaning, validation, authorization, and consequence boundary that a web, chat, voice, worker, or CLI consumer may invoke. | `invoice.export` |
+
+Public URL names may use deliberate, outward-facing product classifications
+such as product area, product concept, resource, view, and user-visible
+workflow step. Those names must be stable product language rather than
+transient app, module, page, component, provider, or source-folder labels.
+Changing the implementation behind a bookmarked address must not require
+changing the address.
+
+The initial policy direction is:
+
+- the deployment target owns environment origins, DNS, TLS, and custom-domain
+  resources; environment is not a default browser-path segment;
+- product composition owns the top-level public navigation namespaces and
+  detects collisions between app contributions;
+- an app/feature may contribute a view or capability mapping within an approved
+  product namespace, but must not claim another app's namespace;
+- web adapters map a public address to an approved view and then invoke the
+  shared capability path; they do not create a second business or
+  authorization path;
+- browser paths use stable, user-understandable product areas and resources;
+  query fields are limited to safe, bounded view state;
+- URLs must not contain credentials, tokens, raw personal or tenant data,
+  permissions, roles, group assignments, or other authority claims;
+- navigation never confers authority. Every request still resolves verified
+  identity and tenant context, then enforces permission and resource policy;
+  and
+- a navigation address may display an action-review view, but an HTTP safe
+  method must not itself perform a consequential action.
+
+Tenant addressing—custom domain, tenant subdomain, or tenant path prefix—is a
+deliberate future product and deployment decision. It affects identity,
+cookies, TLS, support, branding, and trusted tenant resolution; a
+tenant-looking host or path value is never authorization evidence.
+
+Do not add a generic frontend router, universal URL package, or mandatory
+folder grammar now. When the first real web consumer is selected, define a
+versioned public-navigation declaration that references product namespace,
+view, capability, access classification, and supported channel. Add
+product-composition validation for duplicate or reserved public paths,
+compatibility/redirect expectations for changed bookmarked addresses, and a
+focused web-adaptation workflow. Codify the resulting enforceable policy as a
+source-reviewed product concern rather than embedding it in the current
+backend route contract.
+
 ## Implementation Sequence
 
 ### 0. Record This Foundation Plan
@@ -390,6 +454,30 @@ Acceptance:
   platform capabilities.
 - The first real consumer determines the repository location and exact schema;
   do not create an empty universal capability package in advance.
+
+### 3c. Define The Public Navigation Declaration And Web Addressing Policy
+
+Before a web template, browser router, or product composition generator claims
+to provide stable public pages, define the versioned declaration that maps
+product namespaces and views to approved capabilities.
+
+Acceptance:
+
+- The declaration distinguishes public navigation addresses, backend API
+  routes, and shared capabilities.
+- Product composition owns top-level public namespaces and rejects duplicate
+  or reserved paths across app contributions.
+- Address names are stable product language and do not expose implementation
+  topology, credentials, roles, permissions, group membership, or sensitive
+  tenant data.
+- It records which query values are safe view state, which identifiers are
+  suitable for public addressing, and the required redirect or compatibility
+  treatment for a changed bookmark.
+- It requires a deliberate tenant-addressing model and rejects treating a
+  supplied host/path value as authorization evidence.
+- The first web-adaptation playbook proves that navigation does not bypass
+  shared identity, tenant, authorization, validation, confirmation, audit, or
+  consequence controls.
 
 ### 4. Add Focused Workflows And Checklists
 
