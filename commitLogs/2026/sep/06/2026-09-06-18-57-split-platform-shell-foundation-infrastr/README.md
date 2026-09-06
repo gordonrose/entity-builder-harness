@@ -97,6 +97,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 - Summary: Created and reviewed a non-executing public-TLS repair change set.
   Durable evidence: The readiness manifest and deployment plan record the two expected additions, no replacement or modification, and the fact that the local-source preview must be recreated from `origin/main` before any execution; raw alert contact data is absent from repository records.
 
+
+- Summary: Refreshed the TLS chat branch from current main through a clean governed preflight.
+  Durable evidence: Remote main was current with origin/main; preflight branch agentic/preflight/chat-2026-09-06-18-57-refactor-the-kanbien-stagi-41210ca9fa05/20260906220508 merged without conflicts, passed the platform-shell infrastructure check, and applied commit 3da3415ac2e617a35d240568c019a4ef99ad1b08. The disposable worktree and branch were removed; no stash, push, main change, or AWS mutation occurred.
+
 ## Activity Log
 
 ### 2026-09-06T17:57:15Z - Session started
@@ -219,6 +223,13 @@ Message: feat(deploy): add platform hostname TLS
 Summary: Added the foundation-owned DNS-validated ACM certificate and additional SNI listener attachment for the platform hostname space, strengthened its static guardrails, recorded the no-replacement review change set, and removed raw alert contact addresses from repository records.
 
 ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
+
+### 2026-09-06T22:05:32Z - Context hygiene
+
+Summary: Refreshed the TLS chat branch from current main through a clean governed preflight.
+
+Durable evidence: Remote main was current with origin/main; preflight branch agentic/preflight/chat-2026-09-06-18-57-refactor-the-kanbien-stagi-41210ca9fa05/20260906220508 merged without conflicts, passed the platform-shell infrastructure check, and applied commit 3da3415ac2e617a35d240568c019a4ef99ad1b08. The disposable worktree and branch were removed; no stash, push, main change, or AWS mutation occurred.
 
 ## Sub-Agent Activity
 
