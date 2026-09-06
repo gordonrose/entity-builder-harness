@@ -49,8 +49,8 @@ create reusable platform shell target profile before first AWS deploy
 - Keep `deploy-readiness.yml` as the proof/blocker manifest and reference the
   target profile instead of making readiness the only source of target
   decisions.
-- Use `gordonrose164@hotmail.com` as the Kanbien staging platform shell budget
-  alert email destination.
+- Supply the Kanbien staging platform-shell budget alert destination at
+  configuration time; do not store the contact address in the repository.
 - Allow `http://localhost:3000` as a local development CORS origin in addition
   to the selected Kanbien production/staging origin policy.
 - Use `/livez` as the ALB health-check path for first AWS deploy, while keeping
@@ -62,7 +62,8 @@ create reusable platform shell target profile before first AWS deploy
 - Use AWS Secrets Manager for Cognito client secret material.
 - Use previous ECS task definition as the primary rollback target and previous
   image digest as the fallback target.
-- Send CloudWatch alarm notifications to `gordonrose164@hotmail.com`.
+- Supply the CloudWatch alarm notification destination at deployment time; do
+  not store the contact address in the repository.
 - Use hybrid AWS mutation style: governed manual AWS CLI for narrowly approved
   bootstrap prerequisites, then GitHub Actions/OIDC for repeatable build and
   deploy.

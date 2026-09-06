@@ -32,6 +32,7 @@ fragments:
   - foundation/rate-limiting.yml
   - foundation/workload-iam.yml
   - foundation/public-ingress.yml
+  - foundation/public-tls.yml
   - foundation/edge-protection.yml
   - foundation/alerting.yml
   - foundation/outputs.yml
