@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 7
+#   version: 8
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -188,6 +188,8 @@ aws:
         - '*.platform.kanbien.com'
       validation: dns-in-existing-route53-hosted-zone
       listener_attachment: additional-sni-certificate
+      certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/5a1be5b3-ee97-4666-a50a-99f52a099c4e
+      certificate_status: ISSUED
       existing_default_certificate_unchanged: true
     target_group: kanbien-stg-platform-shell
     host_rule: staging.platform.kanbien.com

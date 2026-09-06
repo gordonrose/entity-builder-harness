@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 9
+#   version: 10
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -116,14 +116,14 @@ inspection:
     alert_subscription_confirmed: true
     public_tls:
       hostname: staging.platform.kanbien.com
-      status: preview-reviewed-promotion-pending
+      status: issued-and-externally-verified
       existing_default_certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
       existing_default_certificate_names:
         - kanbien.com
         - www.kanbien.com
         - staging.kanbien.com
         - '*.kanbien.com'
-      reason: A wildcard covers one leftmost DNS label only, so '*.kanbien.com' does not cover the two-label hostname 'staging.platform.kanbien.com'.
+      reason: A wildcard covers one leftmost DNS label only, so '*.kanbien.com' does not cover the two-label hostname 'staging.platform.kanbien.com'. The foundation-owned certificate repairs that coverage without replacing the default certificate.
       selected_repair:
         ownership: cloudformation-foundation-stack
         primary_domain: platform.kanbien.com
@@ -131,8 +131,16 @@ inspection:
           - '*.platform.kanbien.com'
         validation: dns-in-existing-route53-hosted-zone
         listener_attachment: additional-sni-certificate
+        certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/5a1be5b3-ee97-4666-a50a-99f52a099c4e
+        certificate_status: ISSUED
+        validation_status: SUCCESS
+        listener_attachment_is_default: false
         existing_default_certificate_unchanged: true
-      resolution: Commit, merge, and push the selected source; recreate and review a no-replacement foundation update from origin/main; then obtain separate execution approval and re-run public DNS/TLS verification.
+      external_tls_verification:
+        verify_result: 0
+        http_status: 503
+        http_status_explanation: Expected until the platform-shell ECS service registers a healthy target.
+      resolution: Public TLS is complete. Deploy the immutable image-digest ECS service and then run the application, authorization, rate-limit, and rollback smoke proofs.
     planned_cloudformation:
       foundation_stack: kanbien-staging-platform-shell-foundation
       foundation_composition: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
@@ -152,11 +160,11 @@ inspection:
           - Add
         execution_authorized: true
       public_tls_repair_change_set:
-        name: public-tls-repair-20260906-2152
-        id: arn:aws:cloudformation:eu-west-1:337159794548:changeSet/public-tls-repair-20260906-2152/95bb7921-eacf-4c86-8d7d-0ad6db7bc51d
+        name: public-tls-repair-main-20260906-2212
+        id: arn:aws:cloudformation:eu-west-1:337159794548:changeSet/public-tls-repair-main-20260906-2212/480a8ea9-c80f-40ff-bbb6-11c156645117
         status: CREATE_COMPLETE
-        execution_status: AVAILABLE
-        source_provenance: local-chat-branch-review-only-not-execution-eligible
+        execution_status: EXECUTE_COMPLETE
+        source_provenance: pushed-origin-main
         resource_change_count: 2
         resource_change_actions:
           - Add
@@ -164,7 +172,7 @@ inspection:
           - PlatformHostnameCertificate
           - PlatformHostnameCertificateAttachment
         replacement_or_modification_detected: false
-        execution_authorized: false
+        execution_authorized: true
   route53:
     hosted_zone_id: Z0909415EFV969Z95D5F
     existing_aliases_to_staging_alb:
@@ -382,7 +390,8 @@ aws:
     - sg-08d590b0aee6e2e60
   alb: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
   target_group: pending
-  tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+  default_tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+  platform_hostname_tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/5a1be5b3-ee97-4666-a50a-99f52a099c4e
   dns_hostname: staging.platform.kanbien.com
   secret_store: aws-secrets-manager
   log_group: /ecs/kanbien-staging-platform-shell
@@ -411,12 +420,12 @@ operations:
 proof:
   static_validation: passed-local
   policy_checks: passed-local
-  generated_output_review: public-tls-repair-change-set-reviewed-promotion-pending-2026-09-06
+  generated_output_review: public-tls-repair-executed-and-externally-verified-2026-09-06
   image_smoke: passed-local
   compiled_runtime_payload: passed-local-2026-09-06
   local_runtime_smoke: passed-product-smoke-local
-  aws_read_only_inspection: platform-shell-resources-and-foundation-change-set-inspected-2026-09-06
-  deployment_smoke: blocked-tls-certificate-name-mismatch
+  aws_read_only_inspection: platform-shell-foundation-and-public-tls-verified-2026-09-06
+  deployment_smoke: partial-public-tls-passed-workload-pending
   rollback_proof: blocked
 blockers:
   - id: platform-shell-readiness.github-source
@@ -437,18 +446,18 @@ blockers:
   - id: platform-shell-readiness.runtime-target
     severity: blocking
     path: runtime
-    reason: The existing service-platform ECS service remains unselected. The platform-shell foundation now provides the target group, host rule, DNS record, log group, alarms, rate-limit table, and workload roles, but no task definition or ECS service exists yet.
-    resolution: Repair the public TLS certificate mismatch first, then deploy the immutable image-digest service stack. Keep the worker slot deferred until an app-declared background workload exists.
+    reason: The existing service-platform ECS service remains unselected. The platform-shell foundation now provides the target group, host rule, DNS record, public TLS, log group, alarms, rate-limit table, and workload roles, but no task definition or ECS service exists yet.
+    resolution: Deploy the immutable image-digest service stack. Keep the worker slot deferred until an app-declared background workload exists.
   - id: platform-shell-readiness.aws-detail
     severity: blocking
     path: aws
-    reason: The foundation stack successfully created the platform-shell service security group, target group, DNS/host route, log group, alarms, rate-limit table, WAF, and workload roles. The existing shared-ALB default certificate does not cover the two-label staging hostname; a foundation-owned additional SNI certificate has been selected but not yet created.
-    resolution: Commit, merge, and push the selected source; recreate and review the no-replacement public-TLS update from origin/main; then obtain separate execution approval and re-run public DNS/TLS verification before service deployment.
+    reason: The foundation stack successfully created the platform-shell service security group, target group, DNS/host route, public TLS, log group, alarms, rate-limit table, WAF, and workload roles. No platform-shell ECS service or task definition exists yet.
+    resolution: Deploy the immutable image-digest service stack and verify task health, authorization behaviour, rate limiting, logging, alarms, and rollback.
   - id: platform-shell-readiness.smoke-proof
     severity: blocking
     path: proof
-    reason: Foundation routing, logging, alerts, and WAF exist, but verified HTTPS fails because the current default certificate does not match the new hostname. The selected additional SNI certificate has not yet been created. There is also no platform-shell workload, so application smoke and rollback proof remain unavailable.
-    resolution: Promote the selected TLS-source change, recreate and execute the reviewed public-TLS update from origin/main, deploy through the governed workflow, verify DNS/TLS, health, and dummy app behaviour, and record rollback proof.
+    reason: Foundation routing, public TLS, logging, alerts, and WAF exist. There is no platform-shell workload, so application smoke and rollback proof remain unavailable; the expected pre-service `/livez` response is `503` with valid TLS.
+    resolution: Deploy through the governed workflow, verify health and dummy app behaviour, and record rollback proof.
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke
@@ -457,13 +466,8 @@ blockers:
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting
-    reason: The shared DynamoDB limiter, ALB-only client-address resolver, explicit transport limits, and host-scoped WAF are deployed. Verified public HTTPS remains blocked until the selected additional SNI certificate is created and attached, and no negative rate-limit proof exists.
-    resolution: Promote the selected TLS-source change, recreate and execute the public-TLS update from origin/main, confirm the ALB-only security-group precondition and WAF host scope, then complete deployed rate-limit, WAF, and routing smoke evidence before public exposure.
-  - id: platform-shell-readiness.public-tls-certificate
-    severity: blocking
-    path: ingress.tls
-    reason: The existing default certificate covers '*.kanbien.com' but not the two-label hostname 'staging.platform.kanbien.com'; an external TLS client correctly rejects the hostname. The selected repair is a foundation-owned DNS-validated certificate for 'platform.kanbien.com' and '*.platform.kanbien.com', attached as an additional SNI certificate without replacing the default.
-    resolution: Commit, merge, and push the selected TLS source; recreate and review the no-replacement foundation update from origin/main; then obtain separate execution approval and verify TLS for staging.platform.kanbien.com before any application service deployment.
+    reason: The shared DynamoDB limiter, ALB-only client-address resolver, explicit transport limits, host-scoped WAF, and public TLS are deployed. No negative rate-limit proof exists because no platform-shell workload is registered.
+    resolution: Deploy the service, confirm the ALB-only security-group precondition and WAF host scope, then complete deployed rate-limit, WAF, and routing smoke evidence before public exposure.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation
