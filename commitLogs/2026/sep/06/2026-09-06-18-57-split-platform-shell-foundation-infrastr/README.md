@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T19:15:19Z
-latest_commit_sha: e90cb52
-chat_duration: 4684s (00:01:18:04)
+latest_commit_at_utc: 2026-09-06T22:00:57Z
+latest_commit_sha: 43f09dd
+chat_duration: 14622s (00:04:03:42)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -209,6 +209,17 @@ Durable evidence: The staging readiness manifest and deployment plan record the 
   local-source template will be committed, promoted, and re-previewed from
   `origin/main` before separate execution approval is sought.
 
+
+### 2026-09-06T22:00:57Z - Commit recorded
+
+Commit: `43f09dd`
+
+Message: feat(deploy): add platform hostname TLS
+
+Summary: Added the foundation-owned DNS-validated ACM certificate and additional SNI listener attachment for the platform hostname space, strengthened its static guardrails, recorded the no-replacement review change set, and removed raw alert contact addresses from repository records.
+
+ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -230,6 +241,13 @@ Durable evidence: The staging readiness manifest and deployment plan record the 
   Summary: Recorded the verified replacement of the GitHub staging deployment role’s broad direct-service permissions with the reviewed least-privilege CloudFormation boundary, together with target readiness evidence.
   ADR impact: No ADR is needed; this executes the existing target deployment identity decision.
 
+
+- Commit: `43f09dd`
+  Time UTC: 2026-09-06T22:00:57Z
+  Message: feat(deploy): add platform hostname TLS
+  Summary: Added the foundation-owned DNS-validated ACM certificate and additional SNI listener attachment for the platform hostname space, strengthened its static guardrails, recorded the no-replacement review change set, and removed raw alert contact addresses from repository records.
+  ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -244,9 +262,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-06T19:15:19Z
-Latest commit SHA: e90cb52
-Chat duration: 4684s (00:01:18:04)
+Latest commit at UTC: 2026-09-06T22:00:57Z
+Latest commit SHA: 43f09dd
+Chat duration: 14622s (00:04:03:42)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
