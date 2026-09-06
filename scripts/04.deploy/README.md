@@ -44,5 +44,8 @@ Current commands:
 - `verify-platform-shell-deploy-readiness/`: read-only manifest validation for
   product platform shell deployment readiness, including explicit blocker
   coverage for planning-only evidence.
+- `verify-platform-shell-deployment-workflow/`: read-only supply-chain gate
+  that makes the staging workflow scan, create an SPDX SBOM, and attest the
+  immutable image before it can deploy the service stack.
 - `verify-rag-rulebook-deploy-readiness/`: read-only manifest validation for
   RAG/rulebook GitHub-to-AWS deployment readiness.

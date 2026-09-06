@@ -30,6 +30,7 @@
     "platform:shell:image:build": "bash scripts/04.deploy/build-platform-shell-image/script.sh",
     "platform:shell:image:smoke": "bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
     "platform:shell:infrastructure:check": "bash scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+    "platform:shell:deployment-workflow:check": "bash scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
     "app:platform-smoke:boundary": "node apps/platform-smoke/tests/platform-smoke-boundaries.test.mjs",
     "app:platform-smoke:build": "tsc -p apps/platform-smoke/tsconfig.json",
     "app:platform-smoke:check": "npm run app:platform-smoke:typecheck && npm run app:platform-smoke:build && npm run app:platform-smoke:test && npm run app:platform-smoke:boundary",
