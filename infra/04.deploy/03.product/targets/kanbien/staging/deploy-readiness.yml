@@ -112,11 +112,13 @@ inspection:
     metric_alarms_found: false
     planned_cloudformation:
       foundation_stack: kanbien-staging-platform-shell-foundation
-      foundation_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+      foundation_composition: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+      foundation_renderer: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+      foundation_template: rendered-transient-output-from-foundation-composition
       service_stack: kanbien-staging-platform-shell-service
       service_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
       static_policy_check: passed-local
-      aws_template_validation: passed-local-2026-09-06
+      aws_template_validation: passed-rendered-foundation-template-2026-09-06
   route53:
     hosted_zone_id: Z0909415EFV969Z95D5F
     existing_aliases_to_staging_alb:

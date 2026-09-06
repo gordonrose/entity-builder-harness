@@ -48,10 +48,10 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 - The certificate covers `*.kanbien.com`, including the selected staging host.
 - No shell task definition, ECS service, target group, host rule, DNS record,
   log group, alarm, image, or deployed smoke evidence exists.
-- Local adapter, target-composition, static infrastructure-policy, AWS
-  CloudFormation-template validation, and the real read-only container smoke
-  now pass. This proves a local image can start and serve `/livez` and
-  `/readyz`; it does not prove an AWS change set or deployed workload.
+- Local adapter, target-composition, static infrastructure-policy, rendered
+  foundation-template validation, and the real read-only container smoke now
+  pass. This proves a local image can start and serve `/livez` and `/readyz`;
+  it does not prove an AWS change set or deployed workload.
 - The existing ALB has no WAF web ACL. Its current routes serve legacy
   workloads and must not be changed as a side effect of this proof.
 - The current repository branch has uncommitted platform work and is ahead of
@@ -88,7 +88,7 @@ locally before the first AWS execution approval.
 
 | Concern | Proposed decision | Why |
 | --- | --- | --- |
-| Infrastructure definition | AWS CloudFormation under `infra/04.deploy/03.product/targets/kanbien/staging/` | The repository already uses CloudFormation for ECS staging infrastructure; it gives reviewable, repeatable desired state without putting AWS details in platform code. |
+| Infrastructure definition | Focused CloudFormation source units rendered into one AWS CloudFormation template under `infra/04.deploy/03.product/targets/kanbien/staging/` | The repository keeps ingress, edge protection, IAM, rate limiting, logging, and alerting scanable without changing the single reviewed foundation-stack resource graph. |
 | Compute | One 256 CPU / 512 MiB Fargate server task, desired count 1; worker remains at 0 | Proves the server shell at low cost without pretending the in-memory smoke job has a real queue worker. |
 | Network | Dedicated service security group: ingress only from the existing ALB security group on TCP 3000; outbound HTTPS only as far as the selected Fargate networking model requires | No direct public inbound path to the task. |
 | Routing | New IP target group with `/livez`, dedicated HTTPS listener rule, and Route 53 alias for `staging.platform.kanbien.com` | A host-specific route isolates the proof from legacy root-domain traffic. |
@@ -109,18 +109,20 @@ locally before the first AWS execution approval.
    headers by default.
 3. Parse the reviewed target transport limits at the target composition root;
    invalid values must prevent process startup.
-4. Add CloudFormation resources and static/policy/synthesized-output tests for
-   the service security group, task/execution roles, DynamoDB table, log group,
-   target group, listener rule, WAF, alarms, and SNS topic. Existing ECR,
-   Cognito, ALB, certificate, cluster, and hosted zone are inputs, not stack
-   resources to replace.
+4. Keep CloudFormation source units focused by responsibility, render them
+   deterministically into one foundation template, and run static/policy and
+   AWS-template validation for the service security group, task/execution
+   roles, DynamoDB table, log group, target group, listener rule, WAF, alarms,
+   and SNS topic. Existing ECR, Cognito, ALB, certificate, cluster, and hosted
+   zone are inputs, not stack resources to replace.
 5. Apply the reviewed IAM inline-policy update that lets GitHub pass only the
    platform-shell service CloudFormation execution role and update only the
    platform-shell service stack. Inspect the live role after the update.
 6. Commit, review, and merge the local platform slice. Run the official image
    build from `origin/main`; do not promote a local image.
-7. Obtain explicit approval for the CloudFormation create/update operation and
-   only then apply the reviewed stack. Inspect the created resources.
+7. Render the reviewed foundation source units, obtain explicit approval for
+   the CloudFormation create/update operation, and only then apply the reviewed
+   rendered stack. Inspect the created resources.
 8. Run deployed smoke proof: DNS/TLS, public `/livez`, unauthenticated `401`,
    wrong-permission `403`, correctly scoped `200`, `429` from the shared
    limiter, WAF/routing evidence, log delivery, alarm configuration, and a

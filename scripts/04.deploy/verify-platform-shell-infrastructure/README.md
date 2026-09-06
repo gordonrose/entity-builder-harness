@@ -20,9 +20,10 @@ used_by:
 -->
 # Verify Platform-Shell Infrastructure
 
-`script.sh` is a non-mutating static policy gate for the two Kanbien staging
-platform-shell CloudFormation templates. It needs PyYAML and makes no AWS API
-calls.
+`script.sh` is a non-mutating static policy gate for the Kanbien staging
+platform-shell service template and the rendered foundation template. It first
+renders the focused foundation source units into a temporary file, needs
+PyYAML, and makes no AWS API calls.
 
 It prevents accidental broadening of the first public deployment: the task
 must remain ALB-only, rate-limit state must remain encrypted, short-lived, and

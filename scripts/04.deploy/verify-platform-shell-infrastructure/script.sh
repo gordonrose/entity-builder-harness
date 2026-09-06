@@ -28,7 +28,14 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
+RENDERED_FOUNDATION="$(mktemp "${TMPDIR:-/tmp}/platform-shell-foundation.XXXXXX.yml")"
+trap 'rm -f "$RENDERED_FOUNDATION"' EXIT
+bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
+  --output "$RENDERED_FOUNDATION" >/dev/null
+export RENDERED_FOUNDATION
+
 python3 - <<'PY'
+import os
 from pathlib import Path
 import sys
 
@@ -99,10 +106,64 @@ def contains_value(value, expected):
     return False
 
 
-foundation = load("infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml")
+foundation = load(os.environ["RENDERED_FOUNDATION"])
 service = load("infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml")
 target_profile = load("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
 failures = []
+
+expected_foundation_resources = {
+    "PlatformShellLogGroup",
+    "RateLimitTable",
+    "TaskExecutionRole",
+    "TaskRole",
+    "ServiceDeploymentExecutionRole",
+    "ServiceSecurityGroup",
+    "TargetGroup",
+    "HostRule",
+    "DnsAlias",
+    "WebAcl",
+    "WebAclAssociation",
+    "AlarmTopic",
+    "AlarmTopicPolicy",
+    "AlarmSubscription",
+    "UnhealthyTargetAlarm",
+    "Target5xxAlarm",
+}
+expected_foundation_parameters = {
+    "VpcId",
+    "VpcCidr",
+    "PublicSubnetIds",
+    "ExistingAlbArn",
+    "ExistingAlbSecurityGroupId",
+    "ExistingHttpsListenerArn",
+    "ExistingAlbDnsName",
+    "ExistingAlbCanonicalHostedZoneId",
+    "HostedZoneId",
+    "HostName",
+    "ListenerRulePriority",
+    "AlarmEmail",
+    "LogRetentionDays",
+}
+expected_foundation_outputs = {
+    "LogGroupName",
+    "RateLimitTableName",
+    "RateLimitTableArn",
+    "TaskExecutionRoleArn",
+    "TaskRoleArn",
+    "ServiceDeploymentExecutionRoleArn",
+    "ServiceSecurityGroupId",
+    "TargetGroupArn",
+    "PublicSubnetIdsCsv",
+    "HostName",
+    "AlarmTopicArn",
+    "WebAclArn",
+}
+if set(foundation.get("Parameters", {})) != expected_foundation_parameters:
+    fail("rendered foundation must retain the reviewed parameter interface")
+if set(foundation.get("Resources", {})) != expected_foundation_resources:
+    fail("rendered foundation must contain exactly the reviewed resource set")
+if set(foundation.get("Outputs", {})) != expected_foundation_outputs:
+    fail("rendered foundation must retain the reviewed service-stack output interface")
 
 for forbidden_type in ("AWS::ECR::Repository", "AWS::Cognito::UserPool", "AWS::ElasticLoadBalancingV2::LoadBalancer"):
     if any(item.get("Type") == forbidden_type for item in foundation.get("Resources", {}).values()):

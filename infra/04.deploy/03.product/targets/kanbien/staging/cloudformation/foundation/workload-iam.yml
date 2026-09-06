@@ -1,0 +1,103 @@
+# AWS machine identities. These roles govern ECS and CloudFormation, not product-user permissions.
+Resources:
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-shell-task-execution
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-shell-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: platform-shell-shared-rate-limit-counter
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: UpdateOnlyThePlatformShellRateLimitTable
+                Effect: Allow
+                Action:
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt RateLimitTable.Arn
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  ServiceDeploymentExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-shell-service-deploy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: deploy-only-the-platform-shell-ecs-service
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ManagePlatformShellTaskDefinitionsAndService
+                Effect: Allow
+                Action:
+                  - ecs:CreateService
+                  - ecs:DeleteService
+                  - ecs:DeregisterTaskDefinition
+                  - ecs:DescribeClusters
+                  - ecs:DescribeServices
+                  - ecs:DescribeTaskDefinition
+                  - ecs:RegisterTaskDefinition
+                  - ecs:TagResource
+                  - ecs:UpdateService
+                Resource: "*"
+              - Sid: InspectSelectedLoadBalancerTargetGroup
+                Effect: Allow
+                Action:
+                  - elasticloadbalancing:DescribeTargetGroups
+                Resource: "*"
+              - Sid: PassOnlyThePlatformShellTaskRolesToEcsTasks
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt TaskExecutionRole.Arn
+                  - !GetAtt TaskRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: ecs-tasks.amazonaws.com
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

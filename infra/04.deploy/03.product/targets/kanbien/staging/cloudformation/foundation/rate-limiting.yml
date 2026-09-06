@@ -1,0 +1,35 @@
+# Shared, encrypted fixed-window limiter state. It stores a hash, not raw identities or tokens.
+Resources:
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: kanbien-staging-platform-shell-rate-limits
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      AttributeDefinitions:
+        - AttributeName: keyHash
+          AttributeType: S
+        - AttributeName: windowStartedAtMs
+          AttributeType: N
+      KeySchema:
+        - AttributeName: keyHash
+          KeyType: HASH
+        - AttributeName: windowStartedAtMs
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: security-operational-hash
+        - Key: managed-by
+          Value: cloudformation
