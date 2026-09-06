@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 829
-  term_count: 1670
+  indexed_artifacts: 832
+  term_count: 1676
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8574,6 +8574,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
   evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.readme
   category: artifact-id
   match_type: exact
@@ -8657,6 +8669,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
   evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+  confidence_weight: 1
+- term: deploy.script.render-platform-shell-foundation-template.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.render-platform-shell-foundation-template.readme
+  evidence_path: scripts/04.deploy/render-platform-shell-foundation-template/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/render-platform-shell-foundation-template/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.render-platform-shell-foundation-template.readme
+  evidence_path: scripts/04.deploy/render-platform-shell-foundation-template/README.md
+  confidence_weight: 1
+- term: deploy.script.render-platform-shell-foundation-template
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.render-platform-shell-foundation-template
+  evidence_path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.render-platform-shell-foundation-template
+  evidence_path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
   confidence_weight: 1
 - term: deploy.script.smoke-test-platform-shell-image.readme
   category: artifact-id

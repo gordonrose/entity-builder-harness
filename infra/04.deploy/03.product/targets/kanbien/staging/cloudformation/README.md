@@ -26,12 +26,26 @@ replace the legacy public-site service, its data stores, the shared ALB, the
 wildcard certificate, the existing Cognito machine client, or the existing ECR
 repository.
 
-`foundation.yml` creates the dedicated resources that are safe to review as one
-unit: the task security group, target group, hostname rule and DNS alias,
-rate-limit table, task roles, log group, host-scoped WAF policy, and alarms.
-It takes every pre-existing AWS resource as an input. The WAF association is a
-shared-ALB operation, so its host scope and the live listener priority must be
-reviewed in an AWS change set before it is applied.
+`foundation.yml` is the composition manifest for the dedicated resources that
+are safe to review as one unit. Its focused source files live in
+[`foundation/`](foundation/README.md): public ingress, edge protection,
+workload IAM, shared rate limiting, logging, alerting, and stack outputs. The
+renderer combines them into one transient CloudFormation template, so AWS still
+receives one foundation stack and no nested-stack or resource-ownership change
+is introduced.
+
+The foundation takes every pre-existing AWS resource as an input. The WAF
+association is a shared-ALB operation, so its host scope and the live listener
+priority must be reviewed in an AWS change set before it is applied.
+
+Render the deployable template locally with:
+
+```bash
+bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh --output /tmp/platform-shell-foundation.yml
+```
+
+The renderer is run by the static policy gate and GitHub workflow before AWS
+template validation. Do not edit or commit the rendered output.
 
 `service.yml` creates or updates the Fargate task definition and ECS service.
 It accepts only an immutable `repository@sha256:...` image reference. It cannot

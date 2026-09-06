@@ -51,7 +51,7 @@ env:
   ECR_REPOSITORY: platform-shell
   ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
   FOUNDATION_STACK: kanbien-staging-platform-shell-foundation
-  FOUNDATION_TEMPLATE: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+  FOUNDATION_COMPOSITION: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
   SERVICE_STACK: kanbien-staging-platform-shell-service
   SERVICE_TEMPLATE: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
   SERVICE_DEPLOYMENT_ROLE_ARN: arn:aws:iam::337159794548:role/kanbien-staging-platform-shell-service-deploy
@@ -127,7 +127,11 @@ jobs:
       - name: Validate CloudFormation templates in the selected account
         if: ${{ inputs.publish_image }}
         run: |
-          aws cloudformation validate-template --template-body "file://$FOUNDATION_TEMPLATE" >/dev/null
+          foundation_template="$RUNNER_TEMP/platform-shell-foundation.yml"
+          bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
+            --manifest "$FOUNDATION_COMPOSITION" \
+            --output "$foundation_template"
+          aws cloudformation validate-template --template-body "file://$foundation_template" >/dev/null
           aws cloudformation validate-template --template-body "file://$SERVICE_TEMPLATE" >/dev/null
 
       - name: Resolve digest-pinned base image

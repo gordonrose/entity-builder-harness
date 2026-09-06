@@ -1,0 +1,50 @@
+# Values deliberately exported for the separately deployed service stack.
+Outputs:
+  LogGroupName:
+    Value: !Ref PlatformShellLogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-LogGroupName
+  RateLimitTableName:
+    Value: !Ref RateLimitTable
+    Export:
+      Name: !Sub ${AWS::StackName}-RateLimitTableName
+  RateLimitTableArn:
+    Value: !GetAtt RateLimitTable.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RateLimitTableArn
+  TaskExecutionRoleArn:
+    Value: !GetAtt TaskExecutionRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskExecutionRoleArn
+  TaskRoleArn:
+    Value: !GetAtt TaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TaskRoleArn
+  ServiceDeploymentExecutionRoleArn:
+    Value: !GetAtt ServiceDeploymentExecutionRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-ServiceDeploymentExecutionRoleArn
+  ServiceSecurityGroupId:
+    Value: !Ref ServiceSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-ServiceSecurityGroupId
+  TargetGroupArn:
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-TargetGroupArn
+  PublicSubnetIdsCsv:
+    Value: !Join [",", !Ref PublicSubnetIds]
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnetIdsCsv
+  HostName:
+    Value: !Ref HostName
+    Export:
+      Name: !Sub ${AWS::StackName}-HostName
+  AlarmTopicArn:
+    Value: !Ref AlarmTopic
+    Export:
+      Name: !Sub ${AWS::StackName}-AlarmTopicArn
+  WebAclArn:
+    Value: !GetAtt WebAcl.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WebAclArn

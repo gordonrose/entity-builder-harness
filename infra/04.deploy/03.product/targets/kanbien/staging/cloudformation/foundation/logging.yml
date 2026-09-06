@@ -1,0 +1,16 @@
+# Retained operational log destination. Audit-event retention is intentionally separate.
+Resources:
+  PlatformShellLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /ecs/kanbien-staging-platform-shell
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 4
+#   version: 6
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -44,7 +44,9 @@ deployment:
   first_mutation_candidate: create-platform-shell-foundation-stack
   cloudformation:
     foundation_stack: kanbien-staging-platform-shell-foundation
-    foundation_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+    foundation_composition: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+    foundation_renderer: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+    foundation_template: rendered-transient-output-from-foundation-composition
     service_stack: kanbien-staging-platform-shell-service
     service_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
     service_execution_role_name: kanbien-staging-platform-shell-service-deploy
@@ -71,7 +73,7 @@ deployment:
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
       role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
-      role_policy_deployment_status: pending-governed-iam-policy-update
+      role_policy_deployment_status: deployed-and-verified-2026-09-06
 source:
   provider: github
   repository: gordonrose/entity-builder-harness

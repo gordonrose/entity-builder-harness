@@ -1,0 +1,109 @@
+# Web-layer protections on the shared ALB. Every rule applies only to this foundation's hostname.
+Resources:
+  WebAcl:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: kanbien-staging-platform-shell
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      Description: WAF rules scoped only to the new staging.platform.kanbien.com host on the shared staging ALB.
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: kanbien-staging-platform-shell
+        SampledRequestsEnabled: true
+      Rules:
+        - Name: aws-ip-reputation-on-platform-host
+          Priority: 0
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesAmazonIpReputationList
+              ScopeDownStatement:
+                ByteMatchStatement:
+                  FieldToMatch:
+                    SingleHeader:
+                      Name: host
+                  PositionalConstraint: EXACTLY
+                  SearchString: !Ref HostName
+                  TextTransformations:
+                    - Priority: 0
+                      Type: LOWERCASE
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: platform-shell-ip-reputation
+            SampledRequestsEnabled: true
+        - Name: aws-common-rules-on-platform-host
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+              ScopeDownStatement:
+                ByteMatchStatement:
+                  FieldToMatch:
+                    SingleHeader:
+                      Name: host
+                  PositionalConstraint: EXACTLY
+                  SearchString: !Ref HostName
+                  TextTransformations:
+                    - Priority: 0
+                      Type: LOWERCASE
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: platform-shell-common-rules
+            SampledRequestsEnabled: true
+        - Name: aws-known-bad-inputs-on-platform-host
+          Priority: 2
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+              ScopeDownStatement:
+                ByteMatchStatement:
+                  FieldToMatch:
+                    SingleHeader:
+                      Name: host
+                  PositionalConstraint: EXACTLY
+                  SearchString: !Ref HostName
+                  TextTransformations:
+                    - Priority: 0
+                      Type: LOWERCASE
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: platform-shell-known-bad-inputs
+            SampledRequestsEnabled: true
+        - Name: ip-rate-limit-on-platform-host
+          Priority: 3
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              AggregateKeyType: IP
+              Limit: 300
+              ScopeDownStatement:
+                ByteMatchStatement:
+                  FieldToMatch:
+                    SingleHeader:
+                      Name: host
+                  PositionalConstraint: EXACTLY
+                  SearchString: !Ref HostName
+                  TextTransformations:
+                    - Priority: 0
+                      Type: LOWERCASE
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: platform-shell-ip-rate-limit
+            SampledRequestsEnabled: true
+
+  WebAclAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref ExistingAlbArn
+      WebACLArn: !GetAtt WebAcl.Arn

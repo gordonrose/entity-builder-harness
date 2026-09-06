@@ -1,0 +1,93 @@
+# Public traffic entry: ALB-only task networking, host routing, and hostname alias.
+Resources:
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Only the existing staging ALB may reach the platform-shell task on its HTTP port.
+      GroupName: kanbien-staging-platform-shell-service
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: HTTPS terminates at the shared ALB; task traffic is ALB-only.
+          IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref ExistingAlbSecurityGroupId
+      SecurityGroupEgress:
+        - Description: TLS egress for ECR image pulls, CloudWatch Logs, DynamoDB, Cognito JWKS, and AWS APIs.
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - Description: UDP DNS only to the VPC resolver address range.
+          IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VpcCidr
+        - Description: TCP DNS fallback only to the VPC resolver address range.
+          IpProtocol: tcp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VpcCidr
+      Tags:
+        - Key: Name
+          Value: kanbien-staging-platform-shell-service
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: kanbien-stg-platform-shell
+      VpcId: !Ref VpcId
+      Port: 3000
+      Protocol: HTTP
+      ProtocolVersion: HTTP1
+      TargetType: ip
+      HealthCheckEnabled: true
+      HealthCheckPath: /livez
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 15
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: "200"
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: "30"
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  HostRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ExistingHttpsListenerArn
+      Priority: !Ref ListenerRulePriority
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref HostName
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  DnsAlias:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref HostName
+      Type: A
+      AliasTarget:
+        DNSName: !Ref ExistingAlbDnsName
+        HostedZoneId: !Ref ExistingAlbCanonicalHostedZoneId
+        EvaluateTargetHealth: true

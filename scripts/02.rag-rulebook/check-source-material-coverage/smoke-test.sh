@@ -56,6 +56,26 @@ assert "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
 PY
 
 cat > "$ORPHAN_SOURCE" <<'MARKDOWN'
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: rag-rulebook.fixture.source-material-coverage-orphan
+version: 1
+status: draft
+layer: 04.deploy
+domain: rulebook
+disciplines:
+- agentic
+- architecture
+kind: source-material
+purpose: Temporary orphan source fixture used to prove coverage validation rejects missing outcomes.
+portability:
+  class: internal
+  targets:
+  - entity-builder
+used_by:
+- id: rag-rulebook.script.check-source-material-coverage.smoke-test
+  path: scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh
+-->
 # Source Material Coverage Smoke Test
 
 This temporary file intentionally has no structured rule, derivation report, or
@@ -90,6 +110,26 @@ PY
 rm -f "$ORPHAN_SOURCE"
 
 cat > "$STALE_SOURCE" <<'MARKDOWN'
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: rag-rulebook.fixture.source-provenance-stale-source
+version: 1
+status: draft
+layer: 04.deploy
+domain: rulebook
+disciplines:
+- agentic
+- architecture
+kind: source-material
+purpose: Temporary stale-provenance source fixture used to prove source hash validation rejects stale rules.
+portability:
+  class: internal
+  targets:
+  - entity-builder
+used_by:
+- id: rag-rulebook.script.check-source-material-coverage.smoke-test
+  path: scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh
+-->
 # Source Provenance Smoke Test
 
 This temporary file has a structured rule, but that rule intentionally records
@@ -97,6 +137,26 @@ the wrong source hash. The coverage checker must fail while both files exist.
 MARKDOWN
 
 cat > "$STALE_RULE" <<'YAML'
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.fixture.source-provenance-stale-rule
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   kind: rule
+#   purpose: Temporary stale-provenance rule fixture used to prove source hash validation rejects stale rules.
+#   portability:
+#     class: internal
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: rag-rulebook.script.check-source-material-coverage.smoke-test
+#     path: scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh
+
 id: concern.source-provenance-smoke-test
 title: Source provenance smoke test
 version: 1

@@ -1,0 +1,61 @@
+# Foundation template metadata and inputs. This fragment has no AWS resources.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Dedicated foundation for the Kanbien staging platform-shell ECS Fargate service.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Existing VPC that contains the selected ECS cluster and ALB.
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+    AllowedPattern: ^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/(?:[0-9]|[12][0-9]|3[0-2])$
+    Description: Existing VPC CIDR used only for outbound DNS resolution.
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Existing subnets where the Fargate task receives a public address for low-cost outbound access.
+  ExistingAlbArn:
+    Type: String
+    Description: Existing shared public ALB ARN. This stack never creates or replaces it.
+  ExistingAlbSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Existing shared ALB security group allowed to reach the service task.
+  ExistingHttpsListenerArn:
+    Type: String
+    Description: Existing HTTPS listener ARN that receives the new host-specific rule.
+  ExistingAlbDnsName:
+    Type: String
+    Description: Existing ALB DNS name used by the Route 53 alias record.
+  ExistingAlbCanonicalHostedZoneId:
+    Type: String
+    Description: Canonical hosted-zone ID for the existing ALB alias target.
+  HostedZoneId:
+    Type: String
+    Description: Existing Route 53 hosted-zone ID for kanbien.com.
+  HostName:
+    Type: String
+    Default: staging.platform.kanbien.com
+    AllowedPattern: ^[a-z0-9.-]+$
+    Description: New public hostname owned by this stack and the only host inspected by its WAF rules.
+  ListenerRulePriority:
+    Type: Number
+    Default: 20
+    MinValue: 1
+    MaxValue: 50000
+    Description: Unused priority on the shared HTTPS listener, inspected immediately before apply.
+  AlarmEmail:
+    Type: String
+    Description: Email address that receives alarm subscription confirmation and operational alerts.
+  LogRetentionDays:
+    Type: Number
+    Default: 14
+    AllowedValues:
+      - 1
+      - 3
+      - 5
+      - 7
+      - 14
+      - 30
+      - 60
+      - 90
+    Description: Short operational-log retention; audit retention is a separate future policy.
