@@ -3,6 +3,7 @@ export interface PlatformCorsPolicy {
   readonly allowedMethods?: readonly string[];
   readonly allowedHeaders?: readonly string[];
   readonly allowCredentials?: boolean;
+  readonly maxAgeSeconds?: number;
 }
 
 export interface PlatformSecurityHeadersOptions {
@@ -18,10 +19,13 @@ export function createPlatformSecurityHeaders(
     "x-frame-options": "DENY",
     "referrer-policy": "no-referrer",
     "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    "permissions-policy": "camera=(), geolocation=(), microphone=()",
     ...(options.cors?.allowedOrigin === undefined ? {} : { "access-control-allow-origin": options.cors.allowedOrigin }),
     ...(options.cors?.allowedMethods === undefined ? {} : { "access-control-allow-methods": options.cors.allowedMethods.join(", ") }),
     ...(options.cors?.allowedHeaders === undefined ? {} : { "access-control-allow-headers": options.cors.allowedHeaders.join(", ") }),
     ...(options.cors?.allowCredentials === undefined ? {} : { "access-control-allow-credentials": String(options.cors.allowCredentials) }),
+    ...(options.cors?.maxAgeSeconds === undefined ? {} : { "access-control-max-age": String(options.cors.maxAgeSeconds) }),
+    ...(options.cors?.allowedOrigin === undefined ? {} : { vary: "Origin" }),
   };
 }
 
@@ -34,6 +38,7 @@ export function corsPolicyForOrigin(origin: string | undefined): PlatformCorsPol
     allowedOrigin: origin,
     allowedMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["authorization", "content-type", "x-request-id"],
+    maxAgeSeconds: 600,
   };
 }
 

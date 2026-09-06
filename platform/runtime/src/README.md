@@ -64,7 +64,9 @@ This file coordinates a process state machine: created, starting, ready,
 stopping, stopped, or failed. It runs app startup hooks, starts resources,
 marks readiness, then reverses the appropriate work during shutdown: app
 pre-stop hooks, resource draining, reverse-order closing, telemetry flushing,
-and app post-stop hooks.
+and app post-stop hooks. A host may call `beginDrain()` first: this moves the
+state from ready to stopping and therefore makes readiness false before it
+stops accepting new server or worker work.
 
 It does not open a listening socket, poll a queue, or choose an orchestrator.
 Server and worker hosts call this lifecycle controller while their own modules

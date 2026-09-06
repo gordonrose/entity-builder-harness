@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.readme
-version: 1
+version: 2
 status: active
 layer: 03.product
 domain: governance
@@ -33,8 +33,11 @@ planning and AWS mutation remain governed by `04.deploy`.
 - Product workflows: `.agentic/03.product/workflows/`
 - Product migration plans: `.agentic/03.product/plans/migration/`
 - Product implementation plans: `.agentic/03.product/plans/implementation/`
+- Product standards: `.agentic/03.product/standards/`
 - Product harness foundation plan:
   `.agentic/03.product/plans/implementation/product-harness-foundation.md`
+- Initial identity-security baseline:
+  `.agentic/03.product/standards/identity-security-baseline.v1.md`
 - Runtime contracts: `platform/contracts/`
 - Product composition: `products/`
 - Application source: `apps/`

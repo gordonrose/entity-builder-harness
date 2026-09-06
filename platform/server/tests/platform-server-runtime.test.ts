@@ -1,4 +1,5 @@
-import { deepEqual, equal } from "node:assert/strict";
+import { deepEqual, equal, notEqual } from "node:assert/strict";
+import { request as nodeHttpRequest } from "node:http";
 import type { Principal } from "@kanbien/core/authn";
 import {
   allow,
@@ -28,9 +29,10 @@ async function main(): Promise<void> {
   const appId = platformAppId("smoke");
   const routeName = platformRouteName("smoke.echo");
   const publicRouteName = platformRouteName("smoke.public");
+  const slowRouteName = platformRouteName("smoke.slow");
   const tenantRouteName = platformRouteName("smoke.tenant");
   const resourceRouteName = platformRouteName("smoke.resource");
-  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok) {
+  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !slowRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok) {
     throw new Error("Expected valid server test primitives.");
   }
 
@@ -49,6 +51,7 @@ async function main(): Promise<void> {
   let resourceHandlerCalls = 0;
   let tenantResolverCalls = 0;
   let resourceResolutionCalls = 0;
+  let resolveSlowHandler: (() => void) | undefined;
   const authorizationRequests: AuthorizationRequest[] = [];
   const deps = {
     ...createPlatformTestMountDeps({ logger, metrics }),
@@ -94,8 +97,29 @@ async function main(): Promise<void> {
         handler: {
           handle: (_request, context) => {
             publicRoutePrincipal = context.principal;
-            return { status: 200, body: { public: true } };
+            return {
+              status: 200,
+              body: { public: true },
+              headers: {
+                "content-security-policy": "default-src *",
+                "x-app-visible": "allowed",
+                "x-request-id": "app-must-not-control-this",
+              },
+            };
           },
+        },
+      });
+      registry.registerRoute({
+        name: slowRouteName.value,
+        method: "GET",
+        path: "/slow",
+        auth: { kind: "public" },
+        handler: {
+          handle: () => new Promise((resolve) => {
+            resolveSlowHandler = () => {
+              resolve({ status: 200, body: { slow: "settled" } });
+            };
+          }),
         },
       });
       registry.registerRoute({
@@ -282,6 +306,11 @@ async function main(): Promise<void> {
   const publicRoute = await shell.value.handle({ method: "GET", path: "/public" });
   equal(publicRoute.status, 200);
   deepEqual(publicRoute.body, { public: true });
+  equal(publicRoute.headers["content-security-policy"], "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+  equal(publicRoute.headers["x-app-visible"], "allowed");
+  equal(typeof publicRoute.headers["x-request-id"], "string");
+  notEqual(publicRoute.headers["x-request-id"], "app-must-not-control-this");
+  equal(publicRoute.headers["access-control-max-age"], undefined);
   equal(publicRoutePrincipal, undefined);
   const publicRouteWithCredentials = await shell.value.handle({
     method: "GET",
@@ -471,8 +500,48 @@ async function main(): Promise<void> {
     method: "GET",
     path: "/livez",
     headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" },
+    clientAddress: "198.51.100.10",
   });
-  equal(rateLimitKeys[0], "ip:203.0.113.10");
+  equal(rateLimitKeys[0], "ip:198.51.100.10");
+
+  const forwardedAddressKeys: string[] = [];
+  const forwardedAddressShell = await createPlatformServerShell({
+    apps: [app],
+    deps,
+    tenantResolver,
+    clientAddressResolver: {
+      resolve: ({ socketPeerAddress, headers }) => {
+        if (socketPeerAddress === undefined) {
+          throw new Error("Expected the Node transport to supply a socket peer address.");
+        }
+        equal(headers["x-forwarded-for"], "198.51.100.55, 203.0.113.9");
+        return "203.0.113.9";
+      },
+    },
+    rateLimiter: {
+      check: (key) => {
+        forwardedAddressKeys.push(key);
+        return { allowed: true };
+      },
+    },
+  });
+  equal(forwardedAddressShell.ok, true);
+  if (!forwardedAddressShell.ok) {
+    throw new Error("Expected forwarded-address shell to mount.");
+  }
+  await forwardedAddressShell.value.lifecycle.start();
+  const forwardedAddressHandle = await forwardedAddressShell.value.listen();
+  try {
+    const response = await fetch("http://127.0.0.1:" + forwardedAddressHandle.port + "/public", {
+      headers: { "x-forwarded-for": "198.51.100.55, 203.0.113.9" },
+    });
+    equal(response.status, 200);
+    equal(forwardedAddressKeys[0], "ip:203.0.113.9");
+  } finally {
+    forwardedAddressShell.value.lifecycle.beginDrain();
+    await forwardedAddressHandle.close();
+    await forwardedAddressShell.value.lifecycle.shutdown();
+  }
 
   const privateHealthShell = await createPlatformServerShell({
     apps: [app],
@@ -556,6 +625,165 @@ async function main(): Promise<void> {
     const issues = invalidConfigShell.error.details?.["issues"] as readonly unknown[];
     equal(JSON.stringify(issues).includes("do-not-leak"), false);
   }
+
+  const invalidTransportShell = await createPlatformServerShell({
+    apps: [app],
+    deps,
+    auth,
+    tenantResolver,
+    transport: { headersTimeoutMs: 31_000, requestTimeoutMs: 30_000 },
+  });
+  equal(invalidTransportShell.ok, false);
+  if (!invalidTransportShell.ok) {
+    equal(invalidTransportShell.error.code, "PLATFORM_SERVER_TRANSPORT_CONFIG_INVALID");
+  }
+
+  const transportShell = await createPlatformServerShell({
+    apps: [app],
+    deps,
+    auth,
+    tenantResolver,
+    corsAllowlist: ["https://app.example.test"],
+    transport: { maxRequestBodyBytes: 32, maxConcurrentRequests: 2 },
+  });
+  equal(transportShell.ok, true);
+  if (!transportShell.ok) {
+    throw new Error("Expected transport shell to mount.");
+  }
+  await transportShell.value.lifecycle.start();
+  const transportHandle = await transportShell.value.listen();
+  const transportBaseUrl = `http://127.0.0.1:${transportHandle.port}`;
+  try {
+    const responseWithGeneratedId = await fetch(`${transportBaseUrl}/public`);
+    equal(responseWithGeneratedId.status, 200);
+    const generatedRequestId = responseWithGeneratedId.headers.get("x-request-id");
+    equal(typeof generatedRequestId, "string");
+    notEqual(generatedRequestId, "app-must-not-control-this");
+    const responseWithUpstreamId = await fetch(`${transportBaseUrl}/public`, {
+      headers: { "x-request-id": "upstream-123" },
+    });
+    equal(responseWithUpstreamId.headers.get("x-request-id"), "upstream-123");
+
+    const preflight = await fetch(`${transportBaseUrl}/echo/123`, {
+      method: "OPTIONS",
+      headers: { origin: "https://app.example.test" },
+    });
+    equal(preflight.status, 204);
+    equal(preflight.headers.get("access-control-allow-origin"), "https://app.example.test");
+    equal(preflight.headers.get("access-control-allow-methods"), "POST, OPTIONS");
+    equal(preflight.headers.get("vary"), "Origin");
+
+    const malformedJson = await fetch(`${transportBaseUrl}/echo/123`, {
+      method: "POST",
+      headers: { authorization: "Bearer ok", "content-type": "application/json" },
+      body: "{",
+    });
+    equal(malformedJson.status, 400);
+    equal((await malformedJson.json() as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_INVALID_REQUEST");
+
+    const oversizedPayload = await fetch(`${transportBaseUrl}/echo/123`, {
+      method: "POST",
+      headers: { authorization: "Bearer ok", "content-type": "application/json" },
+      body: JSON.stringify({ message: "this payload is deliberately over the thirty-two byte limit" }),
+    });
+    equal(oversizedPayload.status, 413);
+    equal((await oversizedPayload.json() as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_PAYLOAD_TOO_LARGE");
+
+    const unsupportedMethod = await rawHttpRequest({
+      port: transportHandle.port,
+      method: "TRACE",
+      path: "/public",
+    });
+    equal(unsupportedMethod.status, 405);
+    equal(unsupportedMethod.headers["allow"], "GET, OPTIONS");
+  } finally {
+    transportShell.value.lifecycle.beginDrain();
+    await transportHandle.close();
+    await transportShell.value.lifecycle.shutdown();
+  }
+
+  const timeoutShell = await createPlatformServerShell({
+    apps: [app],
+    deps,
+    auth,
+    tenantResolver,
+    transport: { handlerTimeoutMs: 10, maxConcurrentRequests: 1 },
+  });
+  equal(timeoutShell.ok, true);
+  if (!timeoutShell.ok) {
+    throw new Error("Expected timeout shell to mount.");
+  }
+  await timeoutShell.value.lifecycle.start();
+  const timeoutHandle = await timeoutShell.value.listen();
+  try {
+    const timedOut = await fetch(`http://127.0.0.1:${timeoutHandle.port}/slow`);
+    equal(timedOut.status, 504);
+    const capacityStillHeld = await fetch(`http://127.0.0.1:${timeoutHandle.port}/public`);
+    equal(capacityStillHeld.status, 503);
+    if (resolveSlowHandler === undefined) {
+      throw new Error("Expected slow handler to be running.");
+    }
+    resolveSlowHandler();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const capacityReleased = await fetch(`http://127.0.0.1:${timeoutHandle.port}/public`);
+    equal(capacityReleased.status, 200);
+  } finally {
+    if (resolveSlowHandler !== undefined) {
+      resolveSlowHandler();
+    }
+    timeoutShell.value.lifecycle.beginDrain();
+    await timeoutHandle.close();
+    await timeoutShell.value.lifecycle.shutdown();
+  }
+
+  const earlyRateLimitedShell = await createPlatformServerShell({
+    apps: [app],
+    deps,
+    tenantResolver,
+    rateLimiter: { check: () => ({ allowed: false }) },
+    transport: { maxRequestBodyBytes: 1 },
+  });
+  equal(earlyRateLimitedShell.ok, true);
+  if (!earlyRateLimitedShell.ok) {
+    throw new Error("Expected early-rate-limited shell to mount.");
+  }
+  await earlyRateLimitedShell.value.lifecycle.start();
+  const earlyRateLimitedHandle = await earlyRateLimitedShell.value.listen();
+  try {
+    const rateLimitedBeforeParse = await fetch(`http://127.0.0.1:${earlyRateLimitedHandle.port}/public`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ a: "body is much larger than one byte" }),
+    });
+    equal(rateLimitedBeforeParse.status, 429);
+    equal((await rateLimitedBeforeParse.json() as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_RATE_LIMITED");
+  } finally {
+    earlyRateLimitedShell.value.lifecycle.beginDrain();
+    await earlyRateLimitedHandle.close();
+    await earlyRateLimitedShell.value.lifecycle.shutdown();
+  }
+}
+
+async function rawHttpRequest(input: {
+  readonly port: number;
+  readonly method: string;
+  readonly path: string;
+}): Promise<{ readonly status: number; readonly headers: Readonly<Record<string, string | readonly string[] | undefined>> }> {
+  return new Promise((resolve, reject) => {
+    const request = nodeHttpRequest({
+      host: "127.0.0.1",
+      port: input.port,
+      method: input.method,
+      path: input.path,
+    }, (response) => {
+      response.resume();
+      response.on("end", () => {
+        resolve({ status: response.statusCode ?? 0, headers: response.headers });
+      });
+    });
+    request.once("error", reject);
+    request.end();
+  });
 }
 
 main()

@@ -108,10 +108,12 @@ a denied decision with a retry-after duration.
 It also derives a safe key. A verified authentication result can supply a
 stable principal key. Otherwise, a Bearer token is hashed before it is used as
 a key; the raw token is never used as a loggable identifier. If no usable token
-is available, the code falls back to a forwarded or real IP address, then to an
-anonymous bucket. This is an operational safeguard, not a finished distributed
-production rate-limit store; selecting a shared store belongs to a later
-adapter and deployment slice.
+is available, the caller may supply a client address, then the code falls back
+to an anonymous bucket. The generic HTTP listener supplies only Node's real
+socket peer address; it never trusts a caller-provided forwarded-address
+header. This is an operational safeguard, not a finished distributed
+production rate-limit store; a public multi-replica target must select a shared
+adapter and a target-owned trusted-ingress address policy.
 
 ### `index.ts` — the one public doorway
 

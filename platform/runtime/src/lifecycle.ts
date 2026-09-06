@@ -44,6 +44,7 @@ export interface PlatformRuntimeLifecycleController {
   isReady(): boolean;
   events(): readonly PlatformRuntimeLifecycleEvent[];
   start(): Promise<Result<void, PlatformRuntimeError>>;
+  beginDrain(): Result<void, PlatformRuntimeError>;
   shutdown(): Promise<Result<readonly PlatformRuntimeLifecycleEvent[], PlatformRuntimeError>>;
 }
 
@@ -103,6 +104,18 @@ export function createPlatformRuntimeLifecycle(
         return platformRuntimeFailure("PLATFORM_RUNTIME_LIFECYCLE_FAILED", "Runtime startup lifecycle failed.", { state: "starting" }, error);
       }
     },
+    beginDrain() {
+      if (state === "stopping") {
+        return { ok: true, value: undefined };
+      }
+
+      if (state !== "ready") {
+        return platformRuntimeFailure("PLATFORM_RUNTIME_INVALID_STATE", "Runtime lifecycle can only begin draining from the ready state.", { state });
+      }
+
+      state = "stopping";
+      return { ok: true, value: undefined };
+    },
     async shutdown() {
       if (state === "created") {
         state = "stopped";
@@ -113,11 +126,13 @@ export function createPlatformRuntimeLifecycle(
         return { ok: true, value: [...events] };
       }
 
-      if (state !== "ready" && state !== "failed") {
+      if (state !== "ready" && state !== "stopping" && state !== "failed") {
         return platformRuntimeFailure("PLATFORM_RUNTIME_INVALID_STATE", "Runtime lifecycle cannot shut down from the current state.", { state });
       }
 
-      state = "stopping";
+      if (state !== "stopping") {
+        state = "stopping";
+      }
 
       try {
         for (const app of apps) {

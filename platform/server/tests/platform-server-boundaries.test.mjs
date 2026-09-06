@@ -13,7 +13,7 @@ const importSpecifierPatterns = [
   /\bexport\s+(?:type\s+)?[^"']*?\s+from\s+["']([^"']+)["']/g,
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
-const allowedSourceImportPattern = /^(?:node:http|node:net|@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-config|platform-contracts|platform-health|platform-observability|platform-runtime|platform-security))$/;
+const allowedSourceImportPattern = /^(?:node:crypto|node:http|node:net|@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-config|platform-contracts|platform-health|platform-observability|platform-runtime|platform-security))$/;
 const forbiddenProviderWords = /\b(?:aws|amazon|cognito|auth0|clerk|okta|keycloak|entra|azuread|firebase|s3|kafka|redis|prisma|dynamodb|cloudwatch)\b/i;
 
 async function walk(dir) {

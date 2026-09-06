@@ -1,10 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Clock } from "@kanbien/core";
-import {
-  bearerTokenFromHeaders,
-  firstHeaderValue,
-  type PlatformAuthenticationResult,
-} from "./authentication";
+import type { PlatformAuthenticationResult } from "./authentication";
 import type { PlatformSecurityError } from "./errors";
 
 export interface PlatformRateLimitDecision {
@@ -13,18 +9,24 @@ export interface PlatformRateLimitDecision {
 }
 
 export interface PlatformRateLimiter {
+  check(key: string): PlatformRateLimitDecision | Promise<PlatformRateLimitDecision>;
+}
+
+export interface InMemoryPlatformRateLimiter extends PlatformRateLimiter {
   check(key: string): PlatformRateLimitDecision;
 }
 
 export interface InMemoryPlatformRateLimiterOptions {
   readonly limit?: number;
   readonly windowMs?: number;
+  readonly maxBuckets?: number;
   readonly clock?: Clock;
 }
 
 export interface PlatformRateLimitKeyInput {
-  readonly headers?: Readonly<Record<string, string | readonly string[]>>;
   readonly authentication?: PlatformAuthenticationResult;
+  readonly bearerToken?: string;
+  readonly clientAddress?: string;
 }
 
 interface RateLimitBucket {
@@ -34,9 +36,13 @@ interface RateLimitBucket {
 
 export function createInMemoryPlatformRateLimiter(
   options: InMemoryPlatformRateLimiterOptions = {},
-): PlatformRateLimiter {
+): InMemoryPlatformRateLimiter {
   const limit = options.limit ?? 1000;
   const windowMs = options.windowMs ?? 60_000;
+  const maxBuckets = options.maxBuckets ?? 10_000;
+  assertPositiveInteger("limit", limit);
+  assertPositiveInteger("windowMs", windowMs);
+  assertPositiveInteger("maxBuckets", maxBuckets);
   const clock = options.clock ?? { now: () => new Date() };
   const buckets = new Map<string, RateLimitBucket>();
 
@@ -45,6 +51,10 @@ export function createInMemoryPlatformRateLimiter(
       const nowMs = clock.now().getTime();
       const current = buckets.get(key);
       if (current === undefined || nowMs - current.windowStartedAtMs >= windowMs) {
+        pruneExpiredBuckets(buckets, nowMs, windowMs);
+        if (buckets.size >= maxBuckets && current === undefined) {
+          return { allowed: false, retryAfterMs: windowMs };
+        }
         buckets.set(key, { windowStartedAtMs: nowMs, count: 1 });
         return { allowed: true };
       }
@@ -67,22 +77,34 @@ export function platformRateLimitKey(input: PlatformRateLimitKeyInput): string {
     return input.authentication.rateLimitKey;
   }
 
-  const bearerToken = bearerTokenFromHeaders(input.headers ?? {});
+  const bearerToken = input.bearerToken;
   if (bearerToken !== undefined) {
     return `token:${sha256(bearerToken)}`;
   }
 
-  const forwardedFor = firstHeaderValue(input.headers ?? {}, "x-forwarded-for");
-  if (forwardedFor !== undefined && forwardedFor.length > 0) {
-    return `ip:${forwardedFor.split(",")[0]?.trim() ?? forwardedFor}`;
-  }
-
-  const realIp = firstHeaderValue(input.headers ?? {}, "x-real-ip");
-  if (realIp !== undefined && realIp.length > 0) {
-    return `ip:${realIp}`;
+  if (input.clientAddress !== undefined && input.clientAddress.length > 0) {
+    return `ip:${input.clientAddress}`;
   }
 
   return "anonymous";
+}
+
+function pruneExpiredBuckets(
+  buckets: Map<string, RateLimitBucket>,
+  nowMs: number,
+  windowMs: number,
+): void {
+  for (const [key, bucket] of buckets) {
+    if (nowMs - bucket.windowStartedAtMs >= windowMs) {
+      buckets.delete(key);
+    }
+  }
+}
+
+function assertPositiveInteger(name: string, value: number): void {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new RangeError(`${name} must be a positive integer.`);
+  }
 }
 
 export function platformRateLimitError(retryAfterMs?: number): PlatformSecurityError {

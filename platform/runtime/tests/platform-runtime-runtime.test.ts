@@ -290,6 +290,9 @@ async function main(): Promise<void> {
   equal(lifecycle.isReady(), false);
   equal((await lifecycle.start()).ok, true);
   equal(lifecycle.isReady(), true);
+  equal(lifecycle.beginDrain().ok, true);
+  equal(lifecycle.isReady(), false);
+  equal(lifecycle.state(), "stopping");
   const stopped = await lifecycle.shutdown();
   equal(stopped.ok, true);
   equal(lifecycle.isReady(), false);

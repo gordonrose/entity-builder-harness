@@ -44,6 +44,7 @@ export {
 } from "./rate-limiting";
 export type {
   InMemoryPlatformRateLimiterOptions,
+  InMemoryPlatformRateLimiter,
   PlatformRateLimitDecision,
   PlatformRateLimitKeyInput,
   PlatformRateLimiter,

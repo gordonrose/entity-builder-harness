@@ -93,6 +93,8 @@ function authHookForPermission(permission: Permission) {
       ? {
         authenticated: true,
         permissions: [permission],
+        principalId: "kanbien-platform-user",
+        principalType: "user" as const,
         subject: "kanbien-platform-user",
         rateLimitKey: "principal:kanbien-platform-user",
       }
