@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T18:45:53Z
-latest_commit_sha: e39c691
-chat_duration: 2918s (00:00:48:38)
+latest_commit_at_utc: 2026-09-06T19:15:19Z
+latest_commit_sha: e90cb52
+chat_duration: 4684s (00:01:18:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -146,6 +146,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: The foundation source organisation and the completed least-privilege GitHub deployment-role update are covered by the staging deployment plan, target profile, and readiness evidence. The change records verified live state without introducing a new deployment or product policy.
 
+
+### 2026-09-06T19:15:19Z - Commit recorded
+
+Commit: `e90cb52`
+
+Message: chore(deploy): record staging IAM policy hardening
+
+Summary: Recorded the verified replacement of the GitHub staging deployment role’s broad direct-service permissions with the reviewed least-privilege CloudFormation boundary, together with target readiness evidence.
+
+ADR impact: No ADR is needed; this executes the existing target deployment identity decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -159,6 +170,13 @@ Rationale: The foundation source organisation and the completed least-privilege 
   Message: refactor(deploy): split platform shell foundation
   Summary: Split the Kanbien staging foundation into focused authored units rendered into the same validated CloudFormation stack, and repaired the rulebook coverage smoke fixtures so metadata validation no longer masks their intended assertions.
   ADR impact: Covered by the existing single-stack target decision; no ADR is needed.
+
+
+- Commit: `e90cb52`
+  Time UTC: 2026-09-06T19:15:19Z
+  Message: chore(deploy): record staging IAM policy hardening
+  Summary: Recorded the verified replacement of the GitHub staging deployment role’s broad direct-service permissions with the reviewed least-privilege CloudFormation boundary, together with target readiness evidence.
+  ADR impact: No ADR is needed; this executes the existing target deployment identity decision.
 
 ## Main Refresh Conflicts
 
@@ -174,9 +192,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-06T18:45:53Z
-Latest commit SHA: e39c691
-Chat duration: 2918s (00:00:48:38)
+Latest commit at UTC: 2026-09-06T19:15:19Z
+Latest commit SHA: e90cb52
+Chat duration: 4684s (00:01:18:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
