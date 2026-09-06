@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 2
+version: 6
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -44,19 +44,34 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 ## Current evidence
 
 - The selected ECR repository, machine Cognito client/scope, shared ECS
-  cluster, public ALB, hosted zone, and wildcard certificate exist.
-- The certificate covers `*.kanbien.com`, including the selected staging host.
-- No shell task definition, ECS service, target group, host rule, DNS record,
-  log group, alarm, image, or deployed smoke evidence exists.
+  cluster, public ALB, hosted zone, and existing wildcard certificate exist.
+- The foundation stack was created from the reviewed
+  `foundation-initial-20260906-1915` change set. It created the target group,
+  host rule, DNS alias, WAF, rate-limit table, log group, alarms, alert topic,
+  and workload roles. No shell task definition, ECS service, image, or
+  deployed application smoke evidence exists.
+- The existing default certificate covers `*.kanbien.com`, which matches one
+  label such as `staging.kanbien.com`, but it does **not** cover the two-label
+  host `staging.platform.kanbien.com`. A real TLS client rejected that
+  hostname. The selected repair is a new foundation-owned DNS-validated ACM
+  certificate for `platform.kanbien.com` and `*.platform.kanbien.com`, added
+  as an SNI certificate without replacing the shared listener's default
+  certificate.
+- The review-only `public-tls-repair-20260906-2152` foundation update change
+  set is `CREATE_COMPLETE` and `AVAILABLE`. It contains exactly two additions:
+  the ACM certificate and its additional HTTPS-listener certificate attachment.
+  It contains no replacement or modification. It was rendered from the current
+  chat branch, so it is evidence of the intended resource graph only; a fresh
+  change set must be created from reviewed `origin/main` before execution.
 - Local adapter, target-composition, static infrastructure-policy, rendered
   foundation-template validation, and the real read-only container smoke now
   pass. This proves a local image can start and serve `/livez` and `/readyz`;
   it does not prove an AWS change set or deployed workload.
 - The existing ALB has no WAF web ACL. Its current routes serve legacy
   workloads and must not be changed as a side effect of this proof.
-- The current platform source still needs to be merged and pushed to
-  `origin/main`. Official deployment images must come from reviewed, pushed
-  `origin/main`, never a local working tree.
+- The current platform source is committed and present on `origin/main`.
+  Official deployment images must come from reviewed, pushed `origin/main`,
+  never a local working tree.
 
 ## Defects to correct before an AWS apply
 
@@ -66,18 +81,19 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    target. The public composition refuses to start without it, the ALB-only
    client-address policy, and reviewed listener limits.
 3. Foundation and service CloudFormation templates plus a static policy gate
-   exist and passed AWS template validation. No foundation stack or service has
-   been created yet.
+   exist and passed AWS template validation. The reviewed foundation CREATE
+   change set executed successfully with 16 additions and no modifications or
+   deletions. The foundation stack exists; the service does not.
 4. The GitHub workflow validates templates, publishes an immutable image,
    deploys only the service stack through a dedicated CloudFormation execution
    role, and performs public liveness plus unauthenticated-route smoke. On
    2026-09-06, the live GitHub role was updated and verified against the
-   reviewed narrowed CloudFormation-policy boundary. This path still cannot
-   run until its source is merged to `origin/main` and the foundation stack
-   has created the service deployment role.
-5. A deployed negative-rate-limit test, a WAF/routing proof, and a rollback
-   exercise remain absent. The local container-engine smoke now passes, but it
-   is not a substitute for those deployed proofs.
+   reviewed narrowed CloudFormation-policy boundary. The foundation now created
+   the service deployment role, but this path must wait for the TLS repair.
+5. The deployed WAF, rate-limit table, alert subscription, and host route have
+   configuration proof. A deployed negative-rate-limit test, verified public
+   TLS/routing proof, and a rollback exercise remain absent. The local
+   container-engine smoke is not a substitute for those proofs.
 6. New resources are consistently tagged `service=platform-shell`, but the
    account has not activated that cost-allocation tag or proven the intended
    tag-scoped monthly budget. This account-level Billing action cannot be
@@ -94,6 +110,7 @@ locally before the first AWS execution approval.
 | Compute | One 256 CPU / 512 MiB Fargate server task, desired count 1; worker remains at 0 | Proves the server shell at low cost without pretending the in-memory smoke job has a real queue worker. |
 | Network | Dedicated service security group: ingress only from the existing ALB security group on TCP 3000; outbound HTTPS only as far as the selected Fargate networking model requires | No direct public inbound path to the task. |
 | Routing | New IP target group with `/livez`, dedicated HTTPS listener rule, and Route 53 alias for `staging.platform.kanbien.com` | A host-specific route isolates the proof from legacy root-domain traffic. |
+| Public TLS | A foundation-owned ACM public certificate for `platform.kanbien.com` and `*.platform.kanbien.com`, DNS-validated in the existing hosted zone and added as an extra SNI certificate to the existing HTTPS listener | The selected hostname stays stable, future `*.platform.kanbien.com` environments can be covered, and no legacy certificate or listener default is replaced. |
 | Authentication | Existing M2M Cognito access-token/JWKS configuration; no client secret delivered to the running service | The service verifies tokens using public keys. The confidential client secret is only for controlled smoke-token acquisition. |
 | Shared rate limit | Provider adapter backed by a new DynamoDB fixed-window counter table with TTL and task-role-only `UpdateItem` access | Enforces a shared quota across task replicas without storing raw tokens or a durable personal-data profile. |
 | Client address | A target-selected resolver that uses the final ALB-appended `X-Forwarded-For` address only because the task security group admits traffic solely from the ALB | The generic server continues to distrust forwarded headers by default; trust exists only at this reviewed target boundary. |
@@ -114,23 +131,32 @@ locally before the first AWS execution approval.
 4. Keep CloudFormation source units focused by responsibility, render them
    deterministically into one foundation template, and run static/policy and
    AWS-template validation for the service security group, task/execution
-   roles, DynamoDB table, log group, target group, listener rule, WAF, alarms,
-   and SNS topic. Existing ECR, Cognito, ALB, certificate, cluster, and hosted
-   zone are inputs, not stack resources to replace.
+   roles, DynamoDB table, log group, target group, listener rule, DNS-validated
+   platform-hostname certificate, WAF, alarms, and SNS topic. Existing ECR,
+   Cognito, ALB, default listener certificate, cluster, and hosted zone are
+   inputs, not stack resources to replace.
 5. Completed on 2026-09-06: applied and inspected the reviewed IAM
    inline-policy update. GitHub can now pass only the platform-shell service
    CloudFormation execution role and update only the platform-shell service
    stack.
-6. Commit, review, and merge the local platform slice. Run the official image
-   build from `origin/main`; do not promote a local image.
-7. Render the reviewed foundation source units, obtain explicit approval for
-   the CloudFormation create/update operation, and only then apply the reviewed
-   rendered stack. Inspect the created resources.
-8. Run deployed smoke proof: DNS/TLS, public `/livez`, unauthenticated `401`,
+6. Completed on 2026-09-06: commit, review, merge, and push the local platform
+   slice to `origin/main`. Do not promote a local image.
+7. Completed on 2026-09-06: render, review, and execute the foundation CREATE
+   change set `foundation-initial-20260906-1915`. The stack reached
+   `CREATE_COMPLETE` with its expected 16 additions.
+8. Selected on 2026-09-06: repair the TLS mismatch by adding a
+   foundation-owned `platform.kanbien.com` / `*.platform.kanbien.com` ACM
+   certificate and attaching it as an additional SNI certificate to the shared
+   HTTPS listener. A local-source review change set confirmed exactly two
+   additions and no replacement or modification. Commit, merge, and push the
+   source; recreate and review the change set from `origin/main`; then obtain
+   separate execution approval and verify public DNS and TLS before service
+   deployment.
+9. Run deployed smoke proof: DNS/TLS, public `/livez`, unauthenticated `401`,
    wrong-permission `403`, correctly scoped `200`, `429` from the shared
    limiter, WAF/routing evidence, log delivery, alarm configuration, and a
    rollback exercise.
-9. After tagged foundation resources exist, activate the `service` cost
+10. After tagged foundation resources exist, activate the `service` cost
    allocation tag in the account Billing console, wait for billing visibility,
    configure the target-scoped monthly/forecast budget alerts, and record the
    proof. Do not treat a resource tag as a functioning budget by itself.
@@ -148,6 +174,12 @@ The WAF association is still a shared-ALB change. Before execution, review the
 rendered scope-down statements and listener priority against the live listener
 rules. Abort rather than apply if either could affect a legacy hostname.
 
+The selected TLS repair does not change the shared listener's default
+certificate. It adds an SNI certificate only, so the ALB selects it solely
+when the client requests a matching `*.platform.kanbien.com` hostname. The
+reviewed update has exactly two additions: the foundation-owned certificate and
+that attachment.
+
 ## Rollback and recovery
 
 - **Bad image or failing task:** ECS deployment circuit breaker restores the
@@ -163,6 +195,10 @@ rules. Abort rather than apply if either could affect a legacy hostname.
   a safe operational signal, and roll back to the previous known-good task
   definition. Do not silently fall back to the process-local limiter on a
   public target.
+- **TLS repair:** before execution, delete the unexecuted change set and no AWS
+  resource changes. After execution, a separately approved stack update can
+  remove only the platform-hostname certificate attachment and certificate;
+  the existing shared listener default certificate remains untouched.
 
 ## Execution approval checklist
 

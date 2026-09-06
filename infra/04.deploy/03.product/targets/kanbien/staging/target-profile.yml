@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 6
+#   version: 7
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -180,7 +180,15 @@ aws:
     reuse_existing: true
     listener_https: arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750
     canonical_hosted_zone_id: Z32O12XQLNTSW2
-    certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+    default_certificate_arn: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
+    platform_hostname_certificate:
+      ownership: cloudformation-foundation-stack
+      primary_domain: platform.kanbien.com
+      subject_alternative_names:
+        - '*.platform.kanbien.com'
+      validation: dns-in-existing-route53-hosted-zone
+      listener_attachment: additional-sni-certificate
+      existing_default_certificate_unchanged: true
     target_group: kanbien-stg-platform-shell
     host_rule: staging.platform.kanbien.com
     host_rule_priority: 20
@@ -319,7 +327,8 @@ observability:
   log_retention_days: 14
   alarm_destination:
     type: email
-    value: gordonrose164@hotmail.com
+    source: operator-supplied-at-deployment-time
+    value_stored_in_repository: false
   alarms:
     - alb-unhealthy-targets
     - alb-5xx-spike
@@ -342,7 +351,8 @@ operations:
       - 100
     alert_destination:
       type: email
-      value: gordonrose164@hotmail.com
+      source: operator-supplied-at-budget-configuration-time
+      value_stored_in_repository: false
     cost_allocation:
       resource_tag_key: service
       resource_tag_value: platform-shell

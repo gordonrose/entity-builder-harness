@@ -29,6 +29,7 @@ repository renderer; they are not independent AWS stacks.
 | --- | --- | --- |
 | `template.yml` | Template metadata and approved inputs from existing AWS infrastructure. | Parameters only |
 | `public-ingress.yml` | How public traffic enters through the shared ALB and reaches healthy platform tasks. | service security group, target group, host rule, DNS alias |
+| `public-tls.yml` | DNS-validated certificate ownership for the `platform.kanbien.com` hostname space and a narrowly scoped SNI attachment to the shared HTTPS listener. It does not replace that listener's existing default certificate. | ACM certificate, additional listener certificate |
 | `edge-protection.yml` | Host-scoped web-request protection at the shared ALB. | WAF web ACL and association |
 | `workload-iam.yml` | Least-privilege identities used by AWS workload components. It is not end-user authorization. | ECS task roles and service deployment role |
 | `rate-limiting.yml` | Shared, encrypted fixed-window limiter state for the public runtime. | DynamoDB table |

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T19:15:19Z
-latest_commit_sha: e90cb52
-chat_duration: 4684s (00:01:18:04)
+latest_commit_at_utc: 2026-09-06T22:00:57Z
+latest_commit_sha: 43f09dd
+chat_duration: 14622s (00:04:03:42)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -68,6 +68,13 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The foundation source organisation and the completed least-privilege GitHub deployment-role update are covered by the staging deployment plan, target profile, and readiness evidence. The change records verified live state without introducing a new deployment or product policy.
 
+
+- Decision: Create the reviewed foundation CloudFormation change set without executing it.
+  Rationale: The CREATE change set is available and contains 16 Add operations only, with no modifications or deletions. It remains unexecuted; separate explicit approval is required before it can create the staging foundation resources.
+
+- Decision: Keep `staging.platform.kanbien.com` and repair its TLS coverage with a foundation-owned certificate for `platform.kanbien.com` and `*.platform.kanbien.com`.
+  Rationale: A `*.kanbien.com` certificate covers only one left-most label and cannot secure the selected two-label host. An additional SNI certificate preserves the hostname and leaves the shared listener's default certificate unchanged.
+
 ## Context Hygiene
 
 - Performed all task edits in the chat-owned worktree, leaving the root
@@ -79,6 +86,20 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 
 - Summary: Applied and verified the narrowly scoped GitHub deployment-role IAM update in the selected staging account.
   Durable evidence: The target profile, readiness manifest, deployment plan, and this session log record the live-policy match; no CloudFormation stack, ECS workload, DNS record, WAF association, or other AWS resource changed.
+
+
+- Summary: Created and reviewed the unexecuted foundation change set after revalidating pushed source and live shared-ALB inputs.
+  Durable evidence: The staging readiness manifest and deployment plan record the change-set ID, 16-add-only summary, available execution state, remote-main source, and continued execution block; the SNS recipient address is intentionally absent from repository records.
+
+- Summary: Executed the approved foundation CREATE change set and inspected the resulting foundation stack; recorded the TLS hostname mismatch as a blocker.
+  Durable evidence: The readiness manifest and deployment plan record the `CREATE_COMPLETE` foundation stack, created resources, and the certificate coverage defect. No application service was deployed.
+
+- Summary: Created and reviewed a non-executing public-TLS repair change set.
+  Durable evidence: The readiness manifest and deployment plan record the two expected additions, no replacement or modification, and the fact that the local-source preview must be recreated from `origin/main` before any execution; raw alert contact data is absent from repository records.
+
+
+- Summary: Refreshed the TLS chat branch from current main through a clean governed preflight.
+  Durable evidence: Remote main was current with origin/main; preflight branch agentic/preflight/chat-2026-09-06-18-57-refactor-the-kanbien-stagi-41210ca9fa05/20260906220508 merged without conflicts, passed the platform-shell infrastructure check, and applied commit 3da3415ac2e617a35d240568c019a4ef99ad1b08. The disposable worktree and branch were removed; no stash, push, main change, or AWS mutation occurred.
 
 ## Activity Log
 
@@ -157,6 +178,59 @@ Summary: Recorded the verified replacement of the GitHub staging deployment role
 
 ADR impact: No ADR is needed; this executes the existing target deployment identity decision.
 
+
+### 2026-09-06T21:38:19Z - Decision
+
+Decision: Create the reviewed foundation CloudFormation change set without executing it.
+
+Rationale: The CREATE change set is available and contains 16 Add operations only, with no modifications or deletions. It remains unexecuted; separate explicit approval is required before it can create the staging foundation resources.
+
+
+### 2026-09-06T21:38:20Z - Context hygiene
+
+Summary: Created and reviewed the unexecuted foundation change set after revalidating pushed source and live shared-ALB inputs.
+
+Durable evidence: The staging readiness manifest and deployment plan record the change-set ID, 16-add-only summary, available execution state, remote-main source, and continued execution block; the SNS recipient address is intentionally absent from repository records.
+
+
+### 2026-09-06T21:53:32Z - Foundation execution and public TLS repair review
+
+- The explicitly approved `foundation-initial-20260906-1915` CREATE change set
+  executed successfully. The staging foundation stack reached `CREATE_COMPLETE`
+  and created its expected 16 resources. No ECS service or application task
+  was created.
+- Post-deployment TLS verification found that the shared listener's existing
+  certificate does not cover `staging.platform.kanbien.com`. This is a DNS
+  wildcard-depth mismatch, not an application or WAF failure.
+- The user selected the hostname-preserving repair: a foundation-owned ACM
+  certificate for `platform.kanbien.com` and `*.platform.kanbien.com`, with a
+  DNS validation record in the existing hosted zone and an additional SNI
+  attachment on the shared HTTPS listener.
+- The review-only `public-tls-repair-20260906-2152` change set is
+  `CREATE_COMPLETE` and `AVAILABLE`, with exactly two Add actions:
+  `PlatformHostnameCertificate` and `PlatformHostnameCertificateAttachment`.
+  It contains no replacement or modification and has not been executed. Its
+  local-source template will be committed, promoted, and re-previewed from
+  `origin/main` before separate execution approval is sought.
+
+
+### 2026-09-06T22:00:57Z - Commit recorded
+
+Commit: `43f09dd`
+
+Message: feat(deploy): add platform hostname TLS
+
+Summary: Added the foundation-owned DNS-validated ACM certificate and additional SNI listener attachment for the platform hostname space, strengthened its static guardrails, recorded the no-replacement review change set, and removed raw alert contact addresses from repository records.
+
+ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
+
+### 2026-09-06T22:05:32Z - Context hygiene
+
+Summary: Refreshed the TLS chat branch from current main through a clean governed preflight.
+
+Durable evidence: Remote main was current with origin/main; preflight branch agentic/preflight/chat-2026-09-06-18-57-refactor-the-kanbien-stagi-41210ca9fa05/20260906220508 merged without conflicts, passed the platform-shell infrastructure check, and applied commit 3da3415ac2e617a35d240568c019a4ef99ad1b08. The disposable worktree and branch were removed; no stash, push, main change, or AWS mutation occurred.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -178,6 +252,13 @@ ADR impact: No ADR is needed; this executes the existing target deployment ident
   Summary: Recorded the verified replacement of the GitHub staging deployment role’s broad direct-service permissions with the reviewed least-privilege CloudFormation boundary, together with target readiness evidence.
   ADR impact: No ADR is needed; this executes the existing target deployment identity decision.
 
+
+- Commit: `43f09dd`
+  Time UTC: 2026-09-06T22:00:57Z
+  Message: feat(deploy): add platform hostname TLS
+  Summary: Added the foundation-owned DNS-validated ACM certificate and additional SNI listener attachment for the platform hostname space, strengthened its static guardrails, recorded the no-replacement review change set, and removed raw alert contact addresses from repository records.
+  ADR impact: Implements the existing staging target boundary; no ADR is needed.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -192,9 +273,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-06T19:15:19Z
-Latest commit SHA: e90cb52
-Chat duration: 4684s (00:01:18:04)
+Latest commit at UTC: 2026-09-06T22:00:57Z
+Latest commit SHA: 43f09dd
+Chat duration: 14622s (00:04:03:42)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

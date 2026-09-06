@@ -1,0 +1,29 @@
+# Public TLS ownership: a DNS-validated certificate for the platform hostname space and its SNI attachment.
+Resources:
+  PlatformHostnameCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: platform.kanbien.com
+      SubjectAlternativeNames:
+        - '*.platform.kanbien.com'
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: platform.kanbien.com
+          HostedZoneId: !Ref HostedZoneId
+      CertificateTransparencyLoggingPreference: ENABLED
+      Tags:
+        - Key: Name
+          Value: kanbien-staging-platform-shell-public-tls
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  PlatformHostnameCertificateAttachment:
+    Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
+    Properties:
+      ListenerArn: !Ref ExistingHttpsListenerArn
+      Certificates:
+        - CertificateArn: !Ref PlatformHostnameCertificate

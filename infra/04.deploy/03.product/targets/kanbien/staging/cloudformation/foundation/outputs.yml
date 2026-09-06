@@ -48,3 +48,7 @@ Outputs:
     Value: !GetAtt WebAcl.Arn
     Export:
       Name: !Sub ${AWS::StackName}-WebAclArn
+  PlatformHostnameCertificateArn:
+    Value: !Ref PlatformHostnameCertificate
+    Export:
+      Name: !Sub ${AWS::StackName}-PlatformHostnameCertificateArn

@@ -121,6 +121,8 @@ expected_foundation_resources = {
     "TargetGroup",
     "HostRule",
     "DnsAlias",
+    "PlatformHostnameCertificate",
+    "PlatformHostnameCertificateAttachment",
     "WebAcl",
     "WebAclAssociation",
     "AlarmTopic",
@@ -157,6 +159,7 @@ expected_foundation_outputs = {
     "HostName",
     "AlarmTopicArn",
     "WebAclArn",
+    "PlatformHostnameCertificateArn",
 }
 if set(foundation.get("Parameters", {})) != expected_foundation_parameters:
     fail("rendered foundation must retain the reviewed parameter interface")
@@ -207,6 +210,29 @@ if target_group.get("TargetType") != "ip" or target_group.get("HealthCheckPath")
 host_rule = properties(foundation, "HostRule", "AWS::ElasticLoadBalancingV2::ListenerRule")
 if not contains_intrinsic(host_rule.get("Conditions", []), "!Ref", "HostName"):
     fail("HostRule must use the target-owned exact HostName condition")
+
+platform_certificate = properties(foundation, "PlatformHostnameCertificate", "AWS::CertificateManager::Certificate")
+platform_certificate_profile = target_profile.get("aws", {}).get("alb", {}).get("platform_hostname_certificate", {})
+if platform_certificate.get("DomainName") != platform_certificate_profile.get("primary_domain"):
+    fail("PlatformHostnameCertificate must use the target-profile primary domain")
+if platform_certificate.get("SubjectAlternativeNames") != platform_certificate_profile.get("subject_alternative_names"):
+    fail("PlatformHostnameCertificate SANs must match the target profile")
+if platform_certificate.get("ValidationMethod") != "DNS":
+    fail("PlatformHostnameCertificate must use DNS validation")
+if not contains_intrinsic(platform_certificate.get("DomainValidationOptions", []), "!Ref", "HostedZoneId"):
+    fail("PlatformHostnameCertificate must validate in the declared existing hosted zone")
+if platform_certificate.get("CertificateTransparencyLoggingPreference") != "ENABLED":
+    fail("PlatformHostnameCertificate must enable certificate-transparency logging")
+
+platform_certificate_attachment = properties(
+    foundation,
+    "PlatformHostnameCertificateAttachment",
+    "AWS::ElasticLoadBalancingV2::ListenerCertificate",
+)
+if platform_certificate_attachment.get("ListenerArn") != {"!Ref": "ExistingHttpsListenerArn"}:
+    fail("PlatformHostnameCertificateAttachment must use only the declared existing HTTPS listener")
+if not contains_intrinsic(platform_certificate_attachment.get("Certificates", []), "!Ref", "PlatformHostnameCertificate"):
+    fail("PlatformHostnameCertificateAttachment must attach the foundation-owned certificate")
 
 web_acl = properties(foundation, "WebAcl", "AWS::WAFv2::WebACL")
 if web_acl.get("Scope") != "REGIONAL" or web_acl.get("DefaultAction") != {"Allow": {}}:
