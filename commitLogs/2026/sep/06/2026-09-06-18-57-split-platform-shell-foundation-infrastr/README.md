@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T22:23:49Z
-latest_commit_sha: 291dcf2
-chat_duration: 15994s (00:04:26:34)
+latest_commit_at_utc: 2026-09-06T22:39:07Z
+latest_commit_sha: 1b56173
+chat_duration: 16912s (00:04:41:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -264,6 +264,17 @@ Summary: Recorded the completed foundation TLS update: issued DNS-validated cert
 
 ADR impact: Implements the existing staging target boundary; no ADR is needed.
 
+
+### 2026-09-06T22:39:07Z - Commit recorded
+
+Commit: `1b56173`
+
+Message: feat(deploy): gate platform shell supply chain
+
+Summary: Moved ECR scan enforcement before the service-stack deployment, blocked both critical and high findings until a governed risk-acceptance mechanism exists, and added SPDX SBOM plus provenance and SBOM attestations for the immutable image digest. Added a local workflow guard to prevent regression.
+
+ADR impact: Implements the existing supply-chain evidence requirement; no ADR is needed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -299,6 +310,13 @@ ADR impact: Implements the existing staging target boundary; no ADR is needed.
   Summary: Recorded the completed foundation TLS update: issued DNS-validated certificate, non-default SNI attachment, successful external hostname verification, expected pre-service 503, and the remaining workload-dependent readiness gaps.
   ADR impact: Implements the existing staging target boundary; no ADR is needed.
 
+
+- Commit: `1b56173`
+  Time UTC: 2026-09-06T22:39:07Z
+  Message: feat(deploy): gate platform shell supply chain
+  Summary: Moved ECR scan enforcement before the service-stack deployment, blocked both critical and high findings until a governed risk-acceptance mechanism exists, and added SPDX SBOM plus provenance and SBOM attestations for the immutable image digest. Added a local workflow guard to prevent regression.
+  ADR impact: Implements the existing supply-chain evidence requirement; no ADR is needed.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -313,9 +331,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-06T22:23:49Z
-Latest commit SHA: 291dcf2
-Chat duration: 15994s (00:04:26:34)
+Latest commit at UTC: 2026-09-06T22:39:07Z
+Latest commit SHA: 1b56173
+Chat duration: 16912s (00:04:41:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
