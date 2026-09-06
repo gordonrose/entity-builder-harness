@@ -60,6 +60,14 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The foundation split, deterministic renderer, and fixture repair are covered by the staging deployment plan, the target profile, and readiness evidence; they preserve the reviewed single-stack resource graph without adding a new platform policy.
 
+
+- Decision: Replace the GitHub staging deployment inline policy with the reviewed least-privilege CloudFormation boundary.
+  Rationale: The previous policy granted broad direct-service mutation. The applied policy restricts GitHub to the platform-shell ECR repository, service-stack CloudFormation operations, template validation, and passing only the service deployment role to CloudFormation; AWS validation and positive plus negative simulations verified that boundary.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: The foundation source organisation and the completed least-privilege GitHub deployment-role update are covered by the staging deployment plan, target profile, and readiness evidence. The change records verified live state without introducing a new deployment or product policy.
+
 ## Context Hygiene
 
 - Performed all task edits in the chat-owned worktree, leaving the root
@@ -67,6 +75,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 - Kept the scope to the foundation-source refactor and the directly exposed
   harness smoke-fixture metadata interaction; no AWS deployment work was
   performed.
+
+
+- Summary: Applied and verified the narrowly scoped GitHub deployment-role IAM update in the selected staging account.
+  Durable evidence: The target profile, readiness manifest, deployment plan, and this session log record the live-policy match; no CloudFormation stack, ECS workload, DNS record, WAF association, or other AWS resource changed.
 
 ## Activity Log
 
@@ -113,6 +125,27 @@ Summary: Split the Kanbien staging foundation into focused authored units render
 
 ADR impact: Covered by the existing single-stack target decision; no ADR is needed.
 
+
+### 2026-09-06T19:03:42Z - Decision
+
+Decision: Replace the GitHub staging deployment inline policy with the reviewed least-privilege CloudFormation boundary.
+
+Rationale: The previous policy granted broad direct-service mutation. The applied policy restricts GitHub to the platform-shell ECR repository, service-stack CloudFormation operations, template validation, and passing only the service deployment role to CloudFormation; AWS validation and positive plus negative simulations verified that boundary.
+
+
+### 2026-09-06T19:03:42Z - Context hygiene
+
+Summary: Applied and verified the narrowly scoped GitHub deployment-role IAM update in the selected staging account.
+
+Durable evidence: The target profile, readiness manifest, deployment plan, and this session log record the live-policy match; no CloudFormation stack, ECS workload, DNS record, WAF association, or other AWS resource changed.
+
+
+### 2026-09-06T19:08:32Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: The foundation source organisation and the completed least-privilege GitHub deployment-role update are covered by the staging deployment plan, target profile, and readiness evidence. The change records verified live state without introducing a new deployment or product policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -155,9 +188,8 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: The foundation split, deterministic renderer, and fixture repair are covered by the staging deployment plan, the target profile, and readiness evidence; they preserve the reviewed single-stack resource graph without adding a new platform policy.
+Reason: The foundation source organisation and the completed least-privilege GitHub deployment-role update are covered by the staging deployment plan, target profile, and readiness evidence. The change records verified live state without introducing a new deployment or product policy.
 Evidence:
-- .agentic/03.product/plans/implementation/production-reference-target-baseline.md
 - docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
 - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
 - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml

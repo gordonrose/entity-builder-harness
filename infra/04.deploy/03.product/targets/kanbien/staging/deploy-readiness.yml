@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 6
+#   version: 7
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -170,9 +170,9 @@ github:
     workflow_has_id_token_permission: true
     trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-trust.json
     permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
-    live_policy_last_inspected_at_utc: "2026-09-06T00:00:00Z"
-    live_policy_matches_repository_policy: false
-    required_policy_update: Add the repository's narrowed CloudFormation service-stack permissions before the repeatable deployment workflow is run.
+    live_policy_last_inspected_at_utc: "2026-09-06T19:03:03Z"
+    live_policy_matches_repository_policy: true
+    live_policy_verification: The live inline policy semantically matches the repository policy; AWS policy validation and positive plus negative least-privilege simulations passed.
 artifacts:
   source_commit_sha: pending
   build_policy:
@@ -379,8 +379,8 @@ blockers:
   - id: platform-shell-readiness.github-detail
     severity: blocking
     path: github
-    reason: GitHub workflow, source policy, OIDC trust, and environment protection settings are selected, but the live deployment role still has its older direct-service policy rather than the repository's narrowed CloudFormation service-stack policy. No workflow run id or deploy proof exists yet.
-    resolution: Apply the reviewed IAM inline-policy update through a separate governed AWS change, inspect the live policy, then run the selected manual GitHub workflow after the foundation stack exists.
+    reason: The GitHub workflow, source policy, OIDC trust, environment protection settings, and narrowed live deployment policy are selected and verified. No approved remote-main workflow run or deployment proof exists yet.
+    resolution: After the foundation stack exists, run the selected manual GitHub workflow from merged origin/main and record the workflow, image, and deployment proof.
   - id: platform-shell-readiness.image-provenance
     severity: blocking
     path: artifacts

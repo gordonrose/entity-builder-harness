@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -54,9 +54,9 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
   it does not prove an AWS change set or deployed workload.
 - The existing ALB has no WAF web ACL. Its current routes serve legacy
   workloads and must not be changed as a side effect of this proof.
-- The current repository branch has uncommitted platform work and is ahead of
+- The current platform source still needs to be merged and pushed to
   `origin/main`. Official deployment images must come from reviewed, pushed
-  `origin/main`, never this working tree.
+  `origin/main`, never a local working tree.
 
 ## Defects to correct before an AWS apply
 
@@ -68,11 +68,13 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 3. Foundation and service CloudFormation templates plus a static policy gate
    exist and passed AWS template validation. No foundation stack or service has
    been created yet.
-4. The GitHub workflow now validates templates, publishes an immutable image,
+4. The GitHub workflow validates templates, publishes an immutable image,
    deploys only the service stack through a dedicated CloudFormation execution
-   role, and performs public liveness plus unauthenticated-route smoke. The
-   live GitHub role has its older policy and must receive the separately
-   reviewed narrowed CloudFormation-policy update before this path can run.
+   role, and performs public liveness plus unauthenticated-route smoke. On
+   2026-09-06, the live GitHub role was updated and verified against the
+   reviewed narrowed CloudFormation-policy boundary. This path still cannot
+   run until its source is merged to `origin/main` and the foundation stack
+   has created the service deployment role.
 5. A deployed negative-rate-limit test, a WAF/routing proof, and a rollback
    exercise remain absent. The local container-engine smoke now passes, but it
    is not a substitute for those deployed proofs.
@@ -115,9 +117,10 @@ locally before the first AWS execution approval.
    roles, DynamoDB table, log group, target group, listener rule, WAF, alarms,
    and SNS topic. Existing ECR, Cognito, ALB, certificate, cluster, and hosted
    zone are inputs, not stack resources to replace.
-5. Apply the reviewed IAM inline-policy update that lets GitHub pass only the
-   platform-shell service CloudFormation execution role and update only the
-   platform-shell service stack. Inspect the live role after the update.
+5. Completed on 2026-09-06: applied and inspected the reviewed IAM
+   inline-policy update. GitHub can now pass only the platform-shell service
+   CloudFormation execution role and update only the platform-shell service
+   stack.
 6. Commit, review, and merge the local platform slice. Run the official image
    build from `origin/main`; do not promote a local image.
 7. Render the reviewed foundation source units, obtain explicit approval for
