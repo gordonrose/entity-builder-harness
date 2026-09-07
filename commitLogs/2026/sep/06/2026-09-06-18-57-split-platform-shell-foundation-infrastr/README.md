@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-07T12:08:26Z
-latest_commit_sha: 86e6944
-chat_duration: 65471s (00:18:11:11)
+latest_commit_at_utc: 2026-09-07T12:55:01Z
+latest_commit_sha: 4b76896
+chat_duration: 68266s (00:18:57:46)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -286,6 +286,17 @@ Summary: Corrected the asynchronous ECR scan-record wait, moved the deployable p
 
 ADR impact: No ADR is needed; this hardens the existing staged deployment target and supply-chain policy.
 
+
+### 2026-09-07T12:55:01Z - Commit recorded
+
+Commit: `4b76896`
+
+Message: Recorded the successful remote-main platform-shell deployment: immutable Distroless image with a complete zero-critical/zero-high ECR scan, SBOM and provenance attestations, service-stack update, and independent TLS/liveness 200 plus unauthenticated 401 checks; reduced readiness blockers to protected-route scope coverage, rate/WAF/routing, operations/rollback, deferred worker, and cost evidence.
+
+Summary: No ADR is needed; this records execution of the existing deployment design.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -335,6 +346,13 @@ ADR impact: No ADR is needed; this hardens the existing staged deployment target
   Summary: Corrected the asynchronous ECR scan-record wait, moved the deployable platform-shell artifact to a separately digest-pinned non-root Distroless Node runtime, converted health checks to exec form, and recorded the first scan rejection plus replacement-image requirement. Verified local read-only image smoke and refreshed generated recognition sources.
   ADR impact: No ADR is needed; this hardens the existing staged deployment target and supply-chain policy.
 
+
+- Commit: `4b76896`
+  Time UTC: 2026-09-07T12:55:01Z
+  Message: Recorded the successful remote-main platform-shell deployment: immutable Distroless image with a complete zero-critical/zero-high ECR scan, SBOM and provenance attestations, service-stack update, and independent TLS/liveness 200 plus unauthenticated 401 checks; reduced readiness blockers to protected-route scope coverage, rate/WAF/routing, operations/rollback, deferred worker, and cost evidence.
+  Summary: No ADR is needed; this records execution of the existing deployment design.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -349,9 +367,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-07T12:08:26Z
-Latest commit SHA: 86e6944
-Chat duration: 65471s (00:18:11:11)
+Latest commit at UTC: 2026-09-07T12:55:01Z
+Latest commit SHA: 4b76896
+Chat duration: 68266s (00:18:57:46)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
