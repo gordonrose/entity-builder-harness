@@ -9,6 +9,7 @@ import {
   type Permission,
 } from "@kanbien/core/authz";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
+import { createInMemoryTracer } from "@kanbien/core/monitoring";
 import { messageDescriptor } from "@kanbien/core/shared";
 import { tenantContext, tenantId, type TenantContext } from "@kanbien/core/tenancy";
 import { validationIssue } from "@kanbien/core/validation";
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
   const resourcePermission = "smoke.record:read" as Permission;
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
+  const tracer = createInMemoryTracer();
   let authenticatedPrincipal: Principal | undefined;
   let publicRoutePrincipal: Principal | undefined;
   let requiredTenantContext: TenantContext | undefined;
@@ -247,6 +249,7 @@ async function main(): Promise<void> {
   const shell = await createPlatformServerShell({
     apps: [app],
     deps,
+    tracer,
     auth,
     tenantResolver,
     corsAllowlist: ["https://app.example.test"],
@@ -479,6 +482,22 @@ async function main(): Promise<void> {
 
   equal(metrics.points().some((point) => point.name === "platform.server.request"), true);
   equal(logger.records().some((record) => record.message === "platform.server.request"), true);
+  const completedEchoTrace = tracer.spans().find((span) =>
+    span.name === "platform.server.request"
+      && span.end?.attributes?.["route"] === "smoke.echo"
+      && span.end.attributes["status"] === 200);
+  deepEqual(completedEchoTrace?.attributes, { method: "POST" });
+  deepEqual(completedEchoTrace?.end, {
+    outcome: "succeeded",
+    attributes: {
+      method: "POST",
+      route: "smoke.echo",
+      status: 200,
+      latencyMs: 0,
+    },
+  });
+  equal("requestId" in (completedEchoTrace?.end?.attributes ?? {}), false);
+  equal("correlationId" in (completedEchoTrace?.end?.attributes ?? {}), false);
 
   const rateLimitKeys: string[] = [];
   const keyedRateLimitShell = await createPlatformServerShell({

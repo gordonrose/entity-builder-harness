@@ -1,6 +1,7 @@
 import { isoDateTimeFromDate, messageDescriptor } from "../src/shared/index";
 import {
   fixedHealthCheck,
+  createInMemoryTracer,
   healthCheckName,
   healthCheckResult,
   metricLabels,
@@ -11,6 +12,8 @@ import {
   monitoringSignalDefinition,
   monitoringSignalName,
   noopMetrics,
+  noopTracer,
+  traceSpanName,
   type HealthCheck,
   type HealthCheckName,
   type HealthCheckResult,
@@ -33,6 +36,9 @@ import {
   type MonitoringSignalDefinition,
   type MonitoringSignalIntent,
   type MonitoringSignalName,
+  type TraceContext,
+  type TraceSpanOutcome,
+  type Tracer,
 } from "../src/monitoring/index";
 
 const checkedAt = isoDateTimeFromDate(new Date("2026-07-07T10:00:00Z"));
@@ -70,6 +76,15 @@ const metric: MetricPoint = metricPoint({
 });
 const metrics: Metrics = noopMetrics;
 void metrics.record(metric);
+
+const tracer: Tracer = noopTracer;
+const rootSpan = tracer.startSpan({ name: traceSpanName("platform.server.request") });
+const traceContext: TraceContext = rootSpan.context;
+const traceOutcome: TraceSpanOutcome = "succeeded";
+rootSpan.end({ outcome: traceOutcome, attributes: { status: 200 } });
+const inMemoryTracer = createInMemoryTracer();
+const childSpan = inMemoryTracer.startSpan({ name: traceSpanName("platform.server.handler"), parent: traceContext });
+childSpan.end({ outcome: "rejected" });
 
 const metricDefinition: MonitoringMetricDefinition = {
   name: metricName("api.request.duration_ms"),
@@ -152,3 +167,9 @@ metricPoint({ name: "api.requests.total", kind: "counter", value: 1, unit: metri
 
 // @ts-expect-error signal definitions require at least a typed intent array.
 monitoringSignalDefinition({ name: signalName, category, owner: "platform-runtime" });
+
+// @ts-expect-error trace spans require a branded span name.
+tracer.startSpan({ name: "platform.server.request" });
+
+// @ts-expect-error trace end outcomes are constrained.
+rootSpan.end({ outcome: "unknown" });

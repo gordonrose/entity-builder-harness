@@ -1,6 +1,6 @@
 import { recordConfigSource, type ConfigRecord } from "@kanbien/core/config";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
-import { noopMetrics } from "@kanbien/core/monitoring";
+import { noopMetrics, type Tracer } from "@kanbien/core/monitoring";
 import { systemClock, type Result } from "@kanbien/core/shared";
 import {
   fixedFeatureFlagReader,
@@ -25,6 +25,7 @@ export interface PlatformServerProcessOptions {
   readonly configKeys?: readonly string[];
   readonly env?: NodeJS.ProcessEnv;
   readonly logger?: Logger;
+  readonly tracer?: Tracer;
   readonly port?: number;
   readonly host?: string;
   readonly installSignalHandlers?: boolean;
@@ -52,6 +53,7 @@ export async function startPlatformServerProcess(
     ...(options.auth === undefined ? {} : { auth: options.auth }),
     ...(options.rateLimiter === undefined ? {} : { rateLimiter: options.rateLimiter }),
     ...(options.clientAddressResolver === undefined ? {} : { clientAddressResolver: options.clientAddressResolver }),
+    ...(options.tracer === undefined ? {} : { tracer: options.tracer }),
     ...(options.transport === undefined ? {} : { transport: options.transport }),
     ...(env["PLATFORM_CORS_ORIGIN"] === undefined ? {} : { corsOrigin: env["PLATFORM_CORS_ORIGIN"] }),
     ...(env["PLATFORM_CORS_ALLOWLIST"] === undefined ? {} : { corsAllowlist: csvEnv(env["PLATFORM_CORS_ALLOWLIST"]) }),

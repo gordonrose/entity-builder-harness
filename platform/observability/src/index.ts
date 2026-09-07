@@ -24,5 +24,14 @@ export {
 } from "./metrics";
 export type { PlatformMetricInput } from "./metrics";
 
-export { platformTraceFields } from "./tracing";
-export type { PlatformTraceFieldsInput } from "./tracing";
+export {
+  endPlatformTraceSpan,
+  platformTraceAttributes,
+  platformTraceFields,
+  startPlatformTraceSpan,
+} from "./tracing";
+export type {
+  PlatformTraceAttributesInput,
+  PlatformTraceFieldsInput,
+  PlatformTraceSpanInput,
+} from "./tracing";

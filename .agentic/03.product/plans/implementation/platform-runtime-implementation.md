@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 20
+version: 21
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -687,14 +687,19 @@ barrel.
 - `logging.ts` owns the safe Core-logger wrapper and structured-log writes;
 - `metrics.ts` owns provider-neutral metric recording plus request, job,
   health, and elapsed-time helpers; and
-- `tracing.ts` owns safe trace-field preparation only.
+- `tracing.ts` owns safe trace-field preparation and safe adaptation to the
+  Core provider-neutral tracer port.
 
-The split preserves exported names and runtime behaviour. It does not select a
-logging, metric, or tracing provider; create a trace/span; add an exporter;
-or create a durable audit or security-record pipeline. The package README and
-local source README are the current responsibility maps, while the existing
-type, build, runtime, and provider-boundary checks remain its verification
-baseline.
+The source organisation now has a first trace-mechanics seed: Core monitoring
+defines `TraceContext`, span/tracer contracts, no-op behavior, and an
+in-memory test tracer; the server creates and completes one request span with
+an allowlisted operational summary. A failing tracer safely falls back to a
+no-op span and must not alter the HTTP response. The slice does not select a
+logging, metric, or tracing provider; accept remote parent context; expose
+trace context to app handlers; select sampling; add an exporter; or create a
+durable audit or security-record pipeline. The package README and local source
+README are the current responsibility maps, while the existing type, build,
+runtime, and provider-boundary checks remain its verification baseline.
 
 Acceptance:
 
@@ -766,12 +771,14 @@ telemetry. The records must not be treated as copies of one another.
 #### Missing record-profile and sequencing rules
 
 Security controls may continue to make provider-neutral decisions without an
-observability provider. Before those decisions emit security records, however,
-establish a minimum provider-neutral observability seam: composed logger,
-metric, and trace hooks; correlation propagation; shared redaction and bounded
-field normalisation; no-op or in-memory test sinks; and explicit safe behaviour
-when the sink is unavailable. `platform/security` must not call a provider or
-hide a direct security-log sink.
+observability provider. The first observability seam now includes composed
+logger/metric hooks, Core trace contracts, no-op/in-memory trace behavior,
+server request-span wiring, shared redaction/bounded field normalisation, and
+safe no-op fallback when a tracer is unavailable. Before security decisions
+emit security records, extend that seam across the required request, queue, and
+worker boundaries; govern correlation/causation propagation; and define the
+approved delivery-failure behavior. `platform/security` must not call a
+provider or hide a direct security-log sink.
 
 For each capability, define separately whether it needs an audit profile, an
 operational-observability profile, a security-signal profile, or none of these.
@@ -831,18 +838,23 @@ complete:
   deployment version, dependency name, or tenant tier. Tenant, user,
   principal, resource, request, correlation, trace, session, token, raw path,
   URL, IP, and error-message identifiers must not become shared metric labels.
-  The current Core metric-label guard already rejects several unsafe identity
-  and request labels, but it does not yet prove every tenant-ID spelling is
-  rejected; extend that guard and its tests before a metrics exporter is
-  selected. Tenant-scoped investigation and usage reporting require a
+  The current Core metric-label guard rejects tenant and tenant-ID labels,
+  including normalized spellings such as `tenant_id`, alongside other unsafe
+  identity and request labels. Keep extending its explicitly reviewed denylist
+  and tests before a metrics exporter is selected. Tenant-scoped investigation
+  and usage reporting require a
   separately access-controlled audit, security, log-search, or usage-record
   path, not an unbounded global metric dimension.
-- A correlation ID links the whole logical request or workflow; a future trace
-  ID and parent/child span identifiers describe one timed execution path within
-  it. Trace attributes follow the same redaction and bounded-field rules as
-  logs. Sampling may retain failed and unusually slow traces plus a bounded
-  successful sample, but audit events and required security evidence must
-  never depend on trace sampling.
+- A correlation ID links the whole logical request or workflow; a trace ID and
+  parent/child span identifiers describe one timed execution path within it.
+  Core now defines those trace contracts and the current server wraps each
+  request in one span, but it does not yet accept remote parent context,
+  propagate a span through a queue/worker, expose spans to app handlers, or
+  export them. Trace attributes follow the same redaction and bounded-field
+  rules as logs; the server uses only method, stable route name, status,
+  latency, outcome, and error class. Sampling may retain failed and unusually
+  slow traces plus a bounded successful sample, but audit events and required
+  security evidence must never depend on trace sampling.
 - Retention must be scheduled by record class, purpose, region, readers,
   expiry, and legal-hold needs. Where tamper-evidence is required, define the
   protected key or anchor owner, integrity-verification schedule, and alert or

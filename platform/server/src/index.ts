@@ -1,5 +1,6 @@
 import type { Permission } from "@kanbien/core/authz";
 import type { Logger } from "@kanbien/core/logging";
+import { noopTracer, type Tracer } from "@kanbien/core/monitoring";
 import { type CorrelationId, type JsonValue, type Result } from "@kanbien/core/shared";
 import type { TenantContext } from "@kanbien/core/tenancy";
 import {
@@ -22,10 +23,12 @@ import { assertPlatformConfigValid } from "@kanbien/platform-config";
 import { platformHealthHttpStatus, platformLiveness, platformReadiness } from "@kanbien/platform-health";
 import {
   elapsedMilliseconds,
+  endPlatformTraceSpan,
   platformErrorClass,
   platformTraceFields,
   recordPlatformHealthMetric,
   recordPlatformRequestMetric,
+  startPlatformTraceSpan,
   writePlatformLog,
 } from "@kanbien/platform-observability";
 import {
@@ -146,6 +149,7 @@ export interface PlatformServerOptions {
   readonly auth?: PlatformServerAuthHook;
   readonly tenantResolver?: PlatformTenantResolver;
   readonly logger?: Logger;
+  readonly tracer?: Tracer;
   readonly corsOrigin?: string;
   readonly corsAllowlist?: readonly string[];
   readonly healthExposure?: PlatformHealthExposurePolicy;
@@ -173,6 +177,7 @@ interface PlatformServerRequestHandlingInput {
   readonly tenantResolver?: PlatformTenantResolver;
   readonly deps: PlatformMountDeps;
   readonly logger: Logger;
+  readonly tracer: Tracer;
   readonly corsOrigin?: string;
   readonly corsAllowlist?: readonly string[];
   readonly healthExposure?: PlatformHealthExposurePolicy;
@@ -245,11 +250,13 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
   const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps });
   const routes = mounted.value.routes.map(compileRoute);
   const logger = options.logger ?? options.deps.logger;
+  const tracer = options.tracer ?? noopTracer;
   const rateLimiter = options.rateLimiter ?? createInMemoryPlatformRateLimiter({ clock: options.deps.clock });
   const requestInput: PlatformServerRequestHandlingInput = {
     routes,
     deps: options.deps,
     logger,
+    tracer,
     rateLimiter,
     lifecycle,
     healthChecks: mounted.value.healthChecks,
@@ -289,6 +296,10 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
   const middleware: PlatformServerMiddlewareStep[] = [];
   const startedAt = input.deps.clock.now();
   const requestId = input.request.requestId ?? platformServerRequestId(firstHeaderValue(input.request.headers ?? {}, "x-request-id"));
+  const traceSpan = startPlatformTraceSpan(input.tracer, {
+    name: "platform.server.request",
+    attributes: { method: input.request.method },
+  });
   const requestOrigin = firstHeaderValue(input.request.headers ?? {}, "origin");
   const headers = platformResponseHeaders({
     requestId,
@@ -328,6 +339,16 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
         status: platformResponse.status,
       },
       ...(error === undefined ? {} : { error }),
+    });
+    endPlatformTraceSpan(traceSpan, {
+      outcome: traceOutcomeForResponse(platformResponse.status),
+      attributes: {
+        method: input.request.method,
+        route,
+        status: platformResponse.status,
+        latencyMs,
+        ...(errorClass === undefined ? {} : { errorClass }),
+      },
     });
 
     return platformResponse;
@@ -605,6 +626,10 @@ function handlePlatformServerTransportFailure(
   input: PlatformServerRequestHandlingInput & { readonly failure: PlatformServerTransportFailure },
 ): PlatformServerResponse {
   const startedAt = input.deps.clock.now();
+  const traceSpan = startPlatformTraceSpan(input.tracer, {
+    name: "platform.server.request",
+    attributes: { method: input.failure.method },
+  });
   const requestOrigin = firstHeaderValue(input.failure.headers, "origin");
   const headers = platformResponseHeaders({
     requestId: input.failure.requestId,
@@ -658,7 +683,21 @@ function handlePlatformServerTransportFailure(
     },
     ...(input.failure.error === undefined ? {} : { error: input.failure.error }),
   });
+  endPlatformTraceSpan(traceSpan, {
+    outcome: traceOutcomeForResponse(response.status),
+    attributes: {
+      method: input.failure.method,
+      route: "platform.transport",
+      status: response.status,
+      latencyMs,
+      errorClass,
+    },
+  });
   return response;
+}
+
+function traceOutcomeForResponse(status: number): "succeeded" | "rejected" | "failed" {
+  return status >= 500 ? "failed" : status >= 400 ? "rejected" : "succeeded";
 }
 
 function findRoute(routes: readonly CompiledRoute[], request: PlatformServerRequest): { readonly route: CompiledRoute; readonly params: Readonly<Record<string, string>> } | undefined {
