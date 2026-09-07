@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-07T21:58:41Z
-latest_commit_sha: b148efa
-chat_duration: 1558s (00:00:25:58)
+latest_commit_at_utc: 2026-09-07T22:16:28Z
+latest_commit_sha: 137e898
+chat_duration: 2625s (00:00:43:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -146,6 +146,17 @@ Raised: Live AWS observability inspection is temporarily unavailable
 
 Resolution: The local kanbien-dev SSO token expired while making a read-only CloudWatch query. Repository target evidence was used for the lesson; renew SSO before recording live log/alarm evidence. No AWS state changed.
 
+
+### 2026-09-07T22:16:28Z - Commit recorded
+
+Commit: `137e898`
+
+Message: docs(education): explain observability delivery
+
+Summary: Added the target-observability lesson, distinguishing ECS stdout-to-CloudWatch logs and infrastructure alarms from missing application metrics/traces, security records, audit delivery, and WAF request logging. Commit gates passed.
+
+ADR impact: No ADR required; the lesson records existing target decisions and gaps.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -159,6 +170,13 @@ Resolution: The local kanbien-dev SSO token expired while making a read-only Clo
   Message: feat(platform): trace queued worker jobs
   Summary: Added provider-neutral queue trace-parent preservation, direct worker-job causation, bounded worker spans, scanable worker source files, deferred persistence lifecycle/record-change lineage plan, and handbook evidence. Verified Core, runtime, and worker checks.
   ADR impact: No ADR required; applies existing provider-neutral Core/platform direction.
+
+
+- Commit: `137e898`
+  Time UTC: 2026-09-07T22:16:28Z
+  Message: docs(education): explain observability delivery
+  Summary: Added the target-observability lesson, distinguishing ECS stdout-to-CloudWatch logs and infrastructure alarms from missing application metrics/traces, security records, audit delivery, and WAF request logging. Commit gates passed.
+  ADR impact: No ADR required; the lesson records existing target decisions and gaps.
 
 ## Main Refresh Conflicts
 
@@ -176,9 +194,9 @@ make a cross-layer ownership decision requiring a new ADR.
 ## Session Metrics
 
 Raised at UTC: 2026-09-07T21:32:43Z
-Latest commit at UTC: 2026-09-07T21:58:41Z
-Latest commit SHA: b148efa
-Chat duration: 1558s (00:00:25:58)
+Latest commit at UTC: 2026-09-07T22:16:28Z
+Latest commit SHA: 137e898
+Chat duration: 2625s (00:00:43:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
