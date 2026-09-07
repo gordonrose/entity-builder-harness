@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-07T12:55:01Z
-latest_commit_sha: 4b76896
-chat_duration: 68266s (00:18:57:46)
+latest_commit_at_utc: 2026-09-07T18:49:46Z
+latest_commit_sha: c2d4448
+chat_duration: 89551s (01:00:52:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -297,6 +297,17 @@ Summary: No ADR is needed; this records execution of the existing deployment des
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-09-07T18:49:46Z - Commit recorded
+
+Commit: `c2d4448`
+
+Message: Recorded the observability learning decisions in the handbook and owning plans: separate record families, allowlisted facts, proposed canonical action/source/outcome vocabulary, tenant-safe metric dimensions, trace and sampling boundaries, capability-profile responsibilities, and explicit implementation gaps.
+
+Summary: No ADR is needed; this refines existing observability planning without selecting a provider or changing runtime behaviour.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -353,6 +364,13 @@ ADR impact: covered by session ADR disposition
   Summary: No ADR is needed; this records execution of the existing deployment design.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c2d4448`
+  Time UTC: 2026-09-07T18:49:46Z
+  Message: Recorded the observability learning decisions in the handbook and owning plans: separate record families, allowlisted facts, proposed canonical action/source/outcome vocabulary, tenant-safe metric dimensions, trace and sampling boundaries, capability-profile responsibilities, and explicit implementation gaps.
+  Summary: No ADR is needed; this refines existing observability planning without selecting a provider or changing runtime behaviour.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -367,9 +385,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-07T12:55:01Z
-Latest commit SHA: 4b76896
-Chat duration: 68266s (00:18:57:46)
+Latest commit at UTC: 2026-09-07T18:49:46Z
+Latest commit SHA: c2d4448
+Chat duration: 89551s (01:00:52:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
