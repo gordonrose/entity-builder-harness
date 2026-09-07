@@ -6203,15 +6203,168 @@ be resolved from the artifact I am actually shipping?”
 Planning triage: this changed the platform-runtime implementation plan and the
 staging deployment readiness record. It did not change a public app contract.
 
-## 66. Next Lesson Queue
+## 66. Observability: Safe Records, Metrics, and Traces
 
-1. Walk through the foundation stack one resource at a time: service security
-   group, rate-limit table, task roles, target group, DNS route, WAF, and
-   operational alarms.
-2. Learn why a shared ALB makes a WAF association a carefully bounded change,
-   even when every WAF rule is scoped to one new hostname.
-3. Learn how stdout JSON becomes durable operational logs through an ECS host
-   facility, and why that is different from an application CloudWatch adapter.
+Observability begins with questions, not a dashboard or cloud service. For
+every capability, the platform should be able to answer whether the system is
+healthy, why a particular request failed, which policy decision applied, and
+which meaningful action occurred—without creating a second, less-protected copy
+of customer or credential data.
+
+### Five related, but separate, forms of evidence
+
+| Form | Primary question | Example | It must not become |
+|---|---|---|---|
+| Operational log | “What did the software or dependency do?” | A request timed out while creating an export file. | A raw request/response archive. |
+| Metric | “Is there a pattern?” | Export failures increased this hour. | A per-customer record store. |
+| Trace | “Where did one execution spend time or fail?” | Database lookup took 310 ms of an 842 ms request. | A copy of SQL, prompts, tokens, or provider payloads. |
+| Security signal | “What control decision or unusual access pattern occurred?” | A verified principal lacked the required export permission. | A raw JWT, cookie, password, or full claim set. |
+| Audit event | “Who attempted a meaningful action, on what, with what result?” | A tenant user requested an invoice export; it was accepted. | A duplicate of invoice rows, balances, or file contents. |
+
+One request may produce several of these records. They can share an opaque
+correlation ID, but no record family copies another family’s full payload. The
+correlation ID describes the larger story; it is not a tenant ID, user ID,
+invoice ID, credential, or authority claim.
+
+### Allowlisted facts, not "log everything except secrets"
+
+A denylist fails when a new sensitive field appears. An allowlist starts from
+the safer position: a record may contain only named facts that its approved
+profile permits. Unknown facts are omitted or rejected before they reach a
+recording provider.
+
+For an invoice export, an audit record may need an opaque export-job target,
+verified actor type/reference, tenant reference, action, outcome, time, and
+correlation ID. It does not need invoice rows, customer names, export contents,
+signed download URLs, request bodies, tokens, cookies, raw authorisation
+headers, stack traces, provider payloads, chat prompts, voice transcripts, or
+audio.
+
+Encryption and access control remain necessary later, but they do not make
+unnecessary collection safe. First minimise the record; then protect the
+bounded record that remains.
+
+### A stable event vocabulary
+
+HTTP methods are transport facts, not business actions. A `POST` can create a
+user, request an export, approve a tenant, or start an agent workflow. The
+event vocabulary therefore keeps these dimensions separate:
+
+| Dimension | Examples | Purpose |
+|---|---|---|
+| Record family | `audit`, `security`, `operational` | Says which evidence contract and destination rules apply. |
+| Event type | `billing.invoice.export` | Stable category for grouping and validation inside its record family. |
+| Action | `export` | Meaningful canonical verb. |
+| Outcome | `succeeded`, `denied`, `failed`; later operational lifecycle values may include `accepted`, `rejected`, `cancelled`, `timed_out`, or `retried`. | What happened to the action. |
+| Actor type | `user`, `service`, `system`, `anonymous` | Who held accountable authority. |
+| Interaction source | `web`, `mobile`, `desktop`, `tablet`, `chat`, `voice`, `cli`, `api`, `integration`, `scheduled_job`, `system` | How the work began. |
+| Execution context | `server`, `worker`, `scheduler` | Where the work ran. |
+
+The controlled action baseline is:
+
+| Family | Actions |
+|---|---|
+| Resource lifecycle | `create`, `read`, `list`, `search`, `update`, `delete`, `archive`, `restore` |
+| Relationships/access | `assign`, `unassign`, `grant`, `revoke` |
+| Decisions/state | `approve`, `reject`, `enable`, `disable`, `publish`, `unpublish` |
+| Data movement | `upload`, `download`, `import`, `export` |
+| Workflow | `submit`, `cancel`, `execute`, `schedule`, `retry` |
+| Identity/security | `authenticate`, `verify`, `reset`, `recover`, `rotate` |
+| Generation | `generate` |
+
+This is a proposed versioned Core/product taxonomy, not a licence for arbitrary
+new strings. A genuinely new action requires a reviewed vocabulary change,
+corresponding validators, fixtures, and documentation. A feature must not use
+transport words such as `POST` or put outcome into its event type.
+
+### Metric cardinality and tenant visibility
+
+Metrics are aggregates. Their labels must come from small, known sets such as
+route/capability ID, bounded outcome, bounded source, dependency name,
+deployment version, or tenant tier. A tenant, user, principal, resource,
+request, correlation, trace, session, token, raw path, URL, IP address, and
+free-text error can produce an unbounded number of metric series or disclose
+sensitive context. They are not shared metric labels.
+
+This does **not** mean that the platform ignores tenants. Tenant-scoped
+investigation belongs in authorised audit/security/log search, and tenant usage
+belongs in a deliberately designed usage-reporting record. A `TenantRoot` must
+be limited to its verified tenant; a `PlatformRoot` starts from aggregate health
+and needs explicit authority for a tenant-specific investigation. Tenant tier
+or residency class may be a metric label only when its permitted values are
+small, stable, and non-sensitive.
+
+### Trace and span boundaries
+
+Metrics reveal a pattern; a trace shows the timed path of one execution.
+
+```text
+request trace
+  -> authentication span
+  -> authorisation span
+  -> database lookup span
+  -> file-storage span
+  -> queue-submission span
+```
+
+A correlation ID links the overall logical workflow. A trace ID links the
+timing path of one execution, and each span has a parent/child relationship
+within that trace. A worker handling a queued export later keeps the original
+correlation ID but begins a separate execution trace linked through the job or
+message causation chain.
+
+Trace attributes have the same minimisation rules as logs. Trace sampling may
+retain failures, unusually slow work, and a bounded successful sample, but
+audit evidence and required security evidence are never sampled away.
+
+### Capability observability profiles
+
+A future capability declaration will reference separate audit,
+security-signal, and operational-observability profiles. Each profile states
+which events are meaningful, which allowlisted facts may be emitted, who may
+read them, and why their retention/residency is justified. The platform owns
+correlation/trace propagation, redaction, providers, and delivery behaviour;
+the capability supplies only its approved business meaning.
+
+For example, `billing.invoice.export` may audit an accepted export request and
+its later completion or failure, emit a security signal for a relevant denial,
+and record bounded request duration and export-outcome metrics. It must not
+select a cloud vendor, log raw invoices, or turn a trace into a durable audit
+record.
+
+### What is implemented and what is not
+
+Core already has correlation/causation concepts, versioned audit-event shapes,
+and a metric-label guard that rejects many unsafe labels. Platform runtime
+already carries correlation context and the deployed shell writes redacted
+stdout JSON through its ECS host facility. These are useful seams, not a
+complete record pipeline.
+
+There is not yet a selected provider-neutral log/metric/trace exporter, durable
+audit/security sink, tenant-scoped record-retrieval model, trace-propagation
+implementation, canonical-action validator, or full metric guard against every
+tenant-ID spelling. Those remain planned work and must be proved before the
+platform is described as operationally complete for audit or observability.
+
+### Study question
+
+Why should a request that creates an export job record `accepted` separately
+from the worker later recording `succeeded` or `failed`?
+
+The request accepted responsibility for future work; it did not prove that the
+file exists. The later worker record supplies the actual completion outcome,
+linked through correlation and causation without copying the export content.
+
+## 67. Next Lesson Queue
+
+1. Continue observability by examining provider-neutral ports: how structured
+   logs, metrics, and traces leave a server or worker without importing an AWS
+   SDK into generic platform code.
+2. Learn how an ECS host facility receives redacted stdout JSON and why that is
+   different from a durable audit or security-record sink.
+3. Before observability implementation, select one bounded first use case and
+   define its record profiles, provider requirements, failure behaviour, and
+   tests rather than creating empty provider packages.
 
 ## Repository Evidence
 
@@ -6224,6 +6377,8 @@ staging deployment readiness record. It did not change a public app contract.
 - [Platform server source](../../../platform/server/src/index.ts)
 - [Platform server package guide](../../../platform/server/README.md)
 - [Platform server source guide](../../../platform/server/src/README.md)
+- [Platform observability source](../../../platform/observability/src/index.ts)
+- [Core monitoring vocabulary](../../../packages/core/src/monitoring/index.ts)
 - [Platform worker source](../../../platform/workers/src/index.ts)
 - [Smoke app mount](../../../apps/platform-smoke/src/app.mount.ts)
 - [Product harness foundation plan](../../../.agentic/03.product/plans/implementation/product-harness-foundation.md)
@@ -6485,3 +6640,9 @@ After each completed learning chunk:
   and recording policy, per-change evidence, and repository posture in distinct
   locations. It explicitly labels the central evidence schema/store/index as
   future work rather than current compliance evidence.
+- 2026-09-07: Added the observability continuation: separate evidence records,
+  allowlisted facts, canonical action/source/outcome terminology, safe metric
+  cardinality, tenant-scoped investigation boundaries, and trace/sampling
+  rules. The platform-runtime and product-harness plans now capture the
+  implementation obligations; no record pipeline or provider adapter was
+  claimed as implemented.
