@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 18
+version: 19
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -681,9 +681,11 @@ Acceptance:
 - Health separates liveness from readiness and never exposes secret values.
 - Config validation fails before listen or worker polling.
 - Security hooks have defensive defaults even if first auth providers are fakes.
-- Metrics/tracing hooks record route, job, request id, correlation id, tenant
-  where available, error class, latency, retry count, and health state without
-  logging secrets.
+- Observability hooks record route/job identifiers, bounded error class,
+  latency, retry count, and health state without logging secrets. Correlation
+  IDs and verified tenant context may be carried only in separately approved,
+  access-controlled log, trace, security, or audit fields; they must never be
+  general metric labels.
 
 ### 7a. Defer Security, Audit, And Operational Record Pipelines
 
@@ -787,10 +789,38 @@ complete:
 - The current proposed taxonomy remains planning-only until a first consumer
   and shared Core/product governance adopt it: event types follow
   `<app>.<resource>.<verb>`; actor type, interaction channel, and execution
-  context are separate dimensions; outcomes remain `succeeded`, `denied`, or
-  `failed`; and the controlled verb vocabulary covers data, access, decision,
-  operation, and configuration actions. The product-harness plan—not this
-  generic platform milestone—owns chat and voice interaction design.
+  context are separate dimensions. The initial Core audit outcomes remain
+  `succeeded`, `denied`, or `failed`; a future operational record vocabulary
+  may add distinct lifecycle outcomes such as `accepted`, `rejected`,
+  `cancelled`, `timed_out`, and `retried` only through a versioned contract
+  change. The controlled action vocabulary starts with resource lifecycle
+  (`create`, `read`, `list`, `search`, `update`, `delete`, `archive`,
+  `restore`), relationship/access (`assign`, `unassign`, `grant`, `revoke`),
+  decision/state (`approve`, `reject`, `enable`, `disable`, `publish`,
+  `unpublish`), data movement (`upload`, `download`, `import`, `export`),
+  workflow (`submit`, `cancel`, `execute`, `schedule`, `retry`),
+  identity/security (`authenticate`, `verify`, `reset`, `recover`, `rotate`),
+  and generation (`generate`). A genuinely distinct action is a reviewed
+  vocabulary change, never a feature-local free-form string. The
+  product-harness plan—not this generic platform milestone—owns chat and voice
+  interaction design.
+- Metrics may use only reviewed low-cardinality dimensions, such as app,
+  capability/route/job identifier, bounded outcome, bounded source,
+  deployment version, dependency name, or tenant tier. Tenant, user,
+  principal, resource, request, correlation, trace, session, token, raw path,
+  URL, IP, and error-message identifiers must not become shared metric labels.
+  The current Core metric-label guard already rejects several unsafe identity
+  and request labels, but it does not yet prove every tenant-ID spelling is
+  rejected; extend that guard and its tests before a metrics exporter is
+  selected. Tenant-scoped investigation and usage reporting require a
+  separately access-controlled audit, security, log-search, or usage-record
+  path, not an unbounded global metric dimension.
+- A correlation ID links the whole logical request or workflow; a future trace
+  ID and parent/child span identifiers describe one timed execution path within
+  it. Trace attributes follow the same redaction and bounded-field rules as
+  logs. Sampling may retain failed and unusually slow traces plus a bounded
+  successful sample, but audit events and required security evidence must
+  never depend on trace sampling.
 - Retention must be scheduled by record class, purpose, region, readers,
   expiry, and legal-hold needs. Where tamper-evidence is required, define the
   protected key or anchor owner, integrity-verification schedule, and alert or

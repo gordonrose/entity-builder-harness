@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.product-harness-foundation
-version: 7
+version: 8
 status: active
 layer: 03.product
 domain: governance
@@ -447,6 +447,20 @@ Acceptance:
   profiles with allowlisted safe facts; an absent profile is deliberate. Each
   selected profile records field purpose, classification, permissible values,
   bounds/cardinality, audience, and retention/residency justification.
+- It selects its accountable action from the versioned Core/product action
+  vocabulary rather than inventing a feature-local verb. Event type, action,
+  outcome, actor type, interaction source, and execution context remain
+  separate fields so an outcome such as `denied` does not become a different
+  event name.
+- Its operational profile selects only approved low-cardinality metric
+  dimensions. A tenant, user, principal, resource, request, correlation,
+  trace, session, token, raw path, URL, IP address, or free-text error must
+  not become a shared metric label. A capability may request tenant-scoped
+  investigation or usage reporting only through a separately authorised record
+  or reporting design.
+- It may declare the business operations worth tracing, but the platform owns
+  trace/correlation propagation, span structure, redaction, sampling, and the
+  selected provider adapter; a feature cannot turn a trace into an audit store.
 - Any LLM/agent discovery fields are explicitly non-authoritative and cannot
   confer access, tool permission, tenant scope, or side-effect authority.
 - Validators reject secrets, raw tenant data, provider configuration, unbounded
