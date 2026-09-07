@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 1
+  version: 2
   status: active
   layer: 05.education
   domain: education
@@ -6358,6 +6358,39 @@ or record pipeline now exists. The split makes the current seams easier to
 inspect: normalisation is the safety gateway; logging and trace fields consume
 it; metrics remain an independent aggregate-measurement concern.
 
+### First tracing implementation slice
+
+The repository now has the smallest useful tracing path without choosing a
+tracing product:
+
+```text
+server request
+  -> starts one provider-neutral span
+  -> applies route/security/handler policy
+  -> records the response outcome on that span
+  -> ends the span
+```
+
+`packages/core/monitoring` defines the portable nouns: a trace context has a
+trace ID and span ID; a child span also records its immediate parent span ID.
+It defines the `Tracer` and `TraceSpan` ports, a no-op implementation for
+normal operation with tracing disabled, and an in-memory implementation for
+tests. Neither implementation selects a backend.
+
+`platform/observability` is the safety bridge. It converts only an allowlisted
+operational summary—HTTP method, stable route identifier, status, latency,
+outcome, and bounded error class—into scalar trace attributes. It deliberately
+does not put a request body, headers, cookies, token, raw URL, raw path,
+tenant/user identifier, correlation ID, or trace ID into this general trace
+attribute set. If a supplied tracer fails, the bridge replaces it with a no-op
+span so observing a request cannot change the request's response.
+
+This is not distributed tracing yet. The server does not accept a remote parent
+context, an app handler cannot create a child span through its request context,
+workers do not continue a trace from a queue message, and there is no sampler,
+exporter, trace store, retention policy, or provider adapter. Those are later
+decisions because they change the operational and data-governance boundary.
+
 ### Study question
 
 Why should a request that creates an export job record `accepted` separately
@@ -6370,8 +6403,8 @@ linked through correlation and causation without copying the export content.
 ## 67. Next Lesson Queue
 
 1. Continue observability by examining provider-neutral ports: how structured
-   logs, metrics, and traces leave a server or worker without importing an AWS
-   SDK into generic platform code.
+   logs, metrics, and traces leave a server or worker without importing a
+   provider SDK into generic platform code.
 2. Learn how an ECS host facility receives redacted stdout JSON and why that is
    different from a durable audit or security-record sink.
 3. Before observability implementation, select one bounded first use case and
@@ -6664,3 +6697,8 @@ After each completed learning chunk:
   provider-neutral helper now has separate normalisation, logging, metrics,
   and tracing files, with package and source responsibility maps; its public
   barrel and its provider/pipeline status are unchanged.
+- 2026-09-07: Added the first provider-neutral tracing slice. Core monitoring
+  now has scanable health, metrics, signal, trace, identifier, and validation
+  topics; the server starts and completes a safe request span through a
+  no-op/in-memory-capable port. No trace provider, exporter, remote-context
+  propagation, sampling policy, or durable record store was selected.

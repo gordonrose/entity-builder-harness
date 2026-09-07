@@ -14,7 +14,7 @@ external promise.
 | `normalization.ts` | Safe JSON-shaped fields, redaction, size/depth bounds, circular-value handling, and bounded error facts. | Logging and tracing need the same safety rule without either becoming a provider implementation. |
 | `logging.ts` | Safe Core-logger adaptation and structured runtime log writes. | It sends already-normalised facts to an injected logger; it does not select or configure a sink. |
 | `metrics.ts` | Metric recording plus request, job, health, and elapsed-time helpers. | Metric identity and low-cardinality labels stay separate from log-value normalisation and trace attributes. |
-| `tracing.ts` | Safe trace-attribute preparation. | A future span/exporter adapter can receive bounded attributes without tracing mechanics leaking into every runtime caller. |
+| `tracing.ts` | Safe trace attributes plus safe start/end wrappers around the Core tracer port. | Runtime callers can create a provider-neutral span without an unavailable tracer breaking a request. |
 | `index.ts` | Approved public exports only. | Callers keep one stable import while internal source responsibilities remain easy to find. |
 
 ## Detailed guide to the files
@@ -56,16 +56,23 @@ tenant, user, request, trace, session, token, raw URL/path, IP, and resource
 identifiers must not become shared metric labels. This file does not create a
 metrics exporter or a tenant analytics store.
 
-### `tracing.ts` — prepared attributes before a tracing engine exists
+### `tracing.ts` — safe trace mechanics, not an exporter
 
-The current tracing seam prepares a safe attribute object for a future tracer.
-It does not create a trace ID, start a span, determine sampling, or export a
-span. Those need a selected tracing contract, adapter, target configuration,
-and operating model.
+The Core monitoring package now supplies a provider-neutral `Tracer` port,
+trace context, span names, and no-op/in-memory implementations. This file
+prepares an explicit allowlist of scalar trace attributes and safely starts or
+ends a span through that port. If the supplied tracer throws or has an invalid
+shape, it falls back to the no-op tracer rather than changing request outcome.
+
+The current server uses only method, stable route name, status, latency,
+outcome, and a bounded error class. It does not place request IDs, correlation
+IDs, tenant IDs, headers, bodies, raw paths, credentials, or trace IDs into
+these general trace attributes.
 
 Using the same normalisation gateway prevents tracing from becoming a bypass
-around log redaction. Trace attributes need the same data minimisation and
-bounded-value discipline as structured logs.
+around log redaction. The code still does not choose a propagation format,
+sampling policy, exporter, or storage provider; those need a later adapter,
+target configuration, and operating model.
 
 ### `index.ts` — the one public doorway
 

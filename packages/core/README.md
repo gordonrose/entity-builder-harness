@@ -225,14 +225,17 @@ health backend:
   define liveness, readiness, dependency, and capability probe results.
 - `MetricName`, `MetricKind`, `MetricUnit`, `MetricPoint`, and `Metrics`
   define provider-neutral metric emission.
+- `TraceContext`, `TraceSpan`, `Tracer`, and `TraceSpanOutcome` define a
+  provider-neutral timed-operation relationship without selecting a trace
+  backend.
 - `MetricLabels`, `metricLabels`, `defaultUnsafeMetricLabelNames`, and
   `defaultMetricLabelStringLengthLimit` keep metric dimensions primitive,
   bounded, and protected from common secret or high-cardinality labels.
 - `MonitoringSignalDefinition` records why a signal exists, who owns it, what
   component it describes, and whether it is intended for alerting, capacity
   planning, health detection, cost control, debugging, or SLI use.
-- `fixedHealthCheck` and `noopMetrics` are pure helpers for tests and composed
-  local flows.
+- `fixedHealthCheck`, `noopMetrics`, `noopTracer`, and `createInMemoryTracer`
+  are pure helpers for tests and composed local flows.
 
 Core monitoring names the shared operational signal language. It does not
 define CloudWatch, Datadog, Prometheus, OpenTelemetry exporters, health HTTP
@@ -242,9 +245,18 @@ adapters emit and aggregate signals, and infra provisions monitoring backends,
 alarms, dashboards, and notification routes.
 
 Metric labels should be low-cardinality dimensions such as service, route,
-method, status class, dependency, queue, or job type. Do not use raw user ids,
-principal ids, request ids, correlation ids, session ids, URLs, paths, tokens,
-emails, IP addresses, or secrets as metric labels.
+method, status class, dependency, queue, or job type. Do not use raw tenant,
+user, or principal ids; request, correlation, trace, or session ids; URLs,
+paths, tokens, emails, IP addresses, or secrets as metric labels. The default
+metric-label guard rejects `tenant`, `tenantId`, and normalized variants such
+as `tenant_id`.
+
+Within the module, `identifiers.ts` owns branded names and component
+references, `health.ts` owns health contracts, `metrics.ts` owns metric safety
+and the Metrics port, `signals.ts` owns signal definitions, and `tracing.ts`
+owns trace contracts plus test helpers. `validation.ts` is a private shared
+helper and `index.ts` is the intentional public entry point. See the local
+[monitoring source map](src/monitoring/README.md) for the complete file map.
 
 ## Security Contracts
 

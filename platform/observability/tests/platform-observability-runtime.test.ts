@@ -1,17 +1,20 @@
 import { deepEqual, equal } from "node:assert/strict";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
-import type { MetricPoint, Metrics } from "@kanbien/core/monitoring";
+import { createInMemoryTracer, type MetricPoint, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { correlationId, fixedClock } from "@kanbien/core/shared";
 import {
   createPlatformSafeLogger,
+  endPlatformTraceSpan,
   elapsedMilliseconds,
   normalizePlatformError,
   normalizePlatformLogFields,
   platformErrorClass,
+  platformTraceAttributes,
   platformTraceFields,
   recordPlatformHealthMetric,
   recordPlatformJobMetric,
   recordPlatformRequestMetric,
+  startPlatformTraceSpan,
   writePlatformLog,
 } from "../src/index";
 
@@ -97,7 +100,50 @@ async function main(): Promise<void> {
     latencyMs: 25,
     retryCount: null,
     healthState: null,
+    method: null,
+    status: null,
+    outcome: null,
   });
+
+  deepEqual(platformTraceAttributes({
+    method: "GET",
+    route: "smoke.echo",
+    status: 200,
+    outcome: "succeeded",
+    errorClass: "do-not-store-secret",
+  }), {
+    method: "GET",
+    route: "smoke.echo",
+    status: 200,
+    outcome: "succeeded",
+    errorClass: "do-not-store-secret",
+  });
+
+  const tracer = createInMemoryTracer();
+  const span = startPlatformTraceSpan(tracer, {
+    name: "platform.server.request",
+    attributes: { method: "GET", route: "smoke.echo" },
+  });
+  endPlatformTraceSpan(span, {
+    outcome: "succeeded",
+    attributes: { status: 200, latencyMs: 12 },
+  });
+  deepEqual(tracer.spans(), [
+    {
+      name: "platform.server.request",
+      context: { traceId: "trace-1", spanId: "span-1" },
+      attributes: { method: "GET", route: "smoke.echo" },
+      end: { outcome: "succeeded", attributes: { status: 200, latencyMs: 12 } },
+    },
+  ]);
+
+  const unavailableTracer: Tracer = {
+    startSpan: () => {
+      throw new Error("telemetry unavailable");
+    },
+  };
+  const fallbackSpan = startPlatformTraceSpan(unavailableTracer, { name: "platform.server.request" });
+  endPlatformTraceSpan(fallbackSpan, { outcome: "failed" });
 }
 
 main()

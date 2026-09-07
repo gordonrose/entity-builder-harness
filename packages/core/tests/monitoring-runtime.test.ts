@@ -3,6 +3,7 @@ import { isoDateTimeFromDate, messageDescriptor } from "../src/shared/index";
 import {
   defaultMetricLabelStringLengthLimit,
   defaultUnsafeMetricLabelNames,
+  createInMemoryTracer,
   fixedHealthCheck,
   healthCheckName,
   healthCheckResult,
@@ -15,6 +16,11 @@ import {
   monitoringSignalDefinition,
   monitoringSignalName,
   noopMetrics,
+  noopTracer,
+  spanId,
+  traceContext,
+  traceId,
+  traceSpanName,
   type HealthCheckResult,
   type MetricPoint,
   type Metrics,
@@ -98,6 +104,8 @@ async function main(): Promise<void> {
     cached: false,
   });
   throws(() => metricLabels({ user_id: "user-123" }), /unsafe or too high-cardinality/);
+  throws(() => metricLabels({ tenant_id: "tenant-123" }), /unsafe or too high-cardinality/);
+  throws(() => metricLabels({ tenant: "enterprise" }), /unsafe or too high-cardinality/);
   throws(() => metricLabels({ http_path: "/deals/123" }), /unsafe or too high-cardinality/);
   throws(() => metricLabels({ "http-method": "GET" }), /must use lowercase snake_case/);
   throws(() => metricLabels({ status_code: Number.NaN }), /metric label "status_code" must be a finite number/);
@@ -199,6 +207,39 @@ async function main(): Promise<void> {
   await metrics.record(point);
   deepEqual(written, [point]);
   await noopMetrics.record(point);
+
+  const tracer = createInMemoryTracer();
+  const requestSpan = tracer.startSpan({
+    name: traceSpanName("platform.server.request"),
+    attributes: { method: "GET" },
+  });
+  const handlerSpan = tracer.startSpan({
+    name: traceSpanName("platform.server.handler"),
+    parent: requestSpan.context,
+    attributes: { route: "smoke.echo" },
+  });
+  handlerSpan.end({ outcome: "succeeded", attributes: { status: 200 } });
+  requestSpan.end({ outcome: "succeeded", attributes: { status: 200 } });
+  requestSpan.end({ outcome: "failed" });
+  deepEqual(tracer.spans(), [
+    {
+      name: "platform.server.request",
+      context: { traceId: "trace-1", spanId: "span-1" },
+      attributes: { method: "GET" },
+      end: { outcome: "succeeded", attributes: { status: 200 } },
+    },
+    {
+      name: "platform.server.handler",
+      context: { traceId: "trace-1", spanId: "span-2", parentSpanId: "span-1" },
+      attributes: { route: "smoke.echo" },
+      end: { outcome: "succeeded", attributes: { status: 200 } },
+    },
+  ]);
+  const providerContext = traceContext({ traceId: traceId("provider.trace-1"), spanId: spanId("provider-span-1") });
+  deepEqual(providerContext, { traceId: "provider.trace-1", spanId: "provider-span-1" });
+  throws(() => traceId("trace value"), /trace ID must use 1 to 128 safe identifier characters/);
+  const noOpSpan = noopTracer.startSpan({ name: traceSpanName("platform.server.request") });
+  noOpSpan.end({ outcome: "succeeded" });
 
   const healthResult: HealthCheckResult = checked;
   void healthResult;

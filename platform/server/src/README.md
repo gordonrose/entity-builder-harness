@@ -19,12 +19,19 @@ available, creates lifecycle control, and compiles route patterns. It exposes
 two paths: `handle` for deterministic tests or non-Node hosts, and `listen`
 for the Node transport.
 
-The request path owns request outcome logging, exact-origin CORS, standard
-security headers, pre-auth rate-limit checks, health endpoints, route matching,
-authentication, broad permission authorization, tenant derivation, request
-context, input validation, optional resource authorization, handler execution,
-and safe response/error mapping. It deliberately cannot select Cognito, Redis,
-an app, or an AWS service.
+The request path owns request outcome logging, a provider-neutral request span,
+exact-origin CORS, standard security headers, pre-auth rate-limit checks,
+health endpoints, route matching, authentication, broad permission
+authorization, tenant derivation, request context, input validation, optional
+resource authorization, handler execution, and safe response/error mapping. It
+deliberately cannot select Cognito, Redis, an app, or an AWS service.
+
+The span starts before route policy and ends through every normal request or
+transport-failure response path. It records only method, stable route name,
+status, latency, outcome, and bounded error class. It does not expose its trace
+context to app handlers yet, receive remote parent context, choose sampling, or
+export anything. A tracer that fails is replaced by a no-op span so telemetry
+cannot alter the response.
 
 Platform-owned response headers remain authoritative. This prevents an app
 handler from replacing the request ID, CORS decision, content-security policy,
