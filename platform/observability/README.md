@@ -29,7 +29,9 @@ package boundary test protects that dependency direction.
 | `src/index.ts` | Deliberate public package exports only. | `npm run platform:observability:check` |
 
 The [source map](src/README.md) explains why the topics remain separate and
-how their dependencies flow. The topic files are internal organisation, not
-public subpath APIs. A tracing adapter is still future work: no provider,
-exporter, propagation format, sampling policy, retention decision, or trace
-store is selected here.
+how their dependencies flow. The server and worker now create safe
+provider-neutral spans; a worker may use the Core trace parent carried in its
+queue message without exposing it to application handlers. The topic files are
+internal organisation, not public subpath APIs. A tracing adapter is still
+future work: no provider, exporter, external propagation format, sampling
+policy, retention decision, or trace store is selected here.

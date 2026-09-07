@@ -17,6 +17,7 @@ import {
   type Result,
 } from "../shared/index";
 import type { DiagnosticDescriptor } from "../diagnostics/index";
+import { traceContext, type TraceContext } from "../monitoring/index";
 import type { TenantId } from "../tenancy/index";
 
 export type QueueMessageId = EntityId<"QueueMessageId">;
@@ -53,6 +54,7 @@ export interface QueueMessage<TPayload extends QueuePayloadValue = QueuePayload>
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
   readonly causationId?: CausationId;
+  readonly traceParent?: TraceContext;
   readonly idempotencyKey?: QueueIdempotencyKey;
   readonly messageGroupKey?: QueueMessageGroupKey;
   readonly payload: TPayload;
@@ -229,6 +231,7 @@ export function queueMessage<TPayload extends QueuePayloadValue>(input: {
   readonly tenantId?: TenantId;
   readonly correlationId?: CorrelationId;
   readonly causationId?: CausationId;
+  readonly traceParent?: TraceContext;
   readonly idempotencyKey?: QueueIdempotencyKey;
   readonly messageGroupKey?: QueueMessageGroupKey;
   readonly payload: TPayload;
@@ -241,6 +244,7 @@ export function queueMessage<TPayload extends QueuePayloadValue>(input: {
     ...(input.tenantId === undefined ? {} : { tenantId: input.tenantId }),
     ...(input.correlationId === undefined ? {} : { correlationId: input.correlationId }),
     ...(input.causationId === undefined ? {} : { causationId: input.causationId }),
+    ...(input.traceParent === undefined ? {} : { traceParent: copyQueueTraceParent(input.traceParent) }),
     ...(input.idempotencyKey === undefined ? {} : { idempotencyKey: input.idempotencyKey }),
     ...(input.messageGroupKey === undefined ? {} : { messageGroupKey: input.messageGroupKey }),
     payload: copyQueuePayloadValue(input.payload) as TPayload,
@@ -371,6 +375,10 @@ function copyQueueSend<TPayload extends QueuePayloadValue>(send: QueueSend<TPayl
 
 function copyQueueMessage<TPayload extends QueuePayloadValue>(message: QueueMessage<TPayload>): QueueMessage<TPayload> {
   return queueMessage(message);
+}
+
+function copyQueueTraceParent(parent: TraceContext): TraceContext {
+  return traceContext(parent);
 }
 
 function copyQueueSendOptions(options: QueueSendOptions): QueueSendOptions {

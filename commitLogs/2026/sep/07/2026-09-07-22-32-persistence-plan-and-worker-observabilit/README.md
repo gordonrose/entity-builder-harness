@@ -1,0 +1,160 @@
+# Chat Session: 2026-09-07-22-32 persistence-plan-and-worker-observabilit
+
+<!-- agentic-session
+id: 2026-09-07-22-32-let-s-update-our-plan-accordingly-then-continue-with-the-obs
+task: let's update our plan accordingly - then continue with the observability lesson and implementation
+branch: chat/2026-09-07-22-32-let-s-update-our-plan-accordingly-then-continue-with-the-obs
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-07-22-32-let-s-update-our-plan-accordingly-then-continue-with-the-obs-1812168110
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+status: ready
+raised_at_utc: 2026-09-07T21:32:43Z
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
+latest_commit_at_utc:
+latest_commit_sha:
+chat_duration:
+estimated_chat_tokens:
+estimated_chat_cost:
+estimated_chat_cost_basis:
+-->
+
+## Initial Intent
+
+let's update our plan accordingly - then continue with the observability lesson and implementation
+
+## Session Log
+
+- Session started.
+- Branch created.
+- Chat-owned worktree created.
+- Commit log initialized.
+- Recorded the deferred persistence lifecycle and record-change lineage design
+  in the platform-runtime implementation plan.
+- Implemented queue trace-parent preservation, direct worker-job causation,
+  bounded worker spans, and the scanable worker source split.
+- Updated the architecture learning handbook with the queued-work lineage
+  lesson and planning triage.
+
+## Questions Asked
+
+- How should deletion recovery and event-linked record history work when the
+  persistence layer is built?
+- How do correlation, direct causation, trace continuity, and retry attempts
+  differ for queued work?
+
+## Issues Raised
+
+- The worker source had become one large entry file, making its contracts,
+  queue mechanics, errors, and delivery orchestration harder to scan.
+- A trace ID cannot be used as durable record-change causation; it is an
+  operational diagnostic link and may be disabled or sampled.
+
+## Decisions Made
+
+- A logical deletion is a controlled recovery window, not permanent retention;
+  a future product persistence slice must govern restore, purge/anonymisation,
+  retention, erasure, residency, and legal holds.
+- Future mutable-record writes must produce protected append-oriented change
+  history in the same transaction, carrying a bounded record reference,
+  revision, action, tenant/actor where applicable, correlation ID, and direct
+  event/message cause.
+- A worker job's direct cause is its input queue-message ID. The queue message
+  retains its own earlier cause; a retry changes delivery attempt, not cause.
+- Queue trace parent is internal diagnostic context. It may parent the worker's
+  job span but is never provided to the app handler and does not replace
+  business causation.
+- `platform/workers/src` is organised as `errors.ts`, `types.ts`, `queue.ts`,
+  and `worker.ts`, with `index.ts` as the deliberate public barrel. Internal
+  error and queue-time helpers remain non-public.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: The queue, runtime-job, and worker changes are explained by the updated platform implementation plan and architecture handbook; no new retrieval rule is required for this additive provider-neutral slice.
+
+## Context Hygiene
+
+- Read the chat-start and platform-runtime implementation governance, current
+  plan, package README maps, and existing worker/runtime/core tests before
+  changing contracts. No provider, persistence-adapter, exporter, or AWS
+  decision was inferred from this provider-neutral slice.
+
+## Activity Log
+
+### 2026-09-07T21:32:43Z - Session started
+
+Initial intent: let's update our plan accordingly - then continue with the observability lesson and implementation
+
+### 2026-09-07T21:54:27Z - Persistence planning and worker observability slice
+
+- Added the deferred persistence lifecycle and event/message-linked
+  record-change-history requirements to
+  `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
+- Added optional internal `traceParent` preservation to Core queue messages.
+- Added direct queue-message causation to runtime job contexts.
+- Added one safe worker span per non-idle delivery, with bounded attributes and
+  no app-handler trace-context exposure.
+- Split `platform/workers/src/index.ts` into responsibility-named source files
+  while preserving the deliberate public package barrel.
+- Updated package/source README maps and the printable architecture handbook.
+- Verified `npm run core:check`, `npm run platform:runtime:check`, and
+  `npm run platform:workers:check`; all passed. The worker boundary check now
+  covers five source files.
+- Ran `git diff --check`; it passed.
+
+
+### 2026-09-07T21:57:53Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: The queue, runtime-job, and worker changes are explained by the updated platform implementation plan and architecture handbook; no new retrieval rule is required for this additive provider-neutral slice.
+
+## Sub-Agent Activity
+
+- None recorded yet.
+
+## Commits
+
+- None recorded yet.
+
+## Main Refresh Conflicts
+
+- None recorded yet.
+
+## ADR Disposition
+
+ADR needed: no
+ADR path:
+Reason: This slice applies the existing provider-neutral Core/platform
+dependency direction and the approved platform-runtime plan. It does not select
+a provider, alter deployment topology, introduce a product architecture, or
+make a cross-layer ownership decision requiring a new ADR.
+
+## Session Metrics
+
+Raised at UTC: 2026-09-07T21:32:43Z
+Latest commit at UTC:
+Latest commit SHA:
+Chat duration:
+Estimated chat tokens:
+Estimated chat cost:
+Estimated chat cost basis:
+
+## Notes
+
+- Changes are present in the chat worktree only and have not been committed or
+  merged. No AWS resources or external providers were changed.
+
+## RAG Knowledge Disposition
+
+Status: covered
+Reason: The queue, runtime-job, and worker changes are explained by the updated platform implementation plan and architecture handbook; no new retrieval rule is required for this additive provider-neutral slice.
+Evidence:
+- .agentic/03.product/plans/implementation/platform-runtime-implementation.md
+- docs/education/teaching-notes/0002-architecture-learning-handbook.md
+Corpus gaps:
+- None.

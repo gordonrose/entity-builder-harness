@@ -3,7 +3,7 @@ import { principal, principalId } from "@kanbien/core/authn";
 import { recordConfigSource, type ConfigSchema } from "@kanbien/core/config";
 import { healthCheckName, healthCheckResult, monitoringComponent } from "@kanbien/core/monitoring";
 import type { QueueMessageType } from "@kanbien/core/queues";
-import type { CorrelationId } from "@kanbien/core/shared";
+import { causationId, type CorrelationId } from "@kanbien/core/shared";
 import { tenantContext, tenantId } from "@kanbien/core/tenancy";
 import {
   definePlatformApp,
@@ -245,8 +245,10 @@ async function main(): Promise<void> {
     jobName: jobName.value,
     message,
     correlationId: "job-1" as CorrelationId,
+    causationId: causationId("queue-message-1"),
   });
   equal(jobContext.message.payload.rebuild, true);
+  equal(jobContext.causationId, "queue-message-1");
   equal(jobContext.now, "2026-07-10T00:00:00.000Z");
 
   const resourceOrder: string[] = [];

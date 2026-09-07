@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 21
+version: 23
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -692,14 +692,36 @@ barrel.
 
 The source organisation now has a first trace-mechanics seed: Core monitoring
 defines `TraceContext`, span/tracer contracts, no-op behavior, and an
-in-memory test tracer; the server creates and completes one request span with
-an allowlisted operational summary. A failing tracer safely falls back to a
-no-op span and must not alter the HTTP response. The slice does not select a
-logging, metric, or tracing provider; accept remote parent context; expose
-trace context to app handlers; select sampling; add an exporter; or create a
-durable audit or security-record pipeline. The package README and local source
-README are the current responsibility maps, while the existing type, build,
-runtime, and provider-boundary checks remain its verification baseline.
+in-memory test tracer; Core queue messages may preserve an optional trace
+parent; the server creates and completes one request span; and the worker
+creates and completes one job span per non-idle delivery. A worker span becomes
+the child of that internal queue trace parent when it is present, otherwise it
+begins a new trace. A failing tracer safely falls back to a no-op span and must
+not alter an HTTP or worker outcome. The slice does not select a logging,
+metric, or tracing provider; accept a remote HTTP parent; expose trace context
+to app handlers; select sampling; add an exporter; or create a durable audit
+or security-record pipeline. The package README and local source README are
+the current responsibility maps, while the existing type, build, runtime, and
+provider-boundary checks remain its verification baseline.
+
+#### Platform worker source-organisation follow-up
+
+Status: implemented for the provider-neutral worker shell. Its source is now
+organised into `errors.ts`, `types.ts`, `queue.ts`, and `worker.ts`, with
+`index.ts` retaining the deliberate `@kanbien/platform-workers` public barrel.
+The public surface remains the worker shell, queue/idempotency fakes, and
+worker contract types; local error-construction helpers and queue-time helpers
+remain internal implementation details.
+
+This shape separates four questions a reader otherwise had to disentangle in a
+single source file: what can fail, what the worker contracts mean, how the
+deterministic local queue behaves, and how one delivery is executed. It also
+makes the current lineage boundary inspectable: a queue message can retain an
+internal trace parent; each non-idle delivery creates one bounded job span; and
+the runtime job context records the input message as its direct cause while the
+message retains any earlier cause. This source organisation does not select a
+queue provider, add a producer/outbox path, expose trace context to an app
+handler, or deploy a worker service.
 
 Acceptance:
 
@@ -773,12 +795,13 @@ telemetry. The records must not be treated as copies of one another.
 Security controls may continue to make provider-neutral decisions without an
 observability provider. The first observability seam now includes composed
 logger/metric hooks, Core trace contracts, no-op/in-memory trace behavior,
-server request-span wiring, shared redaction/bounded field normalisation, and
-safe no-op fallback when a tracer is unavailable. Before security decisions
-emit security records, extend that seam across the required request, queue, and
-worker boundaries; govern correlation/causation propagation; and define the
-approved delivery-failure behavior. `platform/security` must not call a
-provider or hide a direct security-log sink.
+server request-span wiring, queue trace-parent preservation, worker job-span
+wiring, shared redaction/bounded field normalisation, and safe no-op fallback
+when a tracer is unavailable. Before security decisions emit security records,
+define an approved producer/outbox path that can create queue messages from a
+real capability, carry the appropriate internal trace parent without exposing
+it to the app handler, and define delivery-failure behavior. `platform/security`
+must not call a provider or hide a direct security-log sink.
 
 For each capability, define separately whether it needs an audit profile, an
 operational-observability profile, a security-signal profile, or none of these.
@@ -788,14 +811,78 @@ not copy a durable audit payload into logs, metrics, or traces.
 
 Correlation identifies records that belong to one logical request or workflow;
 causation identifies the immediately preceding event or message that directly
-led to a downstream record. A future slice must preserve correlation through
-the request, queue, worker, audit, and observability boundaries, while adding a
-causation link only for a true direct parent. Core events and queue messages
-already name both values, but the current audit contract exposes correlation
-only and the worker runtime does not yet propagate queue-message causation into
-its job context. Do not imitate causation with unstructured audit metadata;
-govern the required Core and platform contract change when a real consumer
-needs it.
+led to a downstream record. The worker now preserves message correlation and
+sets a job context's direct cause to its input queue-message ID. A message's
+own `causationId` remains its earlier direct parent; it must not be copied
+transitively into the job context. For example, a message `m-42` caused by
+event `e-17` produces a worker job caused by `m-42`, while all three facts may
+share a correlation ID. Core events and queue messages name both values, but
+the current audit contract exposes correlation only. Do not imitate causation
+with unstructured audit metadata; govern the required Core and platform
+contract change when a real audit consumer needs it.
+
+#### Deferred persistence lifecycle and record-change lineage
+
+Status: deliberately deferred until a real product schema and persistence
+adapter are selected. This is a product data-lifecycle capability, not a
+generic logging feature and not a reason to add an empty persistence package.
+
+The persistence design must support controlled logical deletion for mutable
+product records. A deletion first changes a record from active to deleted and
+records the deletion time, responsible actor or executing system, applicable
+tenant, and policy-relevant reason. Ordinary reads, search, lists, exports,
+relationships, and unique-key decisions must treat deleted records deliberately
+rather than accidentally returning them as active. A separately authorised
+restore is allowed only during the configured recovery period. A scheduled,
+reviewable purge must irreversibly remove or anonymise data when its retention,
+privacy-erasure, residency, or legal-hold policy requires it. Logical deletion
+is therefore a repair window, not a justification for retaining personal or
+medical data indefinitely.
+
+The persistence design must also make it possible to determine which record
+version changed because of a particular event or queue message. When a mutable
+record is created, updated, deleted, or restored, its database transaction must
+write a protected, append-oriented record-change history entry or equivalent
+temporal revision. Each entry needs a stable entity kind and record reference,
+version or revision, action, timestamp, tenant where applicable, actor or
+executing system where available, correlation ID, and the direct stable cause.
+The direct cause is the immediately preceding event or queue-message ID—not a
+transitive ancestor, request ID, trace ID, user ID, or correlation ID. For
+example, a worker result caused by queue message `m-42` records `m-42` as its
+cause even when that message was itself caused by event `e-17`.
+
+The history entry must use a classified, allowlisted field-diff or protected
+revision policy. It must not copy every complete row, secret, credential, raw
+request, raw prompt, transcript, medical datum, or personally identifying value
+into a broadly searchable change log by default. History access, tenant
+isolation, retention, legal hold, export, restoration, and purge must be
+governed separately from ordinary application reads. A record-change history
+does not replace an `AuditEvent`: a significant accountable action can require
+both audit evidence and an affected-record revision, while routine technical
+updates may need only the latter.
+
+When one transaction changes state and must make that change visible through an
+event or queue message, the record change and outbox entry must share the same
+atomic boundary. Apps own their schemas, field classifications, action meaning,
+and deletion/retention policy; Core may later own reusable database-neutral
+contracts; platform implements the approved persistence/outbox adapter; and
+infra provisions the protected store, encryption, backups, residency, and
+access controls.
+
+Acceptance for the future persistence slice:
+
+- normal queries exclude logically deleted records unless an explicitly
+  authorised restoration, compliance, or administration path requests them;
+- restoration is denied after the recovery window and purge follows the
+  applicable retention, erasure, and legal-hold policy;
+- an authorised investigator can find the bounded record revisions directly
+  caused by a stable event or queue-message reference without searching raw
+  operational logs;
+- change history preserves tenant isolation and cannot expose unapproved
+  sensitive before/after values; and
+- tests prove transactional state/change/outbox consistency, concurrent-update
+  behaviour, deletion, restoration, purge eligibility, and event-linked
+  lineage.
 
 The future audit slice needs a fixed envelope and a versioned action-profile
 registry. The envelope supplies the accountable anchors; each action profile
@@ -847,14 +934,18 @@ complete:
   path, not an unbounded global metric dimension.
 - A correlation ID links the whole logical request or workflow; a trace ID and
   parent/child span identifiers describe one timed execution path within it.
-  Core now defines those trace contracts and the current server wraps each
-  request in one span, but it does not yet accept remote parent context,
-  propagate a span through a queue/worker, expose spans to app handlers, or
-  export them. Trace attributes follow the same redaction and bounded-field
-  rules as logs; the server uses only method, stable route name, status,
-  latency, outcome, and error class. Sampling may retain failed and unusually
-  slow traces plus a bounded successful sample, but audit events and required
-  security evidence must never depend on trace sampling.
+  Core now defines those trace contracts. The server wraps each request in one
+  span, and the worker wraps each delivery in one job span that may be the child
+  of a queue message's internal trace parent. This is distinct from business
+  causation. The platform does not yet accept a remote HTTP parent, provide the
+  generic producer/outbox path that attaches a server span to a newly created
+  message, expose spans to app handlers, or export traces. Trace attributes
+  follow the same redaction and bounded-field rules as logs: the server uses
+  only method, stable route name, status, latency, outcome, and error class;
+  the worker uses only job, retry count, latency, outcome, and error class.
+  Sampling may retain failed and unusually slow traces plus a bounded successful
+  sample, but audit events and required security evidence must never depend on
+  trace sampling.
 - Retention must be scheduled by record class, purpose, region, readers,
   expiry, and legal-hold needs. Where tamper-evidence is required, define the
   protected key or anchor owner, integrity-verification schedule, and alert or
@@ -1211,7 +1302,7 @@ Entry criteria:
 | Platform leaks app internals | Dependency-direction checks and tests around composition roots |
 | App mount contract drifts | `platform/contracts` type/runtime tests and `platform/testing` helpers |
 | Server starts but policies are wrong | Integration tests with denied auth, unknown permission, invalid payload, and reserved paths |
-| Worker happy path hides failure modes | Retry, dead-letter, idempotency, payload validation, and shutdown tests |
+| Worker happy path hides failure modes | Retry, dead-letter, idempotency, payload validation, direct-causation, trace-parent, and shutdown tests |
 | Health exposes unsafe data | Health output snapshot/assertions with secret redaction tests |
 | Logs become unsafe or huge | Logging normalization tests for rich, circular, provider, and oversized values |
 | Infra imports app internals | Infra boundary checks and manifest-only deployment metadata |
@@ -1241,9 +1332,11 @@ Entry criteria:
 
 ## First Slice Recommendation
 
-Current next slice: commit and merge the reviewed platform/deployment work,
-then obtain a separate explicit AWS approval to update the GitHub deployment role
-and create a reviewed foundation change set. The first AWS apply must remain
-server-first and worker-capable: it may create only the HTTP server resources;
-the future worker retains its explicit naming/configuration slot and activation
-condition but no empty worker service is deployed.
+Current next slice: commit and merge the reviewed persistence planning,
+queue/worker lineage, tracing, and source-organisation work. The next local
+design concern is a real capability's transaction/outbox/queue-producer path;
+do not create a database schema, broker adapter, trace exporter, or AWS worker
+service until a concrete product use case and its target/provider decisions are
+governed separately. The production target remains server-first and
+worker-capable: it reserves worker naming/configuration but does not deploy an
+empty worker service.

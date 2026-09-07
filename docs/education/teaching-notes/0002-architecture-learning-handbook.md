@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 2
+  version: 3
   status: active
   layer: 05.education
   domain: education
@@ -6387,9 +6387,12 @@ span so observing a request cannot change the request's response.
 
 This is not distributed tracing yet. The server does not accept a remote parent
 context, an app handler cannot create a child span through its request context,
-workers do not continue a trace from a queue message, and there is no sampler,
-exporter, trace store, retention policy, or provider adapter. Those are later
-decisions because they change the operational and data-governance boundary.
+and there is no sampler, exporter, trace store, retention policy, or provider
+adapter. A local queue message may retain an internal trace parent so its
+worker span can become a child span, but the platform still has no general
+application producer/outbox path that attaches a server span to a newly
+created message. Those are later decisions because they change the operational
+and data-governance boundary.
 
 ### Study question
 
@@ -6400,7 +6403,105 @@ The request accepted responsibility for future work; it did not prove that the
 file exists. The later worker record supplies the actual completion outcome,
 linked through correlation and causation without copying the export content.
 
-## 67. Next Lesson Queue
+## 67. Queued Work: Direct Cause, Trace Continuity, and Record History
+
+### Start with three labels that do different jobs
+
+Suppose a request begins an invoice export. The request creates event `e-17`,
+which creates queue message `m-42`, which the worker delivers on its first
+attempt. All of those facts may belong to one workflow, but they must not be
+made to look identical.
+
+```text
+correlation: c-9    tells us “these facts belong to one story”
+
+e-17 ──causes──> m-42 ──causes──> worker job
+                         └── has internal trace parent ──> job span
+```
+
+| Fact | Its question | Worker-job value in this example |
+|---|---|---|
+| Correlation ID | “Which broader workflow is this part of?” | `c-9` |
+| Causation ID | “What directly caused this work?” | `m-42`, not `e-17` |
+| Trace parent | “Which timed span should this execution follow?” | The message’s internal trace-parent context, when present |
+| Delivery attempt | “How many times has this message been delivered?” | `1`; a retry changes this, not the business cause |
+
+The direct cause is deliberately the message the worker actually received. It
+is tempting to copy `e-17` because it feels like the original reason for the
+work. But `m-42` is the immediate parent and therefore the most useful link for
+finding one exact delivery, retry sequence, or dead-letter outcome. The message
+itself still preserves its earlier cause (`e-17`), so the complete chain is not
+lost.
+
+### What this implementation now does
+
+Core queue messages can safely carry an optional internal trace parent. The
+worker creates one job span for every non-idle delivery. If that queue trace
+parent exists, the job span becomes its child; otherwise the worker begins a
+new trace. The app handler never receives the trace context. It receives the
+ordinary job context, whose direct cause is the input message ID and whose
+correlation ID remains the workflow-wide value.
+
+This difference matters because trace context is diagnostic machinery, while
+causation is a durable business-lineage fact. A trace can be sampled, disabled,
+or exported to a different operational system. The job’s direct cause must
+continue to mean the same thing even when tracing is off.
+
+The worker source is also now split by responsibility:
+
+| File | Question it answers |
+|---|---|
+| `errors.ts` | What predictable worker failures look like internally |
+| `types.ts` | What a queue, delivery, shell, and result mean |
+| `queue.ts` | How the deterministic in-memory queue and idempotency fake behave |
+| `worker.ts` | How one delivery is validated, observed, retried, or dead-lettered |
+| `index.ts` | Which worker contracts and factories are supported for consumers |
+
+The split does not add a cloud queue, a continuously polling worker, a database,
+or a trace provider. It makes the current provider-neutral behaviour easier to
+inspect and test.
+
+### The deferred persistence rule
+
+When a future capability changes a business record, the eventual persistence
+transaction must be able to record a protected, append-oriented history entry
+for the changed record version. That entry needs a bounded record reference,
+version, action, tenant when applicable, actor or system when known,
+correlation ID, and direct event/message cause. It must use an allowlisted diff
+or revision policy—not a default copy of every row, request, token, prompt, or
+medical/personal value.
+
+Deletion should first create a controlled recovery state rather than instantly
+destroy a record. A later scheduled purge or anonymisation must obey retention,
+privacy-erasure, residency, and legal-hold policy. In other words, a soft
+delete creates a repair window; it is not permission to retain sensitive data
+forever. This is deferred until a real product schema and persistence adapter
+exist, and is recorded in the platform-runtime implementation plan.
+
+### Misconception check
+
+“The trace ID is enough to explain why the worker changed a record.”
+
+No. A trace ID is an operational timing link and may not exist or be retained.
+The stable direct cause is the event or message ID. Record-change history then
+uses that cause to answer which record version changed because of a particular
+piece of work.
+
+### Study question
+
+If `m-42` is retried after an initial handler failure, should the second
+delivery be caused by the first failed attempt?
+
+No. It is still caused by `m-42`; only the delivery attempt changes. That is
+why message identity, business causation, and delivery-attempt count are
+separate facts.
+
+Planning triage: the persistence lifecycle and record-lineage requirements are
+now recorded in `platform-runtime-implementation.md`. The queue trace-parent,
+worker job-span, and direct-cause contract work is implemented and tested in
+this chat worktree, but has not yet been committed.
+
+## 68. Next Lesson Queue
 
 1. Continue observability by examining provider-neutral ports: how structured
    logs, metrics, and traces leave a server or worker without importing a
@@ -6413,7 +6514,7 @@ linked through correlation and causation without copying the export content.
 
 ## Repository Evidence
 
-- [Current session log](../../../commitLogs/2026/aug/31/2026-08-31-01-11-product-harness-foundation-plan/README.md)
+- [Current session log](../../../commitLogs/2026/sep/07/2026-09-07-22-32-persistence-plan-and-worker-observabilit/README.md)
 - [Core package overview](../../../packages/core/README.md)
 - [Core security public entry point](../../../packages/core/src/security/index.ts)
 - [Platform contracts README](../../../platform/contracts/README.md)
@@ -6702,3 +6803,10 @@ After each completed learning chunk:
   topics; the server starts and completes a safe request span through a
   no-op/in-memory-capable port. No trace provider, exporter, remote-context
   propagation, sampling policy, or durable record store was selected.
+- 2026-09-07: Added the queued-work lineage continuation. Queue messages now
+  preserve an optional internal trace parent; the worker creates a bounded job
+  span and records its input message as the runtime job's direct cause. The
+  plan now captures the deferred logical-deletion and protected
+  record-change-history requirements. The worker source is organised by
+  errors, contracts, queue mechanics, and delivery execution; provider,
+  producer/outbox, persistence, and exporter decisions remain deferred.
