@@ -65,9 +65,11 @@ ends a span through that port. If the supplied tracer throws or has an invalid
 shape, it falls back to the no-op tracer rather than changing request outcome.
 
 The current server uses only method, stable route name, status, latency,
-outcome, and a bounded error class. It does not place request IDs, correlation
-IDs, tenant IDs, headers, bodies, raw paths, credentials, or trace IDs into
-these general trace attributes.
+outcome, and a bounded error class. The worker uses the same boundary for job
+name, retry count, latency, outcome, and bounded error class; it may parent a
+span from a queue message's internal Core trace parent. Neither path places
+request IDs, correlation IDs, tenant IDs, headers, bodies, raw paths,
+credentials, or trace IDs into these general trace attributes.
 
 Using the same normalisation gateway prevents tracing from becoming a bypass
 around log redaction. The code still does not choose a propagation format,

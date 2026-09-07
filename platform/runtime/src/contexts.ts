@@ -7,6 +7,7 @@ import type { TenantContext } from "@kanbien/core/tenancy";
 import {
   fixedClock,
   isoDateTimeFromDate,
+  type CausationId,
   type Clock,
   type CorrelationId,
   type ISODateTime,
@@ -50,6 +51,7 @@ export interface PlatformRuntimeJobContextInput extends PlatformRuntimeContextDe
   readonly jobName: PlatformJobName;
   readonly message: QueueMessage;
   readonly correlationId: CorrelationId;
+  readonly causationId?: CausationId;
   readonly now?: ISODateTime;
   readonly tenant?: TenantContext;
   readonly abortSignal?: AbortSignal;
@@ -95,6 +97,7 @@ export function createPlatformRuntimeJobContext(input: PlatformRuntimeJobContext
     jobName: input.jobName,
     message: input.message,
     correlationId: input.correlationId,
+    ...(input.causationId === undefined ? {} : { causationId: input.causationId }),
     now,
     logger: deps.logger,
     metrics: deps.metrics,

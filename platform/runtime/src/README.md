@@ -53,6 +53,12 @@ principal, logger, metrics, config source, feature-flag reader, clock, and
 cancellation signal. This file constructs those context objects with safe,
 deterministic defaults for absent optional dependencies.
 
+For a job, correlation identifies the whole workflow while causation names the
+one input that directly triggered this execution. The worker supplies the input
+queue-message ID as that direct cause; the queue message still retains any
+earlier event or message that caused it. Trace-parent mechanics remain private
+to worker observability and are not handed to application job handlers.
+
 It is intentionally not a container of every application service. A context
 can tell a handler who is acting and when work occurs; it should not quietly
 hand that handler a billing repository, provider SDK, or arbitrary product

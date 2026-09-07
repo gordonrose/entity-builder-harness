@@ -1,5 +1,5 @@
 import type { QueueMessageType } from "@kanbien/core/queues";
-import type { CorrelationId } from "@kanbien/core/shared";
+import { causationId, type CorrelationId } from "@kanbien/core/shared";
 import {
   definePlatformApp,
   platformAppId,
@@ -49,6 +49,7 @@ const jobContext: PlatformJobContext = createPlatformRuntimeJobContext({
   jobName: jobName.value,
   message,
   correlationId: "job-1" as CorrelationId,
+  causationId: causationId("queue-message-1"),
 });
 void jobContext;
 

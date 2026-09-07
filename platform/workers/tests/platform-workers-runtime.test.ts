@@ -1,6 +1,8 @@
-import { equal } from "node:assert/strict";
+import { deepEqual, equal } from "node:assert/strict";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
+import { createInMemoryTracer, spanId, traceContext, traceId } from "@kanbien/core/monitoring";
 import type { QueueIdempotencyKey, QueueMessageType } from "@kanbien/core/queues";
+import { causationId } from "@kanbien/core/shared";
 import { tenantId, type TenantContext } from "@kanbien/core/tenancy";
 import { validationIssue } from "@kanbien/core/validation";
 import {
@@ -30,6 +32,8 @@ async function main(): Promise<void> {
 
   let handled = 0;
   let handledTenant: TenantContext | undefined;
+  let handledCausation: string | undefined;
+  let handlerReceivedTraceParent = false;
   let failingAttempts = 0;
   let tenantlessJobTenant: TenantContext | undefined;
   const logger = createPlatformTestLogger();
@@ -51,6 +55,8 @@ async function main(): Promise<void> {
           handle: (_message, context) => {
             handled += 1;
             handledTenant = context.tenant;
+            handledCausation = context.causationId;
+            handlerReceivedTraceParent = "traceParent" in context;
           },
         },
       });
@@ -69,7 +75,8 @@ async function main(): Promise<void> {
   });
 
   const idempotency = createInMemoryPlatformWorkerIdempotencyStore();
-  const shell = await createPlatformWorkerShell({ apps: [app], deps, idempotency, maxAttempts: 2, retryBackoffMs: () => 25 });
+  const tracer = createInMemoryTracer();
+  const shell = await createPlatformWorkerShell({ apps: [app], deps, idempotency, tracer, maxAttempts: 2, retryBackoffMs: () => 25 });
   equal(shell.ok, true);
   if (!shell.ok) {
     throw new Error("Expected worker shell to mount.");
@@ -94,6 +101,11 @@ async function main(): Promise<void> {
     }),
     idempotencyKey: "idem-1" as QueueIdempotencyKey,
     tenantId: tenantId("tenant-123"),
+    causationId: causationId("event-17"),
+    traceParent: traceContext({
+      traceId: traceId("trace-17"),
+      spanId: spanId("span-17"),
+    }),
   };
   equal(shell.value.enqueue(successMessage).ok, true);
   const success = await shell.value.runNext();
@@ -108,6 +120,30 @@ async function main(): Promise<void> {
   equal(success.value.idempotency, "processed");
   equal(handled, 1);
   equal(handledTenant?.tenantId, "tenant-123");
+  equal(handledCausation, "success-1");
+  equal(successMessage.causationId, "event-17");
+  equal(handlerReceivedTraceParent, false);
+  deepEqual(tracer.spans()[0], {
+    name: "platform.worker.job",
+    context: {
+      traceId: "trace-17",
+      spanId: "span-1",
+      parentSpanId: "span-17",
+    },
+    attributes: {
+      job: "smoke.rebuild",
+      retryCount: 0,
+    },
+    end: {
+      outcome: "succeeded",
+      attributes: {
+        job: "smoke.rebuild",
+        retryCount: 0,
+        latencyMs: 0,
+        outcome: "succeeded",
+      },
+    },
+  });
 
   equal(shell.value.enqueue(successMessage).ok, true);
   const skipped = await shell.value.runNext();

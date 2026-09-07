@@ -495,7 +495,10 @@ schema registries, or cloud SDK clients.
   broker, retry, dead-letter, and test boundaries.
 - `QueueMessage` and `queueMessage` wrap a message with id, type, version,
   timestamp, optional tenant id, optional correlation id, optional causation id,
-  optional idempotency key, optional message group key, and copied payload.
+  optional trace parent, optional idempotency key, optional message group key,
+  and copied payload. The trace parent is operational transport metadata for a
+  downstream worker span; it is not a business cause, metric label, or log
+  field.
   `queueMessage` defaults the version to the current v1 contract when a caller
   does not supply one.
 - `QueueSendOptions`, `QueueDelaySeconds`, and `queueSendOptions` define
@@ -521,6 +524,12 @@ Queue message versions are positive integer schema facts. Durable queue
 adapters, retry paths, replay tools, and dead-letter paths should preserve the
 version so workers can safely handle old and new payload shapes during
 deployment transitions.
+
+A message's optional `causationId` identifies the fact or message that directly
+caused that message. When a worker handles it, the worker's own job context
+uses the input message ID as its direct cause; it does not replace that direct
+link with the message's earlier cause. Correlation follows the full workflow,
+while each causal link remains only one step deep.
 
 `inMemoryQueue.acceptedSends()` and `acceptedMessages()` return messages
 accepted by the helper. They are useful for tests, but they are not durable
