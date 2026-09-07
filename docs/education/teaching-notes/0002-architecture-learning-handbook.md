@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 3
+  version: 4
   status: active
   layer: 05.education
   domain: education
@@ -6501,7 +6501,93 @@ now recorded in `platform-runtime-implementation.md`. The queue trace-parent,
 worker job-span, and direct-cause contract work is implemented and tested in
 this chat worktree, but has not yet been committed.
 
-## 68. Next Lesson Queue
+## 68. Observability Delivery: What the Target Already Does
+
+### Emitting a fact is not delivering it
+
+The platform server and worker can create safe operational facts: a structured
+log record, a bounded metric observation, or a span. That is only the first
+half of observability. A deployed target still needs to collect, retain,
+protect, search, aggregate, alert on, and eventually expire those facts.
+
+For the current Kanbien staging target, the log route is deliberately modest:
+
+```text
+platform process writes safe JSON to stdout
+        ↓
+ECS awslogs log driver
+        ↓
+CloudWatch log group: /ecs/kanbien-staging-platform-shell
+        ↓
+operator searches a 14-day operational-log window
+```
+
+This does not require generic platform code to import an AWS CloudWatch SDK.
+The application process uses the provider-neutral logger; the ECS task
+definition is the AWS-specific delivery mechanism. Platform emits a safe
+record; the target adapter and infrastructure deliver it.
+
+### Four sources of operational evidence
+
+| Source | What it tells us | Current delivery | What it does not prove |
+|---|---|---|---|
+| Application stdout logs | A particular server or worker decision/outcome | ECS `awslogs` to a retained CloudWatch log group | A durable audit trail or security-record store |
+| ALB metrics | Whether traffic reaches healthy targets and whether targets return 5xx responses | Native CloudWatch metrics and alarms | Why an individual application decision failed |
+| ECS metrics | Whether the service has the desired number of tasks and is approaching CPU/memory pressure | Native CloudWatch metrics and alarms | Business capability success or failure |
+| WAF metrics | Whether web-request rules are matching | Native CloudWatch WAF metrics | Full request logging; that is deliberately deferred pending a redaction/retention profile |
+
+The foundation target also sends availability alarms through an SNS topic to an
+operator-controlled email subscription. An alarm says, “this service may need
+attention.” It is not a diagnostic log, security signal, or accountable audit
+event.
+
+### What is still missing
+
+The current target has a **log destination and infrastructure health alarms**.
+It does not yet have all forms of observability delivery:
+
+- Platform metric observations do not yet have a selected CloudWatch metric or
+  log-derived-metric delivery path.
+- Provider-neutral traces are tested in memory but have no exporter, trace
+  store, sampler, or access/retention policy.
+- Security decisions do not yet emit a named security-record stream.
+- Audit events have no durable, protected recorder or store.
+- WAF request logging remains intentionally deferred because raw web-request
+  evidence needs its own redaction, access, and retention policy.
+
+This is why “CloudWatch exists” is not the same as “observability is complete.”
+The target can show that a container was unhealthy or returned 5xx responses.
+It cannot yet answer every product-level question, such as which approved
+export job failed at which stage with what safe error classification.
+
+### Misconception check
+
+“If we add a CloudWatch SDK to `platform/observability`, every problem is
+solved.”
+
+No. That would couple generic platform code to one provider and still leave
+record profiles, metric-cardinality rules, trace sampling, retention, access,
+audit integrity, and security-record policy unresolved. The target already
+shows a better first pattern for plain logs: keep the process provider-neutral
+and let the runtime environment collect stdout.
+
+### Study question
+
+Why is an ALB `5xx` alarm useful but insufficient for an invoice-export
+investigation?
+
+It can show a damaging pattern—targets are returning server errors—but it has
+no knowledge of the business capability, its safe target reference, the queue
+message, or the bounded failure classification. The relevant application log,
+trace, audit event, or security signal must answer those separate questions.
+
+Planning triage: no plan change was needed in this chunk. The production
+baseline and staging target already state the 14-day CloudWatch-log path,
+infrastructure alarms, WAF logging deferral, and outstanding application
+metrics/traces/audit/security gaps. A live AWS confirmation is pending a
+renewed local SSO session; no AWS state was changed.
+
+## 69. Next Lesson Queue
 
 1. Continue observability by examining provider-neutral ports: how structured
    logs, metrics, and traces leave a server or worker without importing a
@@ -6810,3 +6896,8 @@ After each completed learning chunk:
   record-change-history requirements. The worker source is organised by
   errors, contracts, queue mechanics, and delivery execution; provider,
   producer/outbox, persistence, and exporter decisions remain deferred.
+- 2026-09-07: Added the observability-delivery lesson. It distinguishes the
+  current target's ECS stdout-to-CloudWatch operational-log route and native
+  infrastructure metrics/alarms from missing application metric/trace,
+  security-record, audit, and WAF-request-log pipelines. No provider contract
+  or AWS state changed; the existing target baseline already owns the gaps.

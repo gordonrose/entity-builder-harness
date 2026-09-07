@@ -54,6 +54,10 @@ let's update our plan accordingly - then continue with the observability lesson 
 - A trace ID cannot be used as durable record-change causation; it is an
   operational diagnostic link and may be disabled or sampled.
 
+
+- Raised: Live AWS observability inspection is temporarily unavailable
+  Resolution: The local kanbien-dev SSO token expired while making a read-only CloudWatch query. Repository target evidence was used for the lesson; renew SSO before recording live log/alarm evidence. No AWS state changed.
+
 ## Decisions Made
 
 - A logical deletion is a controlled recovery window, not permanent retention;
@@ -75,6 +79,10 @@ let's update our plan accordingly - then continue with the observability lesson 
 
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The queue, runtime-job, and worker changes are explained by the updated platform implementation plan and architecture handbook; no new retrieval rule is required for this additive provider-neutral slice.
+
+
+- Decision: Keep plain operational-log delivery provider-neutral
+  Rationale: The current ECS awslogs target collects safe stdout JSON in CloudWatch; generic platform code does not need a CloudWatch SDK for this path. Existing planning already owns application metrics, traces, audit, security-record, and WAF-request-log gaps.
 
 ## Context Hygiene
 
@@ -123,6 +131,20 @@ Message: feat(platform): trace queued worker jobs
 Summary: Added provider-neutral queue trace-parent preservation, direct worker-job causation, bounded worker spans, scanable worker source files, deferred persistence lifecycle/record-change lineage plan, and handbook evidence. Verified Core, runtime, and worker checks.
 
 ADR impact: No ADR required; applies existing provider-neutral Core/platform direction.
+
+
+### 2026-09-07T22:01:19Z - Decision
+
+Decision: Keep plain operational-log delivery provider-neutral
+
+Rationale: The current ECS awslogs target collects safe stdout JSON in CloudWatch; generic platform code does not need a CloudWatch SDK for this path. Existing planning already owns application metrics, traces, audit, security-record, and WAF-request-log gaps.
+
+
+### 2026-09-07T22:01:20Z - Issue
+
+Raised: Live AWS observability inspection is temporarily unavailable
+
+Resolution: The local kanbien-dev SSO token expired while making a read-only CloudWatch query. Repository target evidence was used for the lesson; renew SSO before recording live log/alarm evidence. No AWS state changed.
 
 ## Sub-Agent Activity
 
