@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-07T21:32:43Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-07T21:58:41Z
+latest_commit_sha: b148efa
+chat_duration: 1558s (00:00:25:58)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -113,13 +113,30 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: The queue, runtime-job, and worker changes are explained by the updated platform implementation plan and architecture handbook; no new retrieval rule is required for this additive provider-neutral slice.
 
+
+### 2026-09-07T21:58:41Z - Commit recorded
+
+Commit: `b148efa`
+
+Message: feat(platform): trace queued worker jobs
+
+Summary: Added provider-neutral queue trace-parent preservation, direct worker-job causation, bounded worker spans, scanable worker source files, deferred persistence lifecycle/record-change lineage plan, and handbook evidence. Verified Core, runtime, and worker checks.
+
+ADR impact: No ADR required; applies existing provider-neutral Core/platform direction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b148efa`
+  Time UTC: 2026-09-07T21:58:41Z
+  Message: feat(platform): trace queued worker jobs
+  Summary: Added provider-neutral queue trace-parent preservation, direct worker-job causation, bounded worker spans, scanable worker source files, deferred persistence lifecycle/record-change lineage plan, and handbook evidence. Verified Core, runtime, and worker checks.
+  ADR impact: No ADR required; applies existing provider-neutral Core/platform direction.
 
 ## Main Refresh Conflicts
 
@@ -137,12 +154,12 @@ make a cross-layer ownership decision requiring a new ADR.
 ## Session Metrics
 
 Raised at UTC: 2026-09-07T21:32:43Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-07T21:58:41Z
+Latest commit SHA: b148efa
+Chat duration: 1558s (00:00:25:58)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
