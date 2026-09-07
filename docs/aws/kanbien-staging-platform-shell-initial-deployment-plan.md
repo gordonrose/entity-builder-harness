@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 9
+version: 10
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -48,8 +48,7 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 - The foundation stack was created from the reviewed
   `foundation-initial-20260906-1915` change set. It created the target group,
   host rule, DNS alias, WAF, rate-limit table, log group, alarms, alert topic,
-  and workload roles. No shell task definition, ECS service, image, or
-  deployed application smoke evidence exists.
+  and workload roles.
 - The existing default certificate covers `*.kanbien.com`, which matches one
   label such as `staging.kanbien.com`, but it does **not** cover the two-label
   host `staging.platform.kanbien.com`. The approved repair is complete: the
@@ -80,43 +79,33 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
   repositories, and the workflow now waits separately for record creation.
   The next image uses a minimal, non-root Distroless Node runtime rather than
   shipping the general-purpose Debian runtime layer.
+- On 2026-09-07, workflow run `34123406369` deployed source commit
+  `c9aac48ebaa3f9ca0ee8c193391b26aa60913e01`. The immutable image digest is
+  `sha256:f73459a3c7a52616fbad11954f03b8e011f723408a555b2d3c8bc9875b32c9d4`.
+  Its ECR scan completed with zero critical and zero high findings; SBOM and
+  provenance attestations were created before the service stack deployment.
+  CloudFormation completed successfully, and both the workflow and an
+  independent client verified TLS, `/livez` = `200`, and an unauthenticated
+  protected route = `401`.
 
-## Defects to correct before an AWS apply
+## Remaining verification work
 
-1. The previously incorrect smoke permission and incomplete Cognito task
-   environment are corrected in the target profile and service template.
-2. The generic in-memory limiter has a tested DynamoDB adapter for this public
-   target. The public composition refuses to start without it, the ALB-only
-   client-address policy, and reviewed listener limits.
-3. Foundation and service CloudFormation templates plus a static policy gate
-   exist and passed AWS template validation. The reviewed foundation CREATE
-   change set executed successfully with 16 additions and no modifications or
-   deletions. The foundation stack exists; the service does not.
-4. The GitHub workflow validates templates, pins both a build-stage and final
-   runtime image by digest, publishes an immutable image, then waits for ECR
-   to create and complete its scan. It blocks both critical and high findings.
-   It generates an SPDX SBOM and writes provenance plus SBOM attestations for
-   the exact image digest before deploying only the service stack through a
-   dedicated CloudFormation execution role. It then performs public liveness
-   plus unauthenticated-route smoke. On 2026-09-06, the live GitHub role was
-   updated and verified against the reviewed narrowed CloudFormation-policy
-   boundary. The foundation created the service deployment role and public TLS
-   is now verified; the path still needs a successful remote-main workflow run
-   and service-deployment proof.
-5. The deployed WAF, rate-limit table, alert subscription, host route, and
-   public TLS have configuration or external-verification proof. A deployed
-   negative-rate-limit test, application route proof, and a rollback exercise
-   remain absent. The local container-engine smoke is not a substitute for
-   those proofs.
-6. New resources are consistently tagged `service=platform-shell`, but the
+1. Prove the deployed protected route with a wrong-scope token (`403`) and a
+   correctly scoped token (`200`). Keep credentials and token values out of
+   repository records.
+2. Prove deployed shared rate limiting (`429`), ALB-only ingress, WAF host
+   scope, and routing without generating a destructive or unbounded load.
+3. Prove redacted log delivery, alarm delivery, and an explicitly governed
+   rollback rehearsal. A successful first deployment is not a rollback proof.
+4. New resources are consistently tagged `service=platform-shell`, but the
    account has not activated that cost-allocation tag or proven the intended
    tag-scoped monthly budget. This account-level Billing action cannot be
    inferred from an infrastructure template.
 
 ## Proposed target design
 
-These choices are proposed for review and must be implemented and tested
-locally before the first AWS execution approval.
+These reviewed choices now describe the deployed first target. The remaining
+verification work above determines when its readiness record can become ready.
 
 | Concern | Proposed decision | Why |
 | --- | --- | --- |
@@ -167,11 +156,15 @@ locally before the first AWS execution approval.
    the certificate `ISSUED`, and external TLS verification now passes for
    `staging.platform.kanbien.com`. An application `503` remains expected until
    the service is deployed.
-9. Run deployed smoke proof: DNS/TLS, public `/livez`, unauthenticated `401`,
-   wrong-permission `403`, correctly scoped `200`, `429` from the shared
-   limiter, WAF/routing evidence, log delivery, alarm configuration, and a
-   rollback exercise.
-10. After tagged foundation resources exist, activate the `service` cost
+9. Completed on 2026-09-07: run the selected workflow from `origin/main`.
+   The workflow built and deployed a digest-pinned Distroless runtime image,
+   required a complete zero-critical/zero-high ECR scan, generated and
+   attested the SBOM and provenance, created or updated the service stack, and
+   passed public liveness plus unauthenticated-route smoke.
+10. Remaining: prove wrong-permission `403`, correctly scoped `200`, `429`
+   from the shared limiter, WAF/routing evidence, log delivery, alarm
+   configuration, and a rollback exercise.
+11. After tagged foundation resources exist, activate the `service` cost
    allocation tag in the account Billing console, wait for billing visibility,
    configure the target-scoped monthly/forecast budget alerts, and record the
    proof. Do not treat a resource tag as a functioning budget by itself.
@@ -217,7 +210,8 @@ that attachment.
 
 ## Execution approval checklist
 
-Execution remains blocked until all are true:
+The initial execution completed on 2026-09-07. A future infrastructure or
+service deployment remains blocked until all are true:
 
 - local code, IaC, policy, and target-profile checks pass;
 - the exact CloudFormation change set is reviewed;
