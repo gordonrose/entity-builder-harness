@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.aws-runtime-family-decision
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -139,7 +139,8 @@ required_before_mutation:
   provenance:
     - source_commit_sha
     - image_digest
-    - base_image_digest
+    - build_image_digest
+    - runtime_image_digest
     - sbom_or_accepted_risk
     - vulnerability_scan_or_accepted_risk
     - workflow_run_identity

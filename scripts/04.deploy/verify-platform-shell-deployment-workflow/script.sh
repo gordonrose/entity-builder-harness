@@ -41,9 +41,10 @@ except ImportError as error:
 
 
 WORKFLOW_PATH = Path(".github/workflows/deploy-platform-shell-staging.yml")
+TARGET_PROFILE_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
 
 
-def load_workflow(path: Path) -> dict:
+def load_yaml(path: Path) -> dict:
     if not path.is_file():
         raise SystemExit(f"ERROR: deployment workflow is missing: {path}")
     # BaseLoader keeps GitHub's unquoted `on` key and values as strings rather
@@ -58,7 +59,8 @@ def text(value: object) -> str:
     return value if isinstance(value, str) else ""
 
 
-workflow = load_workflow(WORKFLOW_PATH)
+workflow = load_yaml(WORKFLOW_PATH)
+target_profile = load_yaml(TARGET_PROFILE_PATH)
 failures: list[str] = []
 
 
@@ -81,6 +83,20 @@ else:
             permissions.get(permission) == expected,
             f"workflow permission {permission} must be {expected}",
         )
+
+workflow_inputs = workflow.get("on", {}).get("workflow_dispatch", {}).get("inputs", {})
+if not isinstance(workflow_inputs, dict):
+    failures.append("workflow_dispatch inputs must be a mapping")
+    workflow_inputs = {}
+for input_name, expected_default in {
+    "base_image_ref": "node:22-bookworm-slim",
+    "runtime_image_ref": "gcr.io/distroless/nodejs22-debian12:nonroot",
+}.items():
+    config = workflow_inputs.get(input_name, {})
+    require(isinstance(config, dict), f"workflow input {input_name} must be a mapping")
+    if isinstance(config, dict):
+        require(config.get("required") == "true", f"workflow input {input_name} must be required")
+        require(config.get("default") == expected_default, f"workflow input {input_name} must default to the reviewed image")
 
 jobs = workflow.get("jobs", {})
 job = jobs.get("build-image", {}) if isinstance(jobs, dict) else {}
@@ -122,12 +138,62 @@ scan_index, scan_step = ordered_steps[1]
 scan_run = text(scan_step.get("run"))
 for required_text, message in {
     "set -euo pipefail": "scan step must fail closed",
+    "ScanNotFoundException": "scan step must distinguish ECR scan-record creation from scan completion",
+    "seq 1 30": "scan step must bound the ECR scan-record availability wait",
+    "ECR did not create an image scan record within five minutes.": "scan step must fail when ECR does not create a scan record",
     "aws ecr wait image-scan-complete": "scan step must wait for the ECR scan",
     'scan_status" != "COMPLETE"': "scan step must require COMPLETE status",
     'critical" != "0"': "scan step must block CRITICAL findings",
     'high" != "0"': "scan step must block HIGH findings until a governed risk-acceptance path exists",
 }.items():
     require(required_text in scan_run, message)
+
+base_image_index, base_image_step = step("Resolve digest-pinned build and runtime images")
+base_image_run = text(base_image_step.get("run"))
+for required_text, message in {
+    "inputs.base_image_ref": "workflow must resolve the selected build image",
+    "inputs.runtime_image_ref": "workflow must resolve the selected runtime image",
+    "build_digest": "workflow must record the immutable build-image digest",
+    "runtime_digest": "workflow must record the immutable runtime-image digest",
+}.items():
+    require(required_text in base_image_run, message)
+
+build_index, build_step = step("Build platform shell image")
+build_run = text(build_step.get("run"))
+for required_text, message in {
+    '--base-image "${{ steps.base-image.outputs.build_image }}"': "build step must use the resolved immutable build image",
+    '--runtime-image "${{ steps.base-image.outputs.runtime_image }}"': "build step must use the resolved immutable runtime image",
+    "--require-digest-base": "build step must require both image references to be digest pinned",
+}.items():
+    require(required_text in build_run, message)
+
+image_profile = target_profile.get("artifacts", {}).get("image", {})
+if not isinstance(image_profile, dict):
+    failures.append("target profile image configuration must be a mapping")
+    image_profile = {}
+for key, expected in {
+    "build_image_policy": "pin-by-digest-for-official-build",
+    "runtime_image_policy": "pin-by-digest-for-official-build",
+    "runtime_image_class": "minimal-nonroot-distroless-nodejs22-debian12",
+}.items():
+    require(image_profile.get(key) == expected, f"target profile image {key} must be {expected}")
+registry_scanning = image_profile.get("registry_scanning", {})
+if not isinstance(registry_scanning, dict):
+    failures.append("target profile registry scanning must be a mapping")
+    registry_scanning = {}
+for key, expected in {
+    "scope": "account-registry",
+    "scan_type": "BASIC",
+    "scan_frequency": "SCAN_ON_PUSH",
+    "verification_command": "aws ecr get-registry-scanning-configuration",
+}.items():
+    require(registry_scanning.get(key) == expected, f"target profile registry scanning {key} must be {expected}")
+repository_filter = registry_scanning.get("repository_filter", {})
+if not isinstance(repository_filter, dict):
+    failures.append("target profile registry scan repository filter must be a mapping")
+    repository_filter = {}
+require(repository_filter.get("value") == "*", "target profile registry scan repository filter must cover all repositories")
+require(repository_filter.get("type") == "WILDCARD", "target profile registry scan repository filter must use WILDCARD")
 
 sbom_index, sbom_step = ordered_steps[2]
 require(sbom_step.get("id") == "sbom", "SBOM step must have the stable sbom id")
@@ -177,6 +243,12 @@ for required_text, message in {
     "steps.scan.outputs.status": "deployment summary must record scan status",
     "steps.provenance-attestation.outputs.attestation-url": "deployment summary must record provenance attestation evidence",
     "steps.sbom-attestation.outputs.attestation-url": "deployment summary must record SBOM attestation evidence",
+}.items():
+    require(required_text in summary_run, message)
+
+for required_text, message in {
+    "steps.base-image.outputs.build_digest": "deployment summary must record the build-image digest",
+    "steps.base-image.outputs.runtime_digest": "deployment summary must record the runtime-image digest",
 }.items():
     require(required_text in summary_run, message)
 

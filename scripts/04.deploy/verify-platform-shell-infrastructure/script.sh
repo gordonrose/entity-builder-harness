@@ -263,6 +263,9 @@ if container.get("ReadonlyRootFilesystem") is not True:
     fail("platform-shell container must use a read-only root filesystem")
 if container.get("Secrets"):
     fail("platform-shell task must not receive a Cognito client secret")
+health_check = container.get("HealthCheck", {})
+if health_check.get("Command", [])[:3] != ["CMD", "/nodejs/bin/node", "-e"]:
+    fail("platform-shell ECS health check must use exec-form Node commands without a shell")
 environment = {entry.get("Name"): entry.get("Value") for entry in container.get("Environment", [])}
 required_environment = {
     "PLATFORM_DEPLOYMENT_EXPOSURE": "public",
@@ -297,6 +300,22 @@ if ecs_service.get("EnableExecuteCommand") is not False:
 breaker = ecs_service.get("DeploymentConfiguration", {}).get("DeploymentCircuitBreaker", {})
 if breaker != {"Enable": True, "Rollback": True}:
     fail("ECS deployment circuit breaker must be enabled with rollback")
+
+dockerfile = Path("infra/04.deploy/03.product/image/Dockerfile").read_text(encoding="utf-8")
+for required_text, message in {
+    "ARG RUNTIME_NODE_IMAGE=gcr.io/distroless/nodejs22-debian12:nonroot": "platform-shell Dockerfile must declare the reviewed minimal runtime image",
+    "FROM ${RUNTIME_NODE_IMAGE}": "platform-shell Dockerfile must use the separate runtime image stage",
+    "COPY --chown=nonroot:nonroot --from=build": "platform-shell runtime payload must be owned by nonroot",
+    "USER nonroot": "platform-shell Dockerfile must run as nonroot",
+    'CMD ["/nodejs/bin/node", "-e"': "platform-shell Dockerfile health check must use Node exec form without a shell",
+    'CMD [".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"]': "platform-shell Dockerfile must pass only the application path to the Distroless Node entrypoint",
+}.items():
+    if required_text not in dockerfile:
+        fail(message)
+if 'ENTRYPOINT ["dumb-init", "--"]' in dockerfile:
+    fail("platform-shell Dockerfile must not require a shell-capable runtime init wrapper")
+if 'CMD ["node", ".cache/platform-shell-image-build/' in dockerfile:
+    fail("platform-shell Dockerfile must not repeat the Node executable supplied by the Distroless entrypoint")
 
 if failures:
     for failure in failures:

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 10
+#   version: 11
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -101,7 +101,15 @@ inspection:
     repository_created_at_utc: "2026-07-13T13:28:30.347000Z"
     tag_mutability_expected: IMMUTABLE
     scan_on_push_expected: true
-    inspected_image_count: 0
+    registry_scanning:
+      scope: account-registry
+      scan_type: BASIC
+      scan_frequency: SCAN_ON_PUSH
+      repository_filter:
+        value: "*"
+        type: WILDCARD
+      verified_on: "2026-09-07"
+    inspected_image_count: 1
   platform_shell_runtime:
     foundation_stack_found: true
     foundation_stack_status: CREATE_COMPLETE
@@ -193,18 +201,18 @@ source:
   provider: github
   repository: gordonrose/entity-builder-harness
   ref: refs/heads/main
-  commit_sha: pending
+  commit_sha: fc096e575bde2ab34eda2b5cf771bd58549ee10a
   workflow_path: .github/workflows/deploy-platform-shell-staging.yml
-  workflow_run_id: pending
+  workflow_run_id: "34065575737"
 github:
   repository: gordonrose/entity-builder-harness
   source_policy: remote-main
   ref: refs/heads/main
-  commit_sha: pending
+  commit_sha: fc096e575bde2ab34eda2b5cf771bd58549ee10a
   workflow_path: .github/workflows/deploy-platform-shell-staging.yml
   workflow_name: Deploy Platform Shell Staging
   trigger: workflow_dispatch
-  workflow_run_id: pending
+  workflow_run_id: "34065575737"
   environment:
     name: staging
     protection_rules:
@@ -228,7 +236,7 @@ github:
     live_policy_matches_repository_policy: true
     live_policy_verification: The live inline policy semantically matches the repository policy; AWS policy validation and positive plus negative least-privilege simulations passed.
 artifacts:
-  source_commit_sha: pending
+  source_commit_sha: fc096e575bde2ab34eda2b5cf771bd58549ee10a
   build_policy:
     official_source: origin/main
     local_builds: smoke-only-not-deployable
@@ -236,7 +244,9 @@ artifacts:
     tag_mutability: IMMUTABLE
     deploy_reference: digest
     deploy_uri_shape: "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:<image-digest>"
-    base_image_policy: pin-by-digest-for-official-build
+    build_image_policy: pin-by-digest-for-official-build
+    runtime_image_policy: pin-by-digest-for-official-build
+    runtime_image_class: minimal-nonroot-distroless-nodejs22-debian12
     vulnerability_policy:
       critical: block
       high: fix-or-record-risk-acceptance-before-deployment
@@ -263,12 +273,22 @@ artifacts:
     build_context: .
     local_smoke_script: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
     local_smoke_passed: true
-    local_smoke_completed_at_utc: "2026-09-06T11:15:40Z"
+    local_smoke_verified_on: "2026-09-07"
     compiled_runtime_payload_check: passed-local-2026-09-06
     image_digest: pending
-    base_image_digest: pending
+    base_image_digest: pending-runtime-digest
+    build_image_digest: pending
+    runtime_image_digest: pending
     sbom: pending
-    vulnerability_scan: pending
+    vulnerability_scan:
+      first_attempt:
+        workflow_run_id: "34065575737"
+        image_digest: sha256:c75efcb3486d545b86a77cc95b583be00819a785c61a6352dd60a754fdeeb4e0
+        record_availability: scan-completed-after-initial-waiter-race
+        result: rejected-by-critical-and-high-policy
+        critical_count: 4
+        high_count: 15
+      replacement_image_required: true
     provenance_or_attestation: pending
 runtime:
   provider: aws

@@ -34,7 +34,8 @@ fi
 mkdir -p "$DOCKER_CONFIG"
 
 TAG="entity-builder-harness/03.product/platform-shell:local"
-BASE_IMAGE="node:22-bookworm-slim"
+BUILD_BASE_IMAGE="node:22-bookworm-slim"
+RUNTIME_IMAGE="gcr.io/distroless/nodejs22-debian12:nonroot"
 REQUIRE_DIGEST_BASE=false
 NO_CACHE=false
 DOCKERFILE="infra/04.deploy/03.product/image/Dockerfile"
@@ -44,7 +45,7 @@ CONTEXT="$ROOT"
 usage() {
   cat <<'EOF'
 Usage:
-  build-platform-shell-image/script.sh [--tag <tag>] [--base-image <image>] [--require-digest-base] [--no-cache]
+  build-platform-shell-image/script.sh [--tag <tag>] [--base-image <image>] [--runtime-image <image>] [--require-digest-base] [--no-cache]
 
 Builds the local platform shell image from:
   infra/04.deploy/03.product/image/Dockerfile
@@ -71,7 +72,12 @@ while [ "$#" -gt 0 ]; do
       ;;
     --base-image)
       require_value "$1" "${2:-}"
-      BASE_IMAGE="$2"
+      BUILD_BASE_IMAGE="$2"
+      shift 2
+      ;;
+    --runtime-image)
+      require_value "$1" "${2:-}"
+      RUNTIME_IMAGE="$2"
       shift 2
       ;;
     --require-digest-base)
@@ -105,9 +111,15 @@ find_engine() {
 
 ENGINE="$(find_engine)"
 
-if [ "$REQUIRE_DIGEST_BASE" = true ] && [[ "$BASE_IMAGE" != *@sha256:* ]]; then
-  echo "ERROR: --require-digest-base requires --base-image pinned by digest." >&2
-  exit 1
+if [ "$REQUIRE_DIGEST_BASE" = true ]; then
+  if [[ "$BUILD_BASE_IMAGE" != *@sha256:* ]]; then
+    echo "ERROR: --require-digest-base requires --base-image pinned by digest." >&2
+    exit 1
+  fi
+  if [[ "$RUNTIME_IMAGE" != *@sha256:* ]]; then
+    echo "ERROR: --require-digest-base requires --runtime-image pinned by digest." >&2
+    exit 1
+  fi
 fi
 
 if ! "$ENGINE" info >/dev/null 2>&1; then
@@ -130,7 +142,8 @@ BUILD_ARGS=(
   --tag "$TAG"
   --label "org.opencontainers.image.revision=$COMMIT_SHA"
   --label "org.opencontainers.image.source=entity-builder-harness"
-  --build-arg "NODE_IMAGE=$BASE_IMAGE"
+  --build-arg "BUILD_NODE_IMAGE=$BUILD_BASE_IMAGE"
+  --build-arg "RUNTIME_NODE_IMAGE=$RUNTIME_IMAGE"
   --build-arg "SOURCE_COMMIT_SHA=$COMMIT_SHA"
 )
 

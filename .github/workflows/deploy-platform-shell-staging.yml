@@ -27,9 +27,13 @@ on:
   workflow_dispatch:
     inputs:
       base_image_ref:
-        description: Base image tag or digest to resolve and pin for this staging build.
+        description: Build-stage Node image tag or digest to resolve and pin for this staging build.
         required: true
         default: node:22-bookworm-slim
+      runtime_image_ref:
+        description: Final minimal Node runtime image tag or digest to resolve and pin for this staging build.
+        required: true
+        default: gcr.io/distroless/nodejs22-debian12:nonroot
       publish_image:
         description: Push the built image to the staging ECR repository.
         required: true
@@ -136,34 +140,53 @@ jobs:
           aws cloudformation validate-template --template-body "file://$foundation_template" >/dev/null
           aws cloudformation validate-template --template-body "file://$SERVICE_TEMPLATE" >/dev/null
 
-      - name: Resolve digest-pinned base image
+      - name: Resolve digest-pinned build and runtime images
         id: base-image
         run: |
           set -euo pipefail
 
-          base_ref="${{ inputs.base_image_ref }}"
-          if [[ "$base_ref" == *@sha256:* ]]; then
-            base_repository="${base_ref%@sha256:*}"
-            base_digest="sha256:${base_ref##*@sha256:}"
-            base_image="$base_ref"
-          else
-            base_repository="${base_ref%:*}"
-            if [ "$base_repository" = "$base_ref" ]; then
-              echo "Base image must include a tag or digest: $base_ref" >&2
+          resolve_image() {
+            local reference="$1"
+            local kind="$2"
+            local repository
+            local digest
+            local image
+
+            if [[ "$reference" == *@sha256:* ]]; then
+              repository="${reference%@sha256:*}"
+              digest="sha256:${reference##*@sha256:}"
+              image="$reference"
+            else
+              repository="${reference%:*}"
+              if [ "$repository" = "$reference" ]; then
+                echo "$kind image must include a tag or digest: $reference" >&2
+                exit 1
+              fi
+              digest="$(docker buildx imagetools inspect "$reference" --format '{{.Manifest.Digest}}')"
+              image="${repository}@${digest}"
+            fi
+
+            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "Resolved $kind image digest has invalid shape: $digest" >&2
               exit 1
             fi
-            base_digest="$(docker buildx imagetools inspect "$base_ref" --format '{{.Manifest.Digest}}')"
-            base_image="${base_repository}@${base_digest}"
-          fi
 
-          if [[ ! "$base_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
-            echo "Resolved base image digest has invalid shape: $base_digest" >&2
-            exit 1
-          fi
+            printf '%s\t%s\t%s\n' "$repository" "$digest" "$image"
+          }
 
-          echo "repository=$base_repository" >> "$GITHUB_OUTPUT"
-          echo "digest=$base_digest" >> "$GITHUB_OUTPUT"
-          echo "image=$base_image" >> "$GITHUB_OUTPUT"
+          IFS=$'\t' read -r build_repository build_digest build_image < <(
+            resolve_image "${{ inputs.base_image_ref }}" "build"
+          )
+          IFS=$'\t' read -r runtime_repository runtime_digest runtime_image < <(
+            resolve_image "${{ inputs.runtime_image_ref }}" "runtime"
+          )
+
+          echo "build_repository=$build_repository" >> "$GITHUB_OUTPUT"
+          echo "build_digest=$build_digest" >> "$GITHUB_OUTPUT"
+          echo "build_image=$build_image" >> "$GITHUB_OUTPUT"
+          echo "runtime_repository=$runtime_repository" >> "$GITHUB_OUTPUT"
+          echo "runtime_digest=$runtime_digest" >> "$GITHUB_OUTPUT"
+          echo "runtime_image=$runtime_image" >> "$GITHUB_OUTPUT"
 
       - name: Select immutable staging image tag
         id: image-tag
@@ -199,7 +222,8 @@ jobs:
         run: |
           bash scripts/04.deploy/build-platform-shell-image/script.sh \
             --tag "${{ steps.image-tag.outputs.uri }}" \
-            --base-image "${{ steps.base-image.outputs.image }}" \
+            --base-image "${{ steps.base-image.outputs.build_image }}" \
+            --runtime-image "${{ steps.base-image.outputs.runtime_image }}" \
             --require-digest-base
 
       - name: Push platform shell image
@@ -234,6 +258,33 @@ jobs:
         id: scan
         run: |
           set -euo pipefail
+
+          # ECR creates the scan record asynchronously after an image push.
+          # The AWS waiter exits immediately if that record is not present yet,
+          # so first poll specifically for record creation, then use the waiter
+          # for the actual scan-completion state.
+          for attempt in $(seq 1 30); do
+            set +e
+            aws ecr describe-image-scan-findings \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
+              --max-results 1 >/dev/null 2>"$RUNNER_TEMP/ecr-scan-record.err"
+            describe_status=$?
+            set -e
+
+            if [ "$describe_status" -eq 0 ]; then
+              break
+            fi
+            if ! grep -q "ScanNotFoundException" "$RUNNER_TEMP/ecr-scan-record.err"; then
+              cat "$RUNNER_TEMP/ecr-scan-record.err" >&2
+              exit "$describe_status"
+            fi
+            if [ "$attempt" = "30" ]; then
+              echo "ECR did not create an image scan record within five minutes." >&2
+              exit 1
+            fi
+            sleep 10
+          done
 
           if ! aws ecr wait image-scan-complete \
             --repository-name "$ECR_REPOSITORY" \
@@ -362,8 +413,10 @@ jobs:
             echo ""
             echo "- Commit: ${GITHUB_SHA}"
             echo "- Workflow run: ${GITHUB_RUN_ID}"
-            echo "- Base image: ${{ steps.base-image.outputs.image }}"
-            echo "- Base digest: ${{ steps.base-image.outputs.digest }}"
+            echo "- Build image: ${{ steps.base-image.outputs.build_image }}"
+            echo "- Build digest: ${{ steps.base-image.outputs.build_digest }}"
+            echo "- Runtime image: ${{ steps.base-image.outputs.runtime_image }}"
+            echo "- Runtime digest: ${{ steps.base-image.outputs.runtime_digest }}"
             echo "- Image tag: ${{ steps.image-tag.outputs.tag }}"
             if [ "${{ inputs.publish_image }}" = "true" ]; then
               echo "- Image digest: ${{ steps.image.outputs.digest }}"
