@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 11
+#   version: 12
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -9,7 +9,7 @@
 #   - architecture
 #   - sre
 #   kind: deployment-manifest
-#   purpose: Record blocked staging deploy-readiness proof for the product platform shell before AWS mutation.
+#   purpose: Record staging deployment evidence and remaining proof gaps for the product platform shell.
 #   portability:
 #     class: internal
 #     targets: []
@@ -62,7 +62,7 @@ inspection:
   conclusion:
     existing_kanbien_staging_boundary_candidate: true
     product_platform_shell_target_selected: false
-    reason: The staging boundary, immutable ECR repository, and machine-to-machine Cognito client exist, but no platform-shell image, ECS task definition/service, target group, DNS/host route, log group, alarm, or deployed proof exists.
+    reason: Pre-deployment inventory snapshot. The initial platform-shell service was subsequently deployed through the recorded GitHub workflow run; remaining proof gaps are listed below rather than inferred from this historical snapshot.
   existing_boundary:
     account_id: "337159794548"
     cluster_arn: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
@@ -112,9 +112,9 @@ inspection:
     inspected_image_count: 1
   platform_shell_runtime:
     foundation_stack_found: true
-    foundation_stack_status: CREATE_COMPLETE
-    ecs_service_found: false
-    task_definition_found: false
+    foundation_stack_status: UPDATE_COMPLETE
+    ecs_service_found: true
+    task_definition_found: true
     alb_target_group_found: true
     route53_record_found: true
     https_host_rule_found: true
@@ -146,9 +146,9 @@ inspection:
         existing_default_certificate_unchanged: true
       external_tls_verification:
         verify_result: 0
-        http_status: 503
-        http_status_explanation: Expected until the platform-shell ECS service registers a healthy target.
-      resolution: Public TLS is complete. Deploy the immutable image-digest ECS service and then run the application, authorization, rate-limit, and rollback smoke proofs.
+        http_status: 200
+        http_status_explanation: Independently verified after the service deployment through the public /livez endpoint.
+      resolution: Public TLS and the initial immutable-image ECS service are complete. Continue with protected-route, rate-limit, WAF, logging, alarm-delivery, cost, and rollback proof.
     planned_cloudformation:
       foundation_stack: kanbien-staging-platform-shell-foundation
       foundation_composition: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
@@ -181,6 +181,12 @@ inspection:
           - PlatformHostnameCertificateAttachment
         replacement_or_modification_detected: false
         execution_authorized: true
+      service_deployment:
+        workflow_run_id: "34123406369"
+        source_commit_sha: c9aac48ebaa3f9ca0ee8c193391b26aa60913e01
+        service_stack: kanbien-staging-platform-shell-service
+        cloudformation_result: successfully-created-or-updated
+        workflow_health_and_unauthenticated_route_smoke: passed
   route53:
     hosted_zone_id: Z0909415EFV969Z95D5F
     existing_aliases_to_staging_alb:
@@ -201,18 +207,18 @@ source:
   provider: github
   repository: gordonrose/entity-builder-harness
   ref: refs/heads/main
-  commit_sha: fc096e575bde2ab34eda2b5cf771bd58549ee10a
+  commit_sha: c9aac48ebaa3f9ca0ee8c193391b26aa60913e01
   workflow_path: .github/workflows/deploy-platform-shell-staging.yml
-  workflow_run_id: "34065575737"
+  workflow_run_id: "34123406369"
 github:
   repository: gordonrose/entity-builder-harness
   source_policy: remote-main
   ref: refs/heads/main
-  commit_sha: fc096e575bde2ab34eda2b5cf771bd58549ee10a
+  commit_sha: c9aac48ebaa3f9ca0ee8c193391b26aa60913e01
   workflow_path: .github/workflows/deploy-platform-shell-staging.yml
   workflow_name: Deploy Platform Shell Staging
   trigger: workflow_dispatch
-  workflow_run_id: "34065575737"
+  workflow_run_id: "34123406369"
   environment:
     name: staging
     protection_rules:
@@ -236,7 +242,7 @@ github:
     live_policy_matches_repository_policy: true
     live_policy_verification: The live inline policy semantically matches the repository policy; AWS policy validation and positive plus negative least-privilege simulations passed.
 artifacts:
-  source_commit_sha: fc096e575bde2ab34eda2b5cf771bd58549ee10a
+  source_commit_sha: c9aac48ebaa3f9ca0ee8c193391b26aa60913e01
   build_policy:
     official_source: origin/main
     local_builds: smoke-only-not-deployable
@@ -275,11 +281,15 @@ artifacts:
     local_smoke_passed: true
     local_smoke_verified_on: "2026-09-07"
     compiled_runtime_payload_check: passed-local-2026-09-06
-    image_digest: pending
-    base_image_digest: pending-runtime-digest
-    build_image_digest: pending
-    runtime_image_digest: pending
-    sbom: pending
+    image_tag: staging-20260907-c9aac48ebaa3-run34123406369
+    image_digest: sha256:f73459a3c7a52616fbad11954f03b8e011f723408a555b2d3c8bc9875b32c9d4
+    deploy_uri: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:f73459a3c7a52616fbad11954f03b8e011f723408a555b2d3c8bc9875b32c9d4
+    base_image_digest: sha256:13593b7570658e8477de39e2f4a1dd25db2f836d68a0ba771251572d23bb4f8e
+    build_image_digest: sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5
+    runtime_image_digest: sha256:13593b7570658e8477de39e2f4a1dd25db2f836d68a0ba771251572d23bb4f8e
+    sbom:
+      status: attested-from-spdx-before-deployment
+      attestation_url: https://github.com/gordonrose/entity-builder-harness/attestations/45740817
     vulnerability_scan:
       first_attempt:
         workflow_run_id: "34065575737"
@@ -289,7 +299,14 @@ artifacts:
         critical_count: 4
         high_count: 15
       replacement_image_required: true
-    provenance_or_attestation: pending
+      successful_deployment:
+        workflow_run_id: "34123406369"
+        status: COMPLETE
+        critical_count: 0
+        high_count: 0
+    provenance_or_attestation:
+      status: attested-before-deployment
+      attestation_url: https://github.com/gordonrose/entity-builder-harness/attestations/45740785
 runtime:
   provider: aws
   family: ecs-fargate
@@ -309,7 +326,7 @@ runtime:
       readiness: /readyz
       alb_health_check_path: /livez
     container_port: 3000
-    task_definition: service-template-draft
+    task_definition: deployed-by-workflow-34123406369
     service: kanbien-staging-platform-shell
   worker:
     status: deferred-worker-capable-project
@@ -409,9 +426,10 @@ aws:
   security_groups:
     - sg-08d590b0aee6e2e60
   alb: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
-  target_group: pending
+  target_group: foundation-stack-owned-platform-shell-target-group
   default_tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631
   platform_hostname_tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/5a1be5b3-ee97-4666-a50a-99f52a099c4e
+  tls_certificate: arn:aws:acm:eu-west-1:337159794548:certificate/5a1be5b3-ee97-4666-a50a-99f52a099c4e
   dns_hostname: staging.platform.kanbien.com
   secret_store: aws-secrets-manager
   log_group: /ecs/kanbien-staging-platform-shell
@@ -445,49 +463,29 @@ proof:
   compiled_runtime_payload: passed-local-2026-09-06
   local_runtime_smoke: passed-product-smoke-local
   aws_read_only_inspection: platform-shell-foundation-and-public-tls-verified-2026-09-06
-  deployment_smoke: partial-public-tls-passed-workload-pending
+  deployment_smoke: public-livez-200-and-unauthenticated-deploy-probe-401-passed-2026-09-07
   rollback_proof: blocked
 blockers:
-  - id: platform-shell-readiness.github-source
+  - id: platform-shell-readiness.deferred-worker-runtime
     severity: blocking
-    path: source
-    reason: The production-bound source commit and workflow run identity are not selected for this Kanbien staging proof.
-    resolution: After this workflow is merged to main and run, record the remote-main commit SHA, workflow run id, and environment protection proof before ECS deployment execution.
-  - id: platform-shell-readiness.github-detail
-    severity: blocking
-    path: github
-    reason: The GitHub workflow, source policy, OIDC trust, environment protection settings, narrowed live deployment policy, and remote-main source are selected and verified. No approved workflow run or deployment proof exists yet.
-    resolution: After the foundation stack exists, run the selected manual GitHub workflow from origin/main and record the workflow, image, and deployment proof.
-  - id: platform-shell-readiness.image-provenance
-    severity: blocking
-    path: artifacts
-    reason: The platform shell image has only been proven locally; the target ECR repository exists with immutable tags and scan-on-push, but no immutable deploy image digest, base digest, scan result, SBOM, or attestation is recorded.
-    resolution: Build from pushed origin/main through the repeatable GitHub/OIDC path, record the immutable image digest, base digest, and scan result, then deploy ECS by digest after runtime targets are selected; keep SBOM plus attestation as blockers before public exposure.
-  - id: platform-shell-readiness.runtime-target
-    severity: blocking
-    path: runtime
-    reason: The existing service-platform ECS service remains unselected. The platform-shell foundation now provides the target group, host rule, DNS record, public TLS, log group, alarms, rate-limit table, and workload roles, but no task definition or ECS service exists yet.
-    resolution: Deploy the immutable image-digest service stack. Keep the worker slot deferred until an app-declared background workload exists.
-  - id: platform-shell-readiness.aws-detail
-    severity: blocking
-    path: aws
-    reason: The foundation stack successfully created the platform-shell service security group, target group, DNS/host route, public TLS, log group, alarms, rate-limit table, WAF, and workload roles. No platform-shell ECS service or task definition exists yet.
-    resolution: Deploy the immutable image-digest service stack and verify task health, authorization behaviour, rate limiting, logging, alarms, and rollback.
-  - id: platform-shell-readiness.smoke-proof
-    severity: blocking
-    path: proof
-    reason: Foundation routing, public TLS, logging, alerts, and WAF exist. There is no platform-shell workload, so application smoke and rollback proof remain unavailable; the expected pre-service `/livez` response is `503` with valid TLS.
-    resolution: Deploy through the governed workflow, verify health and dummy app behaviour, and record rollback proof.
+    path: runtime.worker
+    reason: The target is intentionally server-only until a declared background workload exists; no worker task definition or service has been deployed or exercised.
+    resolution: When a product selects a queue-backed job workload, deploy the worker task definition and service, then record queue, dead-letter, worker health, and rollback evidence.
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke
-    reason: Local server tests prove 401, 403, and success paths, but deployed protected dummy-route smoke proof does not exist yet.
-    resolution: After the smoke app and staging target are deployed, record deployment smoke proof for unauthenticated, forbidden, and authorized requests.
+    reason: The deployed workflow and independent public check prove the unauthenticated 401 boundary, but deployed forbidden 403 and correctly-scoped 200 requests remain unproven.
+    resolution: Acquire a controlled Cognito access token and record wrong-scope 403 plus declared-scope 200 proofs without committing credentials or token values.
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting
-    reason: The shared DynamoDB limiter, ALB-only client-address resolver, explicit transport limits, host-scoped WAF, and public TLS are deployed. No negative rate-limit proof exists because no platform-shell workload is registered.
-    resolution: Deploy the service, confirm the ALB-only security-group precondition and WAF host scope, then complete deployed rate-limit, WAF, and routing smoke evidence before public exposure.
+    reason: The deployed workflow proves liveness only. Deployed 429 behaviour, ALB-only ingress, WAF host scope, and routing evidence have not yet been independently recorded.
+    resolution: Run a bounded rate-limit and WAF/routing verification, then record safe result summaries and links to the relevant logs or metrics.
+  - id: platform-shell-readiness.operational-proof
+    severity: blocking
+    path: proof
+    reason: The service is deployed, but CloudWatch log delivery, alarm delivery, and rollback exercise evidence remain unrecorded.
+    resolution: Verify a redacted operational log record, alarm destination delivery, and an explicitly governed rollback rehearsal before marking the target ready.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation
