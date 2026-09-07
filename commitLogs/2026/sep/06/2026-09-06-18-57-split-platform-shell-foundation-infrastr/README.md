@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-07T18:49:46Z
-latest_commit_sha: c2d4448
-chat_duration: 89551s (01:00:52:31)
+latest_commit_at_utc: 2026-09-07T19:15:45Z
+latest_commit_sha: feb25b3
+chat_duration: 91110s (01:01:18:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -46,6 +46,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
   intended missing-outcome or stale-provenance failures. The fixtures now use
   valid metadata headers while retaining their intentionally invalid coverage
   conditions.
+
+
+- Raised: The active chat branch was one merge commit behind main before the source split.
+  Resolution: A clean, governed preflight refresh merged current main without conflicts; the refresh result was applied before implementation.
 
 ## Decisions Made
 
@@ -79,6 +83,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 - Decision: Execute the pushed-source public-TLS foundation update.
   Rationale: The reviewed change set contained only an ACM certificate for the platform hostname space and its non-default SNI attachment. The user explicitly approved execution after reviewing the two additions, no replacements, target account, region, and rollback behaviour.
 
+
+- Decision: Split the platform-observability implementation by responsibility while preserving its public package barrel.
+  Rationale: This applies the scanability and package-documentation rules without selecting a provider, adding a record pipeline, or changing runtime behaviour.
+
 ## Context Hygiene
 
 - Performed all task edits in the chat-owned worktree, leaving the root
@@ -108,6 +116,10 @@ Refactor the Kanbien staging platform-shell foundation infrastructure into seman
 
 - Summary: Completed and externally verified the platform-hostname TLS repair.
   Durable evidence: The foundation stack is UPDATE_COMPLETE; the certificate is ISSUED with successful DNS validation; the shared listener has it as a non-default SNI certificate; curl verified staging.platform.kanbien.com with TLS result 0 and expected HTTP 503 because the target group has zero registered tasks. Durable evidence is recorded in the target profile, readiness manifest, and deployment plan.
+
+
+- Summary: Observability now has responsibility-owned normalization, logging, metrics, and tracing topics; its public index is exports only.
+  Durable evidence: The package README, source README, platform-runtime plan, and learning handbook hold the durable ownership map. Type, declaration, runtime, and boundary checks passed; no AWS, provider, or record-pipeline change occurred.
 
 ## Activity Log
 
@@ -308,6 +320,45 @@ Summary: No ADR is needed; this refines existing observability planning without 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-09-07T19:10:49Z - Decision
+
+Decision: Split the platform-observability implementation by responsibility while preserving its public package barrel.
+
+Rationale: This applies the scanability and package-documentation rules without selecting a provider, adding a record pipeline, or changing runtime behaviour.
+
+
+### 2026-09-07T19:10:52Z - Issue
+
+Raised: The active chat branch was one merge commit behind main before the source split.
+
+Resolution: A clean, governed preflight refresh merged current main without conflicts; the refresh result was applied before implementation.
+
+
+### 2026-09-07T19:10:56Z - Context hygiene
+
+Summary: Observability now has responsibility-owned normalization, logging, metrics, and tracing topics; its public index is exports only.
+
+Durable evidence: The package README, source README, platform-runtime plan, and learning handbook hold the durable ownership map. Type, declaration, runtime, and boundary checks passed; no AWS, provider, or record-pipeline change occurred.
+
+
+### 2026-09-07T19:10:59Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a compatibility-preserving source reorganisation that implements existing package-documentation and platform-runtime direction; it creates no new durable architecture decision.
+
+
+### 2026-09-07T19:15:45Z - Commit recorded
+
+Commit: `feb25b3`
+
+Message: refactor(platform): split observability topics
+
+Summary: Split the provider-neutral observability helper into normalization, logging, metrics, and tracing topics; retained the public barrel and added local responsibility maps.
+
+ADR impact: No ADR needed; implements the existing platform source-organisation and package-documentation direction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -371,6 +422,13 @@ ADR impact: covered by session ADR disposition
   Summary: No ADR is needed; this refines existing observability planning without selecting a provider or changing runtime behaviour.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `feb25b3`
+  Time UTC: 2026-09-07T19:15:45Z
+  Message: refactor(platform): split observability topics
+  Summary: Split the provider-neutral observability helper into normalization, logging, metrics, and tracing topics; retained the public barrel and added local responsibility maps.
+  ADR impact: No ADR needed; implements the existing platform source-organisation and package-documentation direction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -379,15 +437,16 @@ ADR impact: covered by session ADR disposition
 
 ADR needed: no
 ADR path:
-Reason: This is a source-structure and deterministic rendering change that
-preserves the existing single-stack target design and reviewed resource graph.
+Reason: This is a compatibility-preserving source reorganisation that implements
+existing package-documentation and platform-runtime direction; it creates no
+new durable architecture decision.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-07T18:49:46Z
-Latest commit SHA: c2d4448
-Chat duration: 89551s (01:00:52:31)
+Latest commit at UTC: 2026-09-07T19:15:45Z
+Latest commit SHA: feb25b3
+Chat duration: 91110s (01:01:18:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

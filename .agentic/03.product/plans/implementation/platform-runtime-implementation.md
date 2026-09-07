@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 19
+version: 20
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -673,6 +673,28 @@ the public barrel.
 Future platform-security work must retain this separation. Do not mix a
 structural source reorganisation with provider selection, app-specific policy,
 or new security controls without a separate governed slice.
+
+#### Platform observability source-organisation follow-up
+
+Status: implemented for the current provider-neutral helper surface. The
+former single observability source file is now organised into
+`normalization.ts`, `logging.ts`, `metrics.ts`, and `tracing.ts`, with
+`index.ts` retaining the existing `@kanbien/platform-observability` public
+barrel.
+
+- `normalization.ts` owns redaction, bounded JSON conversion, circular-value
+  handling, and the small safe error shape;
+- `logging.ts` owns the safe Core-logger wrapper and structured-log writes;
+- `metrics.ts` owns provider-neutral metric recording plus request, job,
+  health, and elapsed-time helpers; and
+- `tracing.ts` owns safe trace-field preparation only.
+
+The split preserves exported names and runtime behaviour. It does not select a
+logging, metric, or tracing provider; create a trace/span; add an exporter;
+or create a durable audit or security-record pipeline. The package README and
+local source README are the current responsibility maps, while the existing
+type, build, runtime, and provider-boundary checks remain its verification
+baseline.
 
 Acceptance:
 
