@@ -29,6 +29,13 @@ infra/04.deploy/03.product/image/Dockerfile
 The command builds a local image only. It does not publish, deploy, call AWS,
 or mutate GitHub.
 
+The Dockerfile intentionally has two image stages. The build stage uses the
+full Node image needed for package installation and TypeScript compilation. The
+final stage uses the minimal, non-root Distroless Node 22 runtime. Only the
+compiled payload and production dependencies cross that boundary; package
+management tools, a shell, and general operating-system utilities do not ship
+in the image that ECS runs.
+
 Before a container engine is available, the deployable JavaScript payload can
 also be checked without Docker:
 
@@ -57,6 +64,12 @@ Optional flags:
 ```bash
 bash scripts/04.deploy/build-platform-shell-image/script.sh --tag entity-builder-harness/03.product/platform-shell:local
 bash scripts/04.deploy/build-platform-shell-image/script.sh --base-image node:22-bookworm-slim
+bash scripts/04.deploy/build-platform-shell-image/script.sh --runtime-image gcr.io/distroless/nodejs22-debian12:nonroot
 bash scripts/04.deploy/build-platform-shell-image/script.sh --require-digest-base
 bash scripts/04.deploy/build-platform-shell-image/script.sh --no-cache
 ```
+
+`--require-digest-base` requires both the build and runtime image references to
+be pinned by digest. The official GitHub deployment workflow resolves both
+tags to digests before it invokes this script. Local tags remain convenient for
+development, but they are never deployment evidence.

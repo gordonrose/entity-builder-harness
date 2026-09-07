@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 8
+#   version: 9
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -114,7 +114,17 @@ artifacts:
     tag_format: "staging-<YYYYMMDD>-<short-sha>-run<github-run-id>"
     deploy_reference: digest
     deploy_uri_shape: "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:<image-digest>"
-    base_image_policy: pin-by-digest-for-official-build
+    build_image_policy: pin-by-digest-for-official-build
+    runtime_image_policy: pin-by-digest-for-official-build
+    runtime_image_class: minimal-nonroot-distroless-nodejs22-debian12
+    registry_scanning:
+      scope: account-registry
+      scan_type: BASIC
+      scan_frequency: SCAN_ON_PUSH
+      repository_filter:
+        value: "*"
+        type: WILDCARD
+      verification_command: aws ecr get-registry-scanning-configuration
     vulnerability_policy:
       critical: block
       high: fix-or-record-risk-acceptance-before-deployment

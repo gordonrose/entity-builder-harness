@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 8
+version: 9
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -71,6 +71,15 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 - The current platform source is committed and present on `origin/main`.
   Official deployment images must come from reviewed, pushed `origin/main`,
   never a local working tree.
+- The first remote-main GitHub workflow attempt built and pushed an immutable
+  platform-shell image but stopped before any service-stack mutation. ECR
+  created its scan record asynchronously after the workflow's original waiter
+  had already exited; the completed scan then reported 4 critical and 15 high
+  findings. The scan policy correctly rejected that image. The account-level
+  ECR Basic scan-on-push rule is now explicitly configured for all current
+  repositories, and the workflow now waits separately for record creation.
+  The next image uses a minimal, non-root Distroless Node runtime rather than
+  shipping the general-purpose Debian runtime layer.
 
 ## Defects to correct before an AWS apply
 
@@ -83,16 +92,17 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    exist and passed AWS template validation. The reviewed foundation CREATE
    change set executed successfully with 16 additions and no modifications or
    deletions. The foundation stack exists; the service does not.
-4. The GitHub workflow validates templates, publishes an immutable image, then
-   waits for a complete ECR scan and blocks both critical and high findings.
+4. The GitHub workflow validates templates, pins both a build-stage and final
+   runtime image by digest, publishes an immutable image, then waits for ECR
+   to create and complete its scan. It blocks both critical and high findings.
    It generates an SPDX SBOM and writes provenance plus SBOM attestations for
    the exact image digest before deploying only the service stack through a
    dedicated CloudFormation execution role. It then performs public liveness
    plus unauthenticated-route smoke. On 2026-09-06, the live GitHub role was
    updated and verified against the reviewed narrowed CloudFormation-policy
    boundary. The foundation created the service deployment role and public TLS
-   is now verified; the path still needs a remote-main workflow run and service
-   deployment proof.
+   is now verified; the path still needs a successful remote-main workflow run
+   and service-deployment proof.
 5. The deployed WAF, rate-limit table, alert subscription, host route, and
    public TLS have configuration or external-verification proof. A deployed
    negative-rate-limit test, application route proof, and a rollback exercise
@@ -120,6 +130,7 @@ locally before the first AWS execution approval.
 | Client address | A target-selected resolver that uses the final ALB-appended `X-Forwarded-For` address only because the task security group admits traffic solely from the ALB | The generic server continues to distrust forwarded headers by default; trust exists only at this reviewed target boundary. |
 | Edge protection | New WAFv2 web ACL associated with the existing ALB; every rule is scoped to the new staging host | Gives managed-rule and IP-rate protection before the service while avoiding changes to legacy host behaviour. |
 | Observability | ECS `awslogs` delivery of redacted stdout JSON to a 14-day CloudWatch log group; ECS and ALB alarms to a dedicated SNS email topic | Uses a host log facility rather than coupling platform code to CloudWatch. |
+| Runtime image | Build from a digest-pinned Node 22 image; run only the compiled output and production dependencies in a separately digest-pinned Distroless Node 22 non-root image | The deployable artifact omits a shell, package manager, and build toolchain while preserving a reproducible build boundary. |
 | Rollback | ECS deployment circuit breaker with rollback, previous task definition retained, listener rule/DNS only removed through a separate explicit retirement action | A failed new workload does not take over or interrupt an existing host. |
 
 ## Required implementation sequence

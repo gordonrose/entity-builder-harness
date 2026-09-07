@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 832
-  term_count: 1676
+  indexed_artifacts: 834
+  term_count: 1680
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8789,6 +8789,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
   evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-workflow.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-workflow.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-workflow.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-workflow
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-workflow
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-workflow
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
   confidence_weight: 1
 - term: deploy.script.verify-platform-shell-infrastructure.readme
   category: artifact-id
