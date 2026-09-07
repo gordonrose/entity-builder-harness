@@ -6346,6 +6346,18 @@ implementation, canonical-action validator, or full metric guard against every
 tenant-ID spelling. Those remain planned work and must be proved before the
 platform is described as operationally complete for audit or observability.
 
+### Current repository implementation
+
+The existing observability helper has now been split into responsibility-named
+files: `normalization.ts`, `logging.ts`, `metrics.ts`, and `tracing.ts`.
+`index.ts` remains the one deliberate public barrel, so consumers continue to
+import `@kanbien/platform-observability` without depending on internal paths.
+
+This is a navigation and maintainability change, not a claim that a provider
+or record pipeline now exists. The split makes the current seams easier to
+inspect: normalisation is the safety gateway; logging and trace fields consume
+it; metrics remain an independent aggregate-measurement concern.
+
 ### Study question
 
 Why should a request that creates an export job record `accepted` separately
@@ -6377,7 +6389,9 @@ linked through correlation and causation without copying the export content.
 - [Platform server source](../../../platform/server/src/index.ts)
 - [Platform server package guide](../../../platform/server/README.md)
 - [Platform server source guide](../../../platform/server/src/README.md)
-- [Platform observability source](../../../platform/observability/src/index.ts)
+- [Platform observability package guide](../../../platform/observability/README.md)
+- [Platform observability source guide](../../../platform/observability/src/README.md)
+- [Platform observability public barrel](../../../platform/observability/src/index.ts)
 - [Core monitoring vocabulary](../../../packages/core/src/monitoring/index.ts)
 - [Platform worker source](../../../platform/workers/src/index.ts)
 - [Smoke app mount](../../../apps/platform-smoke/src/app.mount.ts)
@@ -6646,3 +6660,7 @@ After each completed learning chunk:
   rules. The platform-runtime and product-harness plans now capture the
   implementation obligations; no record pipeline or provider adapter was
   claimed as implemented.
+- 2026-09-07: Applied the observability source-organisation decision. The
+  provider-neutral helper now has separate normalisation, logging, metrics,
+  and tracing files, with package and source responsibility maps; its public
+  barrel and its provider/pipeline status are unchanged.
