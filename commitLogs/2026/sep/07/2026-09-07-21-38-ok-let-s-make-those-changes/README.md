@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-07T21:15:12Z
+latest_commit_sha: fc0e16dfa742a9a9c083574dfe03b2c32a7aafd2
+chat_duration: 2177s (00:00:36:17)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -90,13 +90,30 @@ Initial intent: ok let's make those changes
   declaration build, runtime test, and boundary test). The local server
   runtime phase used approved loopback-port permission.
 
+
+### 2026-09-07T21:15:12Z - Commit recorded
+
+Commit: `fc0e16dfa742a9a9c083574dfe03b2c32a7aafd2`
+
+Message: feat(observability): add provider-neutral server tracing
+
+Summary: Split Core monitoring into scanable topics and add safe provider-neutral request tracing through platform observability and server, with tests and documentation.
+
+ADR impact: none
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `fc0e16dfa742a9a9c083574dfe03b2c32a7aafd2`
+  Time UTC: 2026-09-07T21:15:12Z
+  Message: feat(observability): add provider-neutral server tracing
+  Summary: Split Core monitoring into scanable topics and add safe provider-neutral request tracing through platform observability and server, with tests and documentation.
+  ADR impact: none
 
 ## Main Refresh Conflicts
 
@@ -114,12 +131,12 @@ architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-09-07T20:38:55Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-07T21:15:12Z
+Latest commit SHA: fc0e16dfa742a9a9c083574dfe03b2c32a7aafd2
+Chat duration: 2177s (00:00:36:17)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
