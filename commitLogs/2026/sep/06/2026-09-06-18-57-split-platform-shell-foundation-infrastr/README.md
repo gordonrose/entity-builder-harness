@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-06T22:39:07Z
-latest_commit_sha: 1b56173
-chat_duration: 16912s (00:04:41:52)
+latest_commit_at_utc: 2026-09-07T12:08:26Z
+latest_commit_sha: 86e6944
+chat_duration: 65471s (00:18:11:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -275,6 +275,17 @@ Summary: Moved ECR scan enforcement before the service-stack deployment, blocked
 
 ADR impact: Implements the existing supply-chain evidence requirement; no ADR is needed.
 
+
+### 2026-09-07T12:08:26Z - Commit recorded
+
+Commit: `86e6944`
+
+Message: fix(deploy): harden platform shell image retry
+
+Summary: Corrected the asynchronous ECR scan-record wait, moved the deployable platform-shell artifact to a separately digest-pinned non-root Distroless Node runtime, converted health checks to exec form, and recorded the first scan rejection plus replacement-image requirement. Verified local read-only image smoke and refreshed generated recognition sources.
+
+ADR impact: No ADR is needed; this hardens the existing staged deployment target and supply-chain policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -317,6 +328,13 @@ ADR impact: Implements the existing supply-chain evidence requirement; no ADR is
   Summary: Moved ECR scan enforcement before the service-stack deployment, blocked both critical and high findings until a governed risk-acceptance mechanism exists, and added SPDX SBOM plus provenance and SBOM attestations for the immutable image digest. Added a local workflow guard to prevent regression.
   ADR impact: Implements the existing supply-chain evidence requirement; no ADR is needed.
 
+
+- Commit: `86e6944`
+  Time UTC: 2026-09-07T12:08:26Z
+  Message: fix(deploy): harden platform shell image retry
+  Summary: Corrected the asynchronous ECR scan-record wait, moved the deployable platform-shell artifact to a separately digest-pinned non-root Distroless Node runtime, converted health checks to exec form, and recorded the first scan rejection plus replacement-image requirement. Verified local read-only image smoke and refreshed generated recognition sources.
+  ADR impact: No ADR is needed; this hardens the existing staged deployment target and supply-chain policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -331,9 +349,9 @@ preserves the existing single-stack target design and reviewed resource graph.
 ## Session Metrics
 
 Raised at UTC: 2026-09-06T17:57:15Z
-Latest commit at UTC: 2026-09-06T22:39:07Z
-Latest commit SHA: 1b56173
-Chat duration: 16912s (00:04:41:52)
+Latest commit at UTC: 2026-09-07T12:08:26Z
+Latest commit SHA: 86e6944
+Chat duration: 65471s (00:18:11:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
