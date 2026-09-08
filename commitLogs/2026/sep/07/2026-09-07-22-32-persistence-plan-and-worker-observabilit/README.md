@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-08T19:59:21Z
-latest_commit_sha: 5a64093
-chat_duration: 80798s (00:22:26:38)
+latest_commit_at_utc: 2026-09-08T23:32:29Z
+latest_commit_sha: 372e69c
+chat_duration: 93586s (01:01:59:46)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -385,7 +385,18 @@ Reason: The classification-to-handling direction applies existing Core, app, pla
 
 Summary: The chat now has an implemented provider-neutral operational vocabulary and profile registry, plus a recorded future classification-to-handling boundary. Optional operational sink containment and server/worker profile consumption remain next; classification-driven entity/policy implementation remains deferred until a real entity consumer.
 
-Durable evidence: Durable evidence: platform/contracts/src/observability.ts; platform/contracts/src/observability-profiles.ts; .agentic/03.product/plans/implementation/platform-runtime-implementation.md; .agentic/03.product/plans/implementation/product-harness-foundation.md; docs/education/teaching-notes/0002-architecture-learning-handbook.md.
+Durable evidence: platform/contracts/src/observability.ts; platform/contracts/src/observability-profiles.ts; .agentic/03.product/plans/implementation/platform-runtime-implementation.md; .agentic/03.product/plans/implementation/product-harness-foundation.md; docs/education/teaching-notes/0002-architecture-learning-handbook.md.
+
+
+### 2026-09-08T23:32:29Z - Commit recorded
+
+Commit: `372e69c`
+
+Message: feat(observability): govern profiles and staging alarms
+
+Summary: Added governed staging alarm definitions and preflight, provider-neutral capability observability profiles with registry enforcement, smoke proof, classification-to-handling planning, documentation, and generated rulebook recognition evidence. Contract, runtime, server, worker, adapter, smoke-app, deployment static, and full commit gates passed.
+
+ADR impact: No ADR required; applies existing platform/core/app/target ownership boundaries without selecting a provider or building a live policy engine.
 
 ## Sub-Agent Activity
 
@@ -415,6 +426,13 @@ Durable evidence: Durable evidence: platform/contracts/src/observability.ts; pla
   Summary: Recorded safe read-only AWS CloudWatch, ECS, alarm, and SNS evidence; added the explicit missing-ECS-alarm blocker; and added the provider-neutral observability port lesson. The readiness verifier passed in blocked/explanation mode with six documented blockers.
   ADR impact: No ADR required; this records target evidence and an existing infrastructure requirement.
 
+
+- Commit: `372e69c`
+  Time UTC: 2026-09-08T23:32:29Z
+  Message: feat(observability): govern profiles and staging alarms
+  Summary: Added governed staging alarm definitions and preflight, provider-neutral capability observability profiles with registry enforcement, smoke proof, classification-to-handling planning, documentation, and generated rulebook recognition evidence. Contract, runtime, server, worker, adapter, smoke-app, deployment static, and full commit gates passed.
+  ADR impact: No ADR required; applies existing platform/core/app/target ownership boundaries without selecting a provider or building a live policy engine.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -431,9 +449,9 @@ cross-layer ownership decision beyond the existing product-harness plan.
 ## Session Metrics
 
 Raised at UTC: 2026-09-07T21:32:43Z
-Latest commit at UTC: 2026-09-08T19:59:21Z
-Latest commit SHA: 5a64093
-Chat duration: 80798s (00:22:26:38)
+Latest commit at UTC: 2026-09-08T23:32:29Z
+Latest commit SHA: 372e69c
+Chat duration: 93586s (01:01:59:46)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
