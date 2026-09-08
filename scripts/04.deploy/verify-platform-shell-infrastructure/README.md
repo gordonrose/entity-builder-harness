@@ -29,7 +29,10 @@ It prevents accidental broadening of the first public deployment: the task
 must remain ALB-only, rate-limit state must remain encrypted, short-lived, and
 least-privileged, the WAF must scope every rule to the new hostname, the image
 must be pinned by digest, and the container must remain secret-free and
-read-only.
+read-only. It also verifies that the target declares the governed alert-policy
+standard, points to the link-only target catalogue, uses the declared severity
+vocabulary, and keeps every CloudFormation alarm aligned with its canonical
+target-profile definition.
 
 Run it with:
 

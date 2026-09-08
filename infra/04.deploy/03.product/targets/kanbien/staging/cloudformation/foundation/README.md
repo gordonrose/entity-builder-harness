@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -34,7 +34,7 @@ repository renderer; they are not independent AWS stacks.
 | `workload-iam.yml` | Least-privilege identities used by AWS workload components. It is not end-user authorization. | ECS task roles and service deployment role |
 | `rate-limiting.yml` | Shared, encrypted fixed-window limiter state for the public runtime. | DynamoDB table |
 | `logging.yml` | Short-retention operational log destination. | CloudWatch log group |
-| `alerting.yml` | Availability alarms and their operator-notification channel. | CloudWatch alarms, SNS topic, topic policy, email subscription |
+| `alerting.yml` | Shared alert delivery and ALB target-group availability alarms. Service-specific ECS alarms remain in `../service.yml`, because only that stack owns their service dimensions. | CloudWatch alarms, SNS topic, topic policy, email subscription |
 | `outputs.yml` | Values deliberately exported to the separate service stack. | Outputs only |
 
 The division is by responsibility rather than one file per AWS resource. For

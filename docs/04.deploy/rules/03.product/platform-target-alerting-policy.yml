@@ -1,0 +1,163 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.rules.03-product.platform-target-alerting-policy
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.observability
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: rule
+#   purpose: Define target-owned canonical alarm policies for product platform services.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.source-material.03-product.platform-target-alerting-policy
+#     path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+#   - id: deploy.script.verify-platform-shell-infrastructure
+#     path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+id: deploy.03-product.platform-target-alerting-policy
+title: Platform target alerting policy rules
+version: 1
+status: active
+corpus_id: corpus.04.deploy
+owner_layer: 04.deploy
+deploy_track: 03.product
+
+source_derivation:
+  provenance_version: rag-rulebook/source-derivation-provenance/v1
+  mode: direct-source-material
+  generator: agent-assisted-source-to-rule
+  generator_version: v1
+  generated_at_utc: "2026-09-08T20:45:14Z"
+  derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+  source_material:
+    - path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+      sha256: f0b8de8d3e143c941b3a356143ec095c5e056491a57b8ac2334ae4cf8ec21e6a
+
+description: >
+  Product platform targets use one canonical target-profile alarm catalogue,
+  with provider resources, notification delivery, and operator response
+  verified against that catalogue rather than independently invented in
+  templates or provider consoles.
+
+related_rulesets:
+  - docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  - docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml
+  - docs/03.product/rules/core/layers/packages-core.yml
+  - .agentic/aws/workflows/plan-aws-change.md
+  - .agentic/aws/workflows/execute-approved-aws-change.md
+
+applies_to:
+  paths:
+    - "infra/04.deploy/03.product/targets/**/target-profile.yml"
+    - "infra/04.deploy/03.product/targets/**/cloudformation/**"
+    - "scripts/04.deploy/**"
+    - ".github/workflows/**"
+    - "docs/aws/runbooks/**"
+    - "docs/04.deploy/source-material/03.product/**"
+    - "docs/04.deploy/rules/03.product/**"
+
+rules:
+  - id: platform-target-alerting-policy.has-one-canonical-catalogue
+    title: Each target has one canonical alarm catalogue
+    severity: error
+    summary: >
+      A product platform target records its complete alarm policy under
+      `observability.alarms` in its target profile. A repository index links
+      to that policy but must not duplicate policy values.
+    must:
+      - "Declare the alarm-policy standard path, catalogue index path, and `observability.alarms` as the canonical catalogue in `observability.policy`."
+      - "Keep target-specific alarm IDs, metrics, dimensions, thresholds, delivery destinations, and runbooks in that target profile."
+      - "Add one target row to `infra/04.deploy/03.product/targets/README.md` when a new target declares an alarm policy."
+      - "Use a static, plan-time, or deployment-time policy-to-IaC check before treating the target as operationally ready."
+    must_not:
+      - "Do not use a provider console, a CloudFormation template, an alarm name list, or an incident ticket as a second canonical policy store."
+      - "Do not repeat target thresholds, dimensions, or notification configuration in the repository-wide target index."
+      - "Do not define provider alarm thresholds, notification routes, or incident routing in packages/core."
+    required_checks:
+      - "Verify `observability.policy` points to this rule and the target catalogue index."
+      - "Verify the target profile contains one structured `observability.alarms` list with unique IDs."
+      - "Verify the target index links the target profile, implementation source, and runbook."
+    agent_guidance: >
+      When asked what alerts a target has, start at its target profile. Use the
+      index to find the target, then follow the policy's implementation and
+      runbook references. Never reconstruct policy by searching provider
+      resources alone.
+
+  - id: platform-target-alerting-policy.defines-an-operable-alarm
+    title: Every alarm definition is complete and operable
+    severity: error
+    summary: >
+      An alarm is an operational decision system, not a metric name and a
+      threshold. Every definition must identify the signal, decision window,
+      response, and owning implementation.
+    must:
+      - "Give every alarm a stable semantic `id` and a human-readable `purpose`."
+      - "Declare `signal.namespace`, `signal.metric`, and bounded resource dimensions with resolvers or values."
+      - "Declare a statistic, comparison operator, threshold value or source, and unit under `condition`."
+      - "Declare period seconds, evaluation periods, datapoints to alarm, and `treat_missing_data` under `evaluation`."
+      - "Declare a severity from the target policy's explicit severity vocabulary, an owned destination, and a version-controlled runbook under `response`."
+      - "Declare stack ownership, logical resource, provider alarm name, and human-safe description under `implementation`."
+      - "Declare telemetry prerequisites, a read-only proof method, and a fail-closed update path whenever a metric is not natively guaranteed."
+    must_not:
+      - "Do not use tenant, principal, request, trace, session, email, IP, raw route, or another unbounded/sensitive value as a metric dimension."
+      - "Do not put credentials, tokens, customer values, raw payloads, prompts, transcripts, signed URLs, or provider error bodies in alarm descriptions, tags, dimensions, or notification content."
+      - "Do not leave metric dimensions, missing-data semantics, notification ownership, or response runbooks implicit."
+    required_checks:
+      - "Verify every declared alarm contains id, purpose, signal, condition, evaluation, response, and implementation objects."
+      - "Verify every severity is included in the target's declared severity vocabulary."
+      - "Verify every declared runbook path exists and can be followed without collecting sensitive payloads."
+      - "Verify telemetry prerequisites before applying a dependent alarm resource."
+    agent_guidance: >
+      Ask: what is measured, for exactly which resource, what counts as bad,
+      how long must it last, what does no data mean, who reacts, and where is
+      the provider resource owned? If any answer is absent, the policy is not
+      ready to implement.
+
+  - id: platform-target-alerting-policy.proves-delivery-and-drift-control
+    title: Alarm policy is proven against implementation and live delivery
+    severity: error
+    summary: >
+      A provider accepting an alarm resource does not prove metric publication,
+      notification delivery, safe operator response, or alignment with the
+      reviewed policy.
+    must:
+      - "Compare every policy definition with the owning IaC resource's metric, dimensions, condition, evaluation, missing-data rule, destination, tags, and provider identity."
+      - "Use least-privilege deployment permissions that can create or manage only reviewed alarm resources and destinations."
+      - "Record safe live-state evidence, notification-delivery proof, and any pending alarm gaps in the target readiness record."
+      - "Keep alarm response runbooks version controlled and review them when a policy changes."
+    must_not:
+      - "Do not mark a target ready solely because its templates parse or its alarms are in an OK state."
+      - "Do not lower, delete, or bypass a required alarm because a telemetry prerequisite is unavailable; record and resolve a readiness blocker."
+      - "Do not store email endpoints, notification content, raw logs, or customer data as delivery proof in the repository."
+    required_checks:
+      - "Run the target's static infrastructure policy gate."
+      - "Run prerequisite preflights before infrastructure mutation when the target declares them."
+      - "Inspect provider alarm state and delivery evidence read-only after a governed apply."
+      - "Verify target readiness records distinguish source policy, implemented resources, and live proof."
+    agent_guidance: >
+      Treat policy, resource creation, and live proof as separate stages. A
+      missing metric or undelivered notification is a readiness gap, not a
+      reason to weaken the policy.
+
+source_refs:
+  - doc: "platform-target-alerting-policy.md"
+    sections:
+      - "Source of Truth and Catalogue"
+      - "Required Alarm Definition"
+      - "Ownership and Boundaries"
+      - "Definition Rules"
+      - "Lifecycle"
+
+success_criteria:
+  - "A human can locate a target's complete alarm policy without searching cloud templates or console state."
+  - "Every target alarm declares its signal, dimensions, condition, evaluation, response, implementation, and any telemetry prerequisite."
+  - "The repository-wide target index links policies without duplicating mutable policy values."
+  - "Policy-to-IaC drift and live delivery proof remain explicit readiness requirements."

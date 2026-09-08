@@ -34,6 +34,7 @@ async function main(): Promise<void> {
 
   const lifecycleCalls: string[] = [];
   const permission = "smoke.smoke:read";
+  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Platform-testing fixture only." } as const;
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
@@ -49,11 +50,13 @@ async function main(): Promise<void> {
         method: "GET",
         path: "/echo",
         auth: { kind: "authenticated", permissions: [permission] },
+        observability: testObservability,
         handler: { handle: () => ({ status: 200, body: { ok: true } }) },
       });
       registry.registerJob({
         name: jobName.value,
         messageType: "smoke.rebuild" as QueueMessageType,
+        observability: testObservability,
         handler: { handle: () => undefined },
       });
       registry.registerHealthCheck({
@@ -121,6 +124,7 @@ async function main(): Promise<void> {
           method: "GET",
           path: "/echo",
           auth: { kind: "public" },
+          observability: testObservability,
           handler: { handle: () => ({ status: 200 }) },
         });
         registry.registerRoute({
@@ -128,6 +132,7 @@ async function main(): Promise<void> {
           method: "GET",
           path: "/echo-again",
           auth: { kind: "public" },
+          observability: testObservability,
           handler: { handle: () => ({ status: 200 }) },
         });
       },
@@ -146,11 +151,13 @@ async function main(): Promise<void> {
           method: "GET",
           path: "/billing-invoice",
           auth: { kind: "public" },
+          observability: testObservability,
           handler: { handle: () => ({ status: 200 }) },
         });
         registry.registerJob({
           name: foreignJobName.value,
           messageType: "billing.invoice.export" as QueueMessageType,
+          observability: testObservability,
           handler: { handle: () => undefined },
         });
         registry.registerHealthCheck({
@@ -181,6 +188,7 @@ async function main(): Promise<void> {
           method: "GET",
           path: "/echo",
           auth: { kind: "authenticated", permissions: ["smoke:missing"] },
+          observability: testObservability,
           handler: { handle: () => ({ status: 200 }) },
         });
       },
@@ -198,6 +206,7 @@ async function main(): Promise<void> {
           method: "GET",
           path: "/readyz",
           auth: { kind: "public" },
+          observability: testObservability,
           handler: { handle: () => ({ status: 200 }) },
         });
       },
@@ -213,11 +222,13 @@ async function main(): Promise<void> {
         registry.registerJob({
           name: jobName.value,
           messageType: "smoke.rebuild" as QueueMessageType,
+          observability: testObservability,
           handler: { handle: () => undefined },
         });
         registry.registerJob({
           name: jobName.value,
           messageType: "smoke.refresh" as QueueMessageType,
+          observability: testObservability,
           handler: { handle: () => undefined },
         });
       },

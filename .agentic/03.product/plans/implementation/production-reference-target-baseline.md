@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.production-reference-target-baseline
-version: 11
+version: 12
 status: draft
 layer: 03.product
 domain: platform-reference-target
@@ -306,7 +306,7 @@ provider or infrastructure choice is made.
 | Data classification and residency | Attribute sensitivity, initial EU-only tenant home, default cross-boundary denial, placement controls for logs/backups/support/AI, retention and deletion rules. | Core security classification concepts and the target policy direction are recorded. | `requirements captured` | EU target topology, data inventory, enforcement path, provider-location evidence, legal/privacy approval and cross-boundary exception process. |
 | Configuration and secrets | Versioned non-secret config, confidential value delivery, least-privilege access, rotation, no-secret logging. | Environment/config patterns and target references exist. | `requirements captured` | Secret provider/delivery design, target IAM/resource policy, rotation/recovery test, scan and audit evidence. |
 | Shared rate limiting and abuse defence | Consistent quota across replicas, route/principal policy, trusted address policy, safe failure decision. | `PlatformRateLimiter` contract and bounded in-memory limiter are tested. | `contract/local proof` | Shared-store adapter, target selection, network/credential design, failure policy, multi-replica proof. |
-| Operational observability | Structured redacted logs, metrics, traces where required, collection/export, dashboards, alert ownership, retention/access controls. | Safe record normalisation and platform seams exist. | `contract/local proof` | Selected delivery path, target resources, alert/runbook/access policy, failure and deployed evidence. |
+| Operational observability | Structured redacted logs, metrics, traces where required, capability profiles, NFR/SLO measurement, collection/export, dashboards, alert ownership, retention/access controls. | Safe record normalisation, controlled capability profiles, NFR-class/latency-interval references, and registry coverage have local proof; a target-owned alarm-policy standard and staging source catalogue are recorded, but they are not production proof. | `contract/local proof` | Selected delivery path and histogram semantics, target NFR/SLO values and error-budget policy, target resources, alert/runbook/access policy, failure and deployed evidence. |
 | Audit and security records | Durable, tamper-evident-enough record delivery, allowlisted facts, retention, access, export and review. | Record shape/normalisation direction exists; no durable sink. | `requirements captured` | Audit sink and integrity design, target resources, access/retention policy, verification and retrieval evidence. |
 | Relational persistence | Tenant-scoped durable data, migrations, encryption, transactions, backup/restore, access controls. | No selected platform production path. | `not assessed` | Bounded persistence contract/adapter/infra plan and restore proof before any entity data. |
 | Object/file storage | Profile images and documents, encryption, tenant isolation, lifecycle/retention, signed access, safe download. | Required by first release; no selected path. | `requirements captured` | Storage design, adapter/host delivery, isolation/retention/access proof. |

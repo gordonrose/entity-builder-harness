@@ -1,0 +1,170 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.source-material-review.04-deploy.platform-target-alerting-policy.2026-09-08
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   - security
+#   kind: review-record
+#   purpose: Record the OKF review of target-owned platform alerting-policy source material.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.source-material.03-product.platform-target-alerting-policy
+#     path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+#   - id: rag-rulebook.workflow.review-okf-source-material
+#     path: .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-09-08.04-deploy.platform-target-alerting-policy
+status: accepted
+source_material:
+  path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+  corpus_id: corpus.04.deploy
+  vertical: product-platform-target-alerting-policy
+  source_state: accepted
+  sha256: f0b8de8d3e143c941b3a356143ec095c5e056491a57b8ac2334ae4cf8ec21e6a
+  target_rule_paths:
+    - docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+    - architect
+    - agentic-engineer
+    - secops-engineer
+    - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations:
+  - iteration: 1
+    source_revision_summary: >
+      Reviewed the new target-alerting source for ownership, target-profile
+      placement, complete decision fields, safe telemetry boundaries,
+      infrastructure drift checks, runbook linkage, and a non-duplicating
+      repository index. The initial source includes the required corrections;
+      no unresolved change was necessary before derivation.
+    reviewer_assessments:
+      - role: architect
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.7
+          human_readability: 9.8
+          machine_readability: 9.7
+          cost_optimization: 9.6
+          security: 9.7
+          performance: 9.6
+          token_optimization: 9.8
+        recommendations:
+          - recommendation_id: ARCH-REC-001
+            priority: low
+            summary: Add a target row only when a new target declares an alarm policy, so the index cannot imply a policy exists before the target is designed.
+        evidence:
+          - docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+          - infra/04.deploy/03.product/targets/README.md
+      - role: agentic-engineer
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.6
+          necessity: 9.7
+          production_grade_gaps: 9.6
+          execution_variables: 9.8
+          human_readability: 9.7
+          machine_readability: 9.8
+          cost_optimization: 9.7
+          security: 9.6
+          performance: 9.6
+          token_optimization: 9.8
+        recommendations:
+          - recommendation_id: AE-REC-001
+            priority: low
+            summary: Keep the index link-only so retrieval can locate the policy without introducing a second threshold source.
+        evidence:
+          - docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+          - scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+      - role: secops-engineer
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.7
+          necessity: 9.8
+          production_grade_gaps: 9.6
+          execution_variables: 9.6
+          human_readability: 9.6
+          machine_readability: 9.7
+          cost_optimization: 9.6
+          security: 9.9
+          performance: 9.6
+          token_optimization: 9.7
+        recommendations:
+          - recommendation_id: SEC-REC-001
+            priority: low
+            summary: Keep notification endpoints and notification content outside repository evidence and link to a safe runbook instead.
+        evidence:
+          - docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+          - docs/aws/runbooks/platform-shell-staging-alarms.md
+      - role: senior-sre
+        overall_score: 9.7
+        decision: pass
+        blocking_gaps: []
+        dimension_scores:
+          coverage: 9.8
+          necessity: 9.8
+          production_grade_gaps: 9.7
+          execution_variables: 9.7
+          human_readability: 9.7
+          machine_readability: 9.7
+          cost_optimization: 9.7
+          security: 9.7
+          performance: 9.8
+          token_optimization: 9.7
+        recommendations:
+          - recommendation_id: SRE-REC-001
+            priority: low
+            summary: Require explicit missing-data handling and telemetry-prerequisite checks so provider-valid alarms cannot silently be operationally blind.
+        evidence:
+          - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+          - scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+    cross_review_summary:
+      agreement:
+        - The target profile is the only suitable canonical location for target-specific policy values.
+        - A link-only target index improves discovery without creating threshold drift.
+        - Complete alarm definitions need provider/resource scope, missing-data semantics, notification ownership, and a safe runbook.
+        - Policy-to-IaC comparison and read-only live proof are separate from resource syntax and remain required.
+      disagreement: []
+      unresolved_blockers: []
+    recommendation_handling:
+      applied:
+        - recommendation_id: ARCH-REC-001
+          summary: The source and index state that only targets which declare a policy receive a row.
+        - recommendation_id: AE-REC-001
+          summary: The index carries identifiers and links only; target profile remains the sole threshold and dimension source.
+        - recommendation_id: SEC-REC-001
+          summary: The source forbids sensitive notification evidence and requires safe runbook diagnosis.
+        - recommendation_id: SRE-REC-001
+          summary: The source and rule require explicit missing-data semantics and fail-closed telemetry prerequisites.
+      rejected: []
+    rerun_required: false
+final_decision:
+  status: accepted
+  summary: >
+    The reviewed source is sufficiently complete and deterministic to become a
+    product deploy rule. It improves discoverability without authorizing AWS
+    mutation or weakening target-specific telemetry and incident controls.
+  accepted_source_sha256: f0b8de8d3e143c941b3a356143ec095c5e056491a57b8ac2334ae4cf8ec21e6a
+  accepted_at_utc: "2026-09-08T20:45:14Z"
+  required_before_derivation:
+    - Add a source-to-rule derivation report.
+    - Register the active source-to-rule projection.
+    - Validate the target reference and static policy gate.

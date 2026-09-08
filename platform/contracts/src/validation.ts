@@ -13,6 +13,7 @@ import {
 } from "./errors";
 import { isPlatformContractName } from "./identifiers";
 import type { PlatformJobRegistration } from "./jobs";
+import { isPlatformObservabilityRequirement } from "./observability-profiles";
 import type {
   HttpMethod,
   PlatformResourceAuthorization,
@@ -78,6 +79,10 @@ export function validatePlatformRouteRegistration(
   const auth = route["auth"];
   if (!isRouteAuthRequirement(auth)) {
     return contractFailure(malformedPlatformRoute("Route auth requirement must be public or authenticated."));
+  }
+
+  if (!isPlatformObservabilityRequirement(route["observability"])) {
+    return contractFailure(malformedPlatformRoute("Route observability must reference a profile or provide a bounded justified opt-out."));
   }
 
   const tenantRequirement = route["tenant"];
@@ -154,6 +159,10 @@ export function validatePlatformJobRegistration(job: PlatformJobRegistration): R
         messageType: stringifyDetail(messageType),
       }),
     );
+  }
+
+  if (!isPlatformObservabilityRequirement(job["observability"])) {
+    return contractFailure(malformedPlatformJob("Job observability must reference a profile or provide a bounded justified opt-out."));
   }
 
   const validator = job["validator"];

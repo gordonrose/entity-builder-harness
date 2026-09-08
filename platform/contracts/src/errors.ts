@@ -1,7 +1,7 @@
 import type { Permission } from "@kanbien/core/authz";
 import type { JsonValue } from "@kanbien/core/shared";
 
-export type PlatformRegistrationKind = "app" | "route" | "permission" | "job" | "health" | "config";
+export type PlatformRegistrationKind = "app" | "route" | "permission" | "job" | "health" | "config" | "observability-profile";
 
 export type PlatformContractErrorCode =
   | "PLATFORM_CONTRACT_INVALID_NAME"
@@ -11,7 +11,9 @@ export type PlatformContractErrorCode =
   | "PLATFORM_CONTRACT_NAMESPACE_MISMATCH"
   | "PLATFORM_CONTRACT_MALFORMED_PERMISSION"
   | "PLATFORM_CONTRACT_MALFORMED_ROUTE"
-  | "PLATFORM_CONTRACT_MALFORMED_JOB";
+  | "PLATFORM_CONTRACT_MALFORMED_JOB"
+  | "PLATFORM_CONTRACT_MALFORMED_OBSERVABILITY_PROFILE"
+  | "PLATFORM_CONTRACT_UNKNOWN_OBSERVABILITY_PROFILE";
 
 export interface PlatformContractError {
   readonly code: PlatformContractErrorCode;
@@ -43,6 +45,17 @@ export function unknownPlatformPermission(permission: Permission, declaredPermis
   };
 }
 
+export function unknownPlatformObservabilityProfile(
+  profile: string,
+  declaredProfiles: readonly string[],
+): PlatformContractError {
+  return {
+    code: "PLATFORM_CONTRACT_UNKNOWN_OBSERVABILITY_PROFILE",
+    defaultMessage: "Route or job references an observability profile that has not been declared.",
+    details: { profile, declaredProfiles: [...declaredProfiles] },
+  };
+}
+
 export function platformRegistrationNamespaceMismatch(
   kind: PlatformRegistrationKind,
   appId: string,
@@ -65,6 +78,13 @@ export function malformedPlatformRoute(reason: string, details?: Readonly<Record
 
 export function malformedPlatformJob(reason: string, details?: Readonly<Record<string, JsonValue>>): PlatformContractError {
   return platformContractError("PLATFORM_CONTRACT_MALFORMED_JOB", reason, details);
+}
+
+export function malformedPlatformObservabilityProfile(
+  reason: string,
+  details?: Readonly<Record<string, JsonValue>>,
+): PlatformContractError {
+  return platformContractError("PLATFORM_CONTRACT_MALFORMED_OBSERVABILITY_PROFILE", reason, details);
 }
 
 export function invalidContractName(label: string, value: unknown): PlatformContractError {

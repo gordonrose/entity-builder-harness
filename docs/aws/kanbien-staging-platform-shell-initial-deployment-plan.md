@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 10
+version: 11
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -87,6 +87,11 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
   CloudFormation completed successfully, and both the workflow and an
   independent client verified TLS, `/livez` = `200`, and an unauthenticated
   protected route = `401`.
+- The live target currently has two `OK` ALB alarms, a confirmed SNS email
+  subscription, a 14-day log group with a recent stream event, and one desired
+  plus one running platform-shell task. The local source now defines the three
+  missing service alarms (running-count mismatch, high CPU, high memory), but
+  no AWS update has been requested or applied for this follow-up.
 
 ## Remaining verification work
 
@@ -118,7 +123,7 @@ verification work above determines when its readiness record can become ready.
 | Shared rate limit | Provider adapter backed by a new DynamoDB fixed-window counter table with TTL and task-role-only `UpdateItem` access | Enforces a shared quota across task replicas without storing raw tokens or a durable personal-data profile. |
 | Client address | A target-selected resolver that uses the final ALB-appended `X-Forwarded-For` address only because the task security group admits traffic solely from the ALB | The generic server continues to distrust forwarded headers by default; trust exists only at this reviewed target boundary. |
 | Edge protection | New WAFv2 web ACL associated with the existing ALB; every rule is scoped to the new staging host | Gives managed-rule and IP-rate protection before the service while avoiding changes to legacy host behaviour. |
-| Observability | ECS `awslogs` delivery of redacted stdout JSON to a 14-day CloudWatch log group; ECS and ALB alarms to a dedicated SNS email topic | Uses a host log facility rather than coupling platform code to CloudWatch. |
+| Observability | ECS `awslogs` delivery of redacted stdout JSON to a 14-day CloudWatch log group; ALB alarms in the foundation stack; service-specific ECS alarms in the service stack; all notify a dedicated SNS email topic | Keeps shared alert delivery with shared ALB concerns, while the service stack owns metrics that name one ECS service. The running-count alarm is gated on enhanced Container Insights and actual metric publication. |
 | Runtime image | Build from a digest-pinned Node 22 image; run only the compiled output and production dependencies in a separately digest-pinned Distroless Node 22 non-root image | The deployable artifact omits a shell, package manager, and build toolchain while preserving a reproducible build boundary. |
 | Rollback | ECS deployment circuit breaker with rollback, previous task definition retained, listener rule/DNS only removed through a separate explicit retirement action | A failed new workload does not take over or interrupt an existing host. |
 
@@ -161,10 +166,26 @@ verification work above determines when its readiness record can become ready.
    required a complete zero-critical/zero-high ECR scan, generated and
    attested the SBOM and provenance, created or updated the service stack, and
    passed public liveness plus unauthenticated-route smoke.
-10. Remaining: prove wrong-permission `403`, correctly scoped `200`, `429`
+10. Remaining before the next service-stack update: make a governed,
+   read-only inspection of the existing cluster setting and required metric.
+   If `containerInsights` is not `enhanced`, plan a separate explicit ECS
+   cluster-setting update; do not deploy a running-count alarm that has no
+   source metric.
+11. Remaining: review a foundation-stack update that grants the existing
+   service CloudFormation execution role permission to manage only the three
+   named ECS alarms and tag them. Review the corresponding GitHub OIDC policy
+   update, which grants only `ecs:DescribeClusters` and
+   `cloudwatch:ListMetrics` for the preflight. These are separate, bounded AWS
+   operations; their source declarations are not proof that the live roles
+   changed.
+12. Remaining after those prerequisites: review a service-stack change set
+   that adds exactly the three service-owned alarm resources. The workflow must
+   run the read-only telemetry preflight before it mutates that stack. Then
+   record safe alarm-state and end-to-end notification-delivery evidence.
+13. Remaining: prove wrong-permission `403`, correctly scoped `200`, `429`
    from the shared limiter, WAF/routing evidence, log delivery, alarm
    configuration, and a rollback exercise.
-11. After tagged foundation resources exist, activate the `service` cost
+14. After tagged foundation resources exist, activate the `service` cost
    allocation tag in the account Billing console, wait for billing visibility,
    configure the target-scoped monthly/forecast budget alerts, and record the
    proof. Do not treat a resource tag as a functioning budget by itself.
@@ -220,5 +241,8 @@ service deployment remains blocked until all are true:
   available;
 - task and execution IAM roles, WAF scope-down rules, listener priority, and
   SNS subscription are reviewed;
+- for any change that includes the running-count alarm, the existing cluster
+  is confirmed to use `containerInsights=enhanced` and to publish the reviewed
+  `ECS/ContainerInsights` `RunningTaskCount` metric for this service;
 - the user explicitly approves the exact staging stack operation in the
   current chat.

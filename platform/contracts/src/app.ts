@@ -10,6 +10,7 @@ import type { PlatformContractError } from "./errors";
 import type { FeatureFlagReader } from "./flags";
 import type { PlatformAppId, PlatformHealthName } from "./identifiers";
 import type { PlatformJobRegistration } from "./jobs";
+import type { PlatformCapabilityObservabilityProfile } from "./observability-profiles";
 import type { PlatformRouteRegistration } from "./routes";
 
 export interface PlatformPermissionDeclaration {
@@ -33,6 +34,7 @@ export interface PlatformAppRegistry {
   registerPermission(permission: PlatformPermissionDeclaration): Result<void, PlatformContractError>;
   registerRoute(route: PlatformRouteRegistration): Result<void, PlatformContractError>;
   registerJob(job: PlatformJobRegistration): Result<void, PlatformContractError>;
+  registerObservabilityProfile(profile: PlatformCapabilityObservabilityProfile): Result<void, PlatformContractError>;
   registerHealthCheck(healthCheck: PlatformHealthRegistration): Result<void, PlatformContractError>;
   registerConfigSchema<TConfig>(schema: ConfigSchema<TConfig>): Result<void, PlatformContractError>;
 }

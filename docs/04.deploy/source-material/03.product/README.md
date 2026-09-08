@@ -36,3 +36,6 @@ being deployed.
 - `platform-shell-runtime-family.md` records ECS Fargate as the first AWS
   planning runtime family for the platform shell and names blockers before AWS
   mutation.
+- `platform-target-alerting-policy.md` defines the target-owned canonical alarm
+  catalogue, required alarm fields, implementation drift checks, and operator
+  response boundary for product platform services.

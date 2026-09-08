@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -47,11 +47,20 @@ bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh --out
 The renderer is run by the static policy gate and GitHub workflow before AWS
 template validation. Do not edit or commit the rendered output.
 
-`service.yml` creates or updates the Fargate task definition and ECS service.
-It accepts only an immutable `repository@sha256:...` image reference. It cannot
-select a mutable image tag, inject a Cognito client secret, or use an arbitrary
-security group. The final task has no writeable root filesystem and no ECS exec
-session access.
+`service.yml` creates or updates the Fargate task definition and ECS service,
+plus the alarms whose metric dimensions belong to that one service: running
+task count, CPU utilisation, and memory utilisation. It accepts only an
+immutable `repository@sha256:...` image reference. It cannot select a mutable
+image tag, inject a Cognito client secret, or use an arbitrary security group.
+The final task has no writeable root filesystem and no ECS exec session access.
+
+This is intentionally different from `foundation/alerting.yml`. The foundation
+owns the shared SNS topic and ALB target-group alarms because they are shared
+dependencies. The service stack owns alarms that name this service and derive
+their `ClusterName` and `ServiceName` dimensions from its inputs. The
+target-profile alarm definitions are the source of the complete policy; the
+static policy check verifies that both CloudFormation stacks implement them
+without drift.
 
 The foundation also creates `kanbien-staging-platform-shell-service-deploy`, a
 CloudFormation execution role that can manage the ECS task definition and this

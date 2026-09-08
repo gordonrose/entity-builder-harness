@@ -17,13 +17,16 @@ implementation.
 | `contexts.ts` | Runtime, request, and job context shapes. | Apps receive shared runtime facts without being given platform internals. |
 | `routes.ts` | HTTP route declarations and their auth, tenant, and resource-policy inputs. | It describes what a route may request; it does not execute a route. |
 | `jobs.ts` | Background-job declarations. | Jobs have a queue-shaped contract distinct from HTTP routes. |
+| `observability.ts` | Controlled operational nomenclature: capability identity, action, interaction source, execution context, outcome, job-delivery disposition, and canonical emitted field names. | It makes logs, metrics, and traces semantically comparable without selecting a provider or writing telemetry. |
+| `observability-profiles.ts` | Capability-level signal declarations, NFR-class references, latency intervals, safe field allowlists, and explicit opt-outs. | It makes each route/job choose governed operational evidence without embedding provider or alert policy. |
 | `app.ts` | App mount, registry, permission, health, lifecycle, and dependency declarations. | It is the one app-to-platform integration socket. |
 | `validation.ts` | Cross-declaration checks and reserved-route rules. | It reads declarations after they are defined, avoiding declaration-to-validator cycles. |
 | `index.ts` | Deliberate public exports only. | Callers remain insulated from internal source reorganisation. |
 
 The dependency order is foundational errors and identifiers; then flags,
-contexts, and declarations; then validation; then the barrel. Topic files may
-import local relatives or public `@kanbien/core` exports only.
+contexts, observability vocabulary and profiles, and declarations; then validation; then
+the barrel. Topic files may import local relatives or public `@kanbien/core`
+exports only.
 
 ## Detailed guide to the files
 
@@ -168,11 +171,60 @@ const job: PlatformJobRegistration = { // Declare a background job for later wor
 void job; // Mark the illustrative declaration as used.
 ```
 
+### `observability.ts` — the meanings shared by future signals
+
+This file locks a small provider-neutral naming system before any route or job
+is required to emit telemetry. A capability says what meaningful action is
+being performed, such as `billing.invoice.export`. The action is the controlled
+verb `export`; `POST` remains a transport method and must not be substituted
+for it. Interaction source says how work began—such as `voice`—while execution
+context says where it ran—such as `worker`. Those distinctions make later
+investigation precise without recording a raw user, tenant, resource, path, or
+message payload.
+
+The external field names are deliberately lower snake case:
+`capability`, `action`, `actor_type`, `interaction_source`,
+`execution_context`, `http_method`, `http_status_code`,
+`job_delivery_disposition`, `outcome`, and `error_class`. The TypeScript
+properties remain readable camel case, while the declared mapping prevents each
+emitter or provider adapter from inventing a different label spelling.
+
+This file does not itself log, trace, record a metric, select CloudWatch or
+OpenTelemetry, or prove a route uses the vocabulary. It is the common
+dictionary that the profile, registry, server, worker, and adapter slices use.
+
+### `observability-profiles.ts` — evidence and measurement intent per capability
+
+This file is where an application declares the ordinary operational evidence
+for one capability. A profile names the capability and its controlled business
+action, then explicitly permits any combination of operational logs, metrics,
+and traces. It can allow only canonical operational fields; metric dimensions
+are a stricter bounded subset so a profile cannot casually use a tenant, user,
+request ID, raw path, or arbitrary business value as a high-cardinality label.
+
+It also separates *measurement intent* from *NFR policy*. For example,
+`interactive_read` plus `request_response_latency` means “measure this
+interval”; it does not promise a percentile, timeout, error budget, retention
+period, dashboard, or alert. Those values belong in centrally reviewed
+target-operational policy after an adapter has demonstrated a real histogram
+and percentile calculation.
+
+Routes and jobs have an `observability` requirement. The ordinary form
+references a profile registered during app mounting. The exceptional form uses
+a controlled opt-out reason and a short bounded justification. A route or job
+cannot check on its own that a referenced profile exists elsewhere, so the
+complete runtime registry performs that relationship check once all apps have
+mounted.
+
+This file does not define durable audit or security evidence, select a telemetry
+provider, invoke logging/metrics/tracing helpers, calculate p95/p99, or create
+alerts. It describes only the safe app-to-platform declaration boundary.
+
 ### `app.ts` — the app-to-platform integration socket
 
 This file defines what an app can contribute during mounting: permissions,
-routes, jobs, health checks, config schemas, lifecycle hooks, and its declared
-dependencies. `PlatformAppRegistry` is intentionally narrow. It lets an app
+routes, jobs, observability profiles, health checks, config schemas, lifecycle
+hooks, and its declared dependencies. `PlatformAppRegistry` is intentionally narrow. It lets an app
 register intent, not call `listen`, install global middleware, configure CORS,
 or access a raw server or worker loop.
 

@@ -6,9 +6,23 @@ import {
   duplicatePlatformRegistration,
   featureFlagName,
   fixedFeatureFlagReader,
+  isPlatformCapabilityAction,
+  isPlatformExecutionContext,
+  isPlatformInteractionSource,
+  isPlatformJobDeliveryDisposition,
+  isPlatformOperationalOutcome,
   platformAppId,
+  platformCapabilityActions,
+  platformCapabilityName,
+  platformExecutionContexts,
+  platformInteractionSources,
+  platformJobDeliveryDispositions,
+  platformOperationalFieldNames,
+  platformOperationalOutcomes,
   platformJobName,
+  platformObservabilityProfileName,
   platformRouteName,
+  validatePlatformCapabilityObservabilityProfile,
   validatePlatformJobRegistration,
   validatePlatformPermissionDeclaration,
   validatePlatformRouteRegistration,
@@ -53,6 +67,54 @@ async function main(): Promise<void> {
     throw new Error("Expected job name to be valid.");
   }
 
+  const capabilityName = platformCapabilityName("crm.deal.export"); // Validate the stable app-owned capability identity used by the observability nomenclature.
+  const observabilityProfileName = platformObservabilityProfileName("crm.deal.export"); // Validate one app-owned observability-profile identity.
+  equal(capabilityName.ok, true); // Prove the capability name accepts the safe dotted-name syntax used by other platform declarations.
+  if (!capabilityName.ok || !observabilityProfileName.ok) { // Narrow both checked names before reading them in later declarations.
+    throw new Error("Expected platform capability name to be valid."); // Fail the runtime contract test if the intended identity is rejected.
+  }
+  equal(capabilityName.value, "crm.deal.export"); // Prove branding preserves the declared runtime value.
+  equal(platformCapabilityName("CRM Deal Export").ok, false); // Reject a malformed capability name rather than accepting a free-form label.
+  const validObservabilityProfile = {
+    name: observabilityProfileName.value,
+    capability: capabilityName.value,
+    action: "export" as const,
+    signals: ["operational_log", "metric", "trace"] as const,
+    logFieldNames: ["capability", "action", "outcome"] as const,
+    metricDimensionFieldNames: ["capability", "action", "outcome"] as const,
+    traceAttributeNames: ["capability", "action", "outcome"] as const,
+    nfrObjectives: [{ nfrClass: "async_completion" as const, measurement: "job_execution_latency" as const }],
+  };
+  deepEqual(validatePlatformCapabilityObservabilityProfile(validObservabilityProfile), { ok: true, value: undefined });
+  equal(validatePlatformCapabilityObservabilityProfile({ ...validObservabilityProfile, signals: ["trace"], nfrObjectives: validObservabilityProfile.nfrObjectives }).ok, false);
+  equal(platformCapabilityActions.includes("export"), true); // Prove the controlled business-action list includes a supported action.
+  equal(isPlatformCapabilityAction("export"), true); // Prove the action guard accepts a controlled action.
+  equal(isPlatformCapabilityAction("edit"), false); // Prove the action guard rejects an unapproved synonym.
+  equal(platformInteractionSources.includes("voice"), true); // Prove a bounded voice interaction source is part of the documented vocabulary.
+  equal(isPlatformInteractionSource("voice"), true); // Prove the interaction-source guard accepts a known value.
+  equal(isPlatformInteractionSource("browser-extension"), false); // Prove the interaction-source guard rejects an unreviewed value.
+  deepEqual(platformExecutionContexts, ["server", "worker", "scheduler", "cli"]); // Prove execution context remains separate from interaction source.
+  equal(isPlatformExecutionContext("worker"), true); // Prove the execution-context guard accepts a known runtime location.
+  equal(isPlatformExecutionContext("voice"), false); // Prove a source channel cannot be mistaken for a runtime location.
+  deepEqual(platformOperationalOutcomes, ["accepted", "succeeded", "denied", "rejected", "failed", "cancelled", "timed_out"]); // Prove the logical-outcome vocabulary is explicit and ordered.
+  equal(isPlatformOperationalOutcome("denied"), true); // Prove the outcome guard accepts a policy denial.
+  equal(isPlatformOperationalOutcome("error"), false); // Prove vague transport-oriented outcome words are not accepted as canonical vocabulary.
+  deepEqual(platformJobDeliveryDispositions, ["succeeded", "retry_scheduled", "dead_lettered"]); // Prove worker delivery disposition is independent of business outcome.
+  equal(isPlatformJobDeliveryDisposition("retry_scheduled"), true); // Prove the delivery-disposition guard accepts a scheduled retry.
+  equal(isPlatformJobDeliveryDisposition("retry"), false); // Prove the legacy shorthand is not the future canonical emitted value.
+  deepEqual(platformOperationalFieldNames, { // Prove every future signal profile uses the one canonical emitted field-name map.
+    capability: "capability", // Confirm the stable capability field name.
+    action: "action", // Confirm the controlled business-action field name.
+    actorType: "actor_type", // Confirm the bounded actor-category field name.
+    interactionSource: "interaction_source", // Confirm the initiation-channel field name.
+    executionContext: "execution_context", // Confirm the runtime-location field name.
+    httpMethod: "http_method", // Confirm the HTTP-method field name.
+    httpStatusCode: "http_status_code", // Confirm the numeric HTTP-status field name.
+    jobDeliveryDisposition: "job_delivery_disposition", // Confirm the worker-delivery field name.
+    outcome: "outcome", // Confirm the logical-result field name.
+    errorClass: "error_class", // Confirm the bounded error-class field name.
+  }); // Finish the canonical mapping assertion.
+
   const flagName = featureFlagName("crm.deals.bulk-import");
   equal(flagName.ok, true);
   if (!flagName.ok) {
@@ -79,6 +141,7 @@ async function main(): Promise<void> {
     method: "GET",
     path: "/deals/:id",
     auth: { kind: "authenticated", permissions: [dealReadPermission] },
+    observability: { kind: "profile" as const, profile: observabilityProfileName.value },
     handler: { handle: () => ({ status: 200 }) },
   } as const;
   deepEqual(validatePlatformRouteRegistration(validRoute, { declaredPermissions: [dealReadPermission] }), {
@@ -123,15 +186,31 @@ async function main(): Promise<void> {
     validatePlatformRouteRegistration({ ...validRoute, method: "TRACE" as never }, { declaredPermissions: [dealReadPermission] }),
     "PLATFORM_CONTRACT_MALFORMED_ROUTE",
   );
+  expectContractError(
+    validatePlatformRouteRegistration({ ...validRoute, observability: undefined as never }, { declaredPermissions: [dealReadPermission] }),
+    "PLATFORM_CONTRACT_MALFORMED_ROUTE",
+  );
+  expectContractError(
+    validatePlatformRouteRegistration({
+      ...validRoute,
+      observability: { kind: "opt_out", reason: "non_user_workload_path", justification: "" } as never,
+    }, { declaredPermissions: [dealReadPermission] }),
+    "PLATFORM_CONTRACT_MALFORMED_ROUTE",
+  );
 
   const validJob = {
     name: jobName.value,
     messageType: "crm.deals.recalculate-score" as QueueMessageType,
+    observability: { kind: "profile" as const, profile: observabilityProfileName.value },
     handler: { handle: () => undefined },
   };
   deepEqual(validatePlatformJobRegistration(validJob), { ok: true, value: undefined });
   expectContractError(
     validatePlatformJobRegistration({ ...validJob, messageType: "CRM Deals" as never }),
+    "PLATFORM_CONTRACT_MALFORMED_JOB",
+  );
+  expectContractError(
+    validatePlatformJobRegistration({ ...validJob, observability: undefined as never }),
     "PLATFORM_CONTRACT_MALFORMED_JOB",
   );
 
@@ -148,11 +227,13 @@ async function main(): Promise<void> {
       }
 
       registry.registerPermission({ permission: dealReadPermission });
+      registry.registerObservabilityProfile(validObservabilityProfile);
       registry.registerRoute({
         name: routeName.value,
         method: "GET",
         path: "/deals/:id",
         auth: { kind: "authenticated", permissions: [dealReadPermission] },
+        observability: { kind: "profile", profile: observabilityProfileName.value },
         handler: { handle: () => ({ status: 200 }) },
       });
     },
@@ -169,6 +250,9 @@ async function main(): Promise<void> {
         return { ok: true, value: undefined };
       },
       registerJob() {
+        return { ok: true, value: undefined };
+      },
+      registerObservabilityProfile() {
         return { ok: true, value: undefined };
       },
       registerHealthCheck() {

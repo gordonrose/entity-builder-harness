@@ -1,10 +1,12 @@
 export {
   duplicatePlatformRegistration,
   malformedPlatformJob,
+  malformedPlatformObservabilityProfile,
   malformedPlatformPermission,
   malformedPlatformRoute,
   platformRegistrationNamespaceMismatch,
   reservedPlatformPath,
+  unknownPlatformObservabilityProfile,
   unknownPlatformPermission,
 } from "./errors";
 export type {
@@ -37,6 +39,57 @@ export type {
   PlatformJobName,
   PlatformRouteName,
 } from "./identifiers";
+export {
+  isPlatformCapabilityAction,
+  isPlatformExecutionContext,
+  isPlatformInteractionSource,
+  isPlatformJobDeliveryDisposition,
+  isPlatformOperationalFieldName,
+  isPlatformOperationalOutcome,
+  platformCapabilityActions,
+  platformCapabilityName,
+  platformExecutionContexts,
+  platformInteractionSources,
+  platformJobDeliveryDispositions,
+  platformOperationalFieldNames,
+  platformOperationalOutcomes,
+} from "./observability";
+export type {
+  PlatformCapabilityAction,
+  PlatformCapabilityName,
+  PlatformExecutionContext,
+  PlatformInteractionSource,
+  PlatformJobDeliveryDisposition,
+  PlatformOperationalFieldName,
+  PlatformOperationalNomenclature,
+  PlatformOperationalOutcome,
+} from "./observability";
+export {
+  isPlatformLatencyMeasurement,
+  isPlatformMetricDimensionFieldName,
+  isPlatformNfrClass,
+  isPlatformObservabilityOptOutReason,
+  isPlatformObservabilityRequirement,
+  isPlatformObservabilitySignalKind,
+  platformLatencyMeasurements,
+  platformMetricDimensionFieldNames,
+  platformNfrClasses,
+  platformObservabilityOptOutReasons,
+  platformObservabilityProfileName,
+  platformObservabilitySignalKinds,
+  validatePlatformCapabilityObservabilityProfile,
+} from "./observability-profiles";
+export type {
+  PlatformCapabilityObservabilityProfile,
+  PlatformLatencyMeasurement,
+  PlatformMetricDimensionFieldName,
+  PlatformNfrClass,
+  PlatformNfrObjectiveReference,
+  PlatformObservabilityOptOutReason,
+  PlatformObservabilityProfileName,
+  PlatformObservabilityRequirement,
+  PlatformObservabilitySignalKind,
+} from "./observability-profiles";
 export type {
   PlatformJobContext,
   PlatformRequestContext,

@@ -8,8 +8,10 @@ import { tenantContext, tenantId } from "@kanbien/core/tenancy";
 import {
   definePlatformApp,
   platformAppId,
+  platformCapabilityName,
   platformHealthName,
   platformJobName,
+  platformObservabilityProfileName,
   platformRouteName,
 } from "@kanbien/platform-contracts";
 import { createPlatformTestMountDeps, createPlatformTestQueueMessage } from "@kanbien/platform-testing";
@@ -28,12 +30,23 @@ async function main(): Promise<void> {
   const foreignRouteName = platformRouteName("billing.invoice.list");
   const foreignJobName = platformJobName("billing.invoice.export");
   const foreignHealthName = platformHealthName("billing.readiness");
+  const observabilityProfileName = platformObservabilityProfileName("smoke.echo.read");
+  const capabilityName = platformCapabilityName("smoke.echo.read");
 
-  if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok || !foreignRouteName.ok || !foreignJobName.ok || !foreignHealthName.ok) {
+  if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok || !foreignRouteName.ok || !foreignJobName.ok || !foreignHealthName.ok || !observabilityProfileName.ok || !capabilityName.ok) {
     throw new Error("Expected valid platform runtime primitives.");
   }
 
   const permission = "smoke.smoke:read";
+  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Runtime registry fixture only." } as const;
+  const observabilityProfile = {
+    name: observabilityProfileName.value,
+    capability: capabilityName.value,
+    action: "read" as const,
+    signals: ["operational_log", "metric", "trace"] as const,
+    metricDimensionFieldNames: ["capability", "action", "outcome"] as const,
+    nfrObjectives: [{ nfrClass: "interactive_read" as const, measurement: "request_response_latency" as const }],
+  };
   const configSchema: ConfigSchema<{ readonly enabled: boolean }> = {
     parse: () => ({ ok: true, value: { enabled: true } }),
   };
@@ -57,16 +70,19 @@ async function main(): Promise<void> {
     },
     mount(registry) {
       registry.registerPermission({ permission });
+      registry.registerObservabilityProfile(observabilityProfile);
       registry.registerRoute({
         name: routeName.value,
         method: "GET",
         path: "/echo",
         auth: { kind: "authenticated", permissions: [permission] },
+        observability: { kind: "profile", profile: observabilityProfileName.value },
         handler: { handle: () => ({ status: 200 }) },
       });
       registry.registerJob({
         name: jobName.value,
         messageType: "smoke.rebuild" as QueueMessageType,
+        observability: testObservability,
         handler: { handle: () => undefined },
       });
       registry.registerHealthCheck({
@@ -96,6 +112,7 @@ async function main(): Promise<void> {
   }
   equal(mounted.value.routes.length, 1);
   equal(mounted.value.jobs.length, 1);
+  equal(mounted.value.observabilityProfiles.length, 1);
   equal(mounted.value.healthChecks.length, 1);
   equal(mounted.value.configSchemas.length, 1);
   equal(mounted.value.configSchemas[0]?.parse(recordConfigSource({})).ok, true);
@@ -111,6 +128,7 @@ async function main(): Promise<void> {
             method: "GET",
             path: "/echo",
             auth: { kind: "authenticated", permissions: ["smoke:missing"] },
+            observability: testObservability,
             handler: { handle: () => ({ status: 200 }) },
           });
         },
@@ -125,6 +143,50 @@ async function main(): Promise<void> {
   equal(invalidMount.error.code, "PLATFORM_RUNTIME_REGISTRY_INVALID");
   equal(invalidMount.error.contractErrors.some((error) => error.code === "PLATFORM_CONTRACT_UNKNOWN_PERMISSION"), true);
 
+  const unknownProfileMount = await mountPlatformRuntimeApps({
+    apps: [
+      definePlatformApp({
+        id: appId.value,
+        name: "Unknown observability profile",
+        mount(registry) {
+          registry.registerRoute({
+            name: routeName.value,
+            method: "GET",
+            path: "/unknown-profile",
+            auth: { kind: "public" },
+            observability: { kind: "profile", profile: observabilityProfileName.value },
+            handler: { handle: () => ({ status: 200 }) },
+          });
+        },
+      }),
+    ],
+    deps: createPlatformTestMountDeps(),
+  });
+  equal(unknownProfileMount.ok, false);
+  if (unknownProfileMount.ok) {
+    throw new Error("Expected an unknown observability profile to fail mounting.");
+  }
+  equal(unknownProfileMount.error.contractErrors.some((error) => error.code === "PLATFORM_CONTRACT_UNKNOWN_OBSERVABILITY_PROFILE"), true);
+
+  const duplicateProfileMount = await mountPlatformRuntimeApps({
+    apps: [
+      definePlatformApp({
+        id: appId.value,
+        name: "Duplicate observability profile",
+        mount(registry) {
+          registry.registerObservabilityProfile(observabilityProfile);
+          registry.registerObservabilityProfile(observabilityProfile);
+        },
+      }),
+    ],
+    deps: createPlatformTestMountDeps(),
+  });
+  equal(duplicateProfileMount.ok, false);
+  if (duplicateProfileMount.ok) {
+    throw new Error("Expected duplicate observability profiles to fail mounting.");
+  }
+  equal(duplicateProfileMount.error.contractErrors.some((error) => error.code === "PLATFORM_CONTRACT_DUPLICATE_REGISTRATION"), true);
+
   const namespaceMismatch = await mountPlatformRuntimeApps({
     apps: [
       definePlatformApp({
@@ -137,11 +199,13 @@ async function main(): Promise<void> {
             method: "GET",
             path: "/billing-invoice",
             auth: { kind: "public" },
+            observability: testObservability,
             handler: { handle: () => ({ status: 200 }) },
           });
           registry.registerJob({
             name: foreignJobName.value,
             messageType: "billing.invoice.export" as QueueMessageType,
+            observability: testObservability,
             handler: { handle: () => undefined },
           });
           registry.registerHealthCheck({
@@ -182,6 +246,7 @@ async function main(): Promise<void> {
             method: "GET",
             path: "/shared",
             auth: { kind: "public" },
+            observability: testObservability,
             handler: { handle: () => ({ status: 200 }) },
           });
         },
@@ -195,6 +260,7 @@ async function main(): Promise<void> {
             method: "GET",
             path: "/shared",
             auth: { kind: "public" },
+            observability: testObservability,
             handler: { handle: () => ({ status: 200 }) },
           });
         },

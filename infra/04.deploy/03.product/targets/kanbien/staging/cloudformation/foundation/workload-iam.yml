@@ -84,6 +84,30 @@ Resources:
                 Action:
                   - elasticloadbalancing:DescribeTargetGroups
                 Resource: "*"
+              - Sid: CreateOnlyPlatformShellServiceAlarmDefinitions
+                Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricAlarm
+                Resource:
+                  - !Sub arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-running-count-mismatch
+                  - !Sub arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-high-cpu
+                  - !Sub arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-high-memory
+                Condition:
+                  ForAllValues:StringEquals:
+                    cloudwatch:AlarmActions:
+                      - !Ref AlarmTopic
+              - Sid: ManageOnlyPlatformShellServiceAlarmLifecycle
+                Effect: Allow
+                Action:
+                  - cloudwatch:DeleteAlarms
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:ListTagsForResource
+                  - cloudwatch:TagResource
+                  - cloudwatch:UntagResource
+                Resource:
+                  - !Sub arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-running-count-mismatch
+                  - !Sub arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-high-cpu
+                  - !Sub arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-high-memory
               - Sid: PassOnlyThePlatformShellTaskRolesToEcsTasks
                 Effect: Allow
                 Action:

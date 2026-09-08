@@ -37,12 +37,14 @@ import; topic files are not public subpath APIs.
 
 `mountPlatformRuntimeApps` validates each app ID, obtains a scoped registry with
 `registry.forApp(appId)`, and passes that view to the app's `mount` function.
-The view accepts only permission, route, job, and health names beginning with
+The view accepts only permission, route, job, observability-profile, and health names beginning with
 `<app-id>.`; otherwise it records
 `PLATFORM_CONTRACT_NAMESPACE_MISMATCH`. The complete registry still rejects
 global duplicates, such as two valid apps claiming the same HTTP method and
-path. Configuration schemas remain app-supplied schema declarations and are
-not name registrations in the current contract.
+path or the same observability-profile name. It also verifies that every route
+and job references a registered profile or carries a bounded, controlled
+opt-out. Configuration schemas remain app-supplied schema declarations and
+are not name registrations in the current contract.
 
 The registry is built anew during process startup. A deployment system decides
 how to retain old capacity, cut traffic over, and roll back; this package only

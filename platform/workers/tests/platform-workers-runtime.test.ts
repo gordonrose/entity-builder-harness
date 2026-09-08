@@ -39,6 +39,7 @@ async function main(): Promise<void> {
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   const deps = createPlatformTestMountDeps({ logger, metrics });
+  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Worker runtime fixture only." } as const;
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
@@ -46,6 +47,7 @@ async function main(): Promise<void> {
       registry.registerJob({
         name: jobName.value,
         messageType: "smoke.rebuild" as QueueMessageType,
+        observability: testObservability,
         validator: validatorForTest((value): value is { readonly rebuild: boolean } =>
           typeof value === "object"
           && value !== null
@@ -63,6 +65,7 @@ async function main(): Promise<void> {
       registry.registerJob({
         name: failingJobName.value,
         messageType: "smoke.failing" as QueueMessageType,
+        observability: testObservability,
         handler: {
           handle: (_message, context) => {
             failingAttempts += 1;

@@ -10,7 +10,9 @@ import {
   fixedFeatureFlagReader,
   platformAppId,
   platformRegistrationNamespaceMismatch,
+  unknownPlatformObservabilityProfile,
   unknownPlatformPermission,
+  validatePlatformCapabilityObservabilityProfile,
   validatePlatformJobRegistration,
   validatePlatformPermissionDeclaration,
   validatePlatformRouteRegistration,
@@ -24,6 +26,7 @@ import {
   type PlatformJobName,
   type PlatformJobRegistration,
   type PlatformMountDeps,
+  type PlatformCapabilityObservabilityProfile,
   type PlatformPermissionDeclaration,
   type PlatformRegistrationKind,
   type PlatformRequestContext,
@@ -59,6 +62,7 @@ export interface PlatformTestRegistry extends PlatformAppRegistry {
   permissions(): readonly PlatformPermissionDeclaration[];
   routes(): readonly PlatformRouteRegistration[];
   jobs(): readonly PlatformJobRegistration[];
+  observabilityProfiles(): readonly PlatformCapabilityObservabilityProfile[];
   healthChecks(): readonly PlatformHealthRegistration[];
   configSchemas(): readonly ConfigSchema<unknown>[];
   errors(): readonly PlatformContractError[];
@@ -80,6 +84,7 @@ export interface PlatformTestMountResult {
   readonly permissions: readonly PlatformPermissionDeclaration[];
   readonly routes: readonly PlatformRouteRegistration[];
   readonly jobs: readonly PlatformJobRegistration[];
+  readonly observabilityProfiles: readonly PlatformCapabilityObservabilityProfile[];
   readonly healthChecks: readonly PlatformHealthRegistration[];
   readonly configSchemas: readonly ConfigSchema<unknown>[];
   readonly lifecycle: PlatformApp["lifecycle"];
@@ -165,6 +170,7 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
   const permissions: PlatformPermissionDeclaration[] = [];
   const routes: PlatformRouteRegistration[] = [];
   const jobs: PlatformJobRegistration[] = [];
+  const observabilityProfiles: PlatformCapabilityObservabilityProfile[] = [];
   const healthChecks: PlatformHealthRegistration[] = [];
   const configSchemas: ConfigSchema<unknown>[] = [];
   const errors: PlatformContractError[] = [];
@@ -214,6 +220,26 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
       jobs.push(job);
       return contractSuccess();
     },
+    registerObservabilityProfile(profile) {
+      const validation = validatePlatformCapabilityObservabilityProfile(profile);
+      if (!validation.ok) {
+        return track(validation.error);
+      }
+
+      if (observabilityProfiles.some((registered) => registered.name === profile.name)) {
+        return track(duplicatePlatformRegistration("observability-profile", String(profile.name)));
+      }
+
+      observabilityProfiles.push({
+        ...profile,
+        signals: [...profile.signals],
+        ...(profile.logFieldNames === undefined ? {} : { logFieldNames: [...profile.logFieldNames] }),
+        ...(profile.metricDimensionFieldNames === undefined ? {} : { metricDimensionFieldNames: [...profile.metricDimensionFieldNames] }),
+        ...(profile.traceAttributeNames === undefined ? {} : { traceAttributeNames: [...profile.traceAttributeNames] }),
+        ...(profile.nfrObjectives === undefined ? {} : { nfrObjectives: profile.nfrObjectives.map((objective) => ({ ...objective })) }),
+      });
+      return contractSuccess();
+    },
     registerHealthCheck(healthCheck) {
       if (healthChecks.some((registered) => registered.name === healthCheck.name)) {
         return track(duplicatePlatformRegistration("health", String(healthCheck.name)));
@@ -238,6 +264,10 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
         registerJob(job) {
           return registerInAppNamespace(appId, "job", String(job.name), () => registry.registerJob(job));
         },
+        registerObservabilityProfile(profile) {
+          return registerInAppNamespace(appId, "observability-profile", String(profile.name), () =>
+            registry.registerObservabilityProfile(profile));
+        },
         registerHealthCheck(healthCheck) {
           return registerInAppNamespace(appId, "health", String(healthCheck.name), () =>
             registry.registerHealthCheck(healthCheck));
@@ -250,12 +280,21 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
     permissions: () => permissions.map((permission) => ({ ...permission })),
     routes: () => [...routes],
     jobs: () => [...jobs],
+    observabilityProfiles: () => observabilityProfiles.map((profile) => ({
+      ...profile,
+      signals: [...profile.signals],
+      ...(profile.logFieldNames === undefined ? {} : { logFieldNames: [...profile.logFieldNames] }),
+      ...(profile.metricDimensionFieldNames === undefined ? {} : { metricDimensionFieldNames: [...profile.metricDimensionFieldNames] }),
+      ...(profile.traceAttributeNames === undefined ? {} : { traceAttributeNames: [...profile.traceAttributeNames] }),
+      ...(profile.nfrObjectives === undefined ? {} : { nfrObjectives: profile.nfrObjectives.map((objective) => ({ ...objective })) }),
+    })),
     healthChecks: () => [...healthChecks],
     configSchemas: () => [...configSchemas],
     errors: () => [...errors],
     validate() {
       const validationErrors = [...errors];
       const declaredPermissions = permissions.map((permission) => permission.permission);
+      const declaredObservabilityProfiles = observabilityProfiles.map((profile) => String(profile.name));
 
       for (const route of routes) {
         if (route.auth.kind !== "authenticated") {
@@ -266,6 +305,18 @@ export function createPlatformTestRegistry(options: PlatformTestRegistryOptions 
           if (!declaredPermissions.includes(permission)) {
             validationErrors.push(unknownPlatformPermission(permission, declaredPermissions));
           }
+        }
+      }
+
+      for (const registration of [...routes, ...jobs]) {
+        if (registration.observability.kind !== "profile") {
+          continue;
+        }
+
+        if (!declaredObservabilityProfiles.includes(String(registration.observability.profile))) {
+          validationErrors.push(
+            unknownPlatformObservabilityProfile(String(registration.observability.profile), declaredObservabilityProfiles),
+          );
         }
       }
 
@@ -322,6 +373,7 @@ export async function mountPlatformAppForTest(
       permissions: registry.permissions(),
       routes: registry.routes(),
       jobs: registry.jobs(),
+      observabilityProfiles: registry.observabilityProfiles(),
       healthChecks: registry.healthChecks(),
       configSchemas: registry.configSchemas(),
       lifecycle: app.lifecycle,

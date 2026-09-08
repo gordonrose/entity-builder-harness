@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 23
+version: 29
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -704,6 +704,129 @@ or security-record pipeline. The package README and local source README are
 the current responsibility maps, while the existing type, build, runtime, and
 provider-boundary checks remain its verification baseline.
 
+#### Capability observability profile contract
+
+Status: profile declaration and registry enforcement implemented; signal
+emission consumption remains planned. `platform/contracts/src/observability.ts`
+locks the provider-neutral capability/action, actor category, interaction
+source, execution context, logical outcome, job-delivery disposition, checked
+capability identity, and canonical emitted field-name vocabulary.
+`platform/contracts/src/observability-profiles.ts` now adds the app-facing
+profile declaration, provider-neutral signal kinds, explicit opt-out form,
+low-cardinality metric-field allowlist, NFR-class references, and distinct
+latency-measurement vocabulary.
+
+The declaration belongs in `platform/contracts`, because an application must be
+able to place it beside a route or job without importing a provider or runtime
+implementation. The profile may permit operational-log, metric, and trace
+facts only from the controlled canonical vocabulary. It may reference a named
+NFR class such as `interactive_read`, `async_acceptance`, or
+`async_completion`, and it must name the truthful timing interval such as
+request/response, queue wait, worker execution, end-to-end completion, or
+health check. It must not name CloudWatch, OpenTelemetry, a dashboard,
+retention duration, percentile threshold, error-budget window, alert rule, or
+provider exporter.
+
+Apps now register named profiles through the existing narrow app registry. A
+route or job must reference one registered profile or give a controlled reason
+and bounded justification for an opt-out. The runtime and test registries
+collect every profile, route, and job during mount and fail before traffic when
+a profile is duplicated, outside the mounting app namespace, malformed,
+unknown to a route/job, or has incoherent signal/field/NFR declarations. A
+complete registry is necessary because a route or job cannot prove alone that
+its profile was registered elsewhere or that another registration duplicated
+it. `apps/platform-smoke` now proves one `interactive_read` route profile and
+one `async_completion` job profile.
+
+Server and worker delivery code still need to consume the resolved profile to
+choose the already-safe logging, metrics, and tracing helpers. That later
+slice must not select a provider or turn an optional observability helper
+failure into a user/job failure. Required audit and security-record evidence
+remains separately governed and must not be represented as an
+observability-profile substitute.
+
+#### NFR objective policy and percentile measurement
+
+The profile declares **what interval to measure**, not a product promise. A
+central, target-governed NFR/SLO policy must define each named class's eligible
+population, good-event threshold or percentile thresholds, compliance window,
+error-budget calculation, owner, review date, and the action required when the
+budget burns too quickly. A latency objective may use two thresholds—for
+example, a typical-experience percentile and a slow-tail percentile—while a
+separate success-rate objective measures whether the operation worked at all.
+
+Numeric values are environment and workload policy, not generic platform
+constants. The target policy must distinguish a fast asynchronous acceptance
+from later completion, and it must distinguish queue wait from actual worker
+execution. It belongs with target operational policy and alert governance, not
+in an app mount, route, job, generic platform package, or Core contract. A
+future target metrics adapter must retain a real latency distribution (for
+example, a histogram with deliberate bucket boundaries) before a p95/p99 SLO
+or burn-rate alert is treated as evidence. The current Core metric kind and
+generic timer point do not themselves prove percentile aggregation, retention,
+access, sampling, or dashboard behaviour.
+
+#### Data classification and evidence-policy inputs
+
+Status: boundary recorded; implementation is deliberately deferred until a
+first real entity, capability, and policy evaluator are selected. A data
+classification is not an operational profile, and it must never be used as a
+reason to place classified values in logs, metrics, or traces.
+
+`packages/core/security/classification.ts` already owns the reusable
+provider-neutral classification vocabulary, while
+`packages/core/security/policy.ts` owns generic policy-decision shapes. A
+future app/entity schema owns its entity default and attribute-level
+classifications; a future capability declaration owns which classifications it
+may read, change, export, delete, or otherwise process. The product baseline
+and an allowed tenant restriction then determine the resolved requirements:
+authorisation, confirmation/approval, durable audit, security signal,
+operational profile, retention, residency, and persistence handling.
+
+Platform runtime and `platform/contracts` must consume only the resolved
+provider-neutral requirement at their own boundary. They must not discover an
+app's entity fields, embed product attribute names, copy classified values into
+operational evidence, or become a tenant-policy store. An operational profile
+still permits only its canonical safe facts; a stricter data classification
+normally reduces those facts while raising accountability requirements. Tenant
+policy may tighten, but must not silently weaken, the adopted product baseline.
+
+The product-harness plan owns the future entity/capability declaration and
+validator requirements. This platform-shell plan records the integration
+boundary only; it does not authorise a generic entity model, a security-policy
+engine, persistence implementation, or a record-delivery provider.
+
+Current hardening gap: `startPlatformTraceSpan` and `endPlatformTraceSpan`
+already contain tracer-port failures and fall back to a no-op span. In contrast,
+the current `recordPlatformMetric` and `writePlatformLog` helpers synchronously
+call their injected ports without equivalent failure isolation. Before a
+capability profile is adopted as production-ready, define one bounded optional
+operational-sink failure policy and implement it consistently for metrics,
+ordinary operational logs, and traces. Its tests must separately inject a
+failing metric sink, log sink, and tracer and prove that a completed request or
+job retains its original outcome. The failure path must not recursively log to
+the same failed sink or conceal an audit/security-record delivery failure,
+whose stricter semantics remain separately governed.
+
+This implementation slice now has contract, runtime-registry, test-registry,
+smoke-app, and negative-test evidence for unknown profile references, duplicate
+registrations, missing/invalid opt-outs, unsafe labels, and provider-boundary
+preservation. Server/worker resolved-profile consumption, optional-sink failure
+containment, target-selected percentile aggregation, export, retention,
+sampling, dashboards, SLO policy values, and alarms remain later
+adapter/deployment concerns.
+
+The first bounded design/proof case is the existing protected
+`platform-smoke.echo` route, whose app-relative path is `/smoke/:id`. It may
+demonstrate the existing platform-owned `platform.server.request` timer and
+`platform.server.request` span using method, stable route name, status/outcome,
+latency, and bounded error class. The path parameter `id`, request ID,
+correlation ID, principal, tenant, headers, body, and response body are
+explicitly forbidden as general metric labels or trace attributes. This first
+case remains local/in-memory proof only until a later target adapter selects
+metric/trace delivery, access, sampling, retention, dashboards, and a
+production-shaped failure policy.
+
 #### Platform worker source-organisation follow-up
 
 Status: implemented for the provider-neutral worker shell. Its source is now
@@ -902,14 +1025,13 @@ complete:
   both the executing identity and the authorised initiating identity. A chat
   prompt, voice transcript, or model output is never proof of actor identity
   and must not be inserted as unstructured audit metadata.
-- The current proposed taxonomy remains planning-only until a first consumer
-  and shared Core/product governance adopt it: event types follow
-  `<app>.<resource>.<verb>`; actor type, interaction channel, and execution
-  context are separate dimensions. The initial Core audit outcomes remain
-  `succeeded`, `denied`, or `failed`; a future operational record vocabulary
-  may add distinct lifecycle outcomes such as `accepted`, `rejected`,
-  `cancelled`, `timed_out`, and `retried` only through a versioned contract
-  change. The controlled action vocabulary starts with resource lifecycle
+- `platform/contracts/src/observability.ts` now locks the provider-neutral
+  operational vocabulary used at the app/platform declaration boundary:
+  controlled actions, interaction sources, execution contexts, logical
+  outcomes, worker-delivery dispositions, capability names, and canonical
+  emitted field names. Event types still follow `<app>.<resource>.<verb>`;
+  actor type, interaction source, and execution context remain separate
+  dimensions. The controlled action vocabulary starts with resource lifecycle
   (`create`, `read`, `list`, `search`, `update`, `delete`, `archive`,
   `restore`), relationship/access (`assign`, `unassign`, `grant`, `revoke`),
   decision/state (`approve`, `reject`, `enable`, `disable`, `publish`,
@@ -917,7 +1039,11 @@ complete:
   workflow (`submit`, `cancel`, `execute`, `schedule`, `retry`),
   identity/security (`authenticate`, `verify`, `reset`, `recover`, `rotate`),
   and generation (`generate`). A genuinely distinct action is a reviewed
-  vocabulary change, never a feature-local free-form string. The
+  contract change, never a feature-local free-form string. This does not alter
+  the existing Core `AuditEventType` or three-value `AuditOutcome`
+  (`succeeded`, `denied`, `failed`) contracts, nor does it automatically make
+  every route or job emit a record. Versioned Core audit-taxonomy adoption and
+  capability-profile enforcement remain later governed work. The
   product-harness plan—not this generic platform milestone—owns chat and voice
   interaction design.
 - Metrics may use only reviewed low-cardinality dimensions, such as app,

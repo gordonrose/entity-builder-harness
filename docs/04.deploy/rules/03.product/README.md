@@ -35,3 +35,6 @@ system being deployed.
 - `platform-shell-runtime-family.yml` records that ECS Fargate is the first AWS
   planning runtime family for the platform shell, requires client/environment
   target profiles, and names the blockers before cloud mutation.
+- `platform-target-alerting-policy.yml` requires one canonical target alarm
+  catalogue, complete alarm definitions, policy-to-IaC drift checks, and safe
+  live delivery proof without duplicating target thresholds in an index.

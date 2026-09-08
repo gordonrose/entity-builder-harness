@@ -10,6 +10,7 @@ import type { TenantResolver } from "@kanbien/core/tenancy";
 import type { Validator } from "@kanbien/core/validation";
 import type { PlatformRequestContext } from "./contexts";
 import type { PlatformApiVersion, PlatformRouteName } from "./identifiers";
+import type { PlatformObservabilityRequirement } from "./observability-profiles";
 
 export type HttpMethod = PlatformRequestContext["method"];
 
@@ -77,6 +78,7 @@ export interface PlatformRouteRegistration<TBody = unknown, TResponse = unknown>
   readonly path: string;
   readonly apiVersion?: PlatformApiVersion;
   readonly auth: RouteAuthRequirement;
+  readonly observability: PlatformObservabilityRequirement;
   readonly tenant?: PlatformTenantRequirement;
   readonly resourceAuthorization?: PlatformResourceAuthorization<TBody>;
   readonly validator?: Validator<TBody>;

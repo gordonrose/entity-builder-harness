@@ -48,6 +48,7 @@ async function main(): Promise<void> {
   }
 
   const permission = "adapter-smoke.smoke:read" as Permission;
+  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Authentication adapter fixture only." } as const;
   const appId = platformAppId("adapter-smoke");
   const routeName = platformRouteName("adapter-smoke.protected");
   if (!appId.ok || !routeName.ok) {
@@ -63,6 +64,7 @@ async function main(): Promise<void> {
         method: "GET",
         path: "/adapter-protected",
         auth: { kind: "authenticated", permissions: [permission] },
+        observability: testObservability,
         handler: { handle: () => ({ status: 200, body: { status: "ok" } }) },
       });
     },
