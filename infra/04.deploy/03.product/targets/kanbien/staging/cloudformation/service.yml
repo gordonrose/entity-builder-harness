@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.service
-#   version: 1
+#   version: 2
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -198,6 +198,99 @@ Resources:
           TargetGroupArn:
             Fn::ImportValue: !Sub ${FoundationStackName}-TargetGroupArn
       TaskDefinition: !Ref TaskDefinition
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  EcsRunningCountAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: Service
+    Properties:
+      AlarmName: kanbien-staging-platform-shell-ecs-running-count-mismatch
+      AlarmDescription: The platform-shell ECS service has fewer running tasks than desired.
+      Namespace: ECS/ContainerInsights
+      MetricName: RunningTaskCount
+      Statistic: Minimum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      ComparisonOperator: LessThanThreshold
+      Threshold: !Ref DesiredCount
+      TreatMissingData: breaching
+      Dimensions:
+        - Name: ClusterName
+          Value: !Select [1, !Split ["/", !Ref ClusterArn]]
+        - Name: ServiceName
+          Value: !Ref ServiceName
+      AlarmActions:
+        - Fn::ImportValue: !Sub ${FoundationStackName}-AlarmTopicArn
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  EcsHighCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: Service
+    Properties:
+      AlarmName: kanbien-staging-platform-shell-ecs-high-cpu
+      AlarmDescription: The platform-shell ECS service has sustained high CPU utilisation.
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Statistic: Average
+      Unit: Percent
+      Period: 60
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 80
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: ClusterName
+          Value: !Select [1, !Split ["/", !Ref ClusterArn]]
+        - Name: ServiceName
+          Value: !Ref ServiceName
+      AlarmActions:
+        - Fn::ImportValue: !Sub ${FoundationStackName}-AlarmTopicArn
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  EcsHighMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: Service
+    Properties:
+      AlarmName: kanbien-staging-platform-shell-ecs-high-memory
+      AlarmDescription: The platform-shell ECS service has sustained high memory utilisation.
+      Namespace: AWS/ECS
+      MetricName: MemoryUtilization
+      Statistic: Average
+      Unit: Percent
+      Period: 60
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 80
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: ClusterName
+          Value: !Select [1, !Split ["/", !Ref ClusterArn]]
+        - Name: ServiceName
+          Value: !Ref ServiceName
+      AlarmActions:
+        - Fn::ImportValue: !Sub ${FoundationStackName}-AlarmTopicArn
       Tags:
         - Key: service
           Value: platform-shell

@@ -1,0 +1,141 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: rag-rulebook.derivation-report.04-deploy.2026-09-08-platform-target-alerting-policy
+#   version: 1
+#   status: active
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - sre
+#   - security
+#   kind: derivation-report
+#   purpose: Record the source-to-rule derivation for the product platform target alerting-policy standard.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.rules.03-product.platform-target-alerting-policy
+#     path: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.04.deploy.2026-09-08.platform-target-alerting-policy
+status: accepted
+
+source_change:
+  change_type: created
+  approved_source_state: approved
+  changed_paths:
+    - docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+  summary: >
+    Accepted target-alerting source material is projected into one product
+    deploy rule, a link-only target index, and a target-profile policy
+    reference. The rule formalises existing staging alarm structure without
+    authorizing an AWS apply.
+
+target:
+  corpus_id: corpus.04.deploy
+  owner_layer: 04.deploy
+  deploy_track: 03.product
+  expected_rule_paths:
+    - docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+  affected_rule_paths:
+    - docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+  affected_rulesets:
+    - docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
+  affected_evaluations: []
+  affected_corpus_gaps: []
+
+semantic_review:
+  source_claims:
+    - claim_id: platform-target-alerting.canonical-catalogue
+      summary: Each product target keeps its complete alarm policy in the target profile's observability alarms list.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+    - claim_id: platform-target-alerting.link-only-index
+      summary: The repository-wide target index links canonical policies and must not duplicate mutable threshold or dimension values.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+    - claim_id: platform-target-alerting.complete-definition
+      summary: Every alarm defines an exact signal, condition, evaluation, response, provider implementation, and telemetry prerequisite where needed.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+    - claim_id: platform-target-alerting.safe-boundary
+      summary: Alarm metadata, notification proof, and metric dimensions exclude sensitive or unbounded values.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+    - claim_id: platform-target-alerting.drift-and-live-proof
+      summary: Policy-to-IaC comparison and safe live delivery proof are required separately from provider resource syntax.
+      evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+  conflicts:
+    status: none-found
+    search_scope:
+      - docs/04.deploy/rules/
+      - docs/03.product/rules/core/layers/packages-core.yml
+      - infra/04.deploy/03.product/targets/
+      - scripts/04.deploy/
+      - docs/aws/runbooks/
+    items: []
+  drift:
+    status: expected
+    items:
+      - Existing staging alarm policy now declares the reusable rule and target index explicitly; its five thresholds and resource definitions are unchanged.
+      - The existing static staging verifier is extended to reject a missing or incorrect policy/index declaration and unsupported policy severity.
+  ownership:
+    status: ok
+    notes:
+      - Target-specific thresholds, dimensions, and notification choices remain deploy target-profile policy.
+      - Provider-neutral monitoring vocabulary remains in packages/core and does not own provider alarms.
+      - CloudFormation remains the provider implementation, while the deploy target owns policy and readiness evidence.
+      - The target index is discovery-only and intentionally does not become an implementation source.
+
+proposed_updates:
+  rules:
+    - docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations: []
+  notes:
+    - The existing infrastructure policy gate provides focused static enforcement for the current Kanbien staging target.
+    - New target families must add an equivalent target-specific policy-to-IaC gate before they can claim readiness.
+    - No AWS, notification, IAM, or CloudFormation mutation is authorized by this rule derivation.
+
+downstream_effects:
+  index_required: false
+  chunks_required: false
+  selector_evaluation_required: false
+  publish_required: false
+  stale_artifacts: []
+
+validation:
+  required_checks:
+    - bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+    - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+    - npm run platform:shell:infrastructure:check
+    - bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+    - git diff --check
+  checks_run:
+    - command: bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+      result: passed
+    - command: npm run platform:shell:infrastructure:check
+      result: passed
+    - command: bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh
+      result: passed
+    - command: git diff --check
+      result: passed
+  checks_pending: []
+
+review:
+  required: true
+  decision: approved
+  reviewer: codex-agentic-review-loop
+  reviewed_at_utc: "2026-09-08T20:45:14Z"
+  notes:
+    - The accepted OKF review record covers all required perspectives above the 9.5 threshold.
+    - The rule records policy and readiness requirements only; it does not approve cloud mutation.

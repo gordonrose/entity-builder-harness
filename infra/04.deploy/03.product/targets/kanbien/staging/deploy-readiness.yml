@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 12
+#   version: 15
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -119,9 +119,59 @@ inspection:
     route53_record_found: true
     https_host_rule_found: true
     log_group_found: true
-    metric_alarms_found: true
+    metric_alarms_found: partial
     web_acl_found: true
     alert_subscription_confirmed: true
+    observability_read_only_inspection:
+      inspected_at_utc: "2026-09-07T22:19:08Z"
+      profile: kanbien-dev
+      region: eu-west-1
+      mutation_performed: false
+      log_delivery:
+        log_group: /ecs/kanbien-staging-platform-shell
+        retention_days: 14
+        stream_found: true
+        latest_stream_event_at_utc: "2026-09-07T21:59:14Z"
+        raw_event_content_recorded_in_repository: false
+      service_health:
+        service: kanbien-staging-platform-shell
+        status: ACTIVE
+        desired_count: 1
+        running_count: 1
+        pending_count: 0
+      alarm_coverage:
+        status: partial
+        required_by_target_profile:
+          - alb-unhealthy-targets
+          - alb-5xx-spike
+          - ecs-running-count-mismatch
+          - ecs-high-cpu
+          - ecs-high-memory
+        confirmed_in_aws:
+          - name: kanbien-staging-platform-shell-unhealthy-targets
+            state: OK
+          - name: kanbien-staging-platform-shell-target-5xx
+            state: OK
+        missing_from_cloudformation_source_and_aws:
+          - ecs-running-count-mismatch
+          - ecs-high-cpu
+          - ecs-high-memory
+      alarm_subscription:
+        protocol: email
+        confirmed: true
+        endpoint_recorded_in_repository: false
+      source_follow_up_after_inspection:
+        status: implemented-locally-not-applied-to-aws
+        target_profile: structured-five-alarm-definitions-and-runbook
+        service_stack_resources:
+          - EcsRunningCountAlarm
+          - EcsHighCpuAlarm
+          - EcsHighMemoryAlarm
+        required_external_prerequisites:
+          - existing-cluster-containerInsights-enhanced
+          - governed-foundation-update-for-service-alarm-role-permissions
+          - governed-github-oidc-policy-update-for-read-only-telemetry-preflight
+        aws_mutation_performed: false
     public_tls:
       hostname: staging.platform.kanbien.com
       status: issued-and-externally-verified
@@ -239,8 +289,8 @@ github:
     trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-trust.json
     permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
     live_policy_last_inspected_at_utc: "2026-09-06T19:03:03Z"
-    live_policy_matches_repository_policy: true
-    live_policy_verification: The live inline policy semantically matches the repository policy; AWS policy validation and positive plus negative least-privilege simulations passed.
+    live_policy_matches_repository_policy: false
+    live_policy_verification: The live inline policy matched the previously committed source on 2026-09-06. Repository source now adds the narrowly scoped telemetry-preflight reads and awaits a separate governed IAM update plus renewed live policy simulation.
 artifacts:
   source_commit_sha: c9aac48ebaa3f9ca0ee8c193391b26aa60913e01
   build_policy:
@@ -438,11 +488,13 @@ aws:
     source: operator-supplied-at-budget-configuration-time
     value_stored_in_repository: false
   alarms:
-    - alb-unhealthy-targets
-    - alb-5xx-spike
-    - ecs-running-count-mismatch
-    - ecs-high-cpu
-    - ecs-high-memory
+    source: target-profile.observability.alarms
+    required_ids:
+      - alb-unhealthy-targets
+      - alb-5xx-spike
+      - ecs-running-count-mismatch
+      - ecs-high-cpu
+      - ecs-high-memory
 operations:
   owner: Gordon Rose
   escalation_path: Gordon Rose / LLM-assisted operations
@@ -462,7 +514,7 @@ proof:
   image_smoke: passed-local
   compiled_runtime_payload: passed-local-2026-09-06
   local_runtime_smoke: passed-product-smoke-local
-  aws_read_only_inspection: platform-shell-foundation-and-public-tls-verified-2026-09-06
+  aws_read_only_inspection: platform-shell-foundation-public-tls-and-observability-delivery-verified-2026-09-07
   deployment_smoke: public-livez-200-and-unauthenticated-deploy-probe-401-passed-2026-09-07
   rollback_proof: blocked
 blockers:
@@ -484,8 +536,13 @@ blockers:
   - id: platform-shell-readiness.operational-proof
     severity: blocking
     path: proof
-    reason: The service is deployed, but CloudWatch log delivery, alarm delivery, and rollback exercise evidence remain unrecorded.
-    resolution: Verify a redacted operational log record, alarm destination delivery, and an explicitly governed rollback rehearsal before marking the target ready.
+    reason: Read-only inspection now confirms a recent CloudWatch log-stream event, the two implemented ALB alarms in OK state, and a confirmed SNS email subscription. It does not prove an alarm was received by the operator, and rollback exercise evidence remains unrecorded.
+    resolution: Verify a redacted operational log record, end-to-end alarm destination delivery without committing email content, and an explicitly governed rollback rehearsal before marking the target ready.
+  - id: platform-shell-readiness.required-ecs-alarm-coverage
+    severity: blocking
+    path: observability.alarms
+    reason: The target profile and local source now define the three missing ECS alarms, but AWS still confirms only the two ALB alarms. The existing cluster has not yet been read-only verified for enhanced Container Insights, and the deployed foundation and GitHub roles do not yet have the newly declared bounded permissions.
+    resolution: In one governed change sequence, verify or enable containerInsights=enhanced and the emitted RunningTaskCount metric; review and apply the foundation role and GitHub read-only policy updates; then review and apply the service-stack change set. Record safe alarm states and end-to-end notification delivery evidence afterwards.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

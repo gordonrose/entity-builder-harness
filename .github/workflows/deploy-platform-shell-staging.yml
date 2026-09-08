@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: github.workflow.deploy-platform-shell-staging
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -61,6 +61,9 @@ env:
   SERVICE_TEMPLATE: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
   SERVICE_DEPLOYMENT_ROLE_ARN: arn:aws:iam::337159794548:role/kanbien-staging-platform-shell-service-deploy
   READINESS_MANIFEST: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+  OBSERVABILITY_PREREQUISITE_CHECK: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  ECS_CLUSTER: kanbien-staging
+  ECS_SERVICE: kanbien-staging-platform-shell
   SERVICE_URL: https://staging.platform.kanbien.com
 
 jobs:
@@ -125,6 +128,14 @@ jobs:
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify ECS telemetry prerequisite for service alarms
+        if: ${{ inputs.publish_image }}
+        run: |
+          bash "$OBSERVABILITY_PREREQUISITE_CHECK" \
+            --region "$AWS_REGION" \
+            --cluster "$ECS_CLUSTER" \
+            --service "$ECS_SERVICE"
 
       - name: Log in to Amazon ECR
         if: ${{ inputs.publish_image }}

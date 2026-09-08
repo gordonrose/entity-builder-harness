@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 1
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -24,6 +24,8 @@ set -euo pipefail
 #     path: package.json
 #   - id: github.workflow.deploy-platform-shell-staging
 #     path: .github/workflows/deploy-platform-shell-staging.yml
+#   - id: deploy.rules.03-product.platform-target-alerting-policy
+#     path: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
@@ -32,12 +34,14 @@ RENDERED_FOUNDATION="$(mktemp "${TMPDIR:-/tmp}/platform-shell-foundation.XXXXXX.
 trap 'rm -f "$RENDERED_FOUNDATION"' EXIT
 bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
   --output "$RENDERED_FOUNDATION" >/dev/null
+bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
 import os
 from pathlib import Path
 import sys
+import json
 
 try:
     import yaml
@@ -106,9 +110,124 @@ def contains_value(value, expected):
     return False
 
 
+def dimensions_by_name(alarm):
+    dimensions = alarm.get("Dimensions", [])
+    if not isinstance(dimensions, list):
+        return {}
+    return {item.get("Name"): item.get("Value") for item in dimensions if isinstance(item, dict)}
+
+
+def require_alarm_tags(alarm, alarm_id):
+    expected_tags = [
+        {"Key": "service", "Value": "platform-shell"},
+        {"Key": "environment", "Value": "staging"},
+        {"Key": "managed-by", "Value": "cloudformation"},
+    ]
+    if alarm.get("Tags") != expected_tags:
+        fail(f"{alarm_id} must carry the reviewed platform-shell ownership tags")
+
+
+def expected_dimension_value(resolver):
+    values = {
+        "existing-alb-resource-suffix": {"!Select": [1, {"!Split": ["loadbalancer/", {"!Ref": "ExistingAlbArn"}]}]},
+        "foundation-target-group-full-name": {"!GetAtt": "TargetGroup.TargetGroupFullName"},
+        "cluster-name-from-cluster-arn": {"!Select": [1, {"!Split": ["/", {"!Ref": "ClusterArn"}]}]},
+        "service-name": {"!Ref": "ServiceName"},
+    }
+    return values.get(resolver)
+
+
+def expected_threshold(value):
+    if isinstance(value, dict) and value.get("value_source") == "service-desired-count":
+        return {"!Ref": "DesiredCount"}
+    if isinstance(value, dict):
+        return value.get("value")
+    return None
+
+
+def check_profile_alarm(definition, foundation, service, severity_vocabulary):
+    alarm_id = definition.get("id", "<missing-id>")
+    implementation = definition.get("implementation", {})
+    stack = implementation.get("stack")
+    template = {"foundation": foundation, "service": service}.get(stack)
+    if template is None:
+        fail(f"{alarm_id} must name foundation or service as its implementation stack")
+        return
+
+    logical_resource = implementation.get("logical_resource")
+    alarm = properties(template, logical_resource or f"{alarm_id}-missing-resource", "AWS::CloudWatch::Alarm")
+    signal = definition.get("signal", {})
+    condition = definition.get("condition", {})
+    evaluation = definition.get("evaluation", {})
+    response = definition.get("response", {})
+
+    if not isinstance(definition.get("purpose"), str) or not definition["purpose"].strip():
+        fail(f"{alarm_id} target-profile definition must state its operational purpose")
+    if response.get("severity") not in severity_vocabulary:
+        fail(f"{alarm_id} target-profile definition must use a declared target-policy severity")
+
+    expected_properties = {
+        "AlarmName": implementation.get("alarm_name"),
+        "AlarmDescription": implementation.get("alarm_description"),
+        "Namespace": signal.get("namespace"),
+        "MetricName": signal.get("metric"),
+        "Statistic": condition.get("statistic"),
+        "ComparisonOperator": condition.get("comparison_operator"),
+        "Threshold": expected_threshold(condition.get("threshold")),
+        "Unit": condition.get("unit"),
+        "Period": evaluation.get("period_seconds"),
+        "EvaluationPeriods": evaluation.get("evaluation_periods"),
+        "DatapointsToAlarm": evaluation.get("datapoints_to_alarm"),
+        "TreatMissingData": evaluation.get("treat_missing_data"),
+    }
+    for key, expected in expected_properties.items():
+        if expected is None:
+            fail(f"{alarm_id} target-profile definition must set {key}")
+        elif alarm.get(key) != expected:
+            fail(f"{logical_resource} {key} must match target-profile alarm {alarm_id}")
+
+    declared_dimensions = signal.get("dimensions")
+    if not isinstance(declared_dimensions, list):
+        fail(f"{alarm_id} target-profile definition must list metric dimensions")
+    else:
+        actual_dimensions = dimensions_by_name(alarm)
+        expected_names = [item.get("name") for item in declared_dimensions if isinstance(item, dict)]
+        if set(actual_dimensions) != set(expected_names) or len(actual_dimensions) != len(expected_names):
+            fail(f"{logical_resource} metric dimensions must match target-profile alarm {alarm_id}")
+        for dimension in declared_dimensions:
+            if not isinstance(dimension, dict):
+                fail(f"{alarm_id} target-profile dimensions must be objects")
+                continue
+            name = dimension.get("name")
+            expected_value = expected_dimension_value(dimension.get("resolver"))
+            if expected_value is None:
+                fail(f"{alarm_id} has an unsupported or missing dimension resolver for {name}")
+            elif actual_dimensions.get(name) != expected_value:
+                fail(f"{logical_resource} dimension {name} must use the target-profile resolver")
+
+    if response.get("alarm_destination") != "foundation-alarm-topic":
+        fail(f"{alarm_id} must use the reviewed foundation-alarm-topic destination")
+    elif stack == "foundation" and not contains_intrinsic(alarm.get("AlarmActions", []), "!Ref", "AlarmTopic"):
+        fail(f"{logical_resource} must notify the foundation AlarmTopic")
+    elif stack == "service" and not contains_intrinsic(
+        alarm.get("AlarmActions", []),
+        "!Sub",
+        "${FoundationStackName}-AlarmTopicArn",
+    ):
+        fail(f"{logical_resource} must import and notify the foundation AlarmTopic")
+
+    runbook = response.get("runbook")
+    if not isinstance(runbook, str) or not Path(runbook).is_file():
+        fail(f"{alarm_id} must reference a repository runbook")
+    require_alarm_tags(alarm, logical_resource or alarm_id)
+
+
 foundation = load(os.environ["RENDERED_FOUNDATION"])
 service = load("infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml")
 target_profile = load("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
+github_workflow = Path(".github/workflows/deploy-platform-shell-staging.yml").read_text(encoding="utf-8")
+with Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json").open(encoding="utf-8") as handle:
+    github_deployment_policy = json.load(handle)
 failures = []
 
 expected_foundation_resources = {
@@ -161,12 +280,21 @@ expected_foundation_outputs = {
     "WebAclArn",
     "PlatformHostnameCertificateArn",
 }
+expected_service_resources = {
+    "TaskDefinition",
+    "Service",
+    "EcsRunningCountAlarm",
+    "EcsHighCpuAlarm",
+    "EcsHighMemoryAlarm",
+}
 if set(foundation.get("Parameters", {})) != expected_foundation_parameters:
     fail("rendered foundation must retain the reviewed parameter interface")
 if set(foundation.get("Resources", {})) != expected_foundation_resources:
     fail("rendered foundation must contain exactly the reviewed resource set")
 if set(foundation.get("Outputs", {})) != expected_foundation_outputs:
     fail("rendered foundation must retain the reviewed service-stack output interface")
+if set(service.get("Resources", {})) != expected_service_resources:
+    fail("service template must contain exactly the reviewed workload and service-alarm resources")
 
 for forbidden_type in ("AWS::ECR::Repository", "AWS::Cognito::UserPool", "AWS::ElasticLoadBalancingV2::LoadBalancer"):
     if any(item.get("Type") == forbidden_type for item in foundation.get("Resources", {}).values()):
@@ -249,10 +377,167 @@ log_group = properties(foundation, "PlatformShellLogGroup", "AWS::Logs::LogGroup
 if log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
     fail("PlatformShellLogGroup must use the reviewed retention parameter")
 
-for alarm_name in ("UnhealthyTargetAlarm", "Target5xxAlarm"):
-    alarm = properties(foundation, alarm_name, "AWS::CloudWatch::Alarm")
-    if not contains_intrinsic(alarm.get("AlarmActions", []), "!Ref", "AlarmTopic"):
-        fail(f"{alarm_name} must notify AlarmTopic")
+observability = target_profile.get("observability", {})
+alarm_policy = observability.get("policy", {})
+severity_vocabulary = []
+expected_alarm_policy = {
+    "standard": "docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml",
+    "catalogue_index": "infra/04.deploy/03.product/targets/README.md",
+    "canonical_catalogue": "observability.alarms",
+}
+if not isinstance(alarm_policy, dict):
+    fail("target profile must declare an observability alarm-policy object")
+else:
+    for key, expected in expected_alarm_policy.items():
+        if alarm_policy.get(key) != expected:
+            fail(f"target profile alarm policy must set {key} to the governed value")
+    candidate_severity_vocabulary = alarm_policy.get("severity_vocabulary")
+    if not isinstance(candidate_severity_vocabulary, list) or not all(isinstance(value, str) for value in candidate_severity_vocabulary):
+        fail("target profile alarm policy severities must be strings")
+    elif set(candidate_severity_vocabulary) != {"critical", "warning"} or len(candidate_severity_vocabulary) != 2:
+        fail("target profile alarm policy must declare exactly critical and warning severities")
+    else:
+        severity_vocabulary = candidate_severity_vocabulary
+
+catalogue_index_path = Path(expected_alarm_policy["catalogue_index"])
+if not catalogue_index_path.is_file():
+    fail("target profile alarm catalogue index must exist")
+else:
+    catalogue_index = catalogue_index_path.read_text(encoding="utf-8")
+    for required_catalogue_text in (
+        "kanbien/staging/target-profile.yml",
+        "kanbien/staging/cloudformation/foundation/alerting.yml",
+        "kanbien/staging/cloudformation/service.yml",
+        "platform-shell-staging-alarms.md",
+    ):
+        if required_catalogue_text not in catalogue_index:
+            fail("target alarm catalogue index must link the staging policy, implementation, and runbook")
+
+alarm_destination = observability.get("alarm_destination", {})
+if alarm_destination.get("id") != "foundation-alarm-topic":
+    fail("target profile must identify the foundation alarm topic as its alarm destination")
+if target_profile.get("deployment", {}).get("cloudformation", {}).get("validation", {}).get("service_observability_prerequisite_check") != "scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh":
+    fail("target profile must declare the governed service observability prerequisite check")
+
+target_cluster_arn = target_profile.get("aws", {}).get("cluster", "")
+target_cluster_name = target_cluster_arn.rsplit("/", 1)[-1]
+target_service_name = target_profile.get("runtime", {}).get("server", {}).get("service")
+for required_workflow_text in (
+    "OBSERVABILITY_PREREQUISITE_CHECK: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh",
+    f"ECS_CLUSTER: {target_cluster_name}",
+    f"ECS_SERVICE: {target_service_name}",
+    'bash "$OBSERVABILITY_PREREQUISITE_CHECK"',
+    '--cluster "$ECS_CLUSTER"',
+    '--service "$ECS_SERVICE"',
+):
+    if required_workflow_text not in github_workflow:
+        fail("GitHub deployment workflow must run the reviewed ECS telemetry prerequisite check before service deployment")
+
+github_cluster_telemetry_statement = next(
+    (item for item in github_deployment_policy.get("Statement", []) if item.get("Sid") == "ReadSelectedPlatformShellClusterTelemetryPrerequisite"),
+    None,
+)
+if github_cluster_telemetry_statement is None:
+    fail("GitHub deployment identity policy must include the selected-cluster telemetry read statement")
+elif github_cluster_telemetry_statement.get("Effect") != "Allow" or github_cluster_telemetry_statement.get("Action") != ["ecs:DescribeClusters"] or github_cluster_telemetry_statement.get("Resource") != target_cluster_arn:
+    fail("GitHub deployment identity must read ECS telemetry settings only from the selected cluster")
+
+github_metric_telemetry_statement = next(
+    (item for item in github_deployment_policy.get("Statement", []) if item.get("Sid") == "DiscoverCloudWatchTelemetryPrerequisiteMetric"),
+    None,
+)
+if github_metric_telemetry_statement is None:
+    fail("GitHub deployment identity policy must include the CloudWatch metric-discovery read statement")
+elif github_metric_telemetry_statement.get("Effect") != "Allow" or github_metric_telemetry_statement.get("Action") != ["cloudwatch:ListMetrics"] or github_metric_telemetry_statement.get("Resource") != "*":
+    fail("GitHub deployment identity must use only the required CloudWatch metric-discovery read")
+
+telemetry_prerequisites = observability.get("telemetry_prerequisites")
+if not isinstance(telemetry_prerequisites, list) or len(telemetry_prerequisites) != 1:
+    fail("target profile must declare one enhanced Container Insights prerequisite for the running-count alarm")
+else:
+    telemetry_prerequisite = telemetry_prerequisites[0]
+    expected_telemetry_prerequisite = {
+        "id": "ecs-container-insights-enhanced",
+        "owner": "existing-ecs-cluster",
+        "required_for": ["ecs-running-count-mismatch"],
+        "configuration": {
+            "cluster_arn_source": "aws.cluster",
+            "setting": "containerInsights",
+            "required_value": "enhanced",
+        },
+        "expected_signal": {
+            "namespace": "ECS/ContainerInsights",
+            "metric": "RunningTaskCount",
+            "dimensions": ["ClusterName", "ServiceName"],
+        },
+        "deployment_preflight": {
+            "method": "aws-ecs-describe-clusters-settings",
+            "cluster_name_source": "aws.cluster",
+            "service_name_source": "runtime.server.service",
+            "failure_mode": "block-service-stack-update",
+        },
+    }
+    for key, expected in expected_telemetry_prerequisite.items():
+        if not isinstance(telemetry_prerequisite, dict) or telemetry_prerequisite.get(key) != expected:
+            fail(f"target profile Container Insights prerequisite must set {key} to the reviewed value")
+    if telemetry_prerequisite.get("current_status") not in {"pending-read-only-verification", "verified"}:
+        fail("target profile Container Insights prerequisite must state whether read-only verification is pending or verified")
+
+alarm_definitions = observability.get("alarms")
+expected_alarm_ids = {
+    "alb-unhealthy-targets",
+    "alb-5xx-spike",
+    "ecs-running-count-mismatch",
+    "ecs-high-cpu",
+    "ecs-high-memory",
+}
+if not isinstance(alarm_definitions, list):
+    fail("target profile observability alarms must be a structured list")
+else:
+    alarms_by_id = {}
+    for definition in alarm_definitions:
+        if not isinstance(definition, dict) or not isinstance(definition.get("id"), str):
+            fail("each target-profile alarm must be an object with a stable id")
+            continue
+        alarm_id = definition["id"]
+        if alarm_id in alarms_by_id:
+            fail(f"target-profile alarm id is duplicated: {alarm_id}")
+        alarms_by_id[alarm_id] = definition
+    if set(alarms_by_id) != expected_alarm_ids:
+        fail("target profile must declare exactly the reviewed platform-shell alarms")
+    for definition in alarms_by_id.values():
+        check_profile_alarm(definition, foundation, service, severity_vocabulary)
+
+service_deployment_policy = properties(foundation, "ServiceDeploymentExecutionRole", "AWS::IAM::Role").get("Policies", [{}])[0].get("PolicyDocument", {}).get("Statement", [])
+expected_service_alarm_arns = {
+    "arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-running-count-mismatch",
+    "arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-high-cpu",
+    "arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:kanbien-staging-platform-shell-ecs-high-memory",
+}
+put_alarm_statement = next((item for item in service_deployment_policy if item.get("Sid") == "CreateOnlyPlatformShellServiceAlarmDefinitions"), None)
+if put_alarm_statement is None:
+    fail("ServiceDeploymentExecutionRole must have a bounded service-alarm creation statement")
+else:
+    resources = {item.get("!Sub") for item in put_alarm_statement.get("Resource", []) if isinstance(item, dict)}
+    if put_alarm_statement.get("Action") != ["cloudwatch:PutMetricAlarm"] or resources != expected_service_alarm_arns:
+        fail("ServiceDeploymentExecutionRole must create only the three reviewed service alarms")
+    if put_alarm_statement.get("Condition", {}).get("ForAllValues:StringEquals", {}).get("cloudwatch:AlarmActions") != [{"!Ref": "AlarmTopic"}]:
+        fail("ServiceDeploymentExecutionRole must restrict new service alarms to AlarmTopic")
+
+alarm_lifecycle_statement = next((item for item in service_deployment_policy if item.get("Sid") == "ManageOnlyPlatformShellServiceAlarmLifecycle"), None)
+if alarm_lifecycle_statement is None:
+    fail("ServiceDeploymentExecutionRole must have a bounded service-alarm lifecycle statement")
+else:
+    resources = {item.get("!Sub") for item in alarm_lifecycle_statement.get("Resource", []) if isinstance(item, dict)}
+    expected_actions = {
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:ListTagsForResource",
+        "cloudwatch:TagResource",
+        "cloudwatch:UntagResource",
+    }
+    if set(alarm_lifecycle_statement.get("Action", [])) != expected_actions or resources != expected_service_alarm_arns:
+        fail("ServiceDeploymentExecutionRole must manage only the reviewed service-alarm lifecycle actions")
 
 image_parameter = service.get("Parameters", {}).get("ImageUri", {})
 if "@sha256" not in image_parameter.get("AllowedPattern", ""):

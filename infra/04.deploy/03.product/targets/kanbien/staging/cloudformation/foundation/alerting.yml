@@ -46,6 +46,7 @@ Resources:
       Namespace: AWS/ApplicationELB
       MetricName: HealthyHostCount
       Statistic: Minimum
+      Unit: Count
       Period: 60
       EvaluationPeriods: 2
       DatapointsToAlarm: 2
@@ -59,6 +60,13 @@ Resources:
           Value: !GetAtt TargetGroup.TargetGroupFullName
       AlarmActions:
         - !Ref AlarmTopic
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
 
   Target5xxAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -68,6 +76,7 @@ Resources:
       Namespace: AWS/ApplicationELB
       MetricName: HTTPCode_Target_5XX_Count
       Statistic: Sum
+      Unit: Count
       Period: 60
       EvaluationPeriods: 5
       DatapointsToAlarm: 3
@@ -81,3 +90,10 @@ Resources:
           Value: !GetAtt TargetGroup.TargetGroupFullName
       AlarmActions:
         - !Ref AlarmTopic
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

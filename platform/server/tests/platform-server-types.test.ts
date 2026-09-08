@@ -21,6 +21,7 @@ if (!appId.ok || !routeName.ok) {
 }
 
 const permission = "smoke.smoke:read" as Permission;
+const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Server type fixture only." } as const;
 const auth: PlatformServerAuthHook = {
   grantedPermissions: () => [permission],
   authenticate: () => ({ authenticated: true, permissions: [permission], subject: "subject", rateLimitKey: "principal:subject" }),
@@ -37,6 +38,7 @@ const app = definePlatformApp({
       method: "GET",
       path: "/echo",
       auth: { kind: "authenticated", permissions: [permission] },
+      observability: testObservability,
       handler: {
         handle: (): PlatformResponse => ({ status: 200 }),
       },

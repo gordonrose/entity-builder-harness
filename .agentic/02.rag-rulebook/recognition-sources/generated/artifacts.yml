@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 834
-  term_count: 1680
+  indexed_artifacts: 842
+  term_count: 1696
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -3768,6 +3768,18 @@ terms:
   canonical_id: rag-rulebook.derivation-report.04-deploy.2026-07-10-platform-shell-runtime-family
   evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml
   confidence_weight: 1
+- term: rag-rulebook.derivation-report.04-deploy.2026-09-08-platform-target-alerting-policy
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-09-08-platform-target-alerting-policy
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-09-08-platform-target-alerting-policy
+  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+  confidence_weight: 1
 - term: rag-rulebook.derivation-reports.readme
   category: artifact-id
   match_type: exact
@@ -5681,6 +5693,18 @@ terms:
   match_type: exact
   canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-management.2026-06-30
   evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml
+  confidence_weight: 1
+- term: rag-rulebook.source-material-review.04-deploy.platform-target-alerting-policy.2026-09-08
+  category: artifact-id
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.platform-target-alerting-policy.2026-09-08
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+  confidence_weight: 1
+- term: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+  category: file-path
+  match_type: exact
+  canonical_id: rag-rulebook.source-material-review.04-deploy.platform-target-alerting-policy.2026-09-08
+  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
   confidence_weight: 1
 - term: rag-rulebook.source-material-reviews.readme
   category: artifact-id
@@ -8250,6 +8274,18 @@ terms:
   canonical_id: deploy.rules.03-product.platform-shell-runtime-family
   evidence_path: docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml
   confidence_weight: 1
+- term: deploy.rules.03-product.platform-target-alerting-policy
+  category: rule-id
+  match_type: exact
+  canonical_id: deploy.rules.03-product.platform-target-alerting-policy
+  evidence_path: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+  confidence_weight: 1
+- term: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.rules.03-product.platform-target-alerting-policy
+  evidence_path: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+  confidence_weight: 1
 - term: deploy.rules.readme
   category: artifact-id
   match_type: exact
@@ -8370,6 +8406,18 @@ terms:
   canonical_id: deploy.source-material.03-product.platform-shell-runtime-family
   evidence_path: docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md
   confidence_weight: 1
+- term: deploy.source-material.03-product.platform-target-alerting-policy
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.source-material.03-product.platform-target-alerting-policy
+  evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+  confidence_weight: 1
+- term: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.source-material.03-product.platform-target-alerting-policy
+  evidence_path: docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md
+  confidence_weight: 1
 - term: deploy.source-material.readme
   category: artifact-id
   match_type: exact
@@ -8466,6 +8514,18 @@ terms:
   canonical_id: aws.plan.kanbien-staging-platform-shell-initial-deployment
   evidence_path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
   confidence_weight: 1
+- term: aws.runbook.platform-shell-staging-alarms
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.runbook.platform-shell-staging-alarms
+  evidence_path: docs/aws/runbooks/platform-shell-staging-alarms.md
+  confidence_weight: 1
+- term: docs/aws/runbooks/platform-shell-staging-alarms.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.runbook.platform-shell-staging-alarms
+  evidence_path: docs/aws/runbooks/platform-shell-staging-alarms.md
+  confidence_weight: 1
 - term: aws.runbooks.platform-shell-staging-rollback
   category: artifact-id
   match_type: exact
@@ -8561,6 +8621,18 @@ terms:
   match_type: exact
   canonical_id: infra.04-deploy.03-product.image.readme
   evidence_path: infra/04.deploy/03.product/image/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.readme
+  evidence_path: infra/04.deploy/03.product/targets/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.readme
+  evidence_path: infra/04.deploy/03.product/targets/README.md
   confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
   category: artifact-id
@@ -8837,6 +8909,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-infrastructure
   evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-observability-prerequisites.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-observability-prerequisites.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-observability-prerequisites/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-observability-prerequisites.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-observability-prerequisites
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-observability-prerequisites
+  evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-observability-prerequisites
+  evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id

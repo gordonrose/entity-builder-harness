@@ -35,10 +35,11 @@ process; they do not replace the lower-level contract vocabulary.
 ### `registry.ts` — assembling one process’s app catalogue
 
 This file is the meeting point for app declarations. At process startup, it
-collects permissions, routes, jobs, health checks, and config schemas from each
-mounted app. Because it sees the complete catalogue, it can reject duplicate
-routes, jobs, and health names, a route that refers to an undeclared
-permission, and an app attempting to register another app’s namespace.
+collects permissions, routes, jobs, observability profiles, health checks, and
+config schemas from each mounted app. Because it sees the complete catalogue,
+it can reject duplicate routes, jobs, health names, and profile names; a route
+that refers to an undeclared permission or unknown profile; and an app
+attempting to register another app’s namespace.
 
 `mountPlatformRuntimeApps` creates a fresh registry for one process and passes
 each app a scoped `forApp(appId)` view. The app may describe its contributions,

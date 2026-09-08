@@ -60,6 +60,22 @@
       "Resource": "*"
     },
     {
+      "Sid": "ReadSelectedPlatformShellClusterTelemetryPrerequisite",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeClusters"
+      ],
+      "Resource": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging"
+    },
+    {
+      "Sid": "DiscoverCloudWatchTelemetryPrerequisiteMetric",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "PassOnlyThePlatformShellServiceDeploymentRole",
       "Effect": "Allow",
       "Action": [

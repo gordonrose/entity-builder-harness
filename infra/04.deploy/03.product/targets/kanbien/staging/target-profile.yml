@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 9
+#   version: 14
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -56,6 +56,7 @@ deployment:
     validation:
       static_policy_gate: npm run platform:shell:infrastructure:check
       aws_template_validation: aws cloudformation validate-template
+      service_observability_prerequisite_check: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
       execution_gate: reviewed-cloudformation-change-set-and-explicit-current-chat-approval
   execution_policy:
     style: hybrid-bootstrap-manual-then-github-oidc
@@ -73,7 +74,7 @@ deployment:
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
       role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
-      role_policy_deployment_status: deployed-and-verified-2026-09-06
+      role_policy_deployment_status: source-updated-pending-governed-iam-change
 source:
   provider: github
   repository: gordonrose/entity-builder-harness
@@ -335,18 +336,192 @@ config:
       arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       delivery: controlled-smoke-token-acquisition-only-not-ecs-task-environment
 observability:
+  policy:
+    standard: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
+    catalogue_index: infra/04.deploy/03.product/targets/README.md
+    canonical_catalogue: observability.alarms
+    severity_vocabulary:
+      - critical
+      - warning
   log_group: /ecs/kanbien-staging-platform-shell
   log_retention_days: 14
   alarm_destination:
+    id: foundation-alarm-topic
     type: email
     source: operator-supplied-at-deployment-time
     value_stored_in_repository: false
+  telemetry_prerequisites:
+    - id: ecs-container-insights-enhanced
+      owner: existing-ecs-cluster
+      required_for:
+        - ecs-running-count-mismatch
+      configuration:
+        cluster_arn_source: aws.cluster
+        setting: containerInsights
+        required_value: enhanced
+      expected_signal:
+        namespace: ECS/ContainerInsights
+        metric: RunningTaskCount
+        dimensions:
+          - ClusterName
+          - ServiceName
+      deployment_preflight:
+        method: aws-ecs-describe-clusters-settings
+        cluster_name_source: aws.cluster
+        service_name_source: runtime.server.service
+        failure_mode: block-service-stack-update
+      current_status: pending-read-only-verification
   alarms:
-    - alb-unhealthy-targets
-    - alb-5xx-spike
-    - ecs-running-count-mismatch
-    - ecs-high-cpu
-    - ecs-high-memory
+    - id: alb-unhealthy-targets
+      purpose: Detect that no healthy platform-shell target is available behind the shared ALB.
+      signal:
+        namespace: AWS/ApplicationELB
+        metric: HealthyHostCount
+        dimensions:
+          - name: LoadBalancer
+            resolver: existing-alb-resource-suffix
+          - name: TargetGroup
+            resolver: foundation-target-group-full-name
+      condition:
+        statistic: Minimum
+        comparison_operator: LessThanThreshold
+        threshold:
+          value: 1
+        unit: Count
+      evaluation:
+        period_seconds: 60
+        evaluation_periods: 2
+        datapoints_to_alarm: 2
+        treat_missing_data: breaching
+      response:
+        severity: critical
+        alarm_destination: foundation-alarm-topic
+        runbook: docs/aws/runbooks/platform-shell-staging-alarms.md
+      implementation:
+        stack: foundation
+        logical_resource: UnhealthyTargetAlarm
+        alarm_name: kanbien-staging-platform-shell-unhealthy-targets
+        alarm_description: The platform-shell target group has no healthy targets.
+    - id: alb-5xx-spike
+      purpose: Detect a sustained burst of server errors returned by the platform-shell target group.
+      signal:
+        namespace: AWS/ApplicationELB
+        metric: HTTPCode_Target_5XX_Count
+        dimensions:
+          - name: LoadBalancer
+            resolver: existing-alb-resource-suffix
+          - name: TargetGroup
+            resolver: foundation-target-group-full-name
+      condition:
+        statistic: Sum
+        comparison_operator: GreaterThanOrEqualToThreshold
+        threshold:
+          value: 5
+        unit: Count
+      evaluation:
+        period_seconds: 60
+        evaluation_periods: 5
+        datapoints_to_alarm: 3
+        treat_missing_data: notBreaching
+      response:
+        severity: warning
+        alarm_destination: foundation-alarm-topic
+        runbook: docs/aws/runbooks/platform-shell-staging-alarms.md
+      implementation:
+        stack: foundation
+        logical_resource: Target5xxAlarm
+        alarm_name: kanbien-staging-platform-shell-target-5xx
+        alarm_description: The platform-shell target group returned server errors.
+    - id: ecs-running-count-mismatch
+      purpose: Detect when the ECS service has fewer running tasks than its declared desired count.
+      signal:
+        namespace: ECS/ContainerInsights
+        metric: RunningTaskCount
+        dimensions:
+          - name: ClusterName
+            resolver: cluster-name-from-cluster-arn
+          - name: ServiceName
+            resolver: service-name
+      condition:
+        statistic: Minimum
+        comparison_operator: LessThanThreshold
+        threshold:
+          value_source: service-desired-count
+        unit: Count
+      evaluation:
+        period_seconds: 60
+        evaluation_periods: 2
+        datapoints_to_alarm: 2
+        treat_missing_data: breaching
+      response:
+        severity: critical
+        alarm_destination: foundation-alarm-topic
+        runbook: docs/aws/runbooks/platform-shell-staging-alarms.md
+      implementation:
+        stack: service
+        logical_resource: EcsRunningCountAlarm
+        alarm_name: kanbien-staging-platform-shell-ecs-running-count-mismatch
+        alarm_description: The platform-shell ECS service has fewer running tasks than desired.
+    - id: ecs-high-cpu
+      purpose: Detect sustained service CPU pressure before it becomes an availability incident.
+      signal:
+        namespace: AWS/ECS
+        metric: CPUUtilization
+        dimensions:
+          - name: ClusterName
+            resolver: cluster-name-from-cluster-arn
+          - name: ServiceName
+            resolver: service-name
+      condition:
+        statistic: Average
+        comparison_operator: GreaterThanOrEqualToThreshold
+        threshold:
+          value: 80
+        unit: Percent
+      evaluation:
+        period_seconds: 60
+        evaluation_periods: 5
+        datapoints_to_alarm: 3
+        treat_missing_data: notBreaching
+      response:
+        severity: warning
+        alarm_destination: foundation-alarm-topic
+        runbook: docs/aws/runbooks/platform-shell-staging-alarms.md
+      implementation:
+        stack: service
+        logical_resource: EcsHighCpuAlarm
+        alarm_name: kanbien-staging-platform-shell-ecs-high-cpu
+        alarm_description: The platform-shell ECS service has sustained high CPU utilisation.
+    - id: ecs-high-memory
+      purpose: Detect sustained service memory pressure before a task is killed or becomes unhealthy.
+      signal:
+        namespace: AWS/ECS
+        metric: MemoryUtilization
+        dimensions:
+          - name: ClusterName
+            resolver: cluster-name-from-cluster-arn
+          - name: ServiceName
+            resolver: service-name
+      condition:
+        statistic: Average
+        comparison_operator: GreaterThanOrEqualToThreshold
+        threshold:
+          value: 80
+        unit: Percent
+      evaluation:
+        period_seconds: 60
+        evaluation_periods: 5
+        datapoints_to_alarm: 3
+        treat_missing_data: notBreaching
+      response:
+        severity: warning
+        alarm_destination: foundation-alarm-topic
+        runbook: docs/aws/runbooks/platform-shell-staging-alarms.md
+      implementation:
+        stack: service
+        logical_resource: EcsHighMemoryAlarm
+        alarm_name: kanbien-staging-platform-shell-ecs-high-memory
+        alarm_description: The platform-shell ECS service has sustained high memory utilisation.
   waf_request_logging: deferred-until-an-observability-owned-redaction-and-retention-profile-is-implemented
 operations:
   owner: Gordon Rose

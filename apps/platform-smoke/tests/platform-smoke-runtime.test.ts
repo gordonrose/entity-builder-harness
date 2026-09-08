@@ -19,8 +19,10 @@ import {
 import {
   platformSmokeApp,
   platformSmokeAppManifest,
+  platformSmokeEchoObservabilityProfileName,
   platformSmokeJobMessageType,
   platformSmokeReadPermission,
+  platformSmokeRebuildObservabilityProfileName,
 } from "../src/index";
 
 async function main(): Promise<void> {
@@ -40,10 +42,13 @@ async function main(): Promise<void> {
   equal(mounted.value.permissions.length, 1);
   equal(mounted.value.routes.length, 1);
   equal(mounted.value.jobs.length, 1);
+  equal(mounted.value.observabilityProfiles.length, 2);
   equal(mounted.value.healthChecks.length, 1);
   equal(mounted.value.configSchemas.length, 1);
   equal(mounted.value.routes[0]?.path, "/smoke/:id");
   equal(mounted.value.jobs[0]?.messageType, platformSmokeJobMessageType);
+  deepEqual(mounted.value.routes[0]?.observability, { kind: "profile", profile: platformSmokeEchoObservabilityProfileName });
+  deepEqual(mounted.value.jobs[0]?.observability, { kind: "profile", profile: platformSmokeRebuildObservabilityProfileName });
   equal(typeof mounted.value.lifecycle?.beforeStart, "function");
 
   const config = validatePlatformTestConfigSchemas(mounted.value.configSchemas, deps.config);

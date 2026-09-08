@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 3
+  version: 11
   status: active
   layer: 05.education
   domain: education
@@ -4054,11 +4054,14 @@ accepted now and a worker completes later—needs a future explicit lifecycle
 design; it should not overload the current three outcome values with vague
 states such as `pending`.
 
-This is a **proposal**, not an enforced repository rule yet. Before locking it,
-we should reconcile it with the existing semantic identifier policy, make it a
-versioned Core/product taxonomy, define extension ownership, and add validators
-and fixtures. The feature harness can then require capabilities to select from
-it rather than inventing names freely.
+This was initially a **proposal**. Lesson 75 later locked the main
+provider-neutral operational vocabulary in
+`platform/contracts/src/observability.ts`, including controlled actions,
+interaction sources, execution contexts, operational outcomes, job-delivery
+dispositions, capability names, and canonical emitted field names. The existing
+Core audit event and outcome contracts remain deliberately unchanged: adopting
+this vocabulary as a versioned Core audit taxonomy, and requiring every future
+capability profile to use it, is still later governed work.
 
 ### Study question
 
@@ -6272,10 +6275,13 @@ The controlled action baseline is:
 | Identity/security | `authenticate`, `verify`, `reset`, `recover`, `rotate` |
 | Generation | `generate` |
 
-This is a proposed versioned Core/product taxonomy, not a licence for arbitrary
-new strings. A genuinely new action requires a reviewed vocabulary change,
+The controlled operational vocabulary is now implemented in
+`platform/contracts/src/observability.ts`; it is not a licence for arbitrary
+new strings. A genuinely new action requires a reviewed contract change,
 corresponding validators, fixtures, and documentation. A feature must not use
-transport words such as `POST` or put outcome into its event type.
+transport words such as `POST` or put outcome into its event type. The existing
+Core audit taxonomy is separate and remains unchanged until its own governed,
+versioned migration.
 
 ### Metric cardinality and tenant visibility
 
@@ -6501,16 +6507,1039 @@ now recorded in `platform-runtime-implementation.md`. The queue trace-parent,
 worker job-span, and direct-cause contract work is implemented and tested in
 this chat worktree, but has not yet been committed.
 
-## 68. Next Lesson Queue
+## 68. Observability Delivery: What the Target Already Does
 
-1. Continue observability by examining provider-neutral ports: how structured
-   logs, metrics, and traces leave a server or worker without importing a
-   provider SDK into generic platform code.
-2. Learn how an ECS host facility receives redacted stdout JSON and why that is
-   different from a durable audit or security-record sink.
-3. Before observability implementation, select one bounded first use case and
-   define its record profiles, provider requirements, failure behaviour, and
-   tests rather than creating empty provider packages.
+### Emitting a fact is not delivering it
+
+The platform server and worker can create safe operational facts: a structured
+log record, a bounded metric observation, or a span. That is only the first
+half of observability. A deployed target still needs to collect, retain,
+protect, search, aggregate, alert on, and eventually expire those facts.
+
+For the current Kanbien staging target, the log route is deliberately modest:
+
+```text
+platform process writes safe JSON to stdout
+        ↓
+ECS awslogs log driver
+        ↓
+CloudWatch log group: /ecs/kanbien-staging-platform-shell
+        ↓
+operator searches a 14-day operational-log window
+```
+
+This does not require generic platform code to import an AWS CloudWatch SDK.
+The application process uses the provider-neutral logger; the ECS task
+definition is the AWS-specific delivery mechanism. Platform emits a safe
+record; the target adapter and infrastructure deliver it.
+
+### Four sources of operational evidence
+
+| Source | What it tells us | Current delivery | What it does not prove |
+|---|---|---|---|
+| Application stdout logs | A particular server or worker decision/outcome | ECS `awslogs` to a retained CloudWatch log group | A durable audit trail or security-record store |
+| ALB metrics | Whether traffic reaches healthy targets and whether targets return 5xx responses | Native CloudWatch metrics and alarms | Why an individual application decision failed |
+| ECS metrics | Whether the service has the desired number of tasks and is approaching CPU/memory pressure | Native CloudWatch metrics and alarms | Business capability success or failure |
+| WAF metrics | Whether web-request rules are matching | Native CloudWatch WAF metrics | Full request logging; that is deliberately deferred pending a redaction/retention profile |
+
+The foundation target also sends availability alarms through an SNS topic to an
+operator-controlled email subscription. An alarm says, “this service may need
+attention.” It is not a diagnostic log, security signal, or accountable audit
+event.
+
+### What is still missing
+
+The current target has a **log destination and infrastructure health alarms**.
+It does not yet have all forms of observability delivery:
+
+- Platform metric observations do not yet have a selected CloudWatch metric or
+  log-derived-metric delivery path.
+- Provider-neutral traces are tested in memory but have no exporter, trace
+  store, sampler, or access/retention policy.
+- Security decisions do not yet emit a named security-record stream.
+- Audit events have no durable, protected recorder or store.
+- WAF request logging remains intentionally deferred because raw web-request
+  evidence needs its own redaction, access, and retention policy.
+
+This is why “CloudWatch exists” is not the same as “observability is complete.”
+The target can show that a container was unhealthy or returned 5xx responses.
+It cannot yet answer every product-level question, such as which approved
+export job failed at which stage with what safe error classification.
+
+### Misconception check
+
+“If we add a CloudWatch SDK to `platform/observability`, every problem is
+solved.”
+
+No. That would couple generic platform code to one provider and still leave
+record profiles, metric-cardinality rules, trace sampling, retention, access,
+audit integrity, and security-record policy unresolved. The target already
+shows a better first pattern for plain logs: keep the process provider-neutral
+and let the runtime environment collect stdout.
+
+### Study question
+
+Why is an ALB `5xx` alarm useful but insufficient for an invoice-export
+investigation?
+
+It can show a damaging pattern—targets are returning server errors—but it has
+no knowledge of the business capability, its safe target reference, the queue
+message, or the bounded failure classification. The relevant application log,
+trace, audit event, or security signal must answer those separate questions.
+
+### Live target check
+
+After renewing the `kanbien-dev` SSO session, a read-only inspection confirmed
+that the target log group has 14-day retention and a recent ECS log-stream
+event, the platform-shell service has one desired and one running task, and
+the SNS email subscription is confirmed. The two currently implemented ALB
+alarms are both `OK`.
+
+The same inspection revealed a useful readiness discrepancy: the target
+profile requires five alarms, but both the CloudFormation source and live AWS
+currently contain only the two ALB alarms. The missing three cover ECS
+running-count mismatch, high CPU, and high memory. They remain required rather
+than being silently removed from the profile. The staging deploy-readiness
+manifest now records that blocking gap and the reduced operational-proof gap.
+
+Planning triage: the platform implementation plan does not change because
+this is target-specific evidence. The staging deploy-readiness manifest owns
+the evidence and missing-infrastructure alarm work. No AWS state was changed.
+
+## 69. Provider-Neutral Ports: One Word, Three Different Jobs
+
+### A port is a socket, not a cloud service
+
+In this architecture, a **port** is a small interface owned by Core or the
+platform that describes an effect the platform needs. It deliberately says
+nothing about AWS, CloudWatch, a vendor SDK, credentials, network addresses,
+or billing.
+
+Think of a wall socket. The building defines the socket; a lamp, charger, or
+appliance supplies a compatible plug. Likewise, the platform defines the
+observability port; a no-op implementation, test fake, ECS stdout collector,
+or future AWS adapter can supply the implementation.
+
+```text
+server or worker
+    │
+    ├─ Logger.write(safe record) ──> stdout implementation ──> ECS awslogs
+    │
+    ├─ Metrics.record(bounded point) ──> no-op or future metrics adapter
+    │
+    └─ Tracer.startSpan/end(span) ──> no-op/test fake or future trace adapter
+```
+
+The vertical arrows are intentionally different. “Observability” is an
+umbrella term, but a log line, a metric point, and a trace span have different
+data shapes, retention needs, costs, query patterns, and failure modes.
+
+### The three current ports
+
+| Port | What platform code asks for | Why it has its own shape |
+|---|---|---|
+| `Logger` | Write one safe record with level, stable message, optional correlation, and fields. | Logs are discrete explanations for an operator or investigator. ECS can collect stdout records directly. |
+| `Metrics` | Record one numeric point with a fixed name, kind, unit, time, and bounded labels. | Metrics are aggregated patterns. A label such as tenant, user, request, or trace would create unsafe/high-cardinality series, so Core rejects those labels. |
+| `Tracer` | Start a named span, optionally beneath an internal parent, then end it with a bounded outcome. | Traces are timed execution trees. They need parent/child handling and later sampling/export policy, neither of which belongs in ordinary logging. |
+
+`platform/observability` sits immediately before these ports. It normalises
+and bounds fields, redacts unsafe values, turns request/job facts into safe
+metric labels, and limits trace attributes. It is a safety bridge, not a cloud
+client.
+
+### Why one CloudWatch SDK would be the wrong first answer
+
+It is tempting to give every platform concern a CloudWatch client. That makes
+the generic platform know provider credentials and turns a later provider
+change into a widespread code change. It also hides the real design questions:
+
+- Which application metrics are worth paying to retain and alarm on?
+- Which labels are small, stable, and non-sensitive?
+- Which traces are sampled, who may search them, and how long may they live?
+- What must never be sent to a normal operational system because it belongs in
+  a protected audit or security-record path instead?
+
+For ordinary logs, the ECS host already supplies a clean solution: the process
+writes safe stdout and the target collects it. A future provider adapter would
+be appropriate only when a port needs a delivery mechanism the host cannot
+provide—for example, a deliberate metrics exporter or trace exporter. Its
+provider-specific home would be under
+`platform/adapters/aws/observability/cloudwatch/`, while the generic platform
+continues to depend only on the port.
+
+### Misconception check
+
+“A no-op implementation means the platform has no observability.”
+
+No. It means a target can deliberately run without one optional delivery path
+while the server and worker behaviour stays correct. The target can still use
+stdout logging and native AWS health signals. A no-op is safer than making a
+request fail because an optional telemetry service is unavailable. Required
+audit or security evidence needs a different, durable design; it must not
+silently become no-op telemetry.
+
+### Study question
+
+Why may `tenant_id` be suitable for an authorised audit search but unsafe as a
+shared metric label?
+
+An audit search is an authorised lookup over discrete evidence for a particular
+tenant. A metric system creates a separate time series for each label
+combination; tenant IDs create an unbounded number of globally visible series
+and can leak or destabilise the monitoring system. The information need is
+real, but the record type and access boundary must match it.
+
+Planning triage: no generic platform plan change is needed. These ports and
+their safety boundaries already exist in Core, platform observability, and the
+target-direction plan. The target-specific missing ECS alarms are recorded in
+the staging deploy-readiness manifest. A future metrics or trace adapter still
+requires a bounded use case, provider/retention/access decisions, and its own
+implementation slice.
+
+## 70. Alarm Definitions: Turning a Concern into an Operable Rule
+
+### An alarm is a small decision system
+
+It is tempting to define an alarm as a name plus a number:
+
+> “Tell me when CPU is above 80%.”
+
+That sentence leaves out most of the decisions that determine whether the
+alarm is useful or noisy. A complete alarm definition answers eight questions:
+
+| Question | Example in the platform-shell target | Why it matters |
+| --- | --- | --- |
+| What signal? | `AWS/ECS` `CPUUtilization` | The alarm must name a real provider metric. |
+| Which exact resource? | `ClusterName` plus `ServiceName` dimensions | Without dimensions, a shared cluster's unrelated workload could trigger it. |
+| What is bad? | Average CPU is at least 80% | This turns a number into an explicit failure condition. |
+| For how long? | Three of five one-minute periods | A short spike should not normally wake an operator. |
+| What if there is no data? | `notBreaching` for CPU/memory; `breaching` for running count | Missing data has a meaning that must be chosen per signal. |
+| Who is notified? | The foundation-owned SNS alarm topic | A CloudWatch state change is not helpful unless it reaches an owned notification route. |
+| Who owns the resource? | Foundation owns shared ALB alarms; service owns service-specific ECS alarms | The resource must live with the thing that supplies its dimensions and lifecycle. |
+| How is it handled? | A named runbook | The operator needs a safe first action, not only a red dashboard. |
+
+### Why the running-count alarm has a prerequisite
+
+The desired rule is:
+
+```text
+if the service is meant to run 1 task
+and RunningTaskCount is below 1 for two minutes
+then raise a critical alarm
+```
+
+The `RunningTaskCount` metric comes from `ECS/ContainerInsights`, not the
+ordinary free Fargate CPU/memory metrics. The existing shared ECS cluster must
+therefore use enhanced Container Insights, and CloudWatch must already have
+seen a metric for this particular cluster and service. Otherwise the alarm can
+be perfectly written yet have nothing reliable to evaluate.
+
+The repository now makes this explicit in two layers:
+
+```text
+target profile
+  └─ says enhanced telemetry and the metric are prerequisites
+       ↓
+read-only deployment preflight
+  └─ checks cluster setting and metric presence
+       ↓
+CloudFormation service stack
+  └─ creates the running-count, CPU, and memory alarms
+```
+
+That is a useful general pattern: a declaration says what must be true; a
+preflight proves the external prerequisite; infrastructure applies the rule.
+
+### Why two stacks own different alarms
+
+The shared foundation stack already owns the ALB target group and the SNS
+topic, so it owns the “no healthy target” and “target 5xx” alarms. The service
+stack owns the ECS service and its `ClusterName`/`ServiceName` dimensions, so
+it owns the running-task, CPU, and memory alarms.
+
+This does **not** mean there are two separate alarm policies. The structured
+five-alarm policy lives in the staging target profile. The static infrastructure
+check compares each profile definition with its CloudFormation resource,
+including metric, dimensions, threshold, evaluation window, missing-data rule,
+notification path, tags, and runbook. That prevents the profile saying one
+thing while the deployed template quietly says another.
+
+The repository now also has a reusable **Platform Target Alerting Policy**
+standard. It says that every future product target puts its complete alarm
+catalogue in its own `target-profile.yml`; the target index only links to that
+catalogue, its infrastructure implementation, and its runbook. This is a
+useful anti-drift pattern: one authoritative policy, with a quick human map to
+find it. The static target check verifies both the detailed policy-to-template
+match and the link back to the governing standard.
+
+### Misconception check
+
+“If CloudFormation accepts an alarm resource, the alarm is production-ready.”
+
+No. CloudFormation validates the resource shape, not whether a source metric
+exists, the execution role may create it, notification reaches an operator, or
+the threshold is operationally useful. Those are separate properties. This
+slice adds the preflight and narrowly scoped IAM source declarations, but AWS
+has not yet been changed; live verification and delivery proof remain blocking
+readiness work.
+
+### Study question
+
+Why should the CPU alarm treat missing data as `notBreaching`, while the
+running-task alarm treats it as `breaching`?
+
+CPU has no meaningful high-use datapoint when the task is not running, so
+treating absence as high CPU creates misleading noise. A missing running-task
+signal, after enhanced telemetry has been confirmed as a prerequisite, can mean
+the service or telemetry is unhealthy; it should draw attention rather than
+silently count as healthy.
+
+Planning triage: this is target-specific observability work. The structured
+target profile, CloudFormation sources, deployment preflight, runbook, staging
+readiness manifest, AWS deployment plan, alert-policy standard, and target
+catalogue index are updated together. The generic platform-observability plan
+does not change: no provider SDK or application metric/trace exporter was
+added to platform code.
+
+## 71. Capability Observability Profiles: One Capability, Four Different Needs
+
+### The missing declaration layer
+
+The platform already has safe helpers for operational logs, request/job
+metrics, and trace spans. What it does **not** yet have is a declarative
+`CapabilityObservabilityProfile` that tells the platform which of those helpers
+a particular route or job should use, and why.
+
+That distinction matters. A helper answers, “how do I safely write a metric?”
+A profile answers, “does this capability need that metric at all, and which
+safe facts are allowed?” The profile is a design-time declaration; it is not a
+new record emitted for every request.
+
+```text
+capability declaration
+  └─ observability profile says what may be measured or traced
+       ↓
+platform observability helpers normalise and emit safe operational facts
+       ↓
+target composition selects collection, retention, access, dashboards, and alarms
+       ↓
+provider receives only the selected, bounded telemetry
+```
+
+### One action can create several kinds of evidence
+
+Imagine a future `invoice.download` capability. It is only an illustration;
+this repository does not yet contain that business capability.
+
+| Need | Example fact | Why it exists | What it must not contain |
+| --- | --- | --- | --- |
+| Operational log | `capability=invoice.download`, `outcome=ok`, `latency_ms=180` | Diagnose one request's technical behaviour. | Invoice contents, customer name, download URL, access token. |
+| Metric | request duration with route/method/outcome labels | See aggregate rate, latency, and failure trends. | Tenant, user, invoice ID, request ID, raw URL. |
+| Trace span | a bounded timing segment for the route and downstream storage call | See where time was spent along one execution path. | Request body, headers, token, customer data, raw provider response. |
+| Audit event | authorised actor performed an invoice download on a bounded invoice reference | Accountability and later authorised investigation. | The document itself or broad diagnostic payload. |
+
+The first three are operational observability. The fourth is durable business
+and security evidence, with different retention and access rules. A single
+free-form “log everything” call is not a substitute for this separation.
+
+### What a future capability profile should decide
+
+A profile should name only what the platform needs to handle telemetry safely:
+
+1. **Capability identity** — a stable name such as `invoice.download`, not a
+   URL or user-provided label.
+2. **Operational log facts** — a small allowlist such as outcome, bounded error
+   class, latency, retry count, and deployment version.
+3. **Metrics** — aggregate measurements and low-cardinality labels. For a
+   request, method, stable route name, outcome, and status are reasonable;
+   tenant and user are not.
+4. **Tracing** — whether a span is useful, its stable span name, and the small
+   attribute allowlist. A trace explains timing and causal flow; it is not the
+   durable audit trail.
+5. **Audit/security handoff** — whether successful action, denial, or another
+   security decision needs separately governed durable evidence.
+6. **Failure behaviour** — observability failure normally must not fail a user
+   request, while required audit/security evidence may need a stricter,
+   separately designed path.
+
+### Why cardinality is the trap
+
+Metric systems make a separate time series for every unique combination of
+labels. A few good labels stay small:
+
+```text
+method: GET | POST
+outcome: ok | rejected | error
+route: invoice.download | invoice.list
+```
+
+One bad label grows with your customers:
+
+```text
+tenant_id: tenant-a | tenant-b | tenant-c | ...
+invoice_id: invoice-1 | invoice-2 | invoice-3 | ...
+```
+
+The second form increases cost and query difficulty, can exhaust metric
+limits, and exposes identifiers to a broadly accessible operational system.
+That is why the current `recordPlatformRequestMetric` helper records a stable
+route and bounded result fields, while logging and audit paths handle different
+facts under different controls.
+
+### What already exists, and what remains future work
+
+| Existing now | Still to design and implement |
+| --- | --- |
+| `normalization.ts` bounds unknown log/trace values and redacts known sensitive fields. | Direct server and worker consumption of resolved capability profiles. |
+| `platform/contracts/src/observability-profiles.ts` declares provider-neutral profiles, safe field allowlists, NFR classes, and latency intervals. | Target-selected metric and trace export adapters, retention, access controls, and dashboards. |
+| Runtime and test registries require every route/job to adopt a registered profile or use a bounded, justified opt-out. | Capability-specific sampling and trace propagation policy. |
+| `metrics.ts` records provider-neutral request, job, and health metric points. | Per-capability profile-consumption tests and an explicit opt-out review workflow for real apps. |
+| `tracing.ts` creates bounded provider-neutral spans and falls back safely when tracing is unavailable. | A selected histogram implementation and target-governed percentile, SLO, error-budget, and alert policy. |
+
+### Misconception check
+
+“If I add an audit event, I do not need a metric.”
+
+No. An audit event may tell an authorised investigator that one specific
+download happened. It does not efficiently answer, “are downloads failing more
+often today than yesterday?” A metric can answer that aggregate health question
+without carrying a person, tenant, or document identifier.
+
+### Study question
+
+Why is a correlation ID acceptable in a safe operational log but normally a
+poor metric label?
+
+It lets an operator find the few records for one execution. As a metric label,
+it creates a new time series for nearly every request, which is expensive,
+unsearchable at aggregate level, and needlessly exposes a request identifier.
+
+Planning triage: the capability profile is a platform-contract design slice,
+not an AWS adapter decision. It should be designed and tested before a product
+app adopts it; selecting a metrics/tracing exporter comes later through target
+configuration and provider adapters.
+
+## 72. Where a Capability Observability Profile Belongs
+
+### Start with the question the profile answers
+
+A route or job needs to declare, “these are my approved operational
+measurements.” That makes it an **app-facing declaration**, just like its
+route name, authentication requirement, tenant requirement, or input
+validator. It is not generic metric vocabulary and it is not a cloud-delivery
+implementation.
+
+The future ownership shape is:
+
+```text
+packages/core/monitoring
+  └─ universal vocabulary: metric kinds, units, safe label rules, tracer port
+       ↓
+platform/contracts/observability
+  └─ app-facing profile declaration and explicit opt-out vocabulary
+       ↓
+platform/runtime/registry
+  └─ complete mounted view: profiles, routes, jobs, and cross-reference checks
+       ↓
+platform/server and platform/workers
+  └─ use the resolved profile with safe platform-observability helpers
+       ↓
+target configuration and adapters
+  └─ choose exporter, retention, access, dashboards, and alarms
+```
+
+### Why it does not belong in Core
+
+Core should be able to say what a metric is and which labels are unsafe. It
+cannot know whether a future `billing.invoice.download` route exists or whether
+that route is important enough to measure. That is product/app meaning, so an
+app-facing contract is the right boundary.
+
+### Why it does not belong in `platform/observability`
+
+`platform/observability` owns the safe machinery: normalise a field, write a
+safe log, record a metric, start/end a span. If it also decided which app
+capabilities need telemetry, it would need advance knowledge of every product
+app and become a hidden policy owner.
+
+Think of it as the difference between a camera and a filming plan. The camera
+knows how to capture an image; the plan decides what is worth filming.
+
+### The declaration and reference pattern
+
+The recommended shape is a **named registered profile** plus a reference from
+each route or job. An app can reuse one profile where several capabilities
+genuinely have the same safe operational needs, but the reference remains
+visible beside each capability.
+
+```text
+Billing app mount
+  ├─ registers profile: billing.read-operation
+  ├─ registers route: billing.invoice.list → billing.read-operation
+  └─ registers job: billing.invoice.export → explicit different profile
+```
+
+This is preferable to silently giving every route the same telemetry, because
+read operations, exports, writes, and long-running jobs have different risks
+and useful measurements. It is also preferable to copying a full profile into
+every route, which would make later safe changes repetitive and inconsistent.
+
+An explicit opt-out remains possible, but it needs a short reason. For example,
+a platform-internal route with no product behaviour might have no meaningful
+application metric. “We forgot” is not an opt-out; a registry should reject a
+route or job that has neither a valid profile reference nor a reasoned opt-out.
+
+### Why the complete registry must decide
+
+This is the same principle as permission validation.
+
+```text
+Route: billing.invoice.list → profile billing.read-operation
+Profile: billing.read-operation → registered elsewhere during app mount
+```
+
+The route can check that its reference looks like a valid name. It cannot know
+on its own whether that profile was registered, whether another profile reused
+the same name, or whether every other route/job made a deliberate choice. Only
+the runtime registry sees the complete mounted application.
+
+The existing `platform/runtime` registry already uses this pattern for route
+permissions: it gathers declarations during app mount, then validates their
+relationships before returning a mounted runtime. Observability-profile
+validation should happen at the same startup boundary, before the server or
+worker accepts work.
+
+### The checks a future registry needs
+
+| Check | Failure it prevents |
+| --- | --- |
+| Profile ID is unique and belongs to its mounting app namespace. | Two apps accidentally redefine the same operational policy. |
+| Every route/job has a profile reference or reasoned opt-out. | New capabilities quietly become invisible. |
+| Every reference resolves to a registered profile. | A typo leaves a route with undocumented telemetry. |
+| Profile labels and allowed facts satisfy Core safety limits. | Tenant/user/request data leaks into shared metrics or traces. |
+| Server/worker consume only the resolved profile. | A handler bypasses the capability policy with an ad hoc telemetry call. |
+| No contracts import a provider SDK. | A CloudWatch or tracing vendor becomes a hidden app dependency. |
+
+### Misconception check
+
+“If the route contains its telemetry code, we do not need a registry check.”
+
+No. The route can prove only what it wrote nearby. It cannot prove that the
+profile it references exists elsewhere, has not been duplicated, follows the
+same safety rules as a job profile, or that all other capabilities made a
+deliberate choice. The registry turns separate local declarations into one
+system-wide guarantee.
+
+### Study question
+
+Why is a named profile plus a visible route/job reference better than placing a
+large inline metric-and-tracing object directly in every route declaration?
+
+It provides reuse and one place to improve a common safe policy, while the
+visible reference keeps each capability's observability choice reviewable.
+The full registry can then validate that every reference resolves and every
+capability is covered or deliberately opted out.
+
+Planning triage: this is now recorded as a planned platform-contract and
+runtime-registry slice in the platform-runtime implementation plan. No
+TypeScript contract, telemetry behaviour, provider adapter, or AWS resource is
+changed by the lesson.
+
+## 73. Selecting the First Bounded Telemetry Proof
+
+### Choose a narrow real path, not a generic promise
+
+The first useful telemetry proof is the existing protected smoke route:
+
+```text
+route name: platform-smoke.echo
+app-relative path: /smoke/:id
+```
+
+It is a good teaching and test target because it crosses authentication,
+authorisation, routing, request timing, logging, metrics, and tracing without
+containing business records. Its `:id` parameter is especially useful: it
+looks tempting to record, but is exactly the kind of resource/request value
+that must not become a shared metric label or general trace attribute.
+
+### What we want to learn from it
+
+The existing platform server already creates a provider-neutral request timer
+called `platform.server.request` and a span called `platform.server.request`.
+For this route, the useful safe operational facts are:
+
+| Safe fact | Why it is useful |
+| --- | --- |
+| HTTP method | Separates different operation kinds without identifying a person. |
+| Stable route name: `platform-smoke.echo` | Identifies the declared capability, not a user-provided URL. |
+| HTTP status and outcome | Shows whether requests succeed, are rejected, or fail. |
+| Latency | Shows how long the platform took to return a response. |
+| Bounded error class | Helps group technical failures without exporting an error payload. |
+
+The following must stay out of ordinary metrics and general trace attributes:
+
+| Unsafe fact | Why it stays out |
+| --- | --- |
+| `:id` value | It is a resource identifier and can grow without limit. |
+| Tenant, principal, or email | Identifies a customer or person and creates high-cardinality series. |
+| Request/correlation/trace ID | Useful for finding individual logs, but nearly unique per request. |
+| Headers, body, response body | May contain credentials, tokens, personal data, or business content. |
+
+### The complete local proof
+
+Before selecting an exporter, a local test should prove four things:
+
+```text
+request arrives at /smoke/:id
+  → server records one safe request metric for platform-smoke.echo
+  → server starts and ends one safe request span
+  → no metric or trace attribute contains the actual :id or identity facts
+  → tracer/metric failure does not change the HTTP response
+```
+
+This proof demonstrates correct platform behaviour. It does **not** prove that
+CloudWatch, OpenTelemetry, or another provider received the data. The current
+Core metrics and tracer ports can use deterministic in-memory test doubles;
+the ECS target currently has safe stdout collection and infrastructure alarms,
+but no chosen application-metrics or trace exporter.
+
+### Why exporter selection is a later decision
+
+An exporter is an operational and cost decision, not a TypeScript convenience.
+Before a target sends these metrics or traces to a real provider, it must decide:
+
+- who may search them;
+- how long they are retained;
+- whether traces are sampled and at what rate;
+- what happens during provider failure or backpressure;
+- what data-residency and encryption boundary applies;
+- what dashboards or alerts use the resulting data; and
+- the cost limit and owner.
+
+Choosing an SDK first would reverse the design: it would make the available
+vendor fields decide what the product records. The safe profile and local proof
+must come first.
+
+### Misconception check
+
+“Because `platform.server.request` is already emitted for every request, the
+smoke route has finished observability.”
+
+Not yet. It has local provider-neutral instrumentation. It still needs the
+future capability-profile declaration/registry coverage, local assertions that
+the selected facts are safe, and—only when a real operational need is approved—a
+target-selected delivery adapter and operating model.
+
+### Study question
+
+Why is `platform-smoke.echo` a better first proof than a future invoice export?
+
+It exercises the same platform boundary while avoiding business data, product
+meaning, persistence, and retention decisions that do not yet exist. It gives
+us a small test of the telemetry rules before they are trusted with sensitive
+capabilities.
+
+Planning triage: the selected smoke-route proof and its forbidden facts are
+recorded in the platform-runtime implementation plan. No exporter, provider
+SDK, target configuration, dashboard, alarm, or AWS resource is selected by
+this lesson.
+
+## 74. Testing Telemetry with In-Memory Recorders
+
+### A recorder is a notebook, not a cloud simulation
+
+The first local proof does not need CloudWatch, OpenTelemetry, a network, or
+AWS credentials. It replaces the *port* that would send telemetry with a small
+in-memory recorder that keeps entries in an array for the test to inspect.
+
+```text
+production-shaped path                  local proof path
+
+server → Metrics port → provider        server → Metrics port → array of points
+server → Tracer port  → provider        server → Tracer port  → array of spans
+```
+
+The question is deliberately narrow: *did the platform try to emit exactly the
+safe operational facts we approved?* It is not: *did a cloud provider store
+them?* The latter belongs to a later adapter and deployment proof.
+
+Two repository helpers make the local question deterministic:
+
+| Helper | What it records | Why it is useful in a test |
+| --- | --- | --- |
+| `createPlatformTestMetrics()` | Every `MetricPoint` passed to its `record` method. | The test can inspect name, kind, unit, value, timestamp, and labels without a provider. |
+| `createInMemoryTracer()` | Every span's stable test context, start attributes, and first end outcome/attributes. | The test can prove a span starts and completes with only approved attributes. |
+
+The tracer assigns predictable test-only contexts such as `trace-1` and
+`span-1`. That makes assertions repeatable. A real tracing adapter would use
+its own trace context; the fake is not pretending to be a tracing backend.
+
+### Walk through one smoke request
+
+Imagine a successfully authorised request for `/smoke/record-479`. The server
+matches the route declaration and deliberately changes the unbounded concrete
+path into the stable route name `platform-smoke.echo`.
+
+```text
+incoming path: /smoke/record-479
+                    ↓ route matching
+declared route: platform-smoke.echo
+                    ↓ safe request instrumentation
+metric and span use platform-smoke.echo — never record-479
+```
+
+With the fixed test clock, the expected local metric record is conceptually:
+
+| Part | Expected value | Reason |
+| --- | --- | --- |
+| Name | `platform.server.request` | A stable platform-owned measurement. |
+| Kind and unit | timer / milliseconds | This measures duration rather than a business count. |
+| Value | `0` in a fixed-clock test | The test proves shape, not wall-clock performance. |
+| `method` label | `GET` | A small known set. |
+| `route` label | `platform-smoke.echo` | Stable capability identity, not the raw path. |
+| `status` and `outcome` labels | `200` and `ok` | Small result vocabulary for aggregate health. |
+| Absent labels | `record-479`, tenant, principal, request ID, correlation ID | They are identifiers or high-cardinality/sensitive context. |
+
+The corresponding request span begins with `method=GET`. When the server has
+the response, it ends the span as `succeeded` with the method, stable route,
+status, and latency. The **span context** itself necessarily has a trace ID
+and span ID so tracing can connect work; the policy is that those IDs are not
+copied into arbitrary attributes or metric labels.
+
+### What the test should assert
+
+Think of this as a small MOT-style inspection for telemetry. It should look at
+both the things that must exist and the things that must not exist.
+
+1. Send a real in-memory request through the mounted smoke server, with the
+   authentication required to reach the route.
+2. Assert the HTTP response is still the expected successful result. This
+   proves the test exercised the real route rather than manually calling a
+   metrics helper.
+3. Find exactly the request metric for `platform-smoke.echo`; assert its timer
+   shape and each approved low-cardinality label.
+4. Find exactly the corresponding `platform.server.request` span; assert its
+   start attributes, end outcome, and end attributes.
+5. Assert the actual path parameter and identity/request facts occur in
+   neither metric labels nor span attributes. Checking only the expected values
+   is insufficient: a later accidental extra field could otherwise slip in.
+6. Exercise a rejection or failure separately, then assert its distinct bounded
+   outcome/error class rather than leaking the error message or payload.
+
+The current server-runtime test already provides the beginnings of this proof:
+it captures metrics with `createPlatformTestMetrics()`, captures spans with
+`createInMemoryTracer()`, checks a completed request span, and checks that
+request/correlation IDs are absent from end attributes. The future smoke-route
+proof should make the route-specific metric and the forbidden `:id` assertion
+equally explicit.
+
+### An important finding: safe data is not the same as safe failure behaviour
+
+It would be easy to read “safe observability helpers” as meaning every possible
+failure is already harmless. It does not mean that yet.
+
+| Path today | What happens if its injected provider port throws | Status |
+| --- | --- | --- |
+| Tracing | `startPlatformTraceSpan` uses a no-op span and `endPlatformTraceSpan` catches an end failure. | Already failure-isolated. |
+| Metrics | `recordPlatformMetric` directly calls `metrics.record`. | Hardening still required. |
+| Ordinary operational logs | `writePlatformLog` directly calls `logger.write`. | Hardening still required. |
+
+This is why a negative test is valuable. A test metric sink that throws should
+not make an already-completed `200` route become a `500`; a failing ordinary
+log sink should not do so either. At present, those tests would expose a real
+gap rather than pass. We have recorded the requirement in the platform plan
+instead of quietly claiming that a test recorder proves resilience.
+
+This does **not** mean “swallow every security problem.” Ordinary diagnostics,
+metrics, and traces are optional operational signals. Required audit or
+security-record delivery has its own explicitly designed durability and failure
+policy, and must not be hidden behind the optional-observability fallback.
+
+### Misconception check
+
+“If an in-memory test sees a metric, observability is production-ready.”
+
+No. It proves the application-side emission shape, redaction boundary, and
+local behaviour. A production-ready target still needs an approved exporter,
+access control, retention, residency, sampling, backpressure/failure policy,
+dashboards, alarms, and delivery evidence.
+
+### Study question
+
+Why does the test need to assert that `record-479` is *absent*, rather than
+only asserting that the route label equals `platform-smoke.echo`?
+
+Because both facts could exist at once. An accidental extra label or trace
+attribute can create a high-cardinality data leak even when the correct stable
+route name is also present.
+
+Planning triage: this lesson identifies a platform hardening requirement. It
+does not change telemetry code, select a provider, deploy an adapter, or alter
+AWS resources.
+
+## 75. Locking the Main Observability Names
+
+### The names we have now fixed
+
+We have now made the main provider-neutral observability vocabulary a public
+`platform/contracts` type surface. This is deliberately a small dictionary,
+not a command to emit every field for every capability.
+
+| Semantic fact | Canonical emitted field | Examples | What it must not be confused with |
+| --- | --- | --- | --- |
+| Capability | `capability` | `billing.invoice.export` | A raw URL, route parameter, provider operation, or metric name. |
+| Business action | `action` | `create`, `read`, `export`, `approve` | An HTTP method such as `POST`. |
+| Actor category | `actor_type` | `user`, `service`, `system`, `anonymous` | An actor ID, email, or identity claim. |
+| Interaction source | `interaction_source` | `web`, `chat`, `voice`, `api` | The process that later performed the work. |
+| Execution context | `execution_context` | `server`, `worker`, `scheduler`, `cli` | The interaction channel. |
+| HTTP result | `http_method`, `http_status_code` | `GET`, `200` | A business action or job delivery state. |
+| Worker delivery | `job_delivery_disposition` | `succeeded`, `retry_scheduled`, `dead_lettered` | The business operation's logical outcome. |
+| Logical result | `outcome` | `accepted`, `succeeded`, `denied`, `rejected`, `failed`, `cancelled`, `timed_out` | A raw error message or HTTP status. |
+| Failure classification | `error_class` | A bounded stable platform/application code | Stack trace, provider payload, or free-text error. |
+
+The external field names use lower snake case consistently. TypeScript uses
+readable camel-case property names internally and exposes one mapping to those
+emitted names. That gives us a stable schema without tying it to CloudWatch,
+OpenTelemetry, or any other provider's naming system.
+
+### Three distinctions worth remembering
+
+```text
+voice request → worker execution → invoice export
+     source          context          capability/action
+```
+
+`voice` says how the request started. `worker` says where the later work ran.
+`export` says what the business capability means. All three can be true at once
+and none can safely substitute for another.
+
+Likewise, a worker can have `outcome=failed` and
+`job_delivery_disposition=retry_scheduled`. The first describes the attempted
+work; the second describes what the delivery mechanism will do next. Combining
+them into a vague `status=retry` loses that distinction.
+
+### What this does not yet do
+
+The vocabulary does not retrospectively rename the existing generic request
+metric fields, automatically create a profile for a registration, select a
+provider, alter audit storage, or make server and worker delivery consume a
+resolved profile. Route/job coverage is now mandatory through either a
+registered profile or a bounded, justified opt-out. The next runtime and
+adapter slices must turn that protected declaration into safe emitted evidence.
+
+### Study question
+
+Why can a voice-initiated invoice export truthfully have
+`interaction_source=voice`, `execution_context=worker`, and `action=export`?
+
+Because each field answers a different question: how the work began, where it
+ran, and what meaningful business operation was attempted.
+
+Planning triage: the provider-neutral type vocabulary is now implemented in
+`platform/contracts`. That vocabulary slice itself did not select a telemetry
+exporter, provider, or AWS resource; the later profile slice added route/job
+coverage enforcement.
+
+## 76. Capability Profiles Measure Intervals; NFR Policies Set Targets
+
+### What we have now implemented
+
+`platform/contracts/src/observability-profiles.ts` is now the declaration card
+for each capability's ordinary operational evidence. An app registers one or
+more named profiles while it mounts. Every route and job must either reference
+one of those profiles or provide a controlled opt-out reason and a short
+justification. The complete runtime registry sees all three lists—profiles,
+routes, and jobs—so it can reject an unknown profile or a duplicate before the
+process is ready.
+
+The smoke app proves both shapes:
+
+| Registration | Profile class | Measured interval | Why it is truthful |
+| --- | --- | --- | --- |
+| `platform-smoke.echo` route | `interactive_read` | `request_response_latency` | The route does its meaningful work before it sends its response. |
+| `platform-smoke.rebuild` job | `async_completion` | `job_execution_latency` | The worker's handler performs the meaningful background work. |
+
+### A profile does not contain a promise
+
+This distinction is the important one:
+
+```text
+Profile: “measure request/response latency for this interactive read.”
+NFR policy: “95% must complete within X, and 99% within Y, over window Z.”
+Alert policy: “page or notify when the error budget burns at this rate.”
+```
+
+Putting `X`, `Y`, and `Z` in every route would create contradictory targets and
+make a policy change require many feature edits. The profile therefore names a
+controlled NFR class and a specific start-to-finish interval. A central,
+target-governed NFR/SLO policy will later own the numerical thresholds,
+eligible requests, time window, error budget, owner, review date, and response
+when the target is missed.
+
+### Why intervals matter
+
+“Export took five minutes” is not enough information to improve it. It could
+mean that the API was slow, the export waited in a queue, or the worker spent
+time generating the file. The contract makes those separate measurements
+available:
+
+| Interval | Starts | Ends | Diagnoses |
+| --- | --- | --- | --- |
+| Request/response | Server receives request | Response completes | Slow interactive API handling. |
+| Queue wait | Job is enqueued | Worker starts it | Insufficient worker capacity or queue contention. |
+| Job execution | Worker starts handler | Handler completes | Slow application or dependency work. |
+| End-to-end completion | Work is accepted | Declared final outcome | The whole customer-visible asynchronous journey. |
+| Health check | Probe starts | Probe completes | A dependency or readiness check becoming slow. |
+
+An asynchronous export may need all three middle intervals. That is not
+over-measuring: each one answers a different operational question.
+
+### What p95 and p99 still need
+
+The Core monitoring contract can describe a histogram, but the current generic
+platform timer point does not by itself prove that a selected metrics backend
+retains a latency distribution, uses suitable buckets, or calculates reliable
+percentiles. We must not claim a p95/p99 SLO until a provider adapter does
+that work and its target policy identifies the aggregation and retained data.
+
+The profile slice is still valuable now. It prevents an app from silently
+inventing an action, metric dimension, measurement interval, or unregistered
+profile while the later adapter and target-policy work is deliberately staged.
+
+### Misconception check
+
+“A route can check that its profile exists when it is declared.”
+
+No. A profile may be registered later in the same mount, and a duplicate may
+appear in a different app. Only the complete process registry can check the
+relationship correctly. This is the same whole-catalogue reasoning we used for
+permission declarations.
+
+### Study question
+
+Why should an export's API acceptance and its worker completion not share one
+`request_response_latency` target?
+
+Because the API can correctly acknowledge queued work quickly while the worker
+has not yet begun or completed the export. One metric would hide either queue
+delay or worker execution time.
+
+Planning triage: the profile contract, registry enforcement, smoke proof, and
+NFR-class/interval vocabulary are implemented. Percentile aggregation,
+numerical SLOs, error budgets, dashboarding, alerting, retention, and provider
+selection remain intentionally deferred to the target-policy and adapter slices.
+
+## 77. Data Classification Chooses Requirements, Not Telemetry Payloads
+
+### The four things we must not merge together
+
+An attribute classification, a business capability, an operational profile,
+and an evidence record each answer a different question:
+
+| Thing | Question it answers | Example |
+| --- | --- | --- |
+| Attribute classification | How carefully must this data be handled? | A client email is `personal-data`; an amount is `financial-data`. |
+| Capability | What meaningful operation is being attempted? | `invoice.export` |
+| Operational profile | Which safe diagnostic facts may the runtime emit? | Capability, action, outcome, latency, bounded error class. |
+| Audit/security record | What durable or security-relevant evidence must be preserved? | An authorised accountant exported invoices. |
+
+The fact that an attribute is classified does **not** make it suitable for a
+log, metric, or trace. Usually the opposite is true: a stricter classification
+means fewer operational facts may be emitted, while accountability controls
+become stronger.
+
+### The policy-evaluation picture
+
+```text
+future entity/attribute classification
+  + capability action and declared data access
+  + adopted product baseline
+  + tenant restriction
+                ↓
+     resolved data-handling requirements
+                ↓
+authorisation / approval / audit / security signal /
+operational profile / retention / residency
+```
+
+`packages/core/security/classification.ts` already owns the reusable nouns:
+data sensitivity and sensitive-value kind. It is not an entity model; it must
+not learn about an `Invoice`, `clientEmail`, or product-specific export rule.
+Those belong in a future app/entity schema and capability declaration. Core's
+generic policy-decision contract provides a future seam for evaluating the
+combined facts without choosing an identity provider, database, telemetry
+service, or tenant-policy store.
+
+### Worked example
+
+Imagine a future invoice entity:
+
+```text
+invoice reference  → internal business data
+amount             → financial data, confidential handling
+client email       → personal data, confidential handling
+attachment         → inherited or explicitly declared classification
+```
+
+An accountant invokes `invoice.export`. The capability declares that it can
+process the relevant financial and personal classifications. The policy result
+might require a durable audit event, an export-specific authorisation check,
+an approved retention/residency path, and perhaps a security signal. Its
+ordinary operational profile may still emit only this:
+
+```text
+capability=invoice.export
+action=export
+outcome=succeeded
+execution_context=worker
+```
+
+It must not add the invoice number, amount, client email, file contents, or a
+signed download URL merely because the export was important enough to audit.
+
+### The strictest applicable rule wins
+
+An entity can have a default classification and an attribute can declare a
+stricter override. A capability can touch several attributes. The policy must
+apply the strictest relevant treatment rather than averaging them into a weaker
+one. A tenant may tighten the adopted product baseline—for example by requiring
+longer audit retention or stricter residency—but must not silently weaken it.
+
+### Misconception check
+
+“We need a `financial` telemetry profile for financial fields.”
+
+No. The operational profile is an allowlist of safe facts about program
+behaviour. Classification determines whether audit, security, retention,
+approval, residency, and access controls apply. It rarely permits the original
+financial or personal value to enter telemetry.
+
+### Study question
+
+Why might a display-name update and an invoice export both use the action
+`update` or `export`, yet require very different evidence and handling?
+
+Because the action tells us what happened, while the affected data
+classifications, actor scope, product baseline, and tenant restrictions tell us
+the risk and therefore the required controls.
+
+Planning triage: Core already has the classification and generic policy
+vocabulary. The future app/entity schema, capability data-access declaration,
+resolved-policy evaluator, persistence representation, and generated harness
+validators remain intentionally deferred until the first real entity consumer.
+
+## 78. Next Lesson Queue
+
+1. Design the bounded optional-observability failure policy, then implement and
+   test metric/log/tracer failure isolation before calling the smoke-route proof
+   complete.
+2. Make server and worker delivery consume the resolved profile, emitting only
+   its approved standard facts through the existing safe helper boundaries.
+3. Define a target-governed NFR/SLO policy catalogue and histogram adapter
+   before setting p95/p99 objectives or burn-rate alarms.
+4. Return to the practical alarm follow-up only when an explicit AWS change is
+   approved: verify enhanced Container Insights, review the two role changes,
+   review the service-stack change set, and prove notification delivery.
 
 ## Repository Evidence
 
@@ -6810,3 +7839,19 @@ After each completed learning chunk:
   record-change-history requirements. The worker source is organised by
   errors, contracts, queue mechanics, and delivery execution; provider,
   producer/outbox, persistence, and exporter decisions remain deferred.
+- 2026-09-07: Added the observability-delivery lesson. It distinguishes the
+  current target's ECS stdout-to-CloudWatch operational-log route and native
+  infrastructure metrics/alarms from missing application metric/trace,
+  security-record, audit, and WAF-request-log pipelines. No provider contract
+  or AWS state changed; the existing target baseline already owns the gaps.
+- 2026-09-07: Added live, read-only target evidence to the observability
+  lesson. It confirms recent CloudWatch log delivery, healthy ECS desired versus
+  running count, two ALB alarms in `OK`, and a confirmed SNS email subscription.
+  It also records the target-profile mismatch: three required ECS alarms are
+  not yet present in CloudFormation or AWS. The staging readiness manifest,
+  rather than the generic platform plan, owns that deployment gap.
+- 2026-09-07: Added the provider-neutral port lesson. It distinguishes the
+  Logger, Metrics, and Tracer contracts, explains why stdout collection is a
+  target facility rather than a generic CloudWatch dependency, and preserves
+  the future AWS observability-adapter boundary for a deliberately selected
+  metrics or trace delivery use case.

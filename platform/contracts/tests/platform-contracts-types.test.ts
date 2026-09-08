@@ -20,11 +20,15 @@ import {
   fixedFeatureFlagReader,
   platformAppId,
   platformApiVersion,
+  platformCapabilityName,
   platformHealthName,
   platformJobName,
+  platformObservabilityProfileName,
   platformRouteName,
   type FeatureFlagReader,
   type PlatformApp,
+  type PlatformOperationalNomenclature,
+  type PlatformCapabilityObservabilityProfile,
   type PlatformJobContext,
   type PlatformJobRegistration,
   type PlatformMountDeps,
@@ -41,11 +45,53 @@ const routeName = platformRouteName("crm.deals.show");
 const jobName = platformJobName("crm.deals.recalculate-score");
 const healthName = platformHealthName("crm.readiness");
 const apiVersion = platformApiVersion("v1");
+const capabilityName = platformCapabilityName("crm.deal.export"); // Create one checked capability identity for the nomenclature type proof.
+const observabilityProfileName = platformObservabilityProfileName("crm.deal.export"); // Create one checked profile identity for the capability observability proof.
 const flagName = featureFlagName("crm.deals.bulk-import");
 
-if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok || !apiVersion.ok || !flagName.ok) {
+if (!appId.ok || !routeName.ok || !jobName.ok || !healthName.ok || !apiVersion.ok || !capabilityName.ok || !observabilityProfileName.ok || !flagName.ok) {
   throw new Error("Expected valid platform contract primitives.");
 }
+
+const nomenclature: PlatformOperationalNomenclature = { // Prove a complete provider-neutral operational vocabulary can be declared without a provider SDK.
+  capability: capabilityName.value, // Use the separately branded stable capability identity.
+  action: "export", // Use a controlled business action instead of an HTTP method.
+  actorType: "user", // Use only a bounded actor category rather than an actor identifier.
+  interactionSource: "voice", // Keep voice as an initiation channel, not an execution context.
+  executionContext: "worker", // Record where the export actually executes.
+  jobDeliveryDisposition: "retry_scheduled", // Record the worker delivery decision separately from the business result.
+  outcome: "failed", // Record the logical operational result with the canonical outcome vocabulary.
+  errorClass: "PLATFORM_WORKER_HANDLER_FAILED", // Use a bounded error code rather than an error message or provider payload.
+}; // Finish the valid nomenclature example.
+void nomenclature; // Mark the type-proof value as intentionally used.
+
+// @ts-expect-error capability actions must use the reviewed controlled vocabulary.
+const invalidNomenclatureAction: PlatformOperationalNomenclature = { ...nomenclature, action: "edit" };
+void invalidNomenclatureAction;
+
+// @ts-expect-error interaction sources and execution contexts are intentionally different dimensions.
+const invalidNomenclatureExecutionContext: PlatformOperationalNomenclature = { ...nomenclature, executionContext: "voice" };
+void invalidNomenclatureExecutionContext;
+
+// @ts-expect-error operational field labels do not accept a raw identifier in place of a branded capability name.
+const invalidNomenclatureCapability: PlatformOperationalNomenclature = { ...nomenclature, capability: "crm.deal.export" };
+void invalidNomenclatureCapability;
+
+const observabilityProfile: PlatformCapabilityObservabilityProfile = {
+  name: observabilityProfileName.value,
+  capability: capabilityName.value,
+  action: "export",
+  signals: ["operational_log", "metric", "trace"],
+  logFieldNames: ["capability", "action", "outcome"],
+  metricDimensionFieldNames: ["capability", "action", "outcome"],
+  traceAttributeNames: ["capability", "action", "outcome"],
+  nfrObjectives: [{ nfrClass: "async_completion", measurement: "job_execution_latency" }],
+};
+void observabilityProfile;
+
+// @ts-expect-error NFR objective classes must use the controlled central-policy vocabulary.
+const invalidObservabilityProfile: PlatformCapabilityObservabilityProfile = { ...observabilityProfile, nfrObjectives: [{ nfrClass: "fast", measurement: "job_execution_latency" }] };
+void invalidObservabilityProfile;
 
 const logger: Logger = { write: () => undefined };
 const metrics: Metrics = { record: () => undefined };
@@ -110,6 +156,7 @@ const route: PlatformRouteRegistration = {
   path: "/deals/:id",
   apiVersion: apiVersion.value,
   auth: { kind: "authenticated", permissions: [dealReadPermission] },
+  observability: { kind: "profile", profile: observabilityProfileName.value },
   validator: routeValidator,
   handler: {
     handle: () => response,
@@ -162,6 +209,7 @@ const jobContext: PlatformJobContext = {
 const job: PlatformJobRegistration = {
   name: jobName.value,
   messageType: "crm.deals.recalculate-score" as QueueMessageType,
+  observability: { kind: "profile", profile: observabilityProfileName.value },
   validator: jobPayloadValidator,
   handler: {
     handle: (_message, _context) => undefined,
@@ -177,6 +225,7 @@ const app: PlatformApp = definePlatformApp({
   mount(registry, mountDeps) {
     void mountDeps;
     registry.registerPermission(permissionDeclaration);
+    registry.registerObservabilityProfile(observabilityProfile);
     registry.registerRoute(route);
     registry.registerJob(job);
     registry.registerHealthCheck({
@@ -202,6 +251,7 @@ void app.mount(
     registerPermission: () => ({ ok: true, value: undefined }),
     registerRoute: () => ({ ok: true, value: undefined }),
     registerJob: () => ({ ok: true, value: undefined }),
+    registerObservabilityProfile: () => ({ ok: true, value: undefined }),
     registerHealthCheck: () => ({ ok: true, value: undefined }),
     registerConfigSchema: () => ({ ok: true, value: undefined }),
   },

@@ -43,14 +43,37 @@ separate.
 | `src/contexts.ts` | Composed runtime, request, and job contexts. | `npm run platform:contracts:check` |
 | `src/routes.ts` | HTTP request/response, route registration, and route auth, tenant, and resource-authorization declarations. | `npm run platform:contracts:check` |
 | `src/jobs.ts` | Job handler and job-registration declarations. | `npm run platform:contracts:check` |
+| `src/observability.ts` | Provider-neutral capability action, interaction, execution, outcome, and canonical field-name vocabulary. | `npm run platform:contracts:check` |
+| `src/observability-profiles.ts` | Capability observability profiles, NFR-class references, safe signal-field allowlists, and explicit opt-outs. | `npm run platform:contracts:check` |
 | `src/app.ts` | App mount, registry, permission, health, lifecycle, and mount-dependency declarations. | `npm run platform:contracts:check` |
 | `src/validation.ts` | Cross-declaration registration validation and reserved-route rules; it does not execute runtime work. | `npm run platform:contracts:check` |
 | `src/index.ts` | Deliberate public barrel only. | `npm run platform:contracts:check` |
 
 Dependencies flow one way: stable errors and identifiers first; flags,
-contexts, and declarations next; cross-declaration validation after that; and
-the public barrel last. Internal topic files may use local relative imports or
-public `@kanbien/core` exports only.
+contexts, observability vocabulary, and declarations next; cross-declaration
+validation after that; and the public barrel last. Internal topic files may use
+local relative imports or public `@kanbien/core` exports only.
+
+## Operational Nomenclature
+
+`src/observability.ts` locks the vocabulary that lets logs, metrics, traces,
+and future audit/security handoffs describe the same capability without
+confusing a business action with an HTTP method or a worker-delivery decision.
+`src/observability-profiles.ts` uses that vocabulary to declare what one
+capability may emit, its permitted safe fields, and the NFR class/latency
+interval it needs measured.
+
+An app registers profiles while mounting. Every route and job then selects one
+registered profile or supplies a bounded, controlled opt-out justification.
+The complete runtime registry verifies that relationship before the process is
+ready. A profile is not a provider configuration and does not contain a
+threshold, retention period, dashboard, alert, or cloud-service name.
+
+The contracts do not yet make server/worker telemetry emit profile facts,
+rename the existing generic `platform.server.request` fields, select a
+histogram exporter, calculate p95/p99, create alarms, or make audit delivery
+durable. Those are later, separately tested runtime, adapter, and deployment
+slices.
 
 ## Optional Tenant And Resource Authorization
 

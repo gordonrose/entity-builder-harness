@@ -40,6 +40,7 @@ async function main(): Promise<void> {
   const permission = "smoke.smoke:read" as Permission;
   const tenantPermission = "smoke.tenant:read" as Permission;
   const resourcePermission = "smoke.record:read" as Permission;
+  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Server runtime fixture only." } as const;
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   const tracer = createInMemoryTracer();
@@ -96,6 +97,7 @@ async function main(): Promise<void> {
         method: "GET",
         path: "/public",
         auth: { kind: "public" },
+        observability: testObservability,
         handler: {
           handle: (_request, context) => {
             publicRoutePrincipal = context.principal;
@@ -116,6 +118,7 @@ async function main(): Promise<void> {
         method: "GET",
         path: "/slow",
         auth: { kind: "public" },
+        observability: testObservability,
         handler: {
           handle: () => new Promise((resolve) => {
             resolveSlowHandler = () => {
@@ -129,6 +132,7 @@ async function main(): Promise<void> {
         method: "POST",
         path: "/echo/:id",
         auth: { kind: "authenticated", permissions: [permission] },
+        observability: testObservability,
         validator: validatorForTest((value): value is { readonly message: string } =>
           typeof value === "object"
           && value !== null
@@ -150,6 +154,7 @@ async function main(): Promise<void> {
         method: "GET",
         path: "/tenant",
         auth: { kind: "authenticated", permissions: [tenantPermission] },
+        observability: testObservability,
         tenant: "required",
         handler: {
           handle: (_request, context) => {
@@ -164,6 +169,7 @@ async function main(): Promise<void> {
         method: "GET",
         path: "/records/:id",
         auth: { kind: "authenticated", permissions: [resourcePermission] },
+        observability: testObservability,
         tenant: "required",
         resourceAuthorization: {
           permission: resourcePermission,

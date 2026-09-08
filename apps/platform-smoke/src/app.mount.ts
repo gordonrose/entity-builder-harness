@@ -11,14 +11,13 @@ import { invalidResult, validResult, validationIssue, type Validator } from "@ka
 import {
   definePlatformApp,
   platformAppId,
+  platformCapabilityName,
   platformHealthName,
   platformJobName,
+  platformObservabilityProfileName,
   platformRouteName,
-  type PlatformAppId,
+  type PlatformCapabilityObservabilityProfile,
   type PlatformContractError,
-  type PlatformHealthName,
-  type PlatformJobName,
-  type PlatformRouteName,
 } from "@kanbien/platform-contracts";
 import {
   platformSmokeAppManifest,
@@ -37,7 +36,31 @@ export const platformSmokeAppId = unwrapPlatformName(platformAppId(platformSmoke
 export const platformSmokeRouteName = unwrapPlatformName(platformRouteName("platform-smoke.echo"));
 export const platformSmokeJobName = unwrapPlatformName(platformJobName("platform-smoke.rebuild"));
 export const platformSmokeHealthName = unwrapPlatformName(platformHealthName("platform-smoke.readiness"));
+export const platformSmokeEchoObservabilityProfileName = unwrapPlatformName(platformObservabilityProfileName("platform-smoke.smoke.read"));
+export const platformSmokeRebuildObservabilityProfileName = unwrapPlatformName(platformObservabilityProfileName("platform-smoke.smoke.rebuild"));
 export const platformSmokeJobMessageType = "platform-smoke.rebuild" as QueueMessageType;
+
+export const platformSmokeEchoObservabilityProfile: PlatformCapabilityObservabilityProfile = {
+  name: platformSmokeEchoObservabilityProfileName,
+  capability: unwrapPlatformName(platformCapabilityName("platform-smoke.smoke.read")),
+  action: "read",
+  signals: ["operational_log", "metric", "trace"],
+  logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+  metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+  traceAttributeNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+  nfrObjectives: [{ nfrClass: "interactive_read", measurement: "request_response_latency" }],
+};
+
+export const platformSmokeRebuildObservabilityProfile: PlatformCapabilityObservabilityProfile = {
+  name: platformSmokeRebuildObservabilityProfileName,
+  capability: unwrapPlatformName(platformCapabilityName("platform-smoke.smoke.rebuild")),
+  action: "execute",
+  signals: ["operational_log", "metric", "trace"],
+  logFieldNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
+  metricDimensionFieldNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
+  traceAttributeNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
+  nfrObjectives: [{ nfrClass: "async_completion", measurement: "job_execution_latency" }],
+};
 
 export const platformSmokeConfigSchema: ConfigSchema<PlatformSmokeConfig> = {
   parse(source) {
@@ -73,6 +96,8 @@ export const platformSmokeApp = definePlatformApp({
   },
   mount(registry, deps) {
     registry.registerConfigSchema(platformSmokeConfigSchema);
+    registry.registerObservabilityProfile(platformSmokeEchoObservabilityProfile);
+    registry.registerObservabilityProfile(platformSmokeRebuildObservabilityProfile);
     registry.registerPermission({
       permission: platformSmokeReadPermission,
       description: "Read the platform smoke route.",
@@ -82,6 +107,7 @@ export const platformSmokeApp = definePlatformApp({
       method: "GET",
       path: "/smoke/:id",
       auth: { kind: "authenticated", permissions: [platformSmokeReadPermission] },
+      observability: { kind: "profile", profile: platformSmokeEchoObservabilityProfileName },
       handler: {
         handle: (request, context) => ({
           status: 200,
@@ -97,6 +123,7 @@ export const platformSmokeApp = definePlatformApp({
     registry.registerJob({
       name: platformSmokeJobName,
       messageType: platformSmokeJobMessageType,
+      observability: { kind: "profile", profile: platformSmokeRebuildObservabilityProfileName },
       validator: platformSmokeRebuildValidator,
       handler: {
         handle: (message, context) => {
@@ -139,7 +166,7 @@ function isPlatformSmokeRebuildPayload(value: unknown): value is PlatformSmokeRe
     && typeof (value as { readonly rebuild?: unknown }).rebuild === "boolean";
 }
 
-function unwrapPlatformName<TName extends PlatformAppId | PlatformRouteName | PlatformJobName | PlatformHealthName>(
+function unwrapPlatformName<TName extends string>(
   result: Result<TName, PlatformContractError>,
 ): TName {
   if (!result.ok) {

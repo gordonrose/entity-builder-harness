@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.product-harness-foundation
-version: 8
+version: 9
 status: active
 layer: 03.product
 domain: governance
@@ -468,6 +468,69 @@ Acceptance:
   platform capabilities.
 - The first real consumer determines the repository location and exact schema;
   do not create an empty universal capability package in advance.
+
+### 3b.1 Define The Classification-To-Handling Policy Boundary
+
+Before an entity generator, persistence playbook, or capability template can
+claim secure defaults, define how data classification influences handling
+requirements without making telemetry the owner of business data meaning.
+
+The ownership model is deliberately layered:
+
+```text
+entity/attribute classification + capability action + product baseline + tenant restriction
+                                      ↓
+                       resolved data-handling requirements
+                                      ↓
+     authorisation, approval, audit, security signal, operational evidence,
+                 retention, residency, and persistence constraints
+```
+
+`packages/core/security/classification.ts` remains the provider-neutral source
+of reusable classification nouns (`DataClassification`, `DataSensitivity`, and
+`SensitiveValueKind`), and `packages/core/security/policy.ts` remains the
+generic policy-decision seam. Core must not name an app's entity, attribute, or
+business operation. A future app/entity schema owns an entity's default
+classification and any stricter attribute override; for example, an invoice
+may have an internal identifier, a financial amount, and a personal client
+email address. A future capability declaration owns the action and the
+declared classifications it may read, change, export, delete, or otherwise
+process.
+
+The future policy evaluator combines those declarations with the adopted
+product baseline and any tenant restriction. It produces requirements, not raw
+data: whether approval, durable audit, a security signal, an operational
+profile, a retention/residency constraint, or an access restriction applies.
+The strictest applicable classification and policy wins. A tenant may tighten
+but must not silently weaken the product baseline.
+
+Operational observability profiles remain a separate platform-contract surface.
+They allowlist safe operational facts and latency intent; they neither store an
+attribute classification nor make a classified value safe to emit. A
+classification commonly causes *less* operational data to be emitted while
+requiring stronger durable accountability.
+
+Acceptance:
+
+- Entity/attribute classification, capability data-access declarations, and
+  policy requirements are distinct schemas with explicit references rather
+  than copied free-form fields.
+- A validator rejects an unclassified persisted, imported, exported, or
+  externally transmitted attribute unless a governed exception says why it is
+  safe to inherit a declared entity default.
+- A capability declares the relevant classifications and action without
+  enumerating raw field values, tenant records, or secrets in its metadata.
+- A policy decision can require audit, security, operational, retention,
+  residency, authorisation, or approval treatment without putting runtime
+  providers, destination credentials, or sensitive values in a feature
+  declaration.
+- Generated routes, jobs, web UI, chat, and voice adapters invoke the same
+  resolved capability policy; a channel cannot bypass it or create a different
+  data-handling outcome.
+- The first real entity consumer determines the exact machine-readable schema,
+  validator, persistence representation, and policy-evaluator implementation.
+  This plan records the boundary only; it does not authorise a universal entity
+  model or a live tenant-policy store.
 
 ### 3c. Define The Public Navigation Declaration And Web Addressing Policy
 
