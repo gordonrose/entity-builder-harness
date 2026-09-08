@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-07T22:16:28Z
-latest_commit_sha: 137e898
-chat_duration: 2625s (00:00:43:45)
+latest_commit_at_utc: 2026-09-08T19:59:21Z
+latest_commit_sha: 5a64093
+chat_duration: 80798s (00:22:26:38)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -190,6 +190,17 @@ Raised: RAG validation smoke fixtures were left untracked during the readiness v
 
 Resolution: Only the exact documented temporary fixture paths were removed after confirming they were absent before validation and not part of the requested work. Treat cleanup reliability as a separate harness follow-up; no fixture was staged or committed.
 
+
+### 2026-09-08T19:59:21Z - Commit recorded
+
+Commit: `5a64093`
+
+Message: docs(deploy): record observability readiness evidence
+
+Summary: Recorded safe read-only AWS CloudWatch, ECS, alarm, and SNS evidence; added the explicit missing-ECS-alarm blocker; and added the provider-neutral observability port lesson. The readiness verifier passed in blocked/explanation mode with six documented blockers.
+
+ADR impact: No ADR required; this records target evidence and an existing infrastructure requirement.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -211,6 +222,13 @@ Resolution: Only the exact documented temporary fixture paths were removed after
   Summary: Added the target-observability lesson, distinguishing ECS stdout-to-CloudWatch logs and infrastructure alarms from missing application metrics/traces, security records, audit delivery, and WAF request logging. Commit gates passed.
   ADR impact: No ADR required; the lesson records existing target decisions and gaps.
 
+
+- Commit: `5a64093`
+  Time UTC: 2026-09-08T19:59:21Z
+  Message: docs(deploy): record observability readiness evidence
+  Summary: Recorded safe read-only AWS CloudWatch, ECS, alarm, and SNS evidence; added the explicit missing-ECS-alarm blocker; and added the provider-neutral observability port lesson. The readiness verifier passed in blocked/explanation mode with six documented blockers.
+  ADR impact: No ADR required; this records target evidence and an existing infrastructure requirement.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -227,9 +245,9 @@ make a cross-layer ownership decision requiring a new ADR.
 ## Session Metrics
 
 Raised at UTC: 2026-09-07T21:32:43Z
-Latest commit at UTC: 2026-09-07T22:16:28Z
-Latest commit SHA: 137e898
-Chat duration: 2625s (00:00:43:45)
+Latest commit at UTC: 2026-09-08T19:59:21Z
+Latest commit SHA: 5a64093
+Chat duration: 80798s (00:22:26:38)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
