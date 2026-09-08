@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 4
+  version: 6
   status: active
   layer: 05.education
   domain: education
@@ -6581,13 +6581,116 @@ no knowledge of the business capability, its safe target reference, the queue
 message, or the bounded failure classification. The relevant application log,
 trace, audit event, or security signal must answer those separate questions.
 
-Planning triage: no plan change was needed in this chunk. The production
-baseline and staging target already state the 14-day CloudWatch-log path,
-infrastructure alarms, WAF logging deferral, and outstanding application
-metrics/traces/audit/security gaps. A live AWS confirmation is pending a
-renewed local SSO session; no AWS state was changed.
+### Live target check
 
-## 69. Next Lesson Queue
+After renewing the `kanbien-dev` SSO session, a read-only inspection confirmed
+that the target log group has 14-day retention and a recent ECS log-stream
+event, the platform-shell service has one desired and one running task, and
+the SNS email subscription is confirmed. The two currently implemented ALB
+alarms are both `OK`.
+
+The same inspection revealed a useful readiness discrepancy: the target
+profile requires five alarms, but both the CloudFormation source and live AWS
+currently contain only the two ALB alarms. The missing three cover ECS
+running-count mismatch, high CPU, and high memory. They remain required rather
+than being silently removed from the profile. The staging deploy-readiness
+manifest now records that blocking gap and the reduced operational-proof gap.
+
+Planning triage: the platform implementation plan does not change because
+this is target-specific evidence. The staging deploy-readiness manifest owns
+the evidence and missing-infrastructure alarm work. No AWS state was changed.
+
+## 69. Provider-Neutral Ports: One Word, Three Different Jobs
+
+### A port is a socket, not a cloud service
+
+In this architecture, a **port** is a small interface owned by Core or the
+platform that describes an effect the platform needs. It deliberately says
+nothing about AWS, CloudWatch, a vendor SDK, credentials, network addresses,
+or billing.
+
+Think of a wall socket. The building defines the socket; a lamp, charger, or
+appliance supplies a compatible plug. Likewise, the platform defines the
+observability port; a no-op implementation, test fake, ECS stdout collector,
+or future AWS adapter can supply the implementation.
+
+```text
+server or worker
+    │
+    ├─ Logger.write(safe record) ──> stdout implementation ──> ECS awslogs
+    │
+    ├─ Metrics.record(bounded point) ──> no-op or future metrics adapter
+    │
+    └─ Tracer.startSpan/end(span) ──> no-op/test fake or future trace adapter
+```
+
+The vertical arrows are intentionally different. “Observability” is an
+umbrella term, but a log line, a metric point, and a trace span have different
+data shapes, retention needs, costs, query patterns, and failure modes.
+
+### The three current ports
+
+| Port | What platform code asks for | Why it has its own shape |
+|---|---|---|
+| `Logger` | Write one safe record with level, stable message, optional correlation, and fields. | Logs are discrete explanations for an operator or investigator. ECS can collect stdout records directly. |
+| `Metrics` | Record one numeric point with a fixed name, kind, unit, time, and bounded labels. | Metrics are aggregated patterns. A label such as tenant, user, request, or trace would create unsafe/high-cardinality series, so Core rejects those labels. |
+| `Tracer` | Start a named span, optionally beneath an internal parent, then end it with a bounded outcome. | Traces are timed execution trees. They need parent/child handling and later sampling/export policy, neither of which belongs in ordinary logging. |
+
+`platform/observability` sits immediately before these ports. It normalises
+and bounds fields, redacts unsafe values, turns request/job facts into safe
+metric labels, and limits trace attributes. It is a safety bridge, not a cloud
+client.
+
+### Why one CloudWatch SDK would be the wrong first answer
+
+It is tempting to give every platform concern a CloudWatch client. That makes
+the generic platform know provider credentials and turns a later provider
+change into a widespread code change. It also hides the real design questions:
+
+- Which application metrics are worth paying to retain and alarm on?
+- Which labels are small, stable, and non-sensitive?
+- Which traces are sampled, who may search them, and how long may they live?
+- What must never be sent to a normal operational system because it belongs in
+  a protected audit or security-record path instead?
+
+For ordinary logs, the ECS host already supplies a clean solution: the process
+writes safe stdout and the target collects it. A future provider adapter would
+be appropriate only when a port needs a delivery mechanism the host cannot
+provide—for example, a deliberate metrics exporter or trace exporter. Its
+provider-specific home would be under
+`platform/adapters/aws/observability/cloudwatch/`, while the generic platform
+continues to depend only on the port.
+
+### Misconception check
+
+“A no-op implementation means the platform has no observability.”
+
+No. It means a target can deliberately run without one optional delivery path
+while the server and worker behaviour stays correct. The target can still use
+stdout logging and native AWS health signals. A no-op is safer than making a
+request fail because an optional telemetry service is unavailable. Required
+audit or security evidence needs a different, durable design; it must not
+silently become no-op telemetry.
+
+### Study question
+
+Why may `tenant_id` be suitable for an authorised audit search but unsafe as a
+shared metric label?
+
+An audit search is an authorised lookup over discrete evidence for a particular
+tenant. A metric system creates a separate time series for each label
+combination; tenant IDs create an unbounded number of globally visible series
+and can leak or destabilise the monitoring system. The information need is
+real, but the record type and access boundary must match it.
+
+Planning triage: no generic platform plan change is needed. These ports and
+their safety boundaries already exist in Core, platform observability, and the
+target-direction plan. The target-specific missing ECS alarms are recorded in
+the staging deploy-readiness manifest. A future metrics or trace adapter still
+requires a bounded use case, provider/retention/access decisions, and its own
+implementation slice.
+
+## 70. Next Lesson Queue
 
 1. Continue observability by examining provider-neutral ports: how structured
    logs, metrics, and traces leave a server or worker without importing a
@@ -6901,3 +7004,14 @@ After each completed learning chunk:
   infrastructure metrics/alarms from missing application metric/trace,
   security-record, audit, and WAF-request-log pipelines. No provider contract
   or AWS state changed; the existing target baseline already owns the gaps.
+- 2026-09-07: Added live, read-only target evidence to the observability
+  lesson. It confirms recent CloudWatch log delivery, healthy ECS desired versus
+  running count, two ALB alarms in `OK`, and a confirmed SNS email subscription.
+  It also records the target-profile mismatch: three required ECS alarms are
+  not yet present in CloudFormation or AWS. The staging readiness manifest,
+  rather than the generic platform plan, owns that deployment gap.
+- 2026-09-07: Added the provider-neutral port lesson. It distinguishes the
+  Logger, Metrics, and Tracer contracts, explains why stdout collection is a
+  target facility rather than a generic CloudWatch dependency, and preserves
+  the future AWS observability-adapter boundary for a deliberately selected
+  metrics or trace delivery use case.

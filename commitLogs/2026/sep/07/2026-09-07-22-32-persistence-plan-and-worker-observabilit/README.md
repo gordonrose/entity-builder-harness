@@ -58,6 +58,10 @@ let's update our plan accordingly - then continue with the observability lesson 
 - Raised: Live AWS observability inspection is temporarily unavailable
   Resolution: The local kanbien-dev SSO token expired while making a read-only CloudWatch query. Repository target evidence was used for the lesson; renew SSO before recording live log/alarm evidence. No AWS state changed.
 
+
+- Raised: RAG validation smoke fixtures were left untracked during the readiness verification
+  Resolution: Only the exact documented temporary fixture paths were removed after confirming they were absent before validation and not part of the requested work. Treat cleanup reliability as a separate harness follow-up; no fixture was staged or committed.
+
 ## Decisions Made
 
 - A logical deletion is a controlled recovery window, not permanent retention;
@@ -84,12 +88,20 @@ let's update our plan accordingly - then continue with the observability lesson 
 - Decision: Keep plain operational-log delivery provider-neutral
   Rationale: The current ECS awslogs target collects safe stdout JSON in CloudWatch; generic platform code does not need a CloudWatch SDK for this path. Existing planning already owns application metrics, traces, audit, security-record, and WAF-request-log gaps.
 
+
+- Decision: Retain the five-alarm staging target requirement
+  Rationale: Read-only AWS evidence confirms only the two ALB alarms. The three missing ECS alarms are a deployment readiness gap, not a reason to lower the target profile; the readiness manifest records the required future CloudFormation slice.
+
 ## Context Hygiene
 
 - Read the chat-start and platform-runtime implementation governance, current
   plan, package README maps, and existing worker/runtime/core tests before
   changing contracts. No provider, persistence-adapter, exporter, or AWS
   decision was inferred from this provider-neutral slice.
+
+
+- Summary: Live AWS observability inspection completed after SSO renewal.
+  Durable evidence: Evidence is recorded in infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml; safe facts only: 14-day log group with recent stream event, ECS desired/running 1/1, two ALB alarms OK, confirmed SNS email subscription, and three required ECS alarms absent. No raw logs, email endpoint, secrets, or AWS mutation were recorded.
 
 ## Activity Log
 
@@ -156,6 +168,27 @@ Message: docs(education): explain observability delivery
 Summary: Added the target-observability lesson, distinguishing ECS stdout-to-CloudWatch logs and infrastructure alarms from missing application metrics/traces, security records, audit delivery, and WAF request logging. Commit gates passed.
 
 ADR impact: No ADR required; the lesson records existing target decisions and gaps.
+
+
+### 2026-09-07T22:20:13Z - Decision
+
+Decision: Retain the five-alarm staging target requirement
+
+Rationale: Read-only AWS evidence confirms only the two ALB alarms. The three missing ECS alarms are a deployment readiness gap, not a reason to lower the target profile; the readiness manifest records the required future CloudFormation slice.
+
+
+### 2026-09-07T22:20:13Z - Context hygiene
+
+Summary: Live AWS observability inspection completed after SSO renewal.
+
+Durable evidence: Evidence is recorded in infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml; safe facts only: 14-day log group with recent stream event, ECS desired/running 1/1, two ALB alarms OK, confirmed SNS email subscription, and three required ECS alarms absent. No raw logs, email endpoint, secrets, or AWS mutation were recorded.
+
+
+### 2026-09-07T22:21:52Z - Issue
+
+Raised: RAG validation smoke fixtures were left untracked during the readiness verification
+
+Resolution: Only the exact documented temporary fixture paths were removed after confirming they were absent before validation and not part of the requested work. Treat cleanup reliability as a separate harness follow-up; no fixture was staged or committed.
 
 ## Sub-Agent Activity
 

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 12
+#   version: 13
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -119,9 +119,47 @@ inspection:
     route53_record_found: true
     https_host_rule_found: true
     log_group_found: true
-    metric_alarms_found: true
+    metric_alarms_found: partial
     web_acl_found: true
     alert_subscription_confirmed: true
+    observability_read_only_inspection:
+      inspected_at_utc: "2026-09-07T22:19:08Z"
+      profile: kanbien-dev
+      region: eu-west-1
+      mutation_performed: false
+      log_delivery:
+        log_group: /ecs/kanbien-staging-platform-shell
+        retention_days: 14
+        stream_found: true
+        latest_stream_event_at_utc: "2026-09-07T21:59:14Z"
+        raw_event_content_recorded_in_repository: false
+      service_health:
+        service: kanbien-staging-platform-shell
+        status: ACTIVE
+        desired_count: 1
+        running_count: 1
+        pending_count: 0
+      alarm_coverage:
+        status: partial
+        required_by_target_profile:
+          - alb-unhealthy-targets
+          - alb-5xx-spike
+          - ecs-running-count-mismatch
+          - ecs-high-cpu
+          - ecs-high-memory
+        confirmed_in_aws:
+          - name: kanbien-staging-platform-shell-unhealthy-targets
+            state: OK
+          - name: kanbien-staging-platform-shell-target-5xx
+            state: OK
+        missing_from_cloudformation_source_and_aws:
+          - ecs-running-count-mismatch
+          - ecs-high-cpu
+          - ecs-high-memory
+      alarm_subscription:
+        protocol: email
+        confirmed: true
+        endpoint_recorded_in_repository: false
     public_tls:
       hostname: staging.platform.kanbien.com
       status: issued-and-externally-verified
@@ -462,7 +500,7 @@ proof:
   image_smoke: passed-local
   compiled_runtime_payload: passed-local-2026-09-06
   local_runtime_smoke: passed-product-smoke-local
-  aws_read_only_inspection: platform-shell-foundation-and-public-tls-verified-2026-09-06
+  aws_read_only_inspection: platform-shell-foundation-public-tls-and-observability-delivery-verified-2026-09-07
   deployment_smoke: public-livez-200-and-unauthenticated-deploy-probe-401-passed-2026-09-07
   rollback_proof: blocked
 blockers:
@@ -484,8 +522,13 @@ blockers:
   - id: platform-shell-readiness.operational-proof
     severity: blocking
     path: proof
-    reason: The service is deployed, but CloudWatch log delivery, alarm delivery, and rollback exercise evidence remain unrecorded.
-    resolution: Verify a redacted operational log record, alarm destination delivery, and an explicitly governed rollback rehearsal before marking the target ready.
+    reason: Read-only inspection now confirms a recent CloudWatch log-stream event, the two implemented ALB alarms in OK state, and a confirmed SNS email subscription. It does not prove an alarm was received by the operator, and rollback exercise evidence remains unrecorded.
+    resolution: Verify a redacted operational log record, end-to-end alarm destination delivery without committing email content, and an explicitly governed rollback rehearsal before marking the target ready.
+  - id: platform-shell-readiness.required-ecs-alarm-coverage
+    severity: blocking
+    path: observability.alarms
+    reason: The staging target profile requires five alarms, but the CloudFormation source and AWS inspection currently confirm only the two ALB alarms. ECS running-count mismatch, high-CPU, and high-memory alarms are absent.
+    resolution: Plan and approve a bounded CloudFormation change that adds the three required ECS alarms with reviewed thresholds, evaluation windows, SNS actions, and verification evidence.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation
