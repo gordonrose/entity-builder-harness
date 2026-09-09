@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-09T19:04:33Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-09T23:00:18Z
+latest_commit_sha: f632472
+chat_duration: 14145s (00:03:55:45)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -156,6 +156,17 @@ Summary: Record the bounded DynamoDB/SQS smoke-proof direction, relay and worker
 
 ADR impact: No ADR: bounded draft reference-target decision recorded in existing plans; no production implementation, AWS resource, or provider standard is approved.
 
+
+### 2026-09-09T23:00:18Z - Commit recorded
+
+Commit: `f632472`
+
+Message: docs(platform): record smoke queue reliability decisions
+
+Summary: Recorded the bounded DynamoDB/SQS smoke proof, queue reliability boundaries, handbook lessons, and their plan/session evidence.
+
+ADR impact: No ADR: bounded draft reference-target decision recorded in existing plans; no production implementation, AWS resource, or provider standard is approved.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -166,6 +177,13 @@ ADR impact: No ADR: bounded draft reference-target decision recorded in existing
 
 - Commit: docs(platform): record smoke queue reliability decisions
   Summary: Record the bounded DynamoDB/SQS smoke-proof direction, relay and worker safety rules, DLQ recovery constraints, and platform-versus-app coordination ownership.
+  ADR impact: No ADR: bounded draft reference-target decision recorded in existing plans; no production implementation, AWS resource, or provider standard is approved.
+
+
+- Commit: `f632472`
+  Time UTC: 2026-09-09T23:00:18Z
+  Message: docs(platform): record smoke queue reliability decisions
+  Summary: Recorded the bounded DynamoDB/SQS smoke proof, queue reliability boundaries, handbook lessons, and their plan/session evidence.
   ADR impact: No ADR: bounded draft reference-target decision recorded in existing plans; no production implementation, AWS resource, or provider standard is approved.
 
 ## Main Refresh Conflicts
@@ -181,12 +199,12 @@ Reason: The DynamoDB/SQS selection is a bounded draft smoke-reference decision i
 ## Session Metrics
 
 Raised at UTC: 2026-09-09T19:04:33Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-09T23:00:18Z
+Latest commit SHA: f632472
+Chat duration: 14145s (00:03:55:45)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
