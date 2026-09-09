@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 29
+version: 33
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -946,9 +946,91 @@ contract change when a real audit consumer needs it.
 
 #### Deferred persistence lifecycle and record-change lineage
 
-Status: deliberately deferred until a real product schema and persistence
-adapter are selected. This is a product data-lifecycle capability, not a
-generic logging feature and not a reason to add an empty persistence package.
+Status: real product/entity persistence remains deliberately deferred until a
+real product schema and data-access design are selected. It is a product
+data-lifecycle capability, not a generic logging feature and not a reason to
+add an empty persistence package. The separate 2026-09-09 DynamoDB selection
+for one harmless platform-smoke transaction/outbox proof does not change that
+boundary: it selects a provider for an operational reference slice, not the
+future Entity Builder's database.
+
+#### Bounded DynamoDB transactional-outbox smoke proof
+
+<!-- deterministic-check: allow reason="this is a bounded architecture decision; its data-classification and transaction requirements need future adapter and target tests, not a plan-prose script" -->
+The first operating use case is now sufficiently concrete to plan a narrow
+platform proof: a non-business platform-smoke work item changes state and
+writes a bounded evidence record and outbox record in the same DynamoDB
+transaction. The work item must contain only opaque test-safe identifiers and
+bounded status/attempt facts. It must not model customers, users, tenant
+membership, entity attributes, files, prompts, transcripts, or sensitive data.
+
+This is an explicit exception to the earlier instruction not to select a
+database without a concrete use case. It does **not** authorise implementation
+yet. Before a DynamoDB adapter, table, or AWS resource is added, define the
+provider-neutral transaction/outbox boundary, record keys and query access
+patterns, stable idempotency key, conditional-write/conflict behaviour,
+pending-delivery lease/retry behaviour, encryption/IAM/backups/retention, and
+bounded audit evidence. The companion target decision now selects SQS Standard
+with a DLQ for `platform-short-idempotent-work.v1`; it still requires a
+provider-neutral adapter boundary and target-owned configuration rather than
+hardcoded SQS values in generic platform code.
+
+The future adapter belongs at the approved AWS adapter boundary, not in the
+smoke app, Core, generic platform runtime, or infrastructure templates. The
+app declares the harmless operation through its normal public mount; the
+adapter translates the selected DynamoDB behaviour; infrastructure provisions
+the tables and access controls only after a separately governed AWS plan.
+The proof must show all-or-nothing transaction behaviour, safe duplicate
+handling, retained pending delivery after a relay failure, and safe
+observability without treating routine metrics/logs/traces as audit evidence.
+
+#### SQS relay, worker completion, and DLQ safeguards
+
+The selected transport introduces a separate delivery boundary after the
+DynamoDB transaction. A future relay must conditionally lease a pending outbox
+record with a monotonically increasing fencing/attempt value, publish a message
+containing the stable outbox identity, and mark that record published only
+after SQS accepts the send. A crash after the send but before the published
+marker can produce another send; this is an expected duplicate-delivery case,
+not a reason to lose the pending obligation. The downstream worker must use
+the stable identity to make that duplicate harmless.
+
+A future worker must receive the message, establish a conditional durable
+processing claim, perform its bounded work, atomically record the work-item
+terminal state, processing completion, and bounded terminal evidence, and only
+then acknowledge/delete the SQS message. A queue acknowledgement is not proof
+of a business outcome. Deleting before the durable completion record would
+permit a crash to lose work; recording first permits a safe redelivery when the
+delete is interrupted. Expired worker leases must not let a stale worker write
+after a later claimant; the fencing value is part of that protection.
+
+Failure handling must distinguish an already-completed duplicate, a transient
+failure that remains eligible for bounded retry, a permanent invalid-message or
+policy failure, and an unexpected failure that consumes the policy's remaining
+attempt budget. Retry exhaustion moves a message to the DLQ. A DLQ is a
+quarantine and evidence source, not a queue purge or automatic replay command.
+Recovery must first correlate the message to its outbox/work/attempt records,
+inspect durable outcome state, classify and repair the cause, then record a
+bounded decision to close, escalate, or make a controlled retry linked to the
+original failure. Raw payloads remain restricted operational data and must not
+be copied into ordinary logs, prompts, alerts, or audit evidence.
+
+Before this slice is described as proven, tests and target evidence must cover:
+relay crash after publish-before-marker; duplicate queue delivery; expired
+claim/lease fencing; completion-before-ack ordering; retry classification and
+attempt exhaustion; DLQ transfer; and a recovery path that neither purges a
+shared queue nor replays a message without idempotency and an evidence link.
+
+The app-facing job contract must declare a named delivery-policy reference,
+not provider details or an ad hoc `useFencing` flag. The platform worker owns
+generic lease, fencing, acknowledgement, and retry mechanics required by that
+policy. The app capability still owns the business meaning: valid state
+transitions, its stable idempotency identity, and any external-side-effect or
+reconciliation rules. Ordinary interactive entity updates use entity revision
+and business concurrency checks; they do not acquire a worker fence merely
+because an entity exists. A lease/fencing boundary is required only where a
+restartable processor temporarily needs exclusive authority over a durable work
+item or explicitly declared workflow scope.
 
 The persistence design must support controlled logical deletion for mutable
 product records. A deletion first changes a record from active to deleted and
@@ -1084,6 +1166,8 @@ Before implementing any record pipeline:
 
 1. Name the first concrete product or operating use case, its accountable
    actions, security signals, tenant scope, data classification, and owner.
+   The initial operating use case is the bounded platform-smoke work item;
+   it is non-tenant, non-personal, and has no business/entity meaning.
 2. Confirm whether the existing Core contracts are sufficient; govern any
    shared contract change separately and preserve audit schema versions.
 3. Select the target provider only through a deployment target profile and
@@ -1458,11 +1542,10 @@ Entry criteria:
 
 ## First Slice Recommendation
 
-Current next slice: commit and merge the reviewed persistence planning,
-queue/worker lineage, tracing, and source-organisation work. The next local
-design concern is a real capability's transaction/outbox/queue-producer path;
-do not create a database schema, broker adapter, trace exporter, or AWS worker
-service until a concrete product use case and its target/provider decisions are
-governed separately. The production target remains server-first and
-worker-capable: it reserves worker naming/configuration but does not deploy an
-empty worker service.
+Current next slice: design the bounded platform-smoke DynamoDB
+transaction/outbox record model, the provider-neutral queue-delivery policy,
+and their AWS adapter boundaries. DynamoDB storage and SQS Standard/DLQ
+transport are governed reference selections, but no schema, adapter, relay,
+queue resource, AWS worker service, or cloud resource has been created. The
+production target remains server-first and worker-capable: it reserves worker
+naming/configuration but does not deploy an empty worker service.

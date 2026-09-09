@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.production-reference-target-baseline
-version: 12
+version: 16
 status: draft
 layer: 03.product
 domain: platform-reference-target
@@ -260,6 +260,11 @@ A successful smoke deployment proves a bounded platform/deployment slice. It
 does not mean the Entity Builder is product-ready, human-identity-ready, or
 ready to process personal or medical data.
 
+The next bounded proof may create only harmless platform-smoke work-item,
+outbox, and audit-evidence records. It exists to prove transactional state and
+publication mechanics; it is not an entity schema, customer record, tenant
+data model, or authorisation implementation.
+
 ### Existing public website is a separate continuity concern
 
 The existing `kanbien.com` and `www.kanbien.com` public-site DNS boundary must
@@ -307,11 +312,12 @@ provider or infrastructure choice is made.
 | Configuration and secrets | Versioned non-secret config, confidential value delivery, least-privilege access, rotation, no-secret logging. | Environment/config patterns and target references exist. | `requirements captured` | Secret provider/delivery design, target IAM/resource policy, rotation/recovery test, scan and audit evidence. |
 | Shared rate limiting and abuse defence | Consistent quota across replicas, route/principal policy, trusted address policy, safe failure decision. | `PlatformRateLimiter` contract and bounded in-memory limiter are tested. | `contract/local proof` | Shared-store adapter, target selection, network/credential design, failure policy, multi-replica proof. |
 | Operational observability | Structured redacted logs, metrics, traces where required, capability profiles, NFR/SLO measurement, collection/export, dashboards, alert ownership, retention/access controls. | Safe record normalisation, controlled capability profiles, NFR-class/latency-interval references, and registry coverage have local proof; a target-owned alarm-policy standard and staging source catalogue are recorded, but they are not production proof. | `contract/local proof` | Selected delivery path and histogram semantics, target NFR/SLO values and error-budget policy, target resources, alert/runbook/access policy, failure and deployed evidence. |
+| Smoke transactional state and publication proof | One harmless, non-business smoke work item and its bounded audit-evidence and outbox records must be written atomically, then made available to a later relay. This proves platform mechanics only; it stores no customer, tenant, personal, medical, or entity-builder data. | DynamoDB on-demand is selected as the first reference storage provider; SQS Standard with a DLQ is the selected initial relay transport. No persistence/outbox adapter, tables, relay, queue resources, or deployed proof exists yet. | `requirements captured` | Provider-neutral boundary, DynamoDB transaction adapter, SQS adapter, data-key/index design, target-owned configuration, encryption/IAM/backup/retention plan, negative/retry/idempotency tests, and target evidence. |
 | Audit and security records | Durable, tamper-evident-enough record delivery, allowlisted facts, retention, access, export and review. | Record shape/normalisation direction exists; no durable sink. | `requirements captured` | Audit sink and integrity design, target resources, access/retention policy, verification and retrieval evidence. |
-| Relational persistence | Tenant-scoped durable data, migrations, encryption, transactions, backup/restore, access controls. | No selected platform production path. | `not assessed` | Bounded persistence contract/adapter/infra plan and restore proof before any entity data. |
+| Entity persistence | Tenant-scoped durable data, migrations, encryption, transactions, backup/restore, access controls. | No selected product-data path. The DynamoDB smoke selection does not decide entity persistence. | `not assessed` | Bounded persistence contract/adapter/infra plan and restore proof before any entity data. |
 | Object/file storage | Profile images and documents, encryption, tenant isolation, lifecycle/retention, signed access, safe download. | Required by first release; no selected path. | `requirements captured` | Storage design, adapter/host delivery, isolation/retention/access proof. |
 | Upload/download safety | Size/type controls, malware/unsafe-content strategy, bulk workflow, quarantine/approval, audit trail. | Required by first release; no selected path. | `requirements captured` | Threat model, ingestion workflow, storage/queue integration, negative tests and operating response. |
-| Queue, workers, retry, and DLQ | Bulk operations and later agent workflows require durable execution, idempotency, retry, DLQ, correlation, and controlled recovery. | Worker/job contracts exist; no provider selection. | `contract/local proof` | Queue/DLQ adapter and infrastructure, worker target, replay/poison-message policy, operational evidence. |
+| Queue, workers, retry, and DLQ | Bulk operations and later agent workflows require durable execution, idempotency, retry, DLQ, correlation, and controlled recovery. | Worker/job contracts exist. SQS Standard/DLQ is selected only for the bounded smoke reference; it is not a general product async-provider default yet. | `contract/local proof` | Queue/DLQ adapter and infrastructure, worker target, replay/poison-message policy, operational evidence. |
 | Scheduler | Scheduled agent, maintenance, or bulk work must have durable triggers, idempotency, time-zone and missed-run policy. | Identified in platform plan; no selected service. | `requirements captured` | Chosen scheduler/adapter, target policy, operational proof before scheduled work ships. |
 | Agent workflow safety | Untrusted prompts/content, tool permission boundary, consequence confirmation, data minimisation, provider data boundary, evaluation and human escalation. | Security/prompt-injection governance is recorded; no production agent runtime. | `requirements captured` | Agent threat model, approved model/provider/data terms, policy enforcement, evals, audit and incident controls. |
 | Chat and voice channels | Verified session identity, same capability authz path, transcript/audio privacy, retention/consent, confirmation and human handoff. | Channel-neutral product-harness direction is recorded. | `requirements captured` | Channel adapter and privacy/security model before a channel is exposed. |
@@ -344,14 +350,122 @@ example, container log collection or secrets injection may be a target-host
 mechanism. It still needs an explicit target selection, failure model, and
 evidence; it must never be treated as automatic merely because ECS exists.
 
+### Bounded DynamoDB smoke-persistence selection
+
+On 2026-09-09, DynamoDB on-demand in the initial EU reference region was
+selected as the storage provider for the first *platform-smoke* transactional
+state/outbox proof. The selection is driven by the current low-volume,
+cost-aware operating constraint and by the need to prove a real atomic
+state-plus-publication path before product/application work begins.
+
+The selection authorises planning and later implementation of one
+provider-specific platform adapter and target infrastructure plan. It does not
+authorise an AWS mutation, customer-data onboarding, creation of a generic
+repository framework, or a conclusion that future Entity Builder schemas must
+use DynamoDB. Generic platform modules and the smoke app remain provider
+neutral; DynamoDB SDK use belongs only in a future adapter under
+`platform/adapters/aws/<adapter-type>/<service-name>/`, selected by a target
+composition root.
+
+The first slice must use an explicit DynamoDB transaction to save the harmless
+smoke work-item state and its bounded outbox/evidence records together. It
+must use stable IDs, idempotency/conditional-write behaviour, an intentional
+pending-delivery query path, and a safe retry/failure model. The outbox relay's
+queue or event destination was deliberately kept separate from this storage
+decision; the following SQS selection now supplies that transport. No customer,
+tenant, personal, medical, prompt, voice, document, token, credential, or raw
+request value may be stored merely to make this proof more realistic.
+
+Revisit the provider choice when real entity relationships, flexible reporting
+or search, cross-entity constraints, migration requirements, transaction
+boundaries, observed cost, or operational evidence justify a different
+provider. A later relational adapter must be an additive, governed path with a
+data-migration and restore strategy; it must not quietly replace the smoke
+reference selection.
+
+### Bounded SQS smoke-delivery selection
+
+On 2026-09-09, SQS Standard with a dead-letter queue (DLQ) was selected as the
+first relay transport for the DynamoDB smoke outbox. The reference flow is one
+accepted work item becoming one duplicate-safe worker job. It is intentionally
+not a general event-fan-out bus, ordering guarantee, or future product-event
+architecture; EventBridge and FIFO queues remain separate decisions when a
+real multiple-consumer or ordering requirement exists.
+
+The first named policy is `platform-short-idempotent-work.v1`. Its approved
+semantic requirements are at-least-once delivery; an idempotent consumer; no
+ordering assumption; a 30-second expected execution budget; a two-minute
+visibility period; five total delivery attempts; bounded exponential retry
+backoff with jitter; seven-day main-queue retention; fourteen-day DLQ
+retention; and manual, reviewable DLQ recovery by the initial operator. A
+short work item does not need a visibility heartbeat; any future longer-running
+class requires a separate delivery policy with an explicit extension/lease
+strategy.
+
+The generic policy must remain provider-neutral. It owns concepts such as
+delivery model, retry eligibility, attempt limit, execution budget, retention
+requirement, idempotency, ordering requirement, DLQ recovery, and required
+observability. The target-owned configuration maps that policy to SQS values
+such as `VisibilityTimeout`, redrive `maxReceiveCount`, message retention,
+main/DLQ resource references, encryption, IAM, and CloudWatch alarms. The
+target profile is the canonical non-secret policy/value source; infrastructure
+creates and validates the resources from it, target composition injects
+resolved queue references, and the AWS adapter validates/uses them. Do not
+duplicate independently editable values between an app, generic platform code,
+the adapter, and infrastructure.
+
+Platform invariants are not target configuration switches: consumers remain
+idempotent, retries remain bounded, retry exhaustion has a terminal recovery
+path, payloads remain absent from ordinary telemetry, and least-privilege
+access remains required. The decision does not authorise SQS/DynamoDB resource
+creation, adapter implementation, or AWS mutation.
+
+### Bounded relay-processing and DLQ-recovery rules
+
+The smoke proof must treat publication and processing as independently
+recoverable steps. The relay conditionally claims a pending outbox record,
+publishes the stable outbox identity, then marks the record published only
+after provider acceptance. A crash between those last two steps may cause a
+duplicate publication; the worker's durable idempotency/processing record is
+the required protection, not an assertion that SQS provides exactly-once
+delivery.
+
+For each delivery, the worker must claim durable processing before performing
+work and atomically write the terminal smoke-work state, completion marker,
+and bounded evidence before it deletes the queue message. Claiming and state
+transitions require conditional writes with a fencing/attempt value so an
+expired claimant cannot overwrite the work of a newer claimant. The target
+proof must demonstrate safe handling of duplicate deliveries, relay and worker
+crashes, bounded transient retry, and terminal failure.
+
+The DLQ is a restricted quarantine. It must preserve enough safe identifiers
+and attempt/failure facts to correlate the item with the original outbox and
+work records, but raw payloads are not ordinary observability or audit data.
+Initial recovery is manual and reviewable: inspect the durable outcome, repair
+the cause where needed, then record a linked close, escalation, or controlled
+retry decision. Queue-wide purge and blanket redrive are forbidden defaults.
+Any later automated resolver requires a separately approved bounded
+remediation policy and its own operational proof.
+
+Apps consume this capability through a named provider-neutral delivery policy.
+They do not select SQS, DynamoDB conditional-expression details, lease length,
+or a generic `useFencing` switch. The platform worker supplies the selected
+policy's coordination mechanics; the app remains responsible for declaring
+business state-transition meaning, stable idempotency identity, and external
+side-effect/reconciliation requirements. Normal entity update conflicts remain
+an entity-revision and business-concurrency concern unless a distinct,
+restartable workflow has an approved exclusive-processing scope.
+
 ## Sequencing
 
 ### Phase A — Baseline and decisions
 
 Use this plan to remove ambiguity before expanding code. Reconcile the
 existing platform runtime plan, product harness plan, enterprise obligations,
-target profile, and readiness manifest against this matrix. No empty adapters
-or cloud resources are created in this phase.
+target profile, and readiness manifest against this matrix. The bounded
+DynamoDB smoke-persistence selection is now an input to the next design slice;
+it does not create an adapter, a cloud resource, or a generic persistence
+default in this phase.
 
 ### Phase B — Safe public API and sensitive-data foundation
 
@@ -403,6 +517,9 @@ These are deliberately visible rather than silently assumed:
    maximum restoration time, and restore-test cadence?
 6. What monthly operating-cost ceiling and alert threshold should guide early
    managed-service choices?
+7. Which bounded relay topology and SQS-adapter retry implementation will
+   realise `platform-short-idempotent-work.v1`, including failure recovery and
+   DLQ redrive safeguards?
 
 ## Definition Of Done
 

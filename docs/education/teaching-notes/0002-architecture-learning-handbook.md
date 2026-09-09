@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 11
+  version: 15
   status: active
   layer: 05.education
   domain: education
@@ -7528,22 +7528,370 @@ vocabulary. The future app/entity schema, capability data-access declaration,
 resolved-policy evaluator, persistence representation, and generated harness
 validators remain intentionally deferred until the first real entity consumer.
 
-## 78. Next Lesson Queue
+## 78. A Bounded DynamoDB Reference Is Not a Permanent Database Decision
 
-1. Design the bounded optional-observability failure policy, then implement and
+### Why this matters now
+
+The platform-smoke app should prove more than a server can start. It should
+eventually prove that a harmless state change, its required bounded evidence,
+and an outgoing outbox message cannot become separated when a later delivery
+step fails. That needs a real transaction-capable store, even though we are
+not ready to choose the Entity Builder's general persistence approach.
+
+The chosen first reference is DynamoDB on-demand in the EU target. The choice
+fits a low-volume, cost-aware operational proof. It is deliberately narrow:
+it applies only to a non-business smoke work item and its outbox/evidence
+records. It does not decide where future entities, customer data, medical
+data, documents, or reporting models live.
+
+### What the future proof will contain
+
+```text
+one DynamoDB transaction
+    |
+    +-- harmless smoke work-item state
+    +-- bounded audit-evidence record
+    +-- pending outbox record
+```
+
+All three writes either succeed together or fail together. A later platform
+relay will take the pending outbox record to a queue or event destination. We
+have *not* selected that destination yet; choosing DynamoDB does not silently
+mean SQS, EventBridge, or another service is already approved.
+
+### What exists today
+
+Core currently supplies portable persistence and audit vocabulary, including a
+transaction seam and an `AuditRecorder` port. The repository does not yet have
+a DynamoDB persistence/outbox adapter, an outbox table, a relay, a queue/event
+provider, or a deployed durability proof. The only existing DynamoDB adapter
+is for shared rate limiting, which is a different responsibility.
+
+### Misconception check
+
+“We chose DynamoDB, so the future Entity Builder must use DynamoDB.”
+
+No. We chose a low-cost provider for one operational proof. Future real entity
+requirements—relationships, flexible reporting/search, constraints,
+migrations, transaction shape, measured cost, and operating evidence—will
+trigger a separate persistence decision. A later relational adapter is an
+additive migration path, not a reason to rewrite history or claim the smoke
+proof was a product data model.
+
+### Study question
+
+Why is it useful to prove a state/outbox transaction with a harmless smoke
+work item before designing an invoice, customer, or entity feature?
+
+Because it proves the platform's failure and delivery mechanics without
+accidentally making a temporary demo schema the permanent business model.
+
+Planning triage: the bounded selection is recorded in the production-reference
+baseline and platform-runtime plan. It introduces no AWS mutation, no empty
+adapter package, and no change to the deferred entity-persistence boundary.
+
+## 79. The Outbox Is Several Records, Not One Queue Write
+
+### The five logical records
+
+A durable smoke operation requires five logical records, although they do not
+necessarily require five DynamoDB tables:
+
+| Record | Purpose |
+|---|---|
+| Idempotency claim | Stops one client retry becoming two work items. |
+| Smoke work item | Holds the harmless state being changed. |
+| Audit evidence | Records the bounded accountable milestones. |
+| Outbox record | Preserves the obligation to deliver a later message. |
+| Worker processing record | Stops a duplicate delivery applying work twice. |
+
+The first transaction atomically claims idempotency, creates the accepted work
+item, writes acceptance evidence, and creates a pending outbox record. A relay
+then leases the outbox record, sends a message to the selected transport, and
+marks delivery only after confirmation. The worker separately leases and
+processes the message. Its terminal work-item change, processing marker, and
+terminal evidence must also share an atomic boundary.
+
+### Idempotency protects a request, not every concurrency problem
+
+An idempotency key is scoped to the verified caller, capability, and tenant
+when applicable. A protected fingerprint distinguishes a genuine retry from
+key reuse for different input. The raw key never enters ordinary telemetry.
+Idempotency does not replace version checks for normal updates, state
+transitions, authorisation, or business constraints.
+
+### State and race protection
+
+The harmless work-item lifecycle begins as:
+
+```text
+accepted → processing → completed
+                     ↘ failed
+```
+
+Every transition has an allowed predecessor, expected version, owner, and
+failure outcome. A relay or worker claim uses an expiring lease and an
+increasing attempt/lease version. That fencing value stops a stale worker from
+writing after another worker has taken over. We prefer a possible duplicate
+delivery to lost work, then make the consumer duplicate-safe with its stable
+outbox/message identity.
+
+### Misconception check
+
+“One transaction gives us exactly-once processing everywhere.”
+
+No. The transaction protects one database decision. The external queue,
+worker, and later integrations can fail independently. Effective one-time
+business outcomes come from atomic state changes, conditional transitions,
+idempotency, leases/fencing, bounded retries, and repair evidence together.
+
+### Study question
+
+Why must a worker's completion marker and its harmless state transition share
+one transaction?
+
+Otherwise a crash after changing state but before recording completion permits
+a later duplicate delivery to apply the effect again.
+
+## 80. Queue Delivery Policy Is Generic; SQS Is One Target Mapping
+
+### The selected first transport
+
+The first smoke outbox relay will use SQS Standard with a DLQ. It fits one
+accepted work item becoming one worker job. It deliberately does not make
+EventBridge, FIFO ordering, or product-event fan-out part of the initial
+platform proof.
+
+### The named short-work policy
+
+`platform-short-idempotent-work.v1` requires at-least-once delivery,
+idempotent consumers, no ordering assumption, a 30-second expected execution
+budget, two-minute visibility, five total delivery attempts, bounded
+exponential backoff with jitter, seven-day main retention, fourteen-day DLQ
+retention, and manual review before any DLQ redrive.
+
+These are target defaults for short safe-to-retry work, not universal settings
+for long-running imports, integrations, payments, or future agent workflows.
+Those need their own named policies.
+
+### One configuration source, several consumers
+
+```text
+Generic delivery policy
+    → target-owned SQS configuration
+        → infrastructure resources and IAM
+        → target composition references
+        → validated AWS adapter
+```
+
+The generic policy owns the meaning: retry, execution budget, dead-letter
+recovery, idempotency, ordering, retention, observability, and security.
+Target configuration owns the SQS mapping: queue/DLQ resource references,
+visibility, redrive count, retention, encryption, IAM, and provider alarms.
+Platform invariants—such as bounded retries and duplicate-safe consumers—are
+not optional configuration switches. No application should hardcode a queue
+URL, SQS receipt handle, or independently adjustable delivery value.
+
+### Study question
+
+Why should a target profile, rather than an adapter source file, own a
+two-minute visibility timeout?
+
+Because it is an environment-specific operational decision that must stay
+reviewable alongside queue resources, IAM, alarms, and rollback—not an
+unreviewed provider constant hidden in code.
+
+## 81. Worker Completion Is Not Queue Acknowledgement
+
+### The worker's safe order
+
+A queue message is a request to attempt work, not proof that work happened.
+For the selected SQS proof, a worker must follow this order:
+
+```text
+receive message
+    → conditionally claim durable processing
+    → perform bounded work
+    → atomically record terminal outcome and safe evidence
+    → acknowledge/delete the queue message
+```
+
+SQS temporarily hides a received message from other workers for its visibility
+period. That is a lease, not permanent ownership. If the worker crashes or the
+lease expires, SQS can deliver the message again. The durable processing claim,
+stable outbox/message identity, and fencing value decide whether a worker may
+still cause an outcome.
+
+### Why durable completion comes before acknowledgement
+
+| Order | Crash consequence |
+|---|---|
+| Delete the queue message, then record completion | Work can be lost permanently. |
+| Record completion, then delete the queue message | The message may return, but the duplicate is recognised and becomes harmless. |
+
+The worker's harmless smoke state, completion marker, and bounded terminal
+evidence need one atomic boundary. A stale worker must not write after its
+processing lease expired and another worker claimed the work; a monotonically
+increasing fencing or attempt value protects that condition.
+
+### Failure is classified before it is retried
+
+| Result | Correct action |
+|---|---|
+| Already completed | Acknowledge the duplicate without repeating work. |
+| Transient failure | Record safe diagnostics and retry only within the named policy. |
+| Permanent invalid message or policy failure | Record terminal failure and allow the DLQ path. |
+| Unexpected failure | Record safe diagnostics and consume only the remaining bounded attempts. |
+
+### Misconception check
+
+“Deleting a message means the worker completed its job.”
+
+No. Deletion only ends normal queue delivery. The job is complete when durable
+state proves its intended outcome and duplicate processing can no longer alter
+that outcome.
+
+### Study question
+
+Why is a duplicate after durable completion preferable to a crash after early
+queue deletion?
+
+Because durable idempotency can make the duplicate harmless, whereas early
+deletion can remove the only instruction to finish work that was never
+recorded as complete.
+
+## 82. A Dead-Letter Queue Is Quarantine, Not a Retry Button
+
+### What entering the DLQ means
+
+After a message exhausts the policy's delivery budget, the SQS redrive rule
+moves it from the main queue to the DLQ. That means the platform could not
+safely prove its intended outcome through normal automation. It does not prove
+that the intended work never happened, and it does not make a replay safe.
+
+### The recovery sequence
+
+```text
+correlate → inspect durable outcome → classify cause → repair cause
+          → record a bounded recovery decision → close, escalate, or retry
+```
+
+The DLQ item must be correlated with its stable message/outbox/work identity,
+attempt history, and safe failure facts. An operator then checks durable state
+before choosing an action. A controlled retry creates an evidence link to the
+original failure; it is not an untracked redrive of every message in the queue.
+
+### What is safe to record
+
+Safe evidence includes identifiers, policy version, attempt count, timestamps,
+failure category, safe error code, and recovery decision. The raw queue payload
+remains restricted operational data. It must not be copied into general logs,
+audit events, alerts, LLM prompts, or dashboards simply to make investigation
+easier.
+
+### Future automation has a narrow role
+
+A future resolver agent may classify a known duplicate, group repeated
+transient failures, recommend a runbook action, or perform a separately
+allowlisted idempotent recovery. It must not have a blanket permission to
+empty the DLQ, replay every message, change production configuration, or read
+unrestricted tenant data. The existing deferred remediation plan remains the
+owner of that later design.
+
+### Misconception check
+
+“When the dependency recovers, replay the whole DLQ.”
+
+No. Some prior attempts may have partly succeeded, some messages may be
+permanently invalid, and a bulk redrive can overload a recovering dependency.
+Repair first, then use a small controlled batch with evidence and idempotency
+checks.
+
+### Study question
+
+Why must a DLQ recovery decision link back to the original failed delivery?
+
+So an operator or later audit can explain why work was retried, determine
+whether it already partly succeeded, and distinguish recovery from a new
+business request.
+
+## 83. A Capability Declares Need; The Platform Supplies Coordination
+
+### Do not make fencing an app toggle
+
+A job should declare a named delivery policy such as
+`platform-short-idempotent-work.v1`. It should not contain an ad hoc
+`useFencing` flag, SQS visibility value, DynamoDB condition expression, or
+provider-specific retry callback. Those are platform coordination details.
+
+The policy tells the platform which safety envelope the job requires. The
+worker then establishes the required claim, lease, fence, retry, terminal
+recording, and acknowledgement order. This makes the safe path ordinary rather
+than asking every future capability author to reproduce distributed-systems
+logic.
+
+### Business logic still declares business meaning
+
+| Question | Owner |
+|---|---|
+| How does a worker safely claim and finish queued work? | Platform worker. |
+| Which delivery policy does this job require? | App capability contract. |
+| What does `completed` mean for this workflow? | Business capability. |
+| Can an external provider call be repeated safely? | Business capability and its integration adapter. |
+| Did two users submit competing normal record edits? | Entity revision and business-concurrency rules. |
+
+An app capability must still provide the stable idempotency identity and
+define valid business state transitions. The platform cannot infer whether an
+email, payment, document upload, or external provisioning action is safe to
+repeat. It can only provide the generic coordination envelope around the job.
+
+### When an entity needs no fence
+
+A normal entity is not a leased work item. Two users editing the same customer
+record usually need revision-based optimistic concurrency: the second update
+is rejected or reconciled if it was based on an older revision. A fence is only
+appropriate when a restartable processor temporarily owns exclusive work—for
+example, a reconciliation job, import partition, or document conversion.
+That fence normally belongs on a dedicated work/processing record, not on the
+customer row itself.
+
+### Misconception check
+
+“If the platform handles leases, business code no longer needs concurrency
+rules.”
+
+No. The platform prevents stale workers from defeating the processing protocol.
+Business code still protects its own state transitions, authorisation, data
+constraints, and external effects.
+
+### Study question
+
+Why is a named delivery-policy reference safer than a `useFencing` flag on
+each job?
+
+Because a policy describes a reviewed, complete safety envelope. A lone flag
+would invite incompatible combinations of retries, ordering, timeouts, and
+acknowledgement behaviour.
+
+## 84. Next Lesson Queue
+
+1. Define the provider-neutral queue-delivery policy shape and its target-owned
+   SQS mapping, then update the local worker shell to consume a resolved policy
+   rather than raw retry options.
+2. Design the bounded optional-observability failure policy, then implement and
    test metric/log/tracer failure isolation before calling the smoke-route proof
    complete.
-2. Make server and worker delivery consume the resolved profile, emitting only
+3. Make server and worker delivery consume the resolved profile, emitting only
    its approved standard facts through the existing safe helper boundaries.
-3. Define a target-governed NFR/SLO policy catalogue and histogram adapter
+4. Define a target-governed NFR/SLO policy catalogue and histogram adapter
    before setting p95/p99 objectives or burn-rate alarms.
-4. Return to the practical alarm follow-up only when an explicit AWS change is
+5. Return to the practical alarm follow-up only when an explicit AWS change is
    approved: verify enhanced Container Insights, review the two role changes,
    review the service-stack change set, and prove notification delivery.
 
 ## Repository Evidence
 
-- [Current session log](../../../commitLogs/2026/sep/07/2026-09-07-22-32-persistence-plan-and-worker-observabilit/README.md)
+- [Current session log](../../../commitLogs/2026/sep/09/2026-09-09-20-04-record-the-bounded-dynamodb-production-reference-decision-fo/README.md)
 - [Core package overview](../../../packages/core/README.md)
 - [Core security public entry point](../../../packages/core/src/security/index.ts)
 - [Platform contracts README](../../../platform/contracts/README.md)
@@ -7587,6 +7935,25 @@ After each completed learning chunk:
    plan path changed or the explicit no-plan-change rationale.
 
 ## Revision History
+
+- 2026-09-09: Selected DynamoDB on-demand only for the future harmless
+  platform-smoke transaction/outbox reference proof. The lesson separates that
+  low-cost operational decision from the still-deferred Entity Builder
+  persistence choice. At that point, relay transport, AWS resources, and
+  product data remained unselected. No runtime source or AWS resource changed.
+- 2026-09-09: Selected SQS Standard with a DLQ as the first relay transport for
+  that smoke proof. Added the five-record/outbox, idempotency, state/fencing,
+  and target-owned queue-policy lessons. EventBridge, FIFO ordering, adapters,
+  target resources, and AWS mutation remain deferred.
+- 2026-09-09: Added the worker-completion and DLQ-quarantine lessons. The
+  platform plans now require durable completion before queue acknowledgement,
+  duplicate/lease safety, bounded failure classification, and manual linked
+  DLQ recovery for the smoke proof. No runtime source or AWS resource changed.
+- 2026-09-09: Added the capability-versus-platform coordination lesson. Apps
+  now declare a named delivery policy and business idempotency/transition
+  meaning; platform workers own generic lease and fencing mechanics. Normal
+  entity edits continue to use revision-based concurrency unless a separate
+  restartable workflow needs exclusive processing.
 
 - 2026-09-01: Created from the architecture tutoring session. Covers the
   completed core/security and platform/contracts lessons; future lessons will
