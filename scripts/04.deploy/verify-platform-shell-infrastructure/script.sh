@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 3
+#   version: 5
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -12,7 +12,7 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Statically enforce the minimum security and deployment invariants of the Kanbien staging platform-shell CloudFormation templates.
+#   purpose: Statically enforce the Kanbien staging platform-shell infrastructure and selected capability-observability policy invariants.
 #   portability:
 #     class: internal
 #     targets:
@@ -232,6 +232,8 @@ failures = []
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
+    "PlatformShellOtelCollectorLogGroup",
+    "OtelCollectorConfigurationParameter",
     "RateLimitTable",
     "TaskExecutionRole",
     "TaskRole",
@@ -267,6 +269,8 @@ expected_foundation_parameters = {
 }
 expected_foundation_outputs = {
     "LogGroupName",
+    "OtelCollectorLogGroupName",
+    "OtelCollectorConfigurationParameterArn",
     "RateLimitTableName",
     "RateLimitTableArn",
     "TaskExecutionRoleArn",
@@ -310,10 +314,32 @@ if rate_table.get("TimeToLiveSpecification") != {"AttributeName": "expiresAt", "
 if rate_table.get("SSESpecification", {}).get("SSEEnabled") is not True:
     fail("RateLimitTable must enable server-side encryption")
 
+task_execution_policy = properties(foundation, "TaskExecutionRole", "AWS::IAM::Role").get("Policies", [])
+task_execution_configuration_statement = next(
+    (
+        statement
+        for policy in task_execution_policy
+        for statement in policy.get("PolicyDocument", {}).get("Statement", [])
+        if statement.get("Sid") == "ReadOnlyThePlatformShellOtelCollectorConfiguration"
+    ),
+    None,
+)
+if task_execution_configuration_statement is None:
+    fail("TaskExecutionRole must include the narrow collector-configuration read statement")
+elif task_execution_configuration_statement.get("Effect") != "Allow" or task_execution_configuration_statement.get("Action") != ["ssm:GetParameters"] or task_execution_configuration_statement.get("Resource") != {"!GetAtt": "OtelCollectorConfigurationParameter.Arn"}:
+    fail("TaskExecutionRole must read only the reviewed OTel collector configuration parameter")
+
 task_policy = properties(foundation, "TaskRole", "AWS::IAM::Role").get("Policies", [])
-task_actions = [action for policy in task_policy for statement in policy.get("PolicyDocument", {}).get("Statement", []) for action in statement.get("Action", [])]
-if task_actions != ["dynamodb:UpdateItem"]:
-    fail("TaskRole must have only DynamoDB UpdateItem capability for the shared limiter")
+task_statements = [statement for policy in task_policy for statement in policy.get("PolicyDocument", {}).get("Statement", [])]
+task_statements_by_sid = {statement.get("Sid"): statement for statement in task_statements}
+rate_limit_statement = task_statements_by_sid.get("UpdateOnlyThePlatformShellRateLimitTable")
+metric_delivery_statement = task_statements_by_sid.get("PublishOnlyCloudWatchMetricData")
+if rate_limit_statement is None or rate_limit_statement.get("Effect") != "Allow" or rate_limit_statement.get("Action") != ["dynamodb:UpdateItem"] or rate_limit_statement.get("Resource") != {"!GetAtt": "RateLimitTable.Arn"}:
+    fail("TaskRole must retain only the reviewed DynamoDB rate-limit write statement")
+if metric_delivery_statement is None or metric_delivery_statement.get("Effect") != "Allow" or metric_delivery_statement.get("Action") != ["cloudwatch:PutMetricData"] or metric_delivery_statement.get("Resource") != "*":
+    fail("TaskRole must grant only the reviewed CloudWatch OTel metric-delivery action")
+if set(task_statements_by_sid) != {"UpdateOnlyThePlatformShellRateLimitTable", "PublishOnlyCloudWatchMetricData"}:
+    fail("TaskRole must contain exactly the reviewed rate-limit and metric-delivery statements")
 
 service_deployment_role = properties(foundation, "ServiceDeploymentExecutionRole", "AWS::IAM::Role")
 service_deployment_policy = service_deployment_role.get("Policies", [{}])[0].get("PolicyDocument", {}).get("Statement", [])
@@ -376,6 +402,23 @@ if web_acl_association.get("ResourceArn") != {"!Ref": "ExistingAlbArn"}:
 log_group = properties(foundation, "PlatformShellLogGroup", "AWS::Logs::LogGroup")
 if log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
     fail("PlatformShellLogGroup must use the reviewed retention parameter")
+collector_log_group = properties(foundation, "PlatformShellOtelCollectorLogGroup", "AWS::Logs::LogGroup")
+if collector_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-otel-collector" or collector_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
+    fail("PlatformShellOtelCollectorLogGroup must use the reviewed separate collector log destination and retention")
+collector_configuration_parameter = properties(foundation, "OtelCollectorConfigurationParameter", "AWS::SSM::Parameter")
+if collector_configuration_parameter.get("Name") != "/kanbien/staging/platform-shell/observability/collector-config" or collector_configuration_parameter.get("Type") != "String" or collector_configuration_parameter.get("Tier") != "Standard" or collector_configuration_parameter.get("DataType") != "text":
+    fail("OtelCollectorConfigurationParameter must be the reviewed non-secret standard SSM String")
+collector_configuration_value = collector_configuration_parameter.get("Value", {}).get("!Sub") if isinstance(collector_configuration_parameter.get("Value"), dict) else ""
+for required_collector_configuration in (
+    "endpoint: 127.0.0.1:4318",
+    "service: monitoring",
+    "metrics_endpoint: https://monitoring.${AWS::Region}.amazonaws.com/v1/metrics",
+    "authenticator: sigv4auth",
+    "memory_limiter",
+    "exporters: [otlphttp/cloudwatch]",
+):
+    if required_collector_configuration not in collector_configuration_value:
+        fail("OtelCollectorConfigurationParameter must retain the reviewed local OTLP, SigV4, bounded-memory, and CloudWatch metrics pipeline")
 
 observability = target_profile.get("observability", {})
 alarm_policy = observability.get("policy", {})
@@ -384,6 +427,8 @@ expected_alarm_policy = {
     "standard": "docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml",
     "catalogue_index": "infra/04.deploy/03.product/targets/README.md",
     "canonical_catalogue": "observability.alarms",
+    "metric_series_catalogue": "observability.metric_series",
+    "slo_catalogue": "observability.slos",
 }
 if not isinstance(alarm_policy, dict):
     fail("target profile must declare an observability alarm-policy object")
@@ -398,6 +443,159 @@ else:
         fail("target profile alarm policy must declare exactly critical and warning severities")
     else:
         severity_vocabulary = candidate_severity_vocabulary
+
+
+metric_delivery = observability.get("metric_delivery", {})
+if not isinstance(metric_delivery, dict):
+    fail("target profile metric delivery must be a mapping")
+else:
+    for key, expected in {
+        "status": "prepared-not-deployed",
+        "adr": "docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md",
+        "provider": "aws",
+        "adapter_package": "@kanbien/platform-adapter-aws-observability-cloudwatch",
+        "adapter_implementation": "cloudwatch-otel",
+        "protocol": "otlp-http-protobuf",
+    }.items():
+        if metric_delivery.get(key) != expected:
+            fail(f"target profile metric delivery must set {key} to the reviewed initial value")
+    if not Path(metric_delivery.get("adr", "")).is_file():
+        fail("target profile metric delivery must reference its accepted deployment ADR")
+    collector = metric_delivery.get("collector", {})
+    if not isinstance(collector, dict) or collector.get("topology") != "ecs-task-sidecar" or collector.get("endpoint") != "http://127.0.0.1:4318/v1/metrics":
+        fail("target profile metrics must use only the reviewed task-local ECS collector endpoint")
+    elif collector.get("image") != "public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625" or collector.get("image_version") != "v0.48.0" or collector.get("cpu_units") != 128 or collector.get("memory_reservation_mib") != 256:
+        fail("target profile metrics must pin the reviewed collector image and bounded sidecar capacity")
+    elif collector.get("configuration") != {
+        "source": "cloudformation-foundation-ssm-string-parameter",
+        "parameter_name": "/kanbien/staging/platform-shell/observability/collector-config",
+        "parameter_resource": "OtelCollectorConfigurationParameter",
+        "delivery_environment_key": "AOT_CONFIG_CONTENT",
+        "log_group_resource": "PlatformShellOtelCollectorLogGroup",
+        "output_parameter_arn": "OtelCollectorConfigurationParameterArn",
+    }:
+        fail("target profile metrics must declare the reviewed target-owned collector configuration record")
+    metric_task = metric_delivery.get("task")
+    if metric_task != {
+        "cpu_units": 512,
+        "memory_mib": 1024,
+        "application_cpu_units": 384,
+        "application_memory_reservation_mib": 512,
+        "collector_dependency": "platform-shell-depends-on-otel-collector-start",
+    }:
+        fail("target profile metrics must declare the reviewed application and collector task capacity")
+    metric_iam = metric_delivery.get("iam", {})
+    if not isinstance(metric_iam, dict) or metric_iam.get("task_execution_role", {}).get("action") != "ssm:GetParameters" or metric_iam.get("task_execution_role", {}).get("resource") != "OtelCollectorConfigurationParameter" or metric_iam.get("task_role", {}).get("action") != "cloudwatch:PutMetricData" or metric_iam.get("task_role", {}).get("resource") != "*":
+        fail("target profile metrics must declare its narrow SSM configuration and CloudWatch delivery IAM requirements")
+    export = metric_delivery.get("export", {})
+    if not isinstance(export, dict) or export.get("eligible_slo_measurement_sampling") != "none":
+        fail("target profile metrics must preserve every eligible initial SLO measurement")
+    if not isinstance(export, dict) or not isinstance(export.get("interval_ms"), int) or export["interval_ms"] < 1_000 or not isinstance(export.get("timeout_ms"), int) or export["timeout_ms"] <= 0 or export["timeout_ms"] > export["interval_ms"]:
+        fail("target profile metrics must declare a bounded valid export interval and timeout")
+
+
+metric_series = observability.get("metric_series")
+if not isinstance(metric_series, list) or len(metric_series) == 0:
+    fail("target profile must declare at least one target metric series")
+    metric_series = []
+metric_series_by_id = {}
+source_names = set()
+instrument_names = set()
+for series in metric_series:
+    if not isinstance(series, dict):
+        fail("target metric series entries must be mappings")
+        continue
+    series_id = series.get("id")
+    if not isinstance(series_id, str) or not series_id or series_id in metric_series_by_id:
+        fail("target metric series IDs must be non-empty and unique")
+        continue
+    metric_series_by_id[series_id] = series
+    if series.get("status") != "prepared-not-deployed":
+        fail(f"target metric series {series_id} must not claim deployed delivery before its IaC has been applied")
+    source = series.get("source", {})
+    otel = series.get("otel", {})
+    if not isinstance(source, dict) or not isinstance(otel, dict):
+        fail(f"target metric series {series_id} must declare source and otel mappings")
+        continue
+    source_name = source.get("name")
+    source_kind = source.get("kind")
+    source_unit = source.get("unit")
+    instrument_name = otel.get("instrument_name")
+    if not isinstance(source_name, str) or not source_name.startswith("platform.") or source_name in source_names:
+        fail(f"target metric series {series_id} must use a unique platform-owned source name")
+    source_names.add(source_name)
+    if source_kind not in {"counter", "gauge", "histogram", "timer"}:
+        fail(f"target metric series {series_id} must declare a supported Core metric kind")
+    if not isinstance(source_unit, str) or not source_unit:
+        fail(f"target metric series {series_id} must declare a source unit")
+    if not isinstance(instrument_name, str) or not instrument_name.startswith("kanbien.platform.") or instrument_name in instrument_names:
+        fail(f"target metric series {series_id} must use a unique Kanbien OTel instrument name")
+    instrument_names.add(instrument_name)
+    labels = series.get("labels", {})
+    allowed_names = labels.get("allowed_names") if isinstance(labels, dict) else None
+    prohibited_names = labels.get("prohibited_names") if isinstance(labels, dict) else None
+    if not isinstance(allowed_names, list) or not allowed_names or len(allowed_names) != len(set(allowed_names)) or not all(isinstance(name, str) and name.replace("_", "").isalnum() and name == name.lower() for name in allowed_names):
+        fail(f"target metric series {series_id} must declare unique lowercase snake_case metric label names")
+    if not isinstance(prohibited_names, list) or not all(isinstance(name, str) for name in prohibited_names) or set(allowed_names or []).intersection(prohibited_names or []):
+        fail(f"target metric series {series_id} must distinguish allowed and prohibited labels")
+    cardinality_limit = series.get("cardinality_limit")
+    if not isinstance(cardinality_limit, int) or cardinality_limit <= 0 or cardinality_limit > 1_000:
+        fail(f"target metric series {series_id} must set a positive cardinality limit no greater than 1000")
+    histogram = series.get("histogram")
+    if source_kind in {"timer", "histogram"}:
+        boundaries = histogram.get("bucket_boundaries_ms") if isinstance(histogram, dict) else None
+        if not isinstance(boundaries, list) or not boundaries or not all(isinstance(value, (int, float)) and value > 0 for value in boundaries) or any(current <= previous for previous, current in zip(boundaries, boundaries[1:])):
+            fail(f"target metric series {series_id} must declare strictly increasing positive histogram bucket boundaries")
+    elif histogram is not None:
+        fail(f"target metric series {series_id} must not declare histogram buckets for a non-distribution metric")
+
+
+slos = observability.get("slos")
+if not isinstance(slos, list) or len(slos) == 0:
+    fail("target profile must declare at least one target SLO")
+    slos = []
+slo_ids = set()
+for slo in slos:
+    if not isinstance(slo, dict):
+        fail("target SLO entries must be mappings")
+        continue
+    slo_id = slo.get("id")
+    if not isinstance(slo_id, str) or not slo_id or slo_id in slo_ids:
+        fail("target SLO IDs must be non-empty and unique")
+        continue
+    slo_ids.add(slo_id)
+    if slo.get("status") != "selected-not-evaluable":
+        fail(f"target SLO {slo_id} must not claim evaluation before delivery is provisioned")
+    population = slo.get("population", {})
+    objective = slo.get("objective", {})
+    confidence = slo.get("confidence", {})
+    if not isinstance(population, dict) or not isinstance(objective, dict) or not isinstance(confidence, dict):
+        fail(f"target SLO {slo_id} must declare population, objective, and confidence mappings")
+        continue
+    series_id = population.get("metric_series")
+    series = metric_series_by_id.get(series_id)
+    if series is None:
+        fail(f"target SLO {slo_id} must reference a declared target metric series")
+        continue
+    required_dimensions = population.get("required_dimensions")
+    if not isinstance(required_dimensions, dict) or not required_dimensions:
+        fail(f"target SLO {slo_id} must declare a bounded eligible population")
+    elif not set(required_dimensions).issubset(set(series.get("labels", {}).get("allowed_names", []))):
+        fail(f"target SLO {slo_id} population dimensions must be allowed by its metric series")
+    if not isinstance(slo.get("rolling_window_days"), int) or slo["rolling_window_days"] <= 0:
+        fail(f"target SLO {slo_id} must declare a positive rolling window")
+    if not isinstance(confidence.get("minimum_eligible_observations"), int) or confidence["minimum_eligible_observations"] <= 0 or confidence.get("below_minimum_state") != "insufficient-confidence" or not isinstance(confidence.get("synthetic_check"), str):
+        fail(f"target SLO {slo_id} must declare low-volume and synthetic-check behaviour")
+    if objective.get("kind") == "percentile_threshold":
+        maximum_ms = objective.get("maximum_ms")
+        boundaries = series.get("histogram", {}).get("bucket_boundaries_ms", [])
+        if objective.get("percentile") not in {"p95", "p99"} or not isinstance(maximum_ms, (int, float)) or maximum_ms not in boundaries:
+            fail(f"target latency SLO {slo_id} must use p95 or p99 and an exact histogram bucket threshold")
+    elif objective.get("kind") == "success_ratio":
+        if not isinstance(objective.get("good_outcome"), str) or not isinstance(objective.get("target_percent"), (int, float)) or not 0 < objective["target_percent"] <= 100:
+            fail(f"target availability SLO {slo_id} must define a bounded successful outcome and percentage")
+    else:
+        fail(f"target SLO {slo_id} must declare a supported objective kind")
 
 catalogue_index_path = Path(expected_alarm_policy["catalogue_index"])
 if not catalogue_index_path.is_file():
@@ -543,14 +741,39 @@ image_parameter = service.get("Parameters", {}).get("ImageUri", {})
 if "@sha256" not in image_parameter.get("AllowedPattern", ""):
     fail("service ImageUri must require an immutable digest")
 
-container = properties(service, "TaskDefinition", "AWS::ECS::TaskDefinition").get("ContainerDefinitions", [{}])[0]
+task_definition = properties(service, "TaskDefinition", "AWS::ECS::TaskDefinition")
+task_cpu_parameter = service.get("Parameters", {}).get("Cpu", {})
+task_memory_parameter = service.get("Parameters", {}).get("Memory", {})
+if task_definition.get("Cpu") != {"!Ref": "Cpu"} or task_definition.get("Memory") != {"!Ref": "Memory"} or task_cpu_parameter.get("Default") != "512" or task_cpu_parameter.get("AllowedValues") != ["512"] or task_memory_parameter.get("Default") != "1024" or task_memory_parameter.get("AllowedValues") != ["1024"]:
+    fail("TaskDefinition must use the reviewed 512 CPU and 1024 MiB sidecar-capable task capacity")
+containers = task_definition.get("ContainerDefinitions", [])
+containers_by_name = {item.get("Name"): item for item in containers if isinstance(item, dict)}
+container = containers_by_name.get("platform-shell", {})
+collector_container = containers_by_name.get("otel-collector", {})
 if container.get("ReadonlyRootFilesystem") is not True:
     fail("platform-shell container must use a read-only root filesystem")
 if container.get("Secrets"):
     fail("platform-shell task must not receive a Cognito client secret")
+if container.get("Cpu") != 384 or container.get("MemoryReservation") != 512:
+    fail("platform-shell container must retain the reviewed application CPU and memory reservation")
+if container.get("DependsOn") != [{"ContainerName": "otel-collector", "Condition": "START"}]:
+    fail("platform-shell container must depend on the collector starting before it starts")
 health_check = container.get("HealthCheck", {})
 if health_check.get("Command", [])[:3] != ["CMD", "/nodejs/bin/node", "-e"]:
     fail("platform-shell ECS health check must use exec-form Node commands without a shell")
+if collector_container.get("Image") != "public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625" or collector_container.get("Essential") is not True or collector_container.get("ReadonlyRootFilesystem") is not True or collector_container.get("Cpu") != 128 or collector_container.get("MemoryReservation") != 256:
+    fail("otel-collector must use the reviewed immutable image, read-only filesystem, and bounded capacity")
+if collector_container.get("PortMappings"):
+    fail("otel-collector must not publish a task-facing metrics port")
+collector_secrets = collector_container.get("Secrets")
+if collector_secrets != [{"Name": "AOT_CONFIG_CONTENT", "ValueFrom": {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-OtelCollectorConfigurationParameterArn"}}}]:
+    fail("otel-collector must read only the reviewed target configuration through ECS SSM value injection")
+collector_environment = {entry.get("Name"): entry.get("Value") for entry in collector_container.get("Environment", [])}
+if collector_environment != {"AWS_REGION": "eu-west-1"}:
+    fail("otel-collector must retain only the reviewed CloudWatch region environment value")
+collector_log_options = collector_container.get("LogConfiguration", {}).get("Options", {})
+if collector_container.get("LogConfiguration", {}).get("LogDriver") != "awslogs" or collector_log_options.get("awslogs-stream-prefix") != "otel-collector" or collector_log_options.get("awslogs-group") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-OtelCollectorLogGroupName"}}:
+    fail("otel-collector must use its separate reviewed operational log destination")
 environment = {entry.get("Name"): entry.get("Value") for entry in container.get("Environment", [])}
 required_environment = {
     "PLATFORM_DEPLOYMENT_EXPOSURE": "public",
@@ -571,6 +794,30 @@ for key, value in target_environment.items():
             fail("platform-shell task must obtain the shared limiter table name from the foundation stack")
     elif environment.get(key) != value:
         fail(f"service template must match target-profile non-secret value for {key}")
+
+expected_metric_series_environment = []
+for series in metric_series:
+    source = series.get("source", {})
+    otel = series.get("otel", {})
+    expected_series = {
+        "sourceName": source.get("name"),
+        "sourceKind": source.get("kind"),
+        "sourceUnit": source.get("unit"),
+        "instrumentName": otel.get("instrument_name"),
+        "description": otel.get("description"),
+        "allowedLabelNames": series.get("labels", {}).get("allowed_names"),
+        "cardinalityLimit": series.get("cardinality_limit"),
+    }
+    if "histogram" in series:
+        expected_series["histogramBucketBoundaries"] = series.get("histogram", {}).get("bucket_boundaries_ms")
+    expected_metric_series_environment.append(expected_series)
+try:
+    actual_metric_series_environment = json.loads(environment.get("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", ""))
+except (TypeError, json.JSONDecodeError):
+    fail("platform-shell task must provide valid JSON metric-series configuration")
+else:
+    if actual_metric_series_environment != expected_metric_series_environment:
+        fail("platform-shell task metric-series JSON must be a mechanical projection of the reviewed target catalogue")
 
 if rate_table.get("TableName") != target_profile.get("rate_limiting", {}).get("shared_adapter", {}).get("table_name"):
     fail("foundation rate-limit table name must match the target profile")

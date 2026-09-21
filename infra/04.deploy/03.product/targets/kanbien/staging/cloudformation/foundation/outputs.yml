@@ -4,6 +4,14 @@ Outputs:
     Value: !Ref PlatformShellLogGroup
     Export:
       Name: !Sub ${AWS::StackName}-LogGroupName
+  OtelCollectorLogGroupName:
+    Value: !Ref PlatformShellOtelCollectorLogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-OtelCollectorLogGroupName
+  OtelCollectorConfigurationParameterArn:
+    Value: !GetAtt OtelCollectorConfigurationParameter.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-OtelCollectorConfigurationParameterArn
   RateLimitTableName:
     Value: !Ref RateLimitTable
     Export:

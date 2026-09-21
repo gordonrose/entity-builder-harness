@@ -57,7 +57,7 @@ execution remain governed by `.agentic/aws/` workflows.
 Before editing runtime code:
 
 1. Read `.agentic/03.product/plans/implementation/platform-runtime-implementation.md`.
-2. Read ADR 0025, ADR 0026, ADR 0027, and ADR 0028.
+2. Read ADR 0025 (`docs/03.product/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md`), ADR 0026 (`docs/03.product/adrs/0026-use-app-mount-as-platform-integration-boundary.md`), ADR 0027 (`docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md`), and ADR 0028 (`docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md`).
 3. Read the relevant platform, shared, and deployment rules under
    `docs/03.product/rules/`, `docs/06.shared/rules/`, and
    `docs/04.deploy/rules/`.

@@ -27,6 +27,7 @@ import {
   validatorForTest,
 } from "@kanbien/platform-testing";
 import { createPlatformServerShell } from "../src/index";
+import { startPlatformServerProcess } from "../src/main";
 
 async function main(): Promise<void> {
   const appId = platformAppId("smoke");
@@ -862,6 +863,56 @@ async function main(): Promise<void> {
     earlyRateLimitedShell.value.lifecycle.beginDrain();
     await earlyRateLimitedHandle.close();
     await earlyRateLimitedShell.value.lifecycle.shutdown();
+  }
+
+  const processAppId = platformAppId("processmetrics");
+  const processRouteName = platformRouteName("processmetrics.read");
+  const processProfileName = platformObservabilityProfileName("processmetrics.read");
+  const processCapabilityName = platformCapabilityName("processmetrics.read");
+  if (!processAppId.ok || !processRouteName.ok || !processProfileName.ok || !processCapabilityName.ok) {
+    throw new Error("Expected valid process metrics test primitives.");
+  }
+  const processMetrics = createPlatformTestMetrics();
+  const processApp = definePlatformApp({
+    id: processAppId.value,
+    name: "Process metrics",
+    mount(registry) {
+      registry.registerObservabilityProfile({
+        name: processProfileName.value,
+        capability: processCapabilityName.value,
+        action: "read",
+        signals: ["metric"],
+        metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+        nfrObjectives: [{ nfrClass: "interactive_read", measurement: "request_response_latency" }],
+      });
+      registry.registerRoute({
+        name: processRouteName.value,
+        method: "GET",
+        path: "/process-metrics",
+        auth: { kind: "public" },
+        observability: { kind: "profile", profile: processProfileName.value },
+        handler: { handle: () => ({ status: 200, body: { source: "process" } }) },
+      });
+    },
+  });
+  const startedProcess = await startPlatformServerProcess({
+    apps: [processApp],
+    host: "127.0.0.1",
+    port: 39557,
+    installSignalHandlers: false,
+    metrics: processMetrics,
+  });
+  if (!startedProcess.ok) {
+    throw new Error(`Expected the server process to accept a target-composed metrics port: ${startedProcess.error.code}`);
+  }
+  equal(startedProcess.ok, true);
+  try {
+    const response = await fetch(`http://127.0.0.1:${startedProcess.value.handle.port}/process-metrics`);
+    equal(response.status, 200);
+    equal(processMetrics.points().some((point) => point.name === "platform.server.request.outcome" && point.labels?.["capability"] === "processmetrics.read"), true);
+    equal(processMetrics.points().some((point) => point.name === "platform.server.request_response_latency" && point.labels?.["capability"] === "processmetrics.read"), true);
+  } finally {
+    await startedProcess.value.close();
   }
 }
 

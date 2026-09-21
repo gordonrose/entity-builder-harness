@@ -45,14 +45,14 @@ Parameters:
     MaxValue: 3
   Cpu:
     Type: String
-    Default: "256"
-    AllowedValues:
-      - "256"
-  Memory:
-    Type: String
     Default: "512"
     AllowedValues:
       - "512"
+  Memory:
+    Type: String
+    Default: "1024"
+    AllowedValues:
+      - "1024"
 
 Resources:
   TaskDefinition:
@@ -76,7 +76,12 @@ Resources:
           Image: !Ref ImageUri
           Essential: true
           ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
           StopTimeout: 30
+          DependsOn:
+            - ContainerName: otel-collector
+              Condition: START
           PortMappings:
             - ContainerPort: 3000
               Protocol: tcp
@@ -140,6 +145,22 @@ Resources:
               Value: "1000"
             - Name: PLATFORM_SMOKE_APP_NAME
               Value: Kanbien Platform Smoke
+            - Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER
+              Value: cloudwatch-otel
+            - Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT
+              Value: http://127.0.0.1:4318/v1/metrics
+            - Name: PLATFORM_OBSERVABILITY_METRICS_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_OBSERVABILITY_SERVICE_NAME
+              Value: kanbien-staging-platform-shell
+            - Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT
+              Value: staging
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS
+              Value: "60000"
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS
+              Value: "10000"
+            - Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON
+              Value: '[{"sourceName":"platform.server.request.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.server.request.outcome","description":"Completed protected platform-smoke read requests by approved outcome.","allowedLabelNames":["capability","action","execution_context","http_method","http_status_code","outcome","error_class"],"cardinalityLimit":512},{"sourceName":"platform.server.request_response_latency","sourceKind":"timer","sourceUnit":"ms","instrumentName":"kanbien.platform.server.request.duration","description":"Protected platform-smoke read request and response latency in milliseconds.","allowedLabelNames":["capability","action","execution_context","http_method","http_status_code","outcome","error_class"],"cardinalityLimit":512,"histogramBucketBoundaries":[50,100,200,300,500,750,1000,2500,5000,10000,30000]}]'
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -157,6 +178,27 @@ Resources:
             Timeout: 5
             Retries: 3
             StartPeriod: 30
+        - Name: otel-collector
+          Image: public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 128
+          MemoryReservation: 256
+          StopTimeout: 30
+          Environment:
+            - Name: AWS_REGION
+              Value: eu-west-1
+          Secrets:
+            - Name: AOT_CONFIG_CONTENT
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-OtelCollectorConfigurationParameterArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-OtelCollectorLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: otel-collector
       Tags:
         - Key: service
           Value: platform-shell

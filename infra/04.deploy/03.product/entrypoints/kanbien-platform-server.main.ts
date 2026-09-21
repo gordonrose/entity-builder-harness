@@ -22,6 +22,7 @@ import {
   kanbienPlatformProductManifest,
 } from "@kanbien/product-kanbien-platform";
 import { createCognitoJwtBearerAuthenticationHookFromEnv } from "@kanbien/platform-adapter-aws-auth-cognito";
+import type { CloudWatchOtelMetricsRuntime } from "@kanbien/platform-adapter-aws-observability-cloudwatch";
 import { createDynamoDbFixedWindowPlatformRateLimiterFromEnv } from "@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter";
 import { createAlbTrustedClientAddressResolver } from "@kanbien/platform-adapter-aws-runtime-ecs-fargate";
 import {
@@ -29,8 +30,9 @@ import {
   type PlatformClientAddressResolver,
   type PlatformServerTransportOptions,
 } from "@kanbien/platform-server";
-import { startPlatformServerProcess } from "@kanbien/platform-server/main";
+import { startPlatformServerProcess, type PlatformServerProcess } from "@kanbien/platform-server/main";
 import type { PlatformRateLimiter } from "@kanbien/platform-security";
+import { observabilityFromTargetEnvironment } from "./kanbien-platform-observability";
 
 interface TargetRuntimeConfiguration {
   readonly rateLimiter?: PlatformRateLimiter;
@@ -62,6 +64,13 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
     return;
   }
 
+  const observability = observabilityFromTargetEnvironment(process.env);
+  if (!observability.ok) {
+    console.error(JSON.stringify({ level: "error", message: "kanbien-platform.server.observability_configuration_invalid", error: observability.error }));
+    process.exitCode = 1;
+    return;
+  }
+
   const started = await startPlatformServerProcess({
     apps: kanbienPlatformApps,
     configKeys: productConfigKeys(),
@@ -69,6 +78,8 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
     ...(runtime.value.rateLimiter === undefined ? {} : { rateLimiter: runtime.value.rateLimiter }),
     ...(runtime.value.clientAddressResolver === undefined ? {} : { clientAddressResolver: runtime.value.clientAddressResolver }),
     ...(runtime.value.transport === undefined ? {} : { transport: runtime.value.transport }),
+    ...(observability.value === undefined ? {} : { metrics: observability.value.metrics }),
+    installSignalHandlers: false,
   });
 
   if (!started.ok) {
@@ -80,13 +91,17 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
         message: started.error.defaultMessage,
       },
     }));
+    await shutdownObservability(observability.value);
     process.exitCode = 1;
     return;
   }
 
   if (process.env["PLATFORM_SERVER_EXIT_AFTER_START"] === "1") {
-    await started.value.close();
+    await closeTargetProcess(started.value, observability.value);
+    return;
   }
+
+  installTargetShutdownHandlers(started.value, observability.value);
 }
 
 function productConfigKeys(): readonly string[] {
@@ -247,6 +262,43 @@ function targetRuntimeConfigurationError(
       details: { path, reason },
     },
   };
+}
+
+function installTargetShutdownHandlers(
+  server: PlatformServerProcess,
+  observability: CloudWatchOtelMetricsRuntime | undefined,
+): void {
+  let shuttingDown = false;
+  const shutdown = async (signal: NodeJS.Signals) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(JSON.stringify({ level: "info", message: "kanbien-platform.server.shutdown", fields: { signal } }));
+    await closeTargetProcess(server, observability);
+  };
+  process.once("SIGTERM", () => { void shutdown("SIGTERM"); });
+  process.once("SIGINT", () => { void shutdown("SIGINT"); });
+}
+
+async function closeTargetProcess(
+  server: PlatformServerProcess,
+  observability: CloudWatchOtelMetricsRuntime | undefined,
+): Promise<void> {
+  try {
+    await server.close();
+  } finally {
+    await shutdownObservability(observability);
+  }
+}
+
+async function shutdownObservability(
+  observability: CloudWatchOtelMetricsRuntime | undefined,
+): Promise<void> {
+  if (observability === undefined) return;
+  try {
+    await observability.shutdown();
+  } catch {
+    console.error(JSON.stringify({ level: "warn", message: "kanbien-platform.server.observability_shutdown_failed" }));
+  }
 }
 
 if (typeof require !== "undefined" && require.main === module) {

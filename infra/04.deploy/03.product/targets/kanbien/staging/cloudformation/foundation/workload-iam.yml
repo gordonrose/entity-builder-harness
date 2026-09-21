@@ -13,6 +13,16 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: platform-shell-read-otel-collector-configuration
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyThePlatformShellOtelCollectorConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                Resource: !GetAtt OtelCollectorConfigurationParameter.Arn
       Tags:
         - Key: service
           Value: platform-shell
@@ -42,6 +52,15 @@ Resources:
                 Action:
                   - dynamodb:UpdateItem
                 Resource: !GetAtt RateLimitTable.Arn
+        - PolicyName: platform-shell-otel-metric-delivery
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PublishOnlyCloudWatchMetricData
+                Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: "*"
       Tags:
         - Key: service
           Value: platform-shell

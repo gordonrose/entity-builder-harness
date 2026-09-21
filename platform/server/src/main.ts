@@ -1,6 +1,6 @@
 import { recordConfigSource, type ConfigRecord } from "@kanbien/core/config";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
-import { noopMetrics, type Tracer } from "@kanbien/core/monitoring";
+import { noopMetrics, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { systemClock, type Result } from "@kanbien/core/shared";
 import {
   fixedFeatureFlagReader,
@@ -26,6 +26,11 @@ export interface PlatformServerProcessOptions {
   readonly env?: NodeJS.ProcessEnv;
   readonly logger?: Logger;
   readonly tracer?: Tracer;
+  /**
+   * Supplies a target-composed Core metrics sink without coupling the generic
+   * server process to a provider, exporter, credential, or endpoint.
+   */
+  readonly metrics?: Metrics;
   readonly port?: number;
   readonly host?: string;
   readonly installSignalHandlers?: boolean;
@@ -46,7 +51,7 @@ export async function startPlatformServerProcess(
 ): Promise<Result<PlatformServerProcess, PlatformServerError>> {
   const env = options.env ?? process.env;
   const logger = options.logger ?? consoleJsonLogger;
-  const deps = createServerProcessMountDeps(env, logger, options.configKeys ?? []);
+  const deps = createServerProcessMountDeps(env, logger, options.configKeys ?? [], options.metrics ?? noopMetrics);
   const shell = await createPlatformServerShell({
     apps: options.apps ?? [],
     deps,
@@ -153,10 +158,11 @@ function createServerProcessMountDeps(
   env: NodeJS.ProcessEnv,
   logger: Logger,
   extraConfigKeys: readonly string[],
+  metrics: Metrics,
 ): PlatformMountDeps {
   return {
     logger,
-    metrics: noopMetrics,
+    metrics,
     config: recordConfigSource(configRecordFromEnv(env, extraConfigKeys)),
     flags: fixedFeatureFlagReader({}),
     clock: systemClock,

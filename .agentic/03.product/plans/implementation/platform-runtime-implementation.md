@@ -901,26 +901,43 @@ bounded ports and label guardrails; contracts/registry validate profile adoption
 and interval truthfulness; the server and worker consume resolved profiles;
 and the smoke app proves a protected HTTP route emits only approved local
 evidence. The target already has an ordinary log destination and
-infrastructure-health alarms. This is not yet a complete target observability
-system: no metrics/histogram or trace exporter, SLO policy catalogue, capability
-dashboard, synthetic check, security-signal pipeline, or durable audit pipeline
-has been selected or deployed.
+infrastructure-health alarms. The staging target now also has an initial
+target-owned metric-series and SLO catalogue, a locally verified AWS CloudWatch
+OpenTelemetry metrics adapter, and a prepared target-composition/IaC slice.
+That slice injects only the Core `Metrics` port into the generic server,
+supplies a task-local collector through non-secret SSM configuration, and
+prepares narrow execution-role and task-role permissions. This is not yet a
+complete target observability system: no collector, IAM policy, task definition,
+metric backend evidence, dashboard, synthetic check, SLO query/alarm, trace
+exporter, security-signal pipeline, or durable audit pipeline has been deployed.
+
+ADR 0029 records the selected delivery boundary: the generic runtime emits only
+Core metric points, the target-composed AWS adapter reaches only a task-local
+collector, and the task role provides the collector's future CloudWatch
+delivery permission. ECS task-role credentials are task-scoped across sidecar
+containers, so the architecture does not claim per-container IAM isolation.
 
 Implement future ordinary observability in the following dependency order:
 
-1. **Target policy and governance.** Add reviewed target catalogues for metric
-   series, SLOs, dashboards, synthetic checks, data lifecycle/access, and their
-   cross-references. Extend the target alerting/drift rule only when it can
-   validate those new policy shapes without duplicating values.
-2. **One bounded metrics/histogram adapter.** Implement the target-selected
-   Core `Metrics` port with catalogue validation, threshold-aligned histogram
-   observations, bounded asynchronous delivery, lifecycle flush, and explicit
-   coverage health. Do not add provider imports to routes/jobs/platform
-   contracts.
-3. **Target composition and infrastructure.** Inject that adapter only in the
-   selected target entrypoint; provision the EU-resident metric backend,
-   least-privilege access, retention, dashboard resources, and policy-linked
-   alarm resources through reviewed IaC.
+1. **Initial target policy.** Completed for the two protected smoke-read
+   metric series and their three provisional 28-day objectives. The selected
+   policy records bounded labels, `300ms`/`750ms` buckets, complete eligible
+   measurement sampling, low-volume behaviour, and the not-yet-deployed state.
+   Dashboard, synthetic-check, detailed access, and delivery/alarm catalogues
+   remain additions before an operational claim.
+2. **One bounded metrics/histogram adapter.** Completed locally for the AWS
+   OpenTelemetry-to-CloudWatch route. It validates the target catalogue,
+   requires threshold-aligned histogram buckets, bounds labels/cardinality and
+   batching, permits only a task-local collector endpoint, and exposes bounded
+   flush/shutdown. It does not yet provide deployed exporter coverage health;
+   delivery-loss evidence remains a required target feature and proof. No
+   provider imports were added to routes, jobs, or platform contracts.
+3. **Target composition and infrastructure.** Prepared locally. The selected
+   target entrypoint injects the adapter only as Core `Metrics`; CloudFormation
+   prepares the non-secret collector configuration, distinct collector log
+   group, task capacity, and required IAM source. A reviewed AWS change set
+   must still apply it. Retention, dashboards, detailed access, coverage
+   signals, and policy-linked capability alarms remain future target work.
 4. **Independent proof.** Run a safe least-privilege synthetic check through
    the public boundary, then prove a known protected smoke capability creates a
    histogram observation, produces correct SLO calculation evidence, and can
@@ -1029,9 +1046,13 @@ This implementation slice now has contract, runtime-registry, test-registry,
 smoke-app, and negative-test evidence for unknown profile references, duplicate
 registrations, missing/invalid opt-outs, unsafe labels, provider-boundary
 preservation, resolved worker/server profile consumption, and optional-sink
-failure containment. Target-selected percentile aggregation, export, retention,
-sampling, dashboards, SLO policy values, and alarms remain later
-adapter/deployment concerns.
+failure containment. The staging target now also selects two metric series and
+three provisional SLO objectives, while the local AWS adapter proves strict
+catalogue validation, explicit histogram buckets, a task-local exporter
+boundary, and Core-to-OpenTelemetry translation. The sealed runtime also
+constructs that adapter only from target composition. Collector delivery,
+retention/live query evidence, coverage health, dashboards, SLO calculation,
+synthetic proof, and alarms remain deployment concerns.
 
 The first bounded route proof is the existing protected `platform-smoke.echo`
 route, whose app-relative path is `/smoke/:id`. Its profile allows only its

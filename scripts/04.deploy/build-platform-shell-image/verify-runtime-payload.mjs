@@ -36,6 +36,7 @@ const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
 const requiredPayloadFiles = [
   entrypoint,
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-auth-cognito", "index.js"),
+  join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-observability-cloudwatch", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-runtime-ecs-fargate", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-security-dynamodb-rate-limiter", "index.js"),
 ];
@@ -86,6 +87,35 @@ try {
       PLATFORM_SERVER_MAX_CONCURRENT_REQUESTS: "100",
       PLATFORM_SERVER_MAX_REQUESTS_PER_SOCKET: "1000",
       PLATFORM_SMOKE_APP_NAME: "Kanbien Platform Smoke",
+      PLATFORM_SOURCE_COMMIT_SHA: "runtime-payload-test",
+      PLATFORM_OBSERVABILITY_METRICS_PROVIDER: "cloudwatch-otel",
+      PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: "http://127.0.0.1:4318/v1/metrics",
+      PLATFORM_OBSERVABILITY_METRICS_REGION: "eu-west-1",
+      PLATFORM_OBSERVABILITY_SERVICE_NAME: "kanbien-staging-platform-shell",
+      PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: "staging",
+      PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000",
+      PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000",
+      PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON: JSON.stringify([
+        {
+          sourceName: "platform.server.request.outcome",
+          sourceKind: "counter",
+          sourceUnit: "count",
+          instrumentName: "kanbien.platform.server.request.outcome",
+          description: "Compiled runtime payload counter fixture.",
+          allowedLabelNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+          cardinalityLimit: 32,
+        },
+        {
+          sourceName: "platform.server.request_response_latency",
+          sourceKind: "timer",
+          sourceUnit: "ms",
+          instrumentName: "kanbien.platform.server.request.duration",
+          description: "Compiled runtime payload timer fixture.",
+          allowedLabelNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+          cardinalityLimit: 32,
+          histogramBucketBoundaries: [50, 300, 750],
+        },
+      ]),
     },
     stdio: "inherit",
   });
