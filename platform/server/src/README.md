@@ -19,19 +19,36 @@ available, creates lifecycle control, and compiles route patterns. It exposes
 two paths: `handle` for deterministic tests or non-Node hosts, and `listen`
 for the Node transport.
 
-The request path owns request outcome logging, a provider-neutral request span,
-exact-origin CORS, standard security headers, pre-auth rate-limit checks,
-health endpoints, route matching, authentication, broad permission
-authorization, tenant derivation, request context, input validation, optional
-resource authorization, handler execution, and safe response/error mapping. It
-deliberately cannot select Cognito, Redis, an app, or an AWS service.
+The request path owns exact-origin CORS, standard security headers, pre-auth
+rate-limit checks, health endpoints, route matching, authentication, broad
+permission authorization, tenant derivation, request context, input validation,
+optional resource authorization, handler execution, safe response/error
+mapping, and provider-neutral operational evidence. It deliberately cannot
+select Cognito, Redis, an app, or an AWS service.
 
-The span starts before route policy and ends through every normal request or
-transport-failure response path. It records only method, stable route name,
-status, latency, outcome, and bounded error class. It does not expose its trace
-context to app handlers yet, receive remote parent context, choose sampling, or
-export anything. A tracer that fails is replaced by a no-op span so telemetry
-cannot alter the response.
+For a matched app route, the mounted registry resolves its observability
+profile before route policy runs. The profile decides whether that capability
+may emit an operational log, metric, trace, or request/response latency timer,
+and projects only the approved canonical facts: capability, action, server
+execution context, HTTP method/status, outcome, and bounded error class. The
+server does not add raw path parameters, request or correlation IDs, principals,
+tenants, headers, bodies, stable route names, or error objects after this
+projection. An explicit route opt-out emits no capability telemetry.
+
+Some server events have no identifiable app route: an unsupported HTTP method,
+a malformed request URL, or a health check, for example. Those retain separate
+generic platform-operational evidence; they are not labelled as an app
+capability. In contrast, an admission or JSON-parsing failure for a known route
+uses that route's profile, because it is still an attempt to use that
+capability. Tracer, logger, and metric failures are best effort and cannot
+alter the response. This package does not expose trace context to app handlers,
+receive remote parent context, choose sampling, or export anything.
+
+The profile-governed completion count is named
+`platform.server.request.outcome`; the declared latency timer is named
+`platform.server.request_response_latency`. They intentionally have different
+names, so a target metrics backend never receives a counter and timer under the
+same metric identity.
 
 Platform-owned response headers remain authoritative. This prevents an app
 handler from replacing the request ID, CORS decision, content-security policy,

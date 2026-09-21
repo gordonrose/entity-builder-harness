@@ -44,7 +44,7 @@ separate.
 | `src/routes.ts` | HTTP request/response, route registration, and route auth, tenant, and resource-authorization declarations. | `npm run platform:contracts:check` |
 | `src/jobs.ts` | Job handler and job-registration declarations. | `npm run platform:contracts:check` |
 | `src/observability.ts` | Provider-neutral capability action, interaction, execution, outcome, and canonical field-name vocabulary. | `npm run platform:contracts:check` |
-| `src/observability-profiles.ts` | Capability observability profiles, NFR-class references, safe signal-field allowlists, and explicit opt-outs. | `npm run platform:contracts:check` |
+| `src/observability-profiles.ts` | Capability observability profiles, NFR-class references, safe signal-field allowlists, explicit opt-outs, and pure profile projection helpers. | `npm run platform:contracts:check` |
 | `src/app.ts` | App mount, registry, permission, health, lifecycle, and mount-dependency declarations. | `npm run platform:contracts:check` |
 | `src/validation.ts` | Cross-declaration registration validation and reserved-route rules; it does not execute runtime work. | `npm run platform:contracts:check` |
 | `src/index.ts` | Deliberate public barrel only. | `npm run platform:contracts:check` |
@@ -69,11 +69,12 @@ The complete runtime registry verifies that relationship before the process is
 ready. A profile is not a provider configuration and does not contain a
 threshold, retention period, dashboard, alert, or cloud-service name.
 
-The contracts do not yet make server/worker telemetry emit profile facts,
-rename the existing generic `platform.server.request` fields, select a
-histogram exporter, calculate p95/p99, create alarms, or make audit delivery
-durable. Those are later, separately tested runtime, adapter, and deployment
-slices.
+The contracts now let the worker resolve a registered job profile and project
+only its approved operational facts. They do not make server telemetry consume
+profiles yet, rename the existing generic `platform.server.request` fields,
+select a histogram exporter, calculate p95/p99, create alarms, or make audit
+delivery durable. Those are later, separately tested runtime, adapter, and
+deployment slices.
 
 ## Optional Tenant And Resource Authorization
 

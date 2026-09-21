@@ -118,6 +118,19 @@ async function main(): Promise<void> {
     outcome: "succeeded",
     errorClass: "do-not-store-secret",
   });
+  deepEqual(platformTraceAttributes({
+    capability: "smoke.worker.execute",
+    action: "execute",
+    execution_context: "worker",
+    job_delivery_disposition: "succeeded",
+    outcome: "succeeded",
+  }), {
+    capability: "smoke.worker.execute",
+    action: "execute",
+    execution_context: "worker",
+    job_delivery_disposition: "succeeded",
+    outcome: "succeeded",
+  });
 
   const tracer = createInMemoryTracer();
   const span = startPlatformTraceSpan(tracer, {
@@ -144,6 +157,11 @@ async function main(): Promise<void> {
   };
   const fallbackSpan = startPlatformTraceSpan(unavailableTracer, { name: "platform.server.request" });
   endPlatformTraceSpan(fallbackSpan, { outcome: "failed" });
+
+  const unavailableLogger: Logger = { write: () => { throw new Error("logger unavailable"); } };
+  writePlatformLog(unavailableLogger, { level: "info", message: "best-effort" });
+  const unavailableMetrics: Metrics = { record: () => { throw new Error("metrics unavailable"); } };
+  recordPlatformHealthMetric(unavailableMetrics, clock, { healthState: "ready" });
 }
 
 main()

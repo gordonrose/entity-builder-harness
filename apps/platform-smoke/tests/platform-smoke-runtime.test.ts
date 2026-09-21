@@ -1,5 +1,6 @@
 import { deepEqual, equal } from "node:assert/strict";
 import type { Permission } from "@kanbien/core/authz";
+import { createInMemoryTracer } from "@kanbien/core/monitoring";
 import type { QueueIdempotencyKey } from "@kanbien/core/queues";
 import { createPlatformServerShell } from "@kanbien/platform-server";
 import {
@@ -28,6 +29,7 @@ import {
 async function main(): Promise<void> {
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
+  const tracer = createInMemoryTracer();
   const deps = createPlatformTestMountDeps({
     logger,
     metrics,
@@ -65,6 +67,7 @@ async function main(): Promise<void> {
     apps: [platformSmokeApp],
     deps,
     auth,
+    tracer,
     corsAllowlist: ["https://staging.kanbien.example"],
   });
   equal(server.ok, true);
@@ -75,6 +78,15 @@ async function main(): Promise<void> {
 
   const unauthenticated = await server.value.handle({ method: "GET", path: "/smoke/abc" });
   equal(unauthenticated.status, 401);
+  deepEqual(logger.records().at(-1)?.fields, {
+    capability: "platform-smoke.smoke.read",
+    action: "read",
+    execution_context: "server",
+    http_method: "GET",
+    http_status_code: 401,
+    outcome: "denied",
+    error_class: "PLATFORM_SERVER_UNAUTHENTICATED",
+  });
   const forbidden = await server.value.handle({
     method: "GET",
     path: "/smoke/abc",
@@ -94,6 +106,21 @@ async function main(): Promise<void> {
     ok: true,
   });
   equal(ok.headers["access-control-allow-origin"], "https://staging.kanbien.example");
+  equal(metrics.points().some((point) =>
+    point.name === "platform.server.request_response_latency"
+      && point.labels?.["capability"] === "platform-smoke.smoke.read"
+      && point.labels?.["action"] === "read"), true);
+  deepEqual(tracer.spans().at(-1)?.end, {
+    outcome: "succeeded",
+    attributes: {
+      capability: "platform-smoke.smoke.read",
+      action: "read",
+      execution_context: "server",
+      http_method: "GET",
+      http_status_code: 200,
+      outcome: "succeeded",
+    },
+  });
 
   const worker = await createPlatformWorkerShell({
     apps: [platformSmokeApp],

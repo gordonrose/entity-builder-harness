@@ -21,14 +21,18 @@ export function recordPlatformMetric(
   clock: Clock,
   input: PlatformMetricInput,
 ): void {
-  metrics.record({
-    name: metricName(input.name),
-    kind: input.kind ?? "counter",
-    value: input.value ?? 1,
-    unit: metricUnit(input.unit ?? "count"),
-    recordedAt: isoDateTimeFromDate(clock.now()),
-    ...(input.labels === undefined ? {} : { labels: metricLabels(compactLabels(input.labels)) }),
-  });
+  try { // Isolate metric-name, label, clock, and provider failures from the work being measured.
+    metrics.record({ // Deliver one provider-neutral Core metric point through the injected metrics port.
+      name: metricName(input.name), // Validate the stable metric identity before it reaches a provider.
+      kind: input.kind ?? "counter", // Default to a counter when the caller did not select a measurement kind.
+      value: input.value ?? 1, // Default to one occurrence when the caller did not supply a numeric value.
+      unit: metricUnit(input.unit ?? "count"), // Validate the unit while keeping count as the normal counter default.
+      recordedAt: isoDateTimeFromDate(clock.now()), // Stamp the point through the injected clock for deterministic local proof.
+      ...(input.labels === undefined ? {} : { labels: metricLabels(compactLabels(input.labels)) }), // Remove absent labels before the bounded Core-label guard validates them.
+    });
+  } catch { // Treat metrics as best-effort operational evidence rather than a business-path dependency.
+    // Observability must never turn a completed request or job into a failure.
+  }
 }
 
 export function recordPlatformRequestMetric(

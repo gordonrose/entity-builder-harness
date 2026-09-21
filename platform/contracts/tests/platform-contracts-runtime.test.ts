@@ -21,6 +21,11 @@ import {
   platformOperationalOutcomes,
   platformJobName,
   platformObservabilityProfileName,
+  platformProfileAllowsSignal,
+  platformProfileLogFields,
+  platformProfileMeasuresLatency,
+  platformProfileMetricLabels,
+  platformProfileTraceFields,
   platformRouteName,
   validatePlatformCapabilityObservabilityProfile,
   validatePlatformJobRegistration,
@@ -87,6 +92,33 @@ async function main(): Promise<void> {
   };
   deepEqual(validatePlatformCapabilityObservabilityProfile(validObservabilityProfile), { ok: true, value: undefined });
   equal(validatePlatformCapabilityObservabilityProfile({ ...validObservabilityProfile, signals: ["trace"], nfrObjectives: validObservabilityProfile.nfrObjectives }).ok, false);
+  const failingWorkerNomenclature = {
+    capability: capabilityName.value,
+    action: "export" as const,
+    executionContext: "worker" as const,
+    jobDeliveryDisposition: "retry_scheduled" as const,
+    outcome: "failed" as const,
+    errorClass: "PLATFORM_WORKER_HANDLER_FAILED",
+  };
+  equal(platformProfileAllowsSignal(validObservabilityProfile, "metric"), true);
+  equal(platformProfileAllowsSignal(validObservabilityProfile, "trace"), true);
+  equal(platformProfileMeasuresLatency(validObservabilityProfile, "job_execution_latency"), true);
+  equal(platformProfileMeasuresLatency(validObservabilityProfile, "queue_wait_latency"), false);
+  deepEqual(platformProfileLogFields(validObservabilityProfile, failingWorkerNomenclature), {
+    capability: "crm.deal.export",
+    action: "export",
+    outcome: "failed",
+  });
+  deepEqual(platformProfileMetricLabels(validObservabilityProfile, failingWorkerNomenclature), {
+    capability: "crm.deal.export",
+    action: "export",
+    outcome: "failed",
+  });
+  deepEqual(platformProfileTraceFields(validObservabilityProfile, failingWorkerNomenclature), {
+    capability: "crm.deal.export",
+    action: "export",
+    outcome: "failed",
+  });
   equal(platformCapabilityActions.includes("export"), true); // Prove the controlled business-action list includes a supported action.
   equal(isPlatformCapabilityAction("export"), true); // Prove the action guard accepts a controlled action.
   equal(isPlatformCapabilityAction("edit"), false); // Prove the action guard rejects an unapproved synonym.

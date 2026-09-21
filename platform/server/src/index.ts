@@ -1,11 +1,19 @@
 import type { Permission } from "@kanbien/core/authz";
 import type { Logger } from "@kanbien/core/logging";
-import { noopTracer, type Tracer } from "@kanbien/core/monitoring";
+import { noopTracer, type TraceSpan, type Tracer } from "@kanbien/core/monitoring";
 import { type CorrelationId, type JsonValue, type Result } from "@kanbien/core/shared";
 import type { TenantContext } from "@kanbien/core/tenancy";
 import {
+  platformProfileAllowsSignal,
+  platformProfileLogFields,
+  platformProfileMeasuresLatency,
+  platformProfileMetricLabels,
+  platformProfileTraceFields,
   type PlatformApp,
+  type PlatformCapabilityObservabilityProfile,
   type PlatformMountDeps,
+  type PlatformOperationalNomenclature,
+  type PlatformOperationalOutcome,
   type PlatformRequest,
   type PlatformResourceAuthorizationResolution,
   type PlatformResponse,
@@ -27,6 +35,7 @@ import {
   platformErrorClass,
   platformTraceFields,
   recordPlatformHealthMetric,
+  recordPlatformMetric,
   recordPlatformRequestMetric,
   startPlatformTraceSpan,
   writePlatformLog,
@@ -173,6 +182,7 @@ interface CompiledRoute {
 
 interface PlatformServerRequestHandlingInput {
   readonly routes: readonly CompiledRoute[];
+  readonly profilesByName: ReadonlyMap<string, PlatformCapabilityObservabilityProfile>;
   readonly auth?: PlatformServerAuthHook;
   readonly tenantResolver?: PlatformTenantResolver;
   readonly deps: PlatformMountDeps;
@@ -249,11 +259,13 @@ export async function createPlatformServerShell(options: PlatformServerOptions):
 
   const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps });
   const routes = mounted.value.routes.map(compileRoute);
+  const profilesByName = new Map(mounted.value.observabilityProfiles.map((profile) => [String(profile.name), profile]));
   const logger = options.logger ?? options.deps.logger;
   const tracer = options.tracer ?? noopTracer;
   const rateLimiter = options.rateLimiter ?? createInMemoryPlatformRateLimiter({ clock: options.deps.clock });
   const requestInput: PlatformServerRequestHandlingInput = {
     routes,
+    profilesByName,
     deps: options.deps,
     logger,
     tracer,
@@ -296,10 +308,20 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
   const middleware: PlatformServerMiddlewareStep[] = [];
   const startedAt = input.deps.clock.now();
   const requestId = input.request.requestId ?? platformServerRequestId(firstHeaderValue(input.request.headers ?? {}, "x-request-id"));
-  const traceSpan = startPlatformTraceSpan(input.tracer, {
-    name: "platform.server.request",
-    attributes: { method: input.request.method },
-  });
+  const routeMatch = findRoute(input.routes, input.request);
+  const profile = routeMatch === undefined
+    ? undefined
+    : serverProfileForRoute(routeMatch.route.registration, input.profilesByName);
+  const traceSpan = profile === undefined
+    ? routeMatch === undefined
+      ? startPlatformTraceSpan(input.tracer, {
+        name: "platform.server.request",
+        attributes: { method: input.request.method },
+      })
+      : undefined
+    : platformProfileAllowsSignal(profile, "trace")
+      ? startPlatformTraceSpan(input.tracer, { name: "platform.server.request" })
+      : undefined;
   const requestOrigin = firstHeaderValue(input.request.headers ?? {}, "origin");
   const headers = platformResponseHeaders({
     requestId,
@@ -316,40 +338,59 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
   ): PlatformServerResponse => {
     const latencyMs = elapsedMilliseconds(startedAt, input.deps.clock.now());
     const errorClass = error === undefined ? undefined : platformErrorClass(error);
-    recordPlatformRequestMetric(input.deps.metrics, input.deps.clock, {
-      method: input.request.method,
-      route,
-      status: platformResponse.status,
-      latencyMs,
-      ...(errorClass === undefined ? {} : { errorClass }),
-    });
-    writePlatformLog(input.logger, {
-      level: platformResponse.status >= 500 ? "error" : platformResponse.status >= 400 ? "warn" : "info",
-      message: "platform.server.request",
-      correlationId: requestId,
-      fields: {
-        ...platformTraceFields({
-          requestId,
-          correlationId: requestId,
-          route,
-          latencyMs,
-          ...(errorClass === undefined ? {} : { errorClass }),
-        }),
-        method: input.request.method,
-        status: platformResponse.status,
-      },
-      ...(error === undefined ? {} : { error }),
-    });
-    endPlatformTraceSpan(traceSpan, {
-      outcome: traceOutcomeForResponse(platformResponse.status),
-      attributes: {
+    if (profile !== undefined && routeMatch !== undefined) {
+      recordServerProfileObservation({
+        deps: input.deps,
+        logger: input.logger,
+        profile,
+        method: routeMatch.route.registration.method,
+        response: platformResponse,
+        startedAt,
+        ...(error === undefined ? {} : { error }),
+      });
+      endServerProfileTrace({
+        profile,
+        span: traceSpan,
+        method: routeMatch.route.registration.method,
+        response: platformResponse,
+        ...(error === undefined ? {} : { error }),
+      });
+    } else if (routeMatch === undefined && traceSpan !== undefined) {
+      recordPlatformRequestMetric(input.deps.metrics, input.deps.clock, {
         method: input.request.method,
         route,
         status: platformResponse.status,
         latencyMs,
         ...(errorClass === undefined ? {} : { errorClass }),
-      },
-    });
+      });
+      writePlatformLog(input.logger, {
+        level: platformResponse.status >= 500 ? "error" : platformResponse.status >= 400 ? "warn" : "info",
+        message: "platform.server.request",
+        correlationId: requestId,
+        fields: {
+          ...platformTraceFields({
+            requestId,
+            correlationId: requestId,
+            route,
+            latencyMs,
+            ...(errorClass === undefined ? {} : { errorClass }),
+          }),
+          method: input.request.method,
+          status: platformResponse.status,
+        },
+        ...(error === undefined ? {} : { error }),
+      });
+      endPlatformTraceSpan(traceSpan, {
+        outcome: traceOutcomeForResponse(platformResponse.status),
+        attributes: {
+          method: input.request.method,
+          route,
+          status: platformResponse.status,
+          latencyMs,
+          ...(errorClass === undefined ? {} : { errorClass }),
+        },
+      });
+    }
 
     return platformResponse;
   };
@@ -418,7 +459,6 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
       return finish(response(platformHealthHttpStatus(ready.status), ready, headers, middleware), "platform.readyz");
     }
 
-    const routeMatch = findRoute(input.routes, input.request);
     if (routeMatch === undefined) {
       middleware.push("error-mapping", "response-logging");
       const allowedMethods = allowedMethodsForPath(input.routes, input.request.path);
@@ -626,10 +666,20 @@ function handlePlatformServerTransportFailure(
   input: PlatformServerRequestHandlingInput & { readonly failure: PlatformServerTransportFailure },
 ): PlatformServerResponse {
   const startedAt = input.deps.clock.now();
-  const traceSpan = startPlatformTraceSpan(input.tracer, {
-    name: "platform.server.request",
-    attributes: { method: input.failure.method },
-  });
+  const routeMatch = routeMatchForTransportFailure(input.routes, input.failure);
+  const profile = routeMatch === undefined
+    ? undefined
+    : serverProfileForRoute(routeMatch.route.registration, input.profilesByName);
+  const traceSpan = profile === undefined
+    ? routeMatch === undefined
+      ? startPlatformTraceSpan(input.tracer, {
+        name: "platform.server.request",
+        attributes: { method: input.failure.method },
+      })
+      : undefined
+    : platformProfileAllowsSignal(profile, "trace")
+      ? startPlatformTraceSpan(input.tracer, { name: "platform.server.request" })
+      : undefined;
   const requestOrigin = firstHeaderValue(input.failure.headers, "origin");
   const headers = platformResponseHeaders({
     requestId: input.failure.requestId,
@@ -657,47 +707,210 @@ function handlePlatformServerTransportFailure(
     "error-mapping",
     "response-logging",
   ]);
-  const errorClass = input.failure.error === undefined ? input.failure.code : platformErrorClass(input.failure.error);
-  const latencyMs = elapsedMilliseconds(startedAt, input.deps.clock.now());
-  recordPlatformRequestMetric(input.deps.metrics, input.deps.clock, {
-    method: input.failure.method,
-    route: "platform.transport",
-    status: response.status,
-    latencyMs,
-    errorClass,
-  });
-  writePlatformLog(input.logger, {
-    level: response.status >= 500 ? "error" : "warn",
-    message: "platform.server.request",
-    correlationId: input.failure.requestId,
-    fields: {
-      ...platformTraceFields({
-        requestId: input.failure.requestId,
-        correlationId: input.failure.requestId,
-        route: "platform.transport",
-        latencyMs,
-        errorClass,
-      }),
-      method: input.failure.method,
-      status: response.status,
-    },
-    ...(input.failure.error === undefined ? {} : { error: input.failure.error }),
-  });
-  endPlatformTraceSpan(traceSpan, {
-    outcome: traceOutcomeForResponse(response.status),
-    attributes: {
+  if (profile !== undefined && routeMatch !== undefined) {
+    recordServerProfileObservation({
+      deps: input.deps,
+      logger: input.logger,
+      profile,
+      method: routeMatch.route.registration.method,
+      response,
+      startedAt,
+      error: input.failure.error ?? error,
+    });
+    endServerProfileTrace({
+      profile,
+      span: traceSpan,
+      method: routeMatch.route.registration.method,
+      response,
+      error: input.failure.error ?? error,
+    });
+  } else if (routeMatch === undefined && traceSpan !== undefined) {
+    const errorClass = input.failure.error === undefined ? input.failure.code : platformErrorClass(input.failure.error);
+    const latencyMs = elapsedMilliseconds(startedAt, input.deps.clock.now());
+    recordPlatformRequestMetric(input.deps.metrics, input.deps.clock, {
       method: input.failure.method,
       route: "platform.transport",
       status: response.status,
       latencyMs,
       errorClass,
-    },
-  });
+    });
+    writePlatformLog(input.logger, {
+      level: response.status >= 500 ? "error" : "warn",
+      message: "platform.server.request",
+      correlationId: input.failure.requestId,
+      fields: {
+        ...platformTraceFields({
+          requestId: input.failure.requestId,
+          correlationId: input.failure.requestId,
+          route: "platform.transport",
+          latencyMs,
+          errorClass,
+        }),
+        method: input.failure.method,
+        status: response.status,
+      },
+      ...(input.failure.error === undefined ? {} : { error: input.failure.error }),
+    });
+    endPlatformTraceSpan(traceSpan, {
+      outcome: traceOutcomeForResponse(response.status),
+      attributes: {
+        method: input.failure.method,
+        route: "platform.transport",
+        status: response.status,
+        latencyMs,
+        errorClass,
+      },
+    });
+  }
   return response;
 }
 
+function serverProfileForRoute(
+  route: PlatformRouteRegistration,
+  profilesByName: ReadonlyMap<string, PlatformCapabilityObservabilityProfile>,
+): PlatformCapabilityObservabilityProfile | undefined {
+  if (route.observability.kind !== "profile") {
+    return undefined;
+  }
+
+  return profilesByName.get(String(route.observability.profile));
+}
+
+function routeMatchForTransportFailure(
+  routes: readonly CompiledRoute[],
+  failure: PlatformServerTransportFailure,
+): { readonly route: CompiledRoute; readonly params: Readonly<Record<string, string>> } | undefined {
+  if (!isPlatformRouteMethod(failure.method)) {
+    return undefined;
+  }
+
+  return findRoute(routes, { method: failure.method, path: failure.path });
+}
+
+function isPlatformRouteMethod(value: string): value is PlatformRouteRegistration["method"] {
+  return value === "GET"
+    || value === "POST"
+    || value === "PUT"
+    || value === "PATCH"
+    || value === "DELETE";
+}
+
+function recordServerProfileObservation(input: {
+  readonly deps: PlatformMountDeps;
+  readonly logger: Logger;
+  readonly profile: PlatformCapabilityObservabilityProfile;
+  readonly method: PlatformRouteRegistration["method"];
+  readonly response: PlatformServerResponse;
+  readonly startedAt: Date;
+  readonly error?: unknown;
+}): void {
+  const nomenclature = serverNomenclature(input.profile, input.method, input.response.status, input.error);
+  if (platformProfileAllowsSignal(input.profile, "operational_log")) {
+    writePlatformLog(input.logger, {
+      level: serverLogLevel(input.response.status),
+      message: "platform.server.request",
+      fields: platformProfileLogFields(input.profile, nomenclature),
+    });
+  }
+
+  if (!platformProfileAllowsSignal(input.profile, "metric")) {
+    return;
+  }
+
+  const labels = platformProfileMetricLabels(input.profile, nomenclature);
+  recordPlatformMetric(input.deps.metrics, input.deps.clock, {
+    name: "platform.server.request.outcome",
+    labels,
+  });
+
+  if (platformProfileMeasuresLatency(input.profile, "request_response_latency")) {
+    recordPlatformMetric(input.deps.metrics, input.deps.clock, {
+      name: "platform.server.request_response_latency",
+      kind: "timer",
+      value: elapsedMilliseconds(input.startedAt, input.deps.clock.now()),
+      unit: "ms",
+      labels,
+    });
+  }
+}
+
+function endServerProfileTrace(input: {
+  readonly profile: PlatformCapabilityObservabilityProfile;
+  readonly span: TraceSpan | undefined;
+  readonly method: PlatformRouteRegistration["method"];
+  readonly response: PlatformServerResponse;
+  readonly error?: unknown;
+}): void {
+  if (input.span === undefined) {
+    return;
+  }
+
+  const nomenclature = serverNomenclature(input.profile, input.method, input.response.status, input.error);
+  endPlatformTraceSpan(input.span, {
+    outcome: traceOutcomeForOperationalOutcome(nomenclature.outcome),
+    attributes: platformProfileTraceFields(input.profile, nomenclature),
+  });
+}
+
+function serverNomenclature(
+  profile: PlatformCapabilityObservabilityProfile,
+  method: PlatformRouteRegistration["method"],
+  status: number,
+  error: unknown | undefined,
+): PlatformOperationalNomenclature {
+  return {
+    capability: profile.capability,
+    action: profile.action,
+    executionContext: "server",
+    httpMethod: method,
+    httpStatusCode: status,
+    outcome: operationalOutcomeForResponse(status),
+    ...(error === undefined ? {} : { errorClass: platformErrorClass(error) }),
+  };
+}
+
+function serverLogLevel(status: number): "info" | "warn" | "error" {
+  return status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+}
+
+function operationalOutcomeForResponse(status: number): PlatformOperationalOutcome {
+  if (status === 202) {
+    return "accepted";
+  }
+
+  if (status === 401 || status === 403) {
+    return "denied";
+  }
+
+  if (status === 408 || status === 504) {
+    return "timed_out";
+  }
+
+  if (status >= 500) {
+    return "failed";
+  }
+
+  if (status >= 400) {
+    return "rejected";
+  }
+
+  return "succeeded";
+}
+
+function traceOutcomeForOperationalOutcome(outcome: PlatformOperationalOutcome): "succeeded" | "rejected" | "failed" {
+  if (outcome === "succeeded" || outcome === "accepted") {
+    return "succeeded";
+  }
+
+  if (outcome === "denied" || outcome === "rejected" || outcome === "cancelled") {
+    return "rejected";
+  }
+
+  return "failed";
+}
+
 function traceOutcomeForResponse(status: number): "succeeded" | "rejected" | "failed" {
-  return status >= 500 ? "failed" : status >= 400 ? "rejected" : "succeeded";
+  return traceOutcomeForOperationalOutcome(operationalOutcomeForResponse(status));
 }
 
 function findRoute(routes: readonly CompiledRoute[], request: PlatformServerRequest): { readonly route: CompiledRoute; readonly params: Readonly<Record<string, string>> } | undefined {

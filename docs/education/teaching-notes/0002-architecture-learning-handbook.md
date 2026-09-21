@@ -1468,12 +1468,15 @@ audiences separate.
 
 ### The response trail
 
-Every return path reaches the server's finishing step. It measures latency,
-records a request metric with the route and status, and writes a structured log
-using the request's correlation id. This means an allowed 200 response, a 400
-validation failure, a 403 authorization failure, and a 500 handler failure
-all leave an operational trail without asking every app handler to remember
-how to log them.
+Every return path reaches the server's finishing step. For a route with a
+declared observability profile, it records only the profile-approved canonical
+facts and only the signal families the profile permits. A 200 response, 400
+validation failure, 403 authorization failure, and 500 handler failure can
+therefore leave an operational trail without every app handler remembering how
+to log—but they cannot turn a raw request, a principal, a tenant, or a body into
+an accidental telemetry field. A route that explicitly opts out produces no
+capability telemetry. Server failures that occur before any route is known are
+recorded separately as platform operations, not mislabelled as business work.
 
 ### Misconception check
 
@@ -7873,19 +7876,650 @@ Because a policy describes a reviewed, complete safety envelope. A lone flag
 would invite incompatible combinations of retries, ordering, timeouts, and
 acknowledgement behaviour.
 
-## 84. Next Lesson Queue
+## 84. A Profile Must Change What the Worker Emits
+
+### From a declaration to a guardrail
+
+Earlier, a job could *declare* a profile while the worker still emitted its
+own generic facts such as a raw message type and retry count. That is like a
+restaurant collecting an allergy card at the door, then letting every cook use
+any ingredient anyway: the declaration exists, but it does not protect the
+outcome.
+
+The worker now resolves the job's declared profile from the complete mounted
+registry before it emits telemetry. It gives the profile a small typed set of
+facts it knows truthfully:
+
+```text
+capability=platform-smoke.smoke.rebuild
+action=execute
+execution_context=worker
+job_delivery_disposition=retry_scheduled
+outcome=failed
+error_class=PLATFORM_WORKER_HANDLER_FAILED
+```
+
+The profile may select some of those facts for an operational log, a stricter
+subset for metric dimensions, and another subset for trace attributes. It
+cannot select the queue payload, tenant, message ID, raw exception, retry
+delay, or a free-form new field, because those are not in the typed canonical
+vocabulary. The worker does not add them after the projection either.
+
+### What the runtime now does
+
+| Profile says | Worker behaviour |
+|---|---|
+| `operational_log` | Write one bounded `platform.worker.job.delivery` record with only its approved log fields. |
+| `metric` | Record one bounded delivery counter using only approved metric dimensions. |
+| `trace` | Create and complete one `platform.worker.job` span with only approved trace fields. |
+| `job_execution_latency` | Record that interval only after the handler was invoked, because otherwise no job execution occurred to measure. |
+| `queue_wait_latency` | Record that interval only when the profile declares it, because the worker knows when this delivery entered its queue. |
+| explicit opt-out | Emit no *capability* telemetry through this path. |
+
+An unregistered message has no app-owned capability profile. The worker still
+dead-letters it safely, but it must not pretend that the message belongs to a
+known business capability or invent an app-level telemetry record for it.
+
+### A crucial reliability rule
+
+Observability answers “what happened?” It must not decide whether the work
+happens. Therefore logging, metric recording, and tracing are all best effort:
+if a telemetry port throws, the worker continues and returns the real job
+result. The test deliberately supplies a broken logger, metrics sink, and
+tracer, and the job still succeeds.
+
+This does **not** mean evidence is unimportant. It means a future durable audit
+or security requirement needs its own explicitly designed delivery guarantee;
+we must not quietly treat a short-lived diagnostic signal as the proof that an
+important action happened.
+
+### Misconception check
+
+“The normalisation helper redacts secrets, so a profile allowlist is optional.”
+
+No. Normalisation protects against obviously dangerous values that reach a
+helper. A profile decides which *kind* of fact should reach a helper in the
+first place. Both are needed: profile first, normalisation second.
+
+### Study question
+
+Why does the worker record queue-wait latency only when a profile declares that
+measurement rather than whenever it happens to have an enqueue timestamp?
+
+Because collecting a number is not automatically meaningful. The profile says
+the capability and its operators have agreed that this interval is worth
+measuring; otherwise the platform avoids creating unreviewed cost, dashboards,
+and alert pressure from every available timestamp.
+
+## 85. A Profile Must Change What the Server Emits
+
+### The same rule applies to HTTP
+
+An HTTP route can be reached through more than its happy path. A caller may be
+denied authentication, fail validation, exceed a rate limit, send malformed
+JSON, or receive a timeout. Those are still attempts to use a known
+capability—provided the server could match the method and path to that route.
+
+The server therefore resolves the route's profile as soon as it can identify
+the route. Its completion step then gives the profile a small truthful set of
+facts:
+
+```text
+capability=platform-smoke.echo
+action=read
+execution_context=server
+http_method=GET
+http_status_code=403
+outcome=denied
+error_class=PLATFORM_SERVER_FORBIDDEN
+```
+
+The profile can approve a structured operational log, bounded metric labels,
+a trace span, and a `request_response_latency` timer independently. It cannot
+approve a path such as `/invoices/benelux-104`, the caller's token, a request
+ID, a tenant, an account number, a request body, a response body, or an error
+object. Those facts either identify a person/resource, contain business data,
+or create unsafe cardinality in a metric.
+
+### Why route matching happens before the decision, not before security
+
+Finding a route means only: “this request is aimed at a known capability.” It
+does **not** authorize the caller or invoke the handler. The normal security
+order remains intact:
+
+```text
+match route → resolve its profile → rate limit/authenticate/authorize/validate → handler when allowed → emit approved evidence
+```
+
+This early route match lets the platform correctly describe a rejected attempt
+as an attempt at `invoice.read`, while keeping the real authorization decision
+where it belongs. It is like recognising the department a visitor is trying to
+enter before deciding whether their badge opens the door.
+
+### The two cases that must stay different
+
+| Situation | What the server emits | Why |
+| --- | --- | --- |
+| `POST /invoices/123` matches `invoice.update`, but JSON is malformed | That route's approved capability telemetry, normally with `outcome=rejected`. | The request attempted a known business capability even though the handler never ran. |
+| `TRACE /anything` is not a supported platform method, or the URL is malformed | Generic platform-server evidence only. | There is no trustworthy app capability to name. |
+| A known route has an explicit profile opt-out | No capability telemetry. | An exception must genuinely suppress this optional evidence, not merely hide the declaration. |
+
+Health checks are also platform operations. They retain their separate health
+metric rather than being mistaken for a product capability.
+
+### What “full” means at this point
+
+Workers and HTTP routes now have the same **local, provider-neutral profile
+behaviour**: profile selection, safe field projection, signal gating, declared
+latency intervals, opt-out suppression, and failure isolation. That does not
+yet mean a production observability system exists. We still need a selected
+exporter/sink, real latency distributions for p95/p99, retention and access
+policy, dashboards, SLO rules, and alarms.
+
+### Timeouts are safety ceilings, not performance promises
+
+The server already has mechanical time limits: 10 seconds for headers, 30
+seconds for a request and handler, 5 seconds for an idle keep-alive connection,
+and 30 seconds for shutdown draining. When a handler crosses its deadline, the
+server aborts its signal and returns a safe timeout response, but still holds
+its concurrency slot until the handler really stops. That prevents a slow
+handler from becoming invisible background work.
+
+Those settings protect capacity; they do **not** mean an interactive read is
+allowed to take 30 seconds. Its ordinary performance target can still be p95
+at 300 ms and p99 at 750 ms. A later target policy must divide a user-visible
+deadline between ingress, server handling, downstream calls, cleanup, and the
+safe error response. A provider-backed worker will need a separate execution,
+queue-visibility or lease, retry, and shutdown budget.
+
+### Timeout check
+
+Why must a database or provider call have a smaller timeout than the server
+handler that called it?
+
+Because the handler needs remaining time to cancel work, release local
+resources, record safe operational evidence, and return a controlled response.
+If the downstream call consumes the whole budget, the caller cannot fail
+safely.
+
+### Misconception check
+
+“A 403 should not create capability telemetry because the user never got to
+use the capability.”
+
+No. A 403 is often operationally important: it tells us a caller attempted a
+known protected action and was denied. The record says `outcome=denied`; it
+does not claim that the business action completed. The profile still prevents
+the event from revealing who the caller was or which customer record they
+tried to access.
+
+### Study question
+
+Why does an unsupported HTTP method use generic platform evidence instead of
+borrowing the profile of a route with the same path?
+
+Because the method is part of the route's contract. Borrowing a profile would
+assert a business action we cannot truthfully identify and could make unrelated
+traffic distort that capability's metrics.
+
+## 86. Error Budgets Turn Targets into Sensible Alerts
+
+### An objective includes an allowance
+
+An SLO is not a claim that nothing may ever go wrong. It says how much imperfect
+behaviour is acceptable over a stated window. That allowance is the **error
+budget**.
+
+For a 99.9% availability objective, 0.1% of eligible requests may fail. In a
+window with 100,000 eligible requests, the allowance is 100 failures. The 101st
+failure means that objective has been missed. A latency objective has an
+independent allowance: “95% within 300 ms” permits up to 5% of its eligible
+successful requests to take longer than 300 ms.
+
+Do not add those allowances together. A request that takes 900 ms may spend the
+300-ms latency budget and the 750-ms slow-tail budget; a request that returns a
+safe `500` may spend the availability budget but is not treated as a successful
+latency sample. Each objective needs its own honest denominator and budget.
+
+### Burn rate asks how quickly the allowance is disappearing
+
+The burn rate is the observed bad-event fraction divided by the fraction the
+objective allows. If a 99.9% availability target allows 0.1% failures but a
+service is currently failing 1% of eligible requests, it is burning its budget
+at ten times the sustainable rate. If that continued, a 28-day allowance would
+be exhausted in about 2.8 days.
+
+One slow request is evidence, not an emergency. A useful alert policy combines
+a short window that detects an active problem with a longer window that proves
+it is sustained, and it requires enough eligible requests for the percentage to
+mean something. At very low traffic, the honest result is “insufficient
+confidence”; a named synthetic check provides the stronger early-stage signal.
+
+### Misconception check
+
+“A p99 objective gives us one global error budget.”
+
+No. Availability, typical latency, and slow-tail latency answer different
+questions and have separate allowances. Combining them hides whether users are
+being rejected, most users are being slowed, or only a small but important tail
+is suffering.
+
+### Study question
+
+Why should an alert use both a short and a long observation window?
+
+The short window finds an active deterioration quickly. The long window filters
+out an isolated spike. Requiring both avoids paging for a single unusual request
+while still escalating a real, fast-moving outage.
+
+## 87. Three Alert Families Answer Different Questions
+
+### Do not make “alert” mean one thing
+
+An alert is a request for attention. The signal that creates it determines who
+should respond, what evidence they need, and where its policy belongs. The
+platform needs three separate families.
+
+| Family | Question it answers | Example | Policy home |
+|---|---|---|---|
+| Capability SLO | Is a named workload delivering its promised experience? | Interactive reads are persistently missing their 300-ms target. | Target NFR/SLO catalogue, after a metrics adapter can retain real distributions. |
+| Platform/infrastructure health | Is a shared operating component unhealthy? | The ALB has no healthy targets, an ECS service lacks desired tasks, or a queue is building up. | Target `observability.alarms` catalogue, IaC, and its runbook. |
+| Security | Does a control outcome or pattern require investigation? | Repeated denied export attempts across tenants or an unusual sign-in pattern. | Security-signal/detection policy, protected evidence store, and security incident runbook. |
+
+An ALB target-health alarm cannot say whether `invoice.export` is slow. A
+capability latency SLO cannot say whether somebody is probing permissions across
+tenants. A security detection cannot be replaced by a high CPU alarm. They may
+be correlated during an investigation, but they must not be substituted for one
+another.
+
+### One alert, one primary question
+
+An alert definition may link a trace, a log query, a dashboard, or a related
+security case. Its **trigger**, owner, severity, notification destination, and
+runbook must nevertheless name one primary family. That keeps operations from
+asking an infrastructure responder to interpret possible abuse, or a security
+responder to diagnose ordinary latency regressions.
+
+The staging target already has an infrastructure-health alarm catalogue. It
+does not yet have a selected application metrics exporter for capability SLO
+alarms, nor a general security-signal delivery and detection pipeline. Those
+are explicit gaps, not evidence that the existing alarms cover every concern.
+
+### Misconception check
+
+“A `403` response should create an availability page because the user did not
+get what they wanted.”
+
+No. A valid permission denial is normally an expected policy outcome. It can be
+important security evidence when it forms a suspicious pattern, but it is not
+proof that the platform became unavailable. A server `500` or target timeout is
+different: it can affect the availability objective.
+
+### Study question
+
+Why is a growing queue depth usually an infrastructure/worker-health alarm,
+rather than an immediate failure of every asynchronous business capability?
+
+Queue depth says the delivery system may be losing capacity or keeping work
+waiting too long. A separate capability completion or queue-wait SLO determines
+which business outcomes are actually being affected and how severely.
+
+## 88. A Complete Target SLO Record
+
+### One objective per record
+
+A target should not put “the service must be fast and available” in one large,
+ambiguous setting. It needs one policy record per independently evaluated
+objective. Availability, typical latency, and slow-tail latency have different
+denominators, error budgets, and escalation choices.
+
+For example, an interactive read might eventually have three records:
+
+| Semantic record | Question it answers |
+|---|---|
+| `interactive-read.availability` | Did eligible requests complete successfully? |
+| `interactive-read.request-response.typical-latency` | Did most eligible successful requests complete within the typical threshold? |
+| `interactive-read.request-response.slow-tail-latency` | Did almost all eligible successful requests avoid a seriously slow experience? |
+
+These are examples of names, not live target settings. The target path already
+supplies the environment; the name supplies the workload, interval, and
+objective without hiding the meaning in a provider alarm name.
+
+### Fields the policy must answer
+
+The future target-owned `observability.slos` catalogue must make each record
+answer the following questions.
+
+| Field group | Question | Why it matters |
+|---|---|---|
+| Identity and purpose | What stable SLO is this and why does it exist? | Operators can find one unambiguous policy without reverse-engineering a dashboard. |
+| NFR class and measurement | Which profile class and timed interval does it govern? | A queue-wait target cannot accidentally be applied to HTTP handler time. |
+| Population | Which completed requests/jobs count, and which carefully justified cases do not? | The percentage is meaningless without a denominator. |
+| Objective | What is a good event, success condition, or latency threshold? | “Fast” and “available” become testable. |
+| Window and confidence | Over what rolling period, with what minimum sample, and what happens at low volume? | Prevents both noisy claims and hidden blind spots. |
+| Budget and burn | What bad-event allowance exists, and what short/long sustained burn requires action? | Separates a routine outlier from an emerging incident. |
+| Telemetry prerequisite | Which bounded metric, histogram, exporter, and synthetic check prove it? | A policy cannot claim p99 before a real distribution exists. |
+| Response and lifecycle | Who owns it, where is the dashboard/runbook, and when is it reviewed? | An unowned objective cannot improve reliability. |
+
+### Two catalogues, two jobs
+
+The future `observability.slos` catalogue owns the **meaning and calculation**
+of an SLO. The existing `observability.alarms` catalogue owns provider alarm
+delivery and IaC mapping. An SLO alarm should reference the SLO record by its
+stable id instead of copying the threshold and burn calculation into both
+catalogues.
+
+```text
+observability profile → names workload class and interval
+target SLO record     → defines the objective and evidence required
+target alarm record   → defines notification and provider implementation
+```
+
+This avoids an easy drift problem: changing a 300-ms target in one file while a
+provider alarm still evaluates the old value elsewhere.
+
+### Misconception check
+
+“If an SLO is target-owned, every capability automatically has one.”
+
+No. A profile may declare useful telemetry without a user-facing promise. A
+capability receives an SLO only when its target policy intentionally adopts its
+NFR class and measurement, with enough evidence and an owner to stand behind
+the objective.
+
+### Study question
+
+Why should a provider alarm reference an SLO record rather than duplicate the
+SLO threshold in its own definition?
+
+Because the SLO policy is the authority for what “good” means. The alarm is one
+delivery mechanism for acting on that policy. One authoritative calculation
+prevents their values and intent drifting apart.
+
+## 89. A Histogram Exporter Turns Timer Points into SLO Evidence
+
+### What exists today
+
+The server and worker already emit provider-neutral Core metric points. A timer
+point says, in effect, “this approved interval took 284 milliseconds, at this
+safe recorded time, with these bounded labels.” It is one observation, not a
+percentile calculation and not a histogram by itself.
+
+The `Metrics` port is the seam between that application-side fact and a future
+provider. Target composition will inject an exporter behind the port. Routes,
+jobs, profiles, and generic platform modules must not import a cloud metrics
+SDK or learn a provider's histogram syntax.
+
+### What the exporter must add
+
+| Exporter responsibility | Why the timer point alone is insufficient |
+|---|---|
+| Accept only target-approved metric definitions | A generic metric name must not become a way to create unreviewed paid series or unsafe labels. |
+| Turn each approved timer into a histogram observation | Percentiles need a distribution of many values, not one duration. |
+| Preserve count, sum, and bucket counts | Compliance queries need to know how many events fell at or below each threshold. |
+| Use fixed bucket boundaries that include adopted SLO thresholds | A 300-ms objective needs a 300-ms boundary; otherwise its result is only an approximation. |
+| Keep the profile's bounded label set | A histogram per tenant, user, request, or raw path would create unsafe cardinality and cost. |
+| Batch and flush outside request/job work | Exporting must not make the user wait on a remote metrics service. |
+| Expose exporter coverage/health | A missing or dropping exporter means the SLO evidence may be incomplete. |
+
+For the provisional interactive-read target, the histogram would eventually
+include boundaries at 300 ms and 750 ms, alongside useful neighbouring values.
+The resulting counts can answer both “how many completed within 300 ms?” and
+“how many completed within 750 ms?” without storing individual customer
+requests as metric labels.
+
+### The evidence path
+
+1. A route or job measures only an interval its profile declared.
+2. It emits one bounded Core timer point through the `Metrics` port.
+3. The target-composed exporter validates the metric identity, unit, and label
+   set against its catalogue.
+4. The exporter adds the value to the approved histogram and delivers/batches
+   it using its provider-specific mechanism.
+5. The SLO query uses histogram bucket counts and the declared population to
+   calculate compliance and burn.
+6. An alarm, if justified, references that SLO result and routes the response.
+
+### Reliability does not mean blocking the user
+
+The exporter needs a bounded in-memory buffer, bounded retries, and an orderly
+flush during shutdown. It must never turn an otherwise successful route or job
+into a failure because a metrics provider is unavailable. That is the same
+best-effort boundary as the existing local observability helpers.
+
+But “best effort” does not permit silent false confidence. If delivery is lost
+or cannot be verified for a required period, the target should report that SLO
+evidence is incomplete and raise an operational coverage/health concern. It
+must not claim that the objective passed simply because no measurements arrived.
+
+### Misconception check
+
+“We can calculate p99 later from ordinary request logs.”
+
+Not reliably. Logs may be sampled, retained briefly, redacted differently,
+inaccessible to the metrics query engine, or absent during an exporter failure.
+A designed histogram preserves the aggregate distribution needed for the SLO
+without making per-request logs into a fragile metric store.
+
+### Study question
+
+Why must a histogram bucket boundary include the actual 300-ms SLO threshold?
+
+Without that boundary, the metrics system can only say that a value fell in a
+wide range, such as between 200 and 500 ms. It cannot truthfully count exactly
+how many requests met the 300-ms promise.
+
+## 90. Dashboards Show Evidence; Synthetic Checks Cover Quiet Periods
+
+### A dashboard is not an alarm
+
+An alarm asks somebody to act. A dashboard helps that person understand what is
+happening before, during, and after an incident. It must answer a small set of
+operational questions without becoming a wall of unrelated graphs.
+
+| View | Primary questions | Intended audience |
+|---|---|---|
+| Platform health | Are public targets healthy? Are tasks, capacity, queue delivery, and telemetry coverage operating? | Platform operator |
+| Capability SLO | Is this workload receiving traffic? Are latency, success, budget, and burn meeting its named objective? | Capability/service owner |
+| Security view | Are approved security signals forming a concerning pattern? | Authorised security operator |
+
+The target policy should record each dashboard's stable id, owner, audience and
+access boundary, safe panels, SLO/alarm references, runbook links, review date,
+and retention assumptions. A security dashboard is not a convenient place for
+ordinary broad operational access; raw customer or credential data belongs in
+none of these views.
+
+### “No data” is not green
+
+Each SLO panel needs three visibly different states:
+
+| State | Meaning |
+|---|---|
+| Measured and healthy | Required telemetry arrived and the calculation currently meets its objective. |
+| Partial or insufficient confidence | Some evidence arrived, but volume or delivery coverage cannot support the claimed percentile/SLO result. |
+| No data or telemetry failure | The required measurement is absent, delayed, or unverifiable. This is an observability-coverage concern, not a passing result. |
+
+This matters especially in the early smoke target: its current short-retention
+operational log destination and infrastructure alarms do not automatically
+create capability dashboards or trustworthy application SLO evidence.
+
+### Synthetic checks ask a controlled question
+
+Live traffic explains what real users experienced. But early traffic is sparse.
+A synthetic check is a scheduled, controlled request that asks, “can this
+important path work right now?”
+
+A good target-owned synthetic check declares its stable id, purpose, owner,
+frequency, boundary/identity scope, expected status and latency, safe fixture,
+notification/runbook, and result retention. A protected-path check uses a
+least-privilege synthetic identity and a non-mutating or idempotent fixture. It
+must not quietly bypass the ingress, authentication, authorisation, or
+rate-control boundary it claims to prove.
+
+For example, a liveness synthetic check proves that the public health endpoint
+can be reached. A protected smoke-route check proves more: DNS/TLS/ingress,
+token validation, routing, permission handling, application execution, and the
+safe response. Neither one manufactures a p99; it supplements the honest
+low-volume status with a repeatable availability signal.
+
+### Misconception check
+
+“A green synthetic check proves the platform is meeting its user SLO.”
+
+No. It proves one controlled path worked at one point in time. Real traffic
+distributions still determine whether ordinary users experience acceptable
+latency and success rates. The two forms of evidence complement each other.
+
+### Study question
+
+Why should a protected synthetic check use an ordinary least-privilege identity
+instead of a special bypass credential?
+
+Because a bypass can remain green while ordinary authentication, permission, or
+routing policy is broken. The check must exercise the boundary it is supposed to
+prove, while using a safe fixture that cannot damage business data.
+
+## 91. Observability Data Has a Lifecycle Too
+
+### Retention follows purpose, not one universal number
+
+“Logs are kept for two weeks” is not a complete data policy. The current
+staging operational log destination has 14-day retention, but that applies only
+to those ordinary operational logs. It does not decide the retention of metric
+aggregates, traces, security signals, or durable audit evidence.
+
+| Evidence class | Typical purpose | Retention rule it needs |
+|---|---|---|
+| Operational logs | Diagnose recent technical behaviour. | Short, cost-conscious operational retention. |
+| Aggregate metrics/histograms | Calculate SLOs and see trends. | At least the complete SLO window plus a review margin. |
+| Diagnostic traces | Follow a bounded technical path in detail. | Separately selected, usually short and access-restricted. |
+| Security signals | Detect and investigate suspicious control outcomes. | Security-policy retention, access, integrity, and incident requirements. |
+| Audit events | Prove accountable actions. | Product/compliance/legal retention and integrity requirements. |
+
+The last two are deliberately not “just observability data.” Their durability
+and lifecycle must be designed separately from optional metrics or logs.
+
+### Access follows the audience
+
+| Audience | Evidence normally needed | Boundary |
+|---|---|---|
+| Platform operator | Bounded health dashboards and ordinary operational logs. | No automatic customer-data or unrestricted tenant access. |
+| Authorised engineer | Scoped diagnostic traces/log queries during investigation. | Time-bound, justified access; no credentials or raw payloads. |
+| Security operator | Approved security signals and detection evidence. | Separately protected security workflow. |
+| Compliance/audit reader | Durable accountable-event evidence. | Separate audit access model and retention rules. |
+
+Administrative or break-glass access is not a reason to remove these
+boundaries. It should be time-bound, justified, and auditable itself.
+
+### Sampling is a deliberate choice
+
+Sampling means intentionally recording a known subset of events under a named
+rule. It is different from losing events because an exporter failed.
+
+The first SLO metrics adapter should preserve every eligible measurement. If a
+future high-volume target adopts a statistically valid sampling strategy, it
+must make the rate and coverage visible so calculations remain honest. Traces
+and ordinary successful logs may be sampled separately for cost, while errors,
+timeouts, and other high-value diagnostic cases receive explicit priority.
+
+Required audit and security evidence must never silently inherit optional
+operational sampling. A dropped exporter batch is a coverage failure, not a
+sampling strategy.
+
+### Misconception check
+
+“Metrics are aggregate, so access control and residency do not matter.”
+
+No. Even aggregate series can reveal product behaviour, tenant activity when
+labelled badly, or operational topology. The platform's bounded label policy
+reduces that risk, but target access, EU residency, and retention still need to
+be selected and enforced.
+
+### Study question
+
+Why must a 28-day SLO retain aggregate evidence for at least 28 days?
+
+Because the calculation needs the whole rolling window. Deleting week-one
+histogram data on day 14 would make a claimed 28-day compliance result
+incomplete, even if the dashboard still displayed a percentage.
+
+## 92. From Local Instrumentation to Operational Evidence
+
+### What is complete now
+
+The repository has completed the **local, provider-neutral instrumentation
+slice**:
+
+- Core owns bounded metric, logging, and tracing ports plus unsafe-label
+  guardrails.
+- Capability profiles declare approved signal families, facts, and truthful
+  timing intervals.
+- The registry validates profile adoption before a mounted app begins work.
+- The server and worker emit only resolved-profile evidence; an explicit opt-out
+  emits no capability telemetry.
+- Local tests and the smoke app prove safe emission, opt-out suppression, and
+  telemetry-failure isolation.
+- The staging target has an ordinary log destination and infrastructure-health
+  alarms.
+
+That is valuable, but it is not the same as proving a provider received a
+histogram, calculated an SLO, displayed a dashboard, or delivered an alert.
+
+### What remains before capability observability is operational
+
+| Stage | Deliverable | Evidence of completion |
+|---|---|---|
+| Target policy | Metric-series, SLO, dashboard, synthetic-check, lifecycle/access catalogues. | Reviewed policy has one authoritative value for each decision. |
+| Metrics adapter | One bounded target-composed histogram exporter behind Core `Metrics`. | Known timer points become approved histogram observations; unknown series/labels are rejected. |
+| Target composition | EU-resident backend, access, retention, dashboards, and alarm resources through IaC. | Policy-to-IaC check and least-privilege resource evidence pass. |
+| Public synthetic proof | A least-privilege check reaches a protected smoke capability through the real boundary. | Controlled request proves DNS/TLS/ingress/auth/routing/application path safely. |
+| SLO proof | Histogram observations calculate the policy's good-event ratio/burn correctly. | Dashboard/runbook can find the evidence without sensitive fields. |
+| Failure proof | Exporter failure causes coverage concern, not user/job failure or a false green SLO. | Controlled failure proves isolation, incomplete-confidence state, and alert/runbook path. |
+
+Trace delivery and provider-backed worker queue/lease telemetry are later
+extensions after their own adapters exist. Security-signal and durable audit
+delivery are separate, stricter programmes; they are not additions to a metric
+exporter.
+
+### The correct completion claim
+
+We may say today:
+
+> Routes and jobs have local, provider-neutral, profile-governed observability
+> instrumentation with tested safe emission boundaries.
+
+We must not yet say:
+
+> The production target has complete capability observability and SLO alerting.
+
+That stronger statement needs the policy, adapter, target, public synthetic,
+coverage, access, and alert-delivery proofs above.
+
+### Misconception check
+
+“The smoke app's in-memory test saw a timer, so metrics delivery is complete.”
+
+No. The test proves correct application-side emission. It does not prove a
+histogram backend, retention, access control, SLO calculation, dashboard,
+notification, or response path.
+
+### Study question
+
+Why must the exporter-failure proof show both that a request succeeds and that
+SLO confidence becomes incomplete?
+
+The first result protects product behaviour from an optional telemetry outage.
+The second protects operators from mistaking missing evidence for healthy
+performance. We need both to make the boundary trustworthy.
+
+## 93. Next Lesson Queue
 
 1. Define the provider-neutral queue-delivery policy shape and its target-owned
    SQS mapping, then update the local worker shell to consume a resolved policy
    rather than raw retry options.
-2. Design the bounded optional-observability failure policy, then implement and
-   test metric/log/tracer failure isolation before calling the smoke-route proof
-   complete.
-3. Make server and worker delivery consume the resolved profile, emitting only
-   its approved standard facts through the existing safe helper boundaries.
-4. Define a target-governed NFR/SLO policy catalogue and histogram adapter
+2. Define a target-governed NFR/SLO policy catalogue and histogram adapter
    before setting p95/p99 objectives or burn-rate alarms.
-5. Return to the practical alarm follow-up only when an explicit AWS change is
+3. Return to the practical alarm follow-up only when an explicit AWS change is
    approved: verify enhanced Container Insights, review the two role changes,
    review the service-stack change set, and prove notification delivery.
 
@@ -7936,6 +8570,54 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-21: Added the observability delivery-readiness roadmap. The local
+  instrumentation slice is distinguished from the policy, adapter, target,
+  public synthetic, coverage, and alert-delivery proofs required for an
+  operational target claim. No provider or target state changed.
+- 2026-09-21: Added the observability data-lifecycle lesson. Retention,
+  access, residency, and sampling are now separated by evidence class; the
+  current 14-day staging log retention is explicitly not a universal policy.
+  No telemetry store or target retention value was selected.
+- 2026-09-21: Added the dashboard and synthetic-check lesson. Future target
+  policy must distinguish healthy, partial, and no-data evidence; it must keep
+  platform, capability, and security views separate, and use safe
+  least-privilege synthetic checks during low traffic. No provider resource was
+  selected.
+- 2026-09-21: Added the histogram-exporter lesson. A future target-composed
+  Core metrics adapter must use an approved metric-series catalogue,
+  threshold-aligned buckets, bounded delivery, and explicit evidence-coverage
+  handling before it can support SLO claims. No provider was selected.
+- 2026-09-21: Added the complete target SLO-record lesson. A later
+  `observability.slos` catalogue will own each objective's meaning and
+  calculation, while the existing alarm catalogue remains the provider-delivery
+  and IaC source. No target SLO configuration or provider resource changed.
+- 2026-09-21: Added the alert-family lesson. Capability SLO, platform or
+  infrastructure health, and security alerts now have distinct policy homes,
+  owners, and primary questions; existing staging alarms cover only the
+  infrastructure family. No target alarm or provider state changed.
+- 2026-09-21: Added the error-budget and burn-rate lesson. The target-policy
+  plan now requires separate objective budgets, sustained short/long-window
+  alerting, a minimum eligible sample, and a synthetic-check fallback for
+  low-volume periods. No numeric target or provider implementation changed.
+- 2026-09-21: Clarified that existing HTTP transport timeouts are safety and
+  capacity guardrails, not interactive-performance promises. The platform plan
+  now reserves a later target-owned timeout-budget catalogue, including nested
+  deadline ordering and separate provider-worker execution/lease policy. No
+  runtime timeout configuration or target infrastructure changed.
+- 2026-09-21: Completed the matching provider-neutral HTTP profile-consumption
+  slice. A matched route now emits only profile-approved logs, metric labels,
+  traces, and declared request/response timing; known opt-outs emit no
+  capability telemetry. The lesson distinguishes known capability attempts
+  from generic server/transport operations, and the platform plan records the
+  same boundary. No provider exporter, cloud resource, audit pipeline, or
+  security-record pipeline was selected.
+- 2026-09-21: Implemented the first profile-consumption vertical slice. The
+  worker now resolves registered job profiles, emits only approved canonical
+  facts and declared latency intervals, suppresses capability telemetry for an
+  explicit opt-out, and keeps logger/metrics/tracer failure best effort. The
+  contracts, observability, and worker checks passed locally. Server profile
+  consumption, provider export, durable audit/security evidence, and target
+  NFR/SLO policy remain deferred.
 - 2026-09-09: Selected DynamoDB on-demand only for the future harmless
   platform-smoke transaction/outbox reference proof. The lesson separates that
   low-cost operational decision from the still-deferred Entity Builder

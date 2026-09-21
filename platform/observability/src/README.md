@@ -37,10 +37,12 @@ This file accepts the Core `Logger` port and makes sure normal runtime writes
 cross the normalisation gateway. `createPlatformSafeLogger` wraps an existing
 logger; `writePlatformLog` handles the common one-off structured write.
 
-The file deliberately does not know about a cloud log service, a console
-format, retention, a tenant’s log reader, or security-record policy. A later
-target composition can choose a delivery mechanism without making platform
-runtime code provider-specific.
+The write is deliberately best effort. If field normalisation or the injected
+logger throws, the helper swallows that telemetry failure so a completed route
+or job does not become a business failure. The file deliberately does not know
+about a cloud log service, a console format, retention, a tenant’s log reader,
+or security-record policy. A later target composition can choose a delivery
+mechanism without making platform runtime code provider-specific.
 
 ### `metrics.ts` — small, aggregate measurements
 
@@ -53,8 +55,10 @@ labels.
 Metric labels must remain low-cardinality. Route or job identifiers, HTTP
 status class, safe outcome, error class, and deployment version can be useful;
 tenant, user, request, trace, session, token, raw URL/path, IP, and resource
-identifiers must not become shared metric labels. This file does not create a
-metrics exporter or a tenant analytics store.
+identifiers must not become shared metric labels. Metric construction and the
+injected provider write are deliberately best effort, so an unavailable metric
+sink cannot fail work. This file does not create a metrics exporter or a tenant
+analytics store.
 
 ### `tracing.ts` — safe trace mechanics, not an exporter
 
@@ -65,11 +69,13 @@ ends a span through that port. If the supplied tracer throws or has an invalid
 shape, it falls back to the no-op tracer rather than changing request outcome.
 
 The current server uses only method, stable route name, status, latency,
-outcome, and a bounded error class. The worker uses the same boundary for job
-name, retry count, latency, outcome, and bounded error class; it may parent a
-span from a queue message's internal Core trace parent. Neither path places
-request IDs, correlation IDs, tenant IDs, headers, bodies, raw paths,
-credentials, or trace IDs into these general trace attributes.
+outcome, and a bounded error class. The worker resolves its app job's registered
+observability profile, then sends only that profile's canonical capability,
+action, execution context, delivery disposition, outcome, and bounded error
+class fields to a trace. It may parent a span from a queue message's internal
+Core trace parent. Neither path places request IDs, correlation IDs, tenant
+IDs, headers, bodies, raw paths, credentials, or trace IDs into these general
+trace attributes.
 
 Using the same normalisation gateway prevents tracing from becoming a bypass
 around log redaction. The code still does not choose a propagation format,
@@ -87,9 +93,11 @@ easy for maintainers to scan.
 
 `normalization.ts` is foundational. `logging.ts` and `tracing.ts` use it;
 `metrics.ts` is independent and relies directly on Core metric and clock
-contracts. Finally, `index.ts` exports the supported public surface. Internal
-relative imports stay inside this package, while external source imports are
-limited to public Core modules.
+contracts. Profile declaration and field projection deliberately live in
+`platform/contracts`: this package receives only the already-approved fields
+from a runtime module. Finally, `index.ts` exports the supported public
+surface. Internal relative imports stay inside this package, while external
+source imports are limited to public Core modules.
 
 ## What this split does not change
 
