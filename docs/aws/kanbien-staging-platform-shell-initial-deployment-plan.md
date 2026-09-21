@@ -67,9 +67,10 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 - The shared ALB serves legacy workloads and has the foundation WAF associated
   with host-scoped rules for this platform hostname only. Its existing routes
   and default certificate remain unchanged.
-- The current platform source is committed and present on `origin/main`.
-  Official deployment images must come from reviewed, pushed `origin/main`,
-  never a local working tree.
+- The deployed platform-shell baseline source was committed and present on
+  `origin/main`. The prepared observability update is local source until it is
+  reviewed, committed, and merged. Official deployment images must come from
+  reviewed, pushed `origin/main`, never a local working tree.
 - The first remote-main GitHub workflow attempt built and pushed an immutable
   platform-shell image but stopped before any service-stack mutation. ECR
   created its scan record asynchronously after the workflow's original waiter
@@ -189,6 +190,17 @@ verification work above determines when its readiness record can become ready.
    allocation tag in the account Billing console, wait for billing visibility,
    configure the target-scoped monthly/forecast budget alerts, and record the
    proof. Do not treat a resource tag as a functioning budget by itself.
+15. Proposed, not applied: commit and merge the reviewed observability source
+    to `origin/main`, then run the protected GitHub workflow to produce a
+    scan-accepted immutable image digest containing that exact target
+    composition. Only then review a separate observability-delivery change set.
+    It adds a task-local ADOT collector, non-secret SSM pipeline configuration,
+    a distinct collector log group, execution-role read access for that one
+    parameter, and task-role `cloudwatch:PutMetricData`. The task grows from
+    256 CPU / 512 MiB to 512 CPU / 1024 MiB to reserve sidecar capacity. Apply
+    only after the rendered template and IAM delta show the expected narrow
+    changes; then prove a public smoke request produces a queryable metric and
+    that collector loss does not become a false healthy SLO.
 
 ## Expected AWS blast radius
 

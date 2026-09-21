@@ -93,3 +93,10 @@ options. A product/deployment entrypoint is responsible for supplying any of
 those target-selected pieces. That separation lets the same server mechanics
 host a different product or provider without generic platform code learning
 about either one.
+
+It may also receive an optional Core `Metrics` port from that entrypoint. This
+is an injection socket rather than an AWS decision: the generic server can emit
+the same profile-governed points with the in-memory test sink, a no-op sink, or
+a target-selected adapter. The Kanbien staging entrypoint is the only current
+consumer that selects the CloudWatch OpenTelemetry adapter and owns its bounded
+flush/shutdown lifecycle.

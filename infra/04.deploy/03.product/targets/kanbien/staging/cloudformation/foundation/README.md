@@ -34,6 +34,7 @@ repository renderer; they are not independent AWS stacks.
 | `workload-iam.yml` | Least-privilege identities used by AWS workload components. It is not end-user authorization. | ECS task roles and service deployment role |
 | `rate-limiting.yml` | Shared, encrypted fixed-window limiter state for the public runtime. | DynamoDB table |
 | `logging.yml` | Short-retention operational log destination. | CloudWatch log group |
+| `observability-metrics.yml` | Versioned non-secret collector configuration, its distinct operational log group, and exports for the service task. | SSM String parameter, CloudWatch log group |
 | `alerting.yml` | Shared alert delivery and ALB target-group availability alarms. Service-specific ECS alarms remain in `../service.yml`, because only that stack owns their service dimensions. | CloudWatch alarms, SNS topic, topic policy, email subscription |
 | `outputs.yml` | Values deliberately exported to the separate service stack. | Outputs only |
 

@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-21T22:37:23Z
-latest_commit_sha: 11283f6
-chat_duration: 252600s (02:22:10:00)
+latest_commit_at_utc: 2026-09-21T23:48:49Z
+latest_commit_sha: 3182c74
+chat_duration: 256886s (02:23:21:26)
 estimated_chat_tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -255,6 +255,82 @@ Summary: Implemented provider-neutral observability-profile consumption for serv
 
 ADR impact: No ADR: this activates existing provider-neutral platform guidance; target provider and infrastructure choices remain deferred.
 
+### 2026-09-22 - Staging metric-delivery selection and local adapter implementation
+
+- Corrected the runtime-implementation workflow's ADR references so it points
+  to the four real ADR files rather than ambiguous numbers.
+- Selected the staging capability-metrics route as a target-composed AWS
+  CloudWatch OpenTelemetry adapter sending only to a task-local collector.
+  ADR 0029 records that boundary; no generic platform runtime or application
+  module imports an AWS package.
+- Added the adapter package with strict target-series validation, bounded
+  labels/cardinality, explicit histogram buckets, a private local endpoint,
+  and controlled flush/shutdown. Its local type, runtime, build, and boundary
+  checks pass.
+- Added staging target policy entries for the smoke-read outcome counter and
+  request/response histogram, along with provisional 28-day availability,
+  p95, and p99 objectives. All records are explicitly selected but not
+  deployed/evaluable.
+- Extended the existing staging infrastructure check to validate the catalogue
+  structure and the SLO-to-histogram relationship without duplicating target
+  thresholds in the check.
+- No AWS resource, IAM permission, task definition, collector, metric backend,
+  dashboard, alarm, or live target configuration changed. AWS SSO was used
+  only for prior read-only target inspection.
+
+### 2026-09-22 - Prepared staging collector composition and IaC
+
+- Added the target-only observability composition module. It constructs the
+  reviewed CloudWatch OTel adapter from non-secret target configuration and
+  injects only its provider-neutral Core `Metrics` port into the generic server.
+- The target entrypoint owns startup failure handling and ordered shutdown:
+  close the server first, then make the adapter's bounded final flush/shutdown
+  attempt. The generic server still has no AWS import.
+- Prepared focused CloudFormation source for a pinned ADOT task sidecar, a
+  distinct collector log group, a named non-secret SSM collector configuration
+  record, narrow execution-role `ssm:GetParameters`, and task-role
+  `cloudwatch:PutMetricData`. The sidecar has no published task port; the
+  adapter can send only to task-loopback `127.0.0.1:4318`.
+- Recorded the ECS limitation explicitly: task-role credentials are shared by
+  containers in a task, so reviewed task composition and the fixed loopback
+  endpoint complement IAM; this is not per-container credential isolation.
+- Increased the planned task definition from 256 CPU / 512 MiB to 512 CPU /
+  1024 MiB and reserved 128 CPU / 256 MiB for the collector. This is source
+  preparation only, not a live capacity change.
+- Local checks passed: CloudWatch adapter, generic server (including injected
+  metrics-port proof), sealed image/runtime payload, static infrastructure
+  policy, deployment workflow, smoke app, and whitespace validation.
+- AWS CloudFormation's read-only `validate-template` operation accepted both
+  the freshly rendered foundation template and the service template. This
+  checks template syntax and IAM capability declarations; it did not create a
+  change set, deploy a container, or inspect/live-test metric delivery.
+- The target deploy-readiness manifest now names capability metric delivery as
+  a blocking evidence gap. Its governed planning check remains intentionally
+  `blocked` with seven blockers; this is honest status, not a failed build.
+- Read-only AWS preflight confirms the foundation stack is `UPDATE_COMPLETE`,
+  the service stack is `CREATE_COMPLETE`, and the live ECS service is active
+  with one desired/running task on task-definition revision `1`. No drift or
+  target mutation was attempted in this inspection.
+- Deployment sequencing check: do not create an apply-ready service change set
+  from this local working tree. The prepared service template requires an image
+  containing the new target composition; the live revision-1 ECR image predates
+  it. First commit and merge reviewed source, obtain the GitHub-built,
+  scan-accepted immutable image digest from `origin/main`, then create and
+  review the foundation/service change sets against that exact artifact.
+- No AWS CLI mutation, CloudFormation change set, IAM policy application, ECS
+  task-definition update, collector deployment, or telemetry delivery occurred.
+
+
+### 2026-09-21T23:48:49Z - Commit recorded
+
+Commit: `3182c74`
+
+Message: feat(observability): prepare CloudWatch metric delivery
+
+Summary: Added a target-only CloudWatch OpenTelemetry metrics adapter, target composition, prepared ECS collector/IAM/SSM IaC, local and template validation, and durable plan/handbook/readiness evidence; AWS remains unchanged.
+
+ADR impact: ADR 0029 records the task-local collector boundary and ECS task-role limitation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -269,32 +345,39 @@ ADR impact: No ADR: this activates existing provider-neutral platform guidance; 
   Summary: Implemented provider-neutral observability-profile consumption for server and worker paths, profile-safe telemetry projection, sink-failure isolation, smoke proof, and the target observability readiness roadmap.
   ADR impact: No ADR: this activates existing provider-neutral platform guidance; target provider and infrastructure choices remain deferred.
 
+
+- Commit: `3182c74`
+  Time UTC: 2026-09-21T23:48:49Z
+  Message: feat(observability): prepare CloudWatch metric delivery
+  Summary: Added a target-only CloudWatch OpenTelemetry metrics adapter, target composition, prepared ECS collector/IAM/SSM IaC, local and template validation, and durable plan/handbook/readiness evidence; AWS remains unchanged.
+  ADR impact: ADR 0029 records the task-local collector boundary and ECS task-role limitation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path:
-Reason: This commit implements and documents an already planned provider-neutral observability vertical slice. Target provider, retention values, SLO values, and infrastructure decisions remain deliberately deferred; create an ADR when one of those durable target choices is selected.
+ADR needed: yes
+ADR path: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
+Reason: The target now selects a durable provider-specific capability-metrics delivery boundary. The ADR preserves the distinction between local adapter selection and the still-unapproved AWS collector, IAM, task-definition, dashboard, and alarm implementation.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-19T00:27:23Z
-Latest commit at UTC: 2026-09-21T22:37:23Z
-Latest commit SHA: 11283f6
-Chat duration: 252600s (02:22:10:00)
+Latest commit at UTC: 2026-09-21T23:48:49Z
+Latest commit SHA: 3182c74
+Chat duration: 256886s (02:23:21:26)
 Estimated chat tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
-- No AWS resources, provider adapters, queue infrastructure, or deployment
-  configuration changed in this chat. Temporary local dependency symlinks used
-  for verification were removed afterwards. This is a local provider-neutral
-  vertical slice only.
+- The provider-neutral server and worker slice was followed by a local AWS
+  metrics-adapter and target-policy selection slice. No AWS resources, IAM
+  permissions, task definitions, collector, dashboards, alarms, or deployment
+  configuration changed. The selected target delivery remains not deployed.
 
 ## RAG Knowledge Disposition
 

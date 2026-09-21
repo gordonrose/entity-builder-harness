@@ -50,6 +50,9 @@
       "@kanbien/platform-adapter-aws-auth-cognito": [
         "platform/adapters/aws/auth/cognito/src/index.ts"
       ],
+      "@kanbien/platform-adapter-aws-observability-cloudwatch": [
+        "platform/adapters/aws/observability/cloudwatch/src/index.ts"
+      ],
       "@kanbien/platform-adapter-aws-runtime-ecs-fargate": [
         "platform/adapters/aws/runtime/ecs-fargate/src/index.ts"
       ],
@@ -74,6 +77,7 @@
     "../runtime/src/**/*.ts",
     "../security/src/**/*.ts",
     "../adapters/aws/auth/cognito/src/**/*.ts",
+    "../adapters/aws/observability/cloudwatch/src/**/*.ts",
     "../adapters/aws/runtime/ecs-fargate/src/**/*.ts",
     "../adapters/aws/security/dynamodb-rate-limiter/src/**/*.ts"
   ]

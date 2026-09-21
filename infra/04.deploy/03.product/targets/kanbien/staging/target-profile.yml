@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 14
+#   version: 15
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -158,8 +158,8 @@ runtime:
     container_name: platform-shell
     container_port: 3000
     desired_count: 1
-    cpu: 256
-    memory_mib: 512
+    cpu: 512
+    memory_mib: 1024
     health:
       liveness: /livez
       readiness: /readyz
@@ -330,6 +330,13 @@ config:
     PLATFORM_SERVER_MAX_CONCURRENT_REQUESTS: "100"
     PLATFORM_SERVER_MAX_REQUESTS_PER_SOCKET: "1000"
     PLATFORM_SMOKE_APP_NAME: Kanbien Platform Smoke
+    PLATFORM_OBSERVABILITY_METRICS_PROVIDER: cloudwatch-otel
+    PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: http://127.0.0.1:4318/v1/metrics
+    PLATFORM_OBSERVABILITY_METRICS_REGION: eu-west-1
+    PLATFORM_OBSERVABILITY_SERVICE_NAME: kanbien-staging-platform-shell
+    PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: staging
+    PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000"
+    PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000"
   secret_refs:
     cognito_machine_client_secret:
       name: kanbien/staging/platform-shell/cognito-machine-client
@@ -340,9 +347,229 @@ observability:
     standard: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
     catalogue_index: infra/04.deploy/03.product/targets/README.md
     canonical_catalogue: observability.alarms
+    metric_series_catalogue: observability.metric_series
+    slo_catalogue: observability.slos
     severity_vocabulary:
       - critical
       - warning
+  metric_delivery:
+    status: prepared-not-deployed
+    adr: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
+    provider: aws
+    adapter_package: "@kanbien/platform-adapter-aws-observability-cloudwatch"
+    adapter_implementation: cloudwatch-otel
+    protocol: otlp-http-protobuf
+    collector:
+      topology: ecs-task-sidecar
+      endpoint: http://127.0.0.1:4318/v1/metrics
+      image: public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625
+      image_version: v0.48.0
+      cpu_units: 128
+      memory_reservation_mib: 256
+      configuration:
+        source: cloudformation-foundation-ssm-string-parameter
+        parameter_name: /kanbien/staging/platform-shell/observability/collector-config
+        parameter_resource: OtelCollectorConfigurationParameter
+        delivery_environment_key: AOT_CONFIG_CONTENT
+        log_group_resource: PlatformShellOtelCollectorLogGroup
+        output_parameter_arn: OtelCollectorConfigurationParameterArn
+      ownership: target-composition-and-service-iac
+      required_before_enablement:
+        - pinned-collector-image
+        - least-privilege-metric-delivery-role
+        - target-composition-lifecycle-wiring
+        - policy-to-iac-drift-check
+    task:
+      cpu_units: 512
+      memory_mib: 1024
+      application_cpu_units: 384
+      application_memory_reservation_mib: 512
+      collector_dependency: platform-shell-depends-on-otel-collector-start
+    iam:
+      task_execution_role:
+        action: ssm:GetParameters
+        resource: OtelCollectorConfigurationParameter
+        purpose: read-non-secret-collector-configuration-at-task-start
+      task_role:
+        action: cloudwatch:PutMetricData
+        resource: "*"
+        purpose: collector-sigv4-delivery-to-cloudwatch-otel-metrics-endpoint
+        ecs_boundary_note: ECS task-role credentials are shared by all containers in a task, so this is not per-container IAM isolation. The adapter's fixed loopback endpoint and the reviewed task definition provide the current application-side restriction; a stronger future boundary needs a separate telemetry gateway or task.
+    export:
+      interval_ms: 60000
+      timeout_ms: 10000
+      eligible_slo_measurement_sampling: none
+    coverage:
+      current_status: not-yet-measurable-until-deployed-and-proven
+      requirement: Export loss must be visible as an operational coverage concern and must prevent a healthy SLO claim for an affected window.
+  metric_series:
+    - id: platform-smoke-read-outcome
+      status: prepared-not-deployed
+      purpose: Count completed protected smoke-read requests by the approved capability outcome.
+      source:
+        name: platform.server.request.outcome
+        kind: counter
+        unit: count
+      otel:
+        instrument_name: kanbien.platform.server.request.outcome
+        description: Completed protected platform-smoke read requests by approved outcome.
+      labels:
+        allowed_names:
+          - capability
+          - action
+          - execution_context
+          - http_method
+          - http_status_code
+          - outcome
+          - error_class
+        values_governed_by: platform-observability-profile-and-canonical-operational-vocabulary
+        prohibited_names:
+          - tenant
+          - principal
+          - request_id
+          - trace_id
+          - raw_path
+          - email
+          - ip_address
+      cardinality_limit: 512
+    - id: platform-smoke-read-request-response-latency
+      status: prepared-not-deployed
+      purpose: Measure the server receipt through response-completion latency of protected smoke-read requests.
+      source:
+        name: platform.server.request_response_latency
+        kind: timer
+        unit: ms
+      otel:
+        instrument_name: kanbien.platform.server.request.duration
+        description: Protected platform-smoke read request and response latency in milliseconds.
+      labels:
+        allowed_names:
+          - capability
+          - action
+          - execution_context
+          - http_method
+          - http_status_code
+          - outcome
+          - error_class
+        values_governed_by: platform-observability-profile-and-canonical-operational-vocabulary
+        prohibited_names:
+          - tenant
+          - principal
+          - request_id
+          - trace_id
+          - raw_path
+          - email
+          - ip_address
+      cardinality_limit: 512
+      histogram:
+        bucket_boundaries_ms:
+          - 50
+          - 100
+          - 200
+          - 300
+          - 500
+          - 750
+          - 1000
+          - 2500
+          - 5000
+          - 10000
+          - 30000
+  slos:
+    - id: platform-smoke-interactive-read-availability
+      status: selected-not-evaluable
+      purpose: Measure whether eligible protected smoke-read requests complete successfully.
+      nfr_class: interactive_read
+      measurement: request_response_latency
+      population:
+        metric_series: platform-smoke-read-outcome
+        required_dimensions:
+          capability: platform-smoke.smoke.read
+          action: read
+          execution_context: server
+          http_method: GET
+        eligible_outcomes:
+          - succeeded
+          - failed
+        excluded_outcomes:
+          - denied
+          - rejected
+          - cancelled
+      objective:
+        kind: success_ratio
+        good_outcome: succeeded
+        target_percent: 99.5
+      rolling_window_days: 28
+      error_budget_percent: 0.5
+      confidence:
+        minimum_eligible_observations: 100
+        below_minimum_state: insufficient-confidence
+        synthetic_check: platform-smoke-protected-read
+      delivery:
+        dashboard: deferred-until-metric-delivery-is-provisioned
+        alarm: deferred-until-slo-query-and-coverage-signal-are-proven
+        runbook: deferred-until-slo-delivery-is-provisioned
+    - id: platform-smoke-interactive-read-latency-p95
+      status: selected-not-evaluable
+      purpose: Measure the typical request and response latency of eligible protected smoke-read requests.
+      nfr_class: interactive_read
+      measurement: request_response_latency
+      population:
+        metric_series: platform-smoke-read-request-response-latency
+        required_dimensions:
+          capability: platform-smoke.smoke.read
+          action: read
+          execution_context: server
+          http_method: GET
+          outcome: succeeded
+      objective:
+        kind: percentile_threshold
+        percentile: p95
+        maximum_ms: 300
+      rolling_window_days: 28
+      error_budget_percent: 5
+      confidence:
+        minimum_eligible_observations: 100
+        below_minimum_state: insufficient-confidence
+        synthetic_check: platform-smoke-protected-read
+      delivery:
+        dashboard: deferred-until-metric-delivery-is-provisioned
+        alarm: deferred-until-slo-query-and-coverage-signal-are-proven
+        runbook: deferred-until-slo-delivery-is-provisioned
+    - id: platform-smoke-interactive-read-latency-p99
+      status: selected-not-evaluable
+      purpose: Measure the slow tail of eligible protected smoke-read request and response latency.
+      nfr_class: interactive_read
+      measurement: request_response_latency
+      population:
+        metric_series: platform-smoke-read-request-response-latency
+        required_dimensions:
+          capability: platform-smoke.smoke.read
+          action: read
+          execution_context: server
+          http_method: GET
+          outcome: succeeded
+      objective:
+        kind: percentile_threshold
+        percentile: p99
+        maximum_ms: 750
+      rolling_window_days: 28
+      error_budget_percent: 1
+      confidence:
+        minimum_eligible_observations: 100
+        below_minimum_state: insufficient-confidence
+        synthetic_check: platform-smoke-protected-read
+      delivery:
+        dashboard: deferred-until-metric-delivery-is-provisioned
+        alarm: deferred-until-slo-query-and-coverage-signal-are-proven
+        runbook: deferred-until-slo-delivery-is-provisioned
+  data_lifecycle:
+    metric_evidence:
+      status: selected-not-deployed
+      retention_requirement: at-least-35-days-queryable-for-28-day-window-and-review-margin
+      sampling: complete-for-eligible-slo-measurements
+      ordinary_access_audience: platform-operator
+      prohibited_content: raw-request-data-customer-data-credentials-prompts-transcripts-and-unbounded-identifiers
+      break_glass_access: time-bounded-justified-and-auditable
   log_group: /ecs/kanbien-staging-platform-shell
   log_retention_days: 14
   alarm_destination:

@@ -54,6 +54,16 @@ immutable `repository@sha256:...` image reference. It cannot select a mutable
 image tag, inject a Cognito client secret, or use an arbitrary security group.
 The final task has no writeable root filesystem and no ECS exec session access.
 
+The prepared metric-delivery update adds a second, task-local ADOT collector
+container. The application sends OTLP/HTTP only to `127.0.0.1:4318`; the
+collector signs the onward CloudWatch request using the ECS task role. Its
+non-secret pipeline configuration is a named SSM Parameter Store record, read
+by the ECS execution role at task startup. This avoids storing AWS credentials
+or a large opaque configuration blob in application code. ECS task roles are
+shared by all containers in a task, so the fixed loopback listener and reviewed
+task definition are important complementary controls. None of this is live
+until a separately reviewed CloudFormation change set is applied.
+
 This is intentionally different from `foundation/alerting.yml`. The foundation
 owns the shared SNS topic and ALB target-group alarms because they are shared
 dependencies. The service stack owns alarms that name this service and derive

@@ -29,6 +29,7 @@ description: >-
 fragments:
   - foundation/template.yml
   - foundation/logging.yml
+  - foundation/observability-metrics.yml
   - foundation/rate-limiting.yml
   - foundation/workload-iam.yml
   - foundation/public-ingress.yml

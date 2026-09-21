@@ -8465,13 +8465,71 @@ slice**:
 That is valuable, but it is not the same as proving a provider received a
 histogram, calculated an SLO, displayed a dashboard, or delivered an alert.
 
+### The first target metric catalogue and adapter
+
+The staging target now records its first deliberately small catalogue:
+
+| Item | What it answers | Why it is deliberately narrow |
+|---|---|---|
+| `platform-smoke-read-outcome` | How many eligible smoke-read requests succeeded or failed? | It supports availability without treating authentication denials or invalid client input as a platform outage. |
+| `platform-smoke-read-request-response-latency` | How long did an eligible successful smoke-read request take from server receipt to response completion? | It measures one truthful interval, rather than a vague end-to-end duration. |
+| p95 ≤ 300 ms / p99 ≤ 750 ms | Is the typical and slow-tail experience within the provisional interactive-read thresholds? | The histogram has exact 300 ms and 750 ms bucket boundaries, so either claim can later be calculated honestly. |
+
+The new AWS adapter translates only a metric in that catalogue from the generic
+Core `Metrics` port into an OpenTelemetry instrument. It refuses an undeclared
+metric, incompatible unit, or unapproved label. It also permits only a
+task-local collector address—not an arbitrary internet destination.
+
+This is an important distinction:
+
+```text
+Profile:     “These safe facts may be measured for this capability.”
+Catalogue:  “This target retains exactly these aggregate metric series.”
+Adapter:    “Translate only those approved points to the selected provider.”
+IaC:        “Run a local collector, give its task narrow AWS access, and prove it works.”
+```
+
+All four source lines are now represented and checked locally. The live-evidence
+part remains deliberately pending: source code and a static template are not a
+deployed ECS task or a CloudWatch observation. Consequently, the SLO entries say
+`selected-not-evaluable`: they are a reviewed definition of the measurement,
+not a claim that staging already calculates it.
+
+### What the prepared target composition actually does
+
+The generic server still knows only about the portable `Metrics` port. The
+Kanbien target entrypoint is the seam that chooses the AWS adapter, passes that
+port into the server, and calls the adapter's bounded shutdown method when the
+process stops. This prevents a route, worker, or generic server module from
+learning the words “CloudWatch,” “OTLP,” or “AWS region.”
+
+The ECS task definition adds a small ADOT sidecar. The application sends OTLP
+HTTP only to `127.0.0.1:4318`, meaning another process inside the same task—not
+an arbitrary host on the internet. The sidecar batches the points and uses
+SigV4 to send them to CloudWatch. Its pipeline definition sits in an SSM
+Parameter Store **String** because it is configuration, not a secret. The ECS
+execution role reads that String at task startup; the ECS task role has
+`cloudwatch:PutMetricData` for the collector's later request.
+
+One subtle but important limitation: ECS task-role credentials are shared by
+all containers in that task. The collector is therefore isolated by reviewed
+task composition and the adapter's fixed loopback endpoint, not by a magical
+per-container IAM wall. If a later risk model requires that stronger wall, the
+collector must become a separate gateway/task.
+
+The foundation and service templates have passed CloudFormation's read-only
+template validator. That means AWS accepted their shape and declared IAM
+capability requirements. It does **not** mean the change is deployed: the next
+safe step is still a reviewed change set, followed by live metric, coverage,
+and alert evidence.
+
 ### What remains before capability observability is operational
 
 | Stage | Deliverable | Evidence of completion |
 |---|---|---|
-| Target policy | Metric-series, SLO, dashboard, synthetic-check, lifecycle/access catalogues. | Reviewed policy has one authoritative value for each decision. |
-| Metrics adapter | One bounded target-composed histogram exporter behind Core `Metrics`. | Known timer points become approved histogram observations; unknown series/labels are rejected. |
-| Target composition | EU-resident backend, access, retention, dashboards, and alarm resources through IaC. | Policy-to-IaC check and least-privilege resource evidence pass. |
+| Target policy | Initial metric-series and SLO catalogue selected; dashboard, synthetic-check, detailed delivery/access catalogues remain. | The target profile is the authority for the selected series, labels, buckets, populations, and provisional thresholds. |
+| Metrics adapter | AWS CloudWatch OTel adapter implemented and checked locally. | Known timer points become approved histogram observations; unknown series/labels are rejected; no metric was sent to AWS yet. |
+| Target composition | Target entrypoint, non-secret SSM collector configuration, ADOT sidecar source, task capacity, collector log group, and narrow source IAM are prepared. | Sealed image construction and static policy-to-IaC checks pass locally; AWS deployment is still absent. |
 | Public synthetic proof | A least-privilege check reaches a protected smoke capability through the real boundary. | Controlled request proves DNS/TLS/ingress/auth/routing/application path safely. |
 | SLO proof | Histogram observations calculate the policy's good-event ratio/burn correctly. | Dashboard/runbook can find the evidence without sensitive fields. |
 | Failure proof | Exporter failure causes coverage concern, not user/job failure or a false green SLO. | Controlled failure proves isolation, incomplete-confidence state, and alert/runbook path. |
@@ -8492,8 +8550,8 @@ We must not yet say:
 
 > The production target has complete capability observability and SLO alerting.
 
-That stronger statement needs the policy, adapter, target, public synthetic,
-coverage, access, and alert-delivery proofs above.
+That stronger statement still needs an applied target composition, public
+synthetic, coverage, access, SLO-calculation, and alert-delivery proofs above.
 
 ### Misconception check
 
@@ -8517,8 +8575,9 @@ performance. We need both to make the boundary trustworthy.
 1. Define the provider-neutral queue-delivery policy shape and its target-owned
    SQS mapping, then update the local worker shell to consume a resolved policy
    rather than raw retry options.
-2. Define a target-governed NFR/SLO policy catalogue and histogram adapter
-   before setting p95/p99 objectives or burn-rate alarms.
+2. Review and apply the prepared staging service/foundation CloudFormation
+   change set, then prove collector delivery before treating the provisional
+   p95/p99 objectives as measurable.
 3. Return to the practical alarm follow-up only when an explicit AWS change is
    approved: verify enhanced Container Insights, review the two role changes,
    review the service-stack change set, and prove notification delivery.
@@ -8570,6 +8629,13 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-22: Prepared the first staging capability-metrics target-composition
+  slice. The sealed target runtime injects the AWS OpenTelemetry adapter only
+  as Core `Metrics`; CloudFormation source adds non-secret SSM collector
+  configuration, a task-local ADOT sidecar, distinct collector logs, task
+  capacity, and narrow execution/task-role source policies. The adapter and
+  source checks pass locally. No AWS resource, IAM policy, task definition,
+  collector, metric, dashboard, SLO query, or alarm was deployed.
 - 2026-09-21: Added the observability delivery-readiness roadmap. The local
   instrumentation slice is distinguished from the policy, adapter, target,
   public synthetic, coverage, and alert-delivery proofs required for an

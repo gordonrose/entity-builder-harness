@@ -35,3 +35,21 @@ target profile.
 
 The reusable definition standard is
 [Platform Target Alerting Policy](../../../../docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md).
+
+## Capability Metrics and SLO Catalogue
+
+The same target profile is also the canonical location for capability metric
+series and SLO policy. The entries below are discovery aids only: the target
+profile owns their exact labels, buckets, populations, thresholds, retention,
+and delivery state.
+
+| Target | Canonical policy | Selected metric series | Selected SLOs | Delivery state |
+| --- | --- | --- | --- | --- |
+| Kanbien / staging | [target profile](kanbien/staging/target-profile.yml) | `platform-smoke-read-outcome`, `platform-smoke-read-request-response-latency` | `platform-smoke-interactive-read-availability`, `platform-smoke-interactive-read-latency-p95`, `platform-smoke-interactive-read-latency-p99` | Target composition and IaC are prepared and checked locally; no collector, IAM update, deployed metrics, dashboard, SLO query, or capability alarm exists in AWS yet. |
+
+The initial selected AWS delivery path is the local-collector OpenTelemetry
+adapter at
+`platform/adapters/aws/observability/cloudwatch/`. It can only be composed by
+the target after reviewed service IaC provides the collector, task-level
+permissions, lifecycle wiring, coverage signal, and policy-to-IaC proof. The
+prepared source is not a deployed telemetry path or a green SLO claim.

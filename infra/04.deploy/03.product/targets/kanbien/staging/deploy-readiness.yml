@@ -543,6 +543,11 @@ blockers:
     path: observability.alarms
     reason: The target profile and local source now define the three missing ECS alarms, but AWS still confirms only the two ALB alarms. The existing cluster has not yet been read-only verified for enhanced Container Insights, and the deployed foundation and GitHub roles do not yet have the newly declared bounded permissions.
     resolution: In one governed change sequence, verify or enable containerInsights=enhanced and the emitted RunningTaskCount metric; review and apply the foundation role and GitHub read-only policy updates; then review and apply the service-stack change set. Record safe alarm states and end-to-end notification delivery evidence afterwards.
+  - id: platform-shell-readiness.capability-metric-delivery
+    severity: blocking
+    path: observability.metric_delivery
+    reason: The AWS OpenTelemetry adapter, target composition, CloudFormation source, and template validation are prepared locally, but no reviewed change set has added the collector, task-role permission, or capacity update to AWS. Therefore no capability metric, SLO calculation, delivery-coverage signal, or alarm can yet be claimed.
+    resolution: Review the foundation and service change set as one bounded observability-delivery change, apply only the expected narrow delta, then record a public smoke request, queryable metric, exporter-failure coverage result, SLO query, and alert-delivery evidence.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

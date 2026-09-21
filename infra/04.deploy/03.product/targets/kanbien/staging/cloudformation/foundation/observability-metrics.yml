@@ -1,0 +1,73 @@
+# The target-owned collector configuration and its operational logs. This is not a secret store.
+Resources:
+  PlatformShellOtelCollectorLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /ecs/kanbien-staging-platform-shell-otel-collector
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: otel-collector
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  OtelCollectorConfigurationParameter:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: /kanbien/staging/platform-shell/observability/collector-config
+      Type: String
+      Tier: Standard
+      DataType: text
+      Description: Non-secret target-owned OTLP metrics collector configuration for the Kanbien staging platform shell.
+      Value: !Sub |
+        extensions:
+          health_check:
+            endpoint: 127.0.0.1:13133
+          sigv4auth:
+            service: monitoring
+            region: ${AWS::Region}
+        receivers:
+          otlp:
+            protocols:
+              http:
+                endpoint: 127.0.0.1:4318
+        processors:
+          memory_limiter:
+            check_interval: 1s
+            limit_mib: 192
+            spike_limit_mib: 64
+          batch:
+            send_batch_size: 200
+            timeout: 10s
+        exporters:
+          otlphttp/cloudwatch:
+            tls:
+              insecure: false
+            compression: gzip
+            metrics_endpoint: https://monitoring.${AWS::Region}.amazonaws.com/v1/metrics
+            auth:
+              authenticator: sigv4auth
+        service:
+          extensions: [health_check, sigv4auth]
+          telemetry:
+            logs:
+              level: info
+          pipelines:
+            metrics:
+              receivers: [otlp]
+              processors: [memory_limiter, batch]
+              exporters: [otlphttp/cloudwatch]
+      Tags:
+        service: platform-shell
+        component: otel-collector
+        environment: staging
+        data-classification: operational-configuration
+        managed-by: cloudformation
