@@ -18,7 +18,7 @@ implementation.
 | `routes.ts` | HTTP route declarations and their auth, tenant, and resource-policy inputs. | It describes what a route may request; it does not execute a route. |
 | `jobs.ts` | Background-job declarations. | Jobs have a queue-shaped contract distinct from HTTP routes. |
 | `observability.ts` | Controlled operational nomenclature: capability identity, action, interaction source, execution context, outcome, job-delivery disposition, and canonical emitted field names. | It makes logs, metrics, and traces semantically comparable without selecting a provider or writing telemetry. |
-| `observability-profiles.ts` | Capability-level signal declarations, NFR-class references, latency intervals, safe field allowlists, and explicit opt-outs. | It makes each route/job choose governed operational evidence without embedding provider or alert policy. |
+| `observability-profiles.ts` | Capability-level signal declarations, NFR-class references, latency intervals, safe field allowlists, explicit opt-outs, and pure profile-field projection. | It makes each route/job choose governed operational evidence and lets runtime modules project only approved facts without embedding a provider or alert policy. |
 | `app.ts` | App mount, registry, permission, health, lifecycle, and dependency declarations. | It is the one app-to-platform integration socket. |
 | `validation.ts` | Cross-declaration checks and reserved-route rules. | It reads declarations after they are defined, avoiding declaration-to-validator cycles. |
 | `index.ts` | Deliberate public exports only. | Callers remain insulated from internal source reorganisation. |
@@ -216,9 +216,19 @@ cannot check on its own that a referenced profile exists elsewhere, so the
 complete runtime registry performs that relationship check once all apps have
 mounted.
 
+The profile topic also owns the pure projection helpers used by runtime
+modules: `platformProfileLogFields`, `platformProfileMetricLabels`, and
+`platformProfileTraceFields`. A worker or server supplies typed operational
+nomenclature—such as capability, action, execution context, outcome, and an
+optional delivery disposition—and the helper returns only the fields that the
+profile allowlisted for that signal. `platformProfileAllowsSignal` and
+`platformProfileMeasuresLatency` answer the same two policy questions without
+selecting a logger, metrics sink, tracer, cloud service, or alert.
+
 This file does not define durable audit or security evidence, select a telemetry
 provider, invoke logging/metrics/tracing helpers, calculate p95/p99, or create
-alerts. It describes only the safe app-to-platform declaration boundary.
+alerts. It owns the safe app-to-platform declaration and projection boundary;
+runtime modules own signal emission.
 
 ### `app.ts` — the app-to-platform integration socket
 

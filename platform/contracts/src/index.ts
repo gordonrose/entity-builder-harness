@@ -77,6 +77,11 @@ export {
   platformObservabilityOptOutReasons,
   platformObservabilityProfileName,
   platformObservabilitySignalKinds,
+  platformProfileAllowsSignal,
+  platformProfileLogFields,
+  platformProfileMeasuresLatency,
+  platformProfileMetricLabels,
+  platformProfileTraceFields,
   validatePlatformCapabilityObservabilityProfile,
 } from "./observability-profiles";
 export type {
@@ -89,6 +94,7 @@ export type {
   PlatformObservabilityProfileName,
   PlatformObservabilityRequirement,
   PlatformObservabilitySignalKind,
+  PlatformProfileObservationFields,
 } from "./observability-profiles";
 export type {
   PlatformJobContext,

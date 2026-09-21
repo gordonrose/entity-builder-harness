@@ -16,6 +16,8 @@ import { validationIssue } from "@kanbien/core/validation";
 import {
   definePlatformApp,
   platformAppId,
+  platformCapabilityName,
+  platformObservabilityProfileName,
   platformRouteName,
 } from "@kanbien/platform-contracts";
 import {
@@ -31,16 +33,20 @@ async function main(): Promise<void> {
   const routeName = platformRouteName("smoke.echo");
   const publicRouteName = platformRouteName("smoke.public");
   const slowRouteName = platformRouteName("smoke.slow");
+  const optOutRouteName = platformRouteName("smoke.opt-out");
   const tenantRouteName = platformRouteName("smoke.tenant");
   const resourceRouteName = platformRouteName("smoke.resource");
-  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !slowRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok) {
+  const observabilityProfileName = platformObservabilityProfileName("smoke.request");
+  const capabilityName = platformCapabilityName("smoke.request");
+  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !slowRouteName.ok || !optOutRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok || !observabilityProfileName.ok || !capabilityName.ok) {
     throw new Error("Expected valid server test primitives.");
   }
 
   const permission = "smoke.smoke:read" as Permission;
   const tenantPermission = "smoke.tenant:read" as Permission;
   const resourcePermission = "smoke.record:read" as Permission;
-  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Server runtime fixture only." } as const;
+  const testObservability = { kind: "profile", profile: observabilityProfileName.value } as const;
+  const optOutObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "The opt-out fixture proves an explicit exception does not emit capability telemetry." } as const;
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   const tracer = createInMemoryTracer();
@@ -89,6 +95,16 @@ async function main(): Promise<void> {
     id: appId.value,
     name: "Smoke",
     mount(registry) {
+      registry.registerObservabilityProfile({
+        name: observabilityProfileName.value,
+        capability: capabilityName.value,
+        action: "execute",
+        signals: ["operational_log", "metric", "trace"],
+        logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+        metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+        traceAttributeNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+        nfrObjectives: [{ nfrClass: "interactive_command", measurement: "request_response_latency" }],
+      });
       registry.registerPermission({ permission });
       registry.registerPermission({ permission: tenantPermission });
       registry.registerPermission({ permission: resourcePermission });
@@ -125,6 +141,16 @@ async function main(): Promise<void> {
               resolve({ status: 200, body: { slow: "settled" } });
             };
           }),
+        },
+      });
+      registry.registerRoute({
+        name: optOutRouteName.value,
+        method: "GET",
+        path: "/opt-out",
+        auth: { kind: "public" },
+        observability: optOutObservability,
+        handler: {
+          handle: () => ({ status: 204 }),
         },
       });
       registry.registerRoute({
@@ -337,6 +363,15 @@ async function main(): Promise<void> {
   equal(denied.status, 401);
   equal((denied.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_UNAUTHENTICATED");
   equal(protectedHandlerCalls, 0);
+  deepEqual(logger.records().at(-1)?.fields, {
+    capability: "smoke.request",
+    action: "execute",
+    execution_context: "server",
+    http_method: "POST",
+    http_status_code: 401,
+    outcome: "denied",
+    error_class: "PLATFORM_SERVER_UNAUTHENTICATED",
+  });
 
   const invalid = await shell.value.handle({
     method: "POST",
@@ -486,24 +521,59 @@ async function main(): Promise<void> {
   equal(notFound.status, 404);
   equal((notFound.body as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_ROUTE_NOT_FOUND");
 
-  equal(metrics.points().some((point) => point.name === "platform.server.request"), true);
-  equal(logger.records().some((record) => record.message === "platform.server.request"), true);
+  equal(metrics.points().some((point) =>
+    point.name === "platform.server.request.outcome"
+      && point.labels?.["capability"] === "smoke.request"
+      && point.labels?.["action"] === "execute"), true);
+  equal(metrics.points().some((point) =>
+    point.name === "platform.server.request_response_latency"
+      && point.labels?.["capability"] === "smoke.request"), true);
+  const completedEchoLog = logger.records().find((record) =>
+    record.message === "platform.server.request"
+      && record.fields?.["http_method"] === "POST"
+      && record.fields?.["http_status_code"] === 200);
+  deepEqual(completedEchoLog?.fields, {
+    capability: "smoke.request",
+    action: "execute",
+    execution_context: "server",
+    http_method: "POST",
+    http_status_code: 200,
+    outcome: "succeeded",
+  });
+  equal("requestId" in (completedEchoLog?.fields ?? {}), false);
+  equal("route" in (completedEchoLog?.fields ?? {}), false);
   const completedEchoTrace = tracer.spans().find((span) =>
     span.name === "platform.server.request"
-      && span.end?.attributes?.["route"] === "smoke.echo"
-      && span.end.attributes["status"] === 200);
-  deepEqual(completedEchoTrace?.attributes, { method: "POST" });
+      && span.end?.attributes?.["capability"] === "smoke.request"
+      && span.end.attributes["http_method"] === "POST"
+      && span.end.attributes["http_status_code"] === 200);
+  equal(completedEchoTrace?.attributes, undefined);
   deepEqual(completedEchoTrace?.end, {
     outcome: "succeeded",
     attributes: {
-      method: "POST",
-      route: "smoke.echo",
-      status: 200,
-      latencyMs: 0,
+      capability: "smoke.request",
+      action: "execute",
+      execution_context: "server",
+      http_method: "POST",
+      http_status_code: 200,
+      outcome: "succeeded",
     },
   });
   equal("requestId" in (completedEchoTrace?.end?.attributes ?? {}), false);
   equal("correlationId" in (completedEchoTrace?.end?.attributes ?? {}), false);
+
+  const observabilityCountsBeforeOptOut = {
+    logs: logger.records().length,
+    metrics: metrics.points().length,
+    traces: tracer.spans().length,
+  };
+  const optOutRoute = await shell.value.handle({ method: "GET", path: "/opt-out" });
+  equal(optOutRoute.status, 204);
+  deepEqual({
+    logs: logger.records().length,
+    metrics: metrics.points().length,
+    traces: tracer.spans().length,
+  }, observabilityCountsBeforeOptOut);
 
   const rateLimitKeys: string[] = [];
   const keyedRateLimitShell = await createPlatformServerShell({
@@ -705,6 +775,12 @@ async function main(): Promise<void> {
     });
     equal(malformedJson.status, 400);
     equal((await malformedJson.json() as { readonly error: { readonly code: string } }).error.code, "PLATFORM_SERVER_INVALID_REQUEST");
+    equal(logger.records().some((record) =>
+      record.message === "platform.server.request"
+        && record.fields?.["capability"] === "smoke.request"
+        && record.fields?.["http_method"] === "POST"
+        && record.fields?.["http_status_code"] === 400
+        && record.fields?.["outcome"] === "rejected"), true);
 
     const oversizedPayload = await fetch(`${transportBaseUrl}/echo/123`, {
       method: "POST",

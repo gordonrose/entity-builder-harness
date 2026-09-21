@@ -45,9 +45,18 @@ export function platformTraceFields(input: PlatformTraceFieldsInput): PlatformSa
 }
 
 export interface PlatformTraceAttributesInput {
+  readonly capability?: string;
+  readonly action?: string;
+  readonly actor_type?: string;
+  readonly interaction_source?: string;
+  readonly execution_context?: string;
+  readonly http_method?: string;
+  readonly http_status_code?: number;
+  readonly job_delivery_disposition?: string;
   readonly route?: string;
   readonly job?: string;
   readonly errorClass?: string;
+  readonly error_class?: string;
   readonly latencyMs?: number;
   readonly retryCount?: number;
   readonly healthState?: string;
@@ -64,9 +73,18 @@ export interface PlatformTraceSpanInput {
 
 export function platformTraceAttributes(input: PlatformTraceAttributesInput): TraceAttributes {
   const fields = normalizePlatformLogFields({
+    capability: input.capability,
+    action: input.action,
+    actor_type: input.actor_type,
+    interaction_source: input.interaction_source,
+    execution_context: input.execution_context,
+    http_method: input.http_method,
+    http_status_code: input.http_status_code,
+    job_delivery_disposition: input.job_delivery_disposition,
     route: input.route,
     job: input.job,
     errorClass: input.errorClass,
+    error_class: input.error_class,
     latencyMs: input.latencyMs,
     retryCount: input.retryCount,
     healthState: input.healthState,

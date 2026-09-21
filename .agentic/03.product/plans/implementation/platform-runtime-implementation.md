@@ -694,10 +694,14 @@ The source organisation now has a first trace-mechanics seed: Core monitoring
 defines `TraceContext`, span/tracer contracts, no-op behavior, and an
 in-memory test tracer; Core queue messages may preserve an optional trace
 parent; the server creates and completes one request span; and the worker
-creates and completes one job span per non-idle delivery. A worker span becomes
-the child of that internal queue trace parent when it is present, otherwise it
-begins a new trace. A failing tracer safely falls back to a no-op span and must
-not alter an HTTP or worker outcome. The slice does not select a logging,
+creates and completes one route span only where the matched route's resolved
+profile permits tracing; it separately traces a generic platform operation when
+no app route can be identified. The worker creates and completes one job span
+for a registered job whose resolved profile permits tracing. A worker span
+becomes the child of that internal queue trace parent when it is present,
+otherwise it begins a new trace. A failing tracer safely falls back to a no-op
+span and must not alter an HTTP or worker outcome. The slice does not select a
+logging,
 metric, or tracing provider; accept a remote HTTP parent; expose trace context
 to app handlers; select sampling; add an exporter; or create a durable audit
 or security-record pipeline. The package README and local source README are
@@ -706,8 +710,8 @@ provider-boundary checks remain its verification baseline.
 
 #### Capability observability profile contract
 
-Status: profile declaration and registry enforcement implemented; signal
-emission consumption remains planned. `platform/contracts/src/observability.ts`
+Status: profile declaration, registry enforcement, and provider-neutral worker
+and server consumption are implemented. `platform/contracts/src/observability.ts`
 locks the provider-neutral capability/action, actor category, interaction
 source, execution context, logical outcome, job-delivery disposition, checked
 capability identity, and canonical emitted field-name vocabulary.
@@ -738,10 +742,41 @@ its profile was registered elsewhere or that another registration duplicated
 it. `apps/platform-smoke` now proves one `interactive_read` route profile and
 one `async_completion` job profile.
 
-Server and worker delivery code still need to consume the resolved profile to
-choose the already-safe logging, metrics, and tracing helpers. That later
-slice must not select a provider or turn an optional observability helper
-failure into a user/job failure. Required audit and security-record evidence
+`platform/contracts/src/observability-profiles.ts` now also owns pure
+profile-projection helpers. They take typed operational nomenclature and return
+only the profile's approved canonical fields for a log, metric, or trace. This
+keeps the policy decision in the contract layer while leaving actual signal
+delivery with the runtime module and its injected Core ports.
+
+`platform/workers` resolves each registered job's profile from the mounted
+registry. It emits a `platform.worker.job.delivery` operational log and counter
+only when permitted; it emits a job-execution timer only when the handler was
+actually invoked and that interval was declared; it emits a queue-wait timer
+only when that interval was declared; and it creates a span
+only when tracing was permitted. The worker sends no raw queue message type,
+payload, tenant, message ID, retry count, delay, or error object through this
+path. An explicit opt-out emits no capability telemetry; an unknown message has
+no app-owned profile and is dead-lettered without being misrepresented as a
+known capability. The helper boundaries now make logging, metric, and tracing
+failure best effort, so telemetry unavailability does not change a job result.
+Runtime tests prove field projection, opt-out suppression, and all three
+failure-isolation cases.
+
+`platform/server` resolves a matched route's profile before it begins route
+policy. It emits a `platform.server.request` operational log and a distinct
+`platform.server.request.outcome` counter only when permitted, records
+`platform.server.request_response_latency` only when that interval is declared,
+and creates a span only when tracing is permitted. The outcome counter has a
+different name from the legacy generic request timer so a target backend never
+receives incompatible metric kinds under one identity.
+The server gives the profile only capability/action, server execution context,
+HTTP method and status, controlled outcome, and a bounded error class. A known
+route with an explicit opt-out emits no capability telemetry. Transport or
+health failures for which no app route can be identified remain separate,
+generic platform-operational evidence; they must not be represented as an
+app-owned capability. Parsing and admission failures for a known route use
+that route's profile, so malformed input or capacity refusal is visible as the
+capability attempt it actually was. Required audit and security-record evidence
 remains separately governed and must not be represented as an
 observability-profile substitute.
 
@@ -755,6 +790,156 @@ budget burns too quickly. A latency objective may use two thresholds—for
 example, a typical-experience percentile and a slow-tail percentile—while a
 separate success-rate objective measures whether the operation worked at all.
 
+Each latency threshold and each availability objective has its own error
+budget; their allowances must not be added together. A future alert policy must
+derive sustained burn from the observed bad-event fraction divided by that
+objective's allowed bad-event fraction, use deliberate short and long
+observation windows, and require a minimum eligible sample. One slow request
+belongs in logs, traces, and the histogram, not a pager. When traffic is too
+low for a meaningful percentile or burn calculation, the target must report
+insufficient confidence and rely on a named synthetic check rather than
+manufacturing a p95 or p99 claim.
+
+Keep three alert families distinct in the target operational policy. A
+capability SLO alert answers whether a named workload class is meeting its
+latency or success objective, and cannot be implemented until a selected
+metrics adapter retains its distribution. A platform or infrastructure health
+alarm answers whether a shared operating component—such as an ALB target group,
+ECS service, queue, database, or log-delivery path—is unhealthy; its current
+target-owned catalogue remains under `observability.alarms` and maps to IaC.
+A security alert answers whether an approved security signal or correlated
+pattern requires investigation; it belongs with the future security-signal
+policy, detection logic, access controls, and incident handling rather than
+ordinary request telemetry. An alert may link safe evidence across families,
+but its trigger, owner, severity, destination, and runbook must name one
+primary family.
+
+When a target selects SLO delivery, give its complete SLO policy a separate
+canonical `observability.slos` catalogue alongside—not inside—the existing
+`observability.alarms` catalogue. Use one record per independently evaluated
+objective, because availability, typical latency, and slow-tail latency have
+different denominators, budgets, and possible responses. Each SLO record must
+name a stable semantic id and purpose; the adopted NFR class and truthful
+measurement interval; its eligible population and exclusions; the good-event
+or success criterion and threshold; rolling window; minimum eligible sample and
+low-volume/synthetic-check behaviour; error-budget and short/long burn policy;
+safe bounded metric dimensions; telemetry/exporter and histogram prerequisite;
+owner, review date, dashboard, and runbook. The existing `observability.alarms`
+catalogue continues to own provider alarm delivery and IaC mapping; a future SLO
+alarm must reference its SLO record by id rather than repeat thresholds or
+calculation rules in two places.
+
+A future metrics/histogram exporter is a target-composed implementation of the
+existing Core `Metrics` port; routes, jobs, profiles, and generic platform code
+continue to emit provider-neutral metric points. Before selecting a provider,
+define a target metric-series catalogue that maps each approved timer identity,
+unit, and bounded label set to one histogram definition. Histogram boundaries
+must be stable and include every adopted SLO threshold, preserving count, sum,
+and bucket observations required for a query to calculate compliance. The
+exporter must reject undeclared metric definitions or labels, never export a
+tenant, user, request, trace, raw path, payload, or error message as a
+dimension, and keep counter/timer/histogram metric identities distinct.
+
+Metric delivery remains off the request/job critical path: use a bounded
+in-memory buffer, bounded batching/retry/flush behaviour, and lifecycle-aware
+shutdown. Export failure must not alter a completed route or job. It must still
+be observable as a target-operational coverage/health concern, and a target
+must not make an SLO-confidence claim for a window whose required telemetry was
+lost or unverifiable. Select retention, query engine, dashboard, exporter
+access, and provider resource configuration only with the target adapter.
+
+When a target selects dashboard delivery, its policy must separately catalogue
+the dashboard id, audience/access boundary, owner, review date, safe panel
+queries, SLO and alarm references, drill-down/runbook links, refresh/retention
+assumptions, and explicit data-coverage state. At minimum, distinguish a
+platform-health view, a capability-SLO view, and a restricted security view;
+none may display raw request data, customer data, credentials, or unbounded
+dimensions. “No data”, partial telemetry, and a healthy measured result are
+three different dashboard states.
+
+Low-volume targets require target-owned synthetic checks alongside live
+traffic. Each check must declare stable id, purpose, owner, frequency,
+public-path/identity scope, expected outcome and latency evidence, safe
+non-mutating or idempotent fixture, notification/runbook, and result retention.
+The check must exercise the intended boundary rather than silently bypassing
+authentication, authorization, ingress, or rate controls. A synthetic result
+supplements live SLO evidence; it does not manufacture a percentile from too
+little real traffic.
+
+The target must define an observability data-lifecycle policy before selecting
+external telemetry storage. Ordinary operational logs, aggregate metrics,
+diagnostic traces, security signals, and durable audit events are distinct data
+classes with separate purpose, access, retention, residency, and integrity
+requirements. The current staging log group's 14-day retention applies only to
+that operational log destination; it is not a platform-wide retention rule and
+does not govern future metrics, traces, security evidence, or audit records.
+Any target SLO window requires its complete, queryable aggregate evidence to be
+retained for at least that window plus a policy-defined review margin.
+
+Grant access by least-privilege evidence audience: platform operators may need
+bounded operational dashboards/logs; authorised engineers may receive scoped,
+time-bound diagnostic trace access; security operators need separately
+protected security signals; compliance/audit readers require their own governed
+audit access. Target access design must prohibit raw credentials, tokens,
+customer payloads, prompts, transcripts, and unrestricted tenant data from
+ordinary telemetry stores. Administrative or break-glass access must be
+time-bounded, justified, and itself auditable.
+
+Sampling is an intentional target policy, not accidental data loss. The first
+metrics adapter must preserve every eligible SLO measurement unless a later
+reviewed policy proves a statistically valid, coverage-visible alternative.
+Trace and routine-success log sampling may be selected separately to control
+cost, but error, timeout, and other diagnostically important evidence requires
+an explicit priority rule. Required audit and security records must not inherit
+optional observability sampling. A dropped/failed export is a coverage failure,
+not an acceptable sampling decision.
+
+#### Observability delivery readiness roadmap
+
+The local provider-neutral instrumentation slice is complete: Core supplies the
+bounded ports and label guardrails; contracts/registry validate profile adoption
+and interval truthfulness; the server and worker consume resolved profiles;
+and the smoke app proves a protected HTTP route emits only approved local
+evidence. The target already has an ordinary log destination and
+infrastructure-health alarms. This is not yet a complete target observability
+system: no metrics/histogram or trace exporter, SLO policy catalogue, capability
+dashboard, synthetic check, security-signal pipeline, or durable audit pipeline
+has been selected or deployed.
+
+Implement future ordinary observability in the following dependency order:
+
+1. **Target policy and governance.** Add reviewed target catalogues for metric
+   series, SLOs, dashboards, synthetic checks, data lifecycle/access, and their
+   cross-references. Extend the target alerting/drift rule only when it can
+   validate those new policy shapes without duplicating values.
+2. **One bounded metrics/histogram adapter.** Implement the target-selected
+   Core `Metrics` port with catalogue validation, threshold-aligned histogram
+   observations, bounded asynchronous delivery, lifecycle flush, and explicit
+   coverage health. Do not add provider imports to routes/jobs/platform
+   contracts.
+3. **Target composition and infrastructure.** Inject that adapter only in the
+   selected target entrypoint; provision the EU-resident metric backend,
+   least-privilege access, retention, dashboard resources, and policy-linked
+   alarm resources through reviewed IaC.
+4. **Independent proof.** Run a safe least-privilege synthetic check through
+   the public boundary, then prove a known protected smoke capability creates a
+   histogram observation, produces correct SLO calculation evidence, and can
+   be found from a dashboard/runbook without exposing sensitive fields.
+5. **Failure proof.** Demonstrate that exporter loss does not fail the request
+   or job, appears as incomplete coverage/target health, and prevents a false
+   green SLO claim. Verify alarm delivery and policy-to-IaC/live-state drift
+   evidence separately.
+6. **Broaden deliberately.** Add trace delivery, then provider-backed worker
+   queue/lease telemetry only when their own adapters and evidence policies
+   exist. Keep security-signal and durable audit delivery as separate,
+   stricter implementation programmes rather than adding them as metric fields.
+
+Call ordinary capability observability operational only after the target has
+passed the policy, adapter, public synthetic, success/failure coverage, access,
+and alert-delivery proofs above. Do not claim this milestone merely because
+local tests see an in-memory timer, CloudFormation creates an alarm, or a log
+group exists.
+
 Numeric values are environment and workload policy, not generic platform
 constants. The target policy must distinguish a fast asynchronous acceptance
 from later completion, and it must distinguish queue wait from actual worker
@@ -765,6 +950,42 @@ example, a histogram with deliberate bucket boundaries) before a p95/p99 SLO
 or burn-rate alert is treated as evidence. The current Core metric kind and
 generic timer point do not themselves prove percentile aggregation, retention,
 access, sampling, or dashboard behaviour.
+
+#### Timeout-budget policy
+
+Status: the server has enforced transport guardrails, but a complete
+target-governed timeout-budget catalogue remains planned. The current server
+target profile supplies mechanical baseline limits for header receipt (10
+seconds), request lifetime (30 seconds), keep-alive connections (5 seconds),
+handler execution (30 seconds), and shutdown draining (30 seconds). The server
+enforces header time not exceeding request time; on handler expiry it aborts the
+request signal, returns a safe timeout response, and retains the concurrency
+slot until the handler actually settles. These controls are capacity and
+failure-containment ceilings, not an NFR promise that interactive work may take
+30 seconds.
+
+Before a real target treats timeout behaviour as production-ready, define a
+central timeout policy for each NFR/workload class. It must state the
+user-visible deadline; ingress/load-balancer deadline; server request and
+handler budget; downstream connect, read, and write budgets; cancellation and
+cleanup reserve; retry count/backoff budget; owner; review date; and the safe
+failure outcome. Each nested deadline must leave time for its caller to cancel,
+clean up, and return a controlled response: a downstream call cannot consume
+the entire handler budget, and a handler cannot consume the entire upstream
+deadline.
+
+Worker policy is a separate later concern. It must define a job-execution
+deadline, provider queue visibility/lease period, lease renewal and fencing
+relationship where required, retry/backoff envelope, DLQ hand-off, and
+shutdown-drain behaviour. The deterministic local worker currently has no
+provider queue visibility timeout, lease, or per-job execution-timeout policy.
+
+The timeout catalogue belongs with target operational policy and adapter/infra
+validation, not in a capability profile, route, job, Core, or generic platform
+source. Capability profiles continue to state only the truthful interval to
+measure. When an ingress, provider, and queue adapter are selected, add tests
+that validate the configured deadline ordering and prove timeout, cancellation,
+retry, and drain behaviour without double-processing work.
 
 #### Data classification and evidence-policy inputs
 
@@ -796,36 +1017,31 @@ validator requirements. This platform-shell plan records the integration
 boundary only; it does not authorise a generic entity model, a security-policy
 engine, persistence implementation, or a record-delivery provider.
 
-Current hardening gap: `startPlatformTraceSpan` and `endPlatformTraceSpan`
-already contain tracer-port failures and fall back to a no-op span. In contrast,
-the current `recordPlatformMetric` and `writePlatformLog` helpers synchronously
-call their injected ports without equivalent failure isolation. Before a
-capability profile is adopted as production-ready, define one bounded optional
-operational-sink failure policy and implement it consistently for metrics,
-ordinary operational logs, and traces. Its tests must separately inject a
-failing metric sink, log sink, and tracer and prove that a completed request or
-job retains its original outcome. The failure path must not recursively log to
-the same failed sink or conceal an audit/security-record delivery failure,
-whose stricter semantics remain separately governed.
+Current hardening position: logging, metric recording, and tracing now each
+contain their own optional-sink failure. A failing logger, metric port, or
+tracer cannot change the completed route or job outcome, and tests inject each
+failure separately. The helpers do not recursively write about a failed sink.
+This best-effort policy applies only to ordinary operational telemetry; it
+does not conceal or weaken the separately required delivery guarantees for
+audit or security records.
 
 This implementation slice now has contract, runtime-registry, test-registry,
 smoke-app, and negative-test evidence for unknown profile references, duplicate
-registrations, missing/invalid opt-outs, unsafe labels, and provider-boundary
-preservation. Server/worker resolved-profile consumption, optional-sink failure
-containment, target-selected percentile aggregation, export, retention,
+registrations, missing/invalid opt-outs, unsafe labels, provider-boundary
+preservation, resolved worker/server profile consumption, and optional-sink
+failure containment. Target-selected percentile aggregation, export, retention,
 sampling, dashboards, SLO policy values, and alarms remain later
 adapter/deployment concerns.
 
-The first bounded design/proof case is the existing protected
-`platform-smoke.echo` route, whose app-relative path is `/smoke/:id`. It may
-demonstrate the existing platform-owned `platform.server.request` timer and
-`platform.server.request` span using method, stable route name, status/outcome,
-latency, and bounded error class. The path parameter `id`, request ID,
-correlation ID, principal, tenant, headers, body, and response body are
-explicitly forbidden as general metric labels or trace attributes. This first
-case remains local/in-memory proof only until a later target adapter selects
-metric/trace delivery, access, sampling, retention, dashboards, and a
-production-shaped failure policy.
+The first bounded route proof is the existing protected `platform-smoke.echo`
+route, whose app-relative path is `/smoke/:id`. Its profile allows only its
+checked capability/action, server execution context, HTTP method/status,
+outcome, and bounded error class. The path parameter `id`, request ID,
+correlation ID, principal, tenant, headers, body, response body, and stable
+route name are explicitly forbidden as general profile fields, metric labels,
+or trace attributes. This remains local/in-memory proof until a later target
+adapter selects metric/trace delivery, access, sampling, retention, dashboards,
+and target evidence.
 
 #### Platform worker source-organisation follow-up
 
@@ -853,11 +1069,12 @@ Acceptance:
 - Health separates liveness from readiness and never exposes secret values.
 - Config validation fails before listen or worker polling.
 - Security hooks have defensive defaults even if first auth providers are fakes.
-- Observability hooks record route/job identifiers, bounded error class,
-  latency, retry count, and health state without logging secrets. Correlation
-  IDs and verified tenant context may be carried only in separately approved,
-  access-controlled log, trace, security, or audit fields; they must never be
-  general metric labels.
+- Observability hooks emit only profile-approved canonical capability facts for
+  routes and jobs, plus bounded generic platform evidence where no app
+  capability can be identified. Latency is emitted only for a declared interval.
+  Correlation IDs and verified tenant context may be carried only in separately
+  approved, access-controlled log, trace, security, or audit fields; they must
+  never be general metric labels.
 
 ### 7a. Defer Security, Audit, And Operational Record Pipelines
 

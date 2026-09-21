@@ -20,12 +20,21 @@ message ID, because that message directly triggered this job execution. If the
 message itself was caused by an earlier event, that earlier fact remains on the
 message; it is not incorrectly substituted for the direct job cause.
 
-Each non-idle delivery creates one `platform.worker.job` span. When the
-versioned message supplies a Core `traceParent`, the span becomes its child;
-otherwise it begins a new trace. The span carries only the safe job identifier,
-attempt-derived retry count, latency, outcome, and bounded error class. Trace
-context is neither a metric label nor an app-handler context field, and an
-unavailable tracer falls back safely to no-op behavior.
+For a job with an observability profile, each non-idle delivery first resolves
+that profile from the mounted registry. The worker emits an operational log,
+metric counter, declared latency measurements, and/or a `platform.worker.job`
+span only when that signal is permitted. Each emitted field is projected through
+the profile's relevant allowlist; the worker cannot add its raw message type,
+payload, tenant, message ID, retry count, delay, or error object by default.
+An explicit profile opt-out emits no capability telemetry. An unregistered
+queue message also has no app-owned profile, so it is dead-lettered without
+pretending to be a known capability.
+
+When the profile permits a trace and the versioned message supplies a Core
+`traceParent`, the span becomes its child; otherwise it begins a new trace.
+Trace context is neither a metric label nor an app-handler context field. A
+failing logger, metrics sink, or tracer is best effort and cannot turn a
+completed handler into a worker failure.
 
 Retries retain the same message, correlation, causation history, and trace
 parent, while their delivery attempt increments. A retry therefore records a

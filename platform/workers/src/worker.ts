@@ -1,15 +1,28 @@
 import { noopTracer, type TraceSpan, type TraceSpanOutcome } from "@kanbien/core/monitoring";
 import type { QueueMessage } from "@kanbien/core/queues";
-import { causationId, correlationId, type JsonValue, type Result } from "@kanbien/core/shared";
+import { causationId, correlationId, type Result } from "@kanbien/core/shared";
 import { tenantContext } from "@kanbien/core/tenancy";
-import type { PlatformJobName, PlatformJobRegistration } from "@kanbien/platform-contracts";
+import {
+  platformProfileAllowsSignal,
+  platformProfileLogFields,
+  platformProfileMeasuresLatency,
+  platformProfileMetricLabels,
+  platformProfileTraceFields,
+} from "@kanbien/platform-contracts";
+import type {
+  PlatformCapabilityObservabilityProfile,
+  PlatformJobDeliveryDisposition,
+  PlatformJobName,
+  PlatformJobRegistration,
+  PlatformOperationalNomenclature,
+} from "@kanbien/platform-contracts";
 import { assertPlatformConfigValid } from "@kanbien/platform-config";
 import { platformReadiness } from "@kanbien/platform-health";
 import {
   elapsedMilliseconds,
   endPlatformTraceSpan,
   platformErrorClass,
-  recordPlatformJobMetric,
+  recordPlatformMetric,
   startPlatformTraceSpan,
   writePlatformLog,
 } from "@kanbien/platform-observability";
@@ -23,7 +36,6 @@ import { createInMemoryPlatformWorkerQueue, workerQueueNow } from "./queue";
 import type {
   PlatformWorkerQueueEntry,
   PlatformWorkerRunNextResult,
-  PlatformWorkerRunStatus,
   PlatformWorkerShell,
   PlatformWorkerShellOptions,
 } from "./types";
@@ -53,6 +65,7 @@ export async function createPlatformWorkerShell(
   });
   const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps });
   const jobsByMessageType = new Map(mounted.value.jobs.map((job) => [String(job.messageType), job]));
+  const profilesByName = new Map(mounted.value.observabilityProfiles.map((profile) => [String(profile.name), profile]));
   const tracer = options.tracer ?? noopTracer;
   const maxAttempts = options.maxAttempts ?? 3;
   const retryBackoffMs = options.retryBackoffMs ?? ((attempt: number) => attempt * 1000);
@@ -67,34 +80,32 @@ export async function createPlatformWorkerShell(
       return { ok: true, value: { status: "idle" } };
     }
 
-    const startedAt = options.deps.clock.now();
-    const traceSpan = startPlatformTraceSpan(tracer, {
-      name: "platform.worker.job",
-      ...(entry.message.traceParent === undefined ? {} : { parent: entry.message.traceParent }),
-      attributes: {
-        job: String(entry.message.type),
-        retryCount: entry.attempt - 1,
-      },
-    });
-
     const job = jobsByMessageType.get(String(entry.message.type));
     if (job === undefined) {
       const error = workerError("PLATFORM_WORKER_JOB_NOT_FOUND", "No platform job is registered for the queue message type.", {
         messageType: String(entry.message.type),
       });
       queue.deadLetter(entry, error);
-      recordWorkerAttempt(options, entry, "dead-lettered", undefined, error);
-      writeWorkerLog(options, "warn", "platform.worker.job.dead_lettered", entry, undefined, error);
-      endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "rejected", error });
       return { ok: true, value: deadLettered(entry, error) };
     }
+
+    const profile = workerProfileForJob(job, profilesByName);
+    const startedAt = options.deps.clock.now();
+    const traceSpan = startWorkerTrace(tracer, entry, profile);
 
     const invalidPayload = validateJobPayload(job, entry.message);
     if (invalidPayload !== undefined) {
       queue.deadLetter(entry, invalidPayload);
-      recordWorkerAttempt(options, entry, "dead-lettered", job.name, invalidPayload);
-      writeWorkerLog(options, "warn", "platform.worker.job.dead_lettered", entry, job.name, invalidPayload);
-      endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "rejected", jobName: job.name, error: invalidPayload });
+      recordWorkerObservation(options, entry, profile, startedAt, {
+        outcome: "rejected",
+        deliveryDisposition: "dead_lettered",
+        error: invalidPayload,
+      });
+      endWorkerTrace(profile, traceSpan, {
+        outcome: "rejected",
+        deliveryDisposition: "dead_lettered",
+        error: invalidPayload,
+      });
       return { ok: true, value: deadLettered(entry, invalidPayload, job.name) };
     }
 
@@ -102,9 +113,14 @@ export async function createPlatformWorkerShell(
     if (idempotencyKey !== undefined && options.idempotency !== undefined) {
       try {
         if (await options.idempotency.hasProcessed(idempotencyKey)) {
-          recordWorkerAttempt(options, entry, "succeeded", job.name);
-          writeWorkerLog(options, "info", "platform.worker.job.skipped", entry, job.name);
-          endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "succeeded", jobName: job.name });
+          recordWorkerObservation(options, entry, profile, startedAt, {
+            outcome: "succeeded",
+            deliveryDisposition: "succeeded",
+          });
+          endWorkerTrace(profile, traceSpan, {
+            outcome: "succeeded",
+            deliveryDisposition: "succeeded",
+          });
           return {
             ok: true,
             value: {
@@ -123,7 +139,8 @@ export async function createPlatformWorkerShell(
           { key: idempotencyKey },
           error,
         );
-        endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "failed", jobName: job.name, error: idempotencyError });
+        recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: idempotencyError });
+        endWorkerTrace(profile, traceSpan, { outcome: "failed", error: idempotencyError });
         return { ok: false, error: idempotencyError };
       }
     }
@@ -147,13 +164,16 @@ export async function createPlatformWorkerShell(
         await options.idempotency.recordProcessed(idempotencyKey);
       }
 
-      writePlatformLog(options.deps.logger, {
-        level: "info",
-        message: "platform.worker.job.succeeded",
-        fields: workerLogFields(entry, job.name),
+      recordWorkerObservation(options, entry, profile, startedAt, {
+        outcome: "succeeded",
+        deliveryDisposition: "succeeded",
+        handlerStarted: true,
       });
-      recordWorkerAttempt(options, entry, "succeeded", job.name);
-      endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "succeeded", jobName: job.name });
+      endWorkerTrace(profile, traceSpan, {
+        outcome: "succeeded",
+        deliveryDisposition: "succeeded",
+        handlerStarted: true,
+      });
       return {
         ok: true,
         value: {
@@ -175,22 +195,23 @@ export async function createPlatformWorkerShell(
         const delayMs = retryBackoffMs(entry.attempt);
         const retry = queue.retry(entry, delayMs);
         if (!retry.ok) {
-          endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "failed", jobName: job.name, error: retry.error });
+          recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: retry.error, handlerStarted: true });
+          endWorkerTrace(profile, traceSpan, { outcome: "failed", error: retry.error, handlerStarted: true });
           return retry;
         }
 
-        writePlatformLog(options.deps.logger, {
-          level: "warn",
-          message: "platform.worker.job.retry",
-          fields: {
-            ...workerLogFields(entry, job.name),
-            nextAttempt: entry.attempt + 1,
-            delayMs,
-          },
+        recordWorkerObservation(options, entry, profile, startedAt, {
+          outcome: "failed",
+          deliveryDisposition: "retry_scheduled",
           error: workerHandlerError,
+          handlerStarted: true,
         });
-        recordWorkerAttempt(options, entry, "retry", job.name, workerHandlerError);
-        endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "failed", jobName: job.name, error: workerHandlerError });
+        endWorkerTrace(profile, traceSpan, {
+          outcome: "failed",
+          deliveryDisposition: "retry_scheduled",
+          error: workerHandlerError,
+          handlerStarted: true,
+        });
         return {
           ok: true,
           value: {
@@ -206,14 +227,18 @@ export async function createPlatformWorkerShell(
       }
 
       queue.deadLetter(entry, workerHandlerError);
-      writePlatformLog(options.deps.logger, {
-        level: "error",
-        message: "platform.worker.job.dead_lettered",
-        fields: workerLogFields(entry, job.name),
+      recordWorkerObservation(options, entry, profile, startedAt, {
+        outcome: "failed",
+        deliveryDisposition: "dead_lettered",
         error: workerHandlerError,
+        handlerStarted: true,
       });
-      recordWorkerAttempt(options, entry, "dead-lettered", job.name, workerHandlerError);
-      endWorkerTrace(options, entry, traceSpan, startedAt, { outcome: "failed", jobName: job.name, error: workerHandlerError });
+      endWorkerTrace(profile, traceSpan, {
+        outcome: "failed",
+        deliveryDisposition: "dead_lettered",
+        error: workerHandlerError,
+        handlerStarted: true,
+      });
       return { ok: true, value: deadLettered(entry, workerHandlerError, job.name) };
     }
   }
@@ -295,69 +320,130 @@ function deadLettered(
   };
 }
 
-function recordWorkerAttempt(
+function workerProfileForJob(
+  job: PlatformJobRegistration,
+  profilesByName: ReadonlyMap<string, PlatformCapabilityObservabilityProfile>,
+): PlatformCapabilityObservabilityProfile | undefined {
+  if (job.observability.kind !== "profile") {
+    return undefined;
+  }
+
+  return profilesByName.get(String(job.observability.profile));
+}
+
+function recordWorkerObservation(
   options: PlatformWorkerShellOptions,
   entry: PlatformWorkerQueueEntry,
-  status: Exclude<PlatformWorkerRunStatus, "idle">,
-  jobName?: PlatformJobName,
-  error?: PlatformWorkerError,
+  profile: PlatformCapabilityObservabilityProfile | undefined,
+  startedAt: Date,
+  event: PlatformWorkerObservabilityEvent,
 ): void {
-  recordPlatformJobMetric(options.deps.metrics, options.deps.clock, {
-    job: jobName === undefined ? String(entry.message.type) : String(jobName),
-    status,
-    retryCount: entry.attempt - 1,
-    ...(error === undefined ? {} : { errorClass: error.code }),
+  if (profile === undefined) {
+    return;
+  }
+
+  const nomenclature = workerNomenclature(profile, event);
+  if (platformProfileAllowsSignal(profile, "operational_log")) {
+    writePlatformLog(options.deps.logger, {
+      level: workerLogLevel(event),
+      message: "platform.worker.job.delivery",
+      fields: platformProfileLogFields(profile, nomenclature),
+    });
+  }
+
+  if (!platformProfileAllowsSignal(profile, "metric")) {
+    return;
+  }
+
+  const labels = platformProfileMetricLabels(profile, nomenclature);
+  recordPlatformMetric(options.deps.metrics, options.deps.clock, {
+    name: "platform.worker.job.delivery",
+    labels,
   });
+
+  const finishedAt = options.deps.clock.now();
+  if (event.handlerStarted && platformProfileMeasuresLatency(profile, "job_execution_latency")) {
+    recordPlatformMetric(options.deps.metrics, options.deps.clock, {
+      name: "platform.worker.job.execution_latency",
+      kind: "timer",
+      value: elapsedMilliseconds(startedAt, finishedAt),
+      unit: "ms",
+      labels,
+    });
+  }
+
+  if (platformProfileMeasuresLatency(profile, "queue_wait_latency")) {
+    recordPlatformMetric(options.deps.metrics, options.deps.clock, {
+      name: "platform.worker.job.queue_wait_latency",
+      kind: "timer",
+      value: elapsedMilliseconds(new Date(entry.enqueuedAt), startedAt),
+      unit: "ms",
+      labels,
+    });
+  }
 }
 
 function endWorkerTrace(
-  options: PlatformWorkerShellOptions,
-  entry: PlatformWorkerQueueEntry,
-  span: TraceSpan,
-  startedAt: Date,
-  input: {
-    readonly outcome: TraceSpanOutcome;
-    readonly jobName?: PlatformJobName;
-    readonly error?: unknown;
-  },
+  profile: PlatformCapabilityObservabilityProfile | undefined,
+  span: TraceSpan | undefined,
+  event: PlatformWorkerObservabilityEvent,
 ): void {
+  if (profile === undefined || span === undefined) {
+    return;
+  }
+
   endPlatformTraceSpan(span, {
-    outcome: input.outcome,
-    attributes: {
-      job: input.jobName === undefined ? String(entry.message.type) : String(input.jobName),
-      retryCount: entry.attempt - 1,
-      latencyMs: elapsedMilliseconds(startedAt, options.deps.clock.now()),
-      outcome: input.outcome,
-      ...(input.error === undefined ? {} : { errorClass: platformErrorClass(input.error) }),
-    },
+    outcome: event.outcome,
+    attributes: platformProfileTraceFields(profile, workerNomenclature(profile, event)),
   });
 }
 
-function writeWorkerLog(
-  options: PlatformWorkerShellOptions,
-  level: "info" | "warn" | "error",
-  message: string,
+function startWorkerTrace(
+  tracer: PlatformWorkerShellOptions["tracer"] | undefined,
   entry: PlatformWorkerQueueEntry,
-  jobName?: PlatformJobName,
-  error?: PlatformWorkerError,
-): void {
-  writePlatformLog(options.deps.logger, {
-    level,
-    message,
-    fields: workerLogFields(entry, jobName),
-    ...(error === undefined ? {} : { error }),
+  profile: PlatformCapabilityObservabilityProfile | undefined,
+): TraceSpan | undefined {
+  if (profile === undefined || !platformProfileAllowsSignal(profile, "trace")) {
+    return undefined;
+  }
+
+  return startPlatformTraceSpan(tracer ?? noopTracer, {
+    name: "platform.worker.job",
+    ...(entry.message.traceParent === undefined ? {} : { parent: entry.message.traceParent }),
   });
 }
 
-function workerLogFields(
-  entry: PlatformWorkerQueueEntry,
-  jobName?: PlatformJobName,
-): Readonly<Record<string, JsonValue>> {
+function workerNomenclature(
+  profile: PlatformCapabilityObservabilityProfile,
+  event: PlatformWorkerObservabilityEvent,
+): PlatformOperationalNomenclature {
   return {
-    jobName: jobName === undefined ? String(entry.message.type) : String(jobName),
-    messageType: String(entry.message.type),
-    attempt: entry.attempt,
+    capability: profile.capability,
+    action: profile.action,
+    executionContext: "worker",
+    outcome: event.outcome,
+    ...(event.deliveryDisposition === undefined ? {} : { jobDeliveryDisposition: event.deliveryDisposition }),
+    ...(event.error === undefined ? {} : { errorClass: platformErrorClass(event.error) }),
   };
+}
+
+function workerLogLevel(event: PlatformWorkerObservabilityEvent): "info" | "warn" | "error" {
+  if (event.outcome === "succeeded") {
+    return "info";
+  }
+
+  if (event.outcome === "rejected" || event.deliveryDisposition === "retry_scheduled") {
+    return "warn";
+  }
+
+  return "error";
+}
+
+interface PlatformWorkerObservabilityEvent {
+  readonly outcome: TraceSpanOutcome;
+  readonly deliveryDisposition?: PlatformJobDeliveryDisposition;
+  readonly error?: PlatformWorkerError;
+  readonly handlerStarted?: boolean;
 }
 
 function workerSuccess(): Result<void, PlatformWorkerError> {

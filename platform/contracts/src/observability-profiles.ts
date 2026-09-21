@@ -1,3 +1,4 @@
+import type { MetricLabelValue } from "@kanbien/core/monitoring"; // Reuse the Core scalar metric-label type without choosing a metrics provider.
 import type { Brand, Result } from "@kanbien/core/shared"; // Reuse the shared branded-name and explicit-result primitives.
 import { // Import only contract-level errors because this declaration must not choose a runtime provider.
   malformedPlatformObservabilityProfile, // Describe a malformed profile without throwing during app registration.
@@ -13,6 +14,7 @@ import { // Reuse the controlled operational vocabulary rather than creating par
   type PlatformCapabilityAction, // Describe a reviewed business action.
   type PlatformCapabilityName, // Describe a checked stable capability identity.
   type PlatformOperationalFieldName, // Describe a canonical safe observability fact name.
+  type PlatformOperationalNomenclature, // Project only typed operational facts through one profile's allowlists.
 } from "./observability"; // Keep vocabulary ownership separate from profile ownership.
 
 export const platformObservabilitySignalKinds = [ // Declare the provider-neutral operational signal families a profile may permit.
@@ -84,6 +86,19 @@ export interface PlatformCapabilityObservabilityProfile { // Declare the provide
   readonly traceAttributeNames?: readonly PlatformOperationalFieldName[]; // Allowlist canonical safe facts for diagnostic trace attributes.
   readonly nfrObjectives?: readonly PlatformNfrObjectiveReference[]; // Reference central NFR classes without embedding provider, threshold, alert, or retention policy.
 }
+
+export type PlatformProfileObservationFields = Readonly<{ // Describe the correctly typed canonical facts that survive one profile allowlist.
+  readonly capability?: PlatformOperationalNomenclature["capability"]; // Preserve a stable checked capability name when the profile permits it.
+  readonly action?: PlatformOperationalNomenclature["action"]; // Preserve a controlled business action when the profile permits it.
+  readonly actor_type?: Exclude<PlatformOperationalNomenclature["actorType"], undefined>; // Preserve a bounded actor category when supplied and permitted.
+  readonly interaction_source?: Exclude<PlatformOperationalNomenclature["interactionSource"], undefined>; // Preserve a bounded initiation channel when supplied and permitted.
+  readonly execution_context?: PlatformOperationalNomenclature["executionContext"]; // Preserve a controlled runtime location when the profile permits it.
+  readonly http_method?: Exclude<PlatformOperationalNomenclature["httpMethod"], undefined>; // Preserve a bounded HTTP method when supplied and permitted.
+  readonly http_status_code?: Exclude<PlatformOperationalNomenclature["httpStatusCode"], undefined>; // Preserve a numeric HTTP result when supplied and permitted.
+  readonly job_delivery_disposition?: Exclude<PlatformOperationalNomenclature["jobDeliveryDisposition"], undefined>; // Preserve a controlled delivery decision when supplied and permitted.
+  readonly outcome?: PlatformOperationalNomenclature["outcome"]; // Preserve the logical result when the profile permits it.
+  readonly error_class?: Exclude<PlatformOperationalNomenclature["errorClass"], undefined>; // Preserve only a bounded error classification when supplied and permitted.
+}>; // Prevent payloads, objects, identifiers, and unbounded values from passing this declaration boundary.
 
 export type PlatformObservabilityRequirement = // Require every route and job to select a profile or explain a deliberately narrow exception.
   | { // Describe the ordinary case where a capability profile governs the registration.
@@ -190,6 +205,41 @@ export function isPlatformObservabilityOptOutReason(value: unknown): value is Pl
   return isOneOf(value, platformObservabilityOptOutReasons); // Reuse the local literal-array membership helper.
 }
 
+export function platformProfileAllowsSignal( // Check whether a capability explicitly approved one operational signal family.
+  profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
+  signal: PlatformObservabilitySignalKind, // Ask about one closed signal-family value.
+): boolean { // Return a simple decision that runtime callers can apply without duplicating profile logic.
+  return profile.signals.includes(signal); // Signal declarations are already validated and deduplicated at registration time.
+}
+
+export function platformProfileMeasuresLatency( // Check whether a profile truthfully declares one timing interval as an objective.
+  profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
+  measurement: PlatformLatencyMeasurement, // Name the exact interval whose start and finish points the caller knows.
+): boolean { // Return false when no NFR objective permits this measurement.
+  return profile.nfrObjectives?.some((objective) => objective.measurement === measurement) ?? false; // Keep undeclared latency out of metrics even when ordinary counters are enabled.
+}
+
+export function platformProfileLogFields( // Project capability facts through the log-field allowlist.
+  profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
+  nomenclature: PlatformOperationalNomenclature, // Receive only typed provider-neutral capability facts.
+): PlatformProfileObservationFields { // Return only the canonical facts this profile approved for operational logs.
+  return selectProfileFields(profile.logFieldNames, nomenclature); // Omit every fact not explicitly allowlisted for logs.
+}
+
+export function platformProfileMetricLabels( // Project capability facts through the stricter metric-dimension allowlist.
+  profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
+  nomenclature: PlatformOperationalNomenclature, // Receive only typed provider-neutral capability facts.
+): Readonly<Record<string, MetricLabelValue>> { // Return only bounded scalar labels accepted by Core metrics.
+  return Object.fromEntries(Object.entries(selectProfileFields(profile.metricDimensionFieldNames, nomenclature))) as Readonly<Record<string, MetricLabelValue>>; // Widen the completed scalar projection to Core's metric-label map shape.
+}
+
+export function platformProfileTraceFields( // Project capability facts through the trace-attribute allowlist.
+  profile: PlatformCapabilityObservabilityProfile, // Read the registered profile governing the current capability.
+  nomenclature: PlatformOperationalNomenclature, // Receive only typed provider-neutral capability facts.
+): PlatformProfileObservationFields { // Return only canonical facts this profile approved for diagnostic spans.
+  return selectProfileFields(profile.traceAttributeNames, nomenclature); // Keep trace attributes from becoming a logging-policy bypass.
+}
+
 function validateNfrObjectives(value: unknown): value is readonly PlatformNfrObjectiveReference[] | undefined { // Validate optional NFR objective references and their class-to-measurement compatibility.
   if (value === undefined) { // Allow capabilities with useful telemetry but no latency objective.
     return true; // Accept the absent optional declaration.
@@ -242,6 +292,38 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> { 
 
 function isOneOf<TValue extends string>(value: unknown, values: readonly TValue[]): value is TValue { // Compare an unknown string with one controlled literal vocabulary.
   return typeof value === "string" && values.includes(value as TValue); // Accept only exact known values.
+}
+
+function selectProfileFields( // Apply one optional profile allowlist to the complete controlled nomenclature object.
+  allowedFields: readonly PlatformOperationalFieldName[] | readonly PlatformMetricDimensionFieldName[] | undefined, // Accept the profile's relevant reviewed field list.
+  nomenclature: PlatformOperationalNomenclature, // Read the complete typed operational facts supplied by the platform runtime.
+): PlatformProfileObservationFields { // Return a newly projected minimal set of safe canonical fields.
+  if (allowedFields === undefined) { // Treat an omitted optional allowlist as approval for no optional facts.
+    return {}; // A signal can still be emitted with its fixed name and no facts.
+  }
+
+  const values = { // Map canonical emitted keys to their corresponding typed nomenclature values exactly once.
+    capability: nomenclature.capability, // Preserve the stable capability identity, never a raw route or resource identifier.
+    action: nomenclature.action, // Preserve the controlled business action.
+    actor_type: nomenclature.actorType, // Preserve a bounded actor category only when supplied.
+    interaction_source: nomenclature.interactionSource, // Preserve a bounded origin channel only when supplied.
+    execution_context: nomenclature.executionContext, // Preserve the server/worker/scheduler/CLI location.
+    http_method: nomenclature.httpMethod, // Preserve a bounded method only for server work that supplies it.
+    http_status_code: nomenclature.httpStatusCode, // Preserve a numeric response result only for server work that supplies it.
+    job_delivery_disposition: nomenclature.jobDeliveryDisposition, // Preserve the controlled worker delivery decision only when supplied.
+    outcome: nomenclature.outcome, // Preserve the shared logical capability outcome.
+    error_class: nomenclature.errorClass, // Preserve only a bounded classification, never an error message or object.
+  } satisfies Readonly<Record<PlatformOperationalFieldName, string | number | undefined>>; // Prove the mapping remains complete whenever canonical field names change.
+  const selected: Record<PlatformOperationalFieldName, string | number | undefined> = {} as Record<PlatformOperationalFieldName, string | number | undefined>; // Build a fresh complete map so unapproved facts cannot leak through object spreading.
+
+  for (const fieldName of allowedFields) { // Inspect each field the reviewed profile expressly permits.
+    const value = values[fieldName]; // Read the one matching typed operational fact.
+    if (value !== undefined) { // Avoid emitting absent optional facts as misleading null-like dimensions.
+      selected[fieldName] = value; // Copy only a present scalar fact into the returned profile projection.
+    }
+  }
+
+  return selected as PlatformProfileObservationFields; // Return the narrow field projection after the checked loop excluded every absent or unapproved fact.
 }
 
 function profileFailure(reason: string): Result<void, PlatformContractError> { // Construct one stable profile-validation failure result.

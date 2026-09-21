@@ -60,6 +60,25 @@ The server preserves platform-owned headers such as CORS, content-security
 policy, and `x-request-id`. An app may add ordinary response headers but cannot
 silently weaken those shared protections.
 
+## Route observability profiles
+
+Routes declare an observability profile (or an explicitly justified opt-out)
+through `@kanbien/platform-contracts`. At mount time the complete registry
+proves that each profile reference is real. At request time this package uses
+the resolved profile to decide whether the capability may write a log, counter,
+trace, or request/response latency measurement. Only the profile's approved
+canonical facts can reach those signals; a normal route never supplies a raw
+path, request ID, principal, tenant, header, body, response body, or exception
+object as telemetry fields.
+
+An opt-out route emits no capability telemetry. A known route whose request is
+rejected before handler execution—for example, by JSON parsing, rate limiting,
+or authorization—still uses its profile, because the capability was attempted.
+Failures before the server can identify a route remain separate generic server
+operations, not falsely labelled capability events. The profile controls
+ordinary operational telemetry only; it is not an audit or security-record
+policy and does not select an exporter or cloud provider.
+
 ## Rate limiting and client addresses
 
 The in-memory limiter is intentionally a process-local baseline for tests and

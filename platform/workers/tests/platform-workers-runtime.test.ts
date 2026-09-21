@@ -1,6 +1,7 @@
 import { deepEqual, equal } from "node:assert/strict";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
-import { createInMemoryTracer, spanId, traceContext, traceId } from "@kanbien/core/monitoring";
+import type { Logger } from "@kanbien/core/logging";
+import { createInMemoryTracer, spanId, traceContext, traceId, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import type { QueueIdempotencyKey, QueueMessageType } from "@kanbien/core/queues";
 import { causationId } from "@kanbien/core/shared";
 import { tenantId, type TenantContext } from "@kanbien/core/tenancy";
@@ -8,7 +9,9 @@ import { validationIssue } from "@kanbien/core/validation";
 import {
   definePlatformApp,
   platformAppId,
+  platformCapabilityName,
   platformJobName,
+  platformObservabilityProfileName,
 } from "@kanbien/platform-contracts";
 import {
   createPlatformTestLogger,
@@ -26,7 +29,9 @@ async function main(): Promise<void> {
   const appId = platformAppId("smoke");
   const jobName = platformJobName("smoke.rebuild");
   const failingJobName = platformJobName("smoke.failing");
-  if (!appId.ok || !jobName.ok || !failingJobName.ok) {
+  const profileName = platformObservabilityProfileName("smoke.worker.execute");
+  const capabilityName = platformCapabilityName("smoke.worker.execute");
+  if (!appId.ok || !jobName.ok || !failingJobName.ok || !profileName.ok || !capabilityName.ok) {
     throw new Error("Expected valid worker test primitives.");
   }
 
@@ -39,11 +44,22 @@ async function main(): Promise<void> {
   const logger = createPlatformTestLogger();
   const metrics = createPlatformTestMetrics();
   const deps = createPlatformTestMountDeps({ logger, metrics });
-  const testObservability = { kind: "opt_out", reason: "non_user_workload_path", justification: "Worker runtime fixture only." } as const;
+  const testObservability = { kind: "profile", profile: profileName.value } as const;
+  const testProfile = {
+    name: profileName.value,
+    capability: capabilityName.value,
+    action: "execute" as const,
+    signals: ["operational_log", "metric", "trace"] as const,
+    logFieldNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"] as const,
+    metricDimensionFieldNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"] as const,
+    traceAttributeNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"] as const,
+    nfrObjectives: [{ nfrClass: "async_completion" as const, measurement: "job_execution_latency" as const }],
+  };
   const app = definePlatformApp({
     id: appId.value,
     name: "Smoke",
     mount(registry) {
+      registry.registerObservabilityProfile(testProfile);
       registry.registerJob({
         name: jobName.value,
         messageType: "smoke.rebuild" as QueueMessageType,
@@ -133,16 +149,13 @@ async function main(): Promise<void> {
       spanId: "span-1",
       parentSpanId: "span-17",
     },
-    attributes: {
-      job: "smoke.rebuild",
-      retryCount: 0,
-    },
     end: {
       outcome: "succeeded",
       attributes: {
-        job: "smoke.rebuild",
-        retryCount: 0,
-        latencyMs: 0,
+        capability: "smoke.worker.execute",
+        action: "execute",
+        execution_context: "worker",
+        job_delivery_disposition: "succeeded",
         outcome: "succeeded",
       },
     },
@@ -191,8 +204,27 @@ async function main(): Promise<void> {
   equal(failingAttempts, 2);
   equal(tenantlessJobTenant, undefined);
   equal(shell.value.queue.deadLetters().length, 2);
-  equal(metrics.points().length, 5);
-  equal(logger.records().some((record) => record.message === "platform.worker.job.dead_lettered"), true);
+  equal(metrics.points().length, 8);
+  equal(metrics.points().filter((point) => point.name === "platform.worker.job.delivery").length, 5);
+  equal(metrics.points().filter((point) => point.name === "platform.worker.job.execution_latency").length, 3);
+  deepEqual(metrics.points()[0]?.labels, {
+    capability: "smoke.worker.execute",
+    action: "execute",
+    execution_context: "worker",
+    job_delivery_disposition: "succeeded",
+    outcome: "succeeded",
+  });
+  equal(metrics.points().some((point) => "job" in (point.labels ?? {})), false);
+  equal(metrics.points().some((point) => "retry_count" in (point.labels ?? {})), false);
+  equal(logger.records().filter((record) => record.message === "platform.worker.job.delivery").length, 5);
+  deepEqual(logger.records()[0]?.fields, {
+    capability: "smoke.worker.execute",
+    action: "execute",
+    execution_context: "worker",
+    job_delivery_disposition: "succeeded",
+    outcome: "succeeded",
+  });
+  equal(logger.records().some((record) => "messageType" in (record.fields ?? {})), false);
 
   const idle = await shell.value.runUntilIdle();
   equal(idle.ok, true);
@@ -238,6 +270,85 @@ async function main(): Promise<void> {
     equal(invalidConfigShell.error.code, "PLATFORM_WORKER_CONFIG_INVALID");
     equal(JSON.stringify(invalidConfigShell.error.details).includes("do-not-leak"), false);
   }
+
+  const optOutJobName = platformJobName("smoke.opt-out");
+  if (!optOutJobName.ok) {
+    throw new Error("Expected opt-out job name to be valid.");
+  }
+  const optOutLogger = createPlatformTestLogger();
+  const optOutMetrics = createPlatformTestMetrics();
+  const optOutShell = await createPlatformWorkerShell({
+    apps: [definePlatformApp({
+      id: appId.value,
+      name: "Opt out",
+      mount(registry) {
+        registry.registerJob({
+          name: optOutJobName.value,
+          messageType: "smoke.opt-out" as QueueMessageType,
+          observability: { kind: "opt_out", reason: "non_user_workload_path", justification: "Fixture proves profile opt-out behavior." },
+          handler: { handle: () => undefined },
+        });
+      },
+    })],
+    deps: createPlatformTestMountDeps({ logger: optOutLogger, metrics: optOutMetrics }),
+    tracer: createInMemoryTracer(),
+  });
+  equal(optOutShell.ok, true);
+  if (!optOutShell.ok) {
+    throw new Error("Expected opt-out worker shell to mount.");
+  }
+  equal((await optOutShell.value.start()).ok, true);
+  equal(optOutShell.value.enqueue(createPlatformTestQueueMessage({
+    id: "opt-out-1",
+    type: "smoke.opt-out" as QueueMessageType,
+    payload: {},
+  })).ok, true);
+  equal((await optOutShell.value.runNext()).ok, true);
+  equal(optOutLogger.records().length, 0);
+  equal(optOutMetrics.points().length, 0);
+
+  const resilientJobName = platformJobName("smoke.resilient");
+  if (!resilientJobName.ok) {
+    throw new Error("Expected resilient job name to be valid.");
+  }
+  let resilientHandled = 0;
+  const unavailableLogger: Logger = { write: () => { throw new Error("logger unavailable"); } };
+  const unavailableMetrics: Metrics = { record: () => { throw new Error("metrics unavailable"); } };
+  const unavailableTracer: Tracer = { startSpan: () => { throw new Error("tracer unavailable"); } };
+  const resilientShell = await createPlatformWorkerShell({
+    apps: [definePlatformApp({
+      id: appId.value,
+      name: "Resilient",
+      mount(registry) {
+        registry.registerObservabilityProfile(testProfile);
+        registry.registerJob({
+          name: resilientJobName.value,
+          messageType: "smoke.resilient" as QueueMessageType,
+          observability: testObservability,
+          handler: { handle: () => { resilientHandled += 1; } },
+        });
+      },
+    })],
+    deps: createPlatformTestMountDeps({ logger: unavailableLogger, metrics: unavailableMetrics }),
+    tracer: unavailableTracer,
+  });
+  equal(resilientShell.ok, true);
+  if (!resilientShell.ok) {
+    throw new Error("Expected resilient worker shell to mount.");
+  }
+  equal((await resilientShell.value.start()).ok, true);
+  equal(resilientShell.value.enqueue(createPlatformTestQueueMessage({
+    id: "resilient-1",
+    type: "smoke.resilient" as QueueMessageType,
+    payload: {},
+  })).ok, true);
+  const resilientResult = await resilientShell.value.runNext();
+  equal(resilientResult.ok, true);
+  if (!resilientResult.ok) {
+    throw new Error("Expected unavailable telemetry to leave the job result unchanged.");
+  }
+  equal(resilientResult.value.status, "succeeded");
+  equal(resilientHandled, 1);
 }
 
 main()
