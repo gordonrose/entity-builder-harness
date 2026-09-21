@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-21T22:37:23Z
-latest_commit_sha: 11283f6
-chat_duration: 252600s (02:22:10:00)
+latest_commit_at_utc: 2026-09-21T23:48:49Z
+latest_commit_sha: 3182c74
+chat_duration: 256886s (02:23:21:26)
 estimated_chat_tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -320,6 +320,17 @@ ADR impact: No ADR: this activates existing provider-neutral platform guidance; 
 - No AWS CLI mutation, CloudFormation change set, IAM policy application, ECS
   task-definition update, collector deployment, or telemetry delivery occurred.
 
+
+### 2026-09-21T23:48:49Z - Commit recorded
+
+Commit: `3182c74`
+
+Message: feat(observability): prepare CloudWatch metric delivery
+
+Summary: Added a target-only CloudWatch OpenTelemetry metrics adapter, target composition, prepared ECS collector/IAM/SSM IaC, local and template validation, and durable plan/handbook/readiness evidence; AWS remains unchanged.
+
+ADR impact: ADR 0029 records the task-local collector boundary and ECS task-role limitation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -334,6 +345,13 @@ ADR impact: No ADR: this activates existing provider-neutral platform guidance; 
   Summary: Implemented provider-neutral observability-profile consumption for server and worker paths, profile-safe telemetry projection, sink-failure isolation, smoke proof, and the target observability readiness roadmap.
   ADR impact: No ADR: this activates existing provider-neutral platform guidance; target provider and infrastructure choices remain deferred.
 
+
+- Commit: `3182c74`
+  Time UTC: 2026-09-21T23:48:49Z
+  Message: feat(observability): prepare CloudWatch metric delivery
+  Summary: Added a target-only CloudWatch OpenTelemetry metrics adapter, target composition, prepared ECS collector/IAM/SSM IaC, local and template validation, and durable plan/handbook/readiness evidence; AWS remains unchanged.
+  ADR impact: ADR 0029 records the task-local collector boundary and ECS task-role limitation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -347,9 +365,9 @@ Reason: The target now selects a durable provider-specific capability-metrics de
 ## Session Metrics
 
 Raised at UTC: 2026-09-19T00:27:23Z
-Latest commit at UTC: 2026-09-21T22:37:23Z
-Latest commit SHA: 11283f6
-Chat duration: 252600s (02:22:10:00)
+Latest commit at UTC: 2026-09-21T23:48:49Z
+Latest commit SHA: 3182c74
+Chat duration: 256886s (02:23:21:26)
 Estimated chat tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
