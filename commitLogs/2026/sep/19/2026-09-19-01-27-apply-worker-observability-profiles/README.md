@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-19T00:27:23Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: codex
+transcript_path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl
+transcript_bytes: 97691410
+transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-21T22:37:23Z
+latest_commit_sha: 11283f6
+chat_duration: 252600s (02:22:10:00)
+estimated_chat_tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -244,13 +244,30 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: The provider-neutral observability-profile implementation activates existing platform runtime guidance: platform owns safe telemetry mechanisms, app routes/jobs use runtime seams, and provider translation remains in a later adapter.
 
+
+### 2026-09-21T22:37:23Z - Commit recorded
+
+Commit: `11283f6`
+
+Message: feat(observability): govern capability telemetry profiles
+
+Summary: Implemented provider-neutral observability-profile consumption for server and worker paths, profile-safe telemetry projection, sink-failure isolation, smoke proof, and the target observability readiness roadmap.
+
+ADR impact: No ADR: this activates existing provider-neutral platform guidance; target provider and infrastructure choices remain deferred.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `11283f6`
+  Time UTC: 2026-09-21T22:37:23Z
+  Message: feat(observability): govern capability telemetry profiles
+  Summary: Implemented provider-neutral observability-profile consumption for server and worker paths, profile-safe telemetry projection, sink-failure isolation, smoke proof, and the target observability readiness roadmap.
+  ADR impact: No ADR: this activates existing provider-neutral platform guidance; target provider and infrastructure choices remain deferred.
 
 ## Main Refresh Conflicts
 
@@ -265,12 +282,12 @@ Reason: This commit implements and documents an already planned provider-neutral
 ## Session Metrics
 
 Raised at UTC: 2026-09-19T00:27:23Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-21T22:37:23Z
+Latest commit SHA: 11283f6
+Chat duration: 252600s (02:22:10:00)
+Estimated chat tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
