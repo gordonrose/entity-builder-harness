@@ -57,6 +57,10 @@ Approve synthetic scheduler activation bundle
 - Raised: A fresh cumulative counter made the first post-rollback recovery check look missing
   Resolution: The restored service, collector, and application metric record were healthy; a second fixed smoke request advanced the cumulative value and the same read-only coverage query returned observed.
 
+
+- Raised: Main refresh required before promotion
+  Resolution: The clean chat branch was one merge commit behind local and fetched origin/main. A disposable preflight merged main without changed-path overlap or conflicts, then applied commit 95bfb47 to the chat branch. Stash used: no; discarded work: no; temporary preflight worktree and branch were removed.
+
 ## Decisions Made
 
 
@@ -122,6 +126,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Record the completed corrected exporter-loss rehearsal and its counter-semantics correction
   Durable evidence: Deploy readiness, the rehearsal plan, closure programme, target policy, workflow gate, controlled-smoke README, and handbook retain only safe revisions, run identifiers, statuses, durations, verdicts, and the remaining operator-receipt gap.
+
+
+- Summary: Record the completed main-refresh audit
+  Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
 
 ## Activity Log
 
@@ -355,6 +363,20 @@ Message: fix(observability): prove counter freshness after rollback
 Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
 
 ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
+
+
+### 2026-09-22T18:01:55Z - Issue
+
+Raised: Main refresh required before promotion
+
+Resolution: The clean chat branch was one merge commit behind local and fetched origin/main. A disposable preflight merged main without changed-path overlap or conflicts, then applied commit 95bfb47 to the chat branch. Stash used: no; discarded work: no; temporary preflight worktree and branch were removed.
+
+
+### 2026-09-22T18:01:55Z - Context hygiene
+
+Summary: Record the completed main-refresh audit
+
+Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
 
 ## Sub-Agent Activity
 
