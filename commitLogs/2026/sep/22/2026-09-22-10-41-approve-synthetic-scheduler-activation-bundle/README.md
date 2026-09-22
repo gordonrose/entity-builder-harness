@@ -40,7 +40,10 @@ Approve synthetic scheduler activation bundle
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Chat branch diverged from main after the prior approved scheduler-proof merge
+  Resolution: Fetched remote main, rehearsed the non-rewriting merge in a disposable preflight worktree, reran the synthetic/infrastructure/readiness checks, and applied clean preflight commit 5b26926 with no conflicts, stash, or discarded work.
 
 ## Decisions Made
 
@@ -148,6 +151,13 @@ Message: docs(aws): plan exporter-loss rehearsal
 Summary: Added the no-mutation staging exporter-loss rehearsal plan, corrected the target catalogue’s deployed-metric state, and linked the implementation plan, initial AWS plan, and handbook to the approved boundary.
 
 ADR impact: No new ADR: the plan applies the existing task-local collector decision and defers all AWS mutation to a separately approved execution turn.
+
+
+### 2026-09-22T10:20:46Z - Issue
+
+Raised: Chat branch diverged from main after the prior approved scheduler-proof merge
+
+Resolution: Fetched remote main, rehearsed the non-rewriting merge in a disposable preflight worktree, reran the synthetic/infrastructure/readiness checks, and applied clean preflight commit 5b26926 with no conflicts, stash, or discarded work.
 
 ## Sub-Agent Activity
 
