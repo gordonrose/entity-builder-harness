@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -40,8 +40,8 @@ clients, or stored secret values.
 
 Prove all six statements together:
 
-1. A protected smoke request still returns the approved `200` while application
-   metric export is unavailable.
+1. A protected smoke request still returns the approved `200` while its
+   application metric export cannot reach the task-local collector.
 2. A monitor outside that exporter path detects that the expected reviewed
    metric has not arrived after its grace period.
 3. The affected SLO state is reported as `insufficient-confidence`, never as
@@ -78,6 +78,22 @@ The verifier checks low-cardinality, already-approved capability labels. It
 must not add a per-run identifier, trace ID, tenant, principal, raw path, or
 synthetic token to a metric label just to correlate one request. This is a
 freshness/coverage check, not per-request tracing.
+
+## Correction from the first bounded attempt
+
+The first disposable revision changed the application endpoint from the
+reviewed `http://127.0.0.1:4318/v1/metrics` to port `4319`. ECS correctly
+rolled it back before a smoke request: the CloudWatch adapter intentionally
+rejects any endpoint other than the fixed task-local collector address during
+startup. That was a configuration-boundary proof, not an exporter-loss proof.
+
+Do **not** loosen that adapter rule or treat an arbitrary endpoint as a test
+hook. The corrected rehearsal keeps the application endpoint at `4318` and
+instead makes the disposable collector listen at `4319`. The application then
+uses its normal reviewed address, but no process is listening there. This
+induces a real local delivery failure without creating an arbitrary outbound
+telemetry destination or changing the application image, authorization, or
+request path.
 
 ## Proposed ownership and least-privilege boundary
 
@@ -122,11 +138,14 @@ allowlisted verdict and timing fields; raw query responses remain ephemeral.
 1. Capture the current healthy task-definition ARN and service desired/running
    counts as the rollback baseline. Confirm the current controlled smoke and
    metric-arrival query pass before changing anything.
-2. Create one disposable task-definition revision. Change only the
-   application-side metrics exporter receiver to an intentionally closed
-   loopback endpoint in the task network namespace. Do not change the
-   collector, application image, secrets, DNS, ALB, WAF, rate limit, or
-   authorization configuration.
+2. Create one disposable task-definition revision. Leave the application
+   container, including its fixed `4318` metrics endpoint, unchanged. Replace
+   only the collector's non-secret `AOT_CONFIG_CONTENT` injection with an
+   inline equivalent of the reviewed collector configuration whose OTLP HTTP
+   receiver listens on `127.0.0.1:4319` instead of `4318`. Its health check,
+   AWS exporter, processors, image, task role, and all other collector settings
+   must remain identical. Do not change application image, stored secret
+   values, DNS, ALB, WAF, rate limit, or authorization configuration.
 3. Update only the staging platform-shell service to that revision and wait
    for the service to become steady. If it cannot become steady, stop and
    restore the recorded baseline before making a request.
@@ -173,8 +192,11 @@ resources is out of scope and needs a separate destructive-action approval.
 The readiness record may move this gap only after it has safe evidence of:
 
 - the normal baseline task revision and steady service state;
-- the disposable exporter-loss revision and the one changed non-secret
-  exporter receiver setting;
+- the failed first revision `3` configuration-boundary result and automatic
+  restoration to revision `2`, explicitly marked as non-evidence for exporter
+  loss;
+- the disposable collector-receiver-mismatch revision and the one changed
+  non-secret receiver setting;
 - a protected request `200` during the rehearsal;
 - the redacted `missing` coverage verdict after the full coverage-window
   isolation wait;

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T14:23:13Z
-latest_commit_sha: 345a034
-chat_duration: 16895s (00:04:41:35)
+latest_commit_at_utc: 2026-09-22T15:07:05Z
+latest_commit_sha: b5f741f
+chat_duration: 19527s (00:05:25:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -49,6 +49,10 @@ Approve synthetic scheduler activation bundle
 - Raised: Commit gate found a stale generated artifact-recognition index
   Resolution: The governed generator refreshed only .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml. Review confirmed an index-only delta: artifact IDs and paths for metadata-bearing deployment artifacts, with no curated terminology or routing-policy change.
 
+
+- Raised: First exporter-loss task revision exited before serving traffic
+  Resolution: Revision 3 changed the application endpoint to port 4319. The adapter correctly rejected that non-approved endpoint during startup; ECS restored revision 2. No smoke, coverage, or alert evidence was claimed, and temporary local task-definition material was removed.
+
 ## Decisions Made
 
 
@@ -76,6 +80,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Require full coverage-window isolation for exporter-loss rehearsal
   Rationale: The verifier searches the preceding 1,200 seconds. Its five-minute arrival grace allows normal ingestion but cannot prove a broken exporter: an earlier healthy metric may still be visible. The target policy now declares rehearsal_isolation_wait_seconds=1200, validated equal to query_window_seconds; plans and handbook require waiting the whole window after the broken-export smoke.
 
+
+- Decision: Preserve the fixed application endpoint and fault the disposable collector receiver instead
+  Rationale: The application remains at the security-reviewed 127.0.0.1:4318 endpoint. The corrected task revision changes only collector AOT_CONFIG_CONTENT from receiver port 4318 to 4319, retaining its health check, pipeline, exporter, image, and task role. That induces a real local delivery failure without allowing arbitrary telemetry egress.
+
 ## Context Hygiene
 
 
@@ -98,6 +106,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Add governed recognition-index refresh to this commit
   Durable evidence: The generated artifact index now contains 860 metadata artifacts and 1,732 terms. Its change is derived index data only; source-of-truth timing policy remains in the target profile, rehearsal plan, closure programme, readiness manifest, and verifier tests.
+
+
+- Summary: Record the corrected exporter-loss fault boundary
+  Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
 
 ## Activity Log
 
@@ -254,6 +266,45 @@ Summary: Bound the exporter-loss rehearsal to the full 1,200-second coverage loo
 
 ADR impact: No ADR: target-specific operational safety correction; no generic architecture changed.
 
+
+### 2026-09-22T15:02:50Z - Issue
+
+Raised: First exporter-loss task revision exited before serving traffic
+
+Resolution: Revision 3 changed the application endpoint to port 4319. The adapter correctly rejected that non-approved endpoint during startup; ECS restored revision 2. No smoke, coverage, or alert evidence was claimed, and temporary local task-definition material was removed.
+
+
+### 2026-09-22T15:02:50Z - Decision
+
+Decision: Preserve the fixed application endpoint and fault the disposable collector receiver instead
+
+Rationale: The application remains at the security-reviewed 127.0.0.1:4318 endpoint. The corrected task revision changes only collector AOT_CONFIG_CONTENT from receiver port 4318 to 4319, retaining its health check, pipeline, exporter, image, and task role. That induces a real local delivery failure without allowing arbitrary telemetry egress.
+
+
+### 2026-09-22T15:02:50Z - ADR disposition
+
+ADR needed: no
+
+Reason: This corrects a staging rehearsal method under the existing task-local collector ADR; it does not alter provider-neutral platform architecture or the production endpoint-security model.
+
+
+### 2026-09-22T15:02:51Z - Context hygiene
+
+Summary: Record the corrected exporter-loss fault boundary
+
+Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
+
+
+### 2026-09-22T15:07:05Z - Commit recorded
+
+Commit: `b5f741f`
+
+Message: fix(observability): correct exporter-loss fault boundary
+
+Summary: Recorded revision 3 as configuration-boundary evidence only, preserved the fixed application endpoint, and revised the bounded staging rehearsal to create delivery loss by moving only the disposable collector receiver while retaining its health and export pipeline.
+
+ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -289,6 +340,13 @@ ADR impact: No ADR: target-specific operational safety correction; no generic ar
   Summary: Bound the exporter-loss rehearsal to the full 1,200-second coverage lookback, recorded live IAM and safe coverage-verdict evidence without claiming alert receipt, updated static policy checks, and refreshed the governed artifact-recognition index required by the repository gate.
   ADR impact: No ADR: target-specific operational safety correction; no generic architecture changed.
 
+
+- Commit: `b5f741f`
+  Time UTC: 2026-09-22T15:07:05Z
+  Message: fix(observability): correct exporter-loss fault boundary
+  Summary: Recorded revision 3 as configuration-boundary evidence only, preserved the fixed application endpoint, and revised the bounded staging rehearsal to create delivery loss by moving only the disposable collector receiver while retaining its health and export pipeline.
+  ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -297,14 +355,14 @@ ADR impact: No ADR: target-specific operational safety correction; no generic ar
 
 ADR needed: no
 ADR path: 
-Reason: This is target-specific operational policy binding the existing 1,200-second verifier window to a staging rehearsal; it neither changes a reusable platform architecture nor introduces a provider-neutral contract.
+Reason: This corrects a staging rehearsal method under the existing task-local collector ADR; it does not alter provider-neutral platform architecture or the production endpoint-security model.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T14:23:13Z
-Latest commit SHA: 345a034
-Chat duration: 16895s (00:04:41:35)
+Latest commit at UTC: 2026-09-22T15:07:05Z
+Latest commit SHA: b5f741f
+Chat duration: 19527s (00:05:25:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

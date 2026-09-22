@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 11
+#   version: 12
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -478,7 +478,7 @@ else:
             fail("deployed metric delivery must retain the explicit SLO and exporter-loss coverage gap")
         elif coverage.get("closure_plan") != {
             "coverage_signal": "target-owned-metric-freshness-check-outside-the-application-exporter-path",
-            "rehearsal": "separately-approved-disposable-staging-task-revision-with-unavailable-loopback-export-endpoint",
+            "rehearsal": "separately-approved-disposable-staging-task-revision-with-collector-receiver-mismatch-and-fixed-application-endpoint",
             "request_expectation": "protected-request-succeeds-while-telemetry-is-best-effort",
             "evidence_expectation": "coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery",
             "recovery": "restore-normal-task-revision-through-governed-rollback-path",

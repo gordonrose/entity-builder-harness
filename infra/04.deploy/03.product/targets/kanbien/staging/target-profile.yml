@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 26
+#   version: 27
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -469,7 +469,7 @@ observability:
       requirement: Export loss must be visible as an operational coverage concern and must prevent a healthy SLO claim for an affected window.
       closure_plan:
         coverage_signal: target-owned-metric-freshness-check-outside-the-application-exporter-path
-        rehearsal: separately-approved-disposable-staging-task-revision-with-unavailable-loopback-export-endpoint
+        rehearsal: separately-approved-disposable-staging-task-revision-with-collector-receiver-mismatch-and-fixed-application-endpoint
         request_expectation: protected-request-succeeds-while-telemetry-is-best-effort
         evidence_expectation: coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery
         recovery: restore-normal-task-revision-through-governed-rollback-path
@@ -495,6 +495,11 @@ observability:
     query_window_seconds: 1200
     arrival_grace_seconds: 300
     rehearsal_isolation_wait_seconds: 1200
+    rehearsal_fault_injection:
+      application_endpoint: http://127.0.0.1:4318/v1/metrics
+      disposable_collector_receiver_endpoint: 127.0.0.1:4319
+      application_endpoint_rule: fixed-task-local-adapter-boundary-must-remain-unchanged
+      collector_configuration_rule: replace-only-non-secret-receiver-setting-in-disposable-task-revision
     verdicts:
       - observed
       - missing
