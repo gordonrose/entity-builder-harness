@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 15
+version: 16
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -111,10 +111,11 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    status-only output. Its nominal `17 */4 * * *` UTC cadence is best effort:
    GitHub scheduling delay or a missed run must become a coverage concern, not
    a false green SLO. The separately reviewed IAM role/policy is deployed and
-   verified. Before activation, merge the workflow to `origin/main` and record
-   the first redacted live result. It is labelled synthetic boundary evidence,
-   never unqualified customer SLO traffic, and will later be replaced by the
-   governed platform scheduler module and adapter.
+   verified; the workflow is on `origin/main`; and a manual first redacted
+   `200` result is recorded. The first clock-triggered run remains to be
+   observed. It is labelled synthetic boundary evidence, never unqualified
+   customer SLO traffic, and will later be replaced by the governed platform
+   scheduler module and adapter.
 2. Create a separate, deliberately scope-less or differently scoped Cognito
    machine client before proving the protected route returns `403`. Keep the
    existing correctly scoped `200` proof separate; an invalid token is a `401`
@@ -178,8 +179,11 @@ stored secret value.
 - Attached and read back only `ReadOnlyControlledSmokeSecret`. It permits only
   `secretsmanager:GetSecretValue` for the one declared Cognito smoke-client
   secret ARN. No secret value was retrieved or recorded.
-- The role is presently dormant because the workflow is not yet on remote
-  `main`; no GitHub run or protected request has occurred.
+- The role was initially dormant until source promotion. The workflow is now on
+  remote `main`; its manually dispatched first run completed successfully as
+  run `35711517748` from source `9ccad368a34684afaa9b7ed64d7dba85f4b3fae8`,
+  returning only the approved `200` status and `266` ms duration. A
+  clock-triggered run remains to be observed.
 
 ### Exact execution sequence after approval
 

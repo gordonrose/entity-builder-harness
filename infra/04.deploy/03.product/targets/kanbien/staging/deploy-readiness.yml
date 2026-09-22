@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 22
+#   version: 23
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -87,10 +87,18 @@ deployment:
       allowed_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       command: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
       replacement: replace-with-governed-platform-scheduler-contract-and-adapter
-      activation_status: iam-ready-source-promotion-and-first-live-run-pending
+      activation_status: active-manual-first-run-proven-scheduled-trigger-pending
       activation_prerequisites:
-        - merge-workflow-to-origin-main
-        - record-first-redacted-live-run-result
+        - record-first-scheduled-trigger-result
+      first_live_proof:
+        source_commit_sha: 9ccad368a34684afaa9b7ed64d7dba85f4b3fae8
+        github_run_id: "35711517748"
+        github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35711517748
+        completed_at_utc: "2026-09-22T09:38:37Z"
+        result: passed
+        http_status: 200
+        duration_ms: 266
+        output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
@@ -476,12 +484,12 @@ auth:
     permitted_output: status-and-safe-latency-only-no-token-secret-or-response-body
     limitation: correctly-scoped-200-only-separate-valid-negative-client-required-for-403
     temporary_scheduler:
-      status: iam-ready-source-promotion-pending
+      status: active-manual-first-run-proven-scheduled-trigger-pending
       workflow: .github/workflows/platform-shell-staging-synthetic.yml
       policy_check: npm run platform:shell:synthetic-scheduler:check
       cadence_target: nominal-every-4-hours-best-effort
       delivery_assurance: does-not-prove-telemetry-coverage-or-customer-slo
-      activation: requires-separate-aws-role-creation-and-first-live-run-evidence
+      activation: iam-role-and-manual-first-live-run-proven-scheduled-trigger-pending
   health_exposure:
     livez: public
     readyz: authenticated
@@ -604,7 +612,7 @@ blockers:
     severity: blocking
     path: observability.slos-and-coverage
     reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, but one controlled request is insufficient for the 28-day SLO confidence policy. Exporter-loss coverage, SLO calculations, dashboard/runbook, and capability-alert delivery remain unproven.
-    resolution: Activate the source-prepared least-privilege GitHub Actions synthetic role and workflow after a separately approved IAM plan, record its first redacted live result, calculate each SLO from PromQL with its confidence state, then use a disposable task revision with an unavailable loopback exporter endpoint to prove coverage loss, incomplete confidence, recovery, and capability-alert delivery. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
+    resolution: The least-privilege GitHub Actions synthetic role, workflow, and manual first redacted `200` result are now proven. Record the first clock-triggered run, calculate each SLO from PromQL with its confidence state, then use a disposable task revision with an unavailable loopback exporter endpoint to prove coverage loss, incomplete confidence, recovery, and capability-alert delivery. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

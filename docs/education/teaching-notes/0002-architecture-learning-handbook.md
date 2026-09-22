@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 16
+  version: 17
   status: active
   layer: 05.education
   domain: education
@@ -8641,11 +8641,10 @@ performance. We need both to make the boundary trustworthy.
 
 ## 93. Next Lesson Queue
 
-1. Promote the prepared temporary GitHub Actions synthetic scheduler to
-   `origin/main`, then record its first redacted live run. Its separate IAM
-   role has been deployed and verified. Treat its nominal four-hour cadence as
-   best effort boundary evidence, not telemetry-coverage proof or a customer
-   SLO.
+1. Record the first clock-triggered temporary GitHub Actions synthetic run.
+   Its separate IAM role, source promotion, and manual first redacted `200`
+   result are complete. Treat its nominal four-hour cadence as best effort
+   boundary evidence, not telemetry-coverage proof or a customer SLO.
 2. Design the coverage signal and run a separately approved exporter-loss
    rehearsal. Prove that a successful request plus missing telemetry becomes
    insufficient SLO confidence and an operator signal.
@@ -8655,11 +8654,12 @@ performance. We need both to make the boundary trustworthy.
 
 ## 94. A Temporary Scheduler Is Not a Platform Scheduler
 
-The staging smoke command now has a temporary delivery mechanism prepared: a
+The staging smoke command now has an active temporary delivery mechanism: a
 GitHub Actions workflow scheduled at `17 */4 * * *` UTC. Its isolated IAM role
-is deployed, but the workflow remains dormant until it is promoted to remote
-`main`. It is a practical bridge for a quiet, low-cost target—not the reusable
-scheduler capability the platform will eventually expose.
+is deployed and a manual run has proved the whole fixed request path. The first
+clock-triggered run remains evidence to collect. It is a practical bridge for
+a quiet, low-cost target—not the reusable scheduler capability the platform
+will eventually expose.
 
 ```text
 GitHub's best-effort clock
@@ -8747,6 +8747,11 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-22: Promoted the temporary scheduler source to `origin/main` and
+  manually dispatched its first run. GitHub run `35711517748` completed from
+  source `9ccad368a34684afaa9b7ed64d7dba85f4b3fae8` with the approved redacted
+  result: protected request `200` in `266` ms. This proves the controlled path,
+  not the first clock-triggered run, telemetry coverage, or a customer SLO.
 - 2026-09-22: Created and read back the temporary scheduler's separate AWS IAM
   role. Its main-only GitHub OIDC trust, four ownership tags, and one
   `GetSecretValue` permission exactly match the reviewed source. The workflow

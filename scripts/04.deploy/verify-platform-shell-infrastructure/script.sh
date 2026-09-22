@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 9
+#   version: 10
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -630,7 +630,7 @@ else:
     synthetic_check = synthetic_checks[0]
     expected_synthetic_check = {
         "id": "platform-smoke-protected-read",
-        "status": "iam-ready-source-promotion-pending",
+        "status": "active-manual-first-run-proven-scheduled-trigger-pending",
         "command": "npm run platform:shell:controlled-smoke",
         "cadence_target": "nominal-every-4-hours-best-effort",
         "identity": "dedicated-least-privilege-machine-client",
@@ -641,7 +641,7 @@ else:
         },
         "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
         "evidence_interpretation": "synthetic-boundary-evidence-not-unqualified-customer-traffic",
-        "scheduler": "github-actions-temporary-iam-ready-source-promotion-pending",
+        "scheduler": "github-actions-temporary-active-manual-first-run-proven-scheduled-trigger-pending",
         "scheduler_execution_policy": "deployment.execution_policy.temporary_synthetic_scheduler",
     }
     if synthetic_check != expected_synthetic_check:

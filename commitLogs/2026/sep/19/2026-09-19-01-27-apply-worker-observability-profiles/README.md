@@ -500,6 +500,18 @@ Summary: Added the governed controlled-token smoke command, temporary main-only 
 
 ADR impact: No new ADR: bounded staging-target bridge; the reusable platform scheduler contract and adapter remain separately planned.
 
+### 2026-09-22 - Temporary synthetic scheduler manual proof
+
+- Promoted the scheduler source to `origin/main` at merge commit `9ccad36` and
+  manually dispatched GitHub Actions run `35711517748` from the exact source
+  commit `9ccad368a34684afaa9b7ed64d7dba85f4b3fae8`.
+- The workflow completed successfully. Its safe controlled-smoke output was
+  `200` in `266` ms; no secret, token, authorization header, response body, or
+  provider payload was retrieved into repository evidence.
+- This proves the IAM role, OIDC path, token acquisition, and fixed protected
+  request. It does not yet prove the scheduled clock trigger, telemetry
+  coverage, an SLO, or customer traffic behaviour.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 33
+version: 34
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -969,12 +969,13 @@ claim.
    The scheduler is a separate GitHub OIDC role and workflow with only one
    secret-read permission, a fixed protected read, a nominal four-hour UTC
    cadence, non-overlap, and a five-minute bound. The separately approved IAM
-   change is deployed and read back; source promotion to `origin/main` and a
-   first redacted live result remain before activation. GitHub's schedule is
-   best effort, not a guaranteed interval: it provides recurring labelled
-   synthetic boundary evidence, not customer traffic, telemetry coverage
-   proof, or an unqualified customer SLO. A later platform scheduler contract
-   and adapter replace this bridge. The 28-day objectives remain
+   change is deployed and read back; the source is on `origin/main`; and a
+   manual first run returned the fixed protected route's redacted `200` result.
+   The first clock-triggered run remains evidence to collect. GitHub's schedule
+   is best effort, not a guaranteed interval: it provides recurring labelled
+   synthetic boundary evidence, not customer traffic, telemetry coverage proof,
+   or an unqualified customer SLO. A later platform scheduler contract and
+   adapter replace this bridge. The 28-day objectives remain
    `insufficient-confidence` until their explicit minimum population and
    coverage rules are met.
 
