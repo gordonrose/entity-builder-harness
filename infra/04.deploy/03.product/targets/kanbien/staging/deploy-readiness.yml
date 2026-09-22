@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 29
+#   version: 30
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -152,6 +152,11 @@ deployment:
           affected_slo_confidence: insufficient-confidence
           alert_publish_path: completed-without-operator-receipt-claim
           output_policy: safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload
+      operator_alert_receipt:
+        status: confirmed-by-operator
+        confirmed_on_utc: "2026-09-22"
+        event: declared-metric-coverage-missing-insufficient-confidence
+        retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
@@ -639,9 +644,9 @@ proof:
   aws_read_only_inspection: container-insights-enhanced-five-platform-alarms-ok-and-both-stacks-update-complete-2026-09-22
   deployment_smoke: public-livez-200-protected-401-and-correctly-scoped-200-and-cloudwatch-otel-counter-histogram-query-proven-2026-09-22
   controlled_smoke_command: implemented-and-locally-validated-2026-09-22
-  rollback_proof: collector-receiver-mismatch-and-baseline-telemetry-recovery-proven-pending-operator-alert-receipt-2026-09-22
+  rollback_proof: collector-receiver-mismatch-baseline-telemetry-recovery-and-operator-alert-receipt-proven-2026-09-22
   exporter_loss_rehearsal:
-    status: live-proven-pending-operator-alert-receipt
+    status: live-proven-with-operator-alert-receipt
     source_commit_sha: fbe45401ce1b6f1dc0018dfcd9c6c299b31074ad
     baseline_task_definition_revision: "2"
     disposable_fault_task_definition_revision: "4"
@@ -686,7 +691,12 @@ proof:
       metric_coverage: observed
       affected_slo_confidence: not-determined
       coverage_execution: governed-local-read-only-query-after-five-minute-arrival-grace
-      meaning: proves-the-main-only-workflow-establishes-and-advances-the-cumulative-counter-not-clock-trigger-or-operator-alert-receipt
+      meaning: proves-the-main-only-workflow-establishes-and-advances-the-cumulative-counter-not-clock-trigger
+    operator_alert_receipt:
+      status: confirmed-by-operator
+      confirmed_on_utc: "2026-09-22"
+      event: declared-metric-coverage-missing-insufficient-confidence
+      retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
     retained_evidence_policy: no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses
 blockers:
   - id: platform-shell-readiness.deferred-worker-runtime
@@ -704,16 +714,11 @@ blockers:
     path: auth.rate_limiting
     reason: The deployed workflow proves liveness only. Deployed 429 behaviour, ALB-only ingress, WAF host scope, and routing evidence have not yet been independently recorded.
     resolution: Run at most the declared window limit plus one sequential request and stop on the first 429; use read-only WAF association/listener-host-rule inspection plus a bounded public-host check. Record only aggregate counts, final status, and safe resource evidence.
-  - id: platform-shell-readiness.operational-proof
-    severity: blocking
-    path: proof
-    reason: Read-only inspection confirms a recent CloudWatch log-stream event, the implemented ALB alarms in OK state, and a confirmed SNS email subscription. The collector-receiver-mismatch rehearsal now proves reversible task-definition rollback and telemetry recovery, but the operator has not yet confirmed receipt of the existing coverage alert.
-    resolution: Verify an explicitly marked end-to-end alert receipt without committing email content before marking the target ready.
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage
-    reason: CloudWatch PromQL returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has produced both `observed` and fail-closed `missing` verdicts. The corrected disposable revision 4 kept the application endpoint at `4318`, moved only the collector receiver to `4319`, returned a protected `200`, and then produced `missing` with `insufficient-confidence` after full-window isolation. Baseline revision 2 was restored and a two-request recovery sequence returned `observed`; the first request established the fresh cumulative counter baseline and the later request advanced it. Main-only workflow run `35764615475` then proved the governed two-point, 75-second synthetic implementation produces `observed` coverage after its five-minute arrival grace. The 28-day calculation remains insufficient-confidence below 100 eligible observations. Operator alert receipt, dashboard/runbook, capability-alarm delivery, and clock-triggered schedule proof remain unproven.
-    resolution: Use the declared two-point synthetic sequence for every scheduled freshness check, record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, confirm operator receipt of the existing coverage concern without committing message content, and then complete dashboard/runbook and capability-alarm delivery proof. The temporary best-effort GitHub schedule must not be treated as telemetry coverage or customer-SLO proof.
+    reason: CloudWatch PromQL returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has produced both `observed` and fail-closed `missing` verdicts. The corrected disposable revision 4 kept the application endpoint at `4318`, moved only the collector receiver to `4319`, returned a protected `200`, and then produced `missing` with `insufficient-confidence` after full-window isolation. Baseline revision 2 was restored and a two-request recovery sequence returned `observed`; the first request established the fresh cumulative counter baseline and the later request advanced it. Main-only workflow run `35764615475` then proved the governed two-point, 75-second synthetic implementation produces `observed` coverage after its five-minute arrival grace. The operator has confirmed receipt of the existing missing-coverage concern without repository retention of message content. The 28-day calculation remains insufficient-confidence below 100 eligible observations. Dashboard/runbook, capability-alarm delivery, and clock-triggered schedule proof remain unproven.
+    resolution: Use the declared two-point synthetic sequence for every scheduled freshness check, record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, and then complete dashboard/runbook and capability-alarm delivery proof. The temporary best-effort GitHub schedule must not be treated as telemetry coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

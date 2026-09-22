@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 6
+version: 7
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -170,9 +170,10 @@ a later advancing request before `increase()` can prove recovery. Main-only
 workflow run `35764615475` subsequently proved the governed two-point synthetic
 implementation: it made the fixed pair 75 seconds apart and the read-only
 coverage verdict after its five-minute arrival grace was `observed`. This is
-manual-dispatch implementation evidence only: the first clock-trigger proof and
-operator receipt of the existing fixed alert remain outstanding, and the source
-record deliberately retains no email content.
+manual-dispatch implementation evidence only: the first clock-trigger proof
+remains outstanding. The operator has confirmed receipt of the existing fixed
+alert; the source record deliberately retains no email content, email address,
+subscription identifier, or link.
 
 ### E. Remaining bounded readiness proof
 
