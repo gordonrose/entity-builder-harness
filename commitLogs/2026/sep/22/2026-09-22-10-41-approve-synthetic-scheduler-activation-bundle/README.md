@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T14:23:13Z
-latest_commit_sha: 345a034
-chat_duration: 16895s (00:04:41:35)
+latest_commit_at_utc: 2026-09-22T15:07:05Z
+latest_commit_sha: b5f741f
+chat_duration: 19527s (00:05:25:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -294,6 +294,17 @@ Summary: Record the corrected exporter-loss fault boundary
 
 Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
 
+
+### 2026-09-22T15:07:05Z - Commit recorded
+
+Commit: `b5f741f`
+
+Message: fix(observability): correct exporter-loss fault boundary
+
+Summary: Recorded revision 3 as configuration-boundary evidence only, preserved the fixed application endpoint, and revised the bounded staging rehearsal to create delivery loss by moving only the disposable collector receiver while retaining its health and export pipeline.
+
+ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -329,6 +340,13 @@ Durable evidence: Revision 3 is retained as non-destructive configuration-bounda
   Summary: Bound the exporter-loss rehearsal to the full 1,200-second coverage lookback, recorded live IAM and safe coverage-verdict evidence without claiming alert receipt, updated static policy checks, and refreshed the governed artifact-recognition index required by the repository gate.
   ADR impact: No ADR: target-specific operational safety correction; no generic architecture changed.
 
+
+- Commit: `b5f741f`
+  Time UTC: 2026-09-22T15:07:05Z
+  Message: fix(observability): correct exporter-loss fault boundary
+  Summary: Recorded revision 3 as configuration-boundary evidence only, preserved the fixed application endpoint, and revised the bounded staging rehearsal to create delivery loss by moving only the disposable collector receiver while retaining its health and export pipeline.
+  ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -342,9 +360,9 @@ Reason: This corrects a staging rehearsal method under the existing task-local c
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T14:23:13Z
-Latest commit SHA: 345a034
-Chat duration: 16895s (00:04:41:35)
+Latest commit at UTC: 2026-09-22T15:07:05Z
+Latest commit SHA: b5f741f
+Chat duration: 19527s (00:05:25:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
