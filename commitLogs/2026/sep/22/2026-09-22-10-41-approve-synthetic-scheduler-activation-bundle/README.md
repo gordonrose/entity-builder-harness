@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T10:19:28Z
-latest_commit_sha: bcab34d
-chat_duration: 2270s (00:00:37:50)
+latest_commit_at_utc: 2026-09-22T13:59:16Z
+latest_commit_sha: 0aa81db
+chat_duration: 15458s (00:04:17:38)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -181,6 +181,17 @@ Summary: Source and live-read-only evidence for metric coverage and the SLO eval
 
 Durable evidence: Local metric-coverage, policy, infrastructure, and deterministic segmented-SLO tests pass. Live staging evidence is a normal coverage verdict observed and a 28-day calculation with approximately two eligible observations returning insufficient-confidence. Raw provider responses, query strings, and credentials were not stored.
 
+
+### 2026-09-22T13:59:16Z - Commit recorded
+
+Commit: `0aa81db`
+
+Message: feat(observability): add staging metric coverage verifier
+
+Summary: Added a target-owned CloudWatch metric-coverage verifier, a main-only least-privilege GitHub workflow and IAM source, 28 one-day SLO evaluation, deterministic tests, and aligned readiness, plans, and handbook evidence. Local gates pass; live read-only coverage is observed while the 28-day SLO remains insufficient-confidence below 100 observations.
+
+ADR impact: No ADR: this is a target-specific effective-query limit and bounded operational verifier, not a generic platform architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -202,6 +213,13 @@ Durable evidence: Local metric-coverage, policy, infrastructure, and determinist
   Summary: Added the no-mutation staging exporter-loss rehearsal plan, corrected the target catalogue’s deployed-metric state, and linked the implementation plan, initial AWS plan, and handbook to the approved boundary.
   ADR impact: No new ADR: the plan applies the existing task-local collector decision and defers all AWS mutation to a separately approved execution turn.
 
+
+- Commit: `0aa81db`
+  Time UTC: 2026-09-22T13:59:16Z
+  Message: feat(observability): add staging metric coverage verifier
+  Summary: Added a target-owned CloudWatch metric-coverage verifier, a main-only least-privilege GitHub workflow and IAM source, 28 one-day SLO evaluation, deterministic tests, and aligned readiness, plans, and handbook evidence. Local gates pass; live read-only coverage is observed while the 28-day SLO remains insufficient-confidence below 100 observations.
+  ADR impact: No ADR: this is a target-specific effective-query limit and bounded operational verifier, not a generic platform architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -215,9 +233,9 @@ Reason: This activates and records evidence for an already-approved temporary sc
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T10:19:28Z
-Latest commit SHA: bcab34d
-Chat duration: 2270s (00:00:37:50)
+Latest commit at UTC: 2026-09-22T13:59:16Z
+Latest commit SHA: 0aa81db
+Chat duration: 15458s (00:04:17:38)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
