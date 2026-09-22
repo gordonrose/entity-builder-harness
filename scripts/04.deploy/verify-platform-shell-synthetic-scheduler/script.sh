@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-synthetic-scheduler
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -134,11 +134,20 @@ expected_execution_policy = {
     "allowed_secret_arn": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5",
     "command": "npm run platform:shell:controlled-smoke -- --aws-credential-source environment",
     "replacement": "replace-with-governed-platform-scheduler-contract-and-adapter",
-    "activation_status": "iam-ready-source-promotion-and-first-live-run-pending",
+    "activation_status": "active-manual-first-run-proven-scheduled-trigger-pending",
     "activation_prerequisites": [
-        "merge-workflow-to-origin-main",
-        "record-first-redacted-live-run-result",
+        "record-first-scheduled-trigger-result",
     ],
+    "first_live_proof": {
+        "source_commit_sha": "9ccad368a34684afaa9b7ed64d7dba85f4b3fae8",
+        "github_run_id": "35711517748",
+        "github_run_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/35711517748",
+        "completed_at_utc": "2026-09-22T09:38:37Z",
+        "result": "passed",
+        "http_status": "200",
+        "duration_ms": "266",
+        "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
+    },
 }
 target_execution_policy = nested(target_profile, "deployment", "execution_policy", "temporary_synthetic_scheduler")
 require(target_execution_policy == expected_execution_policy, "target profile must retain the exact reviewed temporary synthetic scheduler policy")
@@ -148,7 +157,7 @@ require(readiness_execution_policy == expected_execution_policy, "readiness mani
 synthetic_checks = nested(target_profile, "observability", "synthetic_checks")
 expected_synthetic_check = {
     "id": "platform-smoke-protected-read",
-    "status": "iam-ready-source-promotion-pending",
+    "status": "active-manual-first-run-proven-scheduled-trigger-pending",
     "command": "npm run platform:shell:controlled-smoke",
     "cadence_target": "nominal-every-4-hours-best-effort",
     "identity": "dedicated-least-privilege-machine-client",
@@ -159,7 +168,7 @@ expected_synthetic_check = {
     },
     "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
     "evidence_interpretation": "synthetic-boundary-evidence-not-unqualified-customer-traffic",
-    "scheduler": "github-actions-temporary-iam-ready-source-promotion-pending",
+    "scheduler": "github-actions-temporary-active-manual-first-run-proven-scheduled-trigger-pending",
     "scheduler_execution_policy": "deployment.execution_policy.temporary_synthetic_scheduler",
 }
 require(synthetic_checks == [expected_synthetic_check], "target profile must retain the single bounded, explicitly non-SLO synthetic check")

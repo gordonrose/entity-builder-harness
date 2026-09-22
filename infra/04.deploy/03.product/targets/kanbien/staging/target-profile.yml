@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 23
+#   version: 24
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -112,10 +112,18 @@ deployment:
       allowed_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       command: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
       replacement: replace-with-governed-platform-scheduler-contract-and-adapter
-      activation_status: iam-ready-source-promotion-and-first-live-run-pending
+      activation_status: active-manual-first-run-proven-scheduled-trigger-pending
       activation_prerequisites:
-        - merge-workflow-to-origin-main
-        - record-first-redacted-live-run-result
+        - record-first-scheduled-trigger-result
+      first_live_proof:
+        source_commit_sha: 9ccad368a34684afaa9b7ed64d7dba85f4b3fae8
+        github_run_id: "35711517748"
+        github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35711517748
+        completed_at_utc: "2026-09-22T09:38:37Z"
+        result: passed
+        http_status: 200
+        duration_ms: 266
+        output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
@@ -627,7 +635,7 @@ observability:
         runbook: deferred-until-slo-delivery-is-provisioned
   synthetic_checks:
     - id: platform-smoke-protected-read
-      status: iam-ready-source-promotion-pending
+      status: active-manual-first-run-proven-scheduled-trigger-pending
       command: npm run platform:shell:controlled-smoke
       cadence_target: nominal-every-4-hours-best-effort
       identity: dedicated-least-privilege-machine-client
@@ -637,7 +645,7 @@ observability:
         expected_http_status: 200
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       evidence_interpretation: synthetic-boundary-evidence-not-unqualified-customer-traffic
-      scheduler: github-actions-temporary-iam-ready-source-promotion-pending
+      scheduler: github-actions-temporary-active-manual-first-run-proven-scheduled-trigger-pending
       scheduler_execution_policy: deployment.execution_policy.temporary_synthetic_scheduler
   data_lifecycle:
     metric_evidence:

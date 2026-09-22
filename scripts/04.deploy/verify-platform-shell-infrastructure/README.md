@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.verify-platform-shell-infrastructure.readme
-version: 5
+version: 6
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -41,13 +41,14 @@ unbounded delivery state.
 
 It also invokes the dedicated synthetic-scheduler policy check. That check
 binds the one redacted controlled-token smoke command to an isolated GitHub
-OIDC role that can read only its declared secret. The nominal four-hour GitHub
-schedule is deliberately labelled best effort: it creates recurring boundary
-observations once activated, but cannot by itself prove telemetry coverage or a
-customer SLO. The wider closure policy still requires a future metric-freshness
-signal and exporter-loss rehearsal, plus bounded `403`, `429`, WAF, alert, and
-rollback exercises. Those entries make the remaining work visible; they do not
-claim it has been run.
+OIDC role that can read only its declared secret. The first manual invocation
+proves the fixed controlled request path, while the first clock-triggered run
+remains separately required evidence. The nominal four-hour GitHub schedule is
+deliberately labelled best effort: it creates recurring boundary observations,
+but cannot by itself prove telemetry coverage or a customer SLO. The wider
+closure policy still requires a future metric-freshness signal and exporter-loss
+rehearsal, plus bounded `403`, `429`, WAF, alert, and rollback exercises. Those
+entries make the remaining work visible; they do not claim it has been run.
 
 Run it with:
 
