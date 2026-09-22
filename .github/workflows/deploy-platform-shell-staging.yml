@@ -9,7 +9,7 @@
 #   - agentic
 #   - sre
 #   kind: ci-workflow
-#   purpose: Build and publish the Kanbien staging platform shell image through the GitHub OIDC deployment path before ECS service mutation.
+#   purpose: Build, scan, attest, and publish the Kanbien staging platform shell image without mutating ECS or CloudFormation.
 #   portability:
 #     class: internal
 #     targets: []
@@ -21,7 +21,7 @@
 #   - id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
 #     path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
 
-name: Deploy Platform Shell Staging
+name: Publish Platform Shell Staging Image
 
 on:
   workflow_dispatch:
@@ -35,7 +35,7 @@ on:
         required: true
         default: gcr.io/distroless/nodejs22-debian12:nonroot
       publish_image:
-        description: Push the built image to the staging ECR repository.
+        description: Push the checked, scanned, and attested image to the staging ECR repository; this workflow never deploys it.
         required: true
         type: boolean
         default: true
@@ -55,16 +55,7 @@ env:
   AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
   ECR_REPOSITORY: platform-shell
   ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell
-  FOUNDATION_STACK: kanbien-staging-platform-shell-foundation
-  FOUNDATION_COMPOSITION: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
-  SERVICE_STACK: kanbien-staging-platform-shell-service
-  SERVICE_TEMPLATE: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
-  SERVICE_DEPLOYMENT_ROLE_ARN: arn:aws:iam::337159794548:role/kanbien-staging-platform-shell-service-deploy
   READINESS_MANIFEST: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
-  OBSERVABILITY_PREREQUISITE_CHECK: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
-  ECS_CLUSTER: kanbien-staging
-  ECS_SERVICE: kanbien-staging-platform-shell
-  SERVICE_URL: https://staging.platform.kanbien.com
 
 jobs:
   build-image:
@@ -129,27 +120,9 @@ jobs:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Verify ECS telemetry prerequisite for service alarms
-        if: ${{ inputs.publish_image }}
-        run: |
-          bash "$OBSERVABILITY_PREREQUISITE_CHECK" \
-            --region "$AWS_REGION" \
-            --cluster "$ECS_CLUSTER" \
-            --service "$ECS_SERVICE"
-
       - name: Log in to Amazon ECR
         if: ${{ inputs.publish_image }}
         uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Validate CloudFormation templates in the selected account
-        if: ${{ inputs.publish_image }}
-        run: |
-          foundation_template="$RUNNER_TEMP/platform-shell-foundation.yml"
-          bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
-            --manifest "$FOUNDATION_COMPOSITION" \
-            --output "$foundation_template"
-          aws cloudformation validate-template --template-body "file://$foundation_template" >/dev/null
-          aws cloudformation validate-template --template-body "file://$SERVICE_TEMPLATE" >/dev/null
 
       - name: Resolve digest-pinned build and runtime images
         id: base-image
@@ -377,47 +350,7 @@ jobs:
           push-to-registry: true
           create-storage-record: false
 
-      - name: Verify the manually governed foundation stack
-        if: ${{ inputs.publish_image }}
-        run: |
-          aws cloudformation describe-stacks \
-            --stack-name "$FOUNDATION_STACK" \
-            --query "Stacks[0].StackStatus" \
-            --output text | grep -E '^(CREATE_COMPLETE|UPDATE_COMPLETE|IMPORT_COMPLETE)$'
-
-      - name: Deploy immutable image digest to the platform-shell service stack
-        if: ${{ inputs.publish_image }}
-        run: |
-          aws cloudformation deploy \
-            --stack-name "$SERVICE_STACK" \
-            --template-file "$SERVICE_TEMPLATE" \
-            --role-arn "$SERVICE_DEPLOYMENT_ROLE_ARN" \
-            --parameter-overrides \
-              FoundationStackName="$FOUNDATION_STACK" \
-              ImageUri="${{ steps.image.outputs.uri }}" \
-            --no-fail-on-empty-changeset
-
-      - name: Prove the public health and authentication boundary
-        if: ${{ inputs.publish_image }}
-        run: |
-          set -euo pipefail
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error --max-time 5 "$SERVICE_URL/livez" >/dev/null; then
-              break
-            fi
-            if [ "$attempt" = "30" ]; then
-              echo "Platform-shell liveness endpoint did not become healthy." >&2
-              exit 1
-            fi
-            sleep 10
-          done
-          status="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 5 "$SERVICE_URL/smoke/deploy-probe")"
-          if [ "$status" != "401" ]; then
-            echo "Expected unauthenticated smoke route to return 401, got $status." >&2
-            exit 1
-          fi
-
-      - name: Record deployment summary
+      - name: Record image-publication summary
         run: |
           {
             echo "## Platform Shell staging image"
@@ -441,13 +374,8 @@ jobs:
             else
               echo "- Image publish: skipped by workflow input"
             fi
-            echo "- Service URL: $SERVICE_URL"
+            echo "- Service deployment: not performed by this workflow"
             echo ""
-            if [ "${{ inputs.publish_image }}" = "true" ]; then
-              echo "- ECS service stack: $SERVICE_STACK"
-              echo "- Health and unauthenticated-route smoke: passed in this workflow"
-            else
-              echo "- Service deployment: skipped because image publishing was skipped"
-            fi
-            echo "Authorized-route, shared-rate-limit, WAF, alarm-delivery, and rollback proof remain separate governed deployment evidence."
+            echo "- Next action: create and review target CloudFormation change sets using the immutable image URI above."
+            echo "- Public health, authentication, rate-limit, WAF, alarm-delivery, and rollback proof remain separate governed deployment evidence."
           } >> "$GITHUB_STEP_SUMMARY"

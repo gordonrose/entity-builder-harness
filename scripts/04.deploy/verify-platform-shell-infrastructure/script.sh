@@ -617,37 +617,73 @@ if alarm_destination.get("id") != "foundation-alarm-topic":
 if target_profile.get("deployment", {}).get("cloudformation", {}).get("validation", {}).get("service_observability_prerequisite_check") != "scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh":
     fail("target profile must declare the governed service observability prerequisite check")
 
-target_cluster_arn = target_profile.get("aws", {}).get("cluster", "")
-target_cluster_name = target_cluster_arn.rsplit("/", 1)[-1]
-target_service_name = target_profile.get("runtime", {}).get("server", {}).get("service")
-for required_workflow_text in (
-    "OBSERVABILITY_PREREQUISITE_CHECK: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh",
-    f"ECS_CLUSTER: {target_cluster_name}",
-    f"ECS_SERVICE: {target_service_name}",
-    'bash "$OBSERVABILITY_PREREQUISITE_CHECK"',
-    '--cluster "$ECS_CLUSTER"',
-    '--service "$ECS_SERVICE"',
+target_execution_policy = target_profile.get("deployment", {}).get("execution_policy", {})
+if not isinstance(target_execution_policy, dict):
+    fail("target profile deployment execution policy must be a mapping")
+    target_execution_policy = {}
+
+image_publication = target_execution_policy.get("repeatable_image_publication", {})
+expected_image_publication = {
+    "mutation_style": "github-actions-oidc-ecr-publication-only",
+    "workflow": ".github/workflows/deploy-platform-shell-staging.yml",
+    "approval": "github-environment-manual",
+    "role_name": "github-platform-shell-staging-deploy",
+    "role_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+    "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json",
+    "role_policy_deployment_status": "source-narrowed-pending-governed-iam-change",
+}
+if not isinstance(image_publication, dict):
+    fail("target profile must define a repeatable GitHub image-publication policy")
+else:
+    for key, expected in expected_image_publication.items():
+        if image_publication.get(key) != expected:
+            fail(f"target GitHub image-publication policy must set {key} to the reviewed value")
+
+service_stack_change = target_execution_policy.get("repeatable_service_stack_change", {})
+expected_service_stack_change = {
+    "mutation_style": "governed-manual-aws-cli-change-set",
+    "aws_profile": "kanbien-dev",
+    "governing_workflow": ".agentic/aws/workflows/execute-approved-aws-change.md",
+    "execution_gate": "reviewed-cloudformation-change-set-and-explicit-current-chat-approval",
+}
+if not isinstance(service_stack_change, dict):
+    fail("target profile must define a separately governed repeatable service-stack change policy")
+else:
+    for key, expected in expected_service_stack_change.items():
+        if service_stack_change.get(key) != expected:
+            fail(f"target governed service-stack-change policy must set {key} to the reviewed value")
+
+for forbidden_workflow_command in (
+    "aws cloudformation deploy",
+    "aws cloudformation create-change-set",
+    "aws cloudformation execute-change-set",
+    "aws ecs update-service",
+    "aws ecs register-task-definition",
 ):
-    if required_workflow_text not in github_workflow:
-        fail("GitHub deployment workflow must run the reviewed ECS telemetry prerequisite check before service deployment")
+    if forbidden_workflow_command in github_workflow:
+        fail(f"GitHub image-publication workflow must not contain service mutation command: {forbidden_workflow_command}")
 
-github_cluster_telemetry_statement = next(
-    (item for item in github_deployment_policy.get("Statement", []) if item.get("Sid") == "ReadSelectedPlatformShellClusterTelemetryPrerequisite"),
-    None,
-)
-if github_cluster_telemetry_statement is None:
-    fail("GitHub deployment identity policy must include the selected-cluster telemetry read statement")
-elif github_cluster_telemetry_statement.get("Effect") != "Allow" or github_cluster_telemetry_statement.get("Action") != ["ecs:DescribeClusters"] or github_cluster_telemetry_statement.get("Resource") != target_cluster_arn:
-    fail("GitHub deployment identity must read ECS telemetry settings only from the selected cluster")
-
-github_metric_telemetry_statement = next(
-    (item for item in github_deployment_policy.get("Statement", []) if item.get("Sid") == "DiscoverCloudWatchTelemetryPrerequisiteMetric"),
-    None,
-)
-if github_metric_telemetry_statement is None:
-    fail("GitHub deployment identity policy must include the CloudWatch metric-discovery read statement")
-elif github_metric_telemetry_statement.get("Effect") != "Allow" or github_metric_telemetry_statement.get("Action") != ["cloudwatch:ListMetrics"] or github_metric_telemetry_statement.get("Resource") != "*":
-    fail("GitHub deployment identity must use only the required CloudWatch metric-discovery read")
+github_policy_statements = github_deployment_policy.get("Statement", [])
+if not isinstance(github_policy_statements, list):
+    fail("GitHub image-publication identity policy must contain a statement list")
+    github_policy_statements = []
+expected_github_policy_sids = {"EcrAuth", "PlatformShellEcrImageAccess"}
+actual_github_policy_sids = {
+    statement.get("Sid")
+    for statement in github_policy_statements
+    if isinstance(statement, dict)
+}
+if actual_github_policy_sids != expected_github_policy_sids:
+    fail("GitHub image-publication identity policy must contain only the reviewed ECR statements")
+for statement in github_policy_statements:
+    if not isinstance(statement, dict):
+        fail("GitHub image-publication identity policy statements must be mappings")
+        continue
+    actions = statement.get("Action", [])
+    if isinstance(actions, str):
+        actions = [actions]
+    if not isinstance(actions, list) or not actions or any(not isinstance(action, str) or not action.startswith("ecr:") for action in actions):
+        fail("GitHub image-publication identity policy must allow only ECR actions")
 
 telemetry_prerequisites = observability.get("telemetry_prerequisites")
 if not isinstance(telemetry_prerequisites, list) or len(telemetry_prerequisites) != 1:

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 15
+#   version: 16
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -59,7 +59,7 @@ deployment:
       service_observability_prerequisite_check: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
       execution_gate: reviewed-cloudformation-change-set-and-explicit-current-chat-approval
   execution_policy:
-    style: hybrid-bootstrap-manual-then-github-oidc
+    style: governed-manual-service-changes-plus-github-image-publication
     bootstrap:
       mutation_style: governed-manual-aws-cli
       aws_profile: kanbien-dev
@@ -67,14 +67,19 @@ deployment:
       allowed_initial_mutations:
         - create-platform-shell-foundation-stack
         - create-platform-shell-runtime-service
-    repeatable_deploy:
-      mutation_style: github-actions-oidc
+    repeatable_image_publication:
+      mutation_style: github-actions-oidc-ecr-publication-only
       workflow: .github/workflows/deploy-platform-shell-staging.yml
       approval: github-environment-manual
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
       role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
-      role_policy_deployment_status: source-updated-pending-governed-iam-change
+      role_policy_deployment_status: source-narrowed-pending-governed-iam-change
+    repeatable_service_stack_change:
+      mutation_style: governed-manual-aws-cli-change-set
+      aws_profile: kanbien-dev
+      governing_workflow: .agentic/aws/workflows/execute-approved-aws-change.md
+      execution_gate: reviewed-cloudformation-change-set-and-explicit-current-chat-approval
 source:
   provider: github
   repository: gordonrose/entity-builder-harness
@@ -175,7 +180,8 @@ cloud:
   account_id: "337159794548"
   profile: kanbien-dev
   bootstrap_identity: aws-profile:kanbien-dev
-  repeatable_deployment_identity: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+  image_publication_identity: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
+  repeatable_service_change_identity: aws-profile:kanbien-dev
   region: eu-west-1
 aws:
   cluster: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging

@@ -331,6 +331,37 @@ Summary: Added a target-only CloudWatch OpenTelemetry metrics adapter, target co
 
 ADR impact: ADR 0029 records the task-local collector boundary and ECS task-role limitation.
 
+### 2026-09-22 - Image-publication and service-deployment authority separated
+
+- Found that the protected GitHub workflow combined image publication with a
+  CloudFormation service-stack deployment. That would have allowed a
+  scan-accepted image run to change the running service without a separately
+  reviewed change set.
+- Changed the workflow and its verifier so it may only build, scan, attest,
+  and publish an immutable ECR image. It is mechanically rejected if it
+  contains a CloudFormation or ECS service-mutation command.
+- Narrowed the source GitHub OIDC policy to the two ECR-only statements and
+  updated the target profile/readiness manifest to distinguish GitHub image
+  publication from the governed manual service-stack change-set procedure.
+  The source change does not alter the live AWS role; that IAM update remains
+  an explicitly reviewed AWS operation.
+- Updated the deployment plan, runtime plan, and learning handbook with the
+  rationale and next sequencing: publish the image first, then create, review,
+  and explicitly approve the CloudFormation change set against its immutable
+  digest.
+- Verification passed: workflow static check, infrastructure static-policy
+  check, readiness planning check (intentionally blocked with seven evidence
+  gaps), and whitespace validation. No AWS resource or identity changed.
+
+### 2026-09-22 - ADR disposition
+
+ADR needed: no
+
+Reason: This is a least-privilege enforcement refinement of the existing
+target delivery decision in ADR 0029. It does not select a new provider,
+runtime boundary, or persistence model; it constrains the automation authority
+that publishes the already selected image.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

@@ -174,15 +174,17 @@ verification work above determines when its readiness record can become ready.
    source metric.
 11. Remaining: review a foundation-stack update that grants the existing
    service CloudFormation execution role permission to manage only the three
-   named ECS alarms and tag them. Review the corresponding GitHub OIDC policy
-   update, which grants only `ecs:DescribeClusters` and
-   `cloudwatch:ListMetrics` for the preflight. These are separate, bounded AWS
-   operations; their source declarations are not proof that the live roles
-   changed.
+   named ECS alarms and tag them. Separately apply the reviewed narrowing of
+   the GitHub OIDC role to ECR image-publication permissions only. The
+   telemetry preflight belongs to the governed manual service-stack change
+   procedure, not to the image-publication identity. These are separate,
+   bounded AWS operations; their source declarations are not proof that the
+   live roles changed.
 12. Remaining after those prerequisites: review a service-stack change set
-   that adds exactly the three service-owned alarm resources. The workflow must
-   run the read-only telemetry preflight before it mutates that stack. Then
-   record safe alarm-state and end-to-end notification-delivery evidence.
+   that adds exactly the three service-owned alarm resources. The governed
+   service-stack procedure must run the read-only telemetry preflight before
+   it mutates that stack. Then record safe alarm-state and end-to-end
+   notification-delivery evidence.
 13. Remaining: prove wrong-permission `403`, correctly scoped `200`, `429`
    from the shared limiter, WAF/routing evidence, log delivery, alarm
    configuration, and a rollback exercise.
@@ -193,14 +195,17 @@ verification work above determines when its readiness record can become ready.
 15. Proposed, not applied: commit and merge the reviewed observability source
     to `origin/main`, then run the protected GitHub workflow to produce a
     scan-accepted immutable image digest containing that exact target
-    composition. Only then review a separate observability-delivery change set.
-    It adds a task-local ADOT collector, non-secret SSM pipeline configuration,
-    a distinct collector log group, execution-role read access for that one
-    parameter, and task-role `cloudwatch:PutMetricData`. The task grows from
-    256 CPU / 512 MiB to 512 CPU / 1024 MiB to reserve sidecar capacity. Apply
-    only after the rendered template and IAM delta show the expected narrow
-    changes; then prove a public smoke request produces a queryable metric and
-    that collector loss does not become a false healthy SLO.
+    composition. That workflow publishes evidence and the digest to ECR; it
+    does **not** change CloudFormation, ECS, or the running service. Only then
+    create and review a separate observability-delivery change set under the
+    governed manual AWS procedure. It adds a task-local ADOT collector,
+    non-secret SSM pipeline configuration, a distinct collector log group,
+    execution-role read access for that one parameter, and task-role
+    `cloudwatch:PutMetricData`. The task grows from 256 CPU / 512 MiB to 512
+    CPU / 1024 MiB to reserve sidecar capacity. Apply only after the rendered
+    template and IAM delta show the expected narrow changes; then prove a
+    public smoke request produces a queryable metric and that collector loss
+    does not become a false healthy SLO.
 
 ## Expected AWS blast radius
 
