@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T18:15:57Z
-latest_commit_sha: 8a46978
-chat_duration: 30859s (00:08:34:19)
+latest_commit_at_utc: 2026-09-22T18:25:17Z
+latest_commit_sha: 091d95d
+chat_duration: 31419s (00:08:43:39)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -469,6 +469,17 @@ ADR needed: no
 
 Reason: This records operational evidence under existing staging observability policy; it does not change the reusable platform architecture.
 
+
+### 2026-09-22T18:25:17Z - Commit recorded
+
+Commit: `091d95d`
+
+Message: docs(observability): record alert receipt proof
+
+Summary: Recorded the operator-confirmed staging metric-coverage alert receipt without retaining mailbox data, removed the resolved operational-proof blocker, and aligned target policy, static verifiers, readiness evidence, and plans.
+
+ADR impact: No ADR: target-specific operational proof under the existing observability closure policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -525,6 +536,13 @@ Reason: This records operational evidence under existing staging observability p
   Summary: Recorded the passed main-only two-request workflow run and its observed coverage verdict in the readiness manifest and operational plans, while preserving the clock-trigger and operator-receipt gaps.
   ADR impact: No ADR: target-specific evidence update under existing observability and staging deployment policy.
 
+
+- Commit: `091d95d`
+  Time UTC: 2026-09-22T18:25:17Z
+  Message: docs(observability): record alert receipt proof
+  Summary: Recorded the operator-confirmed staging metric-coverage alert receipt without retaining mailbox data, removed the resolved operational-proof blocker, and aligned target policy, static verifiers, readiness evidence, and plans.
+  ADR impact: No ADR: target-specific operational proof under the existing observability closure policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -538,9 +556,9 @@ Reason: This records operational evidence under existing staging observability p
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T18:15:57Z
-Latest commit SHA: 8a46978
-Chat duration: 30859s (00:08:34:19)
+Latest commit at UTC: 2026-09-22T18:25:17Z
+Latest commit SHA: 091d95d
+Chat duration: 31419s (00:08:43:39)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
