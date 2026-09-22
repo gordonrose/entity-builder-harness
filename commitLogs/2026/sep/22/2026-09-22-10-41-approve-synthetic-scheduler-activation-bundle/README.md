@@ -64,6 +64,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The exporter-loss rehearsal plan applies the existing target observability boundary: target-owned policy, provider-specific delivery, explicit coverage loss, and no sensitive telemetry labels.
 
+
+- Decision: Adopt one-day effective SLO query windows
+  Rationale: CloudWatch documents a seven-day maximum, but the selected staging OTLP counter accepted one-day increase lookbacks and safely rejected two days and above. The target evaluator uses 28 adjacent one-day windows with shared boundaries; the policy and handbook record both the documented and observed limits.
+
 ## Context Hygiene
 
 
@@ -74,6 +78,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: The exporter-loss plan is source-only: it proposes a five-minute grace, CloudWatch PromQL metric-arrival verifier, safe coverage verdicts, an alert proof, and a disposable loopback-broken task revision with immediate rollback.
   Durable evidence: Durable details are in docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md; target catalogue and implementation/education plans link to it.
+
+
+- Summary: Source and live-read-only evidence for metric coverage and the SLO evaluator is now compacted.
+  Durable evidence: Local metric-coverage, policy, infrastructure, and deterministic segmented-SLO tests pass. Live staging evidence is a normal coverage verdict observed and a 28-day calculation with approximately two eligible observations returning insufficient-confidence. Raw provider responses, query strings, and credentials were not stored.
 
 ## Activity Log
 
@@ -158,6 +166,20 @@ ADR impact: No new ADR: the plan applies the existing task-local collector decis
 Raised: Chat branch diverged from main after the prior approved scheduler-proof merge
 
 Resolution: Fetched remote main, rehearsed the non-rewriting merge in a disposable preflight worktree, reran the synthetic/infrastructure/readiness checks, and applied clean preflight commit 5b26926 with no conflicts, stash, or discarded work.
+
+
+### 2026-09-22T13:55:46Z - Decision
+
+Decision: Adopt one-day effective SLO query windows
+
+Rationale: CloudWatch documents a seven-day maximum, but the selected staging OTLP counter accepted one-day increase lookbacks and safely rejected two days and above. The target evaluator uses 28 adjacent one-day windows with shared boundaries; the policy and handbook record both the documented and observed limits.
+
+
+### 2026-09-22T13:55:50Z - Context hygiene
+
+Summary: Source and live-read-only evidence for metric coverage and the SLO evaluator is now compacted.
+
+Durable evidence: Local metric-coverage, policy, infrastructure, and deterministic segmented-SLO tests pass. Live staging evidence is a normal coverage verdict observed and a 28-day calculation with approximately two eligible observations returning insufficient-confidence. Raw provider responses, query strings, and credentials were not stored.
 
 ## Sub-Agent Activity
 

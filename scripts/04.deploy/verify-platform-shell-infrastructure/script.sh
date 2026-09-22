@@ -36,6 +36,7 @@ bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
   --output "$RENDERED_FOUNDATION" >/dev/null
 bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
 bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'

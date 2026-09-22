@@ -8725,6 +8725,54 @@ durable schedule record, delivery/lease semantics, retry policy, and target
 observability. At that point, this workflow can be retired rather than quietly
 growing into a hidden platform subsystem.
 
+## 96. A Documented Limit Is Not Always Your Effective Limit
+
+Provider documentation is an important design input, but a production target
+must still prove the exact query shape it relies on. CloudWatch documents a
+seven-day maximum PromQL range. During the staging read-only check, however,
+the selected OpenTelemetry counter accepted a one-day `increase()` lookback
+and returned a safe HTTP `400` for two days and above. Historical one-day
+evaluations—one, seven, and twenty-seven days earlier—did work.
+
+So the target records both facts rather than pretending they are the same:
+
+```text
+documented provider maximum:      7 days
+live-proven target query window:  1 day
+28-day SLO calculation:           28 adjacent one-day windows
+```
+
+The evaluator reuses the same 28 time boundaries for every part of one
+calculation. It sums counter increases for availability, then merges the
+histogram's cumulative bucket counts before calculating p95 and p99. It does
+not average daily percentiles: an average of p95 values is not the p95 of the
+combined population.
+
+The first live result had only about two eligible requests. That is a useful
+proof of the query mechanism, but the policy needs 100 observations over the
+real rolling 28-day period. The result is therefore
+`insufficient-confidence`, which is the honest state—not healthy and not a
+service failure.
+
+### Misconception check
+
+“The documentation says seven days, so a seven-day query must be safe in every
+target.”
+
+No. Documentation describes a supported outer boundary. Your exact metric
+model, function, labels, endpoint behaviour, and currently deployed target
+must still be verified. Record the observed effective limit, test it without
+retaining raw provider errors, and keep the evaluator inside that limit.
+
+### Study question
+
+Why do we merge histogram buckets before calculating p95/p99 instead of
+averaging a p95 from each day?
+
+Because a percentile depends on the complete distribution of observations.
+Bucket counts let us reconstruct that combined distribution; daily percentile
+values have already thrown information away.
+
 ### Misconception check
 
 “The scheduler is in GitHub Actions, so it is a CI test.”

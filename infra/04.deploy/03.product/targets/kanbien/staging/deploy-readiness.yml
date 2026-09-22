@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 23
+#   version: 24
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -99,6 +99,33 @@ deployment:
         http_status: 200
         duration_ms: 266
         output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
+    temporary_metric_coverage:
+      mutation_style: github-actions-oidc-promql-coverage-and-fixed-sns-alert
+      workflow: .github/workflows/platform-shell-staging-metric-coverage.yml
+      trigger: schedule-and-manual-dispatch
+      schedule_cron_utc: "35 */4 * * *"
+      delivery_assurance: best-effort-nominal-four-hour-cadence-coverage-concern-not-customer-slo-proof
+      deployable_ref: refs/heads/main
+      github_environment: none
+      role_name: github-platform-shell-staging-metric-coverage
+      role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage
+      inline_policy_name: ReadDeclaredPromqlAndPublishCoverageConcern
+      tags:
+        service: platform-shell
+        environment: staging
+        managed-by: github-actions
+        purpose: metric-coverage
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-policy.json
+      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-trust.json
+      role_policy_deployment_status: source-only
+      allowed_aws_actions:
+        - cloudwatch:GetMetricData
+        - cloudwatch:ListMetrics
+        - sns:Publish
+      allowed_alert_topic_arn: arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms
+      command: npm run platform:shell:metric-coverage -- --aws-credential-source environment --notify-on-non-observed
+      replacement: replace-with-governed-platform-scheduler-contract-and-adapter
+      activation_status: source-implemented-pending-aws-activation
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
@@ -611,8 +638,8 @@ blockers:
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage
-    reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, but one controlled request is insufficient for the 28-day SLO confidence policy. Exporter-loss coverage, SLO calculations, dashboard/runbook, and capability-alert delivery remain unproven.
-    resolution: The least-privilege GitHub Actions synthetic role, workflow, and manual first redacted `200` result are now proven. Record the first clock-triggered run, calculate each SLO from PromQL with its confidence state, then use a disposable task revision with an unavailable loopback exporter endpoint to prove coverage loss, incomplete confidence, recovery, and capability-alert delivery. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
+    reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, but one controlled request is insufficient for the 28-day SLO confidence policy. A 2026-09-22 read-only query proved this metric accepts one-day, including historical, `increase()` lookbacks and rejects longer lookbacks; the declared evaluator consequently uses 28 adjacent one-day windows. Exporter-loss coverage, full SLO calculation evidence, dashboard/runbook, and capability-alert delivery remain unproven.
+    resolution: The least-privilege GitHub Actions synthetic role, workflow, and manual first redacted `200` result are now proven. Record the first clock-triggered run, calculate each SLO from its 28 one-day PromQL windows with its confidence state, then use a disposable task revision with an unavailable loopback exporter endpoint to prove coverage loss, incomplete confidence, recovery, and capability-alert delivery. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation
