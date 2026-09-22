@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 10
+#   version: 11
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -474,7 +474,7 @@ else:
         elif not isinstance(live_proof.get("verified_at_utc"), str) or not live_proof["verified_at_utc"]:
             fail("deployed metric delivery must record a non-secret proof date")
         coverage = metric_delivery.get("coverage", {})
-        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-proven-slo-evaluation-and-exporter-loss-proof-pending":
+        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-and-independent-coverage-verdict-path-proven-exporter-loss-proof-pending":
             fail("deployed metric delivery must retain the explicit SLO and exporter-loss coverage gap")
         elif coverage.get("closure_plan") != {
             "coverage_signal": "target-owned-metric-freshness-check-outside-the-application-exporter-path",

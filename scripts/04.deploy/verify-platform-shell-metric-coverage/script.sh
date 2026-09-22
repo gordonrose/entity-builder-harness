@@ -109,7 +109,7 @@ trust = load_json(TRUST_PATH)
 package = load_json(PACKAGE_PATH)
 coverage = mapping(nested(target_profile, "observability", "metric_coverage"), "target metric_coverage")
 expected_coverage = {
-    "status": "source-implemented-pending-aws-activation",
+    "status": "activated-and-live-verified-exporter-loss-proof-pending",
     "id": "platform-smoke-protected-read-metric-coverage",
     "command": "npm run platform:shell:metric-coverage",
     "scheduler": {
@@ -118,7 +118,7 @@ expected_coverage = {
         "schedule_cron_utc": "35 */4 * * *",
         "execution_identity": "github-platform-shell-staging-metric-coverage",
         "role_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage",
-        "deployment_status": "source-only",
+        "deployment_status": "deployed-and-live-inspected",
     },
     "expected_metric": {
         "instrument_name": "kanbien.platform.server.request.outcome",
@@ -132,6 +132,7 @@ expected_coverage = {
     },
     "query_window_seconds": "1200",
     "arrival_grace_seconds": "300",
+    "rehearsal_isolation_wait_seconds": "1200",
     "verdicts": ["observed", "missing", "query-failed", "notification-failed"],
     "non_observed_slo_confidence": "insufficient-confidence",
     "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",
@@ -165,12 +166,35 @@ expected_execution_policy = {
     "tags": {"service": "platform-shell", "environment": "staging", "managed-by": "github-actions", "purpose": "metric-coverage"},
     "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-policy.json",
     "trust_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-trust.json",
-    "role_policy_deployment_status": "source-only",
+    "role_policy_deployment_status": "deployed-and-live-inspected",
     "allowed_aws_actions": ["cloudwatch:GetMetricData", "cloudwatch:ListMetrics", "sns:Publish"],
     "allowed_alert_topic_arn": "arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms",
     "command": "npm run platform:shell:metric-coverage -- --aws-credential-source environment --notify-on-non-observed",
     "replacement": "replace-with-governed-platform-scheduler-contract-and-adapter",
-    "activation_status": "source-implemented-pending-aws-activation",
+    "activation_status": "active-manual-observed-and-non-observed-verdicts-proven-scheduled-trigger-pending",
+    "live_policy_proof": {
+        "inspection": ["aws-iam-get-role", "aws-iam-get-role-policy"],
+        "verified_at_utc": "2026-09-22",
+        "allowed_mutation_scope": "declared-promql-read-and-one-fixed-sns-coverage-concern-only",
+    },
+    "first_live_verdicts": {
+        "observed": {
+            "source_commit_sha": "e33fbad5ccbb4c0845bb68651cd52c87d96197eb",
+            "github_run_id": "35737959555",
+            "result": "passed",
+            "metric_coverage": "observed",
+            "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",
+        },
+        "non_observed": {
+            "source_commit_sha": "e33fbad5ccbb4c0845bb68651cd52c87d96197eb",
+            "github_run_id": "35737520603",
+            "result": "expected-failure",
+            "metric_coverage": "missing",
+            "affected_slo_confidence": "insufficient-confidence",
+            "alert_publish_path": "completed-without-operator-receipt-claim",
+            "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",
+        },
+    },
 }
 require(nested(readiness, "deployment", "execution_policy", "temporary_metric_coverage") == expected_execution_policy, "readiness manifest must retain the exact reviewed metric-coverage execution policy")
 

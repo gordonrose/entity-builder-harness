@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -147,12 +147,15 @@ intentionally closed loopback endpoint. No image, collector, secret, DNS, WAF,
 rate-limit, or authorization setting may change. Update only the staging
 platform-shell service and wait for a healthy steady state.
 
-Run the controlled protected smoke. It must still return `200`. After the
-grace period, run the independent verifier: it must report `missing`, mark the
-affected SLO result `insufficient-confidence`, and notify the existing alert
-destination. Restore the exact captured task definition, wait for steady
-state, repeat the controlled smoke, and prove an `observed` verdict. Any
-health or smoke failure triggers immediate baseline restoration.
+Run the controlled protected smoke. It must still return `200`. After that
+request, wait the full declared 1,200-second coverage lookback—not merely the
+five-minute arrival grace—before running the independent verifier. The wait
+must exclude all earlier healthy observations from the query window. The
+verifier must then report `missing`, mark the affected SLO result
+`insufficient-confidence`, and notify the existing alert destination. Restore
+the exact captured task definition, wait for steady state, repeat the
+controlled smoke, and prove an `observed` verdict. Any health or smoke failure
+triggers immediate baseline restoration.
 
 ### E. Remaining bounded readiness proof
 

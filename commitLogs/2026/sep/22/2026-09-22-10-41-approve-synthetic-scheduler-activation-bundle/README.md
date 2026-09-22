@@ -45,6 +45,10 @@ Approve synthetic scheduler activation bundle
 - Raised: Chat branch diverged from main after the prior approved scheduler-proof merge
   Resolution: Fetched remote main, rehearsed the non-rewriting merge in a disposable preflight worktree, reran the synthetic/infrastructure/readiness checks, and applied clean preflight commit 5b26926 with no conflicts, stash, or discarded work.
 
+
+- Raised: Commit gate found a stale generated artifact-recognition index
+  Resolution: The governed generator refreshed only .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml. Review confirmed an index-only delta: artifact IDs and paths for metadata-bearing deployment artifacts, with no curated terminology or routing-policy change.
+
 ## Decisions Made
 
 
@@ -68,6 +72,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Adopt one-day effective SLO query windows
   Rationale: CloudWatch documents a seven-day maximum, but the selected staging OTLP counter accepted one-day increase lookbacks and safely rejected two days and above. The target evaluator uses 28 adjacent one-day windows with shared boundaries; the policy and handbook record both the documented and observed limits.
 
+
+- Decision: Require full coverage-window isolation for exporter-loss rehearsal
+  Rationale: The verifier searches the preceding 1,200 seconds. Its five-minute arrival grace allows normal ingestion but cannot prove a broken exporter: an earlier healthy metric may still be visible. The target policy now declares rehearsal_isolation_wait_seconds=1200, validated equal to query_window_seconds; plans and handbook require waiting the whole window after the broken-export smoke.
+
 ## Context Hygiene
 
 
@@ -82,6 +90,14 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Source and live-read-only evidence for metric coverage and the SLO evaluator is now compacted.
   Durable evidence: Local metric-coverage, policy, infrastructure, and deterministic segmented-SLO tests pass. Live staging evidence is a normal coverage verdict observed and a 28-day calculation with approximately two eligible observations returning insufficient-confidence. Raw provider responses, query strings, and credentials were not stored.
+
+
+- Summary: Record live coverage activation evidence without overclaiming alert receipt
+  Durable evidence: Durable evidence is in deploy-readiness: IAM role and inline policy were live-inspected; run 35737959555 returned observed; run 35737520603 returned missing and insufficient-confidence. SNS publish-path completion is not operator receipt proof. The actual exporter-loss/recovery rehearsal has not started.
+
+
+- Summary: Add governed recognition-index refresh to this commit
+  Durable evidence: The generated artifact index now contains 860 metadata artifacts and 1,732 terms. Its change is derived index data only; source-of-truth timing policy remains in the target profile, rehearsal plan, closure programme, readiness manifest, and verifier tests.
 
 ## Activity Log
 
@@ -192,6 +208,41 @@ Summary: Added a target-owned CloudWatch metric-coverage verifier, a main-only l
 
 ADR impact: No ADR: this is a target-specific effective-query limit and bounded operational verifier, not a generic platform architecture decision.
 
+
+### 2026-09-22T14:12:04Z - Decision
+
+Decision: Require full coverage-window isolation for exporter-loss rehearsal
+
+Rationale: The verifier searches the preceding 1,200 seconds. Its five-minute arrival grace allows normal ingestion but cannot prove a broken exporter: an earlier healthy metric may still be visible. The target policy now declares rehearsal_isolation_wait_seconds=1200, validated equal to query_window_seconds; plans and handbook require waiting the whole window after the broken-export smoke.
+
+
+### 2026-09-22T14:12:05Z - Context hygiene
+
+Summary: Record live coverage activation evidence without overclaiming alert receipt
+
+Durable evidence: Durable evidence is in deploy-readiness: IAM role and inline policy were live-inspected; run 35737959555 returned observed; run 35737520603 returned missing and insufficient-confidence. SNS publish-path completion is not operator receipt proof. The actual exporter-loss/recovery rehearsal has not started.
+
+
+### 2026-09-22T14:12:09Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is target-specific operational policy binding the existing 1,200-second verifier window to a staging rehearsal; it neither changes a reusable platform architecture nor introduces a provider-neutral contract.
+
+
+### 2026-09-22T14:16:59Z - Issue
+
+Raised: Commit gate found a stale generated artifact-recognition index
+
+Resolution: The governed generator refreshed only .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml. Review confirmed an index-only delta: artifact IDs and paths for metadata-bearing deployment artifacts, with no curated terminology or routing-policy change.
+
+
+### 2026-09-22T14:16:59Z - Context hygiene
+
+Summary: Add governed recognition-index refresh to this commit
+
+Durable evidence: The generated artifact index now contains 860 metadata artifacts and 1,732 terms. Its change is derived index data only; source-of-truth timing policy remains in the target profile, rehearsal plan, closure programme, readiness manifest, and verifier tests.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -228,7 +279,7 @@ ADR impact: No ADR: this is a target-specific effective-query limit and bounded 
 
 ADR needed: no
 ADR path: 
-Reason: This activates and records evidence for an already-approved temporary scheduler bridge; it does not create or change the planned reusable platform scheduler architecture.
+Reason: This is target-specific operational policy binding the existing 1,200-second verifier window to a staging rehearsal; it neither changes a reusable platform architecture nor introduces a provider-neutral contract.
 
 ## Session Metrics
 

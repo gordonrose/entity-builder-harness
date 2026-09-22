@@ -166,6 +166,10 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         raise MetricCoverageError("the target profile alert must remain scoped to the existing target-owned SNS topic")
     if alert.get("message_policy") != "fixed-safe-verdict-only-no-metric-response-or-request-data":
         raise MetricCoverageError("the target profile alert must retain its fixed safe message policy")
+    query_window_seconds = integer(coverage.get("query_window_seconds"), "observability.metric_coverage.query_window_seconds", 300, 3600)
+    rehearsal_isolation_wait_seconds = integer(coverage.get("rehearsal_isolation_wait_seconds"), "observability.metric_coverage.rehearsal_isolation_wait_seconds", 300, 3600)
+    if rehearsal_isolation_wait_seconds != query_window_seconds:
+        raise MetricCoverageError("the exporter-loss rehearsal isolation wait must equal the metric coverage query window")
     return {
         "account_id": account_id,
         "region": region,
@@ -173,8 +177,9 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "coverage_id": coverage_id,
         "metric_name": metric_name,
         "required_labels": required_labels,
-        "query_window_seconds": integer(coverage.get("query_window_seconds"), "observability.metric_coverage.query_window_seconds", 300, 3600),
+        "query_window_seconds": query_window_seconds,
         "arrival_grace_seconds": integer(coverage.get("arrival_grace_seconds"), "observability.metric_coverage.arrival_grace_seconds", 60, 900),
+        "rehearsal_isolation_wait_seconds": rehearsal_isolation_wait_seconds,
         "topic_arn": topic_arn,
         "alert_subject": subject,
         "slo_query_window_days": integer(slo_query.get("effective_max_increase_lookback_days"), "observability.slo_query.effective_max_increase_lookback_days", 1, 7),
