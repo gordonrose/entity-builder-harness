@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 17
+  version: 18
   status: active
   layer: 05.education
   domain: education
@@ -8672,6 +8672,40 @@ fixed protected GET /smoke/synthetic-read
         ↓
 safe status and latency result
 ```
+
+## 95. What the Exporter-Loss Rehearsal Proves
+
+The exporter-loss rehearsal is not a test to see whether an application can
+survive a broken application feature. Telemetry is deliberately best effort, so
+the application should survive. It is a test of whether operations notices
+that the evidence path has become unreliable.
+
+```text
+one expected protected request
+        │
+        ├── application result: 200
+        │
+        └── expected metric: absent after grace period
+                         │
+                         ▼
+       coverage verdict: missing → SLO confidence: insufficient-confidence
+                         │
+                         ▼
+                    operator alert
+```
+
+The monitor is independent of the application exporter. It queries the
+approved CloudWatch OpenTelemetry series through PromQL after the expected
+request. It must use only the existing bounded labels—not a unique request ID
+or customer identifier. A missing expected metric is not an error rate of zero;
+it is missing evidence.
+
+The rehearsal uses one disposable staging task revision with its
+application-side exporter pointed at a closed loopback receiver. The request
+must still return `200`; then the monitor must report `missing`, mark the
+affected SLO window `insufficient-confidence`, notify the operator, and prove
+recovery after the normal revision is restored. The detailed execution boundary
+is in the exporter-loss rehearsal plan and needs separate AWS approval.
 
 The role cannot deploy ECS, change CloudFormation, administer Cognito, or read
 any other secret. It does not reuse the image-publishing role because “can push

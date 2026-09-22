@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 16
+version: 17
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -105,8 +105,8 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 ## Remaining verification work
 
 1. The governed controlled-token smoke command and temporary GitHub Actions
-   scheduler source are prepared locally. The future workflow has a separate
-   OIDC role which can only read the one declared opaque raw client secret,
+   scheduler are active on `origin/main`. Its separate OIDC role can only read
+   the one declared opaque raw client secret,
    then make the fixed HTTPS `GET` smoke route with an in-memory token and
    status-only output. Its nominal `17 */4 * * *` UTC cadence is best effort:
    GitHub scheduling delay or a missed run must become a coverage concern, not
@@ -125,13 +125,15 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    sequential request, stopping on the first `429`. Inspect the ALB host rule
    and WAF association read-only, then perform a bounded hostname/routing
    check. Do not use a broad load test or malicious WAF payload as evidence.
-4. Add a target-owned metric-freshness/coverage signal before performing a
-   separately approved exporter-loss rehearsal. Use a disposable staging task
-   revision whose application exporter has an intentionally unavailable
-   loopback endpoint; confirm the protected request still works while the
-   external coverage check reports incomplete SLO confidence and reaches its
-   alert destination. Restore the normal revision immediately through the
-   recorded rollback path.
+4. Implement the target-owned metric-freshness/coverage signal before
+   performing a separately approved exporter-loss rehearsal. The detailed
+   boundary, safety controls, and evidence requirements are in the
+   [exporter-loss rehearsal plan](kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md).
+   It uses a disposable staging task revision whose application exporter has an
+   intentionally unavailable loopback endpoint; the protected request must
+   still work while the external coverage check reports incomplete SLO
+   confidence and reaches its alert destination. Restore the normal revision
+   immediately through the recorded rollback path.
 5. Prove redacted log delivery, explicitly marked alarm receipt, and a
    reversible task-definition rollback rehearsal. A successful deployment or
    an alarm merely showing `OK` is not either proof.

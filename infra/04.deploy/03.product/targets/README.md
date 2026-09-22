@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: infra.observability
@@ -45,11 +45,13 @@ and delivery state.
 
 | Target | Canonical policy | Selected metric series | Selected SLOs | Delivery state |
 | --- | --- | --- | --- | --- |
-| Kanbien / staging | [target profile](kanbien/staging/target-profile.yml) | `platform-smoke-read-outcome`, `platform-smoke-read-request-response-latency` | `platform-smoke-interactive-read-availability`, `platform-smoke-interactive-read-latency-p95`, `platform-smoke-interactive-read-latency-p99` | Target composition and IaC are prepared and checked locally; no collector, IAM update, deployed metrics, dashboard, SLO query, or capability alarm exists in AWS yet. |
+| Kanbien / staging | [target profile](kanbien/staging/target-profile.yml) | `platform-smoke-read-outcome`, `platform-smoke-read-request-response-latency` | `platform-smoke-interactive-read-availability`, `platform-smoke-interactive-read-latency-p95`, `platform-smoke-interactive-read-latency-p99` | Collector, narrow task IAM, and both metric series are deployed and PromQL-query-proven. SLO population, coverage monitoring, dashboard/runbook, and capability-alert proof remain open; see the [exporter-loss rehearsal plan](../../../../docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md). |
 
 The initial selected AWS delivery path is the local-collector OpenTelemetry
 adapter at
 `platform/adapters/aws/observability/cloudwatch/`. It can only be composed by
 the target after reviewed service IaC provides the collector, task-level
 permissions, lifecycle wiring, coverage signal, and policy-to-IaC proof. The
-prepared source is not a deployed telemetry path or a green SLO claim.
+deployed target path is not a green SLO claim. The independent freshness signal,
+exporter-loss rehearsal, dashboard/runbook, and capability-alert delivery
+remain separate target work.
