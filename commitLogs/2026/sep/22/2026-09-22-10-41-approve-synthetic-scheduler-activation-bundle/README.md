@@ -49,6 +49,10 @@ Approve synthetic scheduler activation bundle
 - Raised: Commit gate found a stale generated artifact-recognition index
   Resolution: The governed generator refreshed only .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml. Review confirmed an index-only delta: artifact IDs and paths for metadata-bearing deployment artifacts, with no curated terminology or routing-policy change.
 
+
+- Raised: First exporter-loss task revision exited before serving traffic
+  Resolution: Revision 3 changed the application endpoint to port 4319. The adapter correctly rejected that non-approved endpoint during startup; ECS restored revision 2. No smoke, coverage, or alert evidence was claimed, and temporary local task-definition material was removed.
+
 ## Decisions Made
 
 
@@ -76,6 +80,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Require full coverage-window isolation for exporter-loss rehearsal
   Rationale: The verifier searches the preceding 1,200 seconds. Its five-minute arrival grace allows normal ingestion but cannot prove a broken exporter: an earlier healthy metric may still be visible. The target policy now declares rehearsal_isolation_wait_seconds=1200, validated equal to query_window_seconds; plans and handbook require waiting the whole window after the broken-export smoke.
 
+
+- Decision: Preserve the fixed application endpoint and fault the disposable collector receiver instead
+  Rationale: The application remains at the security-reviewed 127.0.0.1:4318 endpoint. The corrected task revision changes only collector AOT_CONFIG_CONTENT from receiver port 4318 to 4319, retaining its health check, pipeline, exporter, image, and task role. That induces a real local delivery failure without allowing arbitrary telemetry egress.
+
 ## Context Hygiene
 
 
@@ -98,6 +106,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Add governed recognition-index refresh to this commit
   Durable evidence: The generated artifact index now contains 860 metadata artifacts and 1,732 terms. Its change is derived index data only; source-of-truth timing policy remains in the target profile, rehearsal plan, closure programme, readiness manifest, and verifier tests.
+
+
+- Summary: Record the corrected exporter-loss fault boundary
+  Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
 
 ## Activity Log
 
@@ -254,6 +266,34 @@ Summary: Bound the exporter-loss rehearsal to the full 1,200-second coverage loo
 
 ADR impact: No ADR: target-specific operational safety correction; no generic architecture changed.
 
+
+### 2026-09-22T15:02:50Z - Issue
+
+Raised: First exporter-loss task revision exited before serving traffic
+
+Resolution: Revision 3 changed the application endpoint to port 4319. The adapter correctly rejected that non-approved endpoint during startup; ECS restored revision 2. No smoke, coverage, or alert evidence was claimed, and temporary local task-definition material was removed.
+
+
+### 2026-09-22T15:02:50Z - Decision
+
+Decision: Preserve the fixed application endpoint and fault the disposable collector receiver instead
+
+Rationale: The application remains at the security-reviewed 127.0.0.1:4318 endpoint. The corrected task revision changes only collector AOT_CONFIG_CONTENT from receiver port 4318 to 4319, retaining its health check, pipeline, exporter, image, and task role. That induces a real local delivery failure without allowing arbitrary telemetry egress.
+
+
+### 2026-09-22T15:02:50Z - ADR disposition
+
+ADR needed: no
+
+Reason: This corrects a staging rehearsal method under the existing task-local collector ADR; it does not alter provider-neutral platform architecture or the production endpoint-security model.
+
+
+### 2026-09-22T15:02:51Z - Context hygiene
+
+Summary: Record the corrected exporter-loss fault boundary
+
+Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -297,7 +337,7 @@ ADR impact: No ADR: target-specific operational safety correction; no generic ar
 
 ADR needed: no
 ADR path: 
-Reason: This is target-specific operational policy binding the existing 1,200-second verifier window to a staging rehearsal; it neither changes a reusable platform architecture nor introduces a provider-neutral contract.
+Reason: This corrects a staging rehearsal method under the existing task-local collector ADR; it does not alter provider-neutral platform architecture or the production endpoint-security model.
 
 ## Session Metrics
 

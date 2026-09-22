@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 25
+#   version: 26
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -659,8 +659,8 @@ blockers:
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage
-    reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has independently produced both `observed` and fail-closed `missing` verdicts. The 28-day calculation remains insufficient-confidence because it has fewer than the policy minimum of 100 eligible observations. A 2026-09-22 read-only query proved this metric accepts one-day, including historical, `increase()` lookbacks and rejects longer lookbacks; the declared evaluator consequently uses 28 adjacent one-day windows. The actual exporter-loss/recovery rehearsal, operator alert receipt, dashboard/runbook, and capability-alarm delivery remain unproven.
-    resolution: Record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, then use a disposable task revision with an unavailable loopback exporter endpoint to prove coverage loss, incomplete confidence, recovery, and capability-alert delivery. After the broken-export synthetic, wait the full 1,200-second coverage lookback before querying; the five-minute arrival grace does not exclude an earlier healthy observation. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
+    reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has independently produced both `observed` and fail-closed `missing` verdicts. The 28-day calculation remains insufficient-confidence because it has fewer than the policy minimum of 100 eligible observations. A 2026-09-22 read-only query proved this metric accepts one-day, including historical, `increase()` lookbacks and rejects longer lookbacks; the declared evaluator consequently uses 28 adjacent one-day windows. The first exporter-loss attempt used disposable revision 3 and auto-restored to revision 2 because the application correctly rejected a non-approved `4319` endpoint during startup; it is configuration-boundary evidence, not exporter-loss evidence. The corrected collector-receiver-mismatch rehearsal, operator alert receipt, dashboard/runbook, and capability-alarm delivery remain unproven.
+    resolution: Record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, then leave the application's fixed `4318` endpoint unchanged and use a disposable collector configuration that listens on `4319` to prove local export loss, incomplete confidence, recovery, and capability-alert delivery. After the broken-export synthetic, wait the full 1,200-second coverage lookback before querying; the five-minute arrival grace does not exclude an earlier healthy observation. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

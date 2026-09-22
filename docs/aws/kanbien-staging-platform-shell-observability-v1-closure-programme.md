@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -141,10 +141,14 @@ clock-triggered coverage result separately when it arrives.
 
 ### D. Exporter-loss and rollback rehearsal
 
-Capture baseline revision and service health. Register one disposable task
-definition revision whose application metrics receiver points only to an
-intentionally closed loopback endpoint. No image, collector, secret, DNS, WAF,
-rate-limit, or authorization setting may change. Update only the staging
+Capture baseline revision and service health. Keep the application's fixed
+`127.0.0.1:4318` exporter endpoint unchanged: it is an enforced egress-safety
+boundary, so changing it to an alternative port is a configuration failure, not
+an exporter-loss test. Register one disposable task-definition revision whose
+collector, and only its non-secret receiver configuration, listens on closed
+port `4319`; retain its health check, processors, AWS exporter, image, task
+role, and every other setting. No application image, stored secret value, DNS,
+WAF, rate-limit, or authorization setting may change. Update only the staging
 platform-shell service and wait for a healthy steady state.
 
 Run the controlled protected smoke. It must still return `200`. After that

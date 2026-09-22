@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-metric-coverage
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -133,6 +133,12 @@ expected_coverage = {
     "query_window_seconds": "1200",
     "arrival_grace_seconds": "300",
     "rehearsal_isolation_wait_seconds": "1200",
+    "rehearsal_fault_injection": {
+        "application_endpoint": "http://127.0.0.1:4318/v1/metrics",
+        "disposable_collector_receiver_endpoint": "127.0.0.1:4319",
+        "application_endpoint_rule": "fixed-task-local-adapter-boundary-must-remain-unchanged",
+        "collector_configuration_rule": "replace-only-non-secret-receiver-setting-in-disposable-task-revision",
+    },
     "verdicts": ["observed", "missing", "query-failed", "notification-failed"],
     "non_observed_slo_confidence": "insufficient-confidence",
     "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",

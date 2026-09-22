@@ -8716,8 +8716,8 @@ twenty-minute query window after its broken-export request. Only then can a
 `missing` verdict be evidence of the intended fault rather than an ambiguous
 mix of old and new telemetry.
 
-The rehearsal uses one disposable staging task revision with its
-application-side exporter pointed at a closed loopback receiver. The request
+The rehearsal keeps the application's fixed approved endpoint and moves only
+the disposable collector receiver to a different loopback port. The request
 must still return `200`; then the monitor must report `missing`, mark the
 affected SLO window `insufficient-confidence`, notify the operator, and prove
 recovery after the normal revision is restored. The detailed execution boundary
@@ -8727,6 +8727,22 @@ The role cannot deploy ECS, change CloudFormation, administer Cognito, or read
 any other secret. It does not reuse the image-publishing role because “can push
 an image” and “can read the synthetic client secret” are unrelated privileges.
 If either purpose is compromised, keeping the roles separate limits the damage.
+
+### A useful failed rehearsal
+
+The first rehearsal intentionally changed the application's metrics endpoint
+from port `4318` to `4319`. ECS rolled the task back because the target adapter
+rejects that configuration before the server starts. This was not a failed
+metric export: it was the security check doing its job. The endpoint rule stops
+target configuration from redirecting operational telemetry to an arbitrary
+destination.
+
+The corrected fault leaves the application at its fixed approved endpoint and
+moves only the disposable collector's receiver to `4319`. That creates a
+connection failure at the intended boundary while the server remains able to
+serve traffic. The broader lesson is that a good resilience rehearsal tests the
+failure you mean to test; if a guard rejects the setup earlier, record that as
+useful evidence and redesign the experiment rather than weakening the guard.
 
 ### The subtle limitation
 
