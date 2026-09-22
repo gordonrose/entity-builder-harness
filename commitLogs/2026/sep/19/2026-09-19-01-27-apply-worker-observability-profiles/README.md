@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T00:00:11Z
-latest_commit_sha: e1829c4
-chat_duration: 257568s (02:23:32:48)
+latest_commit_at_utc: 2026-09-22T09:37:33Z
+latest_commit_sha: 790c17b
+chat_duration: 292210s (03:09:10:10)
 estimated_chat_tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -489,6 +489,17 @@ ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
   operational bridge; the platform scheduler contract and adapter remain a
   separately planned architecture decision.
 
+
+### 2026-09-22T09:37:33Z - Commit recorded
+
+Commit: `790c17b`
+
+Message: feat(deploy): add staging synthetic scheduler
+
+Summary: Added the governed controlled-token smoke command, temporary main-only GitHub OIDC scheduler, one-secret-read IAM source and live role evidence, static policy checks, and observability plan/handbook records. AWS role was created and verified; source promotion and first redacted workflow run remain.
+
+ADR impact: No new ADR: bounded staging-target bridge; the reusable platform scheduler contract and adapter remain separately planned.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -517,6 +528,13 @@ ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
   Summary: Restricted the GitHub staging workflow and its intended IAM policy to ECR image publication; target policy now requires a separately reviewed, explicitly approved CloudFormation service change set. Verified workflow, infrastructure, readiness-planning, and CloudWatch adapter checks; AWS unchanged.
   ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
 
+
+- Commit: `790c17b`
+  Time UTC: 2026-09-22T09:37:33Z
+  Message: feat(deploy): add staging synthetic scheduler
+  Summary: Added the governed controlled-token smoke command, temporary main-only GitHub OIDC scheduler, one-secret-read IAM source and live role evidence, static policy checks, and observability plan/handbook records. AWS role was created and verified; source promotion and first redacted workflow run remain.
+  ADR impact: No new ADR: bounded staging-target bridge; the reusable platform scheduler contract and adapter remain separately planned.
+
 ## Main Refresh Conflicts
 
 - 2026-09-22: refreshed the clean chat branch from `main` after read-only
@@ -533,9 +551,9 @@ Reason: The target now selects a durable provider-specific capability-metrics de
 ## Session Metrics
 
 Raised at UTC: 2026-09-19T00:27:23Z
-Latest commit at UTC: 2026-09-22T00:00:11Z
-Latest commit SHA: e1829c4
-Chat duration: 257568s (02:23:32:48)
+Latest commit at UTC: 2026-09-22T09:37:33Z
+Latest commit SHA: 790c17b
+Chat duration: 292210s (03:09:10:10)
 Estimated chat tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
