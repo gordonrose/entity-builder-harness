@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T15:07:05Z
-latest_commit_sha: b5f741f
-chat_duration: 19527s (00:05:25:27)
+latest_commit_at_utc: 2026-09-22T18:00:31Z
+latest_commit_sha: b6d0b16
+chat_duration: 29933s (00:08:18:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -345,6 +345,17 @@ ADR needed: no
 
 Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
 
+
+### 2026-09-22T18:00:31Z - Commit recorded
+
+Commit: `b6d0b16`
+
+Message: fix(observability): prove counter freshness after rollback
+
+Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
+
+ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -387,6 +398,13 @@ Reason: This corrects a target-specific synthetic freshness procedure under the 
   Summary: Recorded revision 3 as configuration-boundary evidence only, preserved the fixed application endpoint, and revised the bounded staging rehearsal to create delivery loss by moving only the disposable collector receiver while retaining its health and export pipeline.
   ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
 
+
+- Commit: `b6d0b16`
+  Time UTC: 2026-09-22T18:00:31Z
+  Message: fix(observability): prove counter freshness after rollback
+  Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
+  ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -400,9 +418,9 @@ Reason: This corrects a target-specific synthetic freshness procedure under the 
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T15:07:05Z
-Latest commit SHA: b5f741f
-Chat duration: 19527s (00:05:25:27)
+Latest commit at UTC: 2026-09-22T18:00:31Z
+Latest commit SHA: b6d0b16
+Chat duration: 29933s (00:08:18:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
