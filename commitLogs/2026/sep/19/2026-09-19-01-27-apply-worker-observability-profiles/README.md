@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-21T23:48:49Z
-latest_commit_sha: 3182c74
-chat_duration: 256886s (02:23:21:26)
+latest_commit_at_utc: 2026-09-22T00:00:11Z
+latest_commit_sha: e1829c4
+chat_duration: 257568s (02:23:32:48)
 estimated_chat_tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -362,6 +362,17 @@ target delivery decision in ADR 0029. It does not select a new provider,
 runtime boundary, or persistence model; it constrains the automation authority
 that publishes the already selected image.
 
+
+### 2026-09-22T00:00:11Z - Commit recorded
+
+Commit: `e1829c4`
+
+Message: chore(deploy): separate image publication from service changes
+
+Summary: Restricted the GitHub staging workflow and its intended IAM policy to ECR image publication; target policy now requires a separately reviewed, explicitly approved CloudFormation service change set. Verified workflow, infrastructure, readiness-planning, and CloudWatch adapter checks; AWS unchanged.
+
+ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -383,6 +394,13 @@ that publishes the already selected image.
   Summary: Added a target-only CloudWatch OpenTelemetry metrics adapter, target composition, prepared ECS collector/IAM/SSM IaC, local and template validation, and durable plan/handbook/readiness evidence; AWS remains unchanged.
   ADR impact: ADR 0029 records the task-local collector boundary and ECS task-role limitation.
 
+
+- Commit: `e1829c4`
+  Time UTC: 2026-09-22T00:00:11Z
+  Message: chore(deploy): separate image publication from service changes
+  Summary: Restricted the GitHub staging workflow and its intended IAM policy to ECR image publication; target policy now requires a separately reviewed, explicitly approved CloudFormation service change set. Verified workflow, infrastructure, readiness-planning, and CloudWatch adapter checks; AWS unchanged.
+  ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -396,9 +414,9 @@ Reason: The target now selects a durable provider-specific capability-metrics de
 ## Session Metrics
 
 Raised at UTC: 2026-09-19T00:27:23Z
-Latest commit at UTC: 2026-09-21T23:48:49Z
-Latest commit SHA: 3182c74
-Chat duration: 256886s (02:23:21:26)
+Latest commit at UTC: 2026-09-22T00:00:11Z
+Latest commit SHA: e1829c4
+Chat duration: 257568s (02:23:32:48)
 Estimated chat tokens: 24422853 estimated from chat transcript bytes (97691410 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
