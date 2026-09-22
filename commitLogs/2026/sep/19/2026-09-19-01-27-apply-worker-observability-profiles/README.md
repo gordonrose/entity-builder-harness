@@ -373,6 +373,122 @@ Summary: Restricted the GitHub staging workflow and its intended IAM policy to E
 
 ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
 
+### 2026-09-22 - Staging metric delivery and infrastructure evidence completed
+
+- Applied the separately reviewed foundation and service change sets against a
+  scan-accepted immutable image. The staging service completed its ECS rollout
+  on task-definition revision 2, with the task-local ADOT collector included.
+- Enabled enhanced ECS Container Insights. Read-only inspection confirmed both
+  CloudFormation stacks are `UPDATE_COMPLETE` and the five platform
+  infrastructure alarms are `OK`.
+- Proved the bounded capability-metric path with a controlled protected `200`
+  request and an unauthenticated `401` boundary request. CloudWatch returned
+  the approved outcome counter and latency histogram through its native PromQL
+  endpoint. The classic `ListMetrics` API is not the discovery interface for
+  these native OpenTelemetry metrics.
+- Kept the readiness state honest: one or two controlled observations prove
+  delivery only. They do not satisfy the 28-day/minimum-population SLO,
+  exporter-loss coverage, dashboard/runbook, capability-alert delivery,
+  wrong-scope `403`, rate-limit `429`, WAF/routing, or rollback evidence.
+- Replaced the static gate's former prepared-only assumption with a two-state
+  rule. A `deployed-and-query-proven` profile now requires the bounded PromQL
+  evidence and explicit remaining coverage gap; it cannot silently become a
+  blanket operational-ready claim.
+- Narrowed the live GitHub deployment identity to ECR image publication only;
+  CloudFormation and ECS service changes remain governed manual change-set
+  operations with an explicit review and approval.
+
+### 2026-09-22 - Controlled smoke credential rotation and tool hardening gap
+
+- A local controlled token-acquisition attempt incorrectly treated the
+  configured Cognito client secret as structured JSON rather than an opaque raw
+  string. Its parser failure echoed sensitive input into transient local tool
+  output. No secret or token was committed to the repository or sent to the
+  running service, but the value was treated as compromised.
+- Created and proved a replacement credential through the protected smoke
+  route, then revoked the prior credential. A final identifier-only inspection
+  confirmed that exactly one active client secret remains. Values and tokens
+  are intentionally absent from this log.
+- Updated target policy to declare the secret format as `opaque-raw-string`.
+  A future governed controlled-token smoke command must declare its input
+  format, never echo parser input, and record only safe HTTP outcomes.
+
+### 2026-09-22 - Local AWS CLI updated
+
+- Installed the current official AWS CLI v2 under the user-local
+  `~/.local/bin` location rather than changing the operating-system package.
+  Fresh shells select that executable, including the Cognito client-secret
+  rotation commands required for the governed remediation.
+
+### 2026-09-22 - Observability closure plan and controlled-token command
+
+- Recorded four distinct closure paths in the platform implementation plan,
+  staging deployment plan, target profile, readiness manifest, and learning
+  handbook: recurring synthetic evidence, exporter-loss coverage, remaining
+  bounded public/operational proofs, and a safe controlled-token command.
+- Added `npm run platform:shell:controlled-smoke`. Its local validation mode
+  makes no AWS or HTTP call. Its later live mode is fixed to the declared
+  staging account, opaque raw secret format, HTTPS smoke route, `GET` method,
+  and correct-scope `200` expectation. It keeps secret/token values in process
+  memory only and emits only a safe status and elapsed duration.
+- The command is deliberately not a generic HTTP/token client and is excluded
+  from CI. It cannot create identities, rotate credentials, mutate AWS, accept
+  an arbitrary route or scope, or prove `403`; that proof needs a separately
+  declared valid negative client.
+- Extended the static infrastructure policy gate so the closure declarations
+  cannot quietly disappear or become a vague operational-ready claim.
+- Verification passed: `npm run platform:shell:controlled-smoke:check`,
+  `npm run platform:shell:infrastructure:check`, and `git diff --check`.
+  No AWS resource, credential, or live endpoint was changed by this source
+  implementation.
+
+### 2026-09-22 - Temporary synthetic scheduler source prepared
+
+- Added a target-specific GitHub Actions scheduler source for the fixed,
+  protected staging synthetic. It is isolated from image publication and can
+  assume only a separate main-branch OIDC role with `secretsmanager:GetSecretValue`
+  on the one declared smoke-client secret.
+- The workflow has a nominal `17 */4 * * *` UTC trigger, explicit `main`
+  guards, no deployment environment, no repository secrets, no AWS mutation
+  commands, non-overlap, and a five-minute bound. It invokes only the existing
+  redacted controlled-smoke command using OIDC environment credentials.
+- The static scheduler gate, the infrastructure gate, and local controlled
+  smoke validation pass. GitHub scheduling is explicitly best effort, so it
+  does not prove an SLO or telemetry coverage. No AWS IAM role, GitHub workflow
+  execution, secret, or live endpoint was changed by this source step.
+
+### 2026-09-22 - Temporary synthetic scheduler activation planned
+
+- Read-only AWS inspection confirmed `kanbien-dev` targets account
+  `337159794548` and that `github-platform-shell-staging-synthetic` does not
+  exist. The existing image-publish role confirmed the GitHub OIDC provider
+  and main-branch repository condition pattern.
+- Recorded the exact activation sequence in the staging deployment plan: create
+  only the new main-branch OIDC role, attach only inline policy
+  `ReadOnlyControlledSmokeSecret`, read back both policies, then commit,
+  promote, and push the source before manually dispatching its first redacted
+  live smoke run.
+- The plan deliberately creates the dormant role before the workflow reaches
+  remote `main`, so a scheduled run cannot fail merely because its role is
+  absent. No AWS or GitHub mutation was performed during this planning step.
+
+### 2026-09-22 - Temporary synthetic scheduler IAM activated
+
+- Created `github-platform-shell-staging-synthetic` in account `337159794548`
+  through `kanbien-dev`, with tags `service=platform-shell`,
+  `environment=staging`, `managed-by=github-actions`, and
+  `purpose=protected-synthetic`.
+- Attached `ReadOnlyControlledSmokeSecret` and read it back. It permits only
+  `secretsmanager:GetSecretValue` for the one declared smoke-client secret.
+  The read-back trust policy permits only GitHub OIDC tokens for this
+  repository's `main` branch; no secret value was retrieved or recorded.
+- The role is intentionally dormant until the reviewed workflow reaches remote
+  `main`. No GitHub workflow, secret retrieval, or public protected request
+  occurred during this IAM activation.
+- ADR disposition: no new ADR. This is a bounded, reversible staging-target
+  operational bridge; the platform scheduler contract and adapter remain a
+  separately planned architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -403,7 +519,10 @@ ADR impact: No new ADR: least-privilege enforcement refinement of ADR 0029.
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+- 2026-09-22: refreshed the clean chat branch from `main` after read-only
+  preflight found it one commit behind and zero commits ahead with no changed
+  path overlap. Fast-forwarded `b8dd710` to `1bc56ad`; no conflicts, stash, or
+  manual resolution were required.
 
 ## ADR Disposition
 
@@ -423,10 +542,12 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 
 ## Notes
 
-- The provider-neutral server and worker slice was followed by a local AWS
-  metrics-adapter and target-policy selection slice. No AWS resources, IAM
-  permissions, task definitions, collector, dashboards, alarms, or deployment
-  configuration changed. The selected target delivery remains not deployed.
+- The provider-neutral server and worker slice was followed by target-composed
+  AWS metric delivery. The live target now has the collector, narrow IAM,
+  enhanced Container Insights, five infrastructure alarms, and PromQL-proven
+  capability counter/histogram delivery. The selected 28-day SLO remains
+  `selected-not-evaluable` until its population, exporter-loss coverage, and
+  remaining operational proofs are complete.
 
 ## RAG Knowledge Disposition
 

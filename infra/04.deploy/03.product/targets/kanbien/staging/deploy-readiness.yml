@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 16
+#   version: 22
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -38,7 +38,7 @@ deployment:
   source_policy: remote-main
   mutation_authorized: false
   execution_policy:
-    style: governed-manual-service-changes-plus-github-image-publication
+    style: governed-manual-service-changes-plus-github-image-publication-and-read-only-synthetic
     bootstrap:
       mutation_style: governed-manual-aws-cli
       aws_profile: kanbien-dev
@@ -53,7 +53,44 @@ deployment:
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
       role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
-      role_policy_deployment_status: source-narrowed-pending-governed-iam-change
+      role_policy_deployment_status: deployed-and-live-inspected
+      live_policy_proof:
+        inspection: aws-iam-get-role-policy
+        allowed_mutation_scope: ecr-image-publication-only
+        verified_at_utc: "2026-09-22"
+    temporary_synthetic_scheduler:
+      mutation_style: github-actions-oidc-read-only-protected-smoke
+      workflow: .github/workflows/platform-shell-staging-synthetic.yml
+      trigger: schedule-and-manual-dispatch
+      schedule_cron_utc: "17 */4 * * *"
+      delivery_assurance: best-effort-nominal-four-hour-cadence-not-slo-coverage-proof
+      deployable_ref: refs/heads/main
+      github_environment: none
+      role_name: github-platform-shell-staging-synthetic
+      role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-synthetic
+      inline_policy_name: ReadOnlyControlledSmokeSecret
+      tags:
+        service: platform-shell
+        environment: staging
+        managed-by: github-actions
+        purpose: protected-synthetic
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-policy.json
+      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-trust.json
+      role_policy_deployment_status: deployed-and-live-inspected
+      live_policy_proof:
+        inspection:
+          - aws-iam-get-role
+          - aws-iam-get-role-policy
+        verified_at_utc: "2026-09-22T09:31:57Z"
+        allowed_mutation_scope: one-declared-secret-read-and-one-fixed-public-smoke-request
+      allowed_aws_action: secretsmanager:GetSecretValue
+      allowed_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
+      command: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
+      replacement: replace-with-governed-platform-scheduler-contract-and-adapter
+      activation_status: iam-ready-source-promotion-and-first-live-run-pending
+      activation_prerequisites:
+        - merge-workflow-to-origin-main
+        - record-first-redacted-live-run-result
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
@@ -431,7 +468,20 @@ auth:
       local_401_test: true
       local_403_test: true
       local_success_test: true
-      deployment_smoke: blocked
+      deployment_smoke: 401-and-correctly-scoped-200-passed-403-pending-2026-09-22
+  controlled_smoke:
+    command: npm run platform:shell:controlled-smoke
+    local_validation: passed-2026-09-22
+    live_execution: explicitly-approved-staging-operation-not-yet-repeated-by-command
+    permitted_output: status-and-safe-latency-only-no-token-secret-or-response-body
+    limitation: correctly-scoped-200-only-separate-valid-negative-client-required-for-403
+    temporary_scheduler:
+      status: iam-ready-source-promotion-pending
+      workflow: .github/workflows/platform-shell-staging-synthetic.yml
+      policy_check: npm run platform:shell:synthetic-scheduler:check
+      cadence_target: nominal-every-4-hours-best-effort
+      delivery_assurance: does-not-prove-telemetry-coverage-or-customer-slo
+      activation: requires-separate-aws-role-creation-and-first-live-run-evidence
   health_exposure:
     livez: public
     readyz: authenticated
@@ -462,6 +512,8 @@ auth:
     source: aws-secrets-manager
     committed_secret_values: false
     cognito_machine_client_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
+    cognito_machine_client_secret_value_format: opaque-raw-string
+    controlled_smoke_secret_rotation: replacement-proven-and-exposed-secret-revoked-2026-09-22
 cloud:
   provider: aws
   account_id: "337159794548"
@@ -523,8 +575,9 @@ proof:
   image_smoke: passed-local
   compiled_runtime_payload: passed-local-2026-09-06
   local_runtime_smoke: passed-product-smoke-local
-  aws_read_only_inspection: platform-shell-foundation-public-tls-and-observability-delivery-verified-2026-09-07
-  deployment_smoke: public-livez-200-and-unauthenticated-deploy-probe-401-passed-2026-09-07
+  aws_read_only_inspection: container-insights-enhanced-five-platform-alarms-ok-and-both-stacks-update-complete-2026-09-22
+  deployment_smoke: public-livez-200-protected-401-and-correctly-scoped-200-and-cloudwatch-otel-counter-histogram-query-proven-2026-09-22
+  controlled_smoke_command: implemented-and-locally-validated-2026-09-22
   rollback_proof: blocked
 blockers:
   - id: platform-shell-readiness.deferred-worker-runtime
@@ -535,28 +588,23 @@ blockers:
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke
-    reason: The deployed workflow and independent public check prove the unauthenticated 401 boundary, but deployed forbidden 403 and correctly-scoped 200 requests remain unproven.
-    resolution: Acquire a controlled Cognito access token and record wrong-scope 403 plus declared-scope 200 proofs without committing credentials or token values.
+    reason: A controlled Cognito token now proves the correctly scoped protected route returns 200, alongside the existing unauthenticated 401 proof. A deployed wrong-scope 403 proof is still absent.
+    resolution: Provision a separate valid machine client without the smoke-read permission, then use a bounded status-only smoke mode to record 403. Never use an invalid token as an authorization proof or commit credentials/token values.
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting
     reason: The deployed workflow proves liveness only. Deployed 429 behaviour, ALB-only ingress, WAF host scope, and routing evidence have not yet been independently recorded.
-    resolution: Run a bounded rate-limit and WAF/routing verification, then record safe result summaries and links to the relevant logs or metrics.
+    resolution: Run at most the declared window limit plus one sequential request and stop on the first 429; use read-only WAF association/listener-host-rule inspection plus a bounded public-host check. Record only aggregate counts, final status, and safe resource evidence.
   - id: platform-shell-readiness.operational-proof
     severity: blocking
     path: proof
     reason: Read-only inspection now confirms a recent CloudWatch log-stream event, the two implemented ALB alarms in OK state, and a confirmed SNS email subscription. It does not prove an alarm was received by the operator, and rollback exercise evidence remains unrecorded.
-    resolution: Verify a redacted operational log record, end-to-end alarm destination delivery without committing email content, and an explicitly governed rollback rehearsal before marking the target ready.
-  - id: platform-shell-readiness.required-ecs-alarm-coverage
+    resolution: Verify a redacted operational log record, an explicitly marked end-to-end alarm receipt without committing email content, and a reversible governed task-definition rollback rehearsal before marking the target ready.
+  - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
-    path: observability.alarms
-    reason: The target profile and local source now define the three missing ECS alarms, but AWS still confirms only the two ALB alarms. The existing cluster has not yet been read-only verified for enhanced Container Insights, and the deployed foundation and GitHub roles do not yet have the newly declared bounded permissions.
-    resolution: In one governed change sequence, verify or enable containerInsights=enhanced and the emitted RunningTaskCount metric; review and apply the foundation role and GitHub read-only policy updates; then review and apply the service-stack change set. Record safe alarm states and end-to-end notification delivery evidence afterwards.
-  - id: platform-shell-readiness.capability-metric-delivery
-    severity: blocking
-    path: observability.metric_delivery
-    reason: The AWS OpenTelemetry adapter, target composition, CloudFormation source, and template validation are prepared locally, but no reviewed change set has added the collector, task-role permission, or capacity update to AWS. Therefore no capability metric, SLO calculation, delivery-coverage signal, or alarm can yet be claimed.
-    resolution: Review the foundation and service change set as one bounded observability-delivery change, apply only the expected narrow delta, then record a public smoke request, queryable metric, exporter-failure coverage result, SLO query, and alert-delivery evidence.
+    path: observability.slos-and-coverage
+    reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, but one controlled request is insufficient for the 28-day SLO confidence policy. Exporter-loss coverage, SLO calculations, dashboard/runbook, and capability-alert delivery remain unproven.
+    resolution: Activate the source-prepared least-privilege GitHub Actions synthetic role and workflow after a separately approved IAM plan, record its first redacted live result, calculate each SLO from PromQL with its confidence state, then use a disposable task revision with an unavailable loopback exporter endpoint to prove coverage loss, incomplete confidence, recovery, and capability-alert delivery. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

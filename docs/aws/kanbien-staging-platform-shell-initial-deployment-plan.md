@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 11
+version: 15
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -88,25 +88,119 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
   CloudFormation completed successfully, and both the workflow and an
   independent client verified TLS, `/livez` = `200`, and an unauthenticated
   protected route = `401`.
-- The live target currently has two `OK` ALB alarms, a confirmed SNS email
-  subscription, a 14-day log group with a recent stream event, and one desired
-  plus one running platform-shell task. The local source now defines the three
-  missing service alarms (running-count mismatch, high CPU, high memory), but
-  no AWS update has been requested or applied for this follow-up.
+- Before the 2026-09-22 observability update, the live target had two `OK` ALB
+  alarms, a confirmed SNS email subscription, a 14-day log group with a recent
+  stream event, and one desired plus one running platform-shell task. The
+  follow-up added the three service alarms (running-count mismatch, high CPU,
+  and high memory) through a separately reviewed change set.
+- On 2026-09-22, the reviewed observability foundation and service change sets
+  were applied. The cluster now has enhanced Container Insights; the three ECS
+  alarms and the two ALB alarms are `OK`; both stacks are `UPDATE_COMPLETE`;
+  and the service runs revision 2 with the task-local collector.
+- The immutable revision-2 image was scan-accepted with zero critical and high
+  findings. A controlled protected request returned `200`, and CloudWatch
+  PromQL returned its outcome counter and latency histogram. This proves metric
+  delivery, not the 28-day SLO, exporter-loss coverage, or alert delivery.
 
 ## Remaining verification work
 
-1. Prove the deployed protected route with a wrong-scope token (`403`) and a
-   correctly scoped token (`200`). Keep credentials and token values out of
-   repository records.
-2. Prove deployed shared rate limiting (`429`), ALB-only ingress, WAF host
-   scope, and routing without generating a destructive or unbounded load.
-3. Prove redacted log delivery, alarm delivery, and an explicitly governed
-   rollback rehearsal. A successful first deployment is not a rollback proof.
-4. New resources are consistently tagged `service=platform-shell`, but the
+1. The governed controlled-token smoke command and temporary GitHub Actions
+   scheduler source are prepared locally. The future workflow has a separate
+   OIDC role which can only read the one declared opaque raw client secret,
+   then make the fixed HTTPS `GET` smoke route with an in-memory token and
+   status-only output. Its nominal `17 */4 * * *` UTC cadence is best effort:
+   GitHub scheduling delay or a missed run must become a coverage concern, not
+   a false green SLO. The separately reviewed IAM role/policy is deployed and
+   verified. Before activation, merge the workflow to `origin/main` and record
+   the first redacted live result. It is labelled synthetic boundary evidence,
+   never unqualified customer SLO traffic, and will later be replaced by the
+   governed platform scheduler module and adapter.
+2. Create a separate, deliberately scope-less or differently scoped Cognito
+   machine client before proving the protected route returns `403`. Keep the
+   existing correctly scoped `200` proof separate; an invalid token is a `401`
+   test, not an authorization proof. Store any additional secret outside the
+   repository and record only safe status results.
+3. Prove the shared limit with at most the target's declared limit plus one
+   sequential request, stopping on the first `429`. Inspect the ALB host rule
+   and WAF association read-only, then perform a bounded hostname/routing
+   check. Do not use a broad load test or malicious WAF payload as evidence.
+4. Add a target-owned metric-freshness/coverage signal before performing a
+   separately approved exporter-loss rehearsal. Use a disposable staging task
+   revision whose application exporter has an intentionally unavailable
+   loopback endpoint; confirm the protected request still works while the
+   external coverage check reports incomplete SLO confidence and reaches its
+   alert destination. Restore the normal revision immediately through the
+   recorded rollback path.
+5. Prove redacted log delivery, explicitly marked alarm receipt, and a
+   reversible task-definition rollback rehearsal. A successful deployment or
+   an alarm merely showing `OK` is not either proof.
+6. New resources are consistently tagged `service=platform-shell`, but the
    account has not activated that cost-allocation tag or proven the intended
    tag-scoped monthly budget. This account-level Billing action cannot be
    inferred from an infrastructure template.
+
+## Temporary synthetic scheduler activation plan
+
+This is a separate, bounded IAM and source-promotion change. It does not alter
+the ECS service, ALB, WAF, DNS, CloudFormation stacks, Cognito client, or
+stored secret value.
+
+| Item | Planned value |
+| --- | --- |
+| Account / profile / region | `337159794548` / `kanbien-dev` / `eu-west-1` |
+| Environment | `kanbien/staging` |
+| New role | `github-platform-shell-staging-synthetic` |
+| Trust | GitHub OIDC for `gordonrose/entity-builder-harness`, `refs/heads/main`, and the exact main-branch subject; no GitHub deployment environment. |
+| Inline policy | `ReadOnlyControlledSmokeSecret`, with only `secretsmanager:GetSecretValue` on the declared smoke-client secret ARN. |
+| Role tags | `service=platform-shell`, `environment=staging`, `managed-by=github-actions`, and `purpose=protected-synthetic`. |
+| Source promotion | Commit the reviewed chat work, merge it into local `main`, and push `main` to `origin` only after the role is verified. |
+| First live action | Manually dispatch the source-controlled workflow from `main`; it obtains a temporary token, makes one protected `GET`, and retains only redacted status/latency output. |
+
+### Read-only evidence on 2026-09-22
+
+- `kanbien-dev` authenticated as an administrator SSO session in account
+  `337159794548`.
+- `github-platform-shell-staging-synthetic` returned `NoSuchEntity`: no role
+  currently exists, so there is no hidden pre-existing permission to broaden.
+- The existing image-publication role confirms the GitHub OIDC provider and
+  main-branch repository conditions exist. The new role deliberately uses the
+  branch subject rather than the manually approved `staging` environment
+  subject, because an unattended synthetic cannot wait for a deployment
+  approval every four hours.
+
+### IAM execution evidence on 2026-09-22
+
+- Created `github-platform-shell-staging-synthetic` at `09:31:57Z`, with only
+  the four declared ownership tags.
+- Read back its trust policy: the exact GitHub OIDC provider, repository,
+  audience, `refs/heads/main`, and main-branch subject all match the reviewed
+  source.
+- Attached and read back only `ReadOnlyControlledSmokeSecret`. It permits only
+  `secretsmanager:GetSecretValue` for the one declared Cognito smoke-client
+  secret ARN. No secret value was retrieved or recorded.
+- The role is presently dormant because the workflow is not yet on remote
+  `main`; no GitHub run or protected request has occurred.
+
+### Exact execution sequence after approval
+
+1. Create the one role with the reviewed
+   `github-platform-shell-staging-synthetic-trust.json` and bounded ownership
+   tags; create no access keys, users, policy versions, or other identities.
+2. Attach only inline policy `ReadOnlyControlledSmokeSecret` from
+   `github-platform-shell-staging-synthetic-policy.json`.
+3. Read back the role trust policy and inline policy; compare both to the
+   repository sources without recording secret values.
+4. Commit the source, promote it to local `main`, and push `main` to `origin`.
+   The role is intentionally created first: before the workflow exists on
+   remote `main`, it is dormant, avoiding a scheduled run that could fail due
+   to a missing role.
+5. Manually dispatch the workflow from `main`, inspect its redacted result,
+   and record only its URL/run identifier, HTTP status, elapsed time, and
+   timestamp. Do not record a secret, token, header, or response body.
+
+Rollback is to disable or remove the inline policy and then delete the unused
+role only through a separately approved destructive IAM action. Do not delete
+the Cognito secret or alter the platform-shell workload as part of this change.
 
 ## Proposed target design
 
@@ -116,7 +210,7 @@ verification work above determines when its readiness record can become ready.
 | Concern | Proposed decision | Why |
 | --- | --- | --- |
 | Infrastructure definition | Focused CloudFormation source units rendered into one AWS CloudFormation template under `infra/04.deploy/03.product/targets/kanbien/staging/` | The repository keeps ingress, edge protection, IAM, rate limiting, logging, and alerting scanable without changing the single reviewed foundation-stack resource graph. |
-| Compute | One 256 CPU / 512 MiB Fargate server task, desired count 1; worker remains at 0 | Proves the server shell at low cost without pretending the in-memory smoke job has a real queue worker. |
+| Compute | One 512 CPU / 1024 MiB Fargate server task, desired count 1; 128 CPU / 256 MiB is reserved for the collector and worker remains at 0 | The added sidecar has explicit capacity while the first target remains intentionally small. |
 | Network | Dedicated service security group: ingress only from the existing ALB security group on TCP 3000; outbound HTTPS only as far as the selected Fargate networking model requires | No direct public inbound path to the task. |
 | Routing | New IP target group with `/livez`, dedicated HTTPS listener rule, and Route 53 alias for `staging.platform.kanbien.com` | A host-specific route isolates the proof from legacy root-domain traffic. |
 | Public TLS | A foundation-owned ACM public certificate for `platform.kanbien.com` and `*.platform.kanbien.com`, DNS-validated in the existing hosted zone and added as an extra SNI certificate to the existing HTTPS listener | The selected hostname stays stable, future `*.platform.kanbien.com` environments can be covered, and no legacy certificate or listener default is replaced. |
@@ -124,7 +218,7 @@ verification work above determines when its readiness record can become ready.
 | Shared rate limit | Provider adapter backed by a new DynamoDB fixed-window counter table with TTL and task-role-only `UpdateItem` access | Enforces a shared quota across task replicas without storing raw tokens or a durable personal-data profile. |
 | Client address | A target-selected resolver that uses the final ALB-appended `X-Forwarded-For` address only because the task security group admits traffic solely from the ALB | The generic server continues to distrust forwarded headers by default; trust exists only at this reviewed target boundary. |
 | Edge protection | New WAFv2 web ACL associated with the existing ALB; every rule is scoped to the new staging host | Gives managed-rule and IP-rate protection before the service while avoiding changes to legacy host behaviour. |
-| Observability | ECS `awslogs` delivery of redacted stdout JSON to a 14-day CloudWatch log group; ALB alarms in the foundation stack; service-specific ECS alarms in the service stack; all notify a dedicated SNS email topic | Keeps shared alert delivery with shared ALB concerns, while the service stack owns metrics that name one ECS service. The running-count alarm is gated on enhanced Container Insights and actual metric publication. |
+| Observability | ECS `awslogs`, five `OK` infrastructure alarms, and a task-local ADOT collector that sends the reviewed OpenTelemetry metric series to CloudWatch; metrics are queried through PromQL | Separates ordinary logs, infrastructure health, and capability metrics. Delivery is proven; SLO confidence, exporter-loss coverage, dashboard, and capability-alert evidence remain separate work. |
 | Runtime image | Build from a digest-pinned Node 22 image; run only the compiled output and production dependencies in a separately digest-pinned Distroless Node 22 non-root image | The deployable artifact omits a shell, package manager, and build toolchain while preserving a reproducible build boundary. |
 | Rollback | ECS deployment circuit breaker with rollback, previous task definition retained, listener rule/DNS only removed through a separate explicit retirement action | A failed new workload does not take over or interrupt an existing host. |
 
@@ -167,32 +261,21 @@ verification work above determines when its readiness record can become ready.
    required a complete zero-critical/zero-high ECR scan, generated and
    attested the SBOM and provenance, created or updated the service stack, and
    passed public liveness plus unauthenticated-route smoke.
-10. Remaining before the next service-stack update: make a governed,
-   read-only inspection of the existing cluster setting and required metric.
-   If `containerInsights` is not `enhanced`, plan a separate explicit ECS
-   cluster-setting update; do not deploy a running-count alarm that has no
-   source metric.
-11. Remaining: review a foundation-stack update that grants the existing
-   service CloudFormation execution role permission to manage only the three
-   named ECS alarms and tag them. Separately apply the reviewed narrowing of
-   the GitHub OIDC role to ECR image-publication permissions only. The
-   telemetry preflight belongs to the governed manual service-stack change
-   procedure, not to the image-publication identity. These are separate,
-   bounded AWS operations; their source declarations are not proof that the
-   live roles changed.
-12. Remaining after those prerequisites: review a service-stack change set
-   that adds exactly the three service-owned alarm resources. The governed
-   service-stack procedure must run the read-only telemetry preflight before
-   it mutates that stack. Then record safe alarm-state and end-to-end
-   notification-delivery evidence.
-13. Remaining: prove wrong-permission `403`, correctly scoped `200`, `429`
-   from the shared limiter, WAF/routing evidence, log delivery, alarm
-   configuration, and a rollback exercise.
+10. Completed on 2026-09-22: enabled enhanced Container Insights and verified
+    the resulting running-task metric before creating the ECS running-count
+    alarm.
+11. Completed on 2026-09-22: applied the narrow foundation role changes and
+    reduced the live GitHub OIDC role to ECR image publication only.
+12. Completed on 2026-09-22: reviewed and applied the service change set. It
+    created the three service-owned ECS alarms and deployed task revision 2;
+    all five platform alarms were subsequently `OK`.
+13. Remaining: prove wrong-permission `403`, `429` from the shared limiter,
+    WAF/routing evidence, end-to-end alarm delivery, and a rollback exercise.
 14. After tagged foundation resources exist, activate the `service` cost
    allocation tag in the account Billing console, wait for billing visibility,
    configure the target-scoped monthly/forecast budget alerts, and record the
    proof. Do not treat a resource tag as a functioning budget by itself.
-15. Proposed, not applied: commit and merge the reviewed observability source
+15. Completed on 2026-09-22: commit and merge the reviewed observability source
     to `origin/main`, then run the protected GitHub workflow to produce a
     scan-accepted immutable image digest containing that exact target
     composition. That workflow publishes evidence and the digest to ECR; it
@@ -202,10 +285,15 @@ verification work above determines when its readiness record can become ready.
     non-secret SSM pipeline configuration, a distinct collector log group,
     execution-role read access for that one parameter, and task-role
     `cloudwatch:PutMetricData`. The task grows from 256 CPU / 512 MiB to 512
-    CPU / 1024 MiB to reserve sidecar capacity. Apply only after the rendered
-    template and IAM delta show the expected narrow changes; then prove a
-    public smoke request produces a queryable metric and that collector loss
-    does not become a false healthy SLO.
+    CPU / 1024 MiB to reserve sidecar capacity. The rendered template and IAM
+    delta showed the expected narrow changes; a protected smoke request
+    produced a queryable counter and histogram. Exporter-loss coverage must
+    still be proven before an SLO is considered healthy.
+16. Remaining hardening: provide a governed controlled-token smoke command
+    that declares whether its Secrets Manager value is an opaque raw string or
+    structured document, never echoes an input on parser failure, and records
+    only safe HTTP outcomes. This is operational tooling, not an ECS runtime
+    dependency.
 
 ## Expected AWS blast radius
 

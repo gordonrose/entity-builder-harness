@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.verify-platform-shell-infrastructure.readme
-version: 1
+version: 5
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -32,7 +32,22 @@ must be pinned by digest, and the container must remain secret-free and
 read-only. It also verifies that the target declares the governed alert-policy
 standard, points to the link-only target catalogue, uses the declared severity
 vocabulary, and keeps every CloudFormation alarm aligned with its canonical
-target-profile definition.
+target-profile definition. For the metric path it accepts only two explicit
+states: `prepared-not-deployed`, or `deployed-and-query-proven`. The latter
+must retain safe evidence that CloudWatch PromQL returned both reviewed series,
+while still recording any SLO and exporter-loss coverage gaps. A static check
+does not query AWS; it prevents source metadata from claiming a vague or
+unbounded delivery state.
+
+It also invokes the dedicated synthetic-scheduler policy check. That check
+binds the one redacted controlled-token smoke command to an isolated GitHub
+OIDC role that can read only its declared secret. The nominal four-hour GitHub
+schedule is deliberately labelled best effort: it creates recurring boundary
+observations once activated, but cannot by itself prove telemetry coverage or a
+customer SLO. The wider closure policy still requires a future metric-freshness
+signal and exporter-loss rehearsal, plus bounded `403`, `429`, WAF, alert, and
+rollback exercises. Those entries make the remaining work visible; they do not
+claim it has been run.
 
 Run it with:
 

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 16
+#   version: 23
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -9,7 +9,7 @@
 #   - architecture
 #   - sre
 #   kind: deployment-target-profile
-#   purpose: Record reusable non-secret target decisions for the Kanbien staging product platform shell before AWS mutation.
+#   purpose: Record reusable non-secret target decisions and bounded live evidence for the Kanbien staging product platform shell.
 #   portability:
 #     class: internal
 #     targets: []
@@ -18,6 +18,10 @@
 #     path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
 #   - id: deploy.script.verify-platform-shell-deploy-readiness
 #     path: scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh
+#   - id: deploy.script.verify-platform-shell-synthetic-scheduler
+#     path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+#   - id: deploy.script.run-platform-shell-controlled-smoke
+#     path: scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
 schema: deploy/platform-shell-target-profile/v1
 status: draft
 client:
@@ -59,7 +63,7 @@ deployment:
       service_observability_prerequisite_check: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
       execution_gate: reviewed-cloudformation-change-set-and-explicit-current-chat-approval
   execution_policy:
-    style: governed-manual-service-changes-plus-github-image-publication
+    style: governed-manual-service-changes-plus-github-image-publication-and-read-only-synthetic
     bootstrap:
       mutation_style: governed-manual-aws-cli
       aws_profile: kanbien-dev
@@ -74,7 +78,44 @@ deployment:
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
       role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
-      role_policy_deployment_status: source-narrowed-pending-governed-iam-change
+      role_policy_deployment_status: deployed-and-live-inspected
+      live_policy_proof:
+        inspection: aws-iam-get-role-policy
+        allowed_mutation_scope: ecr-image-publication-only
+        verified_at_utc: "2026-09-22"
+    temporary_synthetic_scheduler:
+      mutation_style: github-actions-oidc-read-only-protected-smoke
+      workflow: .github/workflows/platform-shell-staging-synthetic.yml
+      trigger: schedule-and-manual-dispatch
+      schedule_cron_utc: "17 */4 * * *"
+      delivery_assurance: best-effort-nominal-four-hour-cadence-not-slo-coverage-proof
+      deployable_ref: refs/heads/main
+      github_environment: none
+      role_name: github-platform-shell-staging-synthetic
+      role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-synthetic
+      inline_policy_name: ReadOnlyControlledSmokeSecret
+      tags:
+        service: platform-shell
+        environment: staging
+        managed-by: github-actions
+        purpose: protected-synthetic
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-policy.json
+      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-trust.json
+      role_policy_deployment_status: deployed-and-live-inspected
+      live_policy_proof:
+        inspection:
+          - aws-iam-get-role
+          - aws-iam-get-role-policy
+        verified_at_utc: "2026-09-22T09:31:57Z"
+        allowed_mutation_scope: one-declared-secret-read-and-one-fixed-public-smoke-request
+      allowed_aws_action: secretsmanager:GetSecretValue
+      allowed_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
+      command: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
+      replacement: replace-with-governed-platform-scheduler-contract-and-adapter
+      activation_status: iam-ready-source-promotion-and-first-live-run-pending
+      activation_prerequisites:
+        - merge-workflow-to-origin-main
+        - record-first-redacted-live-run-result
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
@@ -348,6 +389,7 @@ config:
       name: kanbien/staging/platform-shell/cognito-machine-client
       arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       delivery: controlled-smoke-token-acquisition-only-not-ecs-task-environment
+      value_format: opaque-raw-string
 observability:
   policy:
     standard: docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml
@@ -359,7 +401,7 @@ observability:
       - critical
       - warning
   metric_delivery:
-    status: prepared-not-deployed
+    status: deployed-and-query-proven
     adr: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
     provider: aws
     adapter_package: "@kanbien/platform-adapter-aws-observability-cloudwatch"
@@ -405,12 +447,27 @@ observability:
       interval_ms: 60000
       timeout_ms: 10000
       eligible_slo_measurement_sampling: none
+    live_proof:
+      query_interface: cloudwatch-promql
+      protected_route_outcomes_observed:
+        - denied-401
+        - succeeded-200
+      series_observed:
+        - kanbien.platform.server.request.outcome
+        - kanbien.platform.server.request.duration
+      verified_at_utc: "2026-09-22"
     coverage:
-      current_status: not-yet-measurable-until-deployed-and-proven
+      current_status: delivery-proven-slo-evaluation-and-exporter-loss-proof-pending
       requirement: Export loss must be visible as an operational coverage concern and must prevent a healthy SLO claim for an affected window.
+      closure_plan:
+        coverage_signal: target-owned-metric-freshness-check-outside-the-application-exporter-path
+        rehearsal: separately-approved-disposable-staging-task-revision-with-unavailable-loopback-export-endpoint
+        request_expectation: protected-request-succeeds-while-telemetry-is-best-effort
+        evidence_expectation: coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery
+        recovery: restore-normal-task-revision-through-governed-rollback-path
   metric_series:
     - id: platform-smoke-read-outcome
-      status: prepared-not-deployed
+      status: deployed-and-query-proven
       purpose: Count completed protected smoke-read requests by the approved capability outcome.
       source:
         name: platform.server.request.outcome
@@ -439,7 +496,7 @@ observability:
           - ip_address
       cardinality_limit: 512
     - id: platform-smoke-read-request-response-latency
-      status: prepared-not-deployed
+      status: deployed-and-query-proven
       purpose: Measure the server receipt through response-completion latency of protected smoke-read requests.
       source:
         name: platform.server.request_response_latency
@@ -568,9 +625,23 @@ observability:
         dashboard: deferred-until-metric-delivery-is-provisioned
         alarm: deferred-until-slo-query-and-coverage-signal-are-proven
         runbook: deferred-until-slo-delivery-is-provisioned
+  synthetic_checks:
+    - id: platform-smoke-protected-read
+      status: iam-ready-source-promotion-pending
+      command: npm run platform:shell:controlled-smoke
+      cadence_target: nominal-every-4-hours-best-effort
+      identity: dedicated-least-privilege-machine-client
+      request:
+        method: GET
+        route_pattern: /smoke/<safe-synthetic-id>
+        expected_http_status: 200
+      output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
+      evidence_interpretation: synthetic-boundary-evidence-not-unqualified-customer-traffic
+      scheduler: github-actions-temporary-iam-ready-source-promotion-pending
+      scheduler_execution_policy: deployment.execution_policy.temporary_synthetic_scheduler
   data_lifecycle:
     metric_evidence:
-      status: selected-not-deployed
+      status: selected-not-proven
       retention_requirement: at-least-35-days-queryable-for-28-day-window-and-review-margin
       sampling: complete-for-eligible-slo-measurements
       ordinary_access_audience: platform-operator
@@ -603,7 +674,7 @@ observability:
         cluster_name_source: aws.cluster
         service_name_source: runtime.server.service
         failure_mode: block-service-stack-update
-      current_status: pending-read-only-verification
+      current_status: verified-enhanced-2026-09-22
   alarms:
     - id: alb-unhealthy-targets
       purpose: Detect that no healthy platform-shell target is available behind the shared ALB.
@@ -784,3 +855,19 @@ operations:
     assisted_by: LLM
     target: previous-ecs-task-definition-primary-previous-image-digest-fallback
     runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
+  readiness_closure:
+    authorization_403:
+      status: planned
+      prerequisite: separate-valid-machine-client-without-platform-smoke-read-permission
+      safe_result: status-code-only-403
+    rate_limit_429:
+      status: planned
+      request_bound: declared-window-limit-plus-one-sequential-requests-stop-on-first-429
+      safe_result: aggregate-counts-and-final-status-only
+    waf_and_routing:
+      status: planned
+      proof: read-only-waf-association-and-listener-host-rule-inspection-plus-bounded-public-host-check
+    alarm_and_rollback:
+      status: planned
+      alert_proof: explicitly-marked-notification-receipt-without-email-content-in-repository
+      rollback_proof: reversible-task-definition-revision-and-governed-restore
