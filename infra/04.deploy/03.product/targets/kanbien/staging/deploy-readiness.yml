@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 28
+#   version: 29
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -676,6 +676,17 @@ proof:
       coverage_result: observed
       coverage_execution: governed-local-read-only-query-after-refreshed-sso
       counter_semantics: first-fresh-task-request-establishes-a-cumulative-baseline-second-request-advances-it-for-promql-increase
+    two_point_synthetic_workflow:
+      source_commit_sha: 1429f37efc191a87c84f0b6ff27588c72d45c3c9
+      github_run_id: "35764615475"
+      github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35764615475
+      result: passed
+      request_count: 2
+      inter_request_wait_seconds: 75
+      metric_coverage: observed
+      affected_slo_confidence: not-determined
+      coverage_execution: governed-local-read-only-query-after-five-minute-arrival-grace
+      meaning: proves-the-main-only-workflow-establishes-and-advances-the-cumulative-counter-not-clock-trigger-or-operator-alert-receipt
     retained_evidence_policy: no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses
 blockers:
   - id: platform-shell-readiness.deferred-worker-runtime
@@ -701,7 +712,7 @@ blockers:
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage
-    reason: CloudWatch PromQL returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has produced both `observed` and fail-closed `missing` verdicts. The corrected disposable revision 4 kept the application endpoint at `4318`, moved only the collector receiver to `4319`, returned a protected `200`, and then produced `missing` with `insufficient-confidence` after full-window isolation. Baseline revision 2 was restored and a two-request recovery sequence returned `observed`; the first request established the fresh cumulative counter baseline and the later request advanced it. The 28-day calculation remains insufficient-confidence below 100 eligible observations. Operator alert receipt, dashboard/runbook, capability-alarm delivery, and clock-triggered schedule proof remain unproven.
+    reason: CloudWatch PromQL returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has produced both `observed` and fail-closed `missing` verdicts. The corrected disposable revision 4 kept the application endpoint at `4318`, moved only the collector receiver to `4319`, returned a protected `200`, and then produced `missing` with `insufficient-confidence` after full-window isolation. Baseline revision 2 was restored and a two-request recovery sequence returned `observed`; the first request established the fresh cumulative counter baseline and the later request advanced it. Main-only workflow run `35764615475` then proved the governed two-point, 75-second synthetic implementation produces `observed` coverage after its five-minute arrival grace. The 28-day calculation remains insufficient-confidence below 100 eligible observations. Operator alert receipt, dashboard/runbook, capability-alarm delivery, and clock-triggered schedule proof remain unproven.
     resolution: Use the declared two-point synthetic sequence for every scheduled freshness check, record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, confirm operator receipt of the existing coverage concern without committing message content, and then complete dashboard/runbook and capability-alarm delivery proof. The temporary best-effort GitHub schedule must not be treated as telemetry coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking

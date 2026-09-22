@@ -61,6 +61,10 @@ Approve synthetic scheduler activation bundle
 - Raised: Main refresh required before promotion
   Resolution: The clean chat branch was one merge commit behind local and fetched origin/main. A disposable preflight merged main without changed-path overlap or conflicts, then applied commit 95bfb47 to the chat branch. Stash used: no; discarded work: no; temporary preflight worktree and branch were removed.
 
+
+- Raised: Main refresh needed to record post-promotion live evidence
+  Resolution: The chat branch was clean and one commit behind the promoted main. A disposable preflight merged main cleanly and applied commit 1a8a0c3 with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
+
 ## Decisions Made
 
 
@@ -96,6 +100,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Use a two-point, 75-second protected synthetic sequence for cumulative-counter freshness
   Rationale: PromQL increase proves change, not merely metric existence. The sequence establishes a post-start baseline then advances it without broadening the identity, route, method, scope, secret source, or provider permissions.
 
+
+- Decision: Treat workflow run 35764615475 as two-point implementation proof only
+  Rationale: The manual run from main source 1429f37 made two fixed protected requests 75 seconds apart and the later read-only verifier returned observed. It does not prove the first clock trigger or human alert receipt.
+
 ## Context Hygiene
 
 
@@ -130,6 +138,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Record the completed main-refresh audit
   Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
+
+
+- Summary: Record the successful two-point synthetic evidence without sensitive operational data
+  Durable evidence: The readiness record and plans retain only the source SHA, run ID and URL, request count, interval, safe coverage verdict, and SLO-confidence state. No secret, token, header, request/response body, raw query, email content, or provider payload was retained.
 
 ## Activity Log
 
@@ -378,6 +390,34 @@ Summary: Record the completed main-refresh audit
 
 Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
 
+
+### 2026-09-22T18:11:51Z - Issue
+
+Raised: Main refresh needed to record post-promotion live evidence
+
+Resolution: The chat branch was clean and one commit behind the promoted main. A disposable preflight merged main cleanly and applied commit 1a8a0c3 with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
+
+
+### 2026-09-22T18:11:51Z - Decision
+
+Decision: Treat workflow run 35764615475 as two-point implementation proof only
+
+Rationale: The manual run from main source 1429f37 made two fixed protected requests 75 seconds apart and the later read-only verifier returned observed. It does not prove the first clock trigger or human alert receipt.
+
+
+### 2026-09-22T18:11:51Z - Context hygiene
+
+Summary: Record the successful two-point synthetic evidence without sensitive operational data
+
+Durable evidence: The readiness record and plans retain only the source SHA, run ID and URL, request count, interval, safe coverage verdict, and SLO-confidence state. No secret, token, header, request/response body, raw query, email content, or provider payload was retained.
+
+
+### 2026-09-22T18:11:51Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is an evidence update for the existing staging workflow and readiness policy; it introduces no reusable platform architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -435,7 +475,7 @@ Durable evidence: The source branch, local/fetched base comparison, clean classi
 
 ADR needed: no
 ADR path: 
-Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
+Reason: This is an evidence update for the existing staging workflow and readiness policy; it introduces no reusable platform architecture decision.
 
 ## Session Metrics
 

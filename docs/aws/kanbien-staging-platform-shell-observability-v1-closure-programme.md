@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 5
+version: 6
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -166,8 +166,12 @@ Any health or smoke failure triggers immediate baseline restoration.
 The 2026-09-22 rehearsal completed the collector-receiver fault, isolated
 `missing`/`insufficient-confidence` verdict, and restored `observed` coverage.
 It also established that a fresh cumulative counter needs a baseline request and
-a later advancing request before `increase()` can prove recovery. The remaining
-rehearsal evidence is operator receipt of the existing fixed alert; the source
+a later advancing request before `increase()` can prove recovery. Main-only
+workflow run `35764615475` subsequently proved the governed two-point synthetic
+implementation: it made the fixed pair 75 seconds apart and the read-only
+coverage verdict after its five-minute arrival grace was `observed`. This is
+manual-dispatch implementation evidence only: the first clock-trigger proof and
+operator receipt of the existing fixed alert remain outstanding, and the source
 record deliberately retains no email content.
 
 ### E. Remaining bounded readiness proof

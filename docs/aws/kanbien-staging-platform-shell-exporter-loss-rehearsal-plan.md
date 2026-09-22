@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
-version: 5
+version: 6
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -230,13 +230,20 @@ The corrected bounded rehearsal completed against `kanbien/staging` in account
 - Revision `2` was restored. Recovery runs `35748560439` (`200`, 512 ms) and
   `35761099278` (`200`, 445 ms) established then advanced the fresh cumulative
   counter. The subsequent governed read-only coverage query returned `observed`.
+- Main-only workflow run `35764615475`, from source
+  `1429f37efc191a87c84f0b6ff27588c72d45c3c9`, then exercised the governed
+  two-request sequence: the second fixed protected request ran 75 seconds after
+  the first, and the read-only query after the five-minute arrival grace returned
+  `observed` with `not-determined` SLO confidence.
 
 The initial recovery request alone returned `missing`, not because delivery was
 broken, but because a fresh cumulative counter needs a baseline and a later
 increment for PromQL `increase()` to show movement. The target now codifies the
 two-point, 75-second sequence. The remaining closure item for this rehearsal is
 operator confirmation that the existing alert destination received the concern;
-email content must not be stored in this repository.
+email content must not be stored in this repository. The successful manual
+workflow run proves the implementation of the pair, not the first scheduled
+clock trigger or operator alert receipt.
 
 ## Sources
 
