@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T18:00:31Z
-latest_commit_sha: b6d0b16
-chat_duration: 29933s (00:08:18:53)
+latest_commit_at_utc: 2026-09-22T18:15:57Z
+latest_commit_sha: 8a46978
+chat_duration: 30859s (00:08:34:19)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -61,6 +61,10 @@ Approve synthetic scheduler activation bundle
 - Raised: Main refresh required before promotion
   Resolution: The clean chat branch was one merge commit behind local and fetched origin/main. A disposable preflight merged main without changed-path overlap or conflicts, then applied commit 95bfb47 to the chat branch. Stash used: no; discarded work: no; temporary preflight worktree and branch were removed.
 
+
+- Raised: Main refresh needed to record post-promotion live evidence
+  Resolution: The chat branch was clean and one commit behind the promoted main. A disposable preflight merged main cleanly and applied commit 1a8a0c3 with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
+
 ## Decisions Made
 
 
@@ -96,6 +100,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Use a two-point, 75-second protected synthetic sequence for cumulative-counter freshness
   Rationale: PromQL increase proves change, not merely metric existence. The sequence establishes a post-start baseline then advances it without broadening the identity, route, method, scope, secret source, or provider permissions.
 
+
+- Decision: Treat workflow run 35764615475 as two-point implementation proof only
+  Rationale: The manual run from main source 1429f37 made two fixed protected requests 75 seconds apart and the later read-only verifier returned observed. It does not prove the first clock trigger or human alert receipt.
+
 ## Context Hygiene
 
 
@@ -130,6 +138,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Record the completed main-refresh audit
   Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
+
+
+- Summary: Record the successful two-point synthetic evidence without sensitive operational data
+  Durable evidence: The readiness record and plans retain only the source SHA, run ID and URL, request count, interval, safe coverage verdict, and SLO-confidence state. No secret, token, header, request/response body, raw query, email content, or provider payload was retained.
 
 ## Activity Log
 
@@ -378,6 +390,45 @@ Summary: Record the completed main-refresh audit
 
 Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
 
+
+### 2026-09-22T18:11:51Z - Issue
+
+Raised: Main refresh needed to record post-promotion live evidence
+
+Resolution: The chat branch was clean and one commit behind the promoted main. A disposable preflight merged main cleanly and applied commit 1a8a0c3 with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
+
+
+### 2026-09-22T18:11:51Z - Decision
+
+Decision: Treat workflow run 35764615475 as two-point implementation proof only
+
+Rationale: The manual run from main source 1429f37 made two fixed protected requests 75 seconds apart and the later read-only verifier returned observed. It does not prove the first clock trigger or human alert receipt.
+
+
+### 2026-09-22T18:11:51Z - Context hygiene
+
+Summary: Record the successful two-point synthetic evidence without sensitive operational data
+
+Durable evidence: The readiness record and plans retain only the source SHA, run ID and URL, request count, interval, safe coverage verdict, and SLO-confidence state. No secret, token, header, request/response body, raw query, email content, or provider payload was retained.
+
+
+### 2026-09-22T18:11:51Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is an evidence update for the existing staging workflow and readiness policy; it introduces no reusable platform architecture decision.
+
+
+### 2026-09-22T18:15:57Z - Commit recorded
+
+Commit: `8a46978`
+
+Message: docs(observability): record two-point workflow proof
+
+Summary: Recorded the passed main-only two-request workflow run and its observed coverage verdict in the readiness manifest and operational plans, while preserving the clock-trigger and operator-receipt gaps.
+
+ADR impact: No ADR: target-specific evidence update under existing observability and staging deployment policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -427,6 +478,13 @@ Durable evidence: The source branch, local/fetched base comparison, clean classi
   Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
   ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
 
+
+- Commit: `8a46978`
+  Time UTC: 2026-09-22T18:15:57Z
+  Message: docs(observability): record two-point workflow proof
+  Summary: Recorded the passed main-only two-request workflow run and its observed coverage verdict in the readiness manifest and operational plans, while preserving the clock-trigger and operator-receipt gaps.
+  ADR impact: No ADR: target-specific evidence update under existing observability and staging deployment policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -435,14 +493,14 @@ Durable evidence: The source branch, local/fetched base comparison, clean classi
 
 ADR needed: no
 ADR path: 
-Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
+Reason: This is an evidence update for the existing staging workflow and readiness policy; it introduces no reusable platform architecture decision.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T18:00:31Z
-Latest commit SHA: b6d0b16
-Chat duration: 29933s (00:08:18:53)
+Latest commit at UTC: 2026-09-22T18:15:57Z
+Latest commit SHA: 8a46978
+Chat duration: 30859s (00:08:34:19)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
