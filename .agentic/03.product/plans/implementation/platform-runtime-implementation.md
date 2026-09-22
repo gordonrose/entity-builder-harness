@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 34
+version: 35
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -993,7 +993,9 @@ claim.
    check must detect the missing metric after its grace period, and the target
    must show incomplete SLO confidence and alert delivery. Restore the normal
    revision through the existing rollback path; never make a collector outage
-   an application-success criterion.
+   an application-success criterion. The exact no-mutation design, proposed
+   identity split, stop conditions, and required evidence are recorded in the
+   [exporter-loss rehearsal plan](../../../docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md).
 3. **Remaining public-boundary and operations proof.** Create a second,
    deliberately scope-less or differently scoped machine client before testing
    the required `403`; never fake an invalid token as an authorization test.
