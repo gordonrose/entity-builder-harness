@@ -109,7 +109,7 @@ trust = load_json(TRUST_PATH)
 package = load_json(PACKAGE_PATH)
 coverage = mapping(nested(target_profile, "observability", "metric_coverage"), "target metric_coverage")
 expected_coverage = {
-    "status": "activated-and-live-verified-exporter-loss-and-rollback-proven-pending-operator-alert-receipt",
+    "status": "activated-and-live-verified-exporter-loss-rollback-and-operator-alert-receipt-proven",
     "id": "platform-smoke-protected-read-metric-coverage",
     "command": "npm run platform:shell:metric-coverage",
     "scheduler": {
@@ -200,6 +200,12 @@ expected_execution_policy = {
             "alert_publish_path": "completed-without-operator-receipt-claim",
             "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",
         },
+    },
+    "operator_alert_receipt": {
+        "status": "confirmed-by-operator",
+        "confirmed_on_utc": "2026-09-22",
+        "event": "declared-metric-coverage-missing-insufficient-confidence",
+        "retained_evidence": "human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content",
     },
 }
 require(nested(readiness, "deployment", "execution_policy", "temporary_metric_coverage") == expected_execution_policy, "readiness manifest must retain the exact reviewed metric-coverage execution policy")

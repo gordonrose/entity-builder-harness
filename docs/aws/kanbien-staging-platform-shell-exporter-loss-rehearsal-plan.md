@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
-version: 6
+version: 7
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -226,7 +226,9 @@ The corrected bounded rehearsal completed against `kanbien/staging` in account
 - Controlled run `35745689762` returned `200` in 555 ms during the fault.
 - After the 1,200-second isolation window, coverage run `35748133992` returned
   `missing` and `insufficient-confidence`. Its fixed SNS publish path completed,
-  but operator receipt has not been claimed.
+  and the operator has since confirmed receipt of the declared missing-coverage
+  concern. No address, subscription identifier, link, or message content is
+  retained here.
 - Revision `2` was restored. Recovery runs `35748560439` (`200`, 512 ms) and
   `35761099278` (`200`, 445 ms) established then advanced the fresh cumulative
   counter. The subsequent governed read-only coverage query returned `observed`.
@@ -239,11 +241,10 @@ The corrected bounded rehearsal completed against `kanbien/staging` in account
 The initial recovery request alone returned `missing`, not because delivery was
 broken, but because a fresh cumulative counter needs a baseline and a later
 increment for PromQL `increase()` to show movement. The target now codifies the
-two-point, 75-second sequence. The remaining closure item for this rehearsal is
-operator confirmation that the existing alert destination received the concern;
-email content must not be stored in this repository. The successful manual
-workflow run proves the implementation of the pair, not the first scheduled
-clock trigger or operator alert receipt.
+two-point, 75-second sequence. Operator confirmation of the existing alert
+destination is now recorded as human confirmation only; email content must not
+be stored in this repository. The successful manual workflow run proves the
+implementation of the pair, not the first scheduled clock trigger.
 
 ## Sources
 

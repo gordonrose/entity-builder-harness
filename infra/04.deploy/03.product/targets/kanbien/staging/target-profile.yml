@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 28
+#   version: 29
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -470,7 +470,7 @@ observability:
         - kanbien.platform.server.request.duration
       verified_at_utc: "2026-09-22"
     coverage:
-      current_status: delivery-and-independent-coverage-verdict-path-and-exporter-loss-rollback-proven-pending-operator-alert-receipt
+      current_status: delivery-and-independent-coverage-verdict-path-and-exporter-loss-rollback-and-operator-alert-receipt-proven
       requirement: Export loss must be visible as an operational coverage concern and must prevent a healthy SLO claim for an affected window.
       closure_plan:
         coverage_signal: target-owned-metric-freshness-check-outside-the-application-exporter-path
@@ -480,7 +480,7 @@ observability:
         evidence_expectation: coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery
         recovery: restore-normal-task-revision-through-governed-rollback-path
   metric_coverage:
-    status: activated-and-live-verified-exporter-loss-and-rollback-proven-pending-operator-alert-receipt
+    status: activated-and-live-verified-exporter-loss-rollback-and-operator-alert-receipt-proven
     id: platform-smoke-protected-read-metric-coverage
     command: npm run platform:shell:metric-coverage
     scheduler:

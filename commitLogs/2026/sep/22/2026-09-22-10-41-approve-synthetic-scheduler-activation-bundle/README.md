@@ -65,6 +65,10 @@ Approve synthetic scheduler activation bundle
 - Raised: Main refresh needed to record post-promotion live evidence
   Resolution: The chat branch was clean and one commit behind the promoted main. A disposable preflight merged main cleanly and applied commit 1a8a0c3 with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
 
+
+- Raised: Main refresh needed to record operator alert confirmation
+  Resolution: The chat branch was clean and behind the promoted main. A disposable preflight merged main cleanly and applied commit b410a3b with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
+
 ## Decisions Made
 
 
@@ -104,6 +108,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Treat workflow run 35764615475 as two-point implementation proof only
   Rationale: The manual run from main source 1429f37 made two fixed protected requests 75 seconds apart and the later read-only verifier returned observed. It does not prove the first clock trigger or human alert receipt.
 
+
+- Decision: Mark the staging missing-coverage alert receipt as proven
+  Rationale: The operator confirmed receipt of the existing fixed metric-coverage missing and insufficient-confidence alert. The prior publish-path proof and this human confirmation together establish end-to-end alert delivery for the rehearsal.
+
 ## Context Hygiene
 
 
@@ -142,6 +150,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Record the successful two-point synthetic evidence without sensitive operational data
   Durable evidence: The readiness record and plans retain only the source SHA, run ID and URL, request count, interval, safe coverage verdict, and SLO-confidence state. No secret, token, header, request/response body, raw query, email content, or provider payload was retained.
+
+
+- Summary: Record operator alert receipt without retaining email content
+  Durable evidence: The repository retains only confirmation date, declared safe event identity, and an explicit no-content policy. It does not retain an email address, subscription identifier, unsubscribe link, message content, headers, or other mailbox data.
 
 ## Activity Log
 
@@ -429,6 +441,34 @@ Summary: Recorded the passed main-only two-request workflow run and its observed
 
 ADR impact: No ADR: target-specific evidence update under existing observability and staging deployment policy.
 
+
+### 2026-09-22T18:21:03Z - Issue
+
+Raised: Main refresh needed to record operator alert confirmation
+
+Resolution: The chat branch was clean and behind the promoted main. A disposable preflight merged main cleanly and applied commit b410a3b with no conflicts, stash, or discarded work; the temporary preflight worktree and branch were removed.
+
+
+### 2026-09-22T18:21:03Z - Decision
+
+Decision: Mark the staging missing-coverage alert receipt as proven
+
+Rationale: The operator confirmed receipt of the existing fixed metric-coverage missing and insufficient-confidence alert. The prior publish-path proof and this human confirmation together establish end-to-end alert delivery for the rehearsal.
+
+
+### 2026-09-22T18:21:03Z - Context hygiene
+
+Summary: Record operator alert receipt without retaining email content
+
+Durable evidence: The repository retains only confirmation date, declared safe event identity, and an explicit no-content policy. It does not retain an email address, subscription identifier, unsubscribe link, message content, headers, or other mailbox data.
+
+
+### 2026-09-22T18:21:03Z - ADR disposition
+
+ADR needed: no
+
+Reason: This records operational evidence under existing staging observability policy; it does not change the reusable platform architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -493,7 +533,7 @@ ADR impact: No ADR: target-specific evidence update under existing observability
 
 ADR needed: no
 ADR path: 
-Reason: This is an evidence update for the existing staging workflow and readiness policy; it introduces no reusable platform architecture decision.
+Reason: This records operational evidence under existing staging observability policy; it does not change the reusable platform architecture.
 
 ## Session Metrics
 

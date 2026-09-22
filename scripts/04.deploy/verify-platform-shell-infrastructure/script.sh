@@ -474,8 +474,8 @@ else:
         elif not isinstance(live_proof.get("verified_at_utc"), str) or not live_proof["verified_at_utc"]:
             fail("deployed metric delivery must record a non-secret proof date")
         coverage = metric_delivery.get("coverage", {})
-        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-and-independent-coverage-verdict-path-and-exporter-loss-rollback-proven-pending-operator-alert-receipt":
-            fail("deployed metric delivery must retain the explicit SLO and exporter-loss coverage gap")
+        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-and-independent-coverage-verdict-path-and-exporter-loss-rollback-and-operator-alert-receipt-proven":
+            fail("deployed metric delivery must retain the explicit SLO and exporter-loss coverage proof state")
         elif coverage.get("closure_plan") != {
             "coverage_signal": "target-owned-metric-freshness-check-outside-the-application-exporter-path",
             "rehearsal": "separately-approved-disposable-staging-task-revision-with-collector-receiver-mismatch-and-fixed-application-endpoint",
