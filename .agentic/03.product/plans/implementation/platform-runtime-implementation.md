@@ -900,16 +900,19 @@ The local provider-neutral instrumentation slice is complete: Core supplies the
 bounded ports and label guardrails; contracts/registry validate profile adoption
 and interval truthfulness; the server and worker consume resolved profiles;
 and the smoke app proves a protected HTTP route emits only approved local
-evidence. The target already has an ordinary log destination and
-infrastructure-health alarms. The staging target now also has an initial
-target-owned metric-series and SLO catalogue, a locally verified AWS CloudWatch
-OpenTelemetry metrics adapter, and a prepared target-composition/IaC slice.
-That slice injects only the Core `Metrics` port into the generic server,
-supplies a task-local collector through non-secret SSM configuration, and
-prepares narrow execution-role and task-role permissions. This is not yet a
-complete target observability system: no collector, IAM policy, task definition,
-metric backend evidence, dashboard, synthetic check, SLO query/alarm, trace
-exporter, security-signal pipeline, or durable audit pipeline has been deployed.
+evidence. On 2026-09-22, the staging target composition was also deployed: it
+injects only the Core `Metrics` port into the generic server, supplies a
+task-local collector through non-secret SSM configuration, and grants the
+reviewed narrow execution-role and task-role permissions. A controlled protected
+request returned its approved outcome counter and latency histogram from
+CloudWatch's PromQL endpoint; the ECS task revision, enhanced Container
+Insights, and five infrastructure alarms were also inspected live.
+
+This is still not a complete target observability system. The SLO population is
+not yet large enough to evaluate the selected 28-day objectives; exporter-loss
+coverage, dashboard/runbook access, capability SLO alarm delivery, trace
+export, security-signal delivery, and durable audit delivery remain explicitly
+separate work.
 
 ADR 0029 records the selected delivery boundary: the generic runtime emits only
 Core metric points, the target-composed AWS adapter reaches only a task-local
@@ -922,26 +925,29 @@ Implement future ordinary observability in the following dependency order:
 1. **Initial target policy.** Completed for the two protected smoke-read
    metric series and their three provisional 28-day objectives. The selected
    policy records bounded labels, `300ms`/`750ms` buckets, complete eligible
-   measurement sampling, low-volume behaviour, and the not-yet-deployed state.
+   measurement sampling, low-volume behaviour, and its `selected-not-evaluable`
+   SLO status.
    Dashboard, synthetic-check, detailed access, and delivery/alarm catalogues
    remain additions before an operational claim.
-2. **One bounded metrics/histogram adapter.** Completed locally for the AWS
+2. **One bounded metrics/histogram adapter.** Deployed and query-proven for the AWS
    OpenTelemetry-to-CloudWatch route. It validates the target catalogue,
    requires threshold-aligned histogram buckets, bounds labels/cardinality and
    batching, permits only a task-local collector endpoint, and exposes bounded
-   flush/shutdown. It does not yet provide deployed exporter coverage health;
+   flush/shutdown. It does not yet provide exporter coverage health;
    delivery-loss evidence remains a required target feature and proof. No
    provider imports were added to routes, jobs, or platform contracts.
-3. **Target composition and infrastructure.** Prepared locally. The selected
-   target entrypoint injects the adapter only as Core `Metrics`; CloudFormation
-   prepares the non-secret collector configuration, distinct collector log
-   group, task capacity, and required IAM source. A reviewed AWS change set
-   must still apply it. Retention, dashboards, detailed access, coverage
-   signals, and policy-linked capability alarms remain future target work.
-4. **Independent proof.** Run a safe least-privilege synthetic check through
-   the public boundary, then prove a known protected smoke capability creates a
-   histogram observation, produces correct SLO calculation evidence, and can
-   be found from a dashboard/runbook without exposing sensitive fields.
+3. **Target composition and infrastructure.** Deployed on staging. The target
+   entrypoint injects the adapter only as Core `Metrics`; the reviewed change
+   set added non-secret collector configuration, a distinct collector log group,
+   task capacity, and narrow IAM. Retention, dashboards, detailed access,
+   coverage signals, and policy-linked capability alarms remain future target
+   work.
+4. **Independent proof.** Partially completed: a safe controlled request
+   traversed the public boundary and produced the known protected capability's
+   counter and histogram; an unauthenticated `401` was also observed. Add a
+   valid wrong-scope `403` check, a named regular synthetic check, SLO
+   calculation evidence, and dashboard/runbook discovery without sensitive
+   fields.
 5. **Failure proof.** Demonstrate that exporter loss does not fail the request
    or job, appears as incomplete coverage/target health, and prevents a false
    green SLO claim. Verify alarm delivery and policy-to-IaC/live-state drift
@@ -950,6 +956,60 @@ Implement future ordinary observability in the following dependency order:
    queue/lease telemetry only when their own adapters and evidence policies
    exist. Keep security-signal and durable audit delivery as separate,
    stricter implementation programmes rather than adding them as metric fields.
+
+#### Staging gap-closure plan
+
+The remaining staging work is deliberately divided between source implementation
+and separately approved live exercises. A source declaration, an ECS `OK`
+state, or a successful one-off request must not collapse those stages into one
+claim.
+
+1. **SLO population and confidence.** The safe controlled-token smoke command
+   and the source for a temporary target-specific scheduler are now prepared.
+   The scheduler is a separate GitHub OIDC role and workflow with only one
+   secret-read permission, a fixed protected read, a nominal four-hour UTC
+   cadence, non-overlap, and a five-minute bound. The separately approved IAM
+   change is deployed and read back; source promotion to `origin/main` and a
+   first redacted live result remain before activation. GitHub's schedule is
+   best effort, not a guaranteed interval: it provides recurring labelled
+   synthetic boundary evidence, not customer traffic, telemetry coverage
+   proof, or an unqualified customer SLO. A later platform scheduler contract
+   and adapter replace this bridge. The 28-day objectives remain
+   `insufficient-confidence` until their explicit minimum population and
+   coverage rules are met.
+
+   The replacement is a distinct future implementation slice: a
+   provider-neutral schedule contract and registry, registration validation,
+   execution context and trace propagation, concurrency/lease and retry
+   policy, safe cancellation, and a target adapter such as EventBridge. It must
+   have its own target configuration, observability profile, alarm/coverage
+   policy, and delivery evidence. The temporary GitHub workflow must not be
+   generalised into that module by adding arbitrary jobs or provider commands.
+2. **Exporter-loss coverage.** Add a target-owned coverage signal and run a
+   separately approved, time-bounded staging rehearsal using a disposable task
+   revision whose application exporter points to an intentionally unavailable
+   loopback endpoint. The protected request must still succeed, the external
+   check must detect the missing metric after its grace period, and the target
+   must show incomplete SLO confidence and alert delivery. Restore the normal
+   revision through the existing rollback path; never make a collector outage
+   an application-success criterion.
+3. **Remaining public-boundary and operations proof.** Create a second,
+   deliberately scope-less or differently scoped machine client before testing
+   the required `403`; never fake an invalid token as an authorization test.
+   Run the `429` check at the declared limit plus one with bounded sequential
+   requests and stop on the first rejection. Inspect WAF association and ALB
+   host routing read-only, test alert receipt with an explicitly marked
+   notification, rehearse a reversible task-definition rollback, and activate
+   the cost-allocation tag before creating and proving the small target budget.
+4. **Controlled-token hardening.** The command accepts only the target
+   profile's declared secret format, reads the secret without printing it,
+   retains the token only in process memory, permits only a fixed HTTPS smoke
+   route and safe method, and emits a redacted status-only result. It has a
+   local validation mode. Its explicit credential-source mode uses either the
+   target's named local profile or the OIDC runner environment—never an
+   arbitrary profile parameter. A live run remains an explicitly approved
+   target operation; it cannot create identities, rotate credentials, change
+   AWS resources, or write values to repository evidence.
 
 Call ordinary capability observability operational only after the target has
 passed the policy, adapter, public synthetic, success/failure coverage, access,
@@ -1047,12 +1107,12 @@ smoke-app, and negative-test evidence for unknown profile references, duplicate
 registrations, missing/invalid opt-outs, unsafe labels, provider-boundary
 preservation, resolved worker/server profile consumption, and optional-sink
 failure containment. The staging target now also selects two metric series and
-three provisional SLO objectives, while the local AWS adapter proves strict
-catalogue validation, explicit histogram buckets, a task-local exporter
-boundary, and Core-to-OpenTelemetry translation. The sealed runtime also
-constructs that adapter only from target composition. Collector delivery,
-retention/live query evidence, coverage health, dashboards, SLO calculation,
-synthetic proof, and alarms remain deployment concerns.
+three provisional SLO objectives, while the AWS adapter proves strict catalogue
+validation, explicit histogram buckets, a task-local exporter boundary, and
+Core-to-OpenTelemetry translation. The sealed runtime constructs that adapter
+only from target composition. Collector delivery and live metric-query evidence
+are complete; retention, coverage health, dashboards, SLO calculation,
+synthetic proof, and capability alarms remain target-operational concerns.
 
 The first bounded route proof is the existing protected `platform-smoke.echo`
 route, whose app-relative path is `/smoke/:id`. Its profile allows only its

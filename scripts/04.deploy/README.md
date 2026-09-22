@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -38,6 +38,12 @@ Current commands:
   provider-neutral platform shell.
 - `smoke-test-platform-shell-image/`: local-only image smoke test for platform
   shell `/livez` and `/readyz`.
+- `run-platform-shell-controlled-smoke/`: locally validates, or with explicit
+  target approval performs, one fixed protected staging request using an
+  in-memory Cognito token and redacted status-only output.
+- `verify-platform-shell-synthetic-scheduler/`: read-only policy check for the
+  temporary GitHub Actions protected-route synthetic workflow and its separate
+  one-secret-read IAM role source.
 - `validate-container-boundaries/`: read-only Dockerfile and container image
   placement validation so deployable images stay under governed `infra/**`
   image directories.

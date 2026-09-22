@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 15
+  version: 16
   status: active
   layer: 05.education
   domain: education
@@ -8489,11 +8489,50 @@ Adapter:    “Translate only those approved points to the selected provider.”
 IaC:        “Run a local collector, give its task narrow AWS access, and prove it works.”
 ```
 
-All four source lines are now represented and checked locally. The live-evidence
-part remains deliberately pending: source code and a static template are not a
-deployed ECS task or a CloudWatch observation. Consequently, the SLO entries say
-`selected-not-evaluable`: they are a reviewed definition of the measurement,
-not a claim that staging already calculates it.
+All four source lines are represented and checked locally. On 2026-09-22 the
+first live-delivery proof was completed as well: a protected smoke read reached
+the deployed ECS task, and CloudWatch returned both approved metric series.
+The SLO entries still say `selected-not-evaluable`: one observation is not the
+28-day evidence population, and exporter-loss coverage is still unproven.
+
+### A subtle CloudWatch lesson: two metric query models
+
+The first inspection used CloudWatch's familiar `ListMetrics` API and found no
+capability series. That looked like a delivery failure, but it was the wrong
+query model.
+
+```text
+classic CloudWatch metrics  → ListMetrics / GetMetricData
+native OpenTelemetry metrics → PromQL query endpoint
+```
+
+The collector sends native OpenTelemetry Protocol (OTLP) metrics to CloudWatch.
+CloudWatch keeps their OpenTelemetry resource attributes and point labels, so
+they are queried with PromQL. The successful staging proof found both the
+outcome counter and the latency histogram through that interface. A missing
+result from a classic API therefore does not prove that an OTLP delivery path is
+broken; first confirm which metric model the target selected.
+
+### What the live proof establishes — and what it does not
+
+The controlled client-credentials smoke request received `200`. Its safe,
+allowlisted labels identify only the capability, action, server context, HTTP
+method, response status, and outcome. CloudWatch then returned one successful
+outcome counter and one histogram observation. A prior unauthenticated request
+also produced its separate denied `401` series.
+
+That proves the whole bounded path:
+
+```text
+protected request → profile → Core Metrics port → AWS adapter
+→ task-local collector → CloudWatch OTLP endpoint → PromQL result
+```
+
+It does **not** yet make the SLO healthy. The availability objective requires
+at least 100 eligible observations over its 28-day window; a controlled request
+is a delivery proof, not a representative customer population. Nor has the
+target deliberately stopped the exporter to prove the coverage alarm and
+incomplete-confidence behaviour.
 
 ### What the prepared target composition actually does
 
@@ -8517,11 +8556,13 @@ task composition and the adapter's fixed loopback endpoint, not by a magical
 per-container IAM wall. If a later risk model requires that stronger wall, the
 collector must become a separate gateway/task.
 
-The foundation and service templates have passed CloudFormation's read-only
-template validator. That means AWS accepted their shape and declared IAM
-capability requirements. It does **not** mean the change is deployed: the next
-safe step is still a reviewed change set, followed by live metric, coverage,
-and alert evidence.
+The foundation and service templates first passed CloudFormation's read-only
+validator, then their reviewed change sets were applied on 2026-09-22. ECS now
+runs task revision 2 with the collector sidecar; both stacks are
+`UPDATE_COMPLETE`, enhanced Container Insights is enabled, and all five
+platform infrastructure alarms are `OK`. This is stronger than template
+validation, but it still leaves the capability SLO, exporter-loss coverage,
+and alert-destination proof to do.
 
 ### Why publishing an image is not deployment
 
@@ -8553,9 +8594,9 @@ traffic is affected and limits the standing power of the automated identity.
 | Stage | Deliverable | Evidence of completion |
 |---|---|---|
 | Target policy | Initial metric-series and SLO catalogue selected; dashboard, synthetic-check, detailed delivery/access catalogues remain. | The target profile is the authority for the selected series, labels, buckets, populations, and provisional thresholds. |
-| Metrics adapter | AWS CloudWatch OTel adapter implemented and checked locally. | Known timer points become approved histogram observations; unknown series/labels are rejected; no metric was sent to AWS yet. |
-| Target composition | Target entrypoint, non-secret SSM collector configuration, ADOT sidecar source, task capacity, collector log group, and narrow source IAM are prepared. | Sealed image construction and static policy-to-IaC checks pass locally; AWS deployment is still absent. |
-| Public synthetic proof | A least-privilege check reaches a protected smoke capability through the real boundary. | Controlled request proves DNS/TLS/ingress/auth/routing/application path safely. |
+| Metrics adapter | AWS CloudWatch OTel adapter is deployed and queried. | The approved outcome counter and latency histogram were returned through CloudWatch PromQL; unknown series/labels remain locally rejected. |
+| Target composition | Target entrypoint, non-secret SSM collector configuration, ADOT sidecar, task capacity, collector log group, and narrow IAM are deployed. | ECS task revision 2 is healthy, and the source still keeps AWS outside generic platform modules. |
+| Public synthetic proof | A controlled least-privilege client reaches the protected smoke capability through the real boundary. | A correct scope produced `200`; the unauthenticated boundary produced `401`. A valid wrong-scope `403` proof remains. |
 | SLO proof | Histogram observations calculate the policy's good-event ratio/burn correctly. | Dashboard/runbook can find the evidence without sensitive fields. |
 | Failure proof | Exporter failure causes coverage concern, not user/job failure or a false green SLO. | Controlled failure proves isolation, incomplete-confidence state, and alert/runbook path. |
 
@@ -8569,14 +8610,17 @@ exporter.
 We may say today:
 
 > Routes and jobs have local, provider-neutral, profile-governed observability
-> instrumentation with tested safe emission boundaries.
+> instrumentation, and the staging HTTP smoke path has query-proven CloudWatch
+> counter and latency-histogram delivery.
 
 We must not yet say:
 
-> The production target has complete capability observability and SLO alerting.
+> The staging target has complete capability observability and trustworthy SLO
+> alerting.
 
-That stronger statement still needs an applied target composition, public
-synthetic, coverage, access, SLO-calculation, and alert-delivery proofs above.
+That stronger statement still needs a recurring public synthetic check,
+enough eligible observations, exporter-loss coverage, access/dashboard,
+SLO-calculation, and alert-delivery proofs above.
 
 ### Misconception check
 
@@ -8597,20 +8641,68 @@ performance. We need both to make the boundary trustworthy.
 
 ## 93. Next Lesson Queue
 
-1. Define the provider-neutral queue-delivery policy shape and its target-owned
-   SQS mapping, then update the local worker shell to consume a resolved policy
-   rather than raw retry options.
-2. Review and apply the prepared staging service/foundation CloudFormation
-   change set after a separately approved image-publication run, then prove
-   collector delivery before treating the provisional p95/p99 objectives as
-   measurable.
-3. Return to the practical alarm follow-up only when an explicit AWS change is
-   approved: verify enhanced Container Insights, review the two role changes,
-   review the service-stack change set, and prove notification delivery.
+1. Promote the prepared temporary GitHub Actions synthetic scheduler to
+   `origin/main`, then record its first redacted live run. Its separate IAM
+   role has been deployed and verified. Treat its nominal four-hour cadence as
+   best effort boundary evidence, not telemetry-coverage proof or a customer
+   SLO.
+2. Design the coverage signal and run a separately approved exporter-loss
+   rehearsal. Prove that a successful request plus missing telemetry becomes
+   insufficient SLO confidence and an operator signal.
+3. Complete the remaining bounded target exercises: real wrong-scope `403`,
+   limit-plus-one `429`, WAF/ALB routing inspection, alert receipt, rollback,
+   and cost-allocation/budget proof.
+
+## 94. A Temporary Scheduler Is Not a Platform Scheduler
+
+The staging smoke command now has a temporary delivery mechanism prepared: a
+GitHub Actions workflow scheduled at `17 */4 * * *` UTC. Its isolated IAM role
+is deployed, but the workflow remains dormant until it is promoted to remote
+`main`. It is a practical bridge for a quiet, low-cost target—not the reusable
+scheduler capability the platform will eventually expose.
+
+```text
+GitHub's best-effort clock
+        ↓
+separate main-only OIDC role
+        ↓
+read exactly one smoke-client secret
+        ↓
+fixed protected GET /smoke/synthetic-read
+        ↓
+safe status and latency result
+```
+
+The role cannot deploy ECS, change CloudFormation, administer Cognito, or read
+any other secret. It does not reuse the image-publishing role because “can push
+an image” and “can read the synthetic client secret” are unrelated privileges.
+If either purpose is compromised, keeping the roles separate limits the damage.
+
+### The subtle limitation
+
+“Every four hours” is only a nominal schedule when GitHub Actions supplies the
+clock. GitHub can delay or miss a scheduled run. Therefore a completed run
+means “the controlled path worked at that time”; an absent run means “we may
+not have enough evidence.” Neither result proves a customer-facing SLO or that
+the telemetry exporter delivered every measurement.
+
+The later platform scheduler will have its own contract, target adapter,
+durable schedule record, delivery/lease semantics, retry policy, and target
+observability. At that point, this workflow can be retired rather than quietly
+growing into a hidden platform subsystem.
+
+### Misconception check
+
+“The scheduler is in GitHub Actions, so it is a CI test.”
+
+Not quite. Normal CI checks source code and makes no live protected request.
+This is a narrowly governed operational synthetic: it obtains a short-lived
+token and crosses the real public boundary. That is why it receives its own
+IAM role, no repository-secret fallback, a fixed route, and redacted output.
 
 ## Repository Evidence
 
-- [Current session log](../../../commitLogs/2026/sep/09/2026-09-09-20-04-record-the-bounded-dynamodb-production-reference-decision-fo/README.md)
+- [Current session log](../../../commitLogs/2026/sep/19/2026-09-19-01-27-apply-worker-observability-profiles/README.md)
 - [Core package overview](../../../packages/core/README.md)
 - [Core security public entry point](../../../packages/core/src/security/index.ts)
 - [Platform contracts README](../../../platform/contracts/README.md)
@@ -8655,6 +8747,25 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-22: Created and read back the temporary scheduler's separate AWS IAM
+  role. Its main-only GitHub OIDC trust, four ownership tags, and one
+  `GetSecretValue` permission exactly match the reviewed source. The workflow
+  is still absent from remote `main`, so no scheduled run, secret retrieval,
+  or protected request occurred in this IAM step.
+- 2026-09-22: Prepared a temporary, target-specific GitHub Actions synthetic
+  scheduler source for the controlled protected-route smoke. Its workflow,
+  separate main-only OIDC trust policy, one-secret-read IAM policy, and static
+  policy gate are source-only and locally verified. Its nominal four-hour
+  cadence is explicitly best effort and not SLO/telemetry-coverage proof; no
+  IAM role, workflow run, or AWS resource was created in this step.
+- 2026-09-22: Applied and query-proved the staging CloudWatch metrics delivery
+  slice. The collector sidecar, narrow IAM, enhanced Container Insights, and
+  five infrastructure alarms are live; a controlled `200` and denied `401`
+  request produced the approved counter and histogram through PromQL. The
+  handbook now records the four closure paths: recurring synthetic evidence,
+  exporter-loss coverage, bounded public/operational proofs, and a safe
+  reusable controlled-token command. SLO confidence and alerting are not yet
+  claimed complete.
 - 2026-09-22: Prepared the first staging capability-metrics target-composition
   slice. The sealed target runtime injects the AWS OpenTelemetry adapter only
   as Core `Metrics`; CloudFormation source adds non-secret SSM collector

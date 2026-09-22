@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 5
+#   version: 9
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -35,6 +35,7 @@ trap 'rm -f "$RENDERED_FOUNDATION"' EXIT
 bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
   --output "$RENDERED_FOUNDATION" >/dev/null
 bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
@@ -449,8 +450,10 @@ metric_delivery = observability.get("metric_delivery", {})
 if not isinstance(metric_delivery, dict):
     fail("target profile metric delivery must be a mapping")
 else:
+    metric_delivery_status = metric_delivery.get("status")
+    if metric_delivery_status not in {"prepared-not-deployed", "deployed-and-query-proven"}:
+        fail("target profile metric delivery must declare a governed delivery status")
     for key, expected in {
-        "status": "prepared-not-deployed",
         "adr": "docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md",
         "provider": "aws",
         "adapter_package": "@kanbien/platform-adapter-aws-observability-cloudwatch",
@@ -459,6 +462,29 @@ else:
     }.items():
         if metric_delivery.get(key) != expected:
             fail(f"target profile metric delivery must set {key} to the reviewed initial value")
+    live_proof = metric_delivery.get("live_proof")
+    if metric_delivery_status == "deployed-and-query-proven":
+        if not isinstance(live_proof, dict) or live_proof.get("query_interface") != "cloudwatch-promql":
+            fail("deployed metric delivery must declare its CloudWatch PromQL proof interface")
+        elif not isinstance(live_proof.get("protected_route_outcomes_observed"), list) or set(live_proof["protected_route_outcomes_observed"]) != {"denied-401", "succeeded-200"}:
+            fail("deployed metric delivery must record the safe denied-401 and succeeded-200 proof outcomes")
+        elif not isinstance(live_proof.get("series_observed"), list) or set(live_proof["series_observed"]) != {"kanbien.platform.server.request.outcome", "kanbien.platform.server.request.duration"}:
+            fail("deployed metric delivery must record both approved CloudWatch metric series")
+        elif not isinstance(live_proof.get("verified_at_utc"), str) or not live_proof["verified_at_utc"]:
+            fail("deployed metric delivery must record a non-secret proof date")
+        coverage = metric_delivery.get("coverage", {})
+        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-proven-slo-evaluation-and-exporter-loss-proof-pending":
+            fail("deployed metric delivery must retain the explicit SLO and exporter-loss coverage gap")
+        elif coverage.get("closure_plan") != {
+            "coverage_signal": "target-owned-metric-freshness-check-outside-the-application-exporter-path",
+            "rehearsal": "separately-approved-disposable-staging-task-revision-with-unavailable-loopback-export-endpoint",
+            "request_expectation": "protected-request-succeeds-while-telemetry-is-best-effort",
+            "evidence_expectation": "coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery",
+            "recovery": "restore-normal-task-revision-through-governed-rollback-path",
+        }:
+            fail("deployed metric delivery must retain its governed exporter-loss closure plan")
+    elif live_proof is not None:
+        fail("prepared metric delivery must not claim live metric proof")
     if not Path(metric_delivery.get("adr", "")).is_file():
         fail("target profile metric delivery must reference its accepted deployment ADR")
     collector = metric_delivery.get("collector", {})
@@ -510,8 +536,8 @@ for series in metric_series:
         fail("target metric series IDs must be non-empty and unique")
         continue
     metric_series_by_id[series_id] = series
-    if series.get("status") != "prepared-not-deployed":
-        fail(f"target metric series {series_id} must not claim deployed delivery before its IaC has been applied")
+    if series.get("status") != metric_delivery.get("status"):
+        fail(f"target metric series {series_id} must use its delivery catalogue status")
     source = series.get("source", {})
     otel = series.get("otel", {})
     if not isinstance(source, dict) or not isinstance(otel, dict):
@@ -597,6 +623,38 @@ for slo in slos:
     else:
         fail(f"target SLO {slo_id} must declare a supported objective kind")
 
+synthetic_checks = observability.get("synthetic_checks")
+if not isinstance(synthetic_checks, list) or len(synthetic_checks) != 1:
+    fail("target profile must declare exactly one initial controlled synthetic check")
+else:
+    synthetic_check = synthetic_checks[0]
+    expected_synthetic_check = {
+        "id": "platform-smoke-protected-read",
+        "status": "iam-ready-source-promotion-pending",
+        "command": "npm run platform:shell:controlled-smoke",
+        "cadence_target": "nominal-every-4-hours-best-effort",
+        "identity": "dedicated-least-privilege-machine-client",
+        "request": {
+            "method": "GET",
+            "route_pattern": "/smoke/<safe-synthetic-id>",
+            "expected_http_status": 200,
+        },
+        "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
+        "evidence_interpretation": "synthetic-boundary-evidence-not-unqualified-customer-traffic",
+        "scheduler": "github-actions-temporary-iam-ready-source-promotion-pending",
+        "scheduler_execution_policy": "deployment.execution_policy.temporary_synthetic_scheduler",
+    }
+    if synthetic_check != expected_synthetic_check:
+        fail("target profile controlled synthetic check must retain the governed safe command policy")
+    else:
+        referenced_synthetic_checks = {
+            slo.get("confidence", {}).get("synthetic_check")
+            for slo in slos
+            if isinstance(slo, dict) and isinstance(slo.get("confidence"), dict)
+        }
+        if referenced_synthetic_checks != {synthetic_check["id"]}:
+            fail("target SLOs must all reference the one governed controlled synthetic check")
+
 catalogue_index_path = Path(expected_alarm_policy["catalogue_index"])
 if not catalogue_index_path.is_file():
     fail("target profile alarm catalogue index must exist")
@@ -630,7 +688,7 @@ expected_image_publication = {
     "role_name": "github-platform-shell-staging-deploy",
     "role_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
     "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json",
-    "role_policy_deployment_status": "source-narrowed-pending-governed-iam-change",
+    "role_policy_deployment_status": "deployed-and-live-inspected",
 }
 if not isinstance(image_publication, dict):
     fail("target profile must define a repeatable GitHub image-publication policy")
@@ -638,6 +696,9 @@ else:
     for key, expected in expected_image_publication.items():
         if image_publication.get(key) != expected:
             fail(f"target GitHub image-publication policy must set {key} to the reviewed value")
+    live_policy_proof = image_publication.get("live_policy_proof")
+    if not isinstance(live_policy_proof, dict) or live_policy_proof.get("inspection") != "aws-iam-get-role-policy" or live_policy_proof.get("allowed_mutation_scope") != "ecr-image-publication-only" or not isinstance(live_policy_proof.get("verified_at_utc"), str) or not live_policy_proof["verified_at_utc"]:
+        fail("target GitHub image-publication policy must retain safe live ECR-only policy-inspection evidence")
 
 service_stack_change = target_execution_policy.get("repeatable_service_stack_change", {})
 expected_service_stack_change = {
@@ -714,8 +775,33 @@ else:
     for key, expected in expected_telemetry_prerequisite.items():
         if not isinstance(telemetry_prerequisite, dict) or telemetry_prerequisite.get(key) != expected:
             fail(f"target profile Container Insights prerequisite must set {key} to the reviewed value")
-    if telemetry_prerequisite.get("current_status") not in {"pending-read-only-verification", "verified"}:
-        fail("target profile Container Insights prerequisite must state whether read-only verification is pending or verified")
+    if telemetry_prerequisite.get("current_status") != "verified-enhanced-2026-09-22":
+        fail("target profile Container Insights prerequisite must retain the verified enhanced evidence state")
+
+operations = target_profile.get("operations", {})
+readiness_closure = operations.get("readiness_closure", {}) if isinstance(operations, dict) else {}
+if readiness_closure != {
+    "authorization_403": {
+        "status": "planned",
+        "prerequisite": "separate-valid-machine-client-without-platform-smoke-read-permission",
+        "safe_result": "status-code-only-403",
+    },
+    "rate_limit_429": {
+        "status": "planned",
+        "request_bound": "declared-window-limit-plus-one-sequential-requests-stop-on-first-429",
+        "safe_result": "aggregate-counts-and-final-status-only",
+    },
+    "waf_and_routing": {
+        "status": "planned",
+        "proof": "read-only-waf-association-and-listener-host-rule-inspection-plus-bounded-public-host-check",
+    },
+    "alarm_and_rollback": {
+        "status": "planned",
+        "alert_proof": "explicitly-marked-notification-receipt-without-email-content-in-repository",
+        "rollback_proof": "reversible-task-definition-revision-and-governed-restore",
+    },
+}:
+    fail("target profile must retain the governed remaining public-boundary and operational closure plan")
 
 alarm_definitions = observability.get("alarms")
 expected_alarm_ids = {
