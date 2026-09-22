@@ -8523,6 +8523,31 @@ capability requirements. It does **not** mean the change is deployed: the next
 safe step is still a reviewed change set, followed by live metric, coverage,
 and alert evidence.
 
+### Why publishing an image is not deployment
+
+An image is a sealed application artefact. Publishing it means placing one
+immutable digest in ECR after the scan, SBOM, and provenance checks succeed.
+Deployment is a separate action: it tells CloudFormation and ECS to make a
+running service use that digest. That can change live traffic, task capacity,
+IAM use, and service health.
+
+The staging policy keeps those authorities separate. The protected GitHub
+workflow may publish only the checked image and its evidence. A governed AWS
+change-set procedure then shows the exact infrastructure delta, requires
+review, and is the only route that may alter the service. The GitHub role's
+source policy is correspondingly reduced to ECR actions; its live IAM update
+remains a separately reviewed operation.
+
+### Misconception check
+
+“If a GitHub environment requires approval, it is safe for the workflow to do
+everything after that approval.”
+
+Not necessarily. An approval says a named action may proceed; it does not make
+an unnecessarily broad action easier to review or reverse. Separating image
+publication from service deployment makes the actual change set visible before
+traffic is affected and limits the standing power of the automated identity.
+
 ### What remains before capability observability is operational
 
 | Stage | Deliverable | Evidence of completion |
@@ -8576,8 +8601,9 @@ performance. We need both to make the boundary trustworthy.
    SQS mapping, then update the local worker shell to consume a resolved policy
    rather than raw retry options.
 2. Review and apply the prepared staging service/foundation CloudFormation
-   change set, then prove collector delivery before treating the provisional
-   p95/p99 objectives as measurable.
+   change set after a separately approved image-publication run, then prove
+   collector delivery before treating the provisional p95/p99 objectives as
+   measurable.
 3. Return to the practical alarm follow-up only when an explicit AWS change is
    approved: verify enhanced Container Insights, review the two role changes,
    review the service-stack change set, and prove notification delivery.
@@ -8636,6 +8662,12 @@ After each completed learning chunk:
   capacity, and narrow execution/task-role source policies. The adapter and
   source checks pass locally. No AWS resource, IAM policy, task definition,
   collector, metric, dashboard, SLO query, or alarm was deployed.
+- 2026-09-22: Separated image publication from service deployment. The GitHub
+  workflow can publish a scanned, attested immutable ECR digest but is checked
+  to contain no CloudFormation or ECS mutation command. A reviewed,
+  explicitly approved CloudFormation change set remains required for a running
+  service change; the live GitHub IAM role still needs its separately governed
+  narrowing update.
 - 2026-09-21: Added the observability delivery-readiness roadmap. The local
   instrumentation slice is distinguished from the policy, adapter, target,
   public synthetic, coverage, and alert-delivery proofs required for an

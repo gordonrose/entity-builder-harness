@@ -1728,6 +1728,14 @@ AWS deployment, deployed protected-route smoke, GitHub deployment-role policy
 update, official image provenance, and rollback proof remain blocked in the
 Kanbien staging target profile.
 
+For the staging target, automated GitHub OIDC authority is now deliberately
+limited to publishing a scanned and attested immutable ECR image. It must not
+create or execute CloudFormation change sets, register task definitions, or
+update ECS services. A separately governed manual AWS change-set procedure
+owns service changes so the exact target delta is reviewable before the running
+workload changes. The checked source policy records the intended ECR-only
+permissions; applying that IAM narrowing remains an explicit AWS operation.
+
 Entry criteria:
 
 - Kanbien Platform has a product composition manifest or equivalent governed

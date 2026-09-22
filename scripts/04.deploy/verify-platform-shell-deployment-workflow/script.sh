@@ -12,7 +12,7 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Statically enforce that the Kanbien staging workflow scans, creates an SBOM, and attests an immutable image before service deployment.
+#   purpose: Statically enforce that the Kanbien staging workflow scans, creates an SBOM, attests, and publishes an immutable image without deploying it.
 #   portability:
 #     class: internal
 #     targets:
@@ -124,14 +124,13 @@ ordered_names = [
     "Generate image SBOM",
     "Attest image provenance",
     "Attest image SBOM",
-    "Verify the manually governed foundation stack",
-    "Deploy immutable image digest to the platform-shell service stack",
+    "Record image-publication summary",
 ]
 ordered_steps = [step(name) for name in ordered_names]
 indices = [index for index, _ in ordered_steps]
 require(
     all(index >= 0 for index in indices) and indices == sorted(indices),
-    "image scan, SBOM, and attestations must all occur before service deployment",
+    "image scan, SBOM, and attestations must all occur before image-publication summary",
 )
 
 scan_index, scan_step = ordered_steps[1]
@@ -237,7 +236,7 @@ for name, expected_id, requires_sbom in [
     else:
         require("sbom-path" not in inputs, "provenance attestation must use the action's provenance mode")
 
-summary_index, summary_step = step("Record deployment summary")
+summary_index, summary_step = step("Record image-publication summary")
 summary_run = text(summary_step.get("run"))
 for required_text, message in {
     "steps.scan.outputs.status": "deployment summary must record scan status",
@@ -245,6 +244,23 @@ for required_text, message in {
     "steps.sbom-attestation.outputs.attestation-url": "deployment summary must record SBOM attestation evidence",
 }.items():
     require(required_text in summary_run, message)
+
+workflow_text = WORKFLOW_PATH.read_text(encoding="utf-8")
+for forbidden_text in (
+    "aws cloudformation deploy",
+    "aws cloudformation create-change-set",
+    "aws cloudformation execute-change-set",
+    "aws ecs update-service",
+    "aws ecs register-task-definition",
+):
+    require(
+        forbidden_text not in workflow_text,
+        f"image-publication workflow must not contain target mutation command: {forbidden_text}",
+    )
+require(
+    "Next action: create and review target CloudFormation change sets" in summary_run,
+    "image-publication summary must direct service deployment to a separately reviewed change-set workflow",
+)
 
 for required_text, message in {
     "steps.base-image.outputs.build_digest": "deployment summary must record the build-image digest",
