@@ -125,11 +125,12 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    sequential request, stopping on the first `429`. Inspect the ALB host rule
    and WAF association read-only, then perform a bounded hostname/routing
    check. Do not use a broad load test or malicious WAF payload as evidence.
-4. Implement the target-owned metric-freshness/coverage signal before
-   performing a separately approved exporter-loss rehearsal. The detailed
-   boundary, safety controls, and evidence requirements are in the
-   [exporter-loss rehearsal plan](kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md).
-   It uses a disposable staging task revision whose application exporter has an
+4. The target-owned metric-freshness/coverage source is implemented and has
+   locally and read-only-live verified its normal `observed` verdict. The
+   detailed staged activation, 28-day SLO evaluator, and evidence boundary are
+   in the [observability-v1 closure programme](kanbien-staging-platform-shell-observability-v1-closure-programme.md).
+   The separately bounded [exporter-loss rehearsal plan](kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md)
+   uses a disposable staging task revision whose application exporter has an
    intentionally unavailable loopback endpoint; the protected request must
    still work while the external coverage check reports incomplete SLO
    confidence and reaches its alert destination. Restore the normal revision

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T10:19:28Z
-latest_commit_sha: bcab34d
-chat_duration: 2270s (00:00:37:50)
+latest_commit_at_utc: 2026-09-22T13:59:16Z
+latest_commit_sha: 0aa81db
+chat_duration: 15458s (00:04:17:38)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -64,6 +64,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The exporter-loss rehearsal plan applies the existing target observability boundary: target-owned policy, provider-specific delivery, explicit coverage loss, and no sensitive telemetry labels.
 
+
+- Decision: Adopt one-day effective SLO query windows
+  Rationale: CloudWatch documents a seven-day maximum, but the selected staging OTLP counter accepted one-day increase lookbacks and safely rejected two days and above. The target evaluator uses 28 adjacent one-day windows with shared boundaries; the policy and handbook record both the documented and observed limits.
+
 ## Context Hygiene
 
 
@@ -74,6 +78,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: The exporter-loss plan is source-only: it proposes a five-minute grace, CloudWatch PromQL metric-arrival verifier, safe coverage verdicts, an alert proof, and a disposable loopback-broken task revision with immediate rollback.
   Durable evidence: Durable details are in docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md; target catalogue and implementation/education plans link to it.
+
+
+- Summary: Source and live-read-only evidence for metric coverage and the SLO evaluator is now compacted.
+  Durable evidence: Local metric-coverage, policy, infrastructure, and deterministic segmented-SLO tests pass. Live staging evidence is a normal coverage verdict observed and a 28-day calculation with approximately two eligible observations returning insufficient-confidence. Raw provider responses, query strings, and credentials were not stored.
 
 ## Activity Log
 
@@ -159,6 +167,31 @@ Raised: Chat branch diverged from main after the prior approved scheduler-proof 
 
 Resolution: Fetched remote main, rehearsed the non-rewriting merge in a disposable preflight worktree, reran the synthetic/infrastructure/readiness checks, and applied clean preflight commit 5b26926 with no conflicts, stash, or discarded work.
 
+
+### 2026-09-22T13:55:46Z - Decision
+
+Decision: Adopt one-day effective SLO query windows
+
+Rationale: CloudWatch documents a seven-day maximum, but the selected staging OTLP counter accepted one-day increase lookbacks and safely rejected two days and above. The target evaluator uses 28 adjacent one-day windows with shared boundaries; the policy and handbook record both the documented and observed limits.
+
+
+### 2026-09-22T13:55:50Z - Context hygiene
+
+Summary: Source and live-read-only evidence for metric coverage and the SLO evaluator is now compacted.
+
+Durable evidence: Local metric-coverage, policy, infrastructure, and deterministic segmented-SLO tests pass. Live staging evidence is a normal coverage verdict observed and a 28-day calculation with approximately two eligible observations returning insufficient-confidence. Raw provider responses, query strings, and credentials were not stored.
+
+
+### 2026-09-22T13:59:16Z - Commit recorded
+
+Commit: `0aa81db`
+
+Message: feat(observability): add staging metric coverage verifier
+
+Summary: Added a target-owned CloudWatch metric-coverage verifier, a main-only least-privilege GitHub workflow and IAM source, 28 one-day SLO evaluation, deterministic tests, and aligned readiness, plans, and handbook evidence. Local gates pass; live read-only coverage is observed while the 28-day SLO remains insufficient-confidence below 100 observations.
+
+ADR impact: No ADR: this is a target-specific effective-query limit and bounded operational verifier, not a generic platform architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -180,6 +213,13 @@ Resolution: Fetched remote main, rehearsed the non-rewriting merge in a disposab
   Summary: Added the no-mutation staging exporter-loss rehearsal plan, corrected the target catalogue’s deployed-metric state, and linked the implementation plan, initial AWS plan, and handbook to the approved boundary.
   ADR impact: No new ADR: the plan applies the existing task-local collector decision and defers all AWS mutation to a separately approved execution turn.
 
+
+- Commit: `0aa81db`
+  Time UTC: 2026-09-22T13:59:16Z
+  Message: feat(observability): add staging metric coverage verifier
+  Summary: Added a target-owned CloudWatch metric-coverage verifier, a main-only least-privilege GitHub workflow and IAM source, 28 one-day SLO evaluation, deterministic tests, and aligned readiness, plans, and handbook evidence. Local gates pass; live read-only coverage is observed while the 28-day SLO remains insufficient-confidence below 100 observations.
+  ADR impact: No ADR: this is a target-specific effective-query limit and bounded operational verifier, not a generic platform architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -193,9 +233,9 @@ Reason: This activates and records evidence for an already-approved temporary sc
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T10:19:28Z
-Latest commit SHA: bcab34d
-Chat duration: 2270s (00:00:37:50)
+Latest commit at UTC: 2026-09-22T13:59:16Z
+Latest commit SHA: 0aa81db
+Chat duration: 15458s (00:04:17:38)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

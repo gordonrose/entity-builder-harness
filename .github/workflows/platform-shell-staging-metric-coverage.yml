@@ -1,0 +1,85 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: github.workflow.platform-shell-staging-metric-coverage
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: runtime.operations
+#   disciplines:
+#   - security
+#   - sre
+#   kind: ci-workflow
+#   purpose: Query the declared Kanbien staging OpenTelemetry metric after the protected synthetic cadence and publish only a fixed coverage concern when evidence is absent.
+#   portability:
+#     class: internal
+#     targets:
+#     - kanbien/staging
+#   effects:
+#   - network
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+
+name: Verify Platform Shell Staging Metric Coverage
+
+on:
+  schedule:
+    - cron: "35 */4 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: platform-shell-staging-metric-coverage
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage
+
+jobs:
+  verify-coverage:
+    name: Verify protected-synthetic metric coverage
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Enforce remote-main source
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Metric coverage blocked: expected refs/heads/main, got $GITHUB_REF" >&2
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install script dependencies
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.2
+
+      - name: Validate fixed metric-coverage policy locally
+        run: npm run platform:shell:metric-coverage -- --validate
+
+      - name: Configure coverage AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify metric coverage and notify only on concern
+        run: npm run platform:shell:metric-coverage -- --aws-credential-source environment --notify-on-non-observed

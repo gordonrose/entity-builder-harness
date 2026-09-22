@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 24
+#   version: 25
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -473,6 +473,45 @@ observability:
         request_expectation: protected-request-succeeds-while-telemetry-is-best-effort
         evidence_expectation: coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery
         recovery: restore-normal-task-revision-through-governed-rollback-path
+  metric_coverage:
+    status: source-implemented-pending-aws-activation
+    id: platform-smoke-protected-read-metric-coverage
+    command: npm run platform:shell:metric-coverage
+    scheduler:
+      workflow: .github/workflows/platform-shell-staging-metric-coverage.yml
+      cadence_target: nominal-every-4-hours-best-effort-after-protected-synthetic
+      schedule_cron_utc: "35 */4 * * *"
+      execution_identity: github-platform-shell-staging-metric-coverage
+      role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage
+      deployment_status: source-only
+    expected_metric:
+      instrument_name: kanbien.platform.server.request.outcome
+      required_labels:
+        capability: platform-smoke.smoke.read
+        action: read
+        execution_context: server
+        http_method: GET
+        outcome: succeeded
+    query_window_seconds: 1200
+    arrival_grace_seconds: 300
+    verdicts:
+      - observed
+      - missing
+      - query-failed
+      - notification-failed
+    non_observed_slo_confidence: insufficient-confidence
+    output_policy: safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload
+    alert:
+      delivery: sns-existing-target-owned-topic-only
+      topic_arn: arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms
+      subject: Kanbien staging platform-shell metric coverage
+      message_policy: fixed-safe-verdict-only-no-metric-response-or-request-data
+  slo_query:
+    provider_documented_max_request_range_days: 7
+    effective_max_increase_lookback_days: 1
+    rolling_window_segment_count: 28
+    implementation: segmented-promql-one-day-increase-and-histogram-bucket-aggregation
+    effective_limit_evidence: live-read-only-query-proven-2026-09-22
   metric_series:
     - id: platform-smoke-read-outcome
       status: deployed-and-query-proven
