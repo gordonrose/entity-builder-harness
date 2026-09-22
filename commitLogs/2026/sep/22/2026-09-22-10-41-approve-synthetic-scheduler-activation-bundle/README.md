@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T18:00:31Z
-latest_commit_sha: b6d0b16
-chat_duration: 29933s (00:08:18:53)
+latest_commit_at_utc: 2026-09-22T18:15:57Z
+latest_commit_sha: 8a46978
+chat_duration: 30859s (00:08:34:19)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -418,6 +418,17 @@ ADR needed: no
 
 Reason: This is an evidence update for the existing staging workflow and readiness policy; it introduces no reusable platform architecture decision.
 
+
+### 2026-09-22T18:15:57Z - Commit recorded
+
+Commit: `8a46978`
+
+Message: docs(observability): record two-point workflow proof
+
+Summary: Recorded the passed main-only two-request workflow run and its observed coverage verdict in the readiness manifest and operational plans, while preserving the clock-trigger and operator-receipt gaps.
+
+ADR impact: No ADR: target-specific evidence update under existing observability and staging deployment policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -467,6 +478,13 @@ Reason: This is an evidence update for the existing staging workflow and readine
   Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
   ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
 
+
+- Commit: `8a46978`
+  Time UTC: 2026-09-22T18:15:57Z
+  Message: docs(observability): record two-point workflow proof
+  Summary: Recorded the passed main-only two-request workflow run and its observed coverage verdict in the readiness manifest and operational plans, while preserving the clock-trigger and operator-receipt gaps.
+  ADR impact: No ADR: target-specific evidence update under existing observability and staging deployment policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -480,9 +498,9 @@ Reason: This is an evidence update for the existing staging workflow and readine
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T18:00:31Z
-Latest commit SHA: b6d0b16
-Chat duration: 29933s (00:08:18:53)
+Latest commit at UTC: 2026-09-22T18:15:57Z
+Latest commit SHA: 8a46978
+Chat duration: 30859s (00:08:34:19)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
