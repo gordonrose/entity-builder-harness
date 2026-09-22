@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 842
-  term_count: 1696
+  indexed_artifacts: 860
+  term_count: 1732
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8106,6 +8106,30 @@ terms:
   canonical_id: github.workflow.deploy-rag-rulebook-staging
   evidence_path: .github/workflows/deploy-rag-rulebook-staging.yml
   confidence_weight: 1
+- term: github.workflow.platform-shell-staging-metric-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.platform-shell-staging-metric-coverage
+  evidence_path: .github/workflows/platform-shell-staging-metric-coverage.yml
+  confidence_weight: 1
+- term: .github/workflows/platform-shell-staging-metric-coverage.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.platform-shell-staging-metric-coverage
+  evidence_path: .github/workflows/platform-shell-staging-metric-coverage.yml
+  confidence_weight: 1
+- term: github.workflow.platform-shell-staging-synthetic
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.platform-shell-staging-synthetic
+  evidence_path: .github/workflows/platform-shell-staging-synthetic.yml
+  confidence_weight: 1
+- term: .github/workflows/platform-shell-staging-synthetic.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.platform-shell-staging-synthetic
+  evidence_path: .github/workflows/platform-shell-staging-synthetic.yml
+  confidence_weight: 1
 - term: deploy.corpus.readme
   category: artifact-id
   match_type: exact
@@ -8141,6 +8165,18 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.adr.0028-use-client-environment-deployment-target-profiles
   evidence_path: docs/04.deploy/adrs/0028-use-client-environment-deployment-target-profiles.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0029-use-task-local-otel-collector-for-cloudwatch-metrics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0029-use-task-local-otel-collector-for-cloudwatch-metrics
+  evidence_path: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0029-use-task-local-otel-collector-for-cloudwatch-metrics
+  evidence_path: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
   confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
@@ -8502,6 +8538,18 @@ terms:
   canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
   evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
   confidence_weight: 1
+- term: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
+  evidence_path: docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
+  evidence_path: docs/aws/kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md
+  confidence_weight: 1
 - term: aws.plan.kanbien-staging-platform-shell-initial-deployment
   category: artifact-id
   match_type: exact
@@ -8513,6 +8561,18 @@ terms:
   match_type: exact
   canonical_id: aws.plan.kanbien-staging-platform-shell-initial-deployment
   evidence_path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+  confidence_weight: 1
+- term: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
+  evidence_path: docs/aws/kanbien-staging-platform-shell-observability-v1-closure-programme.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-platform-shell-observability-v1-closure-programme.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
+  evidence_path: docs/aws/kanbien-staging-platform-shell-observability-v1-closure-programme.md
   confidence_weight: 1
 - term: aws.runbook.platform-shell-staging-alarms
   category: artifact-id
@@ -8658,6 +8718,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
   evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/iam/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/iam/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/iam/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.readme
   category: artifact-id
   match_type: exact
@@ -8765,6 +8837,78 @@ terms:
   match_type: exact
   canonical_id: deploy.script.render-platform-shell-foundation-template
   evidence_path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-controlled-smoke.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-controlled-smoke.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-controlled-smoke/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-controlled-smoke/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-controlled-smoke.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-controlled-smoke/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-controlled-smoke
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-controlled-smoke
+  evidence_path: scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-controlled-smoke
+  evidence_path: scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-controlled-smoke.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-controlled-smoke.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-controlled-smoke.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-metric-coverage.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-metric-coverage.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-metric-coverage/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-metric-coverage/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-metric-coverage.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-metric-coverage/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-metric-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-metric-coverage
+  evidence_path: scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-metric-coverage
+  evidence_path: scripts/04.deploy/run-platform-shell-metric-coverage/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-metric-coverage.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-metric-coverage.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-metric-coverage.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.smoke-test-platform-shell-image.readme
   category: artifact-id
@@ -8910,6 +9054,42 @@ terms:
   canonical_id: deploy.script.verify-platform-shell-infrastructure
   evidence_path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
   confidence_weight: 1
+- term: deploy.script.verify-platform-shell-metric-coverage.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-metric-coverage.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-metric-coverage/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-metric-coverage/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-metric-coverage.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-metric-coverage/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-metric-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-metric-coverage
+  evidence_path: scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-metric-coverage
+  evidence_path: scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-metric-coverage.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-metric-coverage.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-metric-coverage.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.script.verify-platform-shell-observability-prerequisites.readme
   category: artifact-id
   match_type: exact
@@ -8933,6 +9113,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-observability-prerequisites
   evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-synthetic-scheduler.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-synthetic-scheduler.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-synthetic-scheduler.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-synthetic-scheduler
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-synthetic-scheduler
+  evidence_path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-synthetic-scheduler
+  evidence_path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-synthetic-scheduler.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-synthetic-scheduler.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-synthetic-scheduler.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.verify-rag-rulebook-deploy-readiness.readme
   category: artifact-id

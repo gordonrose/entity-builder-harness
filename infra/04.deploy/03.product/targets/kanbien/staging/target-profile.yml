@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 25
+#   version: 26
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -465,7 +465,7 @@ observability:
         - kanbien.platform.server.request.duration
       verified_at_utc: "2026-09-22"
     coverage:
-      current_status: delivery-proven-slo-evaluation-and-exporter-loss-proof-pending
+      current_status: delivery-and-independent-coverage-verdict-path-proven-exporter-loss-proof-pending
       requirement: Export loss must be visible as an operational coverage concern and must prevent a healthy SLO claim for an affected window.
       closure_plan:
         coverage_signal: target-owned-metric-freshness-check-outside-the-application-exporter-path
@@ -474,7 +474,7 @@ observability:
         evidence_expectation: coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery
         recovery: restore-normal-task-revision-through-governed-rollback-path
   metric_coverage:
-    status: source-implemented-pending-aws-activation
+    status: activated-and-live-verified-exporter-loss-proof-pending
     id: platform-smoke-protected-read-metric-coverage
     command: npm run platform:shell:metric-coverage
     scheduler:
@@ -483,7 +483,7 @@ observability:
       schedule_cron_utc: "35 */4 * * *"
       execution_identity: github-platform-shell-staging-metric-coverage
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage
-      deployment_status: source-only
+      deployment_status: deployed-and-live-inspected
     expected_metric:
       instrument_name: kanbien.platform.server.request.outcome
       required_labels:
@@ -494,6 +494,7 @@ observability:
         outcome: succeeded
     query_window_seconds: 1200
     arrival_grace_seconds: 300
+    rehearsal_isolation_wait_seconds: 1200
     verdicts:
       - observed
       - missing

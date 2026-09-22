@@ -8700,6 +8700,22 @@ request. It must use only the existing bounded labels—not a unique request ID
 or customer identifier. A missing expected metric is not an error rate of zero;
 it is missing evidence.
 
+### Grace period versus query window
+
+These two durations answer different questions. The five-minute **arrival
+grace** gives a healthy exporter time to send a metric and for the provider to
+ingest it. The twenty-minute **query window** is the history that the coverage
+verifier searches.
+
+For an ordinary scheduled check, the two work together: the synthetic request
+arrives before the verifier and the twenty-minute query can find it. For an
+exporter-loss rehearsal, they must not be confused. Waiting only five minutes
+after breaking export could still let the verifier find an older healthy
+observation from before the fault. The rehearsal therefore waits the whole
+twenty-minute query window after its broken-export request. Only then can a
+`missing` verdict be evidence of the intended fault rather than an ambiguous
+mix of old and new telemetry.
+
 The rehearsal uses one disposable staging task revision with its
 application-side exporter pointed at a closed loopback receiver. The request
 must still return `200`; then the monitor must report `missing`, mark the

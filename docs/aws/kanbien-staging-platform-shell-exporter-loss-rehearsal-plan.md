@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
-version: 1
-status: draft
+version: 2
+status: active
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -26,10 +26,10 @@ used_by:
 
 ## Status and boundary
 
-This is a **plan only**. It authorises no AWS, GitHub, ECS, IAM, SNS, or
-CloudWatch mutation. A later execution turn must name the exact reviewed
-source, AWS resources, reversible task revision, stop conditions, and rollback
-command under `.agentic/aws/workflows/execute-approved-aws-change.md`.
+This plan is active only for the separately authorised, bounded
+`kanbien/staging` rehearsal. Every AWS action must still name the exact
+reviewed source, AWS resources, reversible task revision, stop conditions, and
+rollback command under `.agentic/aws/workflows/execute-approved-aws-change.md`.
 
 The rehearsal applies only to the `kanbien/staging` platform-shell target in
 account `337159794548`, region `eu-west-1`. It must not alter the legacy
@@ -106,7 +106,8 @@ add one explicit coverage contract with these initial values and no defaults:
 | Observed series | `kanbien.platform.server.request.outcome` | A counter can prove that an eligible completed request was exported. |
 | Required static labels | `capability=platform-smoke.smoke.read`, `action=read`, `execution_context=server`, `http_method=GET`, `outcome=succeeded` | They are already in the reviewed label allowlist and avoid sensitive or unbounded fields. |
 | Export interval | 60 seconds | Current target setting. |
-| Arrival grace period | 5 minutes | Allows the 60-second exporter interval and normal ingestion delay without masking a sustained loss. This is a proposed policy value, not yet deployed. |
+| Arrival grace period | 5 minutes | Allows the 60-second exporter interval and normal ingestion delay before ordinary coverage evaluation. It is not a rehearsal-isolation delay. |
+| Coverage query window and rehearsal isolation wait | 20 minutes | The verifier examines the preceding 1,200 seconds. During exporter-loss rehearsal, wait the whole window after the broken-export smoke so an earlier healthy observation cannot satisfy the query. |
 | Coverage verdicts | `observed`, `missing`, `query-failed`, `notification-failed` | Each non-observed verdict yields `insufficient-confidence`; only `observed` confirms this coverage check. |
 | Persistent alerting | Existing operator alert destination | The rehearsal must prove an operator-facing signal without adding a new recipient or storing email content. |
 
@@ -132,10 +133,12 @@ allowlisted verdict and timing fields; raw query responses remain ephemeral.
 4. Dispatch one controlled protected smoke request. Expect a redacted `200`.
    A request failure is not exporter-loss evidence; it is a separate service
    failure and triggers immediate rollback.
-5. After the declared five-minute grace period, run the independent coverage
-   verifier. Expect no increase for the approved outcome series, a `missing`
-   coverage verdict, and `insufficient-confidence` for the affected SLO
-   window.
+5. After the broken-export smoke, wait the full declared 1,200-second coverage
+   query window—not only the five-minute arrival grace—then run the independent
+   coverage verifier. Expect no increase for the approved outcome series, a
+   `missing` coverage verdict, and `insufficient-confidence` for the affected
+   SLO window. This full-window wait excludes an earlier healthy metric that
+   would otherwise make the rehearsal falsely look `observed`.
 6. Verify delivery of the explicitly marked coverage notification without
    storing the email body or any secret. A workflow success alone is not alert
    receipt proof.
@@ -173,7 +176,8 @@ The readiness record may move this gap only after it has safe evidence of:
 - the disposable exporter-loss revision and the one changed non-secret
   exporter receiver setting;
 - a protected request `200` during the rehearsal;
-- the redacted `missing` coverage verdict after grace;
+- the redacted `missing` coverage verdict after the full coverage-window
+  isolation wait;
 - the operator's alert-receipt confirmation, without message content;
 - restoration to the normal revision;
 - a post-recovery protected `200` and `observed` coverage verdict; and
