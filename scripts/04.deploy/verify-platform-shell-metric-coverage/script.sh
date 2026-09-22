@@ -109,12 +109,12 @@ trust = load_json(TRUST_PATH)
 package = load_json(PACKAGE_PATH)
 coverage = mapping(nested(target_profile, "observability", "metric_coverage"), "target metric_coverage")
 expected_coverage = {
-    "status": "activated-and-live-verified-exporter-loss-proof-pending",
+    "status": "activated-and-live-verified-exporter-loss-and-rollback-proven-pending-operator-alert-receipt",
     "id": "platform-smoke-protected-read-metric-coverage",
     "command": "npm run platform:shell:metric-coverage",
     "scheduler": {
         "workflow": ".github/workflows/platform-shell-staging-metric-coverage.yml",
-        "cadence_target": "nominal-every-4-hours-best-effort-after-protected-synthetic",
+        "cadence_target": "nominal-every-4-hours-best-effort-after-two-point-protected-synthetic",
         "schedule_cron_utc": "35 */4 * * *",
         "execution_identity": "github-platform-shell-staging-metric-coverage",
         "role_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage",

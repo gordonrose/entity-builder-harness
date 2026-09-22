@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 3
+version: 5
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -157,9 +157,18 @@ five-minute arrival grace—before running the independent verifier. The wait
 must exclude all earlier healthy observations from the query window. The
 verifier must then report `missing`, mark the affected SLO result
 `insufficient-confidence`, and notify the existing alert destination. Restore
-the exact captured task definition, wait for steady state, repeat the
-controlled smoke, and prove an `observed` verdict. Any health or smoke failure
-triggers immediate baseline restoration.
+the exact captured task definition and wait for steady state. A fresh
+cumulative counter needs one fixed recovery smoke to establish its exported
+baseline and a second fixed recovery smoke at least 75 seconds later to
+advance it; only then can PromQL `increase()` prove an `observed` verdict.
+Any health or smoke failure triggers immediate baseline restoration.
+
+The 2026-09-22 rehearsal completed the collector-receiver fault, isolated
+`missing`/`insufficient-confidence` verdict, and restored `observed` coverage.
+It also established that a fresh cumulative counter needs a baseline request and
+a later advancing request before `increase()` can prove recovery. The remaining
+rehearsal evidence is operator receipt of the existing fixed alert; the source
+record deliberately retains no email content.
 
 ### E. Remaining bounded readiness proof
 

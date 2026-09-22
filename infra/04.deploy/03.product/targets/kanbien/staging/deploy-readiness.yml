@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 26
+#   version: 28
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -82,10 +82,15 @@ deployment:
           - aws-iam-get-role
           - aws-iam-get-role-policy
         verified_at_utc: "2026-09-22T09:31:57Z"
-        allowed_mutation_scope: one-declared-secret-read-and-one-fixed-public-smoke-request
+        allowed_mutation_scope: two-declared-secret-reads-and-two-fixed-public-smoke-requests-with-75-second-counter-advance-interval
       allowed_aws_action: secretsmanager:GetSecretValue
       allowed_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       command: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
+      metric_coverage_sequence:
+        request_count: 2
+        inter_request_wait_seconds: 75
+        purpose: establish-and-advance-the-cumulative-counter-after-a-fresh-task-start
+        output_policy: per-request-status-and-safe-latency-only-no-token-secret-or-response-body
       replacement: replace-with-governed-platform-scheduler-contract-and-adapter
       activation_status: active-manual-first-run-proven-scheduled-trigger-pending
       activation_prerequisites:
@@ -634,7 +639,44 @@ proof:
   aws_read_only_inspection: container-insights-enhanced-five-platform-alarms-ok-and-both-stacks-update-complete-2026-09-22
   deployment_smoke: public-livez-200-protected-401-and-correctly-scoped-200-and-cloudwatch-otel-counter-histogram-query-proven-2026-09-22
   controlled_smoke_command: implemented-and-locally-validated-2026-09-22
-  rollback_proof: blocked
+  rollback_proof: collector-receiver-mismatch-and-baseline-telemetry-recovery-proven-pending-operator-alert-receipt-2026-09-22
+  exporter_loss_rehearsal:
+    status: live-proven-pending-operator-alert-receipt
+    source_commit_sha: fbe45401ce1b6f1dc0018dfcd9c6c299b31074ad
+    baseline_task_definition_revision: "2"
+    disposable_fault_task_definition_revision: "4"
+    fault_boundary: application-fixed-4318-collector-receiver-only-4319
+    fault_smoke:
+      github_run_id: "35745689762"
+      github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35745689762
+      result: passed
+      http_status: 200
+      duration_ms: 555
+    isolated_coverage:
+      github_run_id: "35748133992"
+      github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35748133992
+      result: expected-failure
+      metric_coverage: missing
+      affected_slo_confidence: insufficient-confidence
+      alert_publish_path: completed-without-operator-receipt-claim
+    recovery:
+      restored_task_definition_revision: "2"
+      baseline_smoke:
+        github_run_id: "35748560439"
+        github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35748560439
+        result: passed
+        http_status: 200
+        duration_ms: 512
+      counter_advancing_smoke:
+        github_run_id: "35761099278"
+        github_run_url: https://github.com/gordonrose/entity-builder-harness/actions/runs/35761099278
+        result: passed
+        http_status: 200
+        duration_ms: 445
+      coverage_result: observed
+      coverage_execution: governed-local-read-only-query-after-refreshed-sso
+      counter_semantics: first-fresh-task-request-establishes-a-cumulative-baseline-second-request-advances-it-for-promql-increase
+    retained_evidence_policy: no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses
 blockers:
   - id: platform-shell-readiness.deferred-worker-runtime
     severity: blocking
@@ -654,13 +696,13 @@ blockers:
   - id: platform-shell-readiness.operational-proof
     severity: blocking
     path: proof
-    reason: Read-only inspection now confirms a recent CloudWatch log-stream event, the two implemented ALB alarms in OK state, and a confirmed SNS email subscription. It does not prove an alarm was received by the operator, and rollback exercise evidence remains unrecorded.
-    resolution: Verify a redacted operational log record, an explicitly marked end-to-end alarm receipt without committing email content, and a reversible governed task-definition rollback rehearsal before marking the target ready.
+    reason: Read-only inspection confirms a recent CloudWatch log-stream event, the implemented ALB alarms in OK state, and a confirmed SNS email subscription. The collector-receiver-mismatch rehearsal now proves reversible task-definition rollback and telemetry recovery, but the operator has not yet confirmed receipt of the existing coverage alert.
+    resolution: Verify an explicitly marked end-to-end alert receipt without committing email content before marking the target ready.
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage
-    reason: CloudWatch PromQL now returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has independently produced both `observed` and fail-closed `missing` verdicts. The 28-day calculation remains insufficient-confidence because it has fewer than the policy minimum of 100 eligible observations. A 2026-09-22 read-only query proved this metric accepts one-day, including historical, `increase()` lookbacks and rejects longer lookbacks; the declared evaluator consequently uses 28 adjacent one-day windows. The first exporter-loss attempt used disposable revision 3 and auto-restored to revision 2 because the application correctly rejected a non-approved `4319` endpoint during startup; it is configuration-boundary evidence, not exporter-loss evidence. The corrected collector-receiver-mismatch rehearsal, operator alert receipt, dashboard/runbook, and capability-alarm delivery remain unproven.
-    resolution: Record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, then leave the application's fixed `4318` endpoint unchanged and use a disposable collector configuration that listens on `4319` to prove local export loss, incomplete confidence, recovery, and capability-alert delivery. After the broken-export synthetic, wait the full 1,200-second coverage lookback before querying; the five-minute arrival grace does not exclude an earlier healthy observation. The temporary best-effort GitHub schedule must not be treated as telemetry-coverage or customer-SLO proof.
+    reason: CloudWatch PromQL returns the deployed protected-route outcome counter and latency histogram, and the live coverage verifier has produced both `observed` and fail-closed `missing` verdicts. The corrected disposable revision 4 kept the application endpoint at `4318`, moved only the collector receiver to `4319`, returned a protected `200`, and then produced `missing` with `insufficient-confidence` after full-window isolation. Baseline revision 2 was restored and a two-request recovery sequence returned `observed`; the first request established the fresh cumulative counter baseline and the later request advanced it. The 28-day calculation remains insufficient-confidence below 100 eligible observations. Operator alert receipt, dashboard/runbook, capability-alarm delivery, and clock-triggered schedule proof remain unproven.
+    resolution: Use the declared two-point synthetic sequence for every scheduled freshness check, record the first clock-triggered runs, calculate each SLO from its 28 one-day PromQL windows with its confidence state, confirm operator receipt of the existing coverage concern without committing message content, and then complete dashboard/runbook and capability-alarm delivery proof. The temporary best-effort GitHub schedule must not be treated as telemetry coverage or customer-SLO proof.
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation

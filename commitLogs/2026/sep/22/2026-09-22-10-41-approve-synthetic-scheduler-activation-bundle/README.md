@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T15:07:05Z
-latest_commit_sha: b5f741f
-chat_duration: 19527s (00:05:25:27)
+latest_commit_at_utc: 2026-09-22T18:00:31Z
+latest_commit_sha: b6d0b16
+chat_duration: 29933s (00:08:18:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -53,6 +53,14 @@ Approve synthetic scheduler activation bundle
 - Raised: First exporter-loss task revision exited before serving traffic
   Resolution: Revision 3 changed the application endpoint to port 4319. The adapter correctly rejected that non-approved endpoint during startup; ECS restored revision 2. No smoke, coverage, or alert evidence was claimed, and temporary local task-definition material was removed.
 
+
+- Raised: A fresh cumulative counter made the first post-rollback recovery check look missing
+  Resolution: The restored service, collector, and application metric record were healthy; a second fixed smoke request advanced the cumulative value and the same read-only coverage query returned observed.
+
+
+- Raised: Main refresh required before promotion
+  Resolution: The clean chat branch was one merge commit behind local and fetched origin/main. A disposable preflight merged main without changed-path overlap or conflicts, then applied commit 95bfb47 to the chat branch. Stash used: no; discarded work: no; temporary preflight worktree and branch were removed.
+
 ## Decisions Made
 
 
@@ -84,6 +92,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Preserve the fixed application endpoint and fault the disposable collector receiver instead
   Rationale: The application remains at the security-reviewed 127.0.0.1:4318 endpoint. The corrected task revision changes only collector AOT_CONFIG_CONTENT from receiver port 4318 to 4319, retaining its health check, pipeline, exporter, image, and task role. That induces a real local delivery failure without allowing arbitrary telemetry egress.
 
+
+- Decision: Use a two-point, 75-second protected synthetic sequence for cumulative-counter freshness
+  Rationale: PromQL increase proves change, not merely metric existence. The sequence establishes a post-start baseline then advances it without broadening the identity, route, method, scope, secret source, or provider permissions.
+
 ## Context Hygiene
 
 
@@ -110,6 +122,14 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Record the corrected exporter-loss fault boundary
   Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
+
+
+- Summary: Record the completed corrected exporter-loss rehearsal and its counter-semantics correction
+  Durable evidence: Deploy readiness, the rehearsal plan, closure programme, target policy, workflow gate, controlled-smoke README, and handbook retain only safe revisions, run identifiers, statuses, durations, verdicts, and the remaining operator-receipt gap.
+
+
+- Summary: Record the completed main-refresh audit
+  Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
 
 ## Activity Log
 
@@ -305,6 +325,59 @@ Summary: Recorded revision 3 as configuration-boundary evidence only, preserved 
 
 ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
 
+
+### 2026-09-22T17:47:18Z - Issue
+
+Raised: A fresh cumulative counter made the first post-rollback recovery check look missing
+
+Resolution: The restored service, collector, and application metric record were healthy; a second fixed smoke request advanced the cumulative value and the same read-only coverage query returned observed.
+
+
+### 2026-09-22T17:47:22Z - Decision
+
+Decision: Use a two-point, 75-second protected synthetic sequence for cumulative-counter freshness
+
+Rationale: PromQL increase proves change, not merely metric existence. The sequence establishes a post-start baseline then advances it without broadening the identity, route, method, scope, secret source, or provider permissions.
+
+
+### 2026-09-22T17:47:30Z - Context hygiene
+
+Summary: Record the completed corrected exporter-loss rehearsal and its counter-semantics correction
+
+Durable evidence: Deploy readiness, the rehearsal plan, closure programme, target policy, workflow gate, controlled-smoke README, and handbook retain only safe revisions, run identifiers, statuses, durations, verdicts, and the remaining operator-receipt gap.
+
+
+### 2026-09-22T17:47:36Z - ADR disposition
+
+ADR needed: no
+
+Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
+
+
+### 2026-09-22T18:00:31Z - Commit recorded
+
+Commit: `b6d0b16`
+
+Message: fix(observability): prove counter freshness after rollback
+
+Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
+
+ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
+
+
+### 2026-09-22T18:01:55Z - Issue
+
+Raised: Main refresh required before promotion
+
+Resolution: The clean chat branch was one merge commit behind local and fetched origin/main. A disposable preflight merged main without changed-path overlap or conflicts, then applied commit 95bfb47 to the chat branch. Stash used: no; discarded work: no; temporary preflight worktree and branch were removed.
+
+
+### 2026-09-22T18:01:55Z - Context hygiene
+
+Summary: Record the completed main-refresh audit
+
+Durable evidence: The source branch, local/fetched base comparison, clean classifier result, no-overlap report, preflight branch/worktree, clean merge result, applied commit 95bfb47, and cleanup result are captured in this session record. No sensitive data was recorded.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -347,6 +420,13 @@ ADR impact: No ADR: target-specific rehearsal correction under the accepted task
   Summary: Recorded revision 3 as configuration-boundary evidence only, preserved the fixed application endpoint, and revised the bounded staging rehearsal to create delivery loss by moving only the disposable collector receiver while retaining its health and export pipeline.
   ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
 
+
+- Commit: `b6d0b16`
+  Time UTC: 2026-09-22T18:00:31Z
+  Message: fix(observability): prove counter freshness after rollback
+  Summary: Govern the staging synthetic as two fixed protected requests 75 seconds apart so the cumulative server request counter establishes a baseline and then advances after rollback; record the successful receiver-mismatch rehearsal and its bounded evidence.
+  ADR impact: Covered by existing observability closure and staging deployment decisions; no ADR required.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -355,14 +435,14 @@ ADR impact: No ADR: target-specific rehearsal correction under the accepted task
 
 ADR needed: no
 ADR path: 
-Reason: This corrects a staging rehearsal method under the existing task-local collector ADR; it does not alter provider-neutral platform architecture or the production endpoint-security model.
+Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T15:07:05Z
-Latest commit SHA: b5f741f
-Chat duration: 19527s (00:05:25:27)
+Latest commit at UTC: 2026-09-22T18:00:31Z
+Latest commit SHA: b6d0b16
+Chat duration: 29933s (00:08:18:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -9,7 +9,7 @@
 #   - security
 #   - sre
 #   kind: ci-workflow
-#   purpose: Run one bounded protected-route synthetic request for Kanbien staging on a best-effort nominal four-hour cadence.
+#   purpose: Run a bounded two-point protected-route synthetic sequence for Kanbien staging on a best-effort nominal four-hour cadence.
 #   portability:
 #     class: internal
 #     targets:
@@ -83,3 +83,9 @@ jobs:
 
       - name: Run protected staging synthetic
         run: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
+
+      - name: Wait for first cumulative counter export
+        run: sleep 75 # Exceed the reviewed 60-second export interval before issuing the fixed counter-advancing request.
+
+      - name: Run protected staging synthetic counter advance
+        run: npm run platform:shell:controlled-smoke -- --aws-credential-source environment # Reuse the fixed policy command; no free-form request input is accepted.
