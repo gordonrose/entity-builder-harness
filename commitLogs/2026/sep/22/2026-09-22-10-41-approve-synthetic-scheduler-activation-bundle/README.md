@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-22T13:59:16Z
-latest_commit_sha: 0aa81db
-chat_duration: 15458s (00:04:17:38)
+latest_commit_at_utc: 2026-09-22T14:23:13Z
+latest_commit_sha: 345a034
+chat_duration: 16895s (00:04:41:35)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -243,6 +243,17 @@ Summary: Add governed recognition-index refresh to this commit
 
 Durable evidence: The generated artifact index now contains 860 metadata artifacts and 1,732 terms. Its change is derived index data only; source-of-truth timing policy remains in the target profile, rehearsal plan, closure programme, readiness manifest, and verifier tests.
 
+
+### 2026-09-22T14:23:13Z - Commit recorded
+
+Commit: `345a034`
+
+Message: fix(observability): isolate exporter-loss rehearsal window
+
+Summary: Bound the exporter-loss rehearsal to the full 1,200-second coverage lookback, recorded live IAM and safe coverage-verdict evidence without claiming alert receipt, updated static policy checks, and refreshed the governed artifact-recognition index required by the repository gate.
+
+ADR impact: No ADR: target-specific operational safety correction; no generic architecture changed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -271,6 +282,13 @@ Durable evidence: The generated artifact index now contains 860 metadata artifac
   Summary: Added a target-owned CloudWatch metric-coverage verifier, a main-only least-privilege GitHub workflow and IAM source, 28 one-day SLO evaluation, deterministic tests, and aligned readiness, plans, and handbook evidence. Local gates pass; live read-only coverage is observed while the 28-day SLO remains insufficient-confidence below 100 observations.
   ADR impact: No ADR: this is a target-specific effective-query limit and bounded operational verifier, not a generic platform architecture decision.
 
+
+- Commit: `345a034`
+  Time UTC: 2026-09-22T14:23:13Z
+  Message: fix(observability): isolate exporter-loss rehearsal window
+  Summary: Bound the exporter-loss rehearsal to the full 1,200-second coverage lookback, recorded live IAM and safe coverage-verdict evidence without claiming alert receipt, updated static policy checks, and refreshed the governed artifact-recognition index required by the repository gate.
+  ADR impact: No ADR: target-specific operational safety correction; no generic architecture changed.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -284,9 +302,9 @@ Reason: This is target-specific operational policy binding the existing 1,200-se
 ## Session Metrics
 
 Raised at UTC: 2026-09-22T09:41:38Z
-Latest commit at UTC: 2026-09-22T13:59:16Z
-Latest commit SHA: 0aa81db
-Chat duration: 15458s (00:04:17:38)
+Latest commit at UTC: 2026-09-22T14:23:13Z
+Latest commit SHA: 345a034
+Chat duration: 16895s (00:04:41:35)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
