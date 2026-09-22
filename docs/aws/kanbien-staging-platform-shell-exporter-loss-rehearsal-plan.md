@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-exporter-loss-rehearsal
-version: 3
+version: 5
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -122,6 +122,7 @@ add one explicit coverage contract with these initial values and no defaults:
 | Observed series | `kanbien.platform.server.request.outcome` | A counter can prove that an eligible completed request was exported. |
 | Required static labels | `capability=platform-smoke.smoke.read`, `action=read`, `execution_context=server`, `http_method=GET`, `outcome=succeeded` | They are already in the reviewed label allowlist and avoid sensitive or unbounded fields. |
 | Export interval | 60 seconds | Current target setting. |
+| Recovery counter sequence | Two fixed protected requests, 75 seconds apart | After a fresh task starts, the first cumulative counter observation establishes a baseline; a later observation must advance it before `increase()` can demonstrate freshness. |
 | Arrival grace period | 5 minutes | Allows the 60-second exporter interval and normal ingestion delay before ordinary coverage evaluation. It is not a rehearsal-isolation delay. |
 | Coverage query window and rehearsal isolation wait | 20 minutes | The verifier examines the preceding 1,200 seconds. During exporter-loss rehearsal, wait the whole window after the broken-export smoke so an earlier healthy observation cannot satisfy the query. |
 | Coverage verdicts | `observed`, `missing`, `query-failed`, `notification-failed` | Each non-observed verdict yields `insufficient-confidence`; only `observed` confirms this coverage check. |
@@ -162,8 +163,12 @@ allowlisted verdict and timing fields; raw query responses remain ephemeral.
    storing the email body or any secret. A workflow success alone is not alert
    receipt proof.
 7. Restore the exact baseline task definition through the governed rollback
-   path. Wait until the service is steady, issue one more controlled smoke
-   request, and verify metric arrival and an `observed` coverage verdict.
+   path. Wait until the service is steady. Issue one fixed controlled smoke to
+   establish the fresh cumulative-counter baseline, wait at least the declared
+   60-second export interval plus the reviewed 15-second margin, then issue a
+   second fixed controlled smoke. Verify metric arrival and an `observed`
+   coverage verdict. One post-restart request alone is not sufficient evidence
+   for a PromQL `increase()` query.
 8. Record only the evidence listed below. Remove no history, IAM identity,
    secret, alarm topic, or task-definition revision during the rehearsal.
 
@@ -209,6 +214,29 @@ The readiness record may move this gap only after it has safe evidence of:
 This closes neither the 28-day SLO population requirement nor the remaining
 wrong-scope `403`, rate-limit `429`, WAF/routing, rollback, dashboard/runbook,
 and budget proof gaps.
+
+## Live rehearsal outcome — 2026-09-22
+
+The corrected bounded rehearsal completed against `kanbien/staging` in account
+`337159794548`, region `eu-west-1`:
+
+- Baseline revision `2` was captured; disposable revision `4` changed only the
+  collector receiver from `4318` to `4319`, while the application retained its
+  fixed `4318` endpoint.
+- Controlled run `35745689762` returned `200` in 555 ms during the fault.
+- After the 1,200-second isolation window, coverage run `35748133992` returned
+  `missing` and `insufficient-confidence`. Its fixed SNS publish path completed,
+  but operator receipt has not been claimed.
+- Revision `2` was restored. Recovery runs `35748560439` (`200`, 512 ms) and
+  `35761099278` (`200`, 445 ms) established then advanced the fresh cumulative
+  counter. The subsequent governed read-only coverage query returned `observed`.
+
+The initial recovery request alone returned `missing`, not because delivery was
+broken, but because a fresh cumulative counter needs a baseline and a later
+increment for PromQL `increase()` to show movement. The target now codifies the
+two-point, 75-second sequence. The remaining closure item for this rehearsal is
+operator confirmation that the existing alert destination received the concern;
+email content must not be stored in this repository.
 
 ## Sources
 

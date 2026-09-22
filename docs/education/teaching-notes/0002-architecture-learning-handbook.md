@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 18
+  version: 19
   status: active
   layer: 05.education
   domain: education
@@ -8743,6 +8743,34 @@ connection failure at the intended boundary while the server remains able to
 serve traffic. The broader lesson is that a good resilience rehearsal tests the
 failure you mean to test; if a guard rejects the setup earlier, record that as
 useful evidence and redesign the experiment rather than weakening the guard.
+
+### A counter needs movement, not merely existence
+
+The recovery check uncovered a subtle property of cumulative counters. A
+freshly started task begins its request counter at zero. Its first successful
+request creates an exported value such as `1`; later periodic exports can keep
+reporting that same value. PromQL `increase()` asks whether the value changed
+within its window, so a lone first request can correctly return zero even
+though telemetry delivery is healthy.
+
+```text
+fresh task → request A → exported counter: 1 → request B → exported counter: 2
+                                 baseline                 increase = 1
+```
+
+The controlled staging recovery proved this directly: after the normal task
+revision returned, the first protected request was successful but the
+freshness query remained `missing`. A second bounded request, made against the
+same fixed route after the first export interval, advanced the counter and the
+same read-only query returned `observed`.
+
+This is not permission to weaken the coverage query to “does a metric exist?”
+An old value could exist even when the expected new request never exported. The
+correct rule is a two-point sequence: establish a baseline, then make a later
+fixed request that advances it. The temporary scheduler now uses two bounded
+requests 75 seconds apart, longer than the target's 60-second export interval.
+Both requests remain protected, use the existing least-privilege identity, and
+emit only their safe status and latency.
 
 ### The subtle limitation
 

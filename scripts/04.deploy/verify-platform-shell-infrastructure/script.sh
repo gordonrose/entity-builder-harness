@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 12
+#   version: 13
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -474,12 +474,13 @@ else:
         elif not isinstance(live_proof.get("verified_at_utc"), str) or not live_proof["verified_at_utc"]:
             fail("deployed metric delivery must record a non-secret proof date")
         coverage = metric_delivery.get("coverage", {})
-        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-and-independent-coverage-verdict-path-proven-exporter-loss-proof-pending":
+        if not isinstance(coverage, dict) or coverage.get("current_status") != "delivery-and-independent-coverage-verdict-path-and-exporter-loss-rollback-proven-pending-operator-alert-receipt":
             fail("deployed metric delivery must retain the explicit SLO and exporter-loss coverage gap")
         elif coverage.get("closure_plan") != {
             "coverage_signal": "target-owned-metric-freshness-check-outside-the-application-exporter-path",
             "rehearsal": "separately-approved-disposable-staging-task-revision-with-collector-receiver-mismatch-and-fixed-application-endpoint",
             "request_expectation": "protected-request-succeeds-while-telemetry-is-best-effort",
+            "counter_semantics": "a-fresh-cumulative-counter-needs-an-exported-baseline-and-a-later-advancing-request-before-promql-increase-can-observe-freshness",
             "evidence_expectation": "coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery",
             "recovery": "restore-normal-task-revision-through-governed-rollback-path",
         }:
@@ -641,6 +642,11 @@ else:
             "expected_http_status": 200,
         },
         "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
+        "metric_coverage_sequence": {
+            "request_count": 2,
+            "inter_request_wait_seconds": 75,
+            "purpose": "establish-and-advance-the-cumulative-counter-after-a-fresh-task-start",
+        },
         "evidence_interpretation": "synthetic-boundary-evidence-not-unqualified-customer-traffic",
         "scheduler": "github-actions-temporary-active-manual-first-run-proven-scheduled-trigger-pending",
         "scheduler_execution_policy": "deployment.execution_policy.temporary_synthetic_scheduler",

@@ -53,6 +53,10 @@ Approve synthetic scheduler activation bundle
 - Raised: First exporter-loss task revision exited before serving traffic
   Resolution: Revision 3 changed the application endpoint to port 4319. The adapter correctly rejected that non-approved endpoint during startup; ECS restored revision 2. No smoke, coverage, or alert evidence was claimed, and temporary local task-definition material was removed.
 
+
+- Raised: A fresh cumulative counter made the first post-rollback recovery check look missing
+  Resolution: The restored service, collector, and application metric record were healthy; a second fixed smoke request advanced the cumulative value and the same read-only coverage query returned observed.
+
 ## Decisions Made
 
 
@@ -84,6 +88,10 @@ Approve synthetic scheduler activation bundle
 - Decision: Preserve the fixed application endpoint and fault the disposable collector receiver instead
   Rationale: The application remains at the security-reviewed 127.0.0.1:4318 endpoint. The corrected task revision changes only collector AOT_CONFIG_CONTENT from receiver port 4318 to 4319, retaining its health check, pipeline, exporter, image, and task role. That induces a real local delivery failure without allowing arbitrary telemetry egress.
 
+
+- Decision: Use a two-point, 75-second protected synthetic sequence for cumulative-counter freshness
+  Rationale: PromQL increase proves change, not merely metric existence. The sequence establishes a post-start baseline then advances it without broadening the identity, route, method, scope, secret source, or provider permissions.
+
 ## Context Hygiene
 
 
@@ -110,6 +118,10 @@ Approve synthetic scheduler activation bundle
 
 - Summary: Record the corrected exporter-loss fault boundary
   Durable evidence: Revision 3 is retained as non-destructive configuration-boundary evidence: the platform-shell container exited 1 and collector exited 0, with baseline revision 2 automatically restored. Durable policy is now in the exporter-loss plan, closure programme, target profile, readiness record, infrastructure verifier, and handbook.
+
+
+- Summary: Record the completed corrected exporter-loss rehearsal and its counter-semantics correction
+  Durable evidence: Deploy readiness, the rehearsal plan, closure programme, target policy, workflow gate, controlled-smoke README, and handbook retain only safe revisions, run identifiers, statuses, durations, verdicts, and the remaining operator-receipt gap.
 
 ## Activity Log
 
@@ -305,6 +317,34 @@ Summary: Recorded revision 3 as configuration-boundary evidence only, preserved 
 
 ADR impact: No ADR: target-specific rehearsal correction under the accepted task-local collector decision.
 
+
+### 2026-09-22T17:47:18Z - Issue
+
+Raised: A fresh cumulative counter made the first post-rollback recovery check look missing
+
+Resolution: The restored service, collector, and application metric record were healthy; a second fixed smoke request advanced the cumulative value and the same read-only coverage query returned observed.
+
+
+### 2026-09-22T17:47:22Z - Decision
+
+Decision: Use a two-point, 75-second protected synthetic sequence for cumulative-counter freshness
+
+Rationale: PromQL increase proves change, not merely metric existence. The sequence establishes a post-start baseline then advances it without broadening the identity, route, method, scope, secret source, or provider permissions.
+
+
+### 2026-09-22T17:47:30Z - Context hygiene
+
+Summary: Record the completed corrected exporter-loss rehearsal and its counter-semantics correction
+
+Durable evidence: Deploy readiness, the rehearsal plan, closure programme, target policy, workflow gate, controlled-smoke README, and handbook retain only safe revisions, run identifiers, statuses, durations, verdicts, and the remaining operator-receipt gap.
+
+
+### 2026-09-22T17:47:36Z - ADR disposition
+
+ADR needed: no
+
+Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -355,7 +395,7 @@ ADR impact: No ADR: target-specific rehearsal correction under the accepted task
 
 ADR needed: no
 ADR path: 
-Reason: This corrects a staging rehearsal method under the existing task-local collector ADR; it does not alter provider-neutral platform architecture or the production endpoint-security model.
+Reason: This corrects a target-specific synthetic freshness procedure under the existing task-local collector decision; it does not change provider-neutral platform architecture or authorization.
 
 ## Session Metrics
 

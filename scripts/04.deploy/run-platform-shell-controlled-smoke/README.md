@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.run-platform-shell-controlled-smoke.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -62,3 +62,8 @@ does not mutate AWS. Run it only with explicit current-chat approval for the
 staging target; it is intentionally excluded from ordinary CI and test suites.
 The distinct, source-prepared synthetic scheduler is the only planned automated
 caller, once its separate IAM role and workflow have been reviewed and enabled.
+It invokes this unchanged fixed command twice, 75 seconds apart. The first
+request establishes an exported cumulative-counter baseline after a fresh task
+start; the second advances that counter so the separate PromQL `increase()`
+coverage verifier can prove freshness. This does not add a route, method,
+scope, secret, free-form input, or provider permission.

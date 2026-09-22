@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-synthetic-scheduler
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -128,11 +128,17 @@ expected_execution_policy = {
     "live_policy_proof": {
         "inspection": ["aws-iam-get-role", "aws-iam-get-role-policy"],
         "verified_at_utc": "2026-09-22T09:31:57Z",
-        "allowed_mutation_scope": "one-declared-secret-read-and-one-fixed-public-smoke-request",
+        "allowed_mutation_scope": "two-declared-secret-reads-and-two-fixed-public-smoke-requests-with-75-second-counter-advance-interval",
     },
     "allowed_aws_action": "secretsmanager:GetSecretValue",
     "allowed_secret_arn": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5",
     "command": "npm run platform:shell:controlled-smoke -- --aws-credential-source environment",
+    "metric_coverage_sequence": {
+        "request_count": "2",
+        "inter_request_wait_seconds": "75",
+        "purpose": "establish-and-advance-the-cumulative-counter-after-a-fresh-task-start",
+        "output_policy": "per-request-status-and-safe-latency-only-no-token-secret-or-response-body",
+    },
     "replacement": "replace-with-governed-platform-scheduler-contract-and-adapter",
     "activation_status": "active-manual-first-run-proven-scheduled-trigger-pending",
     "activation_prerequisites": [
@@ -167,6 +173,11 @@ expected_synthetic_check = {
         "expected_http_status": "200",
     },
     "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
+    "metric_coverage_sequence": {
+        "request_count": "2",
+        "inter_request_wait_seconds": "75",
+        "purpose": "establish-and-advance-the-cumulative-counter-after-a-fresh-task-start",
+    },
     "evidence_interpretation": "synthetic-boundary-evidence-not-unqualified-customer-traffic",
     "scheduler": "github-actions-temporary-active-manual-first-run-proven-scheduled-trigger-pending",
     "scheduler_execution_policy": "deployment.execution_policy.temporary_synthetic_scheduler",
@@ -250,14 +261,20 @@ require(credentials.get("uses") == "aws-actions/configure-aws-credentials@v4", "
 require(credentials.get("with") == {"role-to-assume": "${{ env.AWS_ROLE_ARN }}", "aws-region": "${{ env.AWS_REGION }}"}, "synthetic workflow must assume only its declared role and region")
 run = named_step(steps, "Run protected staging synthetic")
 require(run.get("run") == expected_execution_policy["command"], "synthetic workflow must run only the exact bounded OIDC credential-source command")
+wait = named_step(steps, "Wait for first cumulative counter export")
+require(wait.get("run") == "sleep 75", "synthetic workflow must retain the reviewed counter-baseline export wait")
+advance = named_step(steps, "Run protected staging synthetic counter advance")
+require(advance.get("run") == expected_execution_policy["command"], "synthetic workflow must use the same exact bounded command for the counter-advancing request")
 
 step_names = [step.get("name") for step in steps if isinstance(step, dict)]
 required_order = [
     "Validate fixed synthetic policy locally",
     "Configure read-only AWS credentials",
     "Run protected staging synthetic",
+    "Wait for first cumulative counter export",
+    "Run protected staging synthetic counter advance",
 ]
-require(all(name in step_names for name in required_order) and [step_names.index(name) for name in required_order] == sorted(step_names.index(name) for name in required_order), "synthetic policy validation, OIDC configuration, and live request must occur in that order")
+require(all(name in step_names for name in required_order) and [step_names.index(name) for name in required_order] == sorted(step_names.index(name) for name in required_order), "synthetic policy validation, OIDC configuration, baseline request, bounded export wait, and counter-advancing request must occur in that order")
 
 workflow_text = WORKFLOW_PATH.read_text(encoding="utf-8")
 for forbidden_text in (

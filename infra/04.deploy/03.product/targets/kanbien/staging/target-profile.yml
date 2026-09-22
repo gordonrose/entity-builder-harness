@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 27
+#   version: 28
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -107,10 +107,15 @@ deployment:
           - aws-iam-get-role
           - aws-iam-get-role-policy
         verified_at_utc: "2026-09-22T09:31:57Z"
-        allowed_mutation_scope: one-declared-secret-read-and-one-fixed-public-smoke-request
+        allowed_mutation_scope: two-declared-secret-reads-and-two-fixed-public-smoke-requests-with-75-second-counter-advance-interval
       allowed_aws_action: secretsmanager:GetSecretValue
       allowed_secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       command: npm run platform:shell:controlled-smoke -- --aws-credential-source environment
+      metric_coverage_sequence:
+        request_count: 2
+        inter_request_wait_seconds: 75
+        purpose: establish-and-advance-the-cumulative-counter-after-a-fresh-task-start
+        output_policy: per-request-status-and-safe-latency-only-no-token-secret-or-response-body
       replacement: replace-with-governed-platform-scheduler-contract-and-adapter
       activation_status: active-manual-first-run-proven-scheduled-trigger-pending
       activation_prerequisites:
@@ -465,21 +470,22 @@ observability:
         - kanbien.platform.server.request.duration
       verified_at_utc: "2026-09-22"
     coverage:
-      current_status: delivery-and-independent-coverage-verdict-path-proven-exporter-loss-proof-pending
+      current_status: delivery-and-independent-coverage-verdict-path-and-exporter-loss-rollback-proven-pending-operator-alert-receipt
       requirement: Export loss must be visible as an operational coverage concern and must prevent a healthy SLO claim for an affected window.
       closure_plan:
         coverage_signal: target-owned-metric-freshness-check-outside-the-application-exporter-path
         rehearsal: separately-approved-disposable-staging-task-revision-with-collector-receiver-mismatch-and-fixed-application-endpoint
         request_expectation: protected-request-succeeds-while-telemetry-is-best-effort
+        counter_semantics: a-fresh-cumulative-counter-needs-an-exported-baseline-and-a-later-advancing-request-before-promql-increase-can-observe-freshness
         evidence_expectation: coverage-check-marks-slo-insufficient-confidence-and-proves-alert-delivery
         recovery: restore-normal-task-revision-through-governed-rollback-path
   metric_coverage:
-    status: activated-and-live-verified-exporter-loss-proof-pending
+    status: activated-and-live-verified-exporter-loss-and-rollback-proven-pending-operator-alert-receipt
     id: platform-smoke-protected-read-metric-coverage
     command: npm run platform:shell:metric-coverage
     scheduler:
       workflow: .github/workflows/platform-shell-staging-metric-coverage.yml
-      cadence_target: nominal-every-4-hours-best-effort-after-protected-synthetic
+      cadence_target: nominal-every-4-hours-best-effort-after-two-point-protected-synthetic
       schedule_cron_utc: "35 */4 * * *"
       execution_identity: github-platform-shell-staging-metric-coverage
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage
@@ -689,6 +695,10 @@ observability:
         route_pattern: /smoke/<safe-synthetic-id>
         expected_http_status: 200
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
+      metric_coverage_sequence:
+        request_count: 2
+        inter_request_wait_seconds: 75
+        purpose: establish-and-advance-the-cumulative-counter-after-a-fresh-task-start
       evidence_interpretation: synthetic-boundary-evidence-not-unqualified-customer-traffic
       scheduler: github-actions-temporary-active-manual-first-run-proven-scheduled-trigger-pending
       scheduler_execution_policy: deployment.execution_policy.temporary_synthetic_scheduler
