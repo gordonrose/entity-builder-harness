@@ -45,6 +45,10 @@ let's go
 - Raised: AWS CLI resource-server pagination requires an explicit maximum of 50.
   Resolution: The initial read-only preflight used an invalid pagination size. The corrected bounded query confirmed only the existing platform-shell resource server, while the negative resource server/client/secret were absent.
 
+
+- Raised: The infrastructure policy check exposed a provisioner lifecycle-validation contradiction.
+  Resolution: Local validation had incorrectly required pending provisioning after the one-time resource was created. It now accepts governed post-provision states while live creation still fails unless the target is pending.
+
 ## Decisions Made
 
 
@@ -56,12 +60,20 @@ let's go
 - Decision: Run focused source-baseline checks before the staging transaction.
   Rationale: The verified checks cover the changed JWT contract, Cognito composition, no-secret provisioning path, and static target policy without creating cloud resources.
 
+
+- Decision: Provision the single declared staging negative Cognito client before deploying its allowlist.
+  Rationale: The transaction preflighted exact resource absence, created only the declared unmapped scope/client/secret, returned safe identifiers, and leaves the secret value outside source control and the ECS task.
+
 ## Context Hygiene
 
 
 
 - Summary: Retain only safe preflight facts and no raw AWS payloads.
   Durable evidence: Durable target policy, closure plan, provisioning command, static gate, and future session commit record; no secret, token, header, provider error payload, or email content was retained.
+
+
+- Summary: Recorded only safe Cognito resource identifiers and target lifecycle facts.
+  Durable evidence: The target profile records the client ID and secret ARN, while secret values, OAuth tokens, authorization headers, response bodies, provider errors, and mailbox data remain absent from source, logs, and evidence.
 
 ## Activity Log
 
@@ -114,6 +126,27 @@ Message: feat(authz): govern staging valid-token 403 proof
 Summary: Adds a provider-neutral finite JWT client-ID allowlist, Cognito composition for one additional valid test client, staging target policy, and a no-secret provisioning command for the later bounded authorization proof.
 
 ADR impact: No ADR: extends existing provider and staging boundaries.
+
+
+### 2026-09-23T10:44:42Z - Decision
+
+Decision: Provision the single declared staging negative Cognito client before deploying its allowlist.
+
+Rationale: The transaction preflighted exact resource absence, created only the declared unmapped scope/client/secret, returned safe identifiers, and leaves the secret value outside source control and the ECS task.
+
+
+### 2026-09-23T10:44:42Z - Issue
+
+Raised: The infrastructure policy check exposed a provisioner lifecycle-validation contradiction.
+
+Resolution: Local validation had incorrectly required pending provisioning after the one-time resource was created. It now accepts governed post-provision states while live creation still fails unless the target is pending.
+
+
+### 2026-09-23T10:44:43Z - Context hygiene
+
+Summary: Recorded only safe Cognito resource identifiers and target lifecycle facts.
+
+Durable evidence: The target profile records the client ID and secret ARN, while secret values, OAuth tokens, authorization headers, response bodies, provider errors, and mailbox data remain absent from source, logs, and evidence.
 
 ## Sub-Agent Activity
 

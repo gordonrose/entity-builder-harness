@@ -77,7 +77,23 @@ esac
 EOF
 chmod 700 "$fake_aws"
 
-execution_result="$(bash scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh --execute --aws-cli "$fake_aws")"
+fixture="$fake_root/pending-target-profile.yml"
+python3 - "$fixture" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+source = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
+target = Path(sys.argv[1])
+profile = yaml.safe_load(source.read_text(encoding="utf-8"))
+negative = profile["auth"]["negative_test_client"]
+negative["status"] = "pending-provisioning"
+negative.pop("client_id", None)
+negative.pop("secret_arn", None)
+target.write_text(yaml.safe_dump(profile, sort_keys=False), encoding="utf-8")
+PY
+
+execution_result="$(bash scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh --execute --target-profile "$fixture" --aws-cli "$fake_aws")"
 if [[ "$execution_result" != '{"client_id":"negative-client-id","negative_authz_client_provision":"created","secret_arn":"arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-test"}' ]]; then
   echo "ERROR: negative authorization client provisioner did not emit the safe expected result" >&2
   exit 1

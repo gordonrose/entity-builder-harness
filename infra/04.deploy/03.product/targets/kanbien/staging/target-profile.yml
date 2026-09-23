@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 30
+#   version: 31
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -24,6 +24,8 @@
 #     path: scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
 #   - id: deploy.script.provision-platform-shell-negative-authz-client
 #     path: scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh
+#   - id: deploy.script.run-platform-shell-negative-authz-smoke
+#     path: scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
 schema: deploy/platform-shell-target-profile/v1
 status: draft
 client:
@@ -289,8 +291,10 @@ auth:
     grant_type: client_credentials
     client_secret_storage: aws-secrets-manager
   negative_test_client:
-    status: pending-provisioning
+    status: provisioned-pending-service-deployment
     name: platform-shell-staging-negative-authz-client
+    client_id: 15po9eg4hgknb2pi2d1bdfhdds
+    secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-YnblEn
     type: confidential
     grant_type: client_credentials
     access_token_validity_minutes: 5
@@ -389,6 +393,7 @@ config:
     PLATFORM_AUTH_COGNITO_REGION: eu-west-1
     PLATFORM_AUTH_COGNITO_USER_POOL_ID: eu-west-1_EQaXioA1n
     PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: 4n7kuqstbvb97ur3btbur8afjt
+    PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds"]'
     PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}'
     PLATFORM_CORS_ALLOWLIST: https://staging.platform.kanbien.com
     PLATFORM_HEALTH_LIVEZ_EXPOSURE: public
@@ -422,6 +427,11 @@ config:
       name: kanbien/staging/platform-shell/cognito-machine-client
       arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-machine-client-ibNhn5
       delivery: controlled-smoke-token-acquisition-only-not-ecs-task-environment
+      value_format: opaque-raw-string
+    cognito_negative_authz_client_secret:
+      name: kanbien/staging/platform-shell/cognito-negative-authz-client
+      arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-YnblEn
+      delivery: bounded-negative-authz-smoke-only-not-ecs-task-environment
       value_format: opaque-raw-string
 observability:
   policy:
@@ -940,11 +950,12 @@ operations:
     runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
   readiness_closure:
     authorization_403:
-      status: source-allowlist-implemented-target-deployment-pending
+      status: negative-client-provisioned-target-deployment-pending
       prerequisite: separate-valid-machine-client-without-platform-smoke-read-permission
       authentication_boundary: primary-client-plus-exact-additional-client-id-allowlist-no-wildcards
       target_configuration: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array
       negative_client_scope: dedicated-unmapped-resource-server-scope
+      proof_command: npm run platform:shell:negative-authz-smoke
       safe_result: status-code-only-403
     rate_limit_429:
       status: planned

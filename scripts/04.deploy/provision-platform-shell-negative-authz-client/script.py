@@ -108,8 +108,16 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
     for key, value in expected.items():
         if policy[key] != value:
             raise NegativeAuthzProvisionError("the target profile does not match the reviewed negative authorization client policy")
-    if negative_client.get("status") != "pending-provisioning":
-        raise NegativeAuthzProvisionError("the negative authorization client is not in the pending-provisioning state")
+    status = negative_client.get("status")
+    if status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-403-proof", "deployed-and-403-proven"}:
+        raise NegativeAuthzProvisionError("the negative authorization client is not in a governed lifecycle state")
+    if status != "pending-provisioning":
+        client_id = negative_client.get("client_id")
+        secret_arn = negative_client.get("secret_arn")
+        if not isinstance(client_id, str) or not client_id:
+            raise NegativeAuthzProvisionError("the provisioned negative authorization client must retain its client ID")
+        if not isinstance(secret_arn, str) or not secret_arn.startswith("arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-"):
+            raise NegativeAuthzProvisionError("the provisioned negative authorization client must retain its target-scoped secret ARN")
     if negative_client.get("type") != "confidential" or negative_client.get("grant_type") != "client_credentials":
         raise NegativeAuthzProvisionError("the negative authorization client must remain confidential and client-credentials-only")
     if negative_client.get("access_token_validity_minutes") != 5:
@@ -120,6 +128,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         raise NegativeAuthzProvisionError("the negative authorization scope must remain intentionally unmapped")
     if secret.get("delivery") != "bounded-negative-authz-smoke-only-not-ecs-task-environment" or secret.get("value_format") != "opaque-raw-string":
         raise NegativeAuthzProvisionError("the negative authorization secret has an unsafe delivery policy")
+    policy["status"] = status
     return policy
 
 
@@ -301,6 +310,8 @@ def main() -> int:
     if arguments.validate:
         emit("validated")
         return 0
+    if policy["status"] != "pending-provisioning":
+        raise NegativeAuthzProvisionError("the negative authorization client is not pending provisioning")
     verify_account(arguments.aws_cli, policy)
     require_absent(arguments.aws_cli, policy)
     client_id, secret_arn = create_resources(arguments.aws_cli, policy)

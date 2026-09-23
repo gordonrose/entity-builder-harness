@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 31
+#   version: 32
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -534,13 +534,19 @@ auth:
       local_401_test: true
       local_403_test: true
       local_success_test: true
-      deployment_smoke: 401-and-correctly-scoped-200-passed-403-pending-2026-09-22
+      deployment_smoke: 401-and-correctly-scoped-200-passed-negative-client-provisioned-403-pending-target-deployment
   controlled_smoke:
     command: npm run platform:shell:controlled-smoke
     local_validation: passed-2026-09-22
     live_execution: explicitly-approved-staging-operation-not-yet-repeated-by-command
     permitted_output: status-and-safe-latency-only-no-token-secret-or-response-body
     limitation: correctly-scoped-200-only-separate-valid-negative-client-required-for-403
+  negative_authorization_smoke:
+    command: npm run platform:shell:negative-authz-smoke
+    local_validation: source-policy-implemented
+    provisioning: completed-safe-identifiers-recorded-target-deployment-pending
+    permitted_output: status-and-safe-latency-only-no-token-secret-or-response-body
+    prerequisite: deployed-exact-additional-client-id-allowlist-and-post-deploy-inspection
     temporary_scheduler:
       status: active-manual-first-run-proven-scheduled-trigger-pending
       workflow: .github/workflows/platform-shell-staging-synthetic.yml
@@ -707,8 +713,8 @@ blockers:
   - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke
-    reason: A controlled Cognito token now proves the correctly scoped protected route returns 200, alongside the existing unauthenticated 401 proof. A deployed wrong-scope 403 proof is still absent.
-    resolution: Deploy the reviewed exact additional-client allowlist, provision a separate valid machine client with only a dedicated unmapped scope and without smoke-read permission, then use a bounded status-only smoke mode to record 403. Never use an invalid token as an authorization proof or commit credentials/token values.
+    reason: A controlled Cognito token now proves the correctly scoped protected route returns 200, alongside the existing unauthenticated 401 proof. The separate client and intentionally unmapped scope are provisioned, but the exact allowlist has not yet been deployed into the running service and therefore a valid wrong-scope 403 proof is still absent.
+    resolution: Deploy the reviewed exact additional-client allowlist, inspect the new task definition and healthy service, then run the bounded status-only negative-authz smoke command to record 403. Never use an invalid token as an authorization proof or commit credentials/token values.
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting
