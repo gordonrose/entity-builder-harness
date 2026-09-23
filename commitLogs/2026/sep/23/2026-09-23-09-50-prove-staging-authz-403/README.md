@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T10:36:14Z
-latest_commit_sha: 5fdb989
-chat_duration: 6335s (00:01:45:35)
+latest_commit_at_utc: 2026-09-23T10:45:45Z
+latest_commit_sha: 119023e
+chat_duration: 6906s (00:01:55:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -148,6 +148,17 @@ Summary: Recorded only safe Cognito resource identifiers and target lifecycle fa
 
 Durable evidence: The target profile records the client ID and secret ARN, while secret values, OAuth tokens, authorization headers, response bodies, provider errors, and mailbox data remain absent from source, logs, and evidence.
 
+
+### 2026-09-23T10:45:45Z - Commit recorded
+
+Commit: `119023e`
+
+Message: feat(authz): configure bounded staging 403 proof
+
+Summary: Records the safely provisioned Cognito identifiers, projects the exact one-client allowlist to the staging task, and adds a post-deploy-only redacted authorization-denial smoke command.
+
+ADR impact: No ADR: preserves the accepted Cognito provider boundary and existing staging target.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -162,6 +173,13 @@ Durable evidence: The target profile records the client ID and secret ARN, while
   Summary: Adds a provider-neutral finite JWT client-ID allowlist, Cognito composition for one additional valid test client, staging target policy, and a no-secret provisioning command for the later bounded authorization proof.
   ADR impact: No ADR: extends existing provider and staging boundaries.
 
+
+- Commit: `119023e`
+  Time UTC: 2026-09-23T10:45:45Z
+  Message: feat(authz): configure bounded staging 403 proof
+  Summary: Records the safely provisioned Cognito identifiers, projects the exact one-client allowlist to the staging task, and adds a post-deploy-only redacted authorization-denial smoke command.
+  ADR impact: No ADR: preserves the accepted Cognito provider boundary and existing staging target.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -175,9 +193,9 @@ Reason: The reviewed Cognito authorization-negative proof preserves the existing
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T08:50:39Z
-Latest commit at UTC: 2026-09-23T10:36:14Z
-Latest commit SHA: 5fdb989
-Chat duration: 6335s (00:01:45:35)
+Latest commit at UTC: 2026-09-23T10:45:45Z
+Latest commit SHA: 119023e
+Chat duration: 6906s (00:01:55:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
