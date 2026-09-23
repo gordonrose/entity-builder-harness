@@ -49,6 +49,10 @@ let's go
 - Raised: Generated recognition source was stale
   Resolution: The mandatory commit gate identified missing indexed deployment artifacts already present in the closure programme. Regenerated only the metadata-derived artifacts source and verified its additions were confined to those governed paths.
 
+
+- Raised: Worker delivery metric lacked a governed live-query command
+  Resolution: Added a fixed worker-only coverage target that permits only the declared delivery counter and its five approved success labels; server SLO selection now filters server series explicitly.
+
 ## Decisions Made
 
 
@@ -56,12 +60,20 @@ let's go
 - Decision: Align rate-limit proof to a fresh fixed window
   Rationale: The proof now waits for the next fixed-window boundary and returns explicit inconclusive-window-rolled-over if the boundary changes during execution. It remains limited to configured limit plus one anonymous liveness requests.
 
+
+- Decision: Keep worker delivery observation separate from server SLO coverage and alerting
+  Rationale: The controlled worker proof establishes one consumer/telemetry boundary, not an HTTP customer SLO. It uses no new scheduler, IAM role, or SNS notification path.
+
 ## Context Hygiene
 
 
 
 - Summary: Keep the live deployment evidence and rate-limit test conclusion; discard raw AWS identifiers, task IDs, queue URLs, and command output.
   Durable evidence: Durable policy is in the target profile and deployment docs; source validation is the rate-limit smoke check and infrastructure check.
+
+
+- Summary: Retain safe proof outcomes only: rate limiter passed with 120 allowed requests then a 429; worker rehearsal passed in 112209 ms on revision 1 and read back dormant with source/DLQ zero.
+  Durable evidence: Durable policy and source commands are in the staging target profile, worker operations plan, metric-coverage script, and their local checks. Do not retain queue URLs, messages, task identifiers, credentials, or raw AWS/PromQL output.
 
 ## Activity Log
 
@@ -115,6 +127,34 @@ Summary: Align the bounded rate-limit proof with DynamoDB fixed windows, record 
 
 ADR impact: No ADR required; target-specific operational proof policy is documented in the target profile and closure plan.
 
+
+### 2026-09-23T15:56:07Z - Issue
+
+Raised: Worker delivery metric lacked a governed live-query command
+
+Resolution: Added a fixed worker-only coverage target that permits only the declared delivery counter and its five approved success labels; server SLO selection now filters server series explicitly.
+
+
+### 2026-09-23T15:56:09Z - Decision
+
+Decision: Keep worker delivery observation separate from server SLO coverage and alerting
+
+Rationale: The controlled worker proof establishes one consumer/telemetry boundary, not an HTTP customer SLO. It uses no new scheduler, IAM role, or SNS notification path.
+
+
+### 2026-09-23T15:56:11Z - Context hygiene
+
+Summary: Retain safe proof outcomes only: rate limiter passed with 120 allowed requests then a 429; worker rehearsal passed in 112209 ms on revision 1 and read back dormant with source/DLQ zero.
+
+Durable evidence: Durable policy and source commands are in the staging target profile, worker operations plan, metric-coverage script, and their local checks. Do not retain queue URLs, messages, task identifiers, credentials, or raw AWS/PromQL output.
+
+
+### 2026-09-23T15:56:12Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a target-specific evidence-command extension and a correction to verifier selection, not a durable platform architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -137,7 +177,7 @@ ADR impact: No ADR required; target-specific operational proof policy is documen
 
 ADR needed: no
 ADR path:
-Reason: Target-specific smoke-proof reliability correction; the target profile and worker-and-operations closure plan retain the durable operational policy.
+Reason: This is a target-specific evidence-command extension and a correction to verifier selection, not a durable platform architecture decision.
 
 ## Session Metrics
 

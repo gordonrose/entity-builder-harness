@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 35
+#   version: 36
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -614,6 +614,26 @@ observability:
       topic_arn: arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms
       subject: Kanbien staging platform-shell metric coverage
       message_policy: fixed-safe-verdict-only-no-metric-response-or-request-data
+  worker_metric_coverage:
+    status: source-defined-deployment-pending
+    id: platform-smoke-rebuild-delivery-metric-observation
+    command: npm run platform:shell:metric-coverage -- --coverage-target worker
+    purpose: Independently observe the single side-effect-free worker delivery metric after the bounded worker consumer proof; this is delivery evidence, not an HTTP SLO or alerting policy.
+    expected_metric:
+      instrument_name: kanbien.platform.worker.job.delivery
+      required_labels:
+        capability: platform-smoke.smoke.rebuild
+        action: execute
+        execution_context: worker
+        job_delivery_disposition: succeeded
+        outcome: succeeded
+    query_window_seconds: 1200
+    arrival_grace_seconds: 300
+    verdicts:
+      - observed
+      - missing
+      - query-failed
+    output_policy: safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload
   slo_query:
     provider_documented_max_request_range_days: 7
     effective_max_increase_lookback_days: 1

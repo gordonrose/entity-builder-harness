@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -47,7 +47,8 @@ The repository defines these target-owned components:
   acknowledge/release, and CloudWatch metric delivery only;
 - a separate ECS Fargate worker service with desired count `0`, no ALB, no
   public port, and a task-local OpenTelemetry collector;
-- source-defined worker delivery counter and execution-latency metric series;
+- source-defined worker delivery counter and execution-latency metric series,
+  plus one fixed, query-only delivery-counter observation command;
 - bounded rate-limit and WAF/routing proof commands that use only unauthenticated
   `GET /livez` and emit aggregate safe facts; and
 - a tag-scoped $25 monthly budget definition that uses the existing alert SNS
@@ -91,7 +92,7 @@ operation.
 | --- | --- | --- | --- |
 | Ingress and WAF | Read-only WAF association/listener/security-group checks plus one `GET /livez`. | Expected WAF, host rule, ALB-only server ingress, and `200`. | Status, duration, rule priority, and safe verdict only. |
 | Shared rate limiting | Wait for the next fixed-window boundary, then make at most configured rate limit plus one sequential unauthenticated `GET /livez`; stop at first `429`. A window rollover is inconclusive, never a pass or a failed limiter claim. | At least one `200`, then one `429` inside the same declared window. | Aggregate counts, final status, total duration only. |
-| Worker consumer | Verify source and DLQ are empty and worker desired/running count is zero; enqueue one fixed side-effect-free envelope; scale worker to one; observe settlement; immediately return worker to zero. | Source message is settled, DLQ stays empty, worker returns to zero, and worker metric query is separately observed. | Safe status/counts, task revision, metric verdict, and rollback state; never message body, receipt handle, queue URL, or AWS payload. |
+| Worker consumer | Verify source and DLQ are empty and worker desired/running count is zero; enqueue one fixed side-effect-free envelope; scale worker to one; observe settlement; immediately return worker to zero. After the declared metric-arrival grace, run the fixed `--coverage-target worker` query. | Source message is settled, DLQ stays empty, worker returns to zero, and the declared delivery counter is observed with its fixed success labels. | Safe status/counts, task revision, metric verdict, and rollback state; never message body, receipt handle, queue URL, raw query, or AWS payload. |
 | Cost controls | Activate only `user:service` cost-allocation tag, wait for billing data, then inspect tagged budget and alert configuration. | Tag active; tag-scoped budget exists with reviewed thresholds and existing topic. | Status, UTC time, safe resource name, and alert-topic ARN only. |
 
 The rate and ingress probes are deliberately liveness-only, so they do not

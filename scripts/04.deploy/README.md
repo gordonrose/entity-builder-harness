@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 6
+version: 7
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -58,6 +58,10 @@ Current commands:
   current approval sends one side-effect-free queue message, starts only the
   dormant worker service, observes bounded settlement, and always returns it
   to desired count zero. It proves a consumer boundary, not an outbox.
+- `run-platform-shell-metric-coverage/`: locally validates, or in a governed
+  read-only operation queries only the fixed server coverage/SLO policy or the
+  separately fixed worker delivery-counter observation policy. It never accepts
+  a caller-supplied metric, label set, query, or alert destination.
 - `verify-platform-shell-synthetic-scheduler/`: read-only policy check for the
   temporary GitHub Actions protected-route synthetic workflow and its separate
   one-secret-read IAM role source.

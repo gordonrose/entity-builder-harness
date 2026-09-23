@@ -39,6 +39,7 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--validate", action="store_true", help="Validate policy only; make no AWS, SNS, or HTTP call.")
     parser.add_argument("--mode", choices=("coverage", "slo"), default="coverage", help="Evaluate the reviewed metric-arrival check or the reviewed SLO calculations.")
+    parser.add_argument("--coverage-target", choices=("server", "worker"), default="server", help="Select the fixed server SLO-coverage policy or the fixed worker-delivery observation policy.")
     parser.add_argument("--notify-on-non-observed", action="store_true", help="Publish one fixed safe SNS notification only when coverage is not observed.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE, help="Path to the Kanbien staging target profile.")
     parser.add_argument("--aws-cli", default="aws", help="AWS CLI executable used only for credential export, identity verification, and fixed SNS publication.")
@@ -51,6 +52,10 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--validate cannot publish a notification")
     if arguments.mode != "coverage" and arguments.notify_on_non_observed:
         parser.error("--notify-on-non-observed is permitted only for --mode coverage")
+    if arguments.coverage_target != "server" and arguments.mode == "slo":
+        parser.error("--mode slo is currently defined only for the server coverage target")
+    if arguments.coverage_target != "server" and arguments.notify_on_non_observed:
+        parser.error("--notify-on-non-observed is currently defined only for the server coverage target")
     return arguments
 
 
@@ -113,8 +118,8 @@ def label_mapping(value: Any, name: str) -> dict[str, str]:
     return labels
 
 
-def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
-    """Extract only fixed reviewed values needed to query one target metric policy."""
+def resolve_server_policy(profile: dict[str, Any]) -> dict[str, Any]:
+    """Extract only fixed reviewed values needed to query the server metric-coverage policy."""
 
     cloud = mapping(profile.get("cloud"), "cloud")
     observability = mapping(profile.get("observability"), "observability")
@@ -171,6 +176,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     if rehearsal_isolation_wait_seconds != query_window_seconds:
         raise MetricCoverageError("the exporter-loss rehearsal isolation wait must equal the metric coverage query window")
     return {
+        "coverage_target": "server",
         "account_id": account_id,
         "region": region,
         "aws_profile": aws_profile,
@@ -188,13 +194,78 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def resolve_worker_policy(profile: dict[str, Any]) -> dict[str, Any]:
+    """Extract the separate fixed worker-delivery observation policy without creating a worker SLO or alert path."""
+
+    cloud = mapping(profile.get("cloud"), "cloud")
+    observability = mapping(profile.get("observability"), "observability")
+    coverage = mapping(observability.get("worker_metric_coverage"), "observability.worker_metric_coverage")
+    expected_metric = mapping(coverage.get("expected_metric"), "observability.worker_metric_coverage.expected_metric")
+    account_id = string(cloud.get("account_id"), "cloud.account_id")
+    region = string(cloud.get("region"), "cloud.region")
+    aws_profile = string(cloud.get("profile"), "cloud.profile")
+    coverage_id = string(coverage.get("id"), "observability.worker_metric_coverage.id")
+    command = string(coverage.get("command"), "observability.worker_metric_coverage.command")
+    metric_name = string(expected_metric.get("instrument_name"), "observability.worker_metric_coverage.expected_metric.instrument_name")
+    if not account_id.isdigit() or len(account_id) != 12:
+        raise MetricCoverageError("the target profile account identifier is unsafe")
+    if not SAFE_IDENTIFIER.fullmatch(region):
+        raise MetricCoverageError("the target profile region is unsafe")
+    if coverage.get("status") not in ("source-defined-deployment-pending", "deployed-and-query-proven"):
+        raise MetricCoverageError("the target profile worker metric observation must retain an approved evidence state")
+    if coverage_id != "platform-smoke-rebuild-delivery-metric-observation":
+        raise MetricCoverageError("the target profile does not declare the approved worker metric-observation identity")
+    if command != "npm run platform:shell:metric-coverage -- --coverage-target worker":
+        raise MetricCoverageError("the target profile must name the governed worker metric-observation command")
+    if not SAFE_METRIC_NAME.fullmatch(metric_name) or metric_name != "kanbien.platform.worker.job.delivery":
+        raise MetricCoverageError("the target profile worker metric name must remain the reviewed delivery counter")
+    required_labels = label_mapping(expected_metric.get("required_labels"), "observability.worker_metric_coverage.expected_metric.required_labels")
+    expected_labels = {
+        "capability": "platform-smoke.smoke.rebuild",
+        "action": "execute",
+        "execution_context": "worker",
+        "job_delivery_disposition": "succeeded",
+        "outcome": "succeeded",
+    }
+    if required_labels != expected_labels:
+        raise MetricCoverageError("the target profile worker metric-observation labels must remain the reviewed static delivery facts")
+    if coverage.get("verdicts") != ["observed", "missing", "query-failed"]:
+        raise MetricCoverageError("the target profile worker metric observation must retain the reviewed verdict vocabulary")
+    if coverage.get("output_policy") != "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload":
+        raise MetricCoverageError("the target profile worker metric observation must retain the redacted output policy")
+    return {
+        "coverage_target": "worker",
+        "account_id": account_id,
+        "region": region,
+        "aws_profile": aws_profile,
+        "coverage_id": coverage_id,
+        "metric_name": metric_name,
+        "required_labels": required_labels,
+        "query_window_seconds": integer(coverage.get("query_window_seconds"), "observability.worker_metric_coverage.query_window_seconds", 300, 3600),
+        "arrival_grace_seconds": integer(coverage.get("arrival_grace_seconds"), "observability.worker_metric_coverage.arrival_grace_seconds", 60, 900),
+    }
+
+
+def resolve_policy(profile: dict[str, Any], coverage_target: str = "server") -> dict[str, Any]:
+    """Select one fixed target-owned policy; callers cannot supply a metric name, labels, or arbitrary query."""
+
+    if coverage_target == "server":
+        return resolve_server_policy(profile)
+    if coverage_target == "worker":
+        return resolve_worker_policy(profile)
+    raise MetricCoverageError("the metric coverage target is not approved")
+
+
 def parse_slos(raw_slos: Any, raw_metric_series: Any) -> list[dict[str, Any]]:
     """Validate the three reviewed smoke SLO declarations and their metric identities."""
 
     if not isinstance(raw_slos, list) or len(raw_slos) != 3:
         raise MetricCoverageError("the target profile must declare exactly three platform-smoke SLOs")
-    if not isinstance(raw_metric_series, list) or len(raw_metric_series) != 2:
-        raise MetricCoverageError("the target profile must declare exactly two reviewed platform-smoke metric series")
+    if not isinstance(raw_metric_series, list):
+        raise MetricCoverageError("the target profile must declare the reviewed platform-smoke metric series")
+    raw_metric_series = [entry for entry in raw_metric_series if isinstance(entry, dict) and entry.get("runtime_target") == "server"]
+    if len(raw_metric_series) != 2:
+        raise MetricCoverageError("the target profile must declare exactly two reviewed server platform-smoke metric series")
     metric_names: dict[str, str] = {}
     for entry in raw_metric_series:
         document = mapping(entry, "observability.metric_series entry")
@@ -561,9 +632,12 @@ def main() -> int:
     """Validate policy offline or run exactly one selected safe observation operation."""
 
     arguments = parse_arguments()
-    policy = resolve_policy(load_yaml(Path(arguments.target_profile)))
+    policy = resolve_policy(load_yaml(Path(arguments.target_profile)), arguments.coverage_target)
     if arguments.validate:
-        emit({"platform_shell_metric_coverage": "validated"})
+        payload: dict[str, str] = {"platform_shell_metric_coverage": "validated"}
+        if policy["coverage_target"] == "worker":
+            payload["coverage_target"] = "worker"
+        emit(payload)
         return 0
     verify_account(policy, arguments.aws_cli, arguments.aws_credential_source, arguments.timeout_seconds)
     if arguments.mode == "slo":
@@ -573,6 +647,9 @@ def main() -> int:
     verdict = coverage_verdict(policy, arguments.aws_cli, arguments.aws_credential_source, arguments.timeout_seconds)
     if verdict != "observed" and arguments.notify_on_non_observed:
         verdict = verdict if notify(policy, verdict, arguments.aws_cli, arguments.aws_credential_source, arguments.timeout_seconds) else "notification-failed"
+    if policy["coverage_target"] == "worker":
+        emit({"metric_coverage": verdict, "worker_metric_observation": policy["coverage_id"]})
+        return 0 if verdict == "observed" else 1
     confidence = "not-determined" if verdict == "observed" else EXPECTED_NON_OBSERVED_CONFIDENCE
     emit({"affected_slo_confidence": confidence, "metric_coverage": verdict})
     return 0 if verdict == "observed" else 1

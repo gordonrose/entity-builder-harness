@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.run-platform-shell-worker-smoke.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -9,7 +9,7 @@ disciplines:
 - security
 - sre
 kind: capability-readme
-purpose: Explain the guarded side-effect-free staging worker-consumer proof.
+purpose: Explain the guarded side-effect-free staging worker-consumer proof and its separate fixed telemetry observation.
 portability:
   class: internal
   targets:
@@ -35,3 +35,9 @@ duration, and task revision.
 It never prints a message body or identity, receipt handle, queue URL, raw AWS
 response, task ARN, token, or secret. It is not an outbox producer, a state
 transaction, or proof that future business side effects are duplicate-safe.
+
+After a successful run and the declared telemetry arrival grace, the operator
+uses `npm run platform:shell:metric-coverage -- --coverage-target worker` to
+observe the one fixed delivery counter. Queue settlement and metric delivery
+are intentionally two separate proof steps: a queue can settle even when the
+collector/exporter path is unavailable.
