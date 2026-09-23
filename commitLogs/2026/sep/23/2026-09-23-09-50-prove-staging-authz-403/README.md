@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T10:58:00Z
-latest_commit_sha: 22ba75d
-chat_duration: 7641s (00:02:07:21)
+latest_commit_at_utc: 2026-09-23T11:03:08Z
+latest_commit_sha: 3dd945d
+chat_duration: 7949s (00:02:12:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -225,6 +225,17 @@ Summary: Retained only safe result and health facts for the completed authorizat
 
 Durable evidence: Durable evidence is the UTC time, 403 status, rounded duration, task revision, stack/service/target states, and aggregate alarm states. Credentials, tokens, authorization headers, response bodies, raw logs, and provider errors were excluded.
 
+
+### 2026-09-23T11:03:08Z - Commit recorded
+
+Commit: `3dd945d`
+
+Message: docs(deploy): record staging authz 403 proof
+
+Summary: Records the bounded valid-token 403 proof and post-proof health, removes only that resolved readiness blocker, and preserves four remaining blockers.
+
+ADR impact: No ADR: operational evidence under existing target boundaries.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -253,6 +264,13 @@ Durable evidence: Durable evidence is the UTC time, 403 status, rounded duration
   Summary: Records the reviewed revision-5 rollout, exact non-secret client allowlist, healthy target, image scan acceptance, and five alarm states; it deliberately leaves the valid-token 403 proof pending.
   ADR impact: No ADR: evidence record under the existing staging Cognito and observability boundaries.
 
+
+- Commit: `3dd945d`
+  Time UTC: 2026-09-23T11:03:08Z
+  Message: docs(deploy): record staging authz 403 proof
+  Summary: Records the bounded valid-token 403 proof and post-proof health, removes only that resolved readiness blocker, and preserves four remaining blockers.
+  ADR impact: No ADR: operational evidence under existing target boundaries.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -266,9 +284,9 @@ Reason: The reviewed Cognito authorization-negative proof preserves the existing
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T08:50:39Z
-Latest commit at UTC: 2026-09-23T10:58:00Z
-Latest commit SHA: 22ba75d
-Chat duration: 7641s (00:02:07:21)
+Latest commit at UTC: 2026-09-23T11:03:08Z
+Latest commit SHA: 3dd945d
+Chat duration: 7949s (00:02:12:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
