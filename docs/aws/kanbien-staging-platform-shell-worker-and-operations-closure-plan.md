@@ -90,14 +90,17 @@ operation.
 | Proof | Fixed boundary | Pass condition | Evidence retained |
 | --- | --- | --- | --- |
 | Ingress and WAF | Read-only WAF association/listener/security-group checks plus one `GET /livez`. | Expected WAF, host rule, ALB-only server ingress, and `200`. | Status, duration, rule priority, and safe verdict only. |
-| Shared rate limiting | At most configured rate limit plus one sequential unauthenticated `GET /livez`; stop at first `429`. | At least one `200`, then one `429` inside the declared bound. | Aggregate counts, final status, total duration only. |
+| Shared rate limiting | Wait for the next fixed-window boundary, then make at most configured rate limit plus one sequential unauthenticated `GET /livez`; stop at first `429`. A window rollover is inconclusive, never a pass or a failed limiter claim. | At least one `200`, then one `429` inside the same declared window. | Aggregate counts, final status, total duration only. |
 | Worker consumer | Verify source and DLQ are empty and worker desired/running count is zero; enqueue one fixed side-effect-free envelope; scale worker to one; observe settlement; immediately return worker to zero. | Source message is settled, DLQ stays empty, worker returns to zero, and worker metric query is separately observed. | Safe status/counts, task revision, metric verdict, and rollback state; never message body, receipt handle, queue URL, or AWS payload. |
 | Cost controls | Activate only `user:service` cost-allocation tag, wait for billing data, then inspect tagged budget and alert configuration. | Tag active; tag-scoped budget exists with reviewed thresholds and existing topic. | Status, UTC time, safe resource name, and alert-topic ARN only. |
 
 The rate and ingress probes are deliberately liveness-only, so they do not
 contribute to protected capability SLO data. A `429` immediately on the first
 request is inconclusive because an earlier caller may still occupy the shared
-window; it must not be promoted into a pass by retrying or resetting state.
+window; it must not be promoted into a pass by retrying or resetting state. The
+proof begins at a fresh fixed-window boundary and reports a window rollover as
+inconclusive, so sequential requests cannot be split across two otherwise
+valid counter windows.
 
 ## Rollback and stop conditions
 

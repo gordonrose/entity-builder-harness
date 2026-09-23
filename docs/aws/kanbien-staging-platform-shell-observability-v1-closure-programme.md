@@ -214,8 +214,9 @@ status-only command. If provisioning, deployment, or cleanup cannot preserve
 these constraints, stop rather than falling back to the primary client or an
 invalid token.
 
-Run no more than the target's declared rate-limit window plus one sequential
-request, stopping at the first `429`. Inspect the host rule and WAF association
+Wait for the next fixed-window boundary, then run no more than the target's
+declared rate-limit window plus one sequential request, stopping at the first
+`429`; a boundary rollover is explicitly inconclusive. Inspect the host rule and WAF association
 read-only and make a bounded public host check. Confirm one redacted structured
 log event, explicitly marked alert receipt without an email body, and the
 rollback evidence from work package D.

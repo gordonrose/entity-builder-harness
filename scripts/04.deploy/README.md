@@ -48,8 +48,9 @@ Current commands:
   post-deployment inspection and explicit current-chat approval performs the
   one fixed valid-token, unmapped-scope staging request that must return `403`.
 - `run-platform-shell-rate-limit-smoke/`: locally validates, or after current
-  approval performs at most the configured liveness rate-limit plus one
-  sequential public request and records aggregate-only `429` evidence.
+  approval waits for a fresh fixed window, performs at most the configured
+  liveness rate-limit plus one sequential public request, and records
+  aggregate-only `429` evidence or an explicit rollover-inconclusive result.
 - `run-platform-shell-ingress-smoke/`: locally validates, or after current
   approval performs fixed read-only WAF, listener, and security-group
   inspections plus one public liveness request.
