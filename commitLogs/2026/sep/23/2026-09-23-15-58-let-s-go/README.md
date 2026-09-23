@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T16:46:50Z
-latest_commit_sha: e11e9e0
-chat_duration: 6525s (00:01:48:45)
+latest_commit_at_utc: 2026-09-23T17:00:09Z
+latest_commit_sha: cf6c1c8
+chat_duration: 7324s (00:02:02:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -257,6 +257,17 @@ ADR needed: no
 
 Reason: This is a source-governed correction to staging smoke telemetry evidence semantics, applying the existing fresh-counter rule rather than creating a new architectural decision.
 
+
+### 2026-09-23T17:00:09Z - Commit recorded
+
+Commit: `cf6c1c8`
+
+Message: fix(deploy): prove worker metrics with two points
+
+Summary: Run exactly two harmless worker deliveries 75 seconds apart so PromQL can observe a fresh cumulative counter increase, while retaining automatic scale-down and full validation.
+
+ADR impact: No ADR required; target-specific operational evidence correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -285,6 +296,13 @@ Reason: This is a source-governed correction to staging smoke telemetry evidence
   Summary: Keep the bounded worker task alive through a fixed 75-second metric-export settlement interval, preserve automatic scale-down, and validate the full repository commit gate.
   ADR impact: No ADR required; this is a target-specific operational proof timing correction.
 
+
+- Commit: `cf6c1c8`
+  Time UTC: 2026-09-23T17:00:09Z
+  Message: fix(deploy): prove worker metrics with two points
+  Summary: Run exactly two harmless worker deliveries 75 seconds apart so PromQL can observe a fresh cumulative counter increase, while retaining automatic scale-down and full validation.
+  ADR impact: No ADR required; target-specific operational evidence correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -298,9 +316,9 @@ Reason: This is a source-governed correction to staging smoke telemetry evidence
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T14:58:05Z
-Latest commit at UTC: 2026-09-23T16:46:50Z
-Latest commit SHA: e11e9e0
-Chat duration: 6525s (00:01:48:45)
+Latest commit at UTC: 2026-09-23T17:00:09Z
+Latest commit SHA: cf6c1c8
+Chat duration: 7324s (00:02:02:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
