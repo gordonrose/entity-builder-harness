@@ -1065,7 +1065,7 @@ if readiness_closure != {
         "status": "source-defined-deployment-pending",
         "command": "npm run platform:shell:worker-smoke",
         "execution_guard": "--execute-and-approve-live-worker-smoke",
-        "proof": "one-side-effect-free-direct-sqs-platform-smoke-rebuild-message-through-the-dormant-worker-service",
+        "proof": "two-side-effect-free-direct-sqs-platform-smoke-rebuild-messages-through-the-dormant-worker-service-for-fresh-counter-evidence",
         "preconditions": {
             "worker_desired_count": 0,
             "worker_running_count": 0,
@@ -1075,9 +1075,11 @@ if readiness_closure != {
         "bounded_action": {
             "worker_desired_count": 1,
             "message_type": "platform-smoke.rebuild",
-        "payload": '{"rebuild":true}',
-        "maximum_wait_seconds": 360,
-        "metric_export_settlement_wait_seconds": 75,
+            "payload": '{"rebuild":true}',
+            "message_count": 2,
+            "inter_message_wait_seconds": 75,
+            "maximum_wait_seconds": 360,
+            "metric_export_settlement_wait_seconds": 75,
         },
         "success": {
             "worker_started": True,

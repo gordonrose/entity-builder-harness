@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T16:46:50Z
-latest_commit_sha: e11e9e0
-chat_duration: 6525s (00:01:48:45)
+latest_commit_at_utc: 2026-09-23T17:00:09Z
+latest_commit_sha: cf6c1c8
+chat_duration: 7324s (00:02:02:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -57,6 +57,10 @@ let's go
 - Raised: Worker delivery metric observation returned missing after the successful consumer proof
   Resolution: The worker was scaled down immediately after settlement, before its 60-second configured exporter interval could reliably flush. No telemetry-delivery success was claimed.
 
+
+- Raised: A single worker delivery cannot satisfy the fixed PromQL increase evidence query
+  Resolution: The deployed worker composition already force-flushes telemetry after each settled delivery. The missing verdict is therefore consistent with a fresh counter that has only its first sample, not a claim that the worker lacks telemetry wiring.
+
 ## Decisions Made
 
 
@@ -72,6 +76,10 @@ let's go
 - Decision: Retain the controlled worker task for a fixed 75-second exporter-flush wait after settlement
   Rationale: The wait is source-governed, bounded, shorter than the smoke convergence cap, and verifies the worker remains running before automatic cleanup. It permits one normal metric export without adding a scheduler, role, alert, or arbitrary query.
 
+
+- Decision: Use exactly two controlled worker deliveries 75 seconds apart for worker metric proof
+  Rationale: The first delivery establishes the cumulative-counter baseline; the second advances it after the same interval used by the server two-point synthetic. Both payloads remain side-effect-free and the worker is still returned to zero automatically.
+
 ## Context Hygiene
 
 
@@ -86,6 +94,10 @@ let's go
 
 - Summary: Retain only the safe missing worker metric verdict and the source correction: 75-second post-settlement exporter-flush wait before worker scale-down.
   Durable evidence: Durable policy is in the staging target profile, worker smoke command, static verifier, and worker operations plan. Do not retain raw CloudWatch output, queue data, task identifiers, or credentials.
+
+
+- Summary: Retain the worker metric distinction: delivery settlement, exporter flush, and PromQL counter increase are separate facts. Two controlled deliveries are required for fresh counter evidence.
+  Durable evidence: Durable policy is in the staging target profile, worker smoke script, infrastructure verifier, and worker operations plan. Do not retain raw logs, CloudWatch responses, task identifiers, message identifiers, or credentials.
 
 ## Activity Log
 
@@ -217,6 +229,45 @@ Summary: Keep the bounded worker task alive through a fixed 75-second metric-exp
 
 ADR impact: No ADR required; this is a target-specific operational proof timing correction.
 
+
+### 2026-09-23T16:53:01Z - Issue
+
+Raised: A single worker delivery cannot satisfy the fixed PromQL increase evidence query
+
+Resolution: The deployed worker composition already force-flushes telemetry after each settled delivery. The missing verdict is therefore consistent with a fresh counter that has only its first sample, not a claim that the worker lacks telemetry wiring.
+
+
+### 2026-09-23T16:53:02Z - Decision
+
+Decision: Use exactly two controlled worker deliveries 75 seconds apart for worker metric proof
+
+Rationale: The first delivery establishes the cumulative-counter baseline; the second advances it after the same interval used by the server two-point synthetic. Both payloads remain side-effect-free and the worker is still returned to zero automatically.
+
+
+### 2026-09-23T16:53:02Z - Context hygiene
+
+Summary: Retain the worker metric distinction: delivery settlement, exporter flush, and PromQL counter increase are separate facts. Two controlled deliveries are required for fresh counter evidence.
+
+Durable evidence: Durable policy is in the staging target profile, worker smoke script, infrastructure verifier, and worker operations plan. Do not retain raw logs, CloudWatch responses, task identifiers, message identifiers, or credentials.
+
+
+### 2026-09-23T16:53:02Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a source-governed correction to staging smoke telemetry evidence semantics, applying the existing fresh-counter rule rather than creating a new architectural decision.
+
+
+### 2026-09-23T17:00:09Z - Commit recorded
+
+Commit: `cf6c1c8`
+
+Message: fix(deploy): prove worker metrics with two points
+
+Summary: Run exactly two harmless worker deliveries 75 seconds apart so PromQL can observe a fresh cumulative counter increase, while retaining automatic scale-down and full validation.
+
+ADR impact: No ADR required; target-specific operational evidence correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -245,6 +296,13 @@ ADR impact: No ADR required; this is a target-specific operational proof timing 
   Summary: Keep the bounded worker task alive through a fixed 75-second metric-export settlement interval, preserve automatic scale-down, and validate the full repository commit gate.
   ADR impact: No ADR required; this is a target-specific operational proof timing correction.
 
+
+- Commit: `cf6c1c8`
+  Time UTC: 2026-09-23T17:00:09Z
+  Message: fix(deploy): prove worker metrics with two points
+  Summary: Run exactly two harmless worker deliveries 75 seconds apart so PromQL can observe a fresh cumulative counter increase, while retaining automatic scale-down and full validation.
+  ADR impact: No ADR required; target-specific operational evidence correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -253,14 +311,14 @@ ADR impact: No ADR required; this is a target-specific operational proof timing 
 
 ADR needed: no
 ADR path:
-Reason: This is a bounded correction to a target-specific smoke-proof timing policy; it does not alter platform contracts, persistence semantics, or the architecture boundary.
+Reason: This is a source-governed correction to staging smoke telemetry evidence semantics, applying the existing fresh-counter rule rather than creating a new architectural decision.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T14:58:05Z
-Latest commit at UTC: 2026-09-23T16:46:50Z
-Latest commit SHA: e11e9e0
-Chat duration: 6525s (00:01:48:45)
+Latest commit at UTC: 2026-09-23T17:00:09Z
+Latest commit SHA: cf6c1c8
+Chat duration: 7324s (00:02:02:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
