@@ -96,7 +96,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         raise RateLimitSmokeError("the target profile rate-limit values must be positive")
 
     expected = {
-        "status": "source-defined-deployment-pending",
+        "status": "deployed-and-429-proven",
         "command": "npm run platform:shell:rate-limit-smoke",
         "request_bound": "fresh-fixed-window-declared-limit-plus-one-sequential-requests-stop-on-first-429",
         "fixed_window_alignment": "wait-for-next-window-boundary-and-return-inconclusive-on-rollover",

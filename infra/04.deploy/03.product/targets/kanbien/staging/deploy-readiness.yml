@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 36
+#   version: 37
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -661,6 +661,22 @@ proof:
   aws_read_only_inspection: container-insights-enhanced-five-platform-alarms-ok-and-both-stacks-update-complete-2026-09-22
   deployment_smoke: public-livez-200-protected-401-and-correctly-scoped-200-and-cloudwatch-otel-counter-histogram-query-proven-2026-09-22
   controlled_smoke_command: implemented-and-locally-validated-2026-09-22
+  public_boundary:
+    status: deployed-and-proven
+    executed_on_utc: "2026-09-23"
+    rate_limit_429:
+      result: passed
+      attempted_request_count: 121
+      allowed_request_count: 120
+      first_429_request: 121
+      final_status: 429
+      total_duration_ms: 12213
+    waf_routing_and_ingress:
+      result: passed
+      http_status: 200
+      duration_ms: 163
+      host_rule_priority: 20
+    retained_evidence: aggregate-status-count-duration-and-rule-priority-only-no-address-response-body-header-or-provider-payload
   worker_consumer_and_metric_observation:
     status: deployed-and-proven
     executed_on_utc: "2026-09-23"
@@ -729,11 +745,6 @@ proof:
       retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
     retained_evidence_policy: no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses
 blockers:
-  - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
-    severity: blocking
-    path: auth.rate_limiting
-    reason: "Bounded source commands exist for the public `429` and WAF/routing proofs, but neither command has been run against the deployed target. The worker foundation update is a separate source-defined staging change and must not be inferred from current server liveness."
-    resolution: "Run ingress proof first; then run at most the declared window limit plus one sequential liveness request and stop on the first `429`. Record only aggregate counts, final status, safe resource facts, and no response bodies. Follow the worker-and-operations closure plan."
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage

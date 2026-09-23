@@ -105,7 +105,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str | int]:
     if policy["host_rule_priority"] != 20:
         raise IngressSmokeError("the ingress proof requires the reviewed listener priority 20")
     expected = {
-        "status": "source-defined-deployment-pending",
+        "status": "deployed-and-waf-routing-and-ingress-proven",
         "command": "npm run platform:shell:ingress-smoke",
         "proof": "read-only-waf-association-and-listener-host-rule-inspection-plus-bounded-public-host-check",
         "request": {
