@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 33
+#   version: 34
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -534,7 +534,7 @@ auth:
       local_401_test: true
       local_403_test: true
       local_success_test: true
-      deployment_smoke: 401-and-correctly-scoped-200-passed-negative-client-allowlist-deployed-403-pending-live-proof
+      deployment_smoke: unauthenticated-401-correctly-scoped-200-and-valid-wrong-scope-403-proven-2026-09-23
   controlled_smoke:
     command: npm run platform:shell:controlled-smoke
     local_validation: passed-2026-09-22
@@ -546,8 +546,9 @@ auth:
     local_validation: source-policy-implemented
     provisioning: completed-safe-identifiers-recorded
     deployment: completed-revision-5-allowlist-inspected-2026-09-23
+    live_execution: passed-2026-09-23-status-403-duration-ms-220
     permitted_output: status-and-safe-latency-only-no-token-secret-or-response-body
-    prerequisite: explicit-current-chat-approval-for-one-bounded-live-403-request
+    post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
     temporary_scheduler:
       status: active-manual-first-run-proven-scheduled-trigger-pending
       workflow: .github/workflows/platform-shell-staging-synthetic.yml
@@ -711,11 +712,6 @@ blockers:
     path: runtime.worker
     reason: The target is intentionally server-only until a declared background workload exists; no worker task definition or service has been deployed or exercised.
     resolution: When a product selects a queue-backed job workload, deploy the worker task definition and service, then record queue, dead-letter, worker health, and rollback evidence.
-  - id: platform-shell-readiness.protected-dummy-route-deployment-smoke
-    severity: blocking
-    path: auth.route_exposure.protected_dummy_route.deployment_smoke
-    reason: A controlled Cognito token proves the correctly scoped protected route returns 200, alongside the existing unauthenticated 401 proof. The separately scoped client, exact finite allowlist, immutable image, completed revision-5 rollout, healthy target, and five OK alarms are now recorded. The one remaining proof is the bounded valid wrong-scope 403 request.
-    resolution: With explicit current-chat approval, run the bounded status-only negative-authz smoke command once and record its safe 403 result. Never use an invalid token as an authorization proof or commit credentials/token values.
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting

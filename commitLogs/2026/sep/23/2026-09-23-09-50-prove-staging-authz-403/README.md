@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T10:58:00Z
-latest_commit_sha: 22ba75d
-chat_duration: 7641s (00:02:07:21)
+latest_commit_at_utc: 2026-09-23T11:03:08Z
+latest_commit_sha: 3dd945d
+chat_duration: 7949s (00:02:12:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -72,6 +72,10 @@ let's go
 - Decision: Deploy only the exact finite Cognito client-ID allowlist after scan, change-set, and health verification.
   Rationale: The reviewed change set modified only the ECS task definition and service. The completed revision 5 task retained a healthy target and five OK alarms; the negative client secret remains outside the task.
 
+
+- Decision: Close the staging valid-token authorization proof only after one bounded 403 and post-proof health inspection.
+  Rationale: The declared negative client produced 403 in 220 ms; stack revision 5 remained complete, the ALB target remained healthy, and all five reviewed alarms remained OK. No secret, token, header, response body, or provider error was recorded.
+
 ## Context Hygiene
 
 
@@ -86,6 +90,10 @@ let's go
 
 - Summary: Recorded scan, workflow, revision, health, and alarm facts without sensitive runtime material.
   Durable evidence: The evidence contains only image digest, workflow run ID, stack/service states, revision, target health, and aggregate alarm states; it excludes OAuth secrets/tokens, request headers, response bodies, raw logs, and provider error payloads.
+
+
+- Summary: Retained only safe result and health facts for the completed authorization proof.
+  Durable evidence: Durable evidence is the UTC time, 403 status, rounded duration, task revision, stack/service/target states, and aggregate alarm states. Credentials, tokens, authorization headers, response bodies, raw logs, and provider errors were excluded.
 
 ## Activity Log
 
@@ -203,6 +211,31 @@ Summary: Records the reviewed revision-5 rollout, exact non-secret client allowl
 
 ADR impact: No ADR: evidence record under the existing staging Cognito and observability boundaries.
 
+
+### 2026-09-23T11:00:52Z - Decision
+
+Decision: Close the staging valid-token authorization proof only after one bounded 403 and post-proof health inspection.
+
+Rationale: The declared negative client produced 403 in 220 ms; stack revision 5 remained complete, the ALB target remained healthy, and all five reviewed alarms remained OK. No secret, token, header, response body, or provider error was recorded.
+
+
+### 2026-09-23T11:00:52Z - Context hygiene
+
+Summary: Retained only safe result and health facts for the completed authorization proof.
+
+Durable evidence: Durable evidence is the UTC time, 403 status, rounded duration, task revision, stack/service/target states, and aggregate alarm states. Credentials, tokens, authorization headers, response bodies, raw logs, and provider errors were excluded.
+
+
+### 2026-09-23T11:03:08Z - Commit recorded
+
+Commit: `3dd945d`
+
+Message: docs(deploy): record staging authz 403 proof
+
+Summary: Records the bounded valid-token 403 proof and post-proof health, removes only that resolved readiness blocker, and preserves four remaining blockers.
+
+ADR impact: No ADR: operational evidence under existing target boundaries.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -231,6 +264,13 @@ ADR impact: No ADR: evidence record under the existing staging Cognito and obser
   Summary: Records the reviewed revision-5 rollout, exact non-secret client allowlist, healthy target, image scan acceptance, and five alarm states; it deliberately leaves the valid-token 403 proof pending.
   ADR impact: No ADR: evidence record under the existing staging Cognito and observability boundaries.
 
+
+- Commit: `3dd945d`
+  Time UTC: 2026-09-23T11:03:08Z
+  Message: docs(deploy): record staging authz 403 proof
+  Summary: Records the bounded valid-token 403 proof and post-proof health, removes only that resolved readiness blocker, and preserves four remaining blockers.
+  ADR impact: No ADR: operational evidence under existing target boundaries.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -244,9 +284,9 @@ Reason: The reviewed Cognito authorization-negative proof preserves the existing
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T08:50:39Z
-Latest commit at UTC: 2026-09-23T10:58:00Z
-Latest commit SHA: 22ba75d
-Chat duration: 7641s (00:02:07:21)
+Latest commit at UTC: 2026-09-23T11:03:08Z
+Latest commit SHA: 3dd945d
+Chat duration: 7949s (00:02:12:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

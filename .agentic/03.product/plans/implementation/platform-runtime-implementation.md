@@ -1000,9 +1000,9 @@ claim.
    only a deliberately unmapped scope is now provisioned for the required
    valid-token `403` check; its safe identifiers are target-recorded and its
    secret remains outside source control. The exact finite client-ID allowlist
-   is now deployed and inspected on staging task revision 5. Run the bounded
-   status-only command once, then record its safe result; never fake an invalid
-   token as an authorization test.
+   is deployed and inspected on staging task revision 5. The bounded
+   status-only command returned the expected `403`, with post-proof service
+   health intact; never fake an invalid token as an authorization test.
    Run the `429` check at the declared limit plus one with bounded sequential
    requests and stop on the first rejection. Inspect WAF association and ALB
    host routing read-only, test alert receipt with an explicitly marked

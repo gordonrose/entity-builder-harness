@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 10
+version: 11
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -198,8 +198,10 @@ the target profile; its secret value is not. The next bounded change is only an
 immutable service deployment containing that exact one-ID additional allowlist.
 That deployment is complete on task revision `5`, using the scan-accepted
 immutable image from workflow run `35850734084`; the target is healthy and the
-five reviewed alarms are `OK`. The negative-authz smoke command is now enabled
-only for the single bounded `403` proof.
+five reviewed alarms are `OK`. The one bounded negative-authz smoke then
+returned `403` in 220 ms, and post-proof inspection retained the completed
+revision, healthy target, and five `OK` alarms. This closes the valid
+wrong-scope authorization proof without treating an invalid token as evidence.
 
 Before the live proof, deploy the reviewed immutable image and target
 configuration containing exactly the primary client ID and the separately
