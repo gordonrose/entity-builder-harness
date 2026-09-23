@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 7
+version: 8
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -55,9 +55,10 @@ Current commands:
   approval performs fixed read-only WAF, listener, and security-group
   inspections plus one public liveness request.
 - `run-platform-shell-worker-smoke/`: locally validates, or after explicit
-  current approval sends one side-effect-free queue message, starts only the
-  dormant worker service, observes bounded settlement, and always returns it
-  to desired count zero. It proves a consumer boundary, not an outbox.
+  current approval sends exactly two side-effect-free queue messages 75 seconds
+  apart, starts only the dormant worker service, observes bounded settlement,
+  then always returns it to desired count zero. It proves a consumer boundary
+  and a fresh-counter metric observation, not an outbox.
 - `run-platform-shell-metric-coverage/`: locally validates, or in a governed
   read-only operation queries only the fixed server coverage/SLO policy or the
   separately fixed worker delivery-counter observation policy. It never accepts

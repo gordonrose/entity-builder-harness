@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.run-platform-shell-worker-smoke.readme
-version: 4
+version: 5
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -22,14 +22,14 @@ used_by:
 
 This command is a guarded, disposable **consumer** proof. Its offline
 `--validate` mode checks that the staging target still declares the exact
-one-message policy. Its live mode is deliberately unavailable without both
+two-message policy. Its live mode is deliberately unavailable without both
 `--execute` and `--approve-live-worker-smoke`, plus a current approved staging
 operation.
 
 When explicitly run, it confirms the source queue, DLQ, and worker service are
-empty/dormant; sends one harmless `platform-smoke.rebuild` envelope; sets only
-the worker service to one task; waits for bounded settlement; keeps the task
-alive for 75 seconds; sends one second harmless envelope; waits for its
+empty/dormant; sends a first harmless `platform-smoke.rebuild` envelope; sets
+only the worker service to one task; waits for bounded settlement; keeps the
+task alive for 75 seconds; sends a second harmless envelope; waits for its
 settlement and the reviewed 75-second metric-export wait; then always sets the
 service back to desired count zero. The two fixed deliveries establish and
 advance the fresh cumulative counter needed by the read-only PromQL

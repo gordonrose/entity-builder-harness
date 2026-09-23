@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 35
+#   version: 36
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -478,7 +478,7 @@ runtime:
     initial_exposure: server
     server_service_candidate: kanbien-staging-platform-shell
     worker_service_candidate: kanbien-staging-platform-shell-worker
-    worker_initial_state: source-defined-deployment-pending-desired-count-zero
+    worker_initial_state: deployed-and-consumer-and-metric-proven-desired-count-zero
     worker_activation_condition: reviewed-worker-change-set-with-desired-count-zero-then-separately-approved-side-effect-free-direct-sqs-consumer-proof
   server:
     health:
@@ -489,12 +489,12 @@ runtime:
     task_definition: deployed-by-workflow-34123406369
     service: kanbien-staging-platform-shell
   worker:
-    status: source-defined-deployment-pending
+    status: deployed-and-controlled-consumer-and-metric-proven
     task_definition_family: kanbien-staging-platform-shell-worker
     service_name: kanbien-staging-platform-shell-worker
     desired_count_initial: 0
-    task_definition: source-defined-not-deployed
-    service: source-defined-not-deployed
+    task_definition: deployed-revision-1
+    service: deployed-desired-zero
     queue_adapter: platform/adapters/aws/queue/sqs/
     delivery_boundary: direct-sqs-side-effect-free-smoke-consumer-not-a-persistence-outbox
     live_proof_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
@@ -661,6 +661,19 @@ proof:
   aws_read_only_inspection: container-insights-enhanced-five-platform-alarms-ok-and-both-stacks-update-complete-2026-09-22
   deployment_smoke: public-livez-200-protected-401-and-correctly-scoped-200-and-cloudwatch-otel-counter-histogram-query-proven-2026-09-22
   controlled_smoke_command: implemented-and-locally-validated-2026-09-22
+  worker_consumer_and_metric_observation:
+    status: deployed-and-proven
+    executed_on_utc: "2026-09-23"
+    command: npm run platform:shell:worker-smoke -- --execute --approve-live-worker-smoke
+    result: passed
+    worker_task_definition_revision: "1"
+    duration_ms: 278716
+    message_count: 2
+    inter_message_wait_seconds: 75
+    metric_export_settlement_wait_seconds: 75
+    metric_coverage: observed
+    post_proof_state: worker-desired-and-running-zero-source-and-dead-letter-queues-empty
+    retained_evidence: safe-status-count-duration-task-revision-and-verdict-only-no-message-body-id-receipt-queue-url-or-provider-payload
   rollback_proof: collector-receiver-mismatch-baseline-telemetry-recovery-and-operator-alert-receipt-proven-2026-09-22
   exporter_loss_rehearsal:
     status: live-proven-with-operator-alert-receipt
@@ -716,11 +729,6 @@ proof:
       retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
     retained_evidence_policy: no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses
 blockers:
-  - id: platform-shell-readiness.worker-runtime-and-consumer-proof
-    severity: blocking
-    path: runtime.worker
-    reason: "A provider-neutral worker, SQS adapter, queue/DLQ, least-privilege worker role, desired-zero service, and worker metric catalogue are source-defined and locally checked. No AWS change set has deployed them, and no side-effect-free direct-SQS consumer proof has run. This is not a producer/outbox or durable business-idempotency implementation."
-    resolution: "Follow the worker-and-operations closure plan: deploy reviewed foundation and service change sets with worker desired count zero, inspect resource/IAM boundaries, then separately approve one bounded direct-SQS consumer proof and return the worker to zero. Keep business side effects blocked until persistence provides durable idempotency and processing state."
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting

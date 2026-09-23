@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 38
+#   version: 39
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -213,7 +213,7 @@ runtime:
     initial_exposure: server
     server_service: kanbien-staging-platform-shell
     worker_service: kanbien-staging-platform-shell-worker
-    worker_initial_state: source-defined-deployment-pending
+    worker_initial_state: deployed-and-consumer-and-metric-proven-desired-count-zero
     worker_activation_condition: controlled-smoke-job-proves-the-platform-worker-delivery-path-before-a-business-workload-uses-it
   server:
     task_family: kanbien-staging-platform-shell
@@ -615,7 +615,7 @@ observability:
       subject: Kanbien staging platform-shell metric coverage
       message_policy: fixed-safe-verdict-only-no-metric-response-or-request-data
   worker_metric_coverage:
-    status: source-defined-deployment-pending
+    status: deployed-and-query-proven
     id: platform-smoke-rebuild-delivery-metric-observation
     command: npm run platform:shell:metric-coverage -- --coverage-target worker
     purpose: Independently observe the single side-effect-free worker delivery metric after the bounded worker consumer proof; this is delivery evidence, not an HTTP SLO or alerting policy.
@@ -634,6 +634,12 @@ observability:
       - missing
       - query-failed
     output_policy: safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload
+    live_proof:
+      executed_on_utc: "2026-09-23"
+      command: npm run platform:shell:metric-coverage -- --coverage-target worker
+      result: observed
+      worker_task_definition_revision: "1"
+      retained_evidence: safe-verdict-task-revision-and-bounded-count-duration-only-no-queue-message-or-provider-payload
   slo_query:
     provider_documented_max_request_range_days: 7
     effective_max_increase_lookback_days: 1
@@ -715,7 +721,7 @@ observability:
           - 10000
           - 30000
     - id: platform-smoke-rebuild-delivery
-      status: source-defined-deployment-pending
+      status: deployed-and-query-proven
       runtime_target: worker
       purpose: Count settled platform-smoke worker job deliveries by their approved delivery disposition and outcome.
       source:
@@ -745,7 +751,7 @@ observability:
           - payload
       cardinality_limit: 512
     - id: platform-smoke-rebuild-job-execution-latency
-      status: source-defined-deployment-pending
+      status: deployed-and-query-proven
       runtime_target: worker
       purpose: Measure handler execution time for eligible platform-smoke worker jobs.
       source:
@@ -1143,7 +1149,7 @@ operations:
         expected_http_status: 200
         output_policy: safe-facts-only-no-response-body-address-or-provider-payload
     worker_consumer:
-      status: source-defined-deployment-pending
+      status: deployed-and-consumer-and-metric-proven
       command: npm run platform:shell:worker-smoke
       execution_guard: --execute-and-approve-live-worker-smoke
       proof: two-side-effect-free-direct-sqs-platform-smoke-rebuild-messages-through-the-dormant-worker-service-for-fresh-counter-evidence
@@ -1171,3 +1177,15 @@ operations:
       status: planned
       alert_proof: explicitly-marked-notification-receipt-without-email-content-in-repository
       rollback_proof: reversible-task-definition-revision-and-governed-restore
+  worker_consumer_live_evidence:
+    executed_on_utc: "2026-09-23"
+    command: npm run platform:shell:worker-smoke -- --execute --approve-live-worker-smoke
+    result: passed
+    worker_task_definition_revision: "1"
+    duration_ms: 278716
+    message_count: 2
+    inter_message_wait_seconds: 75
+    metric_export_settlement_wait_seconds: 75
+    post_proof_state: worker-desired-and-running-zero-source-and-dead-letter-queues-empty
+    metric_observation: observed-by-fixed-worker-coverage-target
+    retained_evidence: safe-status-count-duration-task-revision-and-verdict-only-no-message-body-id-receipt-queue-url-or-provider-payload
