@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.run-platform-shell-rate-limit-smoke.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -24,9 +24,11 @@ used_by:
 
 - `--validate` proves the target profile still selects only the fixed public
   `GET /livez` proof and its declared limit plus one request bound.
-- `--execute` makes at most 121 sequential liveness requests, stops at the
-  first `429`, and reports only aggregate counts, final status, and elapsed
-  time.
+- `--execute` waits for the next fixed-window boundary, makes at most 121
+  sequential liveness requests, stops at the first `429`, and reports only
+  aggregate counts, final status, and elapsed time. If the fixed window rolls
+  over during the proof, it returns an explicit inconclusive result rather
+  than treating a second window as a failed limit.
 
 It sends no credential, does not read a response body, and does not call the
 protected smoke route. The latter is important: a rate-limit proof is boundary

@@ -1030,7 +1030,8 @@ if readiness_closure != {
     "rate_limit_429": {
         "status": "source-defined-deployment-pending",
         "command": "npm run platform:shell:rate-limit-smoke",
-        "request_bound": "declared-window-limit-plus-one-sequential-requests-stop-on-first-429",
+        "request_bound": "fresh-fixed-window-declared-limit-plus-one-sequential-requests-stop-on-first-429",
+        "fixed_window_alignment": "wait-for-next-window-boundary-and-return-inconclusive-on-rollover",
         "safe_result": "aggregate-counts-and-final-status-only",
         "request": {
             "method": "GET",

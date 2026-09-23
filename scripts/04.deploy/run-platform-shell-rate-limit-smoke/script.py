@@ -98,7 +98,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     expected = {
         "status": "source-defined-deployment-pending",
         "command": "npm run platform:shell:rate-limit-smoke",
-        "request_bound": "declared-window-limit-plus-one-sequential-requests-stop-on-first-429",
+        "request_bound": "fresh-fixed-window-declared-limit-plus-one-sequential-requests-stop-on-first-429",
+        "fixed_window_alignment": "wait-for-next-window-boundary-and-return-inconclusive-on-rollover",
         "safe_result": "aggregate-counts-and-final-status-only",
         "request": {
             "method": "GET",
@@ -140,6 +141,25 @@ def request_liveness(hostname: str, timeout_seconds: int) -> tuple[int, int]:
     return status, round((time.monotonic() - started) * 1000)
 
 
+def fixed_window_started_at_ms(window_ms: int) -> int:
+    """Return the current fixed-window boundary using the same epoch model as the adapter."""
+
+    now_ms = int(time.time() * 1_000)
+    return (now_ms // window_ms) * window_ms
+
+
+def wait_for_next_fixed_window(window_ms: int) -> int:
+    """Start only after a fresh window so earlier caller traffic cannot distort the proof."""
+
+    current_window_started_at_ms = fixed_window_started_at_ms(window_ms)
+    next_window_started_at_ms = current_window_started_at_ms + window_ms
+    now_ms = int(time.time() * 1_000)
+    time.sleep(max(0, next_window_started_at_ms - now_ms) / 1_000)
+    while fixed_window_started_at_ms(window_ms) < next_window_started_at_ms:
+        time.sleep(0.005)
+    return next_window_started_at_ms
+
+
 def emit_safe_result(result: str, **fields: int | str) -> None:
     """Emit aggregate-only proof facts; omit every response body, header, address, and identifier."""
 
@@ -149,6 +169,7 @@ def emit_safe_result(result: str, **fields: int | str) -> None:
 def execute(policy: dict[str, Any], timeout_seconds: int) -> int:
     """Run the finite sequential proof and stop at the first bounded rate-limit response."""
 
+    expected_window_started_at_ms = wait_for_next_fixed_window(policy["window_ms"])
     allowed_count = 0
     total_duration_ms = 0
     final_status = 0
@@ -156,6 +177,15 @@ def execute(policy: dict[str, Any], timeout_seconds: int) -> int:
         status, duration_ms = request_liveness(policy["hostname"], timeout_seconds)
         total_duration_ms += duration_ms
         final_status = status
+        if fixed_window_started_at_ms(policy["window_ms"]) != expected_window_started_at_ms:
+            emit_safe_result(
+                "inconclusive-window-rolled-over",
+                attempted_request_count=request_number,
+                allowed_request_count=allowed_count,
+                final_status=status,
+                total_duration_ms=total_duration_ms,
+            )
+            return 1
         if status == 200:
             allowed_count += 1
             continue

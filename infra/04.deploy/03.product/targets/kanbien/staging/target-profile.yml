@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 34
+#   version: 35
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -1102,7 +1102,8 @@ operations:
     rate_limit_429:
       status: source-defined-deployment-pending
       command: npm run platform:shell:rate-limit-smoke
-      request_bound: declared-window-limit-plus-one-sequential-requests-stop-on-first-429
+      request_bound: fresh-fixed-window-declared-limit-plus-one-sequential-requests-stop-on-first-429
+      fixed_window_alignment: wait-for-next-window-boundary-and-return-inconclusive-on-rollover
       safe_result: aggregate-counts-and-final-status-only
       request:
         method: GET
