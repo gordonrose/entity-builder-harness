@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T17:20:15Z
-latest_commit_sha: d4979e6
-chat_duration: 408s (00:00:06:48)
+latest_commit_at_utc: 2026-09-23T17:25:55Z
+latest_commit_sha: 99288b3
+chat_duration: 748s (00:00:12:28)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -155,6 +155,17 @@ ADR needed: no
 
 Reason: This records target-specific staging public-boundary evidence and strengthens its static validation; it does not change platform architecture, rate-limit semantics, or persistence policy.
 
+
+### 2026-09-23T17:25:55Z - Commit recorded
+
+Commit: `99288b3`
+
+Message: docs(deploy): record public boundary proofs
+
+Summary: Record aggregate-only rate-limit and ingress/WAF proof evidence, remove the closed readiness blocker, and preserve the protected HTTP SLO boundary.
+
+ADR impact: No ADR required; target-specific staging evidence and static-validation updates do not change platform architecture or rate-limit semantics.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -169,6 +180,13 @@ Reason: This records target-specific staging public-boundary evidence and streng
   Summary: Record the successful bounded two-message worker consumer proof, independent observed delivery metric, dormant zero-task post-state, and exact source validation.
   ADR impact: No ADR required; target-specific staging evidence and its static validation do not change platform architecture or persistence semantics.
 
+
+- Commit: `99288b3`
+  Time UTC: 2026-09-23T17:25:55Z
+  Message: docs(deploy): record public boundary proofs
+  Summary: Record aggregate-only rate-limit and ingress/WAF proof evidence, remove the closed readiness blocker, and preserve the protected HTTP SLO boundary.
+  ADR impact: No ADR required; target-specific staging evidence and static-validation updates do not change platform architecture or rate-limit semantics.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -182,9 +200,9 @@ Reason: This records target-specific staging public-boundary evidence and streng
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-23T17:20:15Z
-Latest commit SHA: d4979e6
-Chat duration: 408s (00:00:06:48)
+Latest commit at UTC: 2026-09-23T17:25:55Z
+Latest commit SHA: 99288b3
+Chat duration: 748s (00:00:12:28)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
