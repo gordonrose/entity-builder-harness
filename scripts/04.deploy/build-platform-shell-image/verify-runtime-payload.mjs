@@ -66,6 +66,7 @@ try {
       PLATFORM_AUTH_COGNITO_REGION: "eu-west-1",
       PLATFORM_AUTH_COGNITO_USER_POOL_ID: "eu-west-1_EQaXioA1n",
       PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: "4n7kuqstbvb97ur3btbur8afjt",
+      PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds"]',
       PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}',
       PLATFORM_CORS_ALLOWLIST: "https://staging.platform.kanbien.com",
       PLATFORM_HEALTH_LIVEZ_EXPOSURE: "public",

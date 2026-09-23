@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 14
+#   version: 15
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -38,6 +38,7 @@ bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/scri
 bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
@@ -261,14 +262,34 @@ else:
     for key, expected in expected_negative_test_client.items():
         if negative_test_client.get(key) != expected:
             fail(f"target profile negative authorization client must retain {key}")
-    if negative_test_client.get("status") not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-and-403-proven"}:
+    status = negative_test_client.get("status")
+    if status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-403-proof", "deployed-and-403-proven"}:
         fail("target profile negative authorization client must use a governed lifecycle status")
     client_id = negative_test_client.get("client_id")
-    if client_id is not None and (not isinstance(client_id, str) or not client_id):
-        fail("target profile negative authorization client ID must be a non-empty string when provisioned")
+    if status == "pending-provisioning":
+        if client_id is not None:
+            fail("target profile must not record a negative authorization client ID before provisioning")
+    elif not isinstance(client_id, str) or not client_id:
+        fail("target profile negative authorization client ID must be a non-empty string after provisioning")
     secret_arn = negative_test_client.get("secret_arn")
-    if secret_arn is not None and (not isinstance(secret_arn, str) or not secret_arn.startswith("arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-")):
+    if status == "pending-provisioning":
+        if secret_arn is not None:
+            fail("target profile must not record a negative authorization secret ARN before provisioning")
+    elif not isinstance(secret_arn, str) or not secret_arn.startswith("arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-"):
         fail("target profile negative authorization secret ARN must remain target-scoped when provisioned")
+    if status != "pending-provisioning" and isinstance(client_id, str) and isinstance(secret_arn, str):
+        config = target_profile.get("config", {})
+        non_secret_env = config.get("non_secret_env", {}) if isinstance(config, dict) else {}
+        secret_refs = config.get("secret_refs", {}) if isinstance(config, dict) else {}
+        if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps([client_id], separators=(",", ":")):
+            fail("target profile must allowlist exactly the provisioned negative authorization client")
+        if secret_refs.get("cognito_negative_authz_client_secret") != {
+            "name": "kanbien/staging/platform-shell/cognito-negative-authz-client",
+            "arn": secret_arn,
+            "delivery": "bounded-negative-authz-smoke-only-not-ecs-task-environment",
+            "value_format": "opaque-raw-string",
+        }:
+            fail("target profile must retain the bounded negative authorization secret reference")
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
@@ -827,11 +848,12 @@ operations = target_profile.get("operations", {})
 readiness_closure = operations.get("readiness_closure", {}) if isinstance(operations, dict) else {}
 if readiness_closure != {
     "authorization_403": {
-        "status": "source-allowlist-implemented-target-deployment-pending",
+        "status": "negative-client-provisioned-target-deployment-pending",
         "prerequisite": "separate-valid-machine-client-without-platform-smoke-read-permission",
         "authentication_boundary": "primary-client-plus-exact-additional-client-id-allowlist-no-wildcards",
         "target_configuration": "PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array",
         "negative_client_scope": "dedicated-unmapped-resource-server-scope",
+        "proof_command": "npm run platform:shell:negative-authz-smoke",
         "safe_result": "status-code-only-403",
     },
     "rate_limit_429": {

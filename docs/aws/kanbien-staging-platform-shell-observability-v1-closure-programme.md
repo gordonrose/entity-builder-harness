@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 8
+version: 9
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -181,7 +181,7 @@ Create one separately scoped valid Cognito machine client with no
 `platform-smoke.smoke:read` permission and prove `403` using only a safe HTTP
 status result. Retain the existing correctly-scoped `200` proof separately.
 
-The existing staging adapter binds the JWT `client_id` claim to exactly one
+The existing staging adapter previously bound the JWT `client_id` claim to exactly one
 machine client. Therefore a second client cannot be used for this proof until
 the target is deliberately configured to accept its exact identifier: otherwise
 the correct result is `401` at authentication, not `403` at authorization.
@@ -190,6 +190,14 @@ verifier supports an exact `oneOf` claim requirement; the Cognito adapter keeps
 the primary client required and accepts optional additional IDs only from a
 validated target environment list. The list rejects empty values, duplicates,
 and repetition of the primary client.
+
+The reviewed provisioning transaction has now created the one declared staging
+negative client, its dedicated `platform-shell-authz-probe/deny` scope, and the
+named Secrets Manager value. Its safe client ID and secret ARN are recorded in
+the target profile; its secret value is not. The next bounded change is only an
+immutable service deployment containing that exact one-ID additional allowlist.
+The negative-authz smoke command cannot execute until post-deployment
+inspection changes its lifecycle state to `deployed-pending-403-proof`.
 
 Before the live proof, deploy the reviewed immutable image and target
 configuration containing exactly the primary client ID and the separately

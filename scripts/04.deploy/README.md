@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 3
+version: 4
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -44,6 +44,9 @@ Current commands:
 - `provision-platform-shell-negative-authz-client/`: locally validates, or
   with explicit current-chat approval creates the one separately scoped Cognito
   machine client and its named secret for the bounded staging `403` proof.
+- `run-platform-shell-negative-authz-smoke/`: locally validates, or after
+  post-deployment inspection and explicit current-chat approval performs the
+  one fixed valid-token, unmapped-scope staging request that must return `403`.
 - `verify-platform-shell-synthetic-scheduler/`: read-only policy check for the
   temporary GitHub Actions protected-route synthetic workflow and its separate
   one-secret-read IAM role source.
