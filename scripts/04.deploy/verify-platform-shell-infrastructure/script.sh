@@ -1075,8 +1075,9 @@ if readiness_closure != {
         "bounded_action": {
             "worker_desired_count": 1,
             "message_type": "platform-smoke.rebuild",
-            "payload": '{"rebuild":true}',
-            "maximum_wait_seconds": 360,
+        "payload": '{"rebuild":true}',
+        "maximum_wait_seconds": 360,
+        "metric_export_settlement_wait_seconds": 75,
         },
         "success": {
             "worker_started": True,
