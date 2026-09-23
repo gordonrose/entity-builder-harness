@@ -49,6 +49,10 @@ let's go
 - Raised: The infrastructure policy check exposed a provisioner lifecycle-validation contradiction.
   Resolution: Local validation had incorrectly required pending provisioning after the one-time resource was created. It now accepts governed post-provision states while live creation still fails unless the target is pending.
 
+
+- Raised: The first deployment waits returned before the control planes reported final completion.
+  Resolution: Post-deployment inspection caught CloudFormation UPDATE_IN_PROGRESS and ECS rollout IN_PROGRESS, so the live proof was held. Read-only stack, service, task, and target-health checks later confirmed UPDATE_COMPLETE, revision 5, a completed rollout, and a healthy target.
+
 ## Decisions Made
 
 
@@ -64,6 +68,10 @@ let's go
 - Decision: Provision the single declared staging negative Cognito client before deploying its allowlist.
   Rationale: The transaction preflighted exact resource absence, created only the declared unmapped scope/client/secret, returned safe identifiers, and leaves the secret value outside source control and the ECS task.
 
+
+- Decision: Deploy only the exact finite Cognito client-ID allowlist after scan, change-set, and health verification.
+  Rationale: The reviewed change set modified only the ECS task definition and service. The completed revision 5 task retained a healthy target and five OK alarms; the negative client secret remains outside the task.
+
 ## Context Hygiene
 
 
@@ -74,6 +82,10 @@ let's go
 
 - Summary: Recorded only safe Cognito resource identifiers and target lifecycle facts.
   Durable evidence: The target profile records the client ID and secret ARN, while secret values, OAuth tokens, authorization headers, response bodies, provider errors, and mailbox data remain absent from source, logs, and evidence.
+
+
+- Summary: Recorded scan, workflow, revision, health, and alarm facts without sensitive runtime material.
+  Durable evidence: The evidence contains only image digest, workflow run ID, stack/service states, revision, target health, and aggregate alarm states; it excludes OAuth secrets/tokens, request headers, response bodies, raw logs, and provider error payloads.
 
 ## Activity Log
 
@@ -158,6 +170,27 @@ Message: feat(authz): configure bounded staging 403 proof
 Summary: Records the safely provisioned Cognito identifiers, projects the exact one-client allowlist to the staging task, and adds a post-deploy-only redacted authorization-denial smoke command.
 
 ADR impact: No ADR: preserves the accepted Cognito provider boundary and existing staging target.
+
+
+### 2026-09-23T10:56:59Z - Decision
+
+Decision: Deploy only the exact finite Cognito client-ID allowlist after scan, change-set, and health verification.
+
+Rationale: The reviewed change set modified only the ECS task definition and service. The completed revision 5 task retained a healthy target and five OK alarms; the negative client secret remains outside the task.
+
+
+### 2026-09-23T10:56:59Z - Issue
+
+Raised: The first deployment waits returned before the control planes reported final completion.
+
+Resolution: Post-deployment inspection caught CloudFormation UPDATE_IN_PROGRESS and ECS rollout IN_PROGRESS, so the live proof was held. Read-only stack, service, task, and target-health checks later confirmed UPDATE_COMPLETE, revision 5, a completed rollout, and a healthy target.
+
+
+### 2026-09-23T10:56:59Z - Context hygiene
+
+Summary: Recorded scan, workflow, revision, health, and alarm facts without sensitive runtime material.
+
+Durable evidence: The evidence contains only image digest, workflow run ID, stack/service states, revision, target health, and aggregate alarm states; it excludes OAuth secrets/tokens, request headers, response bodies, raw logs, and provider error payloads.
 
 ## Sub-Agent Activity
 

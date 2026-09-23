@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 9
+version: 10
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -191,13 +191,15 @@ the primary client required and accepts optional additional IDs only from a
 validated target environment list. The list rejects empty values, duplicates,
 and repetition of the primary client.
 
-The reviewed provisioning transaction has now created the one declared staging
+The reviewed provisioning transaction created the one declared staging
 negative client, its dedicated `platform-shell-authz-probe/deny` scope, and the
 named Secrets Manager value. Its safe client ID and secret ARN are recorded in
 the target profile; its secret value is not. The next bounded change is only an
 immutable service deployment containing that exact one-ID additional allowlist.
-The negative-authz smoke command cannot execute until post-deployment
-inspection changes its lifecycle state to `deployed-pending-403-proof`.
+That deployment is complete on task revision `5`, using the scan-accepted
+immutable image from workflow run `35850734084`; the target is healthy and the
+five reviewed alarms are `OK`. The negative-authz smoke command is now enabled
+only for the single bounded `403` proof.
 
 Before the live proof, deploy the reviewed immutable image and target
 configuration containing exactly the primary client ID and the separately

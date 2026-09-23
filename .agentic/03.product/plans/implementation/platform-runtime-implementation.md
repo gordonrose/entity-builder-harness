@@ -999,9 +999,10 @@ claim.
 3. **Remaining public-boundary and operations proof.** A second client with
    only a deliberately unmapped scope is now provisioned for the required
    valid-token `403` check; its safe identifiers are target-recorded and its
-   secret remains outside source control. Deploy the exact finite client-ID
-   allowlist, inspect the task revision, then run the bounded status-only
-   command; never fake an invalid token as an authorization test.
+   secret remains outside source control. The exact finite client-ID allowlist
+   is now deployed and inspected on staging task revision 5. Run the bounded
+   status-only command once, then record its safe result; never fake an invalid
+   token as an authorization test.
    Run the `429` check at the declared limit plus one with bounded sequential
    requests and stop on the first rejection. Inspect WAF association and ALB
    host routing read-only, test alert receipt with an explicitly marked

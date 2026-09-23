@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 31
+#   version: 32
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -291,7 +291,7 @@ auth:
     grant_type: client_credentials
     client_secret_storage: aws-secrets-manager
   negative_test_client:
-    status: provisioned-pending-service-deployment
+    status: deployed-pending-403-proof
     name: platform-shell-staging-negative-authz-client
     client_id: 15po9eg4hgknb2pi2d1bdfhdds
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-YnblEn
@@ -310,6 +310,15 @@ auth:
       name: kanbien/staging/platform-shell/cognito-negative-authz-client
       delivery: bounded-negative-authz-smoke-only-not-ecs-task-environment
       value_format: opaque-raw-string
+    deployment_evidence:
+      source_commit: 37a3151d4c405481c603537b56473ea75fd51a12
+      image_uri: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:7377505e91b0854a6f83628d406dc9298cd25eac70fc56ebdef21b63d868df17
+      github_workflow_run_id: "35850734084"
+      service_stack_status: UPDATE_COMPLETE
+      task_definition_revision: 5
+      service_rollout: COMPLETED
+      target_health: healthy
+      alarm_states: five-ok
   resource_server:
     identifier: platform-shell
     scopes:
@@ -950,7 +959,7 @@ operations:
     runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
   readiness_closure:
     authorization_403:
-      status: negative-client-provisioned-target-deployment-pending
+      status: deployed-pending-403-proof
       prerequisite: separate-valid-machine-client-without-platform-smoke-read-permission
       authentication_boundary: primary-client-plus-exact-additional-client-id-allowlist-no-wildcards
       target_configuration: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array

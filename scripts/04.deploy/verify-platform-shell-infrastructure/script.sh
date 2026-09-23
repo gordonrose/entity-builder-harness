@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 15
+#   version: 16
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -290,6 +290,20 @@ else:
             "value_format": "opaque-raw-string",
         }:
             fail("target profile must retain the bounded negative authorization secret reference")
+    if status == "deployed-pending-403-proof":
+        evidence = negative_test_client.get("deployment_evidence")
+        expected_evidence = {
+            "source_commit": "37a3151d4c405481c603537b56473ea75fd51a12",
+            "image_uri": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:7377505e91b0854a6f83628d406dc9298cd25eac70fc56ebdef21b63d868df17",
+            "github_workflow_run_id": "35850734084",
+            "service_stack_status": "UPDATE_COMPLETE",
+            "task_definition_revision": 5,
+            "service_rollout": "COMPLETED",
+            "target_health": "healthy",
+            "alarm_states": "five-ok",
+        }
+        if evidence != expected_evidence:
+            fail("target profile must retain the reviewed post-deployment negative authorization evidence")
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
@@ -848,7 +862,7 @@ operations = target_profile.get("operations", {})
 readiness_closure = operations.get("readiness_closure", {}) if isinstance(operations, dict) else {}
 if readiness_closure != {
     "authorization_403": {
-        "status": "negative-client-provisioned-target-deployment-pending",
+        "status": "deployed-pending-403-proof",
         "prerequisite": "separate-valid-machine-client-without-platform-smoke-read-permission",
         "authentication_boundary": "primary-client-plus-exact-additional-client-id-allowlist-no-wildcards",
         "target_configuration": "PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array",
