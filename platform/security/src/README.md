@@ -58,8 +58,10 @@ group membership, and the specific invoice allow the action.
 This file owns the generic JWT/JWKS mechanics. It decodes the three JWT
 segments, checks the expected signing algorithm and key ID, obtains a matching
 public key from JWKS, verifies the signature, and validates issuer, time, and
-required-claim rules. It caches usable signing keys inside the verifier
-instance so repeated token checks do not repeatedly fetch the same key.
+required-claim rules. A required claim is either one exact scalar or a finite,
+explicit allowlist of scalars; it is never a pattern, prefix, or wildcard. It
+caches usable signing keys inside the verifier instance so repeated token
+checks do not repeatedly fetch the same key.
 
 This is verification machinery, not an identity-provider integration. The file
 knows generic concepts such as a JWKS URL, an RS256 signature, `iss`, `sub`,

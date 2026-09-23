@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 29
+#   version: 30
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -22,6 +22,8 @@
 #     path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 #   - id: deploy.script.run-platform-shell-controlled-smoke
 #     path: scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh
+#   - id: deploy.script.provision-platform-shell-negative-authz-client
+#     path: scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh
 schema: deploy/platform-shell-target-profile/v1
 status: draft
 client:
@@ -286,6 +288,24 @@ auth:
     type: confidential
     grant_type: client_credentials
     client_secret_storage: aws-secrets-manager
+  negative_test_client:
+    status: pending-provisioning
+    name: platform-shell-staging-negative-authz-client
+    type: confidential
+    grant_type: client_credentials
+    access_token_validity_minutes: 5
+    token_revocation: enabled
+    prevent_user_existence_errors: enabled
+    resource_server:
+      identifier: platform-shell-authz-probe
+      name: Platform Shell Authorization Negative Probe
+      scope_name: deny
+      scope: platform-shell-authz-probe/deny
+      permission_mapping: intentionally-unmapped
+    secret:
+      name: kanbien/staging/platform-shell/cognito-negative-authz-client
+      delivery: bounded-negative-authz-smoke-only-not-ecs-task-environment
+      value_format: opaque-raw-string
   resource_server:
     identifier: platform-shell
     scopes:
@@ -920,8 +940,11 @@ operations:
     runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
   readiness_closure:
     authorization_403:
-      status: planned
+      status: source-allowlist-implemented-target-deployment-pending
       prerequisite: separate-valid-machine-client-without-platform-smoke-read-permission
+      authentication_boundary: primary-client-plus-exact-additional-client-id-allowlist-no-wildcards
+      target_configuration: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array
+      negative_client_scope: dedicated-unmapped-resource-server-scope
       safe_result: status-code-only-403
     rate_limit_429:
       status: planned

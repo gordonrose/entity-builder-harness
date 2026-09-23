@@ -163,6 +163,19 @@ async function main(): Promise<void> {
     equal(badRequiredClaim.error.code, "PLATFORM_SECURITY_INVALID_TOKEN");
   }
 
+  const allowlistedVerifier = createJwksJwtVerifier({
+    issuer: jwt.issuer,
+    jwksUri: jwt.jwksUri,
+    requiredClaims: [{ claim: "client_id", oneOf: ["primary-client", "negative-test-client"] }],
+    clock: fixedClock(new Date("2026-07-10T00:00:00.000Z")),
+    fetchJwks: {
+      fetch: async () => ({ keys: [jwt.publicJwk] }),
+    },
+  });
+  equal((await allowlistedVerifier.verify(jwt.token({ client_id: "negative-test-client" }))).ok, true);
+  equal((await allowlistedVerifier.verify(jwt.token({ client_id: "unconfigured-client" }))).ok, false);
+  equal((await allowlistedVerifier.verify(jwt.token({ client_id: ["negative-test-client"] }))).ok, false);
+
   const authHook = createJwtBearerAuthenticationHook({ verifier, authz });
   const unauthenticated = await authHook.authenticate({ headers: {} });
   equal(unauthenticated.authenticated, false);

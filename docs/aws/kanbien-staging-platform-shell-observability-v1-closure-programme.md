@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 7
+version: 8
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -180,6 +180,27 @@ subscription identifier, or link.
 Create one separately scoped valid Cognito machine client with no
 `platform-smoke.smoke:read` permission and prove `403` using only a safe HTTP
 status result. Retain the existing correctly-scoped `200` proof separately.
+
+The existing staging adapter binds the JWT `client_id` claim to exactly one
+machine client. Therefore a second client cannot be used for this proof until
+the target is deliberately configured to accept its exact identifier: otherwise
+the correct result is `401` at authentication, not `403` at authorization.
+The correction is a finite client-ID allowlist, not a wildcard. The generic JWT
+verifier supports an exact `oneOf` claim requirement; the Cognito adapter keeps
+the primary client required and accepts optional additional IDs only from a
+validated target environment list. The list rejects empty values, duplicates,
+and repetition of the primary client.
+
+Before the live proof, deploy the reviewed immutable image and target
+configuration containing exactly the primary client ID and the separately
+created negative-test client ID. Create a dedicated Cognito resource-server
+scope for that negative client which is intentionally absent from the
+platform permission mapping. It must not receive the smoke-read scope, user
+authentication flows, a wildcard scope, or a role in the running task. Keep
+its secret outside source control and use it only in a bounded local
+status-only command. If provisioning, deployment, or cleanup cannot preserve
+these constraints, stop rather than falling back to the primary client or an
+invalid token.
 
 Run no more than the target's declared rate-limit window plus one sequential
 request, stopping at the first `429`. Inspect the host rule and WAF association

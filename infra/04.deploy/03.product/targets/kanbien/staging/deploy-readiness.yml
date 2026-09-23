@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 30
+#   version: 31
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -708,7 +708,7 @@ blockers:
     severity: blocking
     path: auth.route_exposure.protected_dummy_route.deployment_smoke
     reason: A controlled Cognito token now proves the correctly scoped protected route returns 200, alongside the existing unauthenticated 401 proof. A deployed wrong-scope 403 proof is still absent.
-    resolution: Provision a separate valid machine client without the smoke-read permission, then use a bounded status-only smoke mode to record 403. Never use an invalid token as an authorization proof or commit credentials/token values.
+    resolution: Deploy the reviewed exact additional-client allowlist, provision a separate valid machine client with only a dedicated unmapped scope and without smoke-read permission, then use a bounded status-only smoke mode to record 403. Never use an invalid token as an authorization proof or commit credentials/token values.
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting
