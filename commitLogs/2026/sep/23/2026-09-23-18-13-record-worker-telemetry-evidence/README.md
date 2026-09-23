@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-23T17:13:27Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T17:25:55Z
-latest_commit_sha: 99288b3
-chat_duration: 748s (00:00:12:28)
+latest_commit_at_utc: 2026-09-23T18:33:01Z
+latest_commit_sha: 905e035
+chat_duration: 4774s (00:01:19:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -221,6 +221,17 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: The target-specific cost-control configuration evidence is retained in the staging profile, readiness record, and deployment closure plans; it introduces no reusable platform or product knowledge domain.
 
+
+### 2026-09-23T18:33:01Z - Commit recorded
+
+Commit: `905e035`
+
+Message: docs(deploy): record cost-control configuration
+
+Summary: Record the active service cost tag, verified tag-scoped budget notifications, no-op Foundation change-set review, and the remaining tagged-billing-data proof boundary.
+
+ADR impact: No ADR required; this corrects target-specific staging evidence and does not change platform architecture or budget policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -242,6 +253,13 @@ Rationale: The target-specific cost-control configuration evidence is retained i
   Summary: Record aggregate-only rate-limit and ingress/WAF proof evidence, remove the closed readiness blocker, and preserve the protected HTTP SLO boundary.
   ADR impact: No ADR required; target-specific staging evidence and static-validation updates do not change platform architecture or rate-limit semantics.
 
+
+- Commit: `905e035`
+  Time UTC: 2026-09-23T18:33:01Z
+  Message: docs(deploy): record cost-control configuration
+  Summary: Record the active service cost tag, verified tag-scoped budget notifications, no-op Foundation change-set review, and the remaining tagged-billing-data proof boundary.
+  ADR impact: No ADR required; this corrects target-specific staging evidence and does not change platform architecture or budget policy.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -255,9 +273,9 @@ Reason: This records target-specific staging proof evidence and corrects its ope
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-23T17:25:55Z
-Latest commit SHA: 99288b3
-Chat duration: 748s (00:00:12:28)
+Latest commit at UTC: 2026-09-23T18:33:01Z
+Latest commit SHA: 905e035
+Chat duration: 4774s (00:01:19:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
