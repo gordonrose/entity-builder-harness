@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-23T08:50:39Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-23T10:36:14Z
+latest_commit_sha: 5fdb989
+chat_duration: 6335s (00:01:45:35)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -104,13 +104,30 @@ Decision: Run focused source-baseline checks before the staging transaction.
 
 Rationale: The verified checks cover the changed JWT contract, Cognito composition, no-secret provisioning path, and static target policy without creating cloud resources.
 
+
+### 2026-09-23T10:36:14Z - Commit recorded
+
+Commit: `5fdb989`
+
+Message: feat(authz): govern staging valid-token 403 proof
+
+Summary: Adds a provider-neutral finite JWT client-ID allowlist, Cognito composition for one additional valid test client, staging target policy, and a no-secret provisioning command for the later bounded authorization proof.
+
+ADR impact: No ADR: extends existing provider and staging boundaries.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `5fdb989`
+  Time UTC: 2026-09-23T10:36:14Z
+  Message: feat(authz): govern staging valid-token 403 proof
+  Summary: Adds a provider-neutral finite JWT client-ID allowlist, Cognito composition for one additional valid test client, staging target policy, and a no-secret provisioning command for the later bounded authorization proof.
+  ADR impact: No ADR: extends existing provider and staging boundaries.
 
 ## Main Refresh Conflicts
 
@@ -125,12 +142,12 @@ Reason: The reviewed Cognito authorization-negative proof preserves the existing
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T08:50:39Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-23T10:36:14Z
+Latest commit SHA: 5fdb989
+Chat duration: 6335s (00:01:45:35)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
