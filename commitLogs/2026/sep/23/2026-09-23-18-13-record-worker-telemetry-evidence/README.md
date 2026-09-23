@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T18:33:01Z
-latest_commit_sha: 905e035
-chat_duration: 4774s (00:01:19:34)
+latest_commit_at_utc: 2026-09-23T20:15:20Z
+latest_commit_sha: 9cf9c20
+chat_duration: 10913s (00:03:01:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -76,6 +76,10 @@ go
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The target-specific cost-control configuration evidence is retained in the staging profile, readiness record, and deployment closure plans; it introduces no reusable platform or product knowledge domain.
 
+
+- Decision: Group target-owned GitHub OIDC IAM source beneath its explicit identity boundary
+  Rationale: The GitHub trust and permission files have a separate account-level lifecycle from ECS task roles owned by the Foundation stack. The `iam/github-oidc` path makes that distinction visible without changing a permission, role, workflow, or AWS resource.
+
 ## Context Hygiene
 
 
@@ -90,6 +94,10 @@ go
 
 - Summary: Retain only safe cost-control configuration facts: active `service` tag, 25 USD monthly tag scope, four reviewed notification types and thresholds, and SNS subscriber type.
   Durable evidence: Do not retain billing amounts, subscriber addresses, email content, raw provider payloads, failed change-set identifiers, or CloudFormation parameters.
+
+
+- Summary: Retain the source-only scanability refactor: GitHub OIDC IAM documents moved under `iam/github-oidc`, with all active target and verifier references updated.
+  Durable evidence: No AWS identity values, policy changes, role inspection output, or cloud mutation evidence is retained because this refactor does not change live AWS state.
 
 ## Activity Log
 
@@ -232,6 +240,42 @@ Summary: Record the active service cost tag, verified tag-scoped budget notifica
 
 ADR impact: No ADR required; this corrects target-specific staging evidence and does not change platform architecture or budget policy.
 
+
+### 2026-09-23T20:11:54Z - Main refresh
+
+Classifier: `clean`
+
+Incoming main: one commit behind; no changed-path overlap.
+
+Preflight: `agentic/preflight/chat-2026-09-23-18-13-go-cb1493473d99/20260923201154` completed with `clean-merge`.
+
+Applied commit: `8e301c639322c80f18698fb27bb3b27f6d241425`; temporary worktree and preflight branch removed; stash used: no.
+
+
+### 2026-09-23T20:15:00Z - Decision
+
+Decision: Group target-owned GitHub OIDC IAM source beneath its explicit identity boundary
+
+Rationale: The GitHub trust and permission files have a separate account-level lifecycle from ECS task roles owned by the Foundation stack. The `iam/github-oidc` path makes that distinction visible without changing a permission, role, workflow, or AWS resource.
+
+
+### 2026-09-23T20:15:00Z - Context hygiene
+
+Summary: Retain the source-only scanability refactor: GitHub OIDC IAM documents moved under `iam/github-oidc`, with all active target and verifier references updated.
+
+Durable evidence: No AWS identity values, policy changes, role inspection output, or cloud mutation evidence is retained because this refactor does not change live AWS state.
+
+
+### 2026-09-23T20:15:20Z - Commit recorded
+
+Commit: `9cf9c20`
+
+Message: refactor(deploy): group github oidc iam source
+
+Summary: Group GitHub OIDC IAM source under a semantically explicit target folder, add responsibility READMEs, and update all active profile and verifier paths without changing live AWS state.
+
+ADR impact: No ADR required; this is a behaviour-preserving source-structure refactor.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -260,22 +304,30 @@ ADR impact: No ADR required; this corrects target-specific staging evidence and 
   Summary: Record the active service cost tag, verified tag-scoped budget notifications, no-op Foundation change-set review, and the remaining tagged-billing-data proof boundary.
   ADR impact: No ADR required; this corrects target-specific staging evidence and does not change platform architecture or budget policy.
 
+
+- Commit: `9cf9c20`
+  Time UTC: 2026-09-23T20:15:20Z
+  Message: refactor(deploy): group github oidc iam source
+  Summary: Group GitHub OIDC IAM source under a semantically explicit target folder, add responsibility READMEs, and update all active profile and verifier paths without changing live AWS state.
+  ADR impact: No ADR required; this is a behaviour-preserving source-structure refactor.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
+- 2026-09-23: no conflicts; second clean rehearsed refresh applied without stash before the IAM scanability refactor.
 
 ## ADR Disposition
 
 ADR needed: no
 ADR path:
-Reason: This records target-specific staging proof evidence and corrects its operational interpretation; it does not change platform architecture, budget policy, or persistence semantics.
+Reason: This records target-specific staging proof evidence and a source-only scanability refactor; it does not change platform architecture, live AWS permissions, budget policy, or persistence semantics.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-23T18:33:01Z
-Latest commit SHA: 905e035
-Chat duration: 4774s (00:01:19:34)
+Latest commit at UTC: 2026-09-23T20:15:20Z
+Latest commit SHA: 9cf9c20
+Chat duration: 10913s (00:03:01:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

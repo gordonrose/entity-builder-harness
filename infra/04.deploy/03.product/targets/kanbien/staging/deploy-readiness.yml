@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 38
+#   version: 39
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -52,7 +52,7 @@ deployment:
       approval: github-environment-manual
       role_name: github-platform-shell-staging-deploy
       role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy
-      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-deploy-policy.json
       role_policy_deployment_status: deployed-and-live-inspected
       live_policy_proof:
         inspection: aws-iam-get-role-policy
@@ -74,8 +74,8 @@ deployment:
         environment: staging
         managed-by: github-actions
         purpose: protected-synthetic
-      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-policy.json
-      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-trust.json
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-synthetic-policy.json
+      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-synthetic-trust.json
       role_policy_deployment_status: deployed-and-live-inspected
       live_policy_proof:
         inspection:
@@ -120,8 +120,8 @@ deployment:
         environment: staging
         managed-by: github-actions
         purpose: metric-coverage
-      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-policy.json
-      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-trust.json
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-policy.json
+      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-trust.json
       role_policy_deployment_status: deployed-and-live-inspected
       allowed_aws_actions:
         - cloudwatch:GetMetricData
@@ -396,8 +396,8 @@ github:
     trust_scoped_to_repository: true
     trust_scoped_to_ref: true
     workflow_has_id_token_permission: true
-    trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-trust.json
-    permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json
+    trust_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-deploy-trust.json
+    permission_policy: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-deploy-policy.json
     live_policy_last_inspected_at_utc: "2026-09-06T19:03:03Z"
     live_policy_matches_repository_policy: false
     live_policy_verification: The live inline policy matched the previously committed source on 2026-09-06. Repository source now adds the narrowly scoped telemetry-preflight reads and awaits a separate governed IAM update plus renewed live policy simulation.

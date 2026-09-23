@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-synthetic-scheduler
-#   version: 3
+#   version: 4
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -44,8 +44,8 @@ except ImportError as error:
 TARGET_PROFILE_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
 READINESS_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml")
 WORKFLOW_PATH = Path(".github/workflows/platform-shell-staging-synthetic.yml")
-POLICY_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-policy.json")
-TRUST_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-synthetic-trust.json")
+POLICY_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-synthetic-policy.json")
+TRUST_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-synthetic-trust.json")
 
 
 def load_yaml(path: Path) -> dict:

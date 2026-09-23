@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: infra.access
@@ -9,30 +9,21 @@ disciplines:
 - security
 - sre
 kind: capability-readme
-purpose: Index the separately scoped GitHub OIDC IAM policy and trust-policy source for Kanbien staging platform-shell operations.
+purpose: Index the target-specific IAM source by operational identity boundary.
 portability:
   class: internal
   targets:
   - kanbien/staging
-used_by:
-- id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-  path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
-- id: deploy.script.verify-platform-shell-synthetic-scheduler
-  path: scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 -->
-# Kanbien Staging Platform-Shell GitHub IAM Source
+# Kanbien Staging IAM Source
 
-Each GitHub operational purpose has its own role. The target profile names the
-role, source files, deployment state, and any live-policy inspection evidence.
-The JSON files in this folder are reviewed source, not proof that a role exists
-in AWS.
+This folder indexes target-specific IAM source that is intentionally managed
+outside the platform-shell CloudFormation stack.
 
-| Files | Role purpose | Allowed AWS capability | Trust boundary |
-| --- | --- | --- | --- |
-| `github-platform-shell-staging-deploy-policy.json` and `github-platform-shell-staging-deploy-trust.json` | Build and publish the immutable platform-shell image. | ECR image operations for `platform-shell` only. | GitHub Actions for this repository's `main` branch through the protected `staging` environment. |
-| `github-platform-shell-staging-synthetic-policy.json` and `github-platform-shell-staging-synthetic-trust.json` | Run the protected staging synthetic. | Inline policy `ReadOnlyControlledSmokeSecret` reads exactly the declared Cognito machine-client secret. | GitHub Actions for this repository's `main` branch only; no deployment environment or repository-secret fallback. |
+| Folder | Owns | Does not own |
+| --- | --- | --- |
+| [`github-oidc/`](github-oidc/README.md) | GitHub Actions trust policies and least-privilege permission policies for separately managed operational identities. | ECS task and execution roles, which belong to the platform-shell Foundation CloudFormation stack. |
 
-The synthetic role is intentionally not permitted to deploy an image, change a
-CloudFormation stack, manage ECS, administer Cognito, or read a wildcard set of
-secrets. Its scheduled workflow is best-effort operational evidence, not a
-replacement for the future governed platform scheduler.
+The distinction is deliberate: a running workload's roles change with its
+stack, while GitHub's account-level operational identities have a separate
+trust boundary and deployment lifecycle.
