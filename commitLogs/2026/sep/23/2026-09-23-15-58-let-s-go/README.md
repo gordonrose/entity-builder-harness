@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-23T15:41:28Z
+latest_commit_sha: b0a46ba
+chat_duration: 2603s (00:00:43:23)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -104,13 +104,30 @@ Raised: Generated recognition source was stale
 
 Resolution: The mandatory commit gate identified missing indexed deployment artifacts already present in the closure programme. Regenerated only the metadata-derived artifacts source and verified its additions were confined to those governed paths.
 
+
+### 2026-09-23T15:41:28Z - Commit recorded
+
+Commit: `b0a46ba`
+
+Message: fix(deploy): make rate-limit proof window-aware
+
+Summary: Align the bounded rate-limit proof with DynamoDB fixed windows, record rollover as inconclusive, refresh the required recognition index, and validate the full commit gate.
+
+ADR impact: No ADR required; target-specific operational proof policy is documented in the target profile and closure plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b0a46ba`
+  Time UTC: 2026-09-23T15:41:28Z
+  Message: fix(deploy): make rate-limit proof window-aware
+  Summary: Align the bounded rate-limit proof with DynamoDB fixed windows, record rollover as inconclusive, refresh the required recognition index, and validate the full commit gate.
+  ADR impact: No ADR required; target-specific operational proof policy is documented in the target profile and closure plan.
 
 ## Main Refresh Conflicts
 
@@ -125,12 +142,12 @@ Reason: Target-specific smoke-proof reliability correction; the target profile a
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T14:58:05Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-23T15:41:28Z
+Latest commit SHA: b0a46ba
+Chat duration: 2603s (00:00:43:23)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
