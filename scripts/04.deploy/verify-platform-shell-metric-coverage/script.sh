@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-metric-coverage
-#   version: 3
+#   version: 4
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -44,8 +44,8 @@ except ImportError as error:
 TARGET_PROFILE_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
 READINESS_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml")
 WORKFLOW_PATH = Path(".github/workflows/platform-shell-staging-metric-coverage.yml")
-POLICY_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-policy.json")
-TRUST_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-trust.json")
+POLICY_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-policy.json")
+TRUST_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-trust.json")
 COMMAND_PATH = Path("scripts/04.deploy/run-platform-shell-metric-coverage/script.py")
 PACKAGE_PATH = Path("package.json")
 failures: list[str] = []
@@ -201,8 +201,8 @@ expected_execution_policy = {
     "role_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage",
     "inline_policy_name": "ReadDeclaredPromqlAndPublishCoverageConcern",
     "tags": {"service": "platform-shell", "environment": "staging", "managed-by": "github-actions", "purpose": "metric-coverage"},
-    "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-policy.json",
-    "trust_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-metric-coverage-trust.json",
+    "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-policy.json",
+    "trust_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-metric-coverage-trust.json",
     "role_policy_deployment_status": "deployed-and-live-inspected",
     "allowed_aws_actions": ["cloudwatch:GetMetricData", "cloudwatch:ListMetrics", "sns:Publish"],
     "allowed_alert_topic_arn": "arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms",

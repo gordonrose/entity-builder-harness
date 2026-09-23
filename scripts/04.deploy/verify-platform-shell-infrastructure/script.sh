@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 21
+#   version: 22
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -233,7 +233,7 @@ foundation = load(os.environ["RENDERED_FOUNDATION"])
 service = load("infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml")
 target_profile = load("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
 github_workflow = Path(".github/workflows/deploy-platform-shell-staging.yml").read_text(encoding="utf-8")
-with Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json").open(encoding="utf-8") as handle:
+with Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-deploy-policy.json").open(encoding="utf-8") as handle:
     github_deployment_policy = json.load(handle)
 failures = []
 
@@ -939,7 +939,7 @@ expected_image_publication = {
     "approval": "github-environment-manual",
     "role_name": "github-platform-shell-staging-deploy",
     "role_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
-    "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json",
+    "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-deploy-policy.json",
     "role_policy_deployment_status": "deployed-and-live-inspected",
 }
 if not isinstance(image_publication, dict):

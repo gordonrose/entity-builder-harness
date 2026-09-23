@@ -76,6 +76,10 @@ go
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The target-specific cost-control configuration evidence is retained in the staging profile, readiness record, and deployment closure plans; it introduces no reusable platform or product knowledge domain.
 
+
+- Decision: Group target-owned GitHub OIDC IAM source beneath its explicit identity boundary
+  Rationale: The GitHub trust and permission files have a separate account-level lifecycle from ECS task roles owned by the Foundation stack. The `iam/github-oidc` path makes that distinction visible without changing a permission, role, workflow, or AWS resource.
+
 ## Context Hygiene
 
 
@@ -90,6 +94,10 @@ go
 
 - Summary: Retain only safe cost-control configuration facts: active `service` tag, 25 USD monthly tag scope, four reviewed notification types and thresholds, and SNS subscriber type.
   Durable evidence: Do not retain billing amounts, subscriber addresses, email content, raw provider payloads, failed change-set identifiers, or CloudFormation parameters.
+
+
+- Summary: Retain the source-only scanability refactor: GitHub OIDC IAM documents moved under `iam/github-oidc`, with all active target and verifier references updated.
+  Durable evidence: No AWS identity values, policy changes, role inspection output, or cloud mutation evidence is retained because this refactor does not change live AWS state.
 
 ## Activity Log
 
@@ -232,6 +240,31 @@ Summary: Record the active service cost tag, verified tag-scoped budget notifica
 
 ADR impact: No ADR required; this corrects target-specific staging evidence and does not change platform architecture or budget policy.
 
+
+### 2026-09-23T20:11:54Z - Main refresh
+
+Classifier: `clean`
+
+Incoming main: one commit behind; no changed-path overlap.
+
+Preflight: `agentic/preflight/chat-2026-09-23-18-13-go-cb1493473d99/20260923201154` completed with `clean-merge`.
+
+Applied commit: `8e301c639322c80f18698fb27bb3b27f6d241425`; temporary worktree and preflight branch removed; stash used: no.
+
+
+### 2026-09-23T20:15:00Z - Decision
+
+Decision: Group target-owned GitHub OIDC IAM source beneath its explicit identity boundary
+
+Rationale: The GitHub trust and permission files have a separate account-level lifecycle from ECS task roles owned by the Foundation stack. The `iam/github-oidc` path makes that distinction visible without changing a permission, role, workflow, or AWS resource.
+
+
+### 2026-09-23T20:15:00Z - Context hygiene
+
+Summary: Retain the source-only scanability refactor: GitHub OIDC IAM documents moved under `iam/github-oidc`, with all active target and verifier references updated.
+
+Durable evidence: No AWS identity values, policy changes, role inspection output, or cloud mutation evidence is retained because this refactor does not change live AWS state.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -263,12 +296,13 @@ ADR impact: No ADR required; this corrects target-specific staging evidence and 
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
+- 2026-09-23: no conflicts; second clean rehearsed refresh applied without stash before the IAM scanability refactor.
 
 ## ADR Disposition
 
 ADR needed: no
 ADR path:
-Reason: This records target-specific staging proof evidence and corrects its operational interpretation; it does not change platform architecture, budget policy, or persistence semantics.
+Reason: This records target-specific staging proof evidence and a source-only scanability refactor; it does not change platform architecture, live AWS permissions, budget policy, or persistence semantics.
 
 ## Session Metrics
 
