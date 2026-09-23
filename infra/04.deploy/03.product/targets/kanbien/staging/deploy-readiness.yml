@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 37
+#   version: 38
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -646,7 +646,19 @@ operations:
   cost_allocation:
     resource_tag_key: service
     resource_tag_value: platform-shell
-    activation_status: source-defined-deployment-pending-account-billing-activation
+    activation_status: deployed-tag-active-budget-alert-configuration-proven-waiting-for-billing-data
+    live_configuration_proof:
+      observed_on_utc: "2026-09-23"
+      account_cost_tag_status: active
+      budget_scope: user:service$platform-shell
+      budget_limit: 25-USD-monthly
+      notification_rules:
+        - actual-50-percent
+        - actual-80-percent
+        - actual-100-percent
+        - forecasted-100-percent
+      subscriber_transport: sns-only
+      evidence_retention: safe-configuration-facts-only-no-billing-amounts-subscriber-addresses-or-provider-payloads
     source_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
   rollback_target: previous-ecs-task-definition-primary-previous-image-digest-fallback
   rollback_authority: Gordon Rose
@@ -753,5 +765,5 @@ blockers:
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation
-    reason: "Source defines a tag-scoped $25 monthly budget and existing SNS topic destination, but the foundation update has not deployed it and the account has not activated the user-defined `service` cost-allocation tag. Existing account-wide billing figures are not evidence for this target-scoped budget."
-    resolution: "Deploy the reviewed foundation update, activate only the `user:service` tag in Billing and Cost Management, wait for billing data, inspect the tag-scoped budget and reviewed alert thresholds, then record only safe identifiers and status without billing data or subscriber details."
+    reason: "The `service` cost-allocation tag is active and the live tag-scoped $25 monthly budget has the reviewed actual 50/80/100% and forecast 100% SNS notifications. The only remaining proof is the time-dependent arrival of tagged billing data; existing account-wide billing figures are not evidence for this target-scoped budget."
+    resolution: "Wait for tagged billing data, then inspect the declared target-scoped budget attribution and record only safe status and identifiers. Do not retain billing amounts, subscriber details, or raw provider responses."

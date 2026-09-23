@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 14
+version: 15
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -230,9 +230,12 @@ the target remains `insufficient-confidence` until it has at least 100 eligible
 observations in that actual rolling window. A dashboard or healthy-looking
 single query never replaces this condition.
 
-Activate the existing `service=platform-shell` cost-allocation tag in Billing,
-allow data to appear, configure the existing $25 monthly target budget and
-forecast thresholds, and prove the alert path without committing billing data.
+The existing `service=platform-shell` cost-allocation tag is active. On
+2026-09-23 the 25 USD monthly target budget was confirmed to retain the
+reviewed actual 50/80/100% and forecast 100% SNS notification rules. The
+Foundation change-set review was a no-op, confirming source and deployed
+configuration convergence. Allow tagged billing data to appear before proving
+charged-cost attribution or alert exercise, without committing billing data.
 
 ## Evidence and closure record
 

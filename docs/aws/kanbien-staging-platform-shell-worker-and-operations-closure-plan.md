@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
-version: 6
+version: 7
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -130,6 +130,26 @@ store, business side-effect safety, or a worker customer SLO. The retained
 evidence contains only the date, verdicts, bounded count and duration, task
 revision, and dormant post-proof state; it contains no queue addresses,
 message data, receipts, raw queries, or provider payloads.
+
+## Recorded cost-control configuration
+
+On 2026-09-23, the account's user-defined `service` cost-allocation tag was
+confirmed active. The staging budget was confirmed as a 25 USD monthly budget
+scoped to `user:service$platform-shell`. Its dedicated notification inventory
+contained exactly the reviewed actual 50%, 80%, and 100% rules plus the
+forecast 100% rule; each had an SNS subscriber. A Foundation change-set review
+reported no changes, confirming the deployed stack already matched the
+reviewed source.
+
+The generic budget summary API did not embed the notification list, so the
+dedicated notification inventory was used rather than treating that empty
+summary field as a missing-alert drift. This evidence retains only configuration
+facts. It does not retain billing amounts, subscriber addresses, email content,
+or raw AWS responses.
+
+Tagged billing data has not yet had time to appear. Until it does, the target
+cannot claim charged-cost attribution or an exercised budget-alert path; that
+is a time-based proof gap, not an infrastructure-deployment gap.
 
 ## Rollback and stop conditions
 
