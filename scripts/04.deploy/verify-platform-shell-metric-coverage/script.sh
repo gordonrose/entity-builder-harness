@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-metric-coverage
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -170,9 +170,16 @@ expected_worker_coverage = {
     "arrival_grace_seconds": "300",
     "verdicts": ["observed", "missing", "query-failed"],
     "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",
+    "live_proof": {
+        "executed_on_utc": "2026-09-23",
+        "command": "npm run platform:shell:metric-coverage -- --coverage-target worker",
+        "result": "observed",
+        "worker_task_definition_revision": "1",
+        "retained_evidence": "safe-verdict-task-revision-and-bounded-count-duration-only-no-queue-message-or-provider-payload",
+    },
 }
 worker_coverage_status = worker_coverage.pop("status", None)
-require(worker_coverage_status in {"source-defined-deployment-pending", "deployed-and-query-proven"}, "worker metric observation must retain an approved evidence state")
+require(worker_coverage_status == "deployed-and-query-proven", "worker metric observation must retain its observed deployed evidence state")
 require(worker_coverage == expected_worker_coverage, "target profile must retain the exact reviewed worker metric-observation contract")
 require(nested(target_profile, "observability", "slo_query") == {
     "provider_documented_max_request_range_days": "7",

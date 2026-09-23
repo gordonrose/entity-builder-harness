@@ -27,7 +27,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate or run the guarded Kanbien staging worker-consumer proof.")
     parser.add_argument("--validate", action="store_true", help="Validate the source policy only; do not contact AWS.")
     parser.add_argument("--execute", action="store_true", help="Run the reviewed bounded worker proof after current approval.")
-    parser.add_argument("--approve-live-worker-smoke", action="store_true", help="Acknowledge that --execute sends one harmless queue message and briefly starts one worker task.")
+    parser.add_argument("--approve-live-worker-smoke", action="store_true", help="Acknowledge that --execute sends two harmless queue messages and briefly starts one worker task.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE, help="Path to the Kanbien staging target profile.")
     parser.add_argument("--aws-cli", default="aws", help="AWS CLI executable for fixed target operations.")
     parser.add_argument("--aws-credential-source", choices=("target-profile", "environment"), default="target-profile", help="Use the declared AWS profile or explicitly configured environment credentials.")
@@ -101,7 +101,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     queue = mapping(worker.get("queue"), "runtime.worker.queue")
 
     expected = {
-        "status": "source-defined-deployment-pending",
+        "status": "deployed-and-consumer-and-metric-proven",
         "command": "npm run platform:shell:worker-smoke",
         "execution_guard": "--execute-and-approve-live-worker-smoke",
         "proof": "two-side-effect-free-direct-sqs-platform-smoke-rebuild-messages-through-the-dormant-worker-service-for-fresh-counter-evidence",
@@ -119,7 +119,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     }:
         raise WorkerSmokeError("the target profile worker proof preconditions are no longer zero-state only")
     if action.get("worker_desired_count") != 1 or action.get("message_type") != "platform-smoke.rebuild" or action.get("payload") != '{"rebuild":true}' or action.get("message_count") != 2 or action.get("inter_message_wait_seconds") != 75 or action.get("maximum_wait_seconds") != 360 or action.get("metric_export_settlement_wait_seconds") != 75:
-        raise WorkerSmokeError("the target profile worker proof action is no longer the reviewed harmless one-message shape")
+        raise WorkerSmokeError("the target profile worker proof action is no longer the reviewed harmless two-message shape")
     if success != {
         "worker_started": True,
         "source_queue_visible_messages": 0,
@@ -271,7 +271,7 @@ def emit(result: str, **fields: int | str) -> None:
 
 
 def execute(policy: dict[str, Any], aws_cli: str, credential_source: str, timeout_seconds: int) -> int:
-    """Run the one-message proof and always return the worker service to its dormant state."""
+    """Run the two-message proof and always return the worker service to its dormant state."""
 
     started = time.monotonic()
     source_url = ""

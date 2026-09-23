@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
-version: 4
+version: 5
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -102,6 +102,21 @@ window; it must not be promoted into a pass by retrying or resetting state. The
 proof begins at a fresh fixed-window boundary and reports a window rollover as
 inconclusive, so sequential requests cannot be split across two otherwise
 valid counter windows.
+
+## Recorded worker proof
+
+On 2026-09-23, the separately approved bounded worker command completed with
+two fixed side-effect-free deliveries and returned `passed` in 278716 ms on
+worker task definition revision `1`. The service was returned to desired and
+running count zero, with the source and dead-letter queues empty. The separate,
+fixed worker metric observation then returned `observed`.
+
+This establishes the dormant worker consumer and delivery-metric boundary. It
+does not establish a producer transaction, outbox relay, durable idempotency
+store, business side-effect safety, or a worker customer SLO. The retained
+evidence contains only the date, verdicts, bounded count and duration, task
+revision, and dormant post-proof state; it contains no queue addresses,
+message data, receipts, raw queries, or provider payloads.
 
 ## Rollback and stop conditions
 

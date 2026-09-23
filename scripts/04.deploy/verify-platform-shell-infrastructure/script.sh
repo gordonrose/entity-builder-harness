@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 19
+#   version: 20
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -756,8 +756,16 @@ if not isinstance(worker_metric_coverage, dict):
     fail("target profile must declare the reviewed worker metric-observation policy")
     worker_metric_coverage = {}
 worker_metric_status = worker_metric_coverage.get("status")
-if worker_metric_status not in {"source-defined-deployment-pending", "deployed-and-query-proven"}:
-    fail("target profile worker metric-observation policy must retain an approved evidence state")
+if worker_metric_status != "deployed-and-query-proven":
+    fail("target profile worker metric-observation policy must retain its observed deployed evidence state")
+if worker_metric_coverage.get("live_proof") != {
+    "executed_on_utc": "2026-09-23",
+    "command": "npm run platform:shell:metric-coverage -- --coverage-target worker",
+    "result": "observed",
+    "worker_task_definition_revision": "1",
+    "retained_evidence": "safe-verdict-task-revision-and-bounded-count-duration-only-no-queue-message-or-provider-payload",
+}:
+    fail("target profile worker metric-observation policy must retain its bounded live proof")
 metric_series_by_id = {}
 source_names = set()
 instrument_names = set()
@@ -1062,7 +1070,7 @@ if readiness_closure != {
         },
     },
     "worker_consumer": {
-        "status": "source-defined-deployment-pending",
+        "status": "deployed-and-consumer-and-metric-proven",
         "command": "npm run platform:shell:worker-smoke",
         "execution_guard": "--execute-and-approve-live-worker-smoke",
         "proof": "two-side-effect-free-direct-sqs-platform-smoke-rebuild-messages-through-the-dormant-worker-service-for-fresh-counter-evidence",
@@ -1097,6 +1105,22 @@ if readiness_closure != {
     },
 }:
     fail("target profile must retain the governed remaining public-boundary and operational closure plan")
+
+worker_consumer_live_evidence = operations.get("worker_consumer_live_evidence") if isinstance(operations, dict) else {}
+if worker_consumer_live_evidence != {
+    "executed_on_utc": "2026-09-23",
+    "command": "npm run platform:shell:worker-smoke -- --execute --approve-live-worker-smoke",
+    "result": "passed",
+    "worker_task_definition_revision": "1",
+    "duration_ms": 278716,
+    "message_count": 2,
+    "inter_message_wait_seconds": 75,
+    "metric_export_settlement_wait_seconds": 75,
+    "post_proof_state": "worker-desired-and-running-zero-source-and-dead-letter-queues-empty",
+    "metric_observation": "observed-by-fixed-worker-coverage-target",
+    "retained_evidence": "safe-status-count-duration-task-revision-and-verdict-only-no-message-body-id-receipt-queue-url-or-provider-payload",
+}:
+    fail("target profile must retain the safe, bounded worker consumer and metric-observation evidence")
 
 alarm_definitions = observability.get("alarms")
 expected_alarm_ids = {

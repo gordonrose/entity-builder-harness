@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 12
+version: 13
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -268,6 +268,12 @@ worker telemetry delivery;
 it does not prove an application state transaction, an outbox relay, or a
 durable business idempotency store. The full execution boundary is in the
 [worker and operations closure plan](kanbien-staging-platform-shell-worker-and-operations-closure-plan.md).
+
+The controlled worker sequence has now completed on 2026-09-23. Two harmless
+deliveries 75 seconds apart returned the worker to its dormant zero-task state,
+and the independently fixed worker observation returned `observed`. This is
+worker delivery evidence only: it does not extend the HTTP SLO population or
+replace the separate 28-day evidence clock.
 
 ## Deferred after v1
 

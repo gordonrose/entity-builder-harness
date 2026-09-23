@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.verify-platform-shell-infrastructure.readme
-version: 8
+version: 9
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -38,10 +38,9 @@ It verifies that the target declares the governed alert-policy standard,
 points to the link-only target catalogue, uses the declared severity
 vocabulary, and keeps every CloudFormation alarm aligned with its canonical
 target-profile definition. Server metric series retain their live delivery
-status; worker series remain explicitly `source-defined-deployment-pending`
-until their own target task is deployed and observed. A static check does not
-query AWS; it prevents source metadata from claiming a vague or unbounded
-delivery state.
+status; worker series retain a separately bounded consumer and fixed-query
+observation record. A static check does not query AWS; it prevents source
+metadata from claiming a vague or unbounded delivery state.
 
 It also invokes the dedicated synthetic-scheduler policy check. That check
 binds the one redacted controlled-token smoke command to an isolated GitHub
@@ -56,9 +55,10 @@ entries make the remaining work visible; they do not claim it has been run.
 
 The same gate validates the guarded worker-consumer rehearsal source. That
 rehearsal requires a separately explicit live-operation flag, insists that the
-worker and both queues are empty before it starts, sends one harmless
-platform-smoke job, and returns the worker service to desired count zero. It is
-not permission to activate a business queue producer or to treat direct SQS
+worker and both queues are empty before it starts, sends two harmless
+platform-smoke jobs 75 seconds apart, and returns the worker service to desired
+count zero. It establishes the fresh-counter metric observation too; it is not
+permission to activate a business queue producer or to treat direct SQS
 delivery as a durable outbox.
 
 Run it with:
