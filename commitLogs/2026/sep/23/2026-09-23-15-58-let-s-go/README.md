@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-23T14:58:05Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T15:41:28Z
-latest_commit_sha: b0a46ba
-chat_duration: 2603s (00:00:43:23)
+latest_commit_at_utc: 2026-09-23T16:29:14Z
+latest_commit_sha: ad9c59a
+chat_duration: 5469s (00:01:31:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -155,6 +155,17 @@ ADR needed: no
 
 Reason: This is a target-specific evidence-command extension and a correction to verifier selection, not a durable platform architecture decision.
 
+
+### 2026-09-23T16:29:14Z - Commit recorded
+
+Commit: `ad9c59a`
+
+Message: feat(deploy): observe worker delivery telemetry
+
+Summary: Add a fixed worker-only metric observation selector, prevent worker delivery from entering server SLO evaluation, document the boundary, and validate repository-wide commit gates.
+
+ADR impact: No ADR required; target-specific delivery evidence is retained in the staging target profile and worker operations plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -169,6 +180,13 @@ Reason: This is a target-specific evidence-command extension and a correction to
   Summary: Align the bounded rate-limit proof with DynamoDB fixed windows, record rollover as inconclusive, refresh the required recognition index, and validate the full commit gate.
   ADR impact: No ADR required; target-specific operational proof policy is documented in the target profile and closure plan.
 
+
+- Commit: `ad9c59a`
+  Time UTC: 2026-09-23T16:29:14Z
+  Message: feat(deploy): observe worker delivery telemetry
+  Summary: Add a fixed worker-only metric observation selector, prevent worker delivery from entering server SLO evaluation, document the boundary, and validate repository-wide commit gates.
+  ADR impact: No ADR required; target-specific delivery evidence is retained in the staging target profile and worker operations plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -182,9 +200,9 @@ Reason: This is a target-specific evidence-command extension and a correction to
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T14:58:05Z
-Latest commit at UTC: 2026-09-23T15:41:28Z
-Latest commit SHA: b0a46ba
-Chat duration: 2603s (00:00:43:23)
+Latest commit at UTC: 2026-09-23T16:29:14Z
+Latest commit SHA: ad9c59a
+Chat duration: 5469s (00:01:31:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
