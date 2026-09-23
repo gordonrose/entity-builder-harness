@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T18:33:01Z
-latest_commit_sha: 905e035
-chat_duration: 4774s (00:01:19:34)
+latest_commit_at_utc: 2026-09-23T20:15:20Z
+latest_commit_sha: 9cf9c20
+chat_duration: 10913s (00:03:01:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -265,6 +265,17 @@ Summary: Retain the source-only scanability refactor: GitHub OIDC IAM documents 
 
 Durable evidence: No AWS identity values, policy changes, role inspection output, or cloud mutation evidence is retained because this refactor does not change live AWS state.
 
+
+### 2026-09-23T20:15:20Z - Commit recorded
+
+Commit: `9cf9c20`
+
+Message: refactor(deploy): group github oidc iam source
+
+Summary: Group GitHub OIDC IAM source under a semantically explicit target folder, add responsibility READMEs, and update all active profile and verifier paths without changing live AWS state.
+
+ADR impact: No ADR required; this is a behaviour-preserving source-structure refactor.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -293,6 +304,13 @@ Durable evidence: No AWS identity values, policy changes, role inspection output
   Summary: Record the active service cost tag, verified tag-scoped budget notifications, no-op Foundation change-set review, and the remaining tagged-billing-data proof boundary.
   ADR impact: No ADR required; this corrects target-specific staging evidence and does not change platform architecture or budget policy.
 
+
+- Commit: `9cf9c20`
+  Time UTC: 2026-09-23T20:15:20Z
+  Message: refactor(deploy): group github oidc iam source
+  Summary: Group GitHub OIDC IAM source under a semantically explicit target folder, add responsibility READMEs, and update all active profile and verifier paths without changing live AWS state.
+  ADR impact: No ADR required; this is a behaviour-preserving source-structure refactor.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -307,9 +325,9 @@ Reason: This records target-specific staging proof evidence and a source-only sc
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-23T18:33:01Z
-Latest commit SHA: 905e035
-Chat duration: 4774s (00:01:19:34)
+Latest commit at UTC: 2026-09-23T20:15:20Z
+Latest commit SHA: 9cf9c20
+Chat duration: 10913s (00:03:01:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
