@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 40
+#   version: 41
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -1109,8 +1109,20 @@ operations:
       resource_tag_key: service
       resource_tag_value: platform-shell
       billing_report_dimension: user:service
-      activation_status: source-defined-deployment-pending-account-billing-activation
-      budget_proof_requirement: Tag-scoped budget and alert configuration are valid only after the account activates the user-defined service cost-allocation tag and billing data becomes available.
+      activation_status: deployed-tag-active-budget-alert-configuration-proven-waiting-for-billing-data
+      live_configuration_proof:
+        observed_on_utc: "2026-09-23"
+        account_cost_tag_status: active
+        budget_scope: user:service$platform-shell
+        budget_limit: 25-USD-monthly
+        notification_rules:
+          - actual-50-percent
+          - actual-80-percent
+          - actual-100-percent
+          - forecasted-100-percent
+        subscriber_transport: sns-only
+        evidence_retention: safe-configuration-facts-only-no-billing-amounts-subscriber-addresses-or-provider-payloads
+      budget_proof_requirement: Configuration proof requires the active user-defined service cost-allocation tag and the reviewed tag-scoped budget alerts. Charged-cost attribution and alert-effectiveness proof additionally require tagged billing data to become available.
   rollback:
     authority: Gordon Rose
     assisted_by: LLM

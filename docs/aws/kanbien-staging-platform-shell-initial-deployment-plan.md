@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 18
+version: 19
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -138,15 +138,17 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
 5. Prove redacted log delivery, explicitly marked alarm receipt, and a
    reversible task-definition rollback rehearsal. A successful deployment or
    an alarm merely showing `OK` is not either proof.
-6. New resources are consistently tagged `service=platform-shell`, but the
-   account has not activated that cost-allocation tag or proven the intended
-   tag-scoped monthly budget. This account-level Billing action cannot be
-   inferred from an infrastructure template.
+6. New resources are consistently tagged `service=platform-shell`. The account
+   has activated that cost-allocation tag, and the tag-scoped 25 USD monthly
+   budget plus its reviewed actual 50/80/100% and forecast 100% SNS rules are
+   live. The remaining cost proof is time-dependent tagged billing data and an
+   exercised alert path; neither can be inferred from an infrastructure
+   template or account-wide billing figures.
 7. The source-defined worker extension now includes a provider-neutral worker
    process, SQS consumer adapter, queue/DLQ, dedicated least-privilege task,
-   and a desired-zero ECS service. It is not yet deployed or live-proven and
-   is deliberately not an outbox producer or durable business-idempotency
-   implementation. Its separate change-set, consumer-rehearsal, and rollback
+   and a desired-zero ECS service. It is deployed and bounded live consumer
+   and metric proof has completed. It remains deliberately separate from an
+   outbox producer or durable business-idempotency implementation. Its exact
    boundary is in the [worker and operations closure plan](kanbien-staging-platform-shell-worker-and-operations-closure-plan.md).
 
 ## Temporary synthetic scheduler activation plan
@@ -282,12 +284,16 @@ verification work above determines when its readiness record can become ready.
 12. Completed on 2026-09-22: reviewed and applied the service change set. It
     created the three service-owned ECS alarms and deployed task revision 2;
     all five platform alarms were subsequently `OK`.
-13. Remaining: prove wrong-permission `403`, `429` from the shared limiter,
-    WAF/routing evidence, end-to-end alarm delivery, and a rollback exercise.
-14. After tagged foundation resources exist, activate the `service` cost
-   allocation tag in the account Billing console, wait for billing visibility,
-   configure the target-scoped monthly/forecast budget alerts, and record the
-   proof. Do not treat a resource tag as a functioning budget by itself.
+13. Completed through the bounded 2026-09-22/23 rehearsals: wrong-permission
+    `403`, shared-limiter `429`, WAF/routing evidence, missing-telemetry alert
+    receipt, and reversible exporter-loss rollback. These do not replace the
+    remaining 28-day protected-capability SLO clock or its first scheduled-run
+    evidence.
+14. Completed configuration proof on 2026-09-23: the `service` cost-allocation
+   tag is active and the target-scoped monthly/forecast budget rules are live.
+   Wait for tagged billing visibility before claiming cost attribution or an
+   exercised budget-alert path. Do not treat account-wide figures as evidence
+   for this target-scoped budget.
 15. Completed on 2026-09-22: commit and merge the reviewed observability source
     to `origin/main`, then run the protected GitHub workflow to produce a
     scan-accepted immutable image digest containing that exact target

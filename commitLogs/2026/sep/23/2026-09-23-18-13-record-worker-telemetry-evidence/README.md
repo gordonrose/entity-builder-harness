@@ -49,6 +49,10 @@ go
 - Raised: The console did not return a terminal aggregate result for a repeat rate-limit probe
   Resolution: Did not use the incomplete replay as evidence. Retained only the earlier recorded safe pass of 120 allowed liveness requests followed by the first 429 on request 121; the independent ingress proof was freshly observed as passed.
 
+
+- Raised: The budget summary API reported no embedded notification list although source defined four budget alerts
+  Resolution: The dedicated notification inventory confirmed the live actual 50/80/100% and forecast 100% rules, each with an SNS subscriber. The reviewed Foundation change set had no changes, so no stack update was executed. The earlier apparent drift was an API-shape misunderstanding, not a missing-alert configuration.
+
 ## Decisions Made
 
 
@@ -64,6 +68,14 @@ go
 - Decision: Record public boundary evidence separately from protected HTTP SLO evidence
   Rationale: The rate-limit and ingress proofs establish control enforcement at liveness ingress only. They cannot add observations to the protected smoke-read SLO population or shorten its 28-day evidence clock.
 
+
+- Decision: Separate active budget configuration proof from time-dependent billed-cost attribution
+  Rationale: The active cost tag, declared tag-scoped budget, reviewed notification inventory, and SNS-only subscriber type establish configuration convergence. Tagged billing data and an exercised cost alert remain time-based evidence requirements; account-wide billing figures are not a substitute.
+
+
+- Decision: Record RAG knowledge disposition: covered
+  Rationale: The target-specific cost-control configuration evidence is retained in the staging profile, readiness record, and deployment closure plans; it introduces no reusable platform or product knowledge domain.
+
 ## Context Hygiene
 
 
@@ -74,6 +86,10 @@ go
 
 - Summary: Keep only the safe public-boundary facts: the fixed-window rate proof reached its first 429 after 120 allowed requests, and the WAF/routing/ingress proof returned 200 at listener priority 20.
   Durable evidence: Durable evidence is constrained in the staging target profile, readiness manifest, operations plan, and static validator. Do not retain public address data, HTTP bodies or headers, WAF payloads, or raw AWS responses.
+
+
+- Summary: Retain only safe cost-control configuration facts: active `service` tag, 25 USD monthly tag scope, four reviewed notification types and thresholds, and SNS subscriber type.
+  Durable evidence: Do not retain billing amounts, subscriber addresses, email content, raw provider payloads, failed change-set identifiers, or CloudFormation parameters.
 
 ## Activity Log
 
@@ -156,6 +172,17 @@ ADR needed: no
 Reason: This records target-specific staging public-boundary evidence and strengthens its static validation; it does not change platform architecture, rate-limit semantics, or persistence policy.
 
 
+### 2026-09-23T18:23:37Z - Main refresh
+
+Classifier: `clean`
+
+Incoming main: one commit behind; no changed-path overlap.
+
+Preflight: `agentic/preflight/chat-2026-09-23-18-13-go-e394f0111f36/20260923182337` completed with `clean-merge`.
+
+Applied commit: `0682a753970d99ff0f27ac6936f1ec8f17203c88`; temporary worktree and preflight branch removed; stash used: no.
+
+
 ### 2026-09-23T17:25:55Z - Commit recorded
 
 Commit: `99288b3`
@@ -165,6 +192,34 @@ Message: docs(deploy): record public boundary proofs
 Summary: Record aggregate-only rate-limit and ingress/WAF proof evidence, remove the closed readiness blocker, and preserve the protected HTTP SLO boundary.
 
 ADR impact: No ADR required; target-specific staging evidence and static-validation updates do not change platform architecture or rate-limit semantics.
+
+
+### 2026-09-23T18:34:00Z - Issue
+
+Raised: The budget summary API reported no embedded notification list although source defined four budget alerts
+
+Resolution: The dedicated notification inventory confirmed the live actual 50/80/100% and forecast 100% rules, each with an SNS subscriber. The reviewed Foundation change set had no changes, so no stack update was executed. The earlier apparent drift was an API-shape misunderstanding, not a missing-alert configuration.
+
+
+### 2026-09-23T18:34:00Z - Decision
+
+Decision: Separate active budget configuration proof from time-dependent billed-cost attribution
+
+Rationale: The active cost tag, declared tag-scoped budget, reviewed notification inventory, and SNS-only subscriber type establish configuration convergence. Tagged billing data and an exercised cost alert remain time-based evidence requirements; account-wide billing figures are not a substitute.
+
+
+### 2026-09-23T18:34:00Z - Context hygiene
+
+Summary: Retain only safe cost-control configuration facts: active `service` tag, 25 USD monthly tag scope, four reviewed notification types and thresholds, and SNS subscriber type.
+
+Durable evidence: Do not retain billing amounts, subscriber addresses, email content, raw provider payloads, failed change-set identifiers, or CloudFormation parameters.
+
+
+### 2026-09-23T18:30:51Z - Decision
+
+Decision: Record RAG knowledge disposition: covered
+
+Rationale: The target-specific cost-control configuration evidence is retained in the staging profile, readiness record, and deployment closure plans; it introduces no reusable platform or product knowledge domain.
 
 ## Sub-Agent Activity
 
@@ -189,13 +244,13 @@ ADR impact: No ADR required; target-specific staging evidence and static-validat
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+- 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
 
 ## ADR Disposition
 
 ADR needed: no
 ADR path:
-Reason: This records target-specific staging public-boundary evidence and strengthens its static validation; it does not change platform architecture, rate-limit semantics, or persistence policy.
+Reason: This records target-specific staging proof evidence and corrects its operational interpretation; it does not change platform architecture, budget policy, or persistence semantics.
 
 ## Session Metrics
 
@@ -214,10 +269,12 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: The target-specific worker consumer and metric evidence is retained in the staging deployment profile, readiness record, and operations closure plan; it introduces no new platform or product knowledge domain.
+Reason: The target-specific cost-control configuration evidence is retained in the staging profile, readiness record, and deployment closure plans; it introduces no reusable platform or product knowledge domain.
 Evidence:
 - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
 - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+- docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+- docs/aws/kanbien-staging-platform-shell-observability-v1-closure-programme.md
 - docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
 Corpus gaps:
 - None.
