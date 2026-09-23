@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 16
+#   version: 17
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -290,7 +290,7 @@ else:
             "value_format": "opaque-raw-string",
         }:
             fail("target profile must retain the bounded negative authorization secret reference")
-    if status == "deployed-pending-403-proof":
+    if status in {"deployed-pending-403-proof", "deployed-and-403-proven"}:
         evidence = negative_test_client.get("deployment_evidence")
         expected_evidence = {
             "source_commit": "37a3151d4c405481c603537b56473ea75fd51a12",
@@ -304,6 +304,18 @@ else:
         }
         if evidence != expected_evidence:
             fail("target profile must retain the reviewed post-deployment negative authorization evidence")
+    if status == "deployed-and-403-proven":
+        expected_proof = {
+            "executed_at_utc": "2026-09-23T10:59:16Z",
+            "command": "npm run platform:shell:negative-authz-smoke -- --execute",
+            "result": "passed",
+            "http_status": 403,
+            "duration_ms": 220,
+            "output_policy": "status-and-safe-latency-only-no-token-secret-or-response-body",
+            "post_proof_health": "stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms",
+        }
+        if negative_test_client.get("authorization_proof") != expected_proof:
+            fail("target profile must retain the safe successful negative authorization proof")
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
@@ -862,7 +874,7 @@ operations = target_profile.get("operations", {})
 readiness_closure = operations.get("readiness_closure", {}) if isinstance(operations, dict) else {}
 if readiness_closure != {
     "authorization_403": {
-        "status": "deployed-pending-403-proof",
+        "status": "deployed-and-403-proven",
         "prerequisite": "separate-valid-machine-client-without-platform-smoke-read-permission",
         "authentication_boundary": "primary-client-plus-exact-additional-client-id-allowlist-no-wildcards",
         "target_configuration": "PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array",

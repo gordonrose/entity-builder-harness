@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 32
+#   version: 33
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -291,7 +291,7 @@ auth:
     grant_type: client_credentials
     client_secret_storage: aws-secrets-manager
   negative_test_client:
-    status: deployed-pending-403-proof
+    status: deployed-and-403-proven
     name: platform-shell-staging-negative-authz-client
     client_id: 15po9eg4hgknb2pi2d1bdfhdds
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-YnblEn
@@ -319,6 +319,14 @@ auth:
       service_rollout: COMPLETED
       target_health: healthy
       alarm_states: five-ok
+    authorization_proof:
+      executed_at_utc: "2026-09-23T10:59:16Z"
+      command: npm run platform:shell:negative-authz-smoke -- --execute
+      result: passed
+      http_status: 403
+      duration_ms: 220
+      output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
+      post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   resource_server:
     identifier: platform-shell
     scopes:
@@ -959,7 +967,7 @@ operations:
     runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
   readiness_closure:
     authorization_403:
-      status: deployed-pending-403-proof
+      status: deployed-and-403-proven
       prerequisite: separate-valid-machine-client-without-platform-smoke-read-permission
       authentication_boundary: primary-client-plus-exact-additional-client-id-allowlist-no-wildcards
       target_configuration: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array
