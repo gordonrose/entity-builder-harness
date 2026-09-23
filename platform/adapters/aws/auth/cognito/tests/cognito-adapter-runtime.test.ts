@@ -29,6 +29,7 @@ async function main(): Promise<void> {
     PLATFORM_AUTH_COGNITO_REGION: fixture.region,
     PLATFORM_AUTH_COGNITO_USER_POOL_ID: fixture.userPoolId,
     PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: fixture.appClientId,
+    PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: JSON.stringify([fixture.negativeTestClientId]),
     PLATFORM_AUTHZ_GROUP_PERMISSIONS: JSON.stringify({ "kanbien-admins": ["adapter-smoke.smoke:read"] }),
     PLATFORM_AUTHZ_SCOPE_PERMISSIONS: JSON.stringify({ "platform-smoke/read": ["adapter-smoke.smoke:read"] }),
     PLATFORM_AUTHZ_CLAIM_PERMISSIONS: JSON.stringify([{ claim: "custom:role", equals: "operator", permissions: ["adapter-smoke.smoke:read"] }]),
@@ -94,18 +95,39 @@ async function main(): Promise<void> {
   });
   equal(allowed.status, 200);
   deepEqual(allowed.body, { status: "ok" });
+  const validButUnauthorized = await shell.value.handle({
+    method: "GET",
+    path: "/adapter-protected",
+    headers: {
+      authorization: `Bearer ${fixture.token({
+        client_id: fixture.negativeTestClientId,
+        scope: "platform-smoke/negative-test",
+      })}`,
+    },
+  });
+  equal(validButUnauthorized.status, 403);
+  const untrustedClient = await shell.value.handle({
+    method: "GET",
+    path: "/adapter-protected",
+    headers: {
+      authorization: `Bearer ${fixture.token({ client_id: "untrusted-client" })}`,
+    },
+  });
+  equal(untrustedClient.status, 401);
 }
 
 function createCognitoFixture(): {
   readonly region: string;
   readonly userPoolId: string;
   readonly appClientId: string;
+  readonly negativeTestClientId: string;
   readonly publicJwk: PlatformJsonWebKey;
   token(extraClaims?: Readonly<Record<string, unknown>>): string;
 } {
   const region = "eu-west-1";
   const userPoolId = "eu-west-1_example";
   const appClientId = "app-client-123";
+  const negativeTestClientId = "negative-test-client-456";
   const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   const publicJwk = {
     ...publicKey.export({ format: "jwk" }),
@@ -118,6 +140,7 @@ function createCognitoFixture(): {
     region,
     userPoolId,
     appClientId,
+    negativeTestClientId,
     publicJwk,
     token(extraClaims = {}) {
       const header = { alg: "RS256", kid: "test-key", typ: "JWT" };

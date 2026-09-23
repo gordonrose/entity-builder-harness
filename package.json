@@ -31,6 +31,8 @@
     "platform:shell:image:smoke": "bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
     "platform:shell:controlled-smoke": "bash scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh",
     "platform:shell:controlled-smoke:check": "bash scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh",
+    "platform:shell:negative-authz-client:provision": "bash scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh",
+    "platform:shell:negative-authz-client:check": "bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh",
     "platform:shell:metric-coverage": "bash scripts/04.deploy/run-platform-shell-metric-coverage/script.sh",
     "platform:shell:metric-coverage:check": "bash scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh",
     "platform:shell:metric-coverage:policy-check": "bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh",

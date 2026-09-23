@@ -14,6 +14,8 @@ export interface CognitoAccessTokenVerifierOptions {
   readonly region: string;
   readonly userPoolId: string;
   readonly appClientId: string;
+  /** Additional exact Cognito client IDs accepted by this specific target, if any. */
+  readonly additionalAppClientIds?: readonly string[];
   readonly clock?: Clock;
   readonly clockSkewSeconds?: number;
   readonly fetchJwks?: PlatformJwksFetcher;
@@ -56,12 +58,13 @@ export const adapterMetadata = {
 export function createCognitoAccessTokenVerifier(
   options: CognitoAccessTokenVerifierOptions,
 ): PlatformJwtVerifier {
+  const allowedAppClientIds = [options.appClientId, ...(options.additionalAppClientIds ?? [])];
   return createJwksJwtVerifier({
     issuer: cognitoIssuer(options.region, options.userPoolId),
     jwksUri: cognitoJwksUri(options.region, options.userPoolId),
     requiredClaims: [
       { claim: "token_use", equals: "access" },
-      { claim: "client_id", equals: options.appClientId },
+      { claim: "client_id", oneOf: allowedAppClientIds },
     ],
     ...(options.clock === undefined ? {} : { clock: options.clock }),
     ...(options.clockSkewSeconds === undefined ? {} : { clockSkewSeconds: options.clockSkewSeconds }),
@@ -113,6 +116,7 @@ export function createCognitoJwtBearerAuthenticationHookFromEnv(
   const region = requiredEnv(env, "PLATFORM_AUTH_COGNITO_REGION");
   const userPoolId = requiredEnv(env, "PLATFORM_AUTH_COGNITO_USER_POOL_ID");
   const appClientId = requiredEnv(env, "PLATFORM_AUTH_COGNITO_APP_CLIENT_ID");
+  const additionalAppClientIds = optionalStringArrayFromJsonEnv(env, "PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS");
   const groups = permissionMapFromJsonEnv(env, "PLATFORM_AUTHZ_GROUP_PERMISSIONS");
   const scopes = permissionMapFromJsonEnv(env, "PLATFORM_AUTHZ_SCOPE_PERMISSIONS");
   const claims = claimPermissionMappingsFromJsonEnv(env, "PLATFORM_AUTHZ_CLAIM_PERMISSIONS");
@@ -125,6 +129,12 @@ export function createCognitoJwtBearerAuthenticationHookFromEnv(
   }
   if (!appClientId.ok) {
     return appClientId;
+  }
+  if (!additionalAppClientIds.ok) {
+    return additionalAppClientIds;
+  }
+  if (additionalAppClientIds.value.includes(appClientId.value)) {
+    return configurationError("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS", "Must not repeat PLATFORM_AUTH_COGNITO_APP_CLIENT_ID.");
   }
   if (!groups.ok) {
     return groups;
@@ -142,6 +152,7 @@ export function createCognitoJwtBearerAuthenticationHookFromEnv(
       region: region.value,
       userPoolId: userPoolId.value,
       appClientId: appClientId.value,
+      ...(additionalAppClientIds.value.length === 0 ? {} : { additionalAppClientIds: additionalAppClientIds.value }),
       authz: {
         groups: groups.value,
         scopes: scopes.value,
@@ -240,6 +251,29 @@ function claimPermissionMappingsFromJsonEnv(
   }
 
   return { ok: true, value: claims };
+}
+
+function optionalStringArrayFromJsonEnv(
+  env: Readonly<Record<string, string | undefined>>,
+  key: string,
+): Result<readonly string[], CognitoAdapterConfigurationError> {
+  const raw = env[key];
+  if (raw === undefined || raw.length === 0) {
+    return { ok: true, value: [] };
+  }
+
+  const parsed = parseJsonEnv(raw, key);
+  if (!parsed.ok) {
+    return parsed;
+  }
+  if (!Array.isArray(parsed.value) || !parsed.value.every((value) => typeof value === "string" && value.length > 0)) {
+    return configurationError(key, "Expected a JSON array of non-empty client ID strings.");
+  }
+  if (new Set(parsed.value).size !== parsed.value.length) {
+    return configurationError(key, "Client IDs must not contain duplicates.");
+  }
+
+  return { ok: true, value: parsed.value };
 }
 
 function parseJsonEnv(raw: string, key: string): Result<unknown, CognitoAdapterConfigurationError> {

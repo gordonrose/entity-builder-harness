@@ -11,10 +11,22 @@ export interface PlatformJwtVerificationOptions {
   readonly fetchJwks?: PlatformJwksFetcher;
 }
 
-export interface PlatformJwtClaimRequirement {
+export type PlatformJwtClaimRequirement = PlatformJwtExactClaimRequirement | PlatformJwtOneOfClaimRequirement;
+
+/** Require a JWT claim to match one exact configured scalar value. */
+export interface PlatformJwtExactClaimRequirement {
   readonly claim: string;
-  readonly equals: string | number | boolean;
+  readonly equals: PlatformJwtClaimScalar;
 }
+
+/** Require a JWT claim to match one of a finite, explicitly configured set of scalar values. */
+export interface PlatformJwtOneOfClaimRequirement {
+  readonly claim: string;
+  readonly oneOf: readonly PlatformJwtClaimScalar[];
+}
+
+/** The only JWT claim values that may be used as configured verification requirements. */
+export type PlatformJwtClaimScalar = string | number | boolean;
 
 export interface PlatformJwtVerifier {
   verify(token: string): Promise<Result<PlatformVerifiedJwt, PlatformSecurityError>>;
@@ -126,7 +138,7 @@ function validateJwtClaims(
   }
 
   for (const requiredClaim of options.requiredClaims ?? []) {
-    if (claims[requiredClaim.claim] !== requiredClaim.equals) {
+    if (!matchesRequiredClaim(claims[requiredClaim.claim], requiredClaim)) {
       return invalidToken(`JWT claim ${requiredClaim.claim} does not match the configured value.`);
     }
   }
@@ -152,6 +164,21 @@ function validateJwtClaims(
   }
 
   return { ok: true, value: undefined };
+}
+
+function matchesRequiredClaim(
+  actual: JsonValue | undefined,
+  requirement: PlatformJwtClaimRequirement,
+): boolean {
+  if (!isClaimScalar(actual)) {
+    return false;
+  }
+
+  if ("equals" in requirement) {
+    return actual === requirement.equals;
+  }
+
+  return requirement.oneOf.length > 0 && requirement.oneOf.some((expected) => actual === expected);
 }
 
 function decodeJwt(token: string): Result<{
@@ -210,6 +237,10 @@ function numberClaim(claims: PrincipalClaims, name: string): number | undefined 
 
 function stringValue(value: JsonValue | undefined): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function isClaimScalar(value: JsonValue | undefined): value is PlatformJwtClaimScalar {
+  return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
 }
 
 function invalidToken(defaultMessage: string): Result<never, PlatformSecurityError> {

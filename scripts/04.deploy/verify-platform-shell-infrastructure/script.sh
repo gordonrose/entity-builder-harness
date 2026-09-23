@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 13
+#   version: 14
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -37,6 +37,7 @@ bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
 bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
 bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
@@ -231,6 +232,43 @@ github_workflow = Path(".github/workflows/deploy-platform-shell-staging.yml").re
 with Path("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-platform-shell-staging-deploy-policy.json").open(encoding="utf-8") as handle:
     github_deployment_policy = json.load(handle)
 failures = []
+
+auth_policy = target_profile.get("auth", {})
+negative_test_client = auth_policy.get("negative_test_client", {}) if isinstance(auth_policy, dict) else {}
+expected_negative_test_client = {
+    "name": "platform-shell-staging-negative-authz-client",
+    "type": "confidential",
+    "grant_type": "client_credentials",
+    "access_token_validity_minutes": 5,
+    "token_revocation": "enabled",
+    "prevent_user_existence_errors": "enabled",
+    "resource_server": {
+        "identifier": "platform-shell-authz-probe",
+        "name": "Platform Shell Authorization Negative Probe",
+        "scope_name": "deny",
+        "scope": "platform-shell-authz-probe/deny",
+        "permission_mapping": "intentionally-unmapped",
+    },
+    "secret": {
+        "name": "kanbien/staging/platform-shell/cognito-negative-authz-client",
+        "delivery": "bounded-negative-authz-smoke-only-not-ecs-task-environment",
+        "value_format": "opaque-raw-string",
+    },
+}
+if not isinstance(negative_test_client, dict):
+    fail("target profile must declare the governed negative authorization client policy")
+else:
+    for key, expected in expected_negative_test_client.items():
+        if negative_test_client.get(key) != expected:
+            fail(f"target profile negative authorization client must retain {key}")
+    if negative_test_client.get("status") not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-and-403-proven"}:
+        fail("target profile negative authorization client must use a governed lifecycle status")
+    client_id = negative_test_client.get("client_id")
+    if client_id is not None and (not isinstance(client_id, str) or not client_id):
+        fail("target profile negative authorization client ID must be a non-empty string when provisioned")
+    secret_arn = negative_test_client.get("secret_arn")
+    if secret_arn is not None and (not isinstance(secret_arn, str) or not secret_arn.startswith("arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-")):
+        fail("target profile negative authorization secret ARN must remain target-scoped when provisioned")
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
@@ -789,8 +827,11 @@ operations = target_profile.get("operations", {})
 readiness_closure = operations.get("readiness_closure", {}) if isinstance(operations, dict) else {}
 if readiness_closure != {
     "authorization_403": {
-        "status": "planned",
+        "status": "source-allowlist-implemented-target-deployment-pending",
         "prerequisite": "separate-valid-machine-client-without-platform-smoke-read-permission",
+        "authentication_boundary": "primary-client-plus-exact-additional-client-id-allowlist-no-wildcards",
+        "target_configuration": "PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS-json-array",
+        "negative_client_scope": "dedicated-unmapped-resource-server-scope",
         "safe_result": "status-code-only-403",
     },
     "rate_limit_429": {
