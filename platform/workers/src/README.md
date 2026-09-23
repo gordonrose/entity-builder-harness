@@ -10,6 +10,7 @@ where worker mechanics accumulate.
 | `types.ts` | Public worker shell, in-memory queue, idempotency, delivery, and result contracts. | The package boundary remains visible without mixing it with execution logic. |
 | `queue.ts` | Deterministic in-memory queue state and idempotency store. | Local test mechanics stay separate from a future provider adapter and from business job execution. |
 | `worker.ts` | App mounting, job resolution, validation, lifecycle, retry/dead-letter decisions, context creation, logs, metrics, and spans. | It is the only place that adapts a delivered queue message into an app job. |
+| `main.ts` | Long-running worker-process composition, config source creation, signal handling, and orderly shutdown. | Provider-neutral process lifecycle remains distinct from a selected queue provider and its acknowledgement mechanics. |
 | `index.ts` | Approved public exports only. | Callers remain independent of internal source organisation. |
 
 ## Job lineage and traces

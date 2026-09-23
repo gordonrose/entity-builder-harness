@@ -19,3 +19,9 @@ export type {
   PlatformWorkerShellOptions,
 } from "./types";
 export { createPlatformWorkerShell } from "./worker";
+export {
+  runPlatformWorkerMain,
+  startPlatformWorkerProcess,
+  type PlatformWorkerProcess,
+  type PlatformWorkerProcessOptions,
+} from "./main";

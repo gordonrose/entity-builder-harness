@@ -1,0 +1,37 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: deploy.script.run-platform-shell-worker-smoke.readme
+version: 1
+status: active
+layer: 04.deploy
+domain: runtime.operations
+disciplines:
+- security
+- sre
+kind: capability-readme
+purpose: Explain the guarded side-effect-free staging worker-consumer proof.
+portability:
+  class: internal
+  targets:
+  - kanbien/staging
+used_by:
+- id: deploy.script.run-platform-shell-worker-smoke
+  path: scripts/04.deploy/run-platform-shell-worker-smoke/script.sh
+-->
+# Platform-shell worker smoke
+
+This command is a guarded, disposable **consumer** proof. Its offline
+`--validate` mode checks that the staging target still declares the exact
+one-message policy. Its live mode is deliberately unavailable without both
+`--execute` and `--approve-live-worker-smoke`, plus a current approved staging
+operation.
+
+When explicitly run, it confirms the source queue, DLQ, and worker service are
+empty/dormant; sends one harmless `platform-smoke.rebuild` envelope; sets only
+the worker service to one task; waits for bounded settlement; and always sets
+that service back to desired count zero. Output contains only a safe verdict,
+duration, and task revision.
+
+It never prints a message body or identity, receipt handle, queue URL, raw AWS
+response, task ARN, token, or secret. It is not an outbox producer, a state
+transaction, or proof that future business side effects are duplicate-safe.

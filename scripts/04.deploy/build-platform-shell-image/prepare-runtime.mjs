@@ -72,11 +72,18 @@ writePackageShim("@kanbien/platform-server", {
   ".": join(runtimeRoot, "platform/server/src/index.js"),
   "./main": join(runtimeRoot, "platform/server/src/main.js"),
 });
+writePackageShim("@kanbien/platform-workers", {
+  ".": join(runtimeRoot, "platform/workers/src/index.js"),
+  "./main": join(runtimeRoot, "platform/workers/src/main.js"),
+});
 writePackageShim("@kanbien/platform-adapter-aws-auth-cognito", {
   ".": join(runtimeRoot, "platform/adapters/aws/auth/cognito/src/index.js"),
 });
 writePackageShim("@kanbien/platform-adapter-aws-observability-cloudwatch", {
   ".": join(runtimeRoot, "platform/adapters/aws/observability/cloudwatch/src/index.js"),
+});
+writePackageShim("@kanbien/platform-adapter-aws-queue-sqs", {
+  ".": join(runtimeRoot, "platform/adapters/aws/queue/sqs/src/index.js"),
 });
 writePackageShim("@kanbien/platform-adapter-aws-runtime-ecs-fargate", {
   ".": join(runtimeRoot, "platform/adapters/aws/runtime/ecs-fargate/src/index.js"),

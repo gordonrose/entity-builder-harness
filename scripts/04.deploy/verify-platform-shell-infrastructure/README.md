@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.verify-platform-shell-infrastructure.readme
-version: 6
+version: 8
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -25,19 +25,23 @@ platform-shell service template and the rendered foundation template. It first
 renders the focused foundation source units into a temporary file, needs
 PyYAML, and makes no AWS API calls.
 
-It prevents accidental broadening of the first public deployment: the task
-must remain ALB-only, rate-limit state must remain encrypted, short-lived, and
-least-privileged, the WAF must scope every rule to the new hostname, the image
-must be pinned by digest, and the container must remain secret-free and
-read-only. It also verifies that the target declares the governed alert-policy
-standard, points to the link-only target catalogue, uses the declared severity
+It prevents accidental broadening of the first public deployment: the server
+task must remain ALB-only, the worker must have no inbound network path,
+rate-limit state must remain encrypted, short-lived, and least-privileged, and
+the worker may receive and settle only its source SQS queue. The WAF must scope
+every rule to the new hostname; the image must stay pinned by digest; and both
+task containers must stay secret-free and read-only. The check also requires
+an SQS-encrypted DLQ/redrive policy, the existing SNS destination's narrow
+Budgets publish policy, and the $25 `service=platform-shell` budget source.
+
+It verifies that the target declares the governed alert-policy standard,
+points to the link-only target catalogue, uses the declared severity
 vocabulary, and keeps every CloudFormation alarm aligned with its canonical
-target-profile definition. For the metric path it accepts only two explicit
-states: `prepared-not-deployed`, or `deployed-and-query-proven`. The latter
-must retain safe evidence that CloudWatch PromQL returned both reviewed series,
-while still recording any SLO and exporter-loss coverage gaps. A static check
-does not query AWS; it prevents source metadata from claiming a vague or
-unbounded delivery state.
+target-profile definition. Server metric series retain their live delivery
+status; worker series remain explicitly `source-defined-deployment-pending`
+until their own target task is deployed and observed. A static check does not
+query AWS; it prevents source metadata from claiming a vague or unbounded
+delivery state.
 
 It also invokes the dedicated synthetic-scheduler policy check. That check
 binds the one redacted controlled-token smoke command to an isolated GitHub
@@ -49,6 +53,13 @@ but cannot by itself prove telemetry coverage or a customer SLO. The wider
 closure policy still requires a future metric-freshness signal and exporter-loss
 rehearsal, plus bounded `403`, `429`, WAF, alert, and rollback exercises. Those
 entries make the remaining work visible; they do not claim it has been run.
+
+The same gate validates the guarded worker-consumer rehearsal source. That
+rehearsal requires a separately explicit live-operation flag, insists that the
+worker and both queues are empty before it starts, sends one harmless
+platform-smoke job, and returns the worker service to desired count zero. It is
+not permission to activate a business queue producer or to treat direct SQS
+delivery as a durable outbox.
 
 Run it with:
 

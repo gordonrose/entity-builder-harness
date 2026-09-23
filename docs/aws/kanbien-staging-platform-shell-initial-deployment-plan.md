@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
-version: 17
+version: 18
 status: draft
 layer: 04.deploy
 domain: infra.ci-cd
@@ -142,6 +142,12 @@ brochure site, `service-platform`, its database/cache, `kanbien.com`,
    account has not activated that cost-allocation tag or proven the intended
    tag-scoped monthly budget. This account-level Billing action cannot be
    inferred from an infrastructure template.
+7. The source-defined worker extension now includes a provider-neutral worker
+   process, SQS consumer adapter, queue/DLQ, dedicated least-privilege task,
+   and a desired-zero ECS service. It is not yet deployed or live-proven and
+   is deliberately not an outbox producer or durable business-idempotency
+   implementation. Its separate change-set, consumer-rehearsal, and rollback
+   boundary is in the [worker and operations closure plan](kanbien-staging-platform-shell-worker-and-operations-closure-plan.md).
 
 ## Temporary synthetic scheduler activation plan
 

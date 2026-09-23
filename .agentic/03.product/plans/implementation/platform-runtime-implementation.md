@@ -1856,9 +1856,18 @@ Entry criteria:
 ## First Slice Recommendation
 
 Current next slice: design the bounded platform-smoke DynamoDB
-transaction/outbox record model, the provider-neutral queue-delivery policy,
-and their AWS adapter boundaries. DynamoDB storage and SQS Standard/DLQ
-transport are governed reference selections, but no schema, adapter, relay,
-queue resource, AWS worker service, or cloud resource has been created. The
-production target remains server-first and worker-capable: it reserves worker
-naming/configuration but does not deploy an empty worker service.
+transaction/outbox record model and durable idempotency/processing records.
+The provider-neutral worker shell, AWS SQS receive/acknowledge/release adapter,
+target worker composition, SQS Standard/DLQ infrastructure definition, and a
+zero-desired-count ECS worker service are now source-defined and locally
+verified. They do **not** create a producer, state/outbox transaction, relay,
+or durable processing/idempotency store. The staging worker remains disabled
+until its separately reviewed CloudFormation change set is applied; its first
+direct-SQS smoke proves consumer mechanics only, not an outbox.
+
+The production target is therefore server-first and worker-capable in two
+different senses: the infrastructure shape is ready for one controlled worker
+task, while the persistence boundary deliberately remains unimplemented. A
+future business workload must not use the worker for side effects until the
+generic durable-idempotency port and the selected persistence transaction are
+implemented and proved.

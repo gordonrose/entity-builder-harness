@@ -14,3 +14,37 @@ Resources:
           Value: staging
         - Key: managed-by
           Value: cloudformation
+
+  PlatformShellWorkerLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /ecs/kanbien-staging-platform-shell-worker
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  PlatformShellWorkerOtelCollectorLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /ecs/kanbien-staging-platform-shell-worker-otel-collector
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker-otel-collector
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

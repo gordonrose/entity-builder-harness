@@ -29,6 +29,12 @@
       "@kanbien/platform-server/main": [
         "platform/server/src/main.ts"
       ],
+      "@kanbien/platform-workers": [
+        "platform/workers/src/index.ts"
+      ],
+      "@kanbien/platform-workers/main": [
+        "platform/workers/src/main.ts"
+      ],
       "@kanbien/platform-contracts": [
         "platform/contracts/src/index.ts"
       ],
@@ -53,6 +59,9 @@
       "@kanbien/platform-adapter-aws-observability-cloudwatch": [
         "platform/adapters/aws/observability/cloudwatch/src/index.ts"
       ],
+      "@kanbien/platform-adapter-aws-queue-sqs": [
+        "platform/adapters/aws/queue/sqs/src/index.ts"
+      ],
       "@kanbien/platform-adapter-aws-runtime-ecs-fargate": [
         "platform/adapters/aws/runtime/ecs-fargate/src/index.ts"
       ],
@@ -76,8 +85,10 @@
     "../observability/src/**/*.ts",
     "../runtime/src/**/*.ts",
     "../security/src/**/*.ts",
+    "../workers/src/**/*.ts",
     "../adapters/aws/auth/cognito/src/**/*.ts",
     "../adapters/aws/observability/cloudwatch/src/**/*.ts",
+    "../adapters/aws/queue/sqs/src/**/*.ts",
     "../adapters/aws/runtime/ecs-fargate/src/**/*.ts",
     "../adapters/aws/security/dynamodb-rate-limiter/src/**/*.ts"
   ]

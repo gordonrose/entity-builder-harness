@@ -23,10 +23,11 @@ This directory owns the provider-neutral container packaging boundary for the
 platform runtime shell. A target-specific entrypoint may compose a provider
 adapter; that selection does not make `platform/server` provider-specific.
 
-The image packages the Kanbien Platform target entrypoint, which mounts the
-product shell and may select its authentication adapter from target environment
-configuration. Without a selected provider it still proves local container
-startup, liveness, and readiness before AWS deployment readiness.
+The image packages the Kanbien Platform target entrypoints. Its Docker default
+starts the public server, while a target may override the command to start the
+non-public worker from the same compiled, immutable image. Both entrypoints
+mount the same product shell; only the target chooses an authentication or
+queue provider adapter.
 
 ## Files
 
@@ -68,6 +69,11 @@ The image runs as the base image's non-root `node` user. Packaged source files
 are root-owned and non-writable by the service user. The image smoke test runs
 with a read-only root filesystem, all capabilities dropped,
 `no-new-privileges`, and a bounded `/tmp` tmpfs.
+
+The worker never uses the Dockerfile's HTTP health check. Its ECS task
+definition overrides the command with the compiled worker target entrypoint,
+does not publish a port, and owns SQS polling, acknowledgement, release, and
+graceful shutdown at the target boundary.
 
 ## Still Blocked Before Deployment
 

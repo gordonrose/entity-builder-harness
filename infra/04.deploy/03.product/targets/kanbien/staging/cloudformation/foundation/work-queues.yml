@@ -1,0 +1,83 @@
+# Durable background delivery resources. The worker task consumes only WorkerQueue; SQS owns retry counting and redrive to the retained DLQ.
+Resources:
+  WorkerDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      QueueName: kanbien-staging-platform-shell-worker-dlq
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      SqsManagedSseEnabled: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker-dead-letter
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-message-envelope
+        - Key: managed-by
+          Value: cloudformation
+
+  WorkerQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      QueueName: kanbien-staging-platform-shell-worker
+      DelaySeconds: 0
+      MaximumMessageSize: 262144
+      MessageRetentionPeriod: 345600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 30
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt WorkerDeadLetterQueue.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-message-envelope
+        - Key: managed-by
+          Value: cloudformation
+
+  WorkerQueueTransportPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref WorkerQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: sqs:*
+            Resource: !GetAtt WorkerQueue.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  WorkerDeadLetterQueueTransportPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref WorkerDeadLetterQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: sqs:*
+            Resource: !GetAtt WorkerDeadLetterQueue.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false

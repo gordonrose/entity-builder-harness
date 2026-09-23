@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 4
+version: 6
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -47,6 +47,16 @@ Current commands:
 - `run-platform-shell-negative-authz-smoke/`: locally validates, or after
   post-deployment inspection and explicit current-chat approval performs the
   one fixed valid-token, unmapped-scope staging request that must return `403`.
+- `run-platform-shell-rate-limit-smoke/`: locally validates, or after current
+  approval performs at most the configured liveness rate-limit plus one
+  sequential public request and records aggregate-only `429` evidence.
+- `run-platform-shell-ingress-smoke/`: locally validates, or after current
+  approval performs fixed read-only WAF, listener, and security-group
+  inspections plus one public liveness request.
+- `run-platform-shell-worker-smoke/`: locally validates, or after explicit
+  current approval sends one side-effect-free queue message, starts only the
+  dormant worker service, observes bounded settlement, and always returns it
+  to desired count zero. It proves a consumer boundary, not an outbox.
 - `verify-platform-shell-synthetic-scheduler/`: read-only policy check for the
   temporary GitHub Actions protected-route synthetic workflow and its separate
   one-secret-read IAM role source.

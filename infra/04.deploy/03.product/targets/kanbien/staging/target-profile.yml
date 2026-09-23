@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 33
+#   version: 34
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -213,8 +213,8 @@ runtime:
     initial_exposure: server
     server_service: kanbien-staging-platform-shell
     worker_service: kanbien-staging-platform-shell-worker
-    worker_initial_state: deferred-until-background-workload
-    worker_activation_condition: app-declared background job or platform runtime queue workload selected for staging
+    worker_initial_state: source-defined-deployment-pending
+    worker_activation_condition: controlled-smoke-job-proves-the-platform-worker-delivery-path-before-a-business-workload-uses-it
   server:
     task_family: kanbien-staging-platform-shell
     service: kanbien-staging-platform-shell
@@ -233,6 +233,23 @@ runtime:
     service: kanbien-staging-platform-shell-worker
     desired_count_initial: 0
     queue_adapter: platform/adapters/aws/queue/sqs/
+    queue:
+      source_queue: kanbien-staging-platform-shell-worker
+      dead_letter_queue: kanbien-staging-platform-shell-worker-dlq
+      delivery_semantics: at-least-once
+      long_poll_seconds: 20
+      visibility_timeout_seconds: 30
+      max_receive_count_before_dead_letter: 3
+      acknowledge_after: provider-neutral-job-shell-reports-succeeded
+      release_on: rejected-failed-missing-or-unavailable-job-delivery
+      transport_encryption: sqs-managed-server-side-encryption
+    workload_policy:
+      inbound_network: none
+      task_role: receive-acknowledge-release-only-for-the-source-queue
+      durable_retry_owner: sqs-redrive-policy
+      generic_worker_attempts_per_delivery: 1
+      smoke_job_idempotency: side-effect-free-controlled-smoke-handler
+      business_job_idempotency: require-a-durable-idempotency-store-through-the-generic-worker-port-before-side-effects
 cloud:
   provider: aws
   account_id: "337159794548"
@@ -250,6 +267,7 @@ aws:
   security_groups:
     alb: sg-08d590b0aee6e2e60
     service: pending
+    worker: pending
   alb:
     arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
     reuse_existing: true
@@ -387,6 +405,7 @@ rate_limiting:
   edge_protection:
     provider: aws-wafv2
     scope: staging.platform.kanbien.com-only
+    web_acl_name: kanbien-staging-platform-shell
     rate_rule: ip-300-per-five-minutes
     alb_request_body_inspection_max_bytes: 8192
     application_request_body_limit_bytes: 1048576
@@ -439,6 +458,20 @@ config:
     PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: staging
     PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000"
     PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000"
+  worker_non_secret_env:
+    PLATFORM_WORKER_QUEUE_PROVIDER: sqs
+    PLATFORM_WORKER_SQS_REGION: eu-west-1
+    PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS: "20"
+    PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS: "30"
+    PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS: "1000"
+    PLATFORM_SMOKE_APP_NAME: Kanbien Platform Smoke
+    PLATFORM_OBSERVABILITY_METRICS_PROVIDER: cloudwatch-otel
+    PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: http://127.0.0.1:4318/v1/metrics
+    PLATFORM_OBSERVABILITY_METRICS_REGION: eu-west-1
+    PLATFORM_OBSERVABILITY_SERVICE_NAME: kanbien-staging-platform-shell-worker
+    PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: staging
+    PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000"
+    PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000"
   secret_refs:
     cognito_machine_client_secret:
       name: kanbien/staging/platform-shell/cognito-machine-client
@@ -480,6 +513,7 @@ observability:
         parameter_resource: OtelCollectorConfigurationParameter
         delivery_environment_key: AOT_CONFIG_CONTENT
         log_group_resource: PlatformShellOtelCollectorLogGroup
+        worker_log_group_resource: PlatformShellWorkerOtelCollectorLogGroup
         output_parameter_arn: OtelCollectorConfigurationParameterArn
       ownership: target-composition-and-service-iac
       required_before_enablement:
@@ -493,6 +527,12 @@ observability:
       application_cpu_units: 384
       application_memory_reservation_mib: 512
       collector_dependency: platform-shell-depends-on-otel-collector-start
+    worker_task:
+      cpu_units: 512
+      memory_mib: 1024
+      application_cpu_units: 384
+      application_memory_reservation_mib: 512
+      collector_dependency: platform-shell-worker-depends-on-otel-collector-start
     iam:
       task_execution_role:
         action: ssm:GetParameters
@@ -503,6 +543,15 @@ observability:
         resource: "*"
         purpose: collector-sigv4-delivery-to-cloudwatch-otel-metrics-endpoint
         ecs_boundary_note: ECS task-role credentials are shared by all containers in a task, so this is not per-container IAM isolation. The adapter's fixed loopback endpoint and the reviewed task definition provide the current application-side restriction; a stronger future boundary needs a separate telemetry gateway or task.
+    worker_iam:
+      task_execution_role:
+        action: ssm:GetParameters
+        resource: OtelCollectorConfigurationParameter
+        purpose: read-non-secret-collector-configuration-at-task-start
+      task_role:
+        action: cloudwatch:PutMetricData
+        resource: "*"
+        purpose: collector-sigv4-delivery-to-cloudwatch-otel-metrics-endpoint
     export:
       interval_ms: 60000
       timeout_ms: 10000
@@ -574,6 +623,7 @@ observability:
   metric_series:
     - id: platform-smoke-read-outcome
       status: deployed-and-query-proven
+      runtime_target: server
       purpose: Count completed protected smoke-read requests by the approved capability outcome.
       source:
         name: platform.server.request.outcome
@@ -603,6 +653,7 @@ observability:
       cardinality_limit: 512
     - id: platform-smoke-read-request-response-latency
       status: deployed-and-query-proven
+      runtime_target: server
       purpose: Measure the server receipt through response-completion latency of protected smoke-read requests.
       source:
         name: platform.server.request_response_latency
@@ -629,6 +680,79 @@ observability:
           - raw_path
           - email
           - ip_address
+      cardinality_limit: 512
+      histogram:
+        bucket_boundaries_ms:
+          - 50
+          - 100
+          - 200
+          - 300
+          - 500
+          - 750
+          - 1000
+          - 2500
+          - 5000
+          - 10000
+          - 30000
+    - id: platform-smoke-rebuild-delivery
+      status: source-defined-deployment-pending
+      runtime_target: worker
+      purpose: Count settled platform-smoke worker job deliveries by their approved delivery disposition and outcome.
+      source:
+        name: platform.worker.job.delivery
+        kind: counter
+        unit: count
+      otel:
+        instrument_name: kanbien.platform.worker.job.delivery
+        description: Completed platform-smoke worker job deliveries by approved outcome.
+      labels:
+        allowed_names:
+          - capability
+          - action
+          - execution_context
+          - job_delivery_disposition
+          - outcome
+          - error_class
+        values_governed_by: platform-observability-profile-and-canonical-operational-vocabulary
+        prohibited_names:
+          - tenant
+          - principal
+          - request_id
+          - trace_id
+          - message_id
+          - receipt_handle
+          - queue_url
+          - payload
+      cardinality_limit: 512
+    - id: platform-smoke-rebuild-job-execution-latency
+      status: source-defined-deployment-pending
+      runtime_target: worker
+      purpose: Measure handler execution time for eligible platform-smoke worker jobs.
+      source:
+        name: platform.worker.job.execution_latency
+        kind: timer
+        unit: ms
+      otel:
+        instrument_name: kanbien.platform.worker.job.execution.duration
+        description: Platform-smoke worker job execution latency in milliseconds.
+      labels:
+        allowed_names:
+          - capability
+          - action
+          - execution_context
+          - job_delivery_disposition
+          - outcome
+          - error_class
+        values_governed_by: platform-observability-profile-and-canonical-operational-vocabulary
+        prohibited_names:
+          - tenant
+          - principal
+          - request_id
+          - trace_id
+          - message_id
+          - receipt_handle
+          - queue_url
+          - payload
       cardinality_limit: 512
       histogram:
         bucket_boundaries_ms:
@@ -951,14 +1075,15 @@ operations:
     forecasted_alert_thresholds_percent:
       - 100
     alert_destination:
-      type: email
-      source: operator-supplied-at-budget-configuration-time
-      value_stored_in_repository: false
+      type: sns-existing-foundation-alarm-topic
+      source: observability.alarm_destination
+      topic_arn: arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms
+      value_stored_in_repository: true
     cost_allocation:
       resource_tag_key: service
       resource_tag_value: platform-shell
       billing_report_dimension: user:service
-      activation_status: pending-account-billing-activation
+      activation_status: source-defined-deployment-pending-account-billing-activation
       budget_proof_requirement: Tag-scoped budget and alert configuration are valid only after the account activates the user-defined service cost-allocation tag and billing data becomes available.
   rollback:
     authority: Gordon Rose
@@ -975,12 +1100,49 @@ operations:
       proof_command: npm run platform:shell:negative-authz-smoke
       safe_result: status-code-only-403
     rate_limit_429:
-      status: planned
+      status: source-defined-deployment-pending
+      command: npm run platform:shell:rate-limit-smoke
       request_bound: declared-window-limit-plus-one-sequential-requests-stop-on-first-429
       safe_result: aggregate-counts-and-final-status-only
+      request:
+        method: GET
+        path: /livez
+        credentials: none
+        expected_allowed_status: 200
+        expected_limited_status: 429
+        slo_population_effect: none-protected-capability-metrics-are-not-emitted-for-liveness
     waf_and_routing:
-      status: planned
+      status: source-defined-deployment-pending
+      command: npm run platform:shell:ingress-smoke
       proof: read-only-waf-association-and-listener-host-rule-inspection-plus-bounded-public-host-check
+      request:
+        method: GET
+        path: /livez
+        credentials: none
+        expected_http_status: 200
+        output_policy: safe-facts-only-no-response-body-address-or-provider-payload
+    worker_consumer:
+      status: source-defined-deployment-pending
+      command: npm run platform:shell:worker-smoke
+      execution_guard: --execute-and-approve-live-worker-smoke
+      proof: one-side-effect-free-direct-sqs-platform-smoke-rebuild-message-through-the-dormant-worker-service
+      preconditions:
+        worker_desired_count: 0
+        worker_running_count: 0
+        source_queue_visible_messages: 0
+        dead_letter_queue_visible_messages: 0
+      bounded_action:
+        worker_desired_count: 1
+        message_type: platform-smoke.rebuild
+        payload: '{"rebuild":true}'
+        maximum_wait_seconds: 360
+      success:
+        worker_started: true
+        source_queue_visible_messages: 0
+        dead_letter_queue_visible_messages: 0
+        cleanup_worker_desired_count: 0
+      safe_result: status-counts-duration-and-task-revision-only-no-message-body-id-receipt-queue-url-or-provider-payload
+      limitation: direct-consumer-proof-only-not-a-producer-transaction-outbox-or-durable-business-idempotency-proof
     alarm_and_rollback:
       status: planned
       alert_proof: explicitly-marked-notification-receipt-without-email-content-in-repository

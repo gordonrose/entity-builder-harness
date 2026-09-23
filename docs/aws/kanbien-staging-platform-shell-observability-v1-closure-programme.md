@@ -246,12 +246,34 @@ The readiness manifest remains blocked until each named proof has evidence.
 Claims such as "deployed", "query-proven", and "operator receipt proven" are
 kept separate so later reviewers can see exactly what was established.
 
+## Source-defined worker extension
+
+The original v1 scope did not require a worker target. The repository now
+defines a deliberately dormant worker extension so the smoke target can prove
+one complete queue-consumer boundary without turning a direct queue message
+into an outbox claim. It consists of a provider-neutral worker process, an
+AWS SQS receive/acknowledge/release adapter, a separate least-privilege worker
+task role, an encrypted source queue and DLQ, task-local metrics, and a worker
+service with desired count `0`.
+
+The deployment and proof sequence is intentionally separate from the HTTP SLO
+evidence clock: deploy the reviewed foundation and service change sets with
+the worker kept at zero, inspect the exact changes, run one bounded
+side-effect-free direct-SQS smoke only after current approval, then return the
+worker to zero and retain safe aggregate evidence. This proves receipt,
+successful acknowledgement, redrive ownership, and worker telemetry delivery;
+it does not prove an application state transaction, an outbox relay, or a
+durable business idempotency store. The full execution boundary is in the
+[worker and operations closure plan](kanbien-staging-platform-shell-worker-and-operations-closure-plan.md).
+
 ## Deferred after v1
 
 The following are deliberately not closure conditions for this smoke target:
 
 - a reusable platform scheduler contract and target adapter;
-- a deployed queue/worker service and its live telemetry proof;
+- a durable producer/state transaction, outbox relay, and durable worker
+  idempotency/processing store (the source-defined direct-SQS worker smoke is
+  intentionally not a substitute);
 - a selected trace exporter, sampling policy, trace retention, and trace-store
   access model;
 - multi-tenant product analytics or tenant-specific metric dimensions;
@@ -262,6 +284,7 @@ The following are deliberately not closure conditions for this smoke target:
 
 - [Exporter-loss rehearsal plan](kanbien-staging-platform-shell-exporter-loss-rehearsal-plan.md)
 - [Initial deployment plan](kanbien-staging-platform-shell-initial-deployment-plan.md)
+- [Worker and operations closure plan](kanbien-staging-platform-shell-worker-and-operations-closure-plan.md)
 - [Staging target profile](../../infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml)
 - [Staging readiness manifest](../../infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml)
 - [Task-local collector decision](../04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md)

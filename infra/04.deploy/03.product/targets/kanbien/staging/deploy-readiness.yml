@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 34
+#   version: 35
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -478,8 +478,8 @@ runtime:
     initial_exposure: server
     server_service_candidate: kanbien-staging-platform-shell
     worker_service_candidate: kanbien-staging-platform-shell-worker
-    worker_initial_state: deferred-until-background-workload
-    worker_activation_condition: app-declared background job or platform runtime queue workload selected for staging
+    worker_initial_state: source-defined-deployment-pending-desired-count-zero
+    worker_activation_condition: reviewed-worker-change-set-with-desired-count-zero-then-separately-approved-side-effect-free-direct-sqs-consumer-proof
   server:
     health:
       liveness: /livez
@@ -489,13 +489,15 @@ runtime:
     task_definition: deployed-by-workflow-34123406369
     service: kanbien-staging-platform-shell
   worker:
-    status: deferred-worker-capable-project
-    task_definition_family_candidate: kanbien-staging-platform-shell-worker
-    service_candidate: kanbien-staging-platform-shell-worker
+    status: source-defined-deployment-pending
+    task_definition_family: kanbien-staging-platform-shell-worker
+    service_name: kanbien-staging-platform-shell-worker
     desired_count_initial: 0
-    task_definition: pending
-    service: pending
+    task_definition: source-defined-not-deployed
+    service: source-defined-not-deployed
     queue_adapter: platform/adapters/aws/queue/sqs/
+    delivery_boundary: direct-sqs-side-effect-free-smoke-consumer-not-a-persistence-outbox
+    live_proof_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
   apps:
@@ -619,9 +621,10 @@ aws:
   secret_store: aws-secrets-manager
   log_group: /ecs/kanbien-staging-platform-shell
   alarm_destination:
-    type: email
-    source: operator-supplied-at-budget-configuration-time
-    value_stored_in_repository: false
+    type: sns-topic
+    source: target-profile.operations.budget.alert_destination
+    arn: arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms
+    subscriber_values_stored_in_repository: false
   alarms:
     source: target-profile.observability.alarms
     required_ids:
@@ -636,9 +639,15 @@ operations:
   budget_name: kanbien-staging-platform-shell-monthly
   cost_limit: 25 USD/month
   budget_alert_destination:
-    type: email
-    source: operator-supplied-at-budget-configuration-time
-    value_stored_in_repository: false
+    type: sns-topic
+    source: target-profile.operations.budget.alert_destination
+    arn: arn:aws:sns:eu-west-1:337159794548:kanbien-staging-platform-shell-alarms
+    subscriber_values_stored_in_repository: false
+  cost_allocation:
+    resource_tag_key: service
+    resource_tag_value: platform-shell
+    activation_status: source-defined-deployment-pending-account-billing-activation
+    source_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
   rollback_target: previous-ecs-task-definition-primary-previous-image-digest-fallback
   rollback_authority: Gordon Rose
   rollback_runbook: docs/aws/runbooks/platform-shell-staging-rollback.md
@@ -707,16 +716,16 @@ proof:
       retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
     retained_evidence_policy: no-secrets-tokens-headers-request-bodies-response-bodies-or-raw-provider-responses
 blockers:
-  - id: platform-shell-readiness.deferred-worker-runtime
+  - id: platform-shell-readiness.worker-runtime-and-consumer-proof
     severity: blocking
     path: runtime.worker
-    reason: The target is intentionally server-only until a declared background workload exists; no worker task definition or service has been deployed or exercised.
-    resolution: When a product selects a queue-backed job workload, deploy the worker task definition and service, then record queue, dead-letter, worker health, and rollback evidence.
+    reason: "A provider-neutral worker, SQS adapter, queue/DLQ, least-privilege worker role, desired-zero service, and worker metric catalogue are source-defined and locally checked. No AWS change set has deployed them, and no side-effect-free direct-SQS consumer proof has run. This is not a producer/outbox or durable business-idempotency implementation."
+    resolution: "Follow the worker-and-operations closure plan: deploy reviewed foundation and service change sets with worker desired count zero, inspect resource/IAM boundaries, then separately approve one bounded direct-SQS consumer proof and return the worker to zero. Keep business side effects blocked until persistence provides durable idempotency and processing state."
   - id: platform-shell-readiness.public-rate-limit-and-ingress-policy
     severity: blocking
     path: auth.rate_limiting
-    reason: The deployed workflow proves liveness only. Deployed 429 behaviour, ALB-only ingress, WAF host scope, and routing evidence have not yet been independently recorded.
-    resolution: Run at most the declared window limit plus one sequential request and stop on the first 429; use read-only WAF association/listener-host-rule inspection plus a bounded public-host check. Record only aggregate counts, final status, and safe resource evidence.
+    reason: "Bounded source commands exist for the public `429` and WAF/routing proofs, but neither command has been run against the deployed target. The worker foundation update is a separate source-defined staging change and must not be inferred from current server liveness."
+    resolution: "Run ingress proof first; then run at most the declared window limit plus one sequential liveness request and stop on the first `429`. Record only aggregate counts, final status, safe resource facts, and no response bodies. Follow the worker-and-operations closure plan."
   - id: platform-shell-readiness.capability-slo-and-coverage
     severity: blocking
     path: observability.slos-and-coverage
@@ -725,5 +734,5 @@ blockers:
   - id: platform-shell-readiness.cost-allocation-and-budget
     severity: blocking
     path: operations.budget.cost_allocation
-    reason: Platform-shell resources carry the service=platform-shell tag, but the account has not yet activated that user-defined cost-allocation tag or proven the intended monthly budget and alert delivery.
-    resolution: After the foundation resources exist, activate the service tag in Billing and Cost Management, allow billing data to appear, configure and verify the tag-scoped monthly budget and forecast alerts, then record the evidence without placing billing data in source control.
+    reason: "Source defines a tag-scoped $25 monthly budget and existing SNS topic destination, but the foundation update has not deployed it and the account has not activated the user-defined `service` cost-allocation tag. Existing account-wide billing figures are not evidence for this target-scoped budget."
+    resolution: "Deploy the reviewed foundation update, activate only the `user:service` tag in Billing and Cost Management, wait for billing data, inspect the tag-scoped budget and reviewed alert thresholds, then record only safe identifiers and status without billing data or subscriber details."
