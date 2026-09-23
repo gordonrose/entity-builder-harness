@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T16:29:14Z
-latest_commit_sha: ad9c59a
-chat_duration: 5469s (00:01:31:09)
+latest_commit_at_utc: 2026-09-23T16:46:50Z
+latest_commit_sha: e11e9e0
+chat_duration: 6525s (00:01:48:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -53,6 +53,10 @@ let's go
 - Raised: Worker delivery metric lacked a governed live-query command
   Resolution: Added a fixed worker-only coverage target that permits only the declared delivery counter and its five approved success labels; server SLO selection now filters server series explicitly.
 
+
+- Raised: Worker delivery metric observation returned missing after the successful consumer proof
+  Resolution: The worker was scaled down immediately after settlement, before its 60-second configured exporter interval could reliably flush. No telemetry-delivery success was claimed.
+
 ## Decisions Made
 
 
@@ -64,6 +68,10 @@ let's go
 - Decision: Keep worker delivery observation separate from server SLO coverage and alerting
   Rationale: The controlled worker proof establishes one consumer/telemetry boundary, not an HTTP customer SLO. It uses no new scheduler, IAM role, or SNS notification path.
 
+
+- Decision: Retain the controlled worker task for a fixed 75-second exporter-flush wait after settlement
+  Rationale: The wait is source-governed, bounded, shorter than the smoke convergence cap, and verifies the worker remains running before automatic cleanup. It permits one normal metric export without adding a scheduler, role, alert, or arbitrary query.
+
 ## Context Hygiene
 
 
@@ -74,6 +82,10 @@ let's go
 
 - Summary: Retain safe proof outcomes only: rate limiter passed with 120 allowed requests then a 429; worker rehearsal passed in 112209 ms on revision 1 and read back dormant with source/DLQ zero.
   Durable evidence: Durable policy and source commands are in the staging target profile, worker operations plan, metric-coverage script, and their local checks. Do not retain queue URLs, messages, task identifiers, credentials, or raw AWS/PromQL output.
+
+
+- Summary: Retain only the safe missing worker metric verdict and the source correction: 75-second post-settlement exporter-flush wait before worker scale-down.
+  Durable evidence: Durable policy is in the staging target profile, worker smoke command, static verifier, and worker operations plan. Do not retain raw CloudWatch output, queue data, task identifiers, or credentials.
 
 ## Activity Log
 
@@ -166,6 +178,45 @@ Summary: Add a fixed worker-only metric observation selector, prevent worker del
 
 ADR impact: No ADR required; target-specific delivery evidence is retained in the staging target profile and worker operations plan.
 
+
+### 2026-09-23T16:34:07Z - Issue
+
+Raised: Worker delivery metric observation returned missing after the successful consumer proof
+
+Resolution: The worker was scaled down immediately after settlement, before its 60-second configured exporter interval could reliably flush. No telemetry-delivery success was claimed.
+
+
+### 2026-09-23T16:34:08Z - Decision
+
+Decision: Retain the controlled worker task for a fixed 75-second exporter-flush wait after settlement
+
+Rationale: The wait is source-governed, bounded, shorter than the smoke convergence cap, and verifies the worker remains running before automatic cleanup. It permits one normal metric export without adding a scheduler, role, alert, or arbitrary query.
+
+
+### 2026-09-23T16:34:11Z - Context hygiene
+
+Summary: Retain only the safe missing worker metric verdict and the source correction: 75-second post-settlement exporter-flush wait before worker scale-down.
+
+Durable evidence: Durable policy is in the staging target profile, worker smoke command, static verifier, and worker operations plan. Do not retain raw CloudWatch output, queue data, task identifiers, or credentials.
+
+
+### 2026-09-23T16:34:13Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a bounded correction to a target-specific smoke-proof timing policy; it does not alter platform contracts, persistence semantics, or the architecture boundary.
+
+
+### 2026-09-23T16:46:50Z - Commit recorded
+
+Commit: `e11e9e0`
+
+Message: fix(deploy): flush worker telemetry before cleanup
+
+Summary: Keep the bounded worker task alive through a fixed 75-second metric-export settlement interval, preserve automatic scale-down, and validate the full repository commit gate.
+
+ADR impact: No ADR required; this is a target-specific operational proof timing correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -187,6 +238,13 @@ ADR impact: No ADR required; target-specific delivery evidence is retained in th
   Summary: Add a fixed worker-only metric observation selector, prevent worker delivery from entering server SLO evaluation, document the boundary, and validate repository-wide commit gates.
   ADR impact: No ADR required; target-specific delivery evidence is retained in the staging target profile and worker operations plan.
 
+
+- Commit: `e11e9e0`
+  Time UTC: 2026-09-23T16:46:50Z
+  Message: fix(deploy): flush worker telemetry before cleanup
+  Summary: Keep the bounded worker task alive through a fixed 75-second metric-export settlement interval, preserve automatic scale-down, and validate the full repository commit gate.
+  ADR impact: No ADR required; this is a target-specific operational proof timing correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -195,14 +253,14 @@ ADR impact: No ADR required; target-specific delivery evidence is retained in th
 
 ADR needed: no
 ADR path:
-Reason: This is a target-specific evidence-command extension and a correction to verifier selection, not a durable platform architecture decision.
+Reason: This is a bounded correction to a target-specific smoke-proof timing policy; it does not alter platform contracts, persistence semantics, or the architecture boundary.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T14:58:05Z
-Latest commit at UTC: 2026-09-23T16:29:14Z
-Latest commit SHA: ad9c59a
-Chat duration: 5469s (00:01:31:09)
+Latest commit at UTC: 2026-09-23T16:46:50Z
+Latest commit SHA: e11e9e0
+Chat duration: 6525s (00:01:48:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

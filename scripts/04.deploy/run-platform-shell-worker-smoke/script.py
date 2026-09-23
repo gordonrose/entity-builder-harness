@@ -118,7 +118,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "dead_letter_queue_visible_messages": 0,
     }:
         raise WorkerSmokeError("the target profile worker proof preconditions are no longer zero-state only")
-    if action.get("worker_desired_count") != 1 or action.get("message_type") != "platform-smoke.rebuild" or action.get("payload") != '{"rebuild":true}' or action.get("maximum_wait_seconds") != 360:
+    if action.get("worker_desired_count") != 1 or action.get("message_type") != "platform-smoke.rebuild" or action.get("payload") != '{"rebuild":true}' or action.get("maximum_wait_seconds") != 360 or action.get("metric_export_settlement_wait_seconds") != 75:
         raise WorkerSmokeError("the target profile worker proof action is no longer the reviewed harmless one-message shape")
     if success != {
         "worker_started": True,
@@ -137,6 +137,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "source_queue_name": required_string(queue.get("source_queue"), "runtime.worker.queue.source_queue"),
         "dead_letter_queue_name": required_string(queue.get("dead_letter_queue"), "runtime.worker.queue.dead_letter_queue"),
         "maximum_wait_seconds": required_integer(action.get("maximum_wait_seconds"), "operations.readiness_closure.worker_consumer.bounded_action.maximum_wait_seconds"),
+        "metric_export_settlement_wait_seconds": required_integer(action.get("metric_export_settlement_wait_seconds"), "operations.readiness_closure.worker_consumer.bounded_action.metric_export_settlement_wait_seconds"),
     }
 
 
@@ -251,6 +252,16 @@ def wait_until(predicate: Any, timeout_seconds: int) -> bool:
     return bool(predicate())
 
 
+def wait_for_worker_metric_export(wait_seconds: int, policy: dict[str, Any], aws_cli: str, credential_source: str) -> None:
+    """Keep the live worker up through one reviewed exporter interval, then fail closed if it stopped before cleanup."""
+
+    deadline = time.monotonic() + wait_seconds
+    while time.monotonic() < deadline:
+        time.sleep(min(10, max(0, deadline - time.monotonic())))
+    if service_state(policy, aws_cli, credential_source)["running"] < 1:
+        raise WorkerSmokeError("the worker stopped before its reviewed metric-export settlement wait completed")
+
+
 def emit(result: str, **fields: int | str) -> None:
     """Emit only bounded aggregate evidence; never raw AWS, queue, task, or message details."""
 
@@ -291,6 +302,7 @@ def execute(policy: dict[str, Any], aws_cli: str, credential_source: str, timeou
 
         if not wait_until(settled, min(timeout_seconds, policy["maximum_wait_seconds"])):
             raise WorkerSmokeError("the bounded worker proof did not converge")
+        wait_for_worker_metric_export(policy["metric_export_settlement_wait_seconds"], policy, aws_cli, credential_source)
         result = "passed"
     except WorkerSmokeError as exception:
         failure_message = str(exception)
@@ -323,7 +335,7 @@ def main() -> int:
     arguments = parse_arguments()
     policy = resolve_policy(load_profile(Path(arguments.target_profile)))
     if arguments.validate:
-        emit("validated", maximum_wait_seconds=policy["maximum_wait_seconds"])
+        emit("validated", maximum_wait_seconds=policy["maximum_wait_seconds"], metric_export_settlement_wait_seconds=policy["metric_export_settlement_wait_seconds"])
         return 0
     return execute(policy, arguments.aws_cli, arguments.aws_credential_source, arguments.timeout_seconds)
 

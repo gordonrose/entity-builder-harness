@@ -28,7 +28,7 @@ cd "$ROOT"
 
 python3 -c 'from pathlib import Path; compile(Path("scripts/04.deploy/run-platform-shell-worker-smoke/script.py").read_text(encoding="utf-8"), "worker-smoke.py", "exec")'
 result="$(npm run platform:shell:worker-smoke -- --validate)"
-if [[ "$result" != *'"worker_smoke":"validated"'* ]] || [[ "$result" != *'"maximum_wait_seconds":360'* ]]; then
+if [[ "$result" != *'"worker_smoke":"validated"'* ]] || [[ "$result" != *'"maximum_wait_seconds":360'* ]] || [[ "$result" != *'"metric_export_settlement_wait_seconds":75'* ]]; then
   echo "ERROR: worker smoke validation must emit only the fixed safe-policy result." >&2
   exit 1
 fi

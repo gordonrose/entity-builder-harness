@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.run-platform-shell-worker-smoke.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -28,9 +28,10 @@ operation.
 
 When explicitly run, it confirms the source queue, DLQ, and worker service are
 empty/dormant; sends one harmless `platform-smoke.rebuild` envelope; sets only
-the worker service to one task; waits for bounded settlement; and always sets
-that service back to desired count zero. Output contains only a safe verdict,
-duration, and task revision.
+the worker service to one task; waits for bounded settlement; keeps the task
+alive for the reviewed 75-second metric-export settlement wait; and always
+sets that service back to desired count zero. Output contains only a safe
+verdict, duration, and task revision.
 
 It never prints a message body or identity, receipt handle, queue URL, raw AWS
 response, task ARN, token, or secret. It is not an outbox producer, a state
