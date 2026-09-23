@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 20
+#   version: 21
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -1043,7 +1043,7 @@ if readiness_closure != {
         "safe_result": "status-code-only-403",
     },
     "rate_limit_429": {
-        "status": "source-defined-deployment-pending",
+        "status": "deployed-and-429-proven",
         "command": "npm run platform:shell:rate-limit-smoke",
         "request_bound": "fresh-fixed-window-declared-limit-plus-one-sequential-requests-stop-on-first-429",
         "fixed_window_alignment": "wait-for-next-window-boundary-and-return-inconclusive-on-rollover",
@@ -1058,7 +1058,7 @@ if readiness_closure != {
         },
     },
     "waf_and_routing": {
-        "status": "source-defined-deployment-pending",
+        "status": "deployed-and-waf-routing-and-ingress-proven",
         "command": "npm run platform:shell:ingress-smoke",
         "proof": "read-only-waf-association-and-listener-host-rule-inspection-plus-bounded-public-host-check",
         "request": {
@@ -1121,6 +1121,29 @@ if worker_consumer_live_evidence != {
     "retained_evidence": "safe-status-count-duration-task-revision-and-verdict-only-no-message-body-id-receipt-queue-url-or-provider-payload",
 }:
     fail("target profile must retain the safe, bounded worker consumer and metric-observation evidence")
+
+public_boundary_live_evidence = operations.get("public_boundary_live_evidence") if isinstance(operations, dict) else {}
+if public_boundary_live_evidence != {
+    "executed_on_utc": "2026-09-23",
+    "rate_limit_429": {
+        "command": "npm run platform:shell:rate-limit-smoke -- --execute",
+        "result": "passed",
+        "attempted_request_count": 121,
+        "allowed_request_count": 120,
+        "first_429_request": 121,
+        "final_status": 429,
+        "total_duration_ms": 12213,
+    },
+    "waf_routing_and_ingress": {
+        "command": "npm run platform:shell:ingress-smoke -- --execute",
+        "result": "passed",
+        "http_status": 200,
+        "duration_ms": 163,
+        "host_rule_priority": 20,
+    },
+    "retained_evidence": "aggregate-status-count-duration-and-rule-priority-only-no-address-response-body-header-or-provider-payload",
+}:
+    fail("target profile must retain the safe, bounded public-boundary evidence")
 
 alarm_definitions = observability.get("alarms")
 expected_alarm_ids = {

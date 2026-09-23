@@ -45,6 +45,10 @@ go
 - Raised: Staging source still recorded the worker boundary as planned after its successful final replay
   Resolution: Updated only safe evidence fields after the two-message replay passed in 278716 ms on task revision 1, the fixed worker metric query returned observed, and the worker plus both queues returned to zero/empty.
 
+
+- Raised: The console did not return a terminal aggregate result for a repeat rate-limit probe
+  Resolution: Did not use the incomplete replay as evidence. Retained only the earlier recorded safe pass of 120 allowed liveness requests followed by the first 429 on request 121; the independent ingress proof was freshly observed as passed.
+
 ## Decisions Made
 
 
@@ -56,12 +60,20 @@ go
 - Decision: Record RAG knowledge disposition: covered
   Rationale: The target-specific worker consumer and metric evidence is retained in the staging deployment profile, readiness record, and operations closure plan; it introduces no new platform or product knowledge domain.
 
+
+- Decision: Record public boundary evidence separately from protected HTTP SLO evidence
+  Rationale: The rate-limit and ingress proofs establish control enforcement at liveness ingress only. They cannot add observations to the protected smoke-read SLO population or shorten its 28-day evidence clock.
+
 ## Context Hygiene
 
 
 
 - Summary: Retain the safe worker proof result: two deliveries 75 seconds apart passed, metric observation was observed, and the dormant post-proof state was restored.
   Durable evidence: Durable evidence is constrained in the staging target profile, readiness manifest, closure plans, and static validators. Do not retain queue URLs, message content, receipt handles, task IDs, raw PromQL, or provider payloads.
+
+
+- Summary: Keep only the safe public-boundary facts: the fixed-window rate proof reached its first 429 after 120 allowed requests, and the WAF/routing/ingress proof returned 200 at listener priority 20.
+  Durable evidence: Durable evidence is constrained in the staging target profile, readiness manifest, operations plan, and static validator. Do not retain public address data, HTTP bodies or headers, WAF payloads, or raw AWS responses.
 
 ## Activity Log
 
@@ -115,6 +127,34 @@ Summary: Record the successful bounded two-message worker consumer proof, indepe
 
 ADR impact: No ADR required; target-specific staging evidence and its static validation do not change platform architecture or persistence semantics.
 
+
+### 2026-09-23T17:24:32Z - Issue
+
+Raised: The console did not return a terminal aggregate result for a repeat rate-limit probe
+
+Resolution: Did not use the incomplete replay as evidence. Retained only the earlier recorded safe pass of 120 allowed liveness requests followed by the first 429 on request 121; the independent ingress proof was freshly observed as passed.
+
+
+### 2026-09-23T17:24:36Z - Decision
+
+Decision: Record public boundary evidence separately from protected HTTP SLO evidence
+
+Rationale: The rate-limit and ingress proofs establish control enforcement at liveness ingress only. They cannot add observations to the protected smoke-read SLO population or shorten its 28-day evidence clock.
+
+
+### 2026-09-23T17:24:42Z - Context hygiene
+
+Summary: Keep only the safe public-boundary facts: the fixed-window rate proof reached its first 429 after 120 allowed requests, and the WAF/routing/ingress proof returned 200 at listener priority 20.
+
+Durable evidence: Durable evidence is constrained in the staging target profile, readiness manifest, operations plan, and static validator. Do not retain public address data, HTTP bodies or headers, WAF payloads, or raw AWS responses.
+
+
+### 2026-09-23T17:24:46Z - ADR disposition
+
+ADR needed: no
+
+Reason: This records target-specific staging public-boundary evidence and strengthens its static validation; it does not change platform architecture, rate-limit semantics, or persistence policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -137,7 +177,7 @@ ADR impact: No ADR required; target-specific staging evidence and its static val
 
 ADR needed: no
 ADR path:
-Reason: This records target-specific staging evidence and strengthens its static validation; it does not change platform architecture, queue semantics, or persistence policy.
+Reason: This records target-specific staging public-boundary evidence and strengthens its static validation; it does not change platform architecture, rate-limit semantics, or persistence policy.
 
 ## Session Metrics
 

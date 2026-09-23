@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
-version: 5
+version: 6
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -102,6 +102,19 @@ window; it must not be promoted into a pass by retrying or resetting state. The
 proof begins at a fresh fixed-window boundary and reports a window rollover as
 inconclusive, so sequential requests cannot be split across two otherwise
 valid counter windows.
+
+## Recorded public-boundary proofs
+
+On 2026-09-23, the bounded rate-limit proof returned 120 allowed liveness
+requests followed by the first `429` on request 121 within its reviewed fixed
+window. The independent ingress proof also passed: the host-scoped WAF,
+priority-20 host rule, ALB-only service ingress, and one public liveness
+request all matched their declared policy.
+
+These are public-boundary proofs, not protected-capability SLO observations.
+Only aggregate count, status, duration, and listener-priority facts are
+retained. The evidence contains no client address, HTTP body or header, WAF
+payload, AWS response, credential, or token.
 
 ## Recorded worker proof
 
