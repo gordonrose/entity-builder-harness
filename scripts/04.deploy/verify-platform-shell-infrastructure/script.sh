@@ -751,6 +751,13 @@ metric_series = observability.get("metric_series")
 if not isinstance(metric_series, list) or len(metric_series) == 0:
     fail("target profile must declare at least one target metric series")
     metric_series = []
+worker_metric_coverage = observability.get("worker_metric_coverage")
+if not isinstance(worker_metric_coverage, dict):
+    fail("target profile must declare the reviewed worker metric-observation policy")
+    worker_metric_coverage = {}
+worker_metric_status = worker_metric_coverage.get("status")
+if worker_metric_status not in {"source-defined-deployment-pending", "deployed-and-query-proven"}:
+    fail("target profile worker metric-observation policy must retain an approved evidence state")
 metric_series_by_id = {}
 source_names = set()
 instrument_names = set()
@@ -768,8 +775,8 @@ for series in metric_series:
         fail(f"target metric series {series_id} must identify server or worker delivery ownership")
     elif runtime_target == "server" and series.get("status") != metric_delivery.get("status"):
         fail(f"target server metric series {series_id} must use its delivery catalogue status")
-    elif runtime_target == "worker" and series.get("status") != "source-defined-deployment-pending":
-        fail(f"target worker metric series {series_id} must remain source-defined until its first live proof")
+    elif runtime_target == "worker" and series.get("status") != worker_metric_status:
+        fail(f"target worker metric series {series_id} must use the worker metric-observation evidence state")
     source = series.get("source", {})
     otel = series.get("otel", {})
     if not isinstance(source, dict) or not isinstance(otel, dict):

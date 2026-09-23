@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
-version: 11
+version: 12
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -261,8 +261,10 @@ The deployment and proof sequence is intentionally separate from the HTTP SLO
 evidence clock: deploy the reviewed foundation and service change sets with
 the worker kept at zero, inspect the exact changes, run one bounded
 side-effect-free direct-SQS smoke only after current approval, then return the
-worker to zero and retain safe aggregate evidence. This proves receipt,
-successful acknowledgement, redrive ownership, and worker telemetry delivery;
+worker to zero and retain safe aggregate evidence. Then run the separately
+governed fixed worker-delivery metric observation after its declared arrival
+grace. This proves receipt, successful acknowledgement, redrive ownership, and
+worker telemetry delivery;
 it does not prove an application state transaction, an outbox relay, or a
 durable business idempotency store. The full execution boundary is in the
 [worker and operations closure plan](kanbien-staging-platform-shell-worker-and-operations-closure-plan.md).

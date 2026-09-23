@@ -39,6 +39,17 @@ if [[ "$environment_result" != '{"platform_shell_metric_coverage":"validated"}' 
   exit 1
 fi
 
+worker_result="$(bash scripts/04.deploy/run-platform-shell-metric-coverage/script.sh --validate --coverage-target worker)"
+if [[ "$worker_result" != '{"coverage_target":"worker","platform_shell_metric_coverage":"validated"}' ]]; then
+  echo "ERROR: worker metric observation validation did not emit the safe expected result" >&2
+  exit 1
+fi
+
+if bash scripts/04.deploy/run-platform-shell-metric-coverage/script.sh --coverage-target worker --mode slo >/dev/null 2>&1; then
+  echo "ERROR: worker metric observation must not be treated as a server SLO query." >&2
+  exit 1
+fi
+
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/04.deploy/run-platform-shell-metric-coverage/slo-evaluation-test.py
 
 echo "Platform-shell metric-coverage local validation passed."

@@ -108,6 +108,7 @@ policy = load_json(POLICY_PATH)
 trust = load_json(TRUST_PATH)
 package = load_json(PACKAGE_PATH)
 coverage = mapping(nested(target_profile, "observability", "metric_coverage"), "target metric_coverage")
+worker_coverage = mapping(nested(target_profile, "observability", "worker_metric_coverage"), "target worker_metric_coverage")
 expected_coverage = {
     "status": "activated-and-live-verified-exporter-loss-rollback-and-operator-alert-receipt-proven",
     "id": "platform-smoke-protected-read-metric-coverage",
@@ -150,6 +151,29 @@ expected_coverage = {
     },
 }
 require(coverage == expected_coverage, "target profile must retain the exact reviewed metric-coverage contract")
+
+expected_worker_coverage = {
+    "id": "platform-smoke-rebuild-delivery-metric-observation",
+    "command": "npm run platform:shell:metric-coverage -- --coverage-target worker",
+    "purpose": "Independently observe the single side-effect-free worker delivery metric after the bounded worker consumer proof; this is delivery evidence, not an HTTP SLO or alerting policy.",
+    "expected_metric": {
+        "instrument_name": "kanbien.platform.worker.job.delivery",
+        "required_labels": {
+            "capability": "platform-smoke.smoke.rebuild",
+            "action": "execute",
+            "execution_context": "worker",
+            "job_delivery_disposition": "succeeded",
+            "outcome": "succeeded",
+        },
+    },
+    "query_window_seconds": "1200",
+    "arrival_grace_seconds": "300",
+    "verdicts": ["observed", "missing", "query-failed"],
+    "output_policy": "safe-verdict-and-aggregate-only-no-query-body-token-or-response-payload",
+}
+worker_coverage_status = worker_coverage.pop("status", None)
+require(worker_coverage_status in {"source-defined-deployment-pending", "deployed-and-query-proven"}, "worker metric observation must retain an approved evidence state")
+require(worker_coverage == expected_worker_coverage, "target profile must retain the exact reviewed worker metric-observation contract")
 require(nested(target_profile, "observability", "slo_query") == {
     "provider_documented_max_request_range_days": "7",
     "effective_max_increase_lookback_days": "1",
@@ -278,6 +302,7 @@ else:
     command_source = COMMAND_PATH.read_text(encoding="utf-8")
     require("secretsmanager" not in command_source.lower(), "metric-coverage command must not read secrets")
     require("platform-smoke" in command_source and "promql" in command_source.lower() and "sns" in command_source.lower(), "metric-coverage command must retain its reviewed target query and fixed notification boundary")
+    require("--coverage-target" in command_source and "resolve_worker_policy" in command_source, "metric-coverage command must retain the fixed worker observation selector")
 
 if failures:
     for failure in failures:
