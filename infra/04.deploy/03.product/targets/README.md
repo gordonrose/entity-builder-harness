@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: infra.observability
@@ -55,3 +55,15 @@ permissions, lifecycle wiring, coverage signal, and policy-to-IaC proof. The
 deployed target path is not a green SLO claim. The independent freshness signal,
 exporter-loss rehearsal, dashboard/runbook, and capability-alert delivery
 remain separate target work.
+
+## Worker Delivery Catalogue
+
+| Target | Generic boundary | Selected provider mapping | Source state | Live-proof boundary |
+| --- | --- | --- | --- | --- |
+| Kanbien / staging | `platform/workers/` | [AWS SQS worker adapter](../../../../platform/adapters/aws/queue/sqs/) | Queue/DLQ, worker IAM, service definition, and worker telemetry are source-defined with desired count `0`. | A reviewed staging change set and one bounded side-effect-free direct-SQS smoke are still required. This is consumer proof, not an outbox or business persistence proof. |
+
+The target profile owns the delivery policy. Generic workers never name SQS;
+the SQS adapter never owns product job meaning; infrastructure owns queue,
+redrive, IAM, task, and log resources. See the [worker and operations closure
+plan](../../../../docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md)
+for the deployment and rollback boundary.

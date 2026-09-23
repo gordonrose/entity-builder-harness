@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 19
+  version: 20
   status: active
   layer: 05.education
   domain: education
@@ -8842,9 +8842,60 @@ This is a narrowly governed operational synthetic: it obtains a short-lived
 token and crosses the real public boundary. That is why it receives its own
 IAM role, no repository-secret fallback, a fixed route, and redacted output.
 
+## 97. A Queue Consumer Is Not an Outbox
+
+The smoke target now has a source-defined worker path: an SQS queue, a DLQ, a
+separate no-ingress ECS worker, and a handler for the harmless
+`platform-smoke.rebuild` job. The worker receives one message, runs the
+registered job, and acknowledges the SQS message only if that job succeeds.
+
+```text
+one direct harmless message
+        ↓
+SQS source queue → worker receives it → job succeeds → SQS acknowledge
+                                                        ↓
+                                            worker returns to zero
+```
+
+That is a valuable proof, but it is deliberately small. A later business
+capability must first make one durable transaction that changes business state
+and writes its outbox obligation together. A relay then publishes that outbox
+record. The worker must also claim durable processing state before any business
+side effect. Those persistence records make retries and duplicate delivery
+safe; an SQS message alone cannot do so.
+
+### Why the worker starts at zero
+
+The public server needs to stay available continuously. The worker is a
+dormant operational component until we intentionally test it. Desired count
+zero means the queue has no polling task and no idle Fargate cost. The future
+proof starts exactly one worker only after confirming both source queue and DLQ
+are empty, sends one safe message, waits for settlement, and returns it to
+zero even when the proof fails.
+
+### Misconception check
+
+“If the source queue becomes empty, the worker definitely completed the work.”
+
+Not by itself. Queue counts are approximate operational evidence. A reliable
+business outcome also needs the worker's durable processing record and state
+transition. For this harmless smoke handler, settlement plus worker health and
+metric evidence is enough to demonstrate the consumer boundary, because the
+handler has no external side effect.
+
+### Study question
+
+Why is a direct SQS smoke command not allowed to evolve quietly into the real
+application's outbox producer?
+
+Because it has no atomic relationship to an accepted business change. A crash
+between changing a record and sending a direct queue message can leave one
+without the other. The later outbox transaction exists precisely to preserve
+that obligation.
+
 ## Repository Evidence
 
-- [Current session log](../../../commitLogs/2026/sep/19/2026-09-19-01-27-apply-worker-observability-profiles/README.md)
+- [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
 - [Core package overview](../../../packages/core/README.md)
 - [Core security public entry point](../../../packages/core/src/security/index.ts)
 - [Platform contracts README](../../../platform/contracts/README.md)
@@ -8889,6 +8940,12 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-23: Added the source-defined staging worker extension: a
+  provider-neutral worker process, SQS consumer adapter, zero-desired-count
+  worker service/queue/DLQ/IAM source, guarded consumer rehearsal, and the
+  worker-and-operations closure plan. This remains local source until a
+  reviewed change set and bounded live proof complete; it is explicitly not an
+  outbox or business persistence implementation.
 - 2026-09-22: Promoted the temporary scheduler source to `origin/main` and
   manually dispatched its first run. GitHub run `35711517748` completed from
   source `9ccad368a34684afaa9b7ed64d7dba85f4b3fae8` with the approved redacted

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 17
+#   version: 19
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -39,6 +39,9 @@ bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
@@ -320,12 +323,20 @@ else:
 expected_foundation_resources = {
     "PlatformShellLogGroup",
     "PlatformShellOtelCollectorLogGroup",
+    "PlatformShellWorkerLogGroup",
+    "PlatformShellWorkerOtelCollectorLogGroup",
     "OtelCollectorConfigurationParameter",
     "RateLimitTable",
     "TaskExecutionRole",
     "TaskRole",
+    "WorkerTaskRole",
     "ServiceDeploymentExecutionRole",
     "ServiceSecurityGroup",
+    "WorkerSecurityGroup",
+    "WorkerQueue",
+    "WorkerDeadLetterQueue",
+    "WorkerQueueTransportPolicy",
+    "WorkerDeadLetterQueueTransportPolicy",
     "TargetGroup",
     "HostRule",
     "DnsAlias",
@@ -338,6 +349,7 @@ expected_foundation_resources = {
     "AlarmSubscription",
     "UnhealthyTargetAlarm",
     "Target5xxAlarm",
+    "PlatformShellMonthlyBudget",
 }
 expected_foundation_parameters = {
     "VpcId",
@@ -357,13 +369,21 @@ expected_foundation_parameters = {
 expected_foundation_outputs = {
     "LogGroupName",
     "OtelCollectorLogGroupName",
+    "WorkerLogGroupName",
+    "WorkerOtelCollectorLogGroupName",
     "OtelCollectorConfigurationParameterArn",
     "RateLimitTableName",
     "RateLimitTableArn",
     "TaskExecutionRoleArn",
     "TaskRoleArn",
+    "WorkerTaskRoleArn",
     "ServiceDeploymentExecutionRoleArn",
     "ServiceSecurityGroupId",
+    "WorkerSecurityGroupId",
+    "WorkerQueueUrl",
+    "WorkerQueueArn",
+    "WorkerDeadLetterQueueUrl",
+    "WorkerDeadLetterQueueArn",
     "TargetGroupArn",
     "PublicSubnetIdsCsv",
     "HostName",
@@ -374,6 +394,8 @@ expected_foundation_outputs = {
 expected_service_resources = {
     "TaskDefinition",
     "Service",
+    "WorkerTaskDefinition",
+    "WorkerService",
     "EcsRunningCountAlarm",
     "EcsHighCpuAlarm",
     "EcsHighMemoryAlarm",
@@ -428,12 +450,53 @@ if metric_delivery_statement is None or metric_delivery_statement.get("Effect") 
 if set(task_statements_by_sid) != {"UpdateOnlyThePlatformShellRateLimitTable", "PublishOnlyCloudWatchMetricData"}:
     fail("TaskRole must contain exactly the reviewed rate-limit and metric-delivery statements")
 
+worker_task_policy = properties(foundation, "WorkerTaskRole", "AWS::IAM::Role").get("Policies", [])
+worker_task_statements = [statement for policy in worker_task_policy for statement in policy.get("PolicyDocument", {}).get("Statement", [])]
+worker_task_statements_by_sid = {statement.get("Sid"): statement for statement in worker_task_statements}
+worker_delivery_statement = worker_task_statements_by_sid.get("ReceiveAndSettleOnlyThePlatformShellWorkerQueue")
+if worker_delivery_statement is None or worker_delivery_statement.get("Effect") != "Allow" or set(worker_delivery_statement.get("Action", [])) != {"sqs:ChangeMessageVisibility", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:ReceiveMessage"} or worker_delivery_statement.get("Resource") != {"!GetAtt": "WorkerQueue.Arn"}:
+    fail("WorkerTaskRole must receive and settle only the reviewed source queue")
+worker_metric_statement = worker_task_statements_by_sid.get("PublishOnlyCloudWatchWorkerMetricData")
+if worker_metric_statement is None or worker_metric_statement.get("Effect") != "Allow" or worker_metric_statement.get("Action") != ["cloudwatch:PutMetricData"] or worker_metric_statement.get("Resource") != "*":
+    fail("WorkerTaskRole must grant only the reviewed CloudWatch worker metric-delivery action")
+if set(worker_task_statements_by_sid) != {"ReceiveAndSettleOnlyThePlatformShellWorkerQueue", "PublishOnlyCloudWatchWorkerMetricData"}:
+    fail("WorkerTaskRole must contain exactly the reviewed queue-delivery and metric-delivery statements")
+
+for queue_name, expected_queue_name, expected_retention, expected_visibility in (
+    ("WorkerQueue", "kanbien-staging-platform-shell-worker", 345600, 30),
+    ("WorkerDeadLetterQueue", "kanbien-staging-platform-shell-worker-dlq", 1209600, None),
+):
+    queue = properties(foundation, queue_name, "AWS::SQS::Queue")
+    if queue.get("QueueName") != expected_queue_name or queue.get("MessageRetentionPeriod") != expected_retention or queue.get("ReceiveMessageWaitTimeSeconds") != 20 or queue.get("SqsManagedSseEnabled") is not True:
+        fail(f"{queue_name} must retain the reviewed name, long-poll, retention, and SQS-managed encryption")
+    if expected_visibility is not None and queue.get("VisibilityTimeout") != expected_visibility:
+        fail("WorkerQueue must retain the reviewed 30-second visibility timeout")
+
+worker_queue = properties(foundation, "WorkerQueue", "AWS::SQS::Queue")
+if worker_queue.get("MaximumMessageSize") != 262144 or worker_queue.get("DelaySeconds") != 0 or worker_queue.get("RedrivePolicy") != {"deadLetterTargetArn": {"!GetAtt": "WorkerDeadLetterQueue.Arn"}, "maxReceiveCount": 3}:
+    fail("WorkerQueue must retain the reviewed bounded payload and SQS redrive policy")
+
+for policy_name, queue_name in (("WorkerQueueTransportPolicy", "WorkerQueue"), ("WorkerDeadLetterQueueTransportPolicy", "WorkerDeadLetterQueue")):
+    queue_policy = properties(foundation, policy_name, "AWS::SQS::QueuePolicy")
+    if queue_policy.get("Queues") != [{"!Ref": queue_name}] or queue_policy.get("PolicyDocument") != {
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Sid": "DenyInsecureTransport",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "sqs:*",
+            "Resource": {"!GetAtt": f"{queue_name}.Arn"},
+            "Condition": {"Bool": {"aws:SecureTransport": False}},
+        }],
+    }:
+        fail(f"{policy_name} must deny non-TLS transport for only its reviewed queue")
+
 service_deployment_role = properties(foundation, "ServiceDeploymentExecutionRole", "AWS::IAM::Role")
 service_deployment_policy = service_deployment_role.get("Policies", [{}])[0].get("PolicyDocument", {}).get("Statement", [])
 if not contains_value(service_deployment_policy, "ecs:RegisterTaskDefinition"):
     fail("ServiceDeploymentExecutionRole must be able to register only the service task definition")
-if not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskExecutionRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskRole.Arn"):
-    fail("ServiceDeploymentExecutionRole must pass only the platform-shell task roles")
+if not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskExecutionRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "WorkerTaskRole.Arn"):
+    fail("ServiceDeploymentExecutionRole must pass only the reviewed platform-shell server and worker task roles")
 
 security_group = properties(foundation, "ServiceSecurityGroup", "AWS::EC2::SecurityGroup")
 for ingress in security_group.get("SecurityGroupIngress", []):
@@ -443,6 +506,17 @@ for ingress in security_group.get("SecurityGroupIngress", []):
         fail("ServiceSecurityGroup ingress must allow only TCP 3000")
 if any(rule.get("CidrIp") == "0.0.0.0/0" and rule.get("FromPort") != 443 for rule in security_group.get("SecurityGroupEgress", [])):
     fail("ServiceSecurityGroup may use public egress only for TLS port 443")
+
+worker_security_group = properties(foundation, "WorkerSecurityGroup", "AWS::EC2::SecurityGroup")
+if worker_security_group.get("SecurityGroupIngress") not in (None, []):
+    fail("WorkerSecurityGroup must accept no inbound network traffic")
+expected_worker_egress = [
+    {"Description": "TLS egress for ECR image pulls, CloudWatch Logs, SQS, and CloudWatch metric delivery.", "IpProtocol": "tcp", "FromPort": 443, "ToPort": 443, "CidrIp": "0.0.0.0/0"},
+    {"Description": "UDP DNS only to the VPC resolver address range.", "IpProtocol": "udp", "FromPort": 53, "ToPort": 53, "CidrIp": {"!Ref": "VpcCidr"}},
+    {"Description": "TCP DNS fallback only to the VPC resolver address range.", "IpProtocol": "tcp", "FromPort": 53, "ToPort": 53, "CidrIp": {"!Ref": "VpcCidr"}},
+]
+if worker_security_group.get("SecurityGroupEgress") != expected_worker_egress:
+    fail("WorkerSecurityGroup must retain only reviewed TLS and VPC DNS egress")
 
 target_group = properties(foundation, "TargetGroup", "AWS::ElasticLoadBalancingV2::TargetGroup")
 if target_group.get("TargetType") != "ip" or target_group.get("HealthCheckPath") != "/livez":
@@ -486,12 +560,65 @@ web_acl_association = properties(foundation, "WebAclAssociation", "AWS::WAFv2::W
 if web_acl_association.get("ResourceArn") != {"!Ref": "ExistingAlbArn"}:
     fail("WebAclAssociation must apply only to the declared existing ALB input")
 
+alarm_topic_policy = properties(foundation, "AlarmTopicPolicy", "AWS::SNS::TopicPolicy")
+if alarm_topic_policy.get("Topics") != [{"!Ref": "AlarmTopic"}]:
+    fail("AlarmTopicPolicy must apply only to the reviewed foundation alarm topic")
+topic_policy_statements = alarm_topic_policy.get("PolicyDocument", {}).get("Statement", [])
+expected_topic_principals = {
+    "AllowCloudWatchAlarmsToPublish": "cloudwatch.amazonaws.com",
+    "AllowBudgetsToPublish": "budgets.amazonaws.com",
+}
+actual_topic_statements = {statement.get("Sid"): statement for statement in topic_policy_statements if isinstance(statement, dict)}
+if set(actual_topic_statements) != set(expected_topic_principals):
+    fail("AlarmTopicPolicy must allow only CloudWatch alarms and Budgets to publish")
+for statement_id, principal in expected_topic_principals.items():
+    statement = actual_topic_statements.get(statement_id, {})
+    if statement.get("Effect") != "Allow" or statement.get("Principal") != {"Service": principal} or statement.get("Action") != "sns:Publish" or statement.get("Resource") != {"!Ref": "AlarmTopic"} or statement.get("Condition") != {"StringEquals": {"aws:SourceAccount": {"!Ref": "AWS::AccountId"}}}:
+        fail(f"AlarmTopicPolicy {statement_id} must retain the reviewed same-account publish boundary")
+
+budget = properties(foundation, "PlatformShellMonthlyBudget", "AWS::Budgets::Budget")
+if budget.get("Budget") != {
+    "BudgetName": "kanbien-staging-platform-shell-monthly",
+    "BudgetLimit": {"Amount": "25", "Unit": "USD"},
+    "TimeUnit": "MONTHLY",
+    "BudgetType": "COST",
+    "CostFilters": {"TagKeyValue": ["user:service$platform-shell"]},
+}:
+    fail("PlatformShellMonthlyBudget must retain the reviewed 25 USD monthly service-tag budget")
+expected_budget_notifications = [
+    ("ACTUAL", 50),
+    ("ACTUAL", 80),
+    ("ACTUAL", 100),
+    ("FORECASTED", 100),
+]
+actual_budget_notifications = budget.get("NotificationsWithSubscribers")
+expected_budget_subscriptions = [
+    {
+        "Notification": {
+            "NotificationType": notification_type,
+            "ComparisonOperator": "GREATER_THAN",
+            "Threshold": threshold,
+            "ThresholdType": "PERCENTAGE",
+        },
+        "Subscribers": [{"SubscriptionType": "SNS", "Address": {"!Ref": "AlarmTopic"}}],
+    }
+    for notification_type, threshold in expected_budget_notifications
+]
+if actual_budget_notifications != expected_budget_subscriptions:
+    fail("PlatformShellMonthlyBudget must send only the reviewed actual and forecast thresholds to AlarmTopic")
+
 log_group = properties(foundation, "PlatformShellLogGroup", "AWS::Logs::LogGroup")
 if log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
     fail("PlatformShellLogGroup must use the reviewed retention parameter")
 collector_log_group = properties(foundation, "PlatformShellOtelCollectorLogGroup", "AWS::Logs::LogGroup")
 if collector_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-otel-collector" or collector_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
     fail("PlatformShellOtelCollectorLogGroup must use the reviewed separate collector log destination and retention")
+worker_log_group = properties(foundation, "PlatformShellWorkerLogGroup", "AWS::Logs::LogGroup")
+if worker_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-worker" or worker_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
+    fail("PlatformShellWorkerLogGroup must use the reviewed worker log destination and retention")
+worker_collector_log_group = properties(foundation, "PlatformShellWorkerOtelCollectorLogGroup", "AWS::Logs::LogGroup")
+if worker_collector_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-worker-otel-collector" or worker_collector_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
+    fail("PlatformShellWorkerOtelCollectorLogGroup must use the reviewed worker collector log destination and retention")
 collector_configuration_parameter = properties(foundation, "OtelCollectorConfigurationParameter", "AWS::SSM::Parameter")
 if collector_configuration_parameter.get("Name") != "/kanbien/staging/platform-shell/observability/collector-config" or collector_configuration_parameter.get("Type") != "String" or collector_configuration_parameter.get("Tier") != "Standard" or collector_configuration_parameter.get("DataType") != "text":
     fail("OtelCollectorConfigurationParameter must be the reviewed non-secret standard SSM String")
@@ -585,6 +712,7 @@ else:
         "parameter_resource": "OtelCollectorConfigurationParameter",
         "delivery_environment_key": "AOT_CONFIG_CONTENT",
         "log_group_resource": "PlatformShellOtelCollectorLogGroup",
+        "worker_log_group_resource": "PlatformShellWorkerOtelCollectorLogGroup",
         "output_parameter_arn": "OtelCollectorConfigurationParameterArn",
     }:
         fail("target profile metrics must declare the reviewed target-owned collector configuration record")
@@ -597,9 +725,21 @@ else:
         "collector_dependency": "platform-shell-depends-on-otel-collector-start",
     }:
         fail("target profile metrics must declare the reviewed application and collector task capacity")
+    worker_metric_task = metric_delivery.get("worker_task")
+    if worker_metric_task != {
+        "cpu_units": 512,
+        "memory_mib": 1024,
+        "application_cpu_units": 384,
+        "application_memory_reservation_mib": 512,
+        "collector_dependency": "platform-shell-worker-depends-on-otel-collector-start",
+    }:
+        fail("target profile metrics must declare the reviewed worker and collector task capacity")
     metric_iam = metric_delivery.get("iam", {})
     if not isinstance(metric_iam, dict) or metric_iam.get("task_execution_role", {}).get("action") != "ssm:GetParameters" or metric_iam.get("task_execution_role", {}).get("resource") != "OtelCollectorConfigurationParameter" or metric_iam.get("task_role", {}).get("action") != "cloudwatch:PutMetricData" or metric_iam.get("task_role", {}).get("resource") != "*":
         fail("target profile metrics must declare its narrow SSM configuration and CloudWatch delivery IAM requirements")
+    worker_metric_iam = metric_delivery.get("worker_iam", {})
+    if not isinstance(worker_metric_iam, dict) or worker_metric_iam.get("task_execution_role", {}).get("action") != "ssm:GetParameters" or worker_metric_iam.get("task_execution_role", {}).get("resource") != "OtelCollectorConfigurationParameter" or worker_metric_iam.get("task_role", {}).get("action") != "cloudwatch:PutMetricData" or worker_metric_iam.get("task_role", {}).get("resource") != "*":
+        fail("target profile metrics must declare narrow worker SSM configuration and CloudWatch delivery IAM requirements")
     export = metric_delivery.get("export", {})
     if not isinstance(export, dict) or export.get("eligible_slo_measurement_sampling") != "none":
         fail("target profile metrics must preserve every eligible initial SLO measurement")
@@ -623,8 +763,13 @@ for series in metric_series:
         fail("target metric series IDs must be non-empty and unique")
         continue
     metric_series_by_id[series_id] = series
-    if series.get("status") != metric_delivery.get("status"):
-        fail(f"target metric series {series_id} must use its delivery catalogue status")
+    runtime_target = series.get("runtime_target")
+    if runtime_target not in {"server", "worker"}:
+        fail(f"target metric series {series_id} must identify server or worker delivery ownership")
+    elif runtime_target == "server" and series.get("status") != metric_delivery.get("status"):
+        fail(f"target server metric series {series_id} must use its delivery catalogue status")
+    elif runtime_target == "worker" and series.get("status") != "source-defined-deployment-pending":
+        fail(f"target worker metric series {series_id} must remain source-defined until its first live proof")
     source = series.get("source", {})
     otel = series.get("otel", {})
     if not isinstance(source, dict) or not isinstance(otel, dict):
@@ -883,13 +1028,56 @@ if readiness_closure != {
         "safe_result": "status-code-only-403",
     },
     "rate_limit_429": {
-        "status": "planned",
+        "status": "source-defined-deployment-pending",
+        "command": "npm run platform:shell:rate-limit-smoke",
         "request_bound": "declared-window-limit-plus-one-sequential-requests-stop-on-first-429",
         "safe_result": "aggregate-counts-and-final-status-only",
+        "request": {
+            "method": "GET",
+            "path": "/livez",
+            "credentials": "none",
+            "expected_allowed_status": 200,
+            "expected_limited_status": 429,
+            "slo_population_effect": "none-protected-capability-metrics-are-not-emitted-for-liveness",
+        },
     },
     "waf_and_routing": {
-        "status": "planned",
+        "status": "source-defined-deployment-pending",
+        "command": "npm run platform:shell:ingress-smoke",
         "proof": "read-only-waf-association-and-listener-host-rule-inspection-plus-bounded-public-host-check",
+        "request": {
+            "method": "GET",
+            "path": "/livez",
+            "credentials": "none",
+            "expected_http_status": 200,
+            "output_policy": "safe-facts-only-no-response-body-address-or-provider-payload",
+        },
+    },
+    "worker_consumer": {
+        "status": "source-defined-deployment-pending",
+        "command": "npm run platform:shell:worker-smoke",
+        "execution_guard": "--execute-and-approve-live-worker-smoke",
+        "proof": "one-side-effect-free-direct-sqs-platform-smoke-rebuild-message-through-the-dormant-worker-service",
+        "preconditions": {
+            "worker_desired_count": 0,
+            "worker_running_count": 0,
+            "source_queue_visible_messages": 0,
+            "dead_letter_queue_visible_messages": 0,
+        },
+        "bounded_action": {
+            "worker_desired_count": 1,
+            "message_type": "platform-smoke.rebuild",
+            "payload": '{"rebuild":true}',
+            "maximum_wait_seconds": 360,
+        },
+        "success": {
+            "worker_started": True,
+            "source_queue_visible_messages": 0,
+            "dead_letter_queue_visible_messages": 0,
+            "cleanup_worker_desired_count": 0,
+        },
+        "safe_result": "status-counts-duration-and-task-revision-only-no-message-body-id-receipt-queue-url-or-provider-payload",
+        "limitation": "direct-consumer-proof-only-not-a-producer-transaction-outbox-or-durable-business-idempotency-proof",
     },
     "alarm_and_rollback": {
         "status": "planned",
@@ -1013,8 +1201,7 @@ for key, value in target_environment.items():
     elif environment.get(key) != value:
         fail(f"service template must match target-profile non-secret value for {key}")
 
-expected_metric_series_environment = []
-for series in metric_series:
+def metric_series_environment(series):
     source = series.get("source", {})
     otel = series.get("otel", {})
     expected_series = {
@@ -1028,7 +1215,13 @@ for series in metric_series:
     }
     if "histogram" in series:
         expected_series["histogramBucketBoundaries"] = series.get("histogram", {}).get("bucket_boundaries_ms")
-    expected_metric_series_environment.append(expected_series)
+    return expected_series
+
+expected_metric_series_environment = [
+    metric_series_environment(series)
+    for series in metric_series
+    if series.get("runtime_target") == "server"
+]
 try:
     actual_metric_series_environment = json.loads(environment.get("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", ""))
 except (TypeError, json.JSONDecodeError):
@@ -1036,6 +1229,60 @@ except (TypeError, json.JSONDecodeError):
 else:
     if actual_metric_series_environment != expected_metric_series_environment:
         fail("platform-shell task metric-series JSON must be a mechanical projection of the reviewed target catalogue")
+
+worker_task_definition = properties(service, "WorkerTaskDefinition", "AWS::ECS::TaskDefinition")
+if worker_task_definition.get("Family") != "kanbien-staging-platform-shell-worker" or worker_task_definition.get("Cpu") != "512" or worker_task_definition.get("Memory") != "1024":
+    fail("WorkerTaskDefinition must retain the reviewed worker family and sidecar-capable capacity")
+if worker_task_definition.get("ExecutionRoleArn") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-TaskExecutionRoleArn"}} or worker_task_definition.get("TaskRoleArn") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerTaskRoleArn"}}:
+    fail("WorkerTaskDefinition must use the reviewed execution and least-privilege worker task roles")
+worker_containers = {item.get("Name"): item for item in worker_task_definition.get("ContainerDefinitions", []) if isinstance(item, dict)}
+worker_container = worker_containers.get("platform-shell-worker", {})
+worker_collector = worker_containers.get("otel-collector", {})
+if worker_container.get("Image") != {"!Ref": "ImageUri"} or worker_container.get("Command") != [".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.js"] or worker_container.get("ReadonlyRootFilesystem") is not True or worker_container.get("Cpu") != 384 or worker_container.get("MemoryReservation") != 512 or worker_container.get("PortMappings") or worker_container.get("HealthCheck") or worker_container.get("Secrets"):
+    fail("platform-shell-worker must be a non-public read-only worker without ports, health endpoint, or task secrets")
+if worker_container.get("DependsOn") != [{"ContainerName": "otel-collector", "Condition": "START"}]:
+    fail("platform-shell-worker must depend on the collector starting before it starts")
+if worker_collector.get("Image") != collector_container.get("Image") or worker_collector.get("ReadonlyRootFilesystem") is not True or worker_collector.get("Cpu") != 128 or worker_collector.get("MemoryReservation") != 256 or worker_collector.get("PortMappings"):
+    fail("worker collector must retain the reviewed immutable image, read-only filesystem, and bounded capacity")
+if worker_collector.get("Secrets") != [{"Name": "AOT_CONFIG_CONTENT", "ValueFrom": {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-OtelCollectorConfigurationParameterArn"}}}]:
+    fail("worker collector must read only the reviewed target configuration through ECS SSM value injection")
+worker_collector_options = worker_collector.get("LogConfiguration", {}).get("Options", {})
+if worker_collector.get("LogConfiguration", {}).get("LogDriver") != "awslogs" or worker_collector_options.get("awslogs-stream-prefix") != "worker-otel-collector" or worker_collector_options.get("awslogs-group") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerOtelCollectorLogGroupName"}}:
+    fail("worker collector must use its separate reviewed worker collector log destination")
+worker_environment = {entry.get("Name"): entry.get("Value") for entry in worker_container.get("Environment", [])}
+worker_target_environment = target_profile.get("config", {}).get("worker_non_secret_env", {})
+if not isinstance(worker_target_environment, dict):
+    fail("target profile must declare worker non-secret deployment configuration")
+else:
+    for key, value in worker_target_environment.items():
+        if worker_environment.get(key) != value:
+            fail(f"worker task must match target-profile worker non-secret value for {key}")
+if worker_environment.get("PLATFORM_WORKER_SQS_QUEUE_URL") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerQueueUrl"}}:
+    fail("worker task must obtain the source queue URL from the foundation stack")
+expected_worker_metric_series_environment = [
+    metric_series_environment(series)
+    for series in metric_series
+    if series.get("runtime_target") == "worker"
+]
+try:
+    actual_worker_metric_series_environment = json.loads(worker_environment.get("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", ""))
+except (TypeError, json.JSONDecodeError):
+    fail("worker task must provide valid JSON metric-series configuration")
+else:
+    if actual_worker_metric_series_environment != expected_worker_metric_series_environment:
+        fail("worker task metric-series JSON must be a mechanical projection of the reviewed target catalogue")
+
+worker_desired_count_parameter = service.get("Parameters", {}).get("WorkerDesiredCount", {})
+if worker_desired_count_parameter.get("Default") != 0 or worker_desired_count_parameter.get("MinValue") != 0 or worker_desired_count_parameter.get("MaxValue") != 1:
+    fail("WorkerDesiredCount must default to zero and permit only the reviewed bounded proof scale")
+worker_service = properties(service, "WorkerService", "AWS::ECS::Service")
+if worker_service.get("ServiceName") != "kanbien-staging-platform-shell-worker" or worker_service.get("DesiredCount") != {"!Ref": "WorkerDesiredCount"} or worker_service.get("TaskDefinition") != {"!Ref": "WorkerTaskDefinition"} or worker_service.get("LoadBalancers") or worker_service.get("EnableExecuteCommand") is not False:
+    fail("WorkerService must retain its non-public, bounded worker deployment shape")
+if worker_service.get("DeploymentConfiguration") != {"MinimumHealthyPercent": 0, "MaximumPercent": 100, "DeploymentCircuitBreaker": {"Enable": True, "Rollback": True}}:
+    fail("WorkerService must retain the reviewed zero-to-one worker rollout configuration")
+worker_network = worker_service.get("NetworkConfiguration", {}).get("AwsvpcConfiguration", {})
+if worker_network.get("AssignPublicIp") != "ENABLED" or worker_network.get("SecurityGroups") != [{"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerSecurityGroupId"}}]:
+    fail("WorkerService must use only the reviewed worker security group and controlled outbound network path")
 
 if rate_table.get("TableName") != target_profile.get("rate_limiting", {}).get("shared_adapter", {}).get("table_name"):
     fail("foundation rate-limit table name must match the target profile")

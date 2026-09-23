@@ -8,6 +8,14 @@ Outputs:
     Value: !Ref PlatformShellOtelCollectorLogGroup
     Export:
       Name: !Sub ${AWS::StackName}-OtelCollectorLogGroupName
+  WorkerLogGroupName:
+    Value: !Ref PlatformShellWorkerLogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerLogGroupName
+  WorkerOtelCollectorLogGroupName:
+    Value: !Ref PlatformShellWorkerOtelCollectorLogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerOtelCollectorLogGroupName
   OtelCollectorConfigurationParameterArn:
     Value: !GetAtt OtelCollectorConfigurationParameter.Arn
     Export:
@@ -28,6 +36,10 @@ Outputs:
     Value: !GetAtt TaskRole.Arn
     Export:
       Name: !Sub ${AWS::StackName}-TaskRoleArn
+  WorkerTaskRoleArn:
+    Value: !GetAtt WorkerTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerTaskRoleArn
   ServiceDeploymentExecutionRoleArn:
     Value: !GetAtt ServiceDeploymentExecutionRole.Arn
     Export:
@@ -36,6 +48,26 @@ Outputs:
     Value: !Ref ServiceSecurityGroup
     Export:
       Name: !Sub ${AWS::StackName}-ServiceSecurityGroupId
+  WorkerSecurityGroupId:
+    Value: !Ref WorkerSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerSecurityGroupId
+  WorkerQueueUrl:
+    Value: !Ref WorkerQueue
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerQueueUrl
+  WorkerQueueArn:
+    Value: !GetAtt WorkerQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerQueueArn
+  WorkerDeadLetterQueueUrl:
+    Value: !Ref WorkerDeadLetterQueue
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerDeadLetterQueueUrl
+  WorkerDeadLetterQueueArn:
+    Value: !GetAtt WorkerDeadLetterQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerDeadLetterQueueArn
   TargetGroupArn:
     Value: !Ref TargetGroup
     Export:

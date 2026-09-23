@@ -28,15 +28,18 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const runtimeRoot = join(repositoryRoot, ".cache", "platform-shell-image-build");
-const entrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-server.main.js");
+const serverEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-server.main.js");
+const workerEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-worker.main.js");
 const workspacePackageScope = join(repositoryRoot, "node_modules", "@kanbien");
 const hiddenWorkspaceRoot = mkdtempSync(join(tmpdir(), "platform-shell-runtime-payload-"));
 const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
 
 const requiredPayloadFiles = [
-  entrypoint,
+  serverEntrypoint,
+  workerEntrypoint,
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-auth-cognito", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-observability-cloudwatch", "index.js"),
+  join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-queue-sqs", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-runtime-ecs-fargate", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-security-dynamodb-rate-limiter", "index.js"),
 ];
@@ -54,7 +57,7 @@ if (!existsSync(workspacePackageScope)) {
 renameSync(workspacePackageScope, hiddenWorkspaceScope);
 
 try {
-  const result = spawnSync(process.execPath, [entrypoint], {
+  const serverResult = spawnSync(process.execPath, [serverEntrypoint], {
     cwd: repositoryRoot,
     env: {
       ...process.env,
@@ -121,8 +124,57 @@ try {
     stdio: "inherit",
   });
 
-  if (result.status !== 0) {
-    throw new Error(`Compiled platform shell runtime failed with exit code ${String(result.status)}.`);
+  if (serverResult.status !== 0) {
+    throw new Error(`Compiled platform shell server runtime failed with exit code ${String(serverResult.status)}.`);
+  }
+
+  const workerResult = spawnSync(process.execPath, [workerEntrypoint], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      PLATFORM_WORKER_EXIT_AFTER_START: "1",
+      PLATFORM_WORKER_QUEUE_PROVIDER: "sqs",
+      PLATFORM_WORKER_SQS_QUEUE_URL: "https://sqs.eu-west-1.amazonaws.com/123456789012/kanbien-staging-platform-shell-worker",
+      PLATFORM_WORKER_SQS_REGION: "eu-west-1",
+      PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS: "20",
+      PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS: "30",
+      PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS: "1000",
+      PLATFORM_SMOKE_APP_NAME: "Kanbien Platform Smoke",
+      PLATFORM_SOURCE_COMMIT_SHA: "runtime-payload-test",
+      PLATFORM_OBSERVABILITY_METRICS_PROVIDER: "cloudwatch-otel",
+      PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: "http://127.0.0.1:4318/v1/metrics",
+      PLATFORM_OBSERVABILITY_METRICS_REGION: "eu-west-1",
+      PLATFORM_OBSERVABILITY_SERVICE_NAME: "kanbien-staging-platform-shell-worker",
+      PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: "staging",
+      PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000",
+      PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000",
+      PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON: JSON.stringify([
+        {
+          sourceName: "platform.worker.job.delivery",
+          sourceKind: "counter",
+          sourceUnit: "count",
+          instrumentName: "kanbien.platform.worker.job.delivery",
+          description: "Compiled runtime payload worker delivery counter fixture.",
+          allowedLabelNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
+          cardinalityLimit: 32,
+        },
+        {
+          sourceName: "platform.worker.job.execution_latency",
+          sourceKind: "timer",
+          sourceUnit: "ms",
+          instrumentName: "kanbien.platform.worker.job.execution.duration",
+          description: "Compiled runtime payload worker execution timer fixture.",
+          allowedLabelNames: ["capability", "action", "execution_context", "job_delivery_disposition", "outcome", "error_class"],
+          cardinalityLimit: 32,
+          histogramBucketBoundaries: [50, 300, 750],
+        },
+      ]),
+    },
+    stdio: "inherit",
+  });
+
+  if (workerResult.status !== 0) {
+    throw new Error(`Compiled platform shell worker runtime failed with exit code ${String(workerResult.status)}.`);
   }
 } finally {
   renameSync(hiddenWorkspaceScope, workspacePackageScope);

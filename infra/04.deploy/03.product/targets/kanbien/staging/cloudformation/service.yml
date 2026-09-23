@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.service
-#   version: 3
+#   version: 4
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -43,6 +43,12 @@ Parameters:
     Default: 1
     MinValue: 1
     MaxValue: 3
+  WorkerDesiredCount:
+    Type: Number
+    Default: 0
+    MinValue: 0
+    MaxValue: 1
+    Description: Normal steady state is zero; a bounded worker proof temporarily scales this service to one task and returns it to zero.
   Cpu:
     Type: String
     Default: "512"
@@ -250,6 +256,144 @@ Resources:
         - Key: managed-by
           Value: cloudformation
 
+  WorkerTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-shell-worker
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-WorkerTaskRoleArn
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: platform-shell-worker
+          Image: !Ref ImageUri
+          Command:
+            - .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.js
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          DependsOn:
+            - ContainerName: otel-collector
+              Condition: START
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: PLATFORM_WORKER_QUEUE_PROVIDER
+              Value: sqs
+            - Name: PLATFORM_WORKER_SQS_QUEUE_URL
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-WorkerQueueUrl
+            - Name: PLATFORM_WORKER_SQS_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS
+              Value: "20"
+            - Name: PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS
+              Value: "30"
+            - Name: PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS
+              Value: "1000"
+            - Name: PLATFORM_SMOKE_APP_NAME
+              Value: Kanbien Platform Smoke
+            - Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER
+              Value: cloudwatch-otel
+            - Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT
+              Value: http://127.0.0.1:4318/v1/metrics
+            - Name: PLATFORM_OBSERVABILITY_METRICS_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_OBSERVABILITY_SERVICE_NAME
+              Value: kanbien-staging-platform-shell-worker
+            - Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT
+              Value: staging
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS
+              Value: "60000"
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS
+              Value: "10000"
+            - Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON
+              Value: '[{"sourceName":"platform.worker.job.delivery","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.worker.job.delivery","description":"Completed platform-smoke worker job deliveries by approved outcome.","allowedLabelNames":["capability","action","execution_context","job_delivery_disposition","outcome","error_class"],"cardinalityLimit":512},{"sourceName":"platform.worker.job.execution_latency","sourceKind":"timer","sourceUnit":"ms","instrumentName":"kanbien.platform.worker.job.execution.duration","description":"Platform-smoke worker job execution latency in milliseconds.","allowedLabelNames":["capability","action","execution_context","job_delivery_disposition","outcome","error_class"],"cardinalityLimit":512,"histogramBucketBoundaries":[50,100,200,300,500,750,1000,2500,5000,10000,30000]}]'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-WorkerLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: platform-shell-worker
+        - Name: otel-collector
+          Image: public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 128
+          MemoryReservation: 256
+          StopTimeout: 30
+          Environment:
+            - Name: AWS_REGION
+              Value: eu-west-1
+          Secrets:
+            - Name: AOT_CONFIG_CONTENT
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-OtelCollectorConfigurationParameterArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-WorkerOtelCollectorLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: worker-otel-collector
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  WorkerService:
+    Type: AWS::ECS::Service
+    DependsOn: WorkerTaskDefinition
+    Properties:
+      ServiceName: kanbien-staging-platform-shell-worker
+      Cluster: !Ref ClusterArn
+      DesiredCount: !Ref WorkerDesiredCount
+      LaunchType: FARGATE
+      PlatformVersion: LATEST
+      EnableExecuteCommand: false
+      EnableECSManagedTags: true
+      PropagateTags: SERVICE
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 0
+        MaximumPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${FoundationStackName}-WorkerSecurityGroupId
+          Subnets: !Split
+            - ","
+            - Fn::ImportValue: !Sub ${FoundationStackName}-PublicSubnetIdsCsv
+      TaskDefinition: !Ref WorkerTaskDefinition
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
   EcsRunningCountAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn: Service
@@ -348,3 +492,7 @@ Outputs:
     Value: !Ref Service
   TaskDefinitionArn:
     Value: !Ref TaskDefinition
+  WorkerServiceArn:
+    Value: !Ref WorkerService
+  WorkerTaskDefinitionArn:
+    Value: !Ref WorkerTaskDefinition

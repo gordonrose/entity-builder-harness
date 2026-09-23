@@ -1,0 +1,40 @@
+# Dedicated worker task identity. It cannot call DynamoDB rate limiting, Cognito, or the public server's resources.
+Resources:
+  WorkerTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-shell-worker-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: platform-shell-worker-delivery
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReceiveAndSettleOnlyThePlatformShellWorkerQueue
+                Effect: Allow
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ReceiveMessage
+                Resource: !GetAtt WorkerQueue.Arn
+              - Sid: PublishOnlyCloudWatchWorkerMetricData
+                Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
