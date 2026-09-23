@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-23T17:20:15Z
+latest_commit_sha: d4979e6
+chat_duration: 408s (00:00:06:48)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -104,13 +104,30 @@ Decision: Record RAG knowledge disposition: covered
 
 Rationale: The target-specific worker consumer and metric evidence is retained in the staging deployment profile, readiness record, and operations closure plan; it introduces no new platform or product knowledge domain.
 
+
+### 2026-09-23T17:20:15Z - Commit recorded
+
+Commit: `d4979e6`
+
+Message: docs(deploy): record worker telemetry evidence
+
+Summary: Record the successful bounded two-message worker consumer proof, independent observed delivery metric, dormant zero-task post-state, and exact source validation.
+
+ADR impact: No ADR required; target-specific staging evidence and its static validation do not change platform architecture or persistence semantics.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `d4979e6`
+  Time UTC: 2026-09-23T17:20:15Z
+  Message: docs(deploy): record worker telemetry evidence
+  Summary: Record the successful bounded two-message worker consumer proof, independent observed delivery metric, dormant zero-task post-state, and exact source validation.
+  ADR impact: No ADR required; target-specific staging evidence and its static validation do not change platform architecture or persistence semantics.
 
 ## Main Refresh Conflicts
 
@@ -125,12 +142,12 @@ Reason: This records target-specific staging evidence and strengthens its static
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-23T17:20:15Z
+Latest commit SHA: d4979e6
+Chat duration: 408s (00:00:06:48)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
