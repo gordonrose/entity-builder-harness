@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-23T16:29:14Z
-latest_commit_sha: ad9c59a
-chat_duration: 5469s (00:01:31:09)
+latest_commit_at_utc: 2026-09-23T16:46:50Z
+latest_commit_sha: e11e9e0
+chat_duration: 6525s (00:01:48:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -206,6 +206,17 @@ ADR needed: no
 
 Reason: This is a bounded correction to a target-specific smoke-proof timing policy; it does not alter platform contracts, persistence semantics, or the architecture boundary.
 
+
+### 2026-09-23T16:46:50Z - Commit recorded
+
+Commit: `e11e9e0`
+
+Message: fix(deploy): flush worker telemetry before cleanup
+
+Summary: Keep the bounded worker task alive through a fixed 75-second metric-export settlement interval, preserve automatic scale-down, and validate the full repository commit gate.
+
+ADR impact: No ADR required; this is a target-specific operational proof timing correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -227,6 +238,13 @@ Reason: This is a bounded correction to a target-specific smoke-proof timing pol
   Summary: Add a fixed worker-only metric observation selector, prevent worker delivery from entering server SLO evaluation, document the boundary, and validate repository-wide commit gates.
   ADR impact: No ADR required; target-specific delivery evidence is retained in the staging target profile and worker operations plan.
 
+
+- Commit: `e11e9e0`
+  Time UTC: 2026-09-23T16:46:50Z
+  Message: fix(deploy): flush worker telemetry before cleanup
+  Summary: Keep the bounded worker task alive through a fixed 75-second metric-export settlement interval, preserve automatic scale-down, and validate the full repository commit gate.
+  ADR impact: No ADR required; this is a target-specific operational proof timing correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -240,9 +258,9 @@ Reason: This is a bounded correction to a target-specific smoke-proof timing pol
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T14:58:05Z
-Latest commit at UTC: 2026-09-23T16:29:14Z
-Latest commit SHA: ad9c59a
-Chat duration: 5469s (00:01:31:09)
+Latest commit at UTC: 2026-09-23T16:46:50Z
+Latest commit SHA: e11e9e0
+Chat duration: 6525s (00:01:48:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
