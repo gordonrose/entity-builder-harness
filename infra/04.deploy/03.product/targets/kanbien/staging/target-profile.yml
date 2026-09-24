@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 52
+#   version: 54
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -354,7 +354,7 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: provisioned-pending-service-deployment
+    status: deployed-pending-write-proof
     name: platform-shell-staging-persistence-write-client
     client_id: 38bhngfddbgu7c41b01crllh46
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
@@ -378,7 +378,19 @@ auth:
       resource_server_scope: platform-shell/smoke.write
       client_boundary: separate-confidential-client-credentials-only
       secret_boundary: target-owned-bounded-smoke-only-not-ecs
-      service_trust: not-deployed-to-server-allowlist
+      service_trust: deployed-to-reviewed-server-allowlist
+    server_allowlist_deployment_evidence:
+      executed_on_utc: "2026-09-24"
+      service_stack: UPDATE_COMPLETE
+      reviewed_changes:
+        public_server_service: task-definition-reference-update-only-no-service-replacement
+        public_server_task_definition: normal-ecs-revision-replacement-container-definitions-only
+      post_execution_verification:
+        public_server: desired-one-running-one-rollout-complete
+        public_target_health: healthy
+        public_liveness: http-200
+        worker: desired-zero-running-zero-rollout-complete
+        source_and_dead_letter_queues: empty
   resource_server:
     identifier: platform-shell
     scopes:
@@ -529,12 +541,12 @@ persistence:
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
       execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write
     activation:
-      server_acceptance: service-deployed-protected-read-and-health-verified-write-identity-provisioned-untrusted
+      server_acceptance: server-allowlist-deployed-and-health-verified-write-proof-pending
       outbox_relay: relay-task-definition-deployed-not-scheduled-or-run
       durable_worker_processing: worker-task-definition-deployed-worker-remains-zero-live-delivery-pending
       iam: foundation-deployed-server-relay-and-worker-least-privilege-verified
       required_identity_scope: platform-shell/smoke.write
-      identity_scope_status: provisioned-separate-write-client-untrusted-by-server-pending-allowlist-deployment
+      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-write-proof-pending
       observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-write-and-delivery-proof-pending
 config:
   non_secret_source: ecs-task-environment
@@ -546,7 +558,7 @@ config:
     PLATFORM_AUTH_COGNITO_REGION: eu-west-1
     PLATFORM_AUTH_COGNITO_USER_POOL_ID: eu-west-1_EQaXioA1n
     PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: 4n7kuqstbvb97ur3btbur8afjt
-    PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds"]'
+    PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds","38bhngfddbgu7c41b01crllh46"]'
     PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}'
     PLATFORM_CORS_ALLOWLIST: https://staging.platform.kanbien.com
     PLATFORM_HEALTH_LIVEZ_EXPOSURE: public

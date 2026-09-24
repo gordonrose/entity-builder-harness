@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.service
-#   version: 7
+#   version: 8
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -109,7 +109,7 @@ Resources:
             - Name: PLATFORM_AUTH_COGNITO_APP_CLIENT_ID
               Value: 4n7kuqstbvb97ur3btbur8afjt
             - Name: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS
-              Value: '["15po9eg4hgknb2pi2d1bdfhdds"]'
+              Value: '["15po9eg4hgknb2pi2d1bdfhdds","38bhngfddbgu7c41b01crllh46"]'
             - Name: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
               Value: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}'
             - Name: PLATFORM_CORS_ALLOWLIST

@@ -65,6 +65,10 @@ go
 - Raised: The staging write identity existed while the target profile still recorded it as pending provisioning.
   Resolution: Performed no duplicate Cognito mutation; reconciled only safe scope and identifier-reference evidence, and isolated the local first-provisioning test with a temporary pending-state fixture.
 
+
+- Raised: The first change-set inspection queried a non-existent CloudFormation Resource field and falsely reported zero changes.
+  Resolution: Re-inspected the correct ResourceChange field; it showed exactly the expected public service in-place update and server task-definition revision. No false drift remains.
+
 ## Decisions Made
 
 
@@ -172,6 +176,10 @@ go
 - Decision: Treat an already-provisioned isolated write identity as evidence reconciliation, not an instruction to recreate it.
   Rationale: The provisioner is intentionally non-idempotent for a fixed client name; refusing a second creation preserves the least-privilege boundary and avoids an unplanned secret rotation.
 
+
+- Decision: Verify CloudFormation change sets through ResourceChange summaries, not an empty projection.
+  Rationale: A syntactically valid but wrong JMESPath field can silently produce an empty result. The corrected inspection now proves both the candidate template and its two expected resource actions.
+
 ## Context Hygiene
 
 
@@ -230,6 +238,10 @@ go
 
 - Summary: Retain only the safe Stage 1 facts: reviewed write scope exists, one isolated confidential client and target-owned secret reference exist, and the server still does not trust that client.
   Durable evidence: Durable evidence is constrained to the target profile, readiness record, Persistence v1 plans, local policy tests, and this session log. Do not retain secret values, tokens, raw Cognito output, request data, task identifiers, or queue content.
+
+
+- Summary: Retain the safe allowlist deployment result: two reviewed changes, service stack update complete, server one running and healthy, worker zero, queues empty, public liveness 200, and exact two-client allowlist active.
+  Durable evidence: Durable evidence is restricted to the target profile, readiness manifest, deployment and implementation plans, static gate, and session log. Do not retain task identifiers, raw change-set data, tokens, secret values, headers, bodies, record contents, or queue messages.
 
 ## Activity Log
 
@@ -1124,6 +1136,34 @@ Summary: Recorded the pre-existing isolated staging write identity without a dup
 
 ADR impact: No ADR: target-specific staging lifecycle evidence and test-fixture correction only.
 
+
+### 2026-09-24T21:06:17Z - Issue
+
+Raised: The first change-set inspection queried a non-existent CloudFormation Resource field and falsely reported zero changes.
+
+Resolution: Re-inspected the correct ResourceChange field; it showed exactly the expected public service in-place update and server task-definition revision. No false drift remains.
+
+
+### 2026-09-24T21:06:19Z - Decision
+
+Decision: Verify CloudFormation change sets through ResourceChange summaries, not an empty projection.
+
+Rationale: A syntactically valid but wrong JMESPath field can silently produce an empty result. The corrected inspection now proves both the candidate template and its two expected resource actions.
+
+
+### 2026-09-24T21:06:20Z - Context hygiene
+
+Summary: Retain the safe allowlist deployment result: two reviewed changes, service stack update complete, server one running and healthy, worker zero, queues empty, public liveness 200, and exact two-client allowlist active.
+
+Durable evidence: Durable evidence is restricted to the target profile, readiness manifest, deployment and implementation plans, static gate, and session log. Do not retain task identifiers, raw change-set data, tokens, secret values, headers, bodies, record contents, or queue messages.
+
+
+### 2026-09-24T21:06:21Z - ADR disposition
+
+ADR needed: no
+
+Reason: This records target-specific staging deployment evidence and corrects an inspection query; no reusable platform architecture changed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1218,7 +1258,7 @@ ADR impact: No ADR: target-specific staging lifecycle evidence and test-fixture 
 
 ADR needed: no
 ADR path: 
-Reason: This is target-specific lifecycle evidence and a test-fixture correction; it does not alter reusable persistence or authentication architecture.
+Reason: This records target-specific staging deployment evidence and corrects an inspection query; no reusable platform architecture changed.
 
 ## Session Metrics
 

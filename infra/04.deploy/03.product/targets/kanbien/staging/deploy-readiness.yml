@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 44
+#   version: 45
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -555,13 +555,19 @@ runtime:
         source_and_dead_letter_queues: empty
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
     write_identity:
-      status: provisioned-pending-server-allowlist-deployment
+      status: server-allowlist-deployed-write-proof-pending
       scope: platform-shell/smoke.write
       client_boundary: separate-confidential-client-credentials-only
       secret_boundary: target-owned-bounded-smoke-only-not-ecs
-      server_trust: untrusted-until-reviewed-server-allowlist-deployment
+      server_trust: exact-additional-client-allowlist-deployed
+      server_allowlist_change:
+        service_stack: UPDATE_COMPLETE
+        resource_change_count: 2
+        public_server_service: task-definition-reference-update-only-no-service-replacement
+        public_server_task_definition: normal-ecs-revision-replacement-container-definitions-only
+        post_execution: server-one-running-one-worker-zero-queues-empty-livez-200
       evidence_hygiene: safe-scope-and-identifier-references-only-no-secret-value-or-token
-    next_boundary: reviewed-server-allowlist-deployment-then-one-harmless-acceptance-before-relay-or-worker-proof
+    next_boundary: one-fixed-no-body-write-client-acceptance-before-relay-or-worker-proof
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
