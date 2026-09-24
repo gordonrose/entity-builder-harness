@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 45
+#   version: 46
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -555,7 +555,7 @@ runtime:
         source_and_dead_letter_queues: empty
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
     write_identity:
-      status: write-proof-failed-non-committing-remediation-pending
+      status: write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending
       scope: platform-shell/smoke.write
       client_boundary: separate-confidential-client-credentials-only
       secret_boundary: target-owned-bounded-smoke-only-not-ecs
@@ -575,7 +575,15 @@ runtime:
         aggregate_commit_result: not-committed
         pre_remediation_error_class: unavailable
         read_only_diagnosis: task-configuration-complete-table-and-indexes-ready-atomic-write-permission-allowed-audit-data-event-unavailable
-    next_boundary: deploy-profile-governed-error-class-remediation-then-obtain-fresh-approval-for-one-replacement-no-body-acceptance-before-relay-or-worker-proof
+      remediation_deployment:
+        executed_on_utc: "2026-09-24"
+        source_commit_sha: af07a79f4be3285b423770476e1e4b97256bafb4
+        github_workflow_run_id: "36064013450"
+        image_digest: sha256:dd8f8e6d4a6131eea2a9d40954ed6b1cf8d20fc1734c109e7658631b578067fc
+        image_scan: zero-critical-zero-high
+        change_set_review: three-task-definition-revisions-and-two-in-place-service-references-only
+        post_deployment: service-update-complete-server-one-running-one-healthy-target-livez-and-protected-read-200-worker-zero-queues-empty-five-alarms-ok
+    next_boundary: obtain-fresh-explicit-approval-for-one-replacement-no-body-acceptance-before-relay-or-worker-proof
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts

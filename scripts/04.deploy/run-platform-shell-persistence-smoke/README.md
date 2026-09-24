@@ -34,11 +34,13 @@ therefore deliberately one-shot: it runs only while the target profile is in
 record changes state and a second invocation is rejected rather than relying
 on a duplicate response as evidence.
 
-If the one permitted request fails, the profile moves to
+If the one permitted request fails, the profile first moves to
 `write-proof-failed-non-committing-remediation-pending`. Validation still
-works in that state, but execution is refused. A remediation deployment and
-fresh approval are required before a replacement request; relay and worker
-actions remain prohibited.
+works in that state, but execution is refused. After the remediation is
+deployed and its server health is verified, the profile moves to
+`write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending`.
+Execution remains refused: a replacement request needs fresh explicit approval,
+and relay and worker actions remain prohibited.
 
 It accepts no caller-supplied client ID, secret, scope, route, body, or request
 ID. It requests only `platform-shell/smoke.write`, reads only the separately

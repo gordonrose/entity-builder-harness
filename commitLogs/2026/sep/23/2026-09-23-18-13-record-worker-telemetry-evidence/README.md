@@ -188,6 +188,10 @@ go
 - Decision: Preserve a stable route failure class outside the HTTP response.
   Rationale: Clients need a safe status and body, while approved operational signals need a bounded category. `PlatformResponse.observability.errorClass` lets the server project only that class through the route profile without exposing provider messages or raw error data.
 
+
+- Decision: Deploy the safe-failure observability repair before any replacement persistence request.
+  Rationale: The scan-clean immutable image and reviewed five-resource change set prove the diagnostic repair is live; a replacement write is still a distinct state-changing action and remains approval-gated.
+
 ## Context Hygiene
 
 
@@ -254,6 +258,10 @@ go
 
 - Summary: Retain the safe allowlist deployment result: two reviewed changes, service stack update complete, server one running and healthy, worker zero, queues empty, public liveness 200, and exact two-client allowlist active.
   Durable evidence: Durable evidence is restricted to the target profile, readiness manifest, deployment and implementation plans, static gate, and session log. Do not retain task identifiers, raw change-set data, tokens, secret values, headers, bodies, record contents, or queue messages.
+
+
+- Summary: Retain only safe remediation deployment evidence: scan-clean immutable image, reviewed revision-only change set, healthy server and target, protected-read and liveness 200, worker zero, queues empty, five alarms OK.
+  Durable evidence: The staging target profile, readiness manifest, deployment plan, handbook, and this session log retain the approved safe facts. Do not retain task identifiers, tokens, secret values, headers, bodies, queue messages, or provider payloads.
 
 ## Activity Log
 
@@ -1225,6 +1233,20 @@ Message: fix(observability): preserve safe route failure classes
 Summary: Added a private, profile-governed route failure classification seam; recorded the safe non-committing persistence acceptance and lifecycle guard; verified contracts, server telemetry, target policy, and deploy scripts.
 
 ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
+
+
+### 2026-09-24T22:02:25Z - Decision
+
+Decision: Deploy the safe-failure observability repair before any replacement persistence request.
+
+Rationale: The scan-clean immutable image and reviewed five-resource change set prove the diagnostic repair is live; a replacement write is still a distinct state-changing action and remains approval-gated.
+
+
+### 2026-09-24T22:02:25Z - Context hygiene
+
+Summary: Retain only safe remediation deployment evidence: scan-clean immutable image, reviewed revision-only change set, healthy server and target, protected-read and liveness 200, worker zero, queues empty, five alarms OK.
+
+Durable evidence: The staging target profile, readiness manifest, deployment plan, handbook, and this session log retain the approved safe facts. Do not retain task identifiers, tokens, secret values, headers, bodies, queue messages, or provider payloads.
 
 ## Sub-Agent Activity
 
