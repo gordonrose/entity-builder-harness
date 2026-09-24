@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 51
+#   version: 52
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -354,8 +354,10 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: pending-provisioning
+    status: provisioned-pending-service-deployment
     name: platform-shell-staging-persistence-write-client
+    client_id: 38bhngfddbgu7c41b01crllh46
+    secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
     type: confidential
     grant_type: client_credentials
     access_token_validity_minutes: 5
@@ -371,6 +373,12 @@ auth:
       name: kanbien/staging/platform-shell/cognito-persistence-write-client
       delivery: bounded-persistence-smoke-only-not-ecs-task-environment
       value_format: opaque-raw-string
+    provisioning_evidence:
+      observed_on_utc: "2026-09-24"
+      resource_server_scope: platform-shell/smoke.write
+      client_boundary: separate-confidential-client-credentials-only
+      secret_boundary: target-owned-bounded-smoke-only-not-ecs
+      service_trust: not-deployed-to-server-allowlist
   resource_server:
     identifier: platform-shell
     scopes:
@@ -521,12 +529,12 @@ persistence:
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
       execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write
     activation:
-      server_acceptance: service-deployed-protected-read-and-health-verified-write-identity-pending
+      server_acceptance: service-deployed-protected-read-and-health-verified-write-identity-provisioned-untrusted
       outbox_relay: relay-task-definition-deployed-not-scheduled-or-run
       durable_worker_processing: worker-task-definition-deployed-worker-remains-zero-live-delivery-pending
       iam: foundation-deployed-server-relay-and-worker-least-privilege-verified
       required_identity_scope: platform-shell/smoke.write
-      identity_scope_status: source-declared-not-configured
+      identity_scope_status: provisioned-separate-write-client-untrusted-by-server-pending-allowlist-deployment
       observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-write-and-delivery-proof-pending
 config:
   non_secret_source: ecs-task-environment
@@ -618,6 +626,11 @@ config:
       name: kanbien/staging/platform-shell/cognito-negative-authz-client
       arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-negative-authz-client-YnblEn
       delivery: bounded-negative-authz-smoke-only-not-ecs-task-environment
+      value_format: opaque-raw-string
+    cognito_persistence_write_client_secret:
+      name: kanbien/staging/platform-shell/cognito-persistence-write-client
+      arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
+      delivery: bounded-persistence-smoke-only-not-ecs-task-environment
       value_format: opaque-raw-string
 observability:
   policy:

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 24
+version: 25
 status: active
 layer: 03.product
 domain: persistence
@@ -220,14 +220,20 @@ prompt, transcript, credential, token, or raw request data.
   success. The worker task definition is deployed but remains at zero; the
   relay task definition exists but has not run. This proves deployment safety,
   not write acceptance or durable delivery.
-- **Still pending:** reviewed execution of the Cognito write-scope/client
-  change and the remaining live AWS proof
-  remain pending. The first live sequence must use an inspected CloudFormation
-  change set, then one harmless accepted work item, one explicitly approved
-  `RunTask` relay pass (not a schedule), and one bounded worker service
-  scale-up before returning the worker to zero. A continuous relay service or
-  scheduler is still a separate design decision. The recording-client and
-  in-memory proofs establish control flow and command shape, not that a real
+- **2026-09-24 — Write identity provisioned and reconciled:** a staging
+  preflight found the single reviewed `smoke.write` scope, isolated confidential
+  client, and target-owned secret already provisioned. The target record now
+  retains only safe references and confirms that the server does not yet trust
+  the client. No secret value or token was read, and no persistence write,
+  relay run, or worker scale-up occurred.
+- **Still pending:** reviewed deployment of the server’s exact write-client
+  allowlist and the remaining live AWS proof remain pending. The first live
+  sequence must then use one harmless accepted work item, one explicitly
+  approved `RunTask` relay pass (not a schedule), and one bounded worker
+  service scale-up before returning the worker to zero. A continuous relay
+  service or scheduler is still a separate design decision. The
+  recording-client and in-memory proofs establish control flow and command
+  shape, not that a real
   DynamoDB table or SQS queue accepts them. A physical conditional-write
   conflict is currently reported as a bounded store failure, not claimed as a
   product-specific duplicate result. No AWS resource was changed by these

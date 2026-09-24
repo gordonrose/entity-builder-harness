@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 5
+version: 6
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -134,6 +134,22 @@ outbox-delivery proof. The next bounded stage is separately approving the
 write-only identity/client setup and exactly one harmless acceptance request;
 only after that may a relay pass and temporary worker scale-up be considered.
 
+## Write identity provisioning evidence — 2026-09-24
+
+The one reviewed `platform-shell/smoke.write` scope, separate confidential
+client-credentials client, and target-owned persistence-smoke secret were
+found provisioned by a narrow staging preflight. The source record had not
+yet been reconciled, so this stage records only the safe client identifier and
+secret reference in the target profile; the secret value was neither read nor
+recorded.
+
+The server has not yet been configured to trust this client: its explicit
+additional-client allowlist still contains only the existing negative-test
+client. Consequently, no write token has been used, no work-item request has
+been sent, and no table, queue, relay, or worker action has occurred in this
+stage. The next step is a reviewed server configuration deployment that adds
+only this already-provisioned client identifier to that allowlist.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes
@@ -208,8 +224,8 @@ target. It creates the single client and secret, rolls back only changes it
 made if a later step fails, and emits only a client ID and secret ARN. The
 smoke command accepts no caller-supplied route, request body, client ID,
 scope, or request ID; it emits only a verdict, HTTP status, and rounded
-duration. Both are source controls, not AWS evidence: no identity resource or
-write request has been made yet.
+duration. The source commands remain the execution controls. The identity
+provisioning stage is now recorded above; no write request has been made yet.
 
 ## Ordered execution plan
 
