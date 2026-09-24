@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 23
+version: 24
 status: active
 layer: 03.product
 domain: persistence
@@ -213,9 +213,15 @@ prompt, transcript, credential, token, or raw request data.
   replacement is normal ECS revision registration, whereas executing the
   service change set would begin the public-server rollout and remains a
   separately approved action.
-- **Still pending:** a reviewed CloudFormation **service** change that supplies
-  the source-defined task definitions; reviewed execution of the Cognito
-  write-scope/client change; and all live AWS proof
+- **2026-09-24 — Service deployment complete:** the reviewed service change
+  set was executed and the stack reached `UPDATE_COMPLETE`. The public server
+  completed its rolling update with the selected immutable image, a healthy
+  target, public liveness success, and the existing protected-read smoke
+  success. The worker task definition is deployed but remains at zero; the
+  relay task definition exists but has not run. This proves deployment safety,
+  not write acceptance or durable delivery.
+- **Still pending:** reviewed execution of the Cognito write-scope/client
+  change and the remaining live AWS proof
   remain pending. The first live sequence must use an inspected CloudFormation
   change set, then one harmless accepted work item, one explicitly approved
   `RunTask` relay pass (not a schedule), and one bounded worker service

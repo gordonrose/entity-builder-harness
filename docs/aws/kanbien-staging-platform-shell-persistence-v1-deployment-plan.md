@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 4
+version: 5
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -90,8 +90,8 @@ separately approved stages.
 
 ## Service change-set inspection — 2026-09-24
 
-The service change set for the immutable image has been created and inspected,
-but **not executed**. It contains exactly five changes:
+The service change set for the immutable image was created and inspected before
+execution. It contained exactly five changes:
 
 - add `RelayTaskDefinition` only—a dormant task definition, not an ECS service
   or scheduler;
@@ -110,6 +110,29 @@ and service stacks remain `UPDATE_COMPLETE`; the public server remains
 desired/running `1/1`, and the worker remains `0/0`. Execution requires a new,
 explicit approval because it will cause the public service to roll to its new
 task definition.
+
+## Service execution evidence — 2026-09-24
+
+After explicit approval, the reviewed service change set was executed. The
+service stack reached `UPDATE_COMPLETE`; its public server completed the
+rolling revision update with desired/running `1/1`, the expected immutable
+persistence-capable image active, one healthy target, and public `/livez`
+returning `200`.
+
+The existing fixed protected-read smoke also returned `200` with a redacted,
+safe result. This confirms that the deployment did not break the established
+read-only authentication path. It did not request a new scope or send a write
+request.
+
+The worker completed its task-definition update while remaining desired/running
+`0/0`; no relay task is running and the source and dead-letter queues remain
+empty. No Cognito resource, secret, scope, client, persistence item, relay
+pass, or worker delivery was changed or exercised.
+
+This is therefore a successful **service-deployment proof**, not yet an
+outbox-delivery proof. The next bounded stage is separately approving the
+write-only identity/client setup and exactly one harmless acceptance request;
+only after that may a relay pass and temporary worker scale-up be considered.
 
 ## Desired source-defined change
 

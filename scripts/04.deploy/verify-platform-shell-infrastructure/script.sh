@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 30
+#   version: 31
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -575,7 +575,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-deployed-service-and-live-proof-pending",
+        "status": "foundation-and-service-deployed-write-and-delivery-proof-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -624,7 +624,7 @@ expected_persistence_profile = {
             "evidence_hygiene": "safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads",
         },
         "service_change_set_review": {
-            "status": "reviewed-available-not-executed",
+            "status": "executed-and-post-deployment-verified",
             "reviewed_on_utc": "2026-09-24",
             "reviewed_changes": {
                 "relay_task_definition": "add-dormant-one-shot-task-definition-only",
@@ -633,17 +633,29 @@ expected_persistence_profile = {
                 "worker_service": "task-definition-reference-update-only-no-service-replacement",
                 "worker_task_definition": "normal-ecs-revision-replacement-container-definitions-only",
             },
-            "execution_guard": "explicit-current-approval-required-before-service-rollout",
+            "executed_on_utc": "2026-09-24",
+            "post_execution_verification": {
+                "service_stack": "UPDATE_COMPLETE",
+                "public_server": "desired-one-running-one-rollout-complete",
+                "public_target_health": "healthy",
+                "public_liveness": "http-200",
+                "protected_read_smoke": "http-200-safe-redacted-result",
+                "active_image": "immutable-persistence-capable-digest-verified",
+                "worker": "desired-zero-running-zero-rollout-complete",
+                "relay_running_task_count": "zero",
+                "source_and_dead_letter_queues": "empty",
+            },
+            "next_execution_guard": "explicit-current-approval-required-for-write-identity-or-delivery-proof",
             "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write",
         },
         "activation": {
-            "server_acceptance": "foundation-deployed-service-change-set-reviewed-not-executed",
-            "outbox_relay": "foundation-deployed-relay-role-network-and-logs-service-change-set-reviewed-not-executed-not-scheduled",
-            "durable_worker_processing": "foundation-deployed-worker-role-and-processing-state-policy-service-change-set-reviewed-not-executed",
+            "server_acceptance": "service-deployed-protected-read-and-health-verified-write-identity-pending",
+            "outbox_relay": "relay-task-definition-deployed-not-scheduled-or-run",
+            "durable_worker_processing": "worker-task-definition-deployed-worker-remains-zero-live-delivery-pending",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "source-declared-not-configured",
-            "observability": "profile-registered-transition-catalogue-foundation-deployed-service-and-live-proof-pending",
+            "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-write-and-delivery-proof-pending",
         },
     },
 }
