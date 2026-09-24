@@ -232,6 +232,19 @@ prompt, transcript, credential, token, or raw request data.
   healthy while the worker stayed at zero and both queues stayed empty. The
   isolated client is now trusted only by the exact server allowlist; no token
   or write was requested during deployment.
+<!-- deterministic-check: allow reason="This is historical staging evidence, not an executable procedure; the target profile and static verifier own its machine-checkable facts." -->
+- **2026-09-24 — Atomic-acceptance proof stopped safely:** the one approved
+  no-body acceptance returned `503` in 229 milliseconds and an aggregate-only
+  table check proved that no atomic transaction committed. The relay was not
+  run and the worker remained at zero. Read-only inspection confirmed the
+  active table/indexes, task configuration, and `TransactWriteItems` task-role
+  permission; CloudTrail has no DynamoDB data event from which to recover the
+  prior provider error. The route had converted the safe failure into an HTTP
+  response without preserving its stable error class for its observability
+  profile. `PlatformResponse.observability.errorClass` now provides that
+  profile-governed, non-transport remediation and is covered by contract and
+  server runtime tests. It is pending a separately reviewed deployment and a
+  fresh approval for one replacement acceptance request.
 - **Still pending:** one harmless accepted work item, one explicitly
   approved `RunTask` relay pass (not a schedule), and one bounded worker
   service scale-up before returning the worker to zero. A continuous relay

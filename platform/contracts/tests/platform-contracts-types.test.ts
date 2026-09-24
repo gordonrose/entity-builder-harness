@@ -133,6 +133,7 @@ void request;
 const response: PlatformResponse = {
   status: 200,
   body: { ok: true },
+  observability: { errorClass: "CRM_DEAL_EXPORT_UNAVAILABLE" },
 };
 void response;
 

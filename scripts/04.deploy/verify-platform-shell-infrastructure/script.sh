@@ -347,7 +347,7 @@ else:
         if persistence_write_test_client.get(key) != expected:
             fail(f"target profile persistence write client must retain {key}")
     persistence_status = persistence_write_test_client.get("status")
-    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "deployed-and-write-proven"}:
+    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "deployed-and-write-proven"}:
         fail("target profile persistence write client must use a governed lifecycle status")
     persistence_client_id = persistence_write_test_client.get("client_id")
     persistence_secret_arn = persistence_write_test_client.get("secret_arn")
@@ -390,12 +390,30 @@ else:
         }
         if secret_refs.get("cognito_persistence_write_client_secret") != expected_persistence_secret_ref:
             fail("target profile must retain the bounded persistence-write secret reference after provisioning")
-    if persistence_status in {"deployed-pending-write-proof", "deployed-and-write-proven"}:
+    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "deployed-and-write-proven"}:
         expected_client_allowlist.append(persistence_client_id)
     if not all(isinstance(client_id, str) and client_id for client_id in expected_client_allowlist):
         fail("target profile must retain all deployed proof-client identifiers")
     if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps(expected_client_allowlist, separators=(",", ":")):
         fail("target profile must allowlist exactly the proof clients deployed to the service")
+    if persistence_status == "write-proof-failed-non-committing-remediation-pending":
+        expected_failed_acceptance = {
+            "executed_on_utc": "2026-09-24",
+            "status": "failed-non-committing",
+            "http_status": 503,
+            "duration_ms": 229,
+            "aggregate_commit_result": "not-committed",
+            "pre_remediation_error_class": "unavailable",
+            "read_only_diagnosis": {
+                "task_configuration": "complete",
+                "persistence_table": "active-required-indexes-present",
+                "atomic_transaction_permission": "allowed",
+                "audit_trail_data_event": "unavailable",
+            },
+            "follow_up": "deploy-profile-governed-error-class-remediation-before-fresh-approved-replacement-acceptance",
+        }
+        if persistence_write_test_client.get("acceptance_attempt") != expected_failed_acceptance:
+            fail("target profile must retain only the safe non-committing acceptance diagnostic evidence")
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
@@ -575,7 +593,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-write-and-delivery-proof-pending",
+        "status": "foundation-and-service-deployed-write-proof-failed-non-committing-remediation-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -645,17 +663,17 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "explicit-current-approval-required-for-write-identity-or-delivery-proof",
-            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write",
+            "next_execution_guard": "separately-reviewed-remediation-deployment-and-fresh-explicit-approval-required-for-replacement-write-proof",
+            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-additional-persistence-write",
         },
         "activation": {
-            "server_acceptance": "server-allowlist-deployed-and-health-verified-write-proof-pending",
+            "server_acceptance": "write-proof-failed-non-committing-profile-governed-error-class-remediation-pending",
             "outbox_relay": "relay-task-definition-deployed-not-scheduled-or-run",
             "durable_worker_processing": "worker-task-definition-deployed-worker-remains-zero-live-delivery-pending",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-write-proof-pending",
-            "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-write-and-delivery-proof-pending",
+            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-replacement-write-proof-requires-fresh-approval",
+            "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-response-error-class-remediation-pending",
         },
     },
 }

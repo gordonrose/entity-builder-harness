@@ -35,6 +35,12 @@ server does not add raw path parameters, request or correlation IDs, principals,
 tenants, headers, bodies, stable route names, or error objects after this
 projection. An explicit route opt-out emits no capability telemetry.
 
+An application handler that safely returns a known failure may attach only a
+stable `PlatformResponse.observability.errorClass`. The server turns it into a
+profile-projected error class for logs, metrics, and traces, but never copies
+that internal fact to the HTTP response. Messages, provider payloads, request
+data, credentials, and identifiers are not a substitute for this class.
+
 Some server events have no identifiable app route: an unsupported HTTP method,
 a malformed request URL, or a health check, for example. Those retain separate
 generic platform-operational evidence; they are not labelled as an app

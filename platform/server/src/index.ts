@@ -604,7 +604,14 @@ async function handlePlatformServerRequest(input: PlatformServerRequestHandlingI
     const handled = await route.registration.handler.handle(platformRequest, context);
 
     middleware.push("response-logging");
-    return finish(response(handled.status, handled.body, mergeApplicationResponseHeaders(headers, handled.headers), middleware), routeName);
+    const observabilityError = handled.observability?.errorClass === undefined
+      ? undefined
+      : { code: handled.observability.errorClass };
+    return finish(
+      response(handled.status, handled.body, mergeApplicationResponseHeaders(headers, handled.headers), middleware),
+      routeName,
+      observabilityError,
+    );
   } catch (error) {
     middleware.push("error-mapping", "response-logging");
     return finish(

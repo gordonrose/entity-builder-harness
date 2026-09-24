@@ -165,6 +165,33 @@ remained empty. The deployed server now trusts exactly the pre-existing
 negative-test client and the isolated persistence-write client. No token was
 requested and no work-item write was sent in this deployment stage.
 
+## Atomic-acceptance diagnostic evidence — 2026-09-24
+
+The one approved no-body work-item acceptance request returned safe status
+`503` in `229` milliseconds. An aggregate-only table check proved that the
+atomic transaction committed no records, so no outbox obligation exists. The
+relay was not run and the worker was not scaled.
+
+Read-only diagnosis established that the active server task has the required
+persistence configuration, the table is active with both required indexes,
+and its task role is allowed to perform the atomic DynamoDB transaction. The
+account audit trail does not retain DynamoDB data-plane events, so it cannot
+recover the provider error class for this earlier request.
+
+This uncovered an application-observability gap, not deployment drift: a
+route could return a safe failure response while dropping its stable internal
+failure class before profile-governed logs, metrics, and traces. The source
+remediation adds a response-only `observability.errorClass` fact. The server
+projects that value only through the route's approved profile; it is never
+serialized into the HTTP response and may not carry provider messages,
+payloads, identifiers, or credentials. Its local contract and server-runtime
+proofs pass.
+
+No second acceptance request is permitted by this proof stage. The next live
+action requires a separately reviewed image deployment of that remediation,
+healthy server verification, and fresh explicit approval for exactly one
+replacement harmless acceptance request before any relay or worker action.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes
@@ -279,7 +306,9 @@ provisioning stage is now recorded above; no write request has been made yet.
    service health is verified. The secret remains out of ECS task environment.
 10. Run exactly one controlled no-body work-item acceptance request. On a
     successful safe result, record `deployed-and-write-proven`, which prevents
-    a second invocation using the same deterministic request identity.
+    a second invocation using the same deterministic request identity. If it
+    fails, record only safe aggregate diagnostics, do not relay or scale a
+    worker, and require fresh approval before any replacement request.
 11. Run one relay `RunTask` and a bounded worker scale-up to one. Observe only safe
     status/count/metric/log facts. Return the worker to zero in a `finally`
     path, including a failed proof.

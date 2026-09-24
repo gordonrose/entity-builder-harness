@@ -63,6 +63,20 @@ export interface PlatformResponse<TBody = unknown> {
   readonly status: number;
   readonly body?: TBody;
   readonly headers?: Readonly<Record<string, string>>;
+  /**
+   * Internal, profile-governed telemetry facts. The transport must never
+   * serialize these facts into an HTTP response.
+   */
+  readonly observability?: PlatformResponseObservability;
+}
+
+/**
+ * A route may attach only a stable, app-owned error classification when its
+ * safe HTTP response represents a failed operation. It must not contain an
+ * error message, provider payload, request data, credential, or identifier.
+ */
+export interface PlatformResponseObservability {
+  readonly errorClass?: string;
 }
 
 export interface PlatformRouteHandler<TBody = unknown, TResponse = unknown> {
