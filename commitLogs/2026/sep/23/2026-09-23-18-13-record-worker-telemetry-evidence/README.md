@@ -152,6 +152,10 @@ go
 - Decision: Record Foundation deployment separately from service activation
   Rationale: A deployed table, identity boundary, logs, and network controls prove the durable substrate exists, but no task definition, relay, worker, identity scope, or write has yet used it. Keeping those states distinct prevents a false claim of end-to-end delivery.
 
+
+- Decision: Treat ECS task-definition replacement as a revision, not a service replacement
+  Rationale: The reviewed service change set replaces only task-definition revisions because their container definitions change. The existing public and worker ECS services are modified only to point at those revisions, retain their identities, and remain subject to a separately approved execution gate.
+
 ## Context Hygiene
 
 
@@ -198,6 +202,10 @@ go
 
 - Summary: Retain only the safe Foundation execution result: deployed protected table and indexes, least-privilege workload boundaries, relay no-ingress boundary, preserved server one/worker zero state, and empty queues.
   Durable evidence: Durable evidence is in the staging target profile, readiness manifest, Persistence v1 deployment plan, Persistence Foundation plan, infrastructure verifier, and this session log. Do not retain records, queue messages, task identifiers, raw change-set/provider output, credentials, or payloads.
+
+
+- Summary: Retain the safe service change-set review: five expected actions, available and unexecuted; no shared-boundary, routing, identity, or permission-scope drift; server remains one running task and worker remains zero.
+  Durable evidence: Durable evidence is in the staging target profile, readiness manifest, Persistence v1 deployment plan, Persistence Foundation plan, infrastructure verifier, and this session log. Do not retain change-set identifiers, task identifiers, raw CloudFormation output, credentials, payloads, or table/queue contents.
 
 ## Activity Log
 
@@ -982,6 +990,27 @@ Summary: Record the executed additive Foundation deployment, protected table and
 
 ADR impact: No ADR required; this records target-specific deployment evidence and does not change persistence architecture or platform contracts.
 
+
+### 2026-09-24T19:56:03Z - Decision
+
+Decision: Treat ECS task-definition replacement as a revision, not a service replacement
+
+Rationale: The reviewed service change set replaces only task-definition revisions because their container definitions change. The existing public and worker ECS services are modified only to point at those revisions, retain their identities, and remain subject to a separately approved execution gate.
+
+
+### 2026-09-24T19:56:03Z - Context hygiene
+
+Summary: Retain the safe service change-set review: five expected actions, available and unexecuted; no shared-boundary, routing, identity, or permission-scope drift; server remains one running task and worker remains zero.
+
+Durable evidence: Durable evidence is in the staging target profile, readiness manifest, Persistence v1 deployment plan, Persistence Foundation plan, infrastructure verifier, and this session log. Do not retain change-set identifiers, task identifiers, raw CloudFormation output, credentials, payloads, or table/queue contents.
+
+
+### 2026-09-24T19:56:03Z - ADR disposition
+
+ADR needed: no
+
+Reason: This applies the established staged ECS deployment policy to a target-specific change set; it introduces no new platform architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1055,7 +1084,7 @@ ADR impact: No ADR required; this records target-specific deployment evidence an
 
 ADR needed: no
 ADR path: 
-Reason: This records a target-specific executed change and its evidence boundary; it does not alter the already approved persistence architecture or platform contracts.
+Reason: This applies the established staged ECS deployment policy to a target-specific change set; it introduces no new platform architecture decision.
 
 ## Session Metrics
 

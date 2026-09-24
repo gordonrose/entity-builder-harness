@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 22
+version: 23
 status: active
 layer: 03.product
 domain: persistence
@@ -205,6 +205,14 @@ prompt, transcript, credential, token, or raw request data.
   and public-server/zero-worker steady state. It did not register a new
   service task definition, run a relay task, scale a worker, change Cognito,
   or write a persistence item.
+- **2026-09-24 — Service change set reviewed:** the available, unexecuted
+  change set adds only a dormant relay task definition, revises the public
+  server and worker task definitions, and updates each existing ECS service to
+  point at its corresponding revision. It does not replace either service,
+  start a relay, scale the worker, or change Cognito. A task-definition
+  replacement is normal ECS revision registration, whereas executing the
+  service change set would begin the public-server rollout and remains a
+  separately approved action.
 - **Still pending:** a reviewed CloudFormation **service** change that supplies
   the source-defined task definitions; reviewed execution of the Cognito
   write-scope/client change; and all live AWS proof
