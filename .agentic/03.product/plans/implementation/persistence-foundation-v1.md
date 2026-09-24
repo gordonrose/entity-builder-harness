@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 26
+version: 27
 status: active
 layer: 03.product
 domain: persistence
@@ -298,6 +298,73 @@ Real product entities will later choose their own schema, queries, migrations,
 tenant boundaries, classification, retention, restore rules, and business
 transitions. A future relational adapter is an additive, governed path; it
 must not quietly replace this narrow smoke reference.
+
+## Two-tranche completion programme — 2026-09-24
+
+The phrase “complete persistence” needs a truthful boundary. This programme
+closes the reusable foundation and one live, production-shaped reference path;
+it does not invent future entity schemas or make a low-cost smoke target claim
+continuous business-event availability.
+
+### Tranche 1 — bounded live transactional-outbox proof
+
+1. Perform **one** freshly authorised replacement no-body acceptance request
+   using a new fixed opaque request identity. The earlier request is retained
+   only as a proved non-commit; it is never retried under its original proof
+   identity.
+2. Record only safe status, rounded duration, aggregate transaction outcome,
+   and target-health facts. Stop before relay/worker work if acceptance does
+   not return its declared success status.
+3. Run one governed Fargate relay task, derived solely from the reviewed
+   service/foundation outputs. It may publish at most the one due outbox fact,
+   emits no envelope or task identifier, and must exit successfully.
+4. Use a separate governed persistence-worker proof to scale the already
+   deployed worker from zero to one, settle that one relay-created delivery,
+   wait through the bounded telemetry flush, and return it to zero in a
+   `finally` path. It must not enqueue a second direct-SQS fixture.
+5. Verify aggregate-only postconditions: public server still healthy, worker
+   desired/running zero, source/DLQ empty, the due index has no remaining
+   deliverable work, and the one processing completion is present. Record the
+   relay/worker transition metric observation separately from queue settlement.
+
+The runner commands accept no target, task definition, network, queue URL,
+payload, client, token, scope, identity, or request-body argument. They fail
+closed on account/region/lifecycle/precondition drift and never print or retain
+provider responses, task IDs, records, messages, secrets, headers, or bodies.
+
+### Tranche 2 — reusable persistent-record foundation
+
+Tranche 2 completes the reusable **contract** required before a future feature
+can choose its own repository and data model:
+
+1. Add a database-neutral logical-record lifecycle contract: active/deleted
+   state, deletion marker, restoration window, retention-policy reference,
+   legal-hold-aware purge eligibility, and closed validation/error semantics.
+   It supplies decisions and invariants; it never performs an unreviewed
+   physical deletion.
+2. Keep the existing `RecordChange` direct-cause lineage as the only generic
+   row-change record. Tests must prove delete/restore actions use the same
+   bounded lineage vocabulary and no arbitrary before/after values can leak
+   into it.
+3. Document the feature adoption checklist: a product must select its entity
+   schema, tenant boundary, authorised readers, expected-version rules,
+   recovery window, retention/erasure/legal-hold policy, migration path, and
+   repository query shape before it obtains an adapter transaction.
+4. Re-run Core, platform, DynamoDB-adapter, smoke-app, compiled-runtime, and
+   static target-policy checks. This makes the platform safe to consume; it
+   deliberately does **not** select a universal retention period or physically
+   purge customer data.
+
+### Explicit boundary after both tranches
+
+After these tranches, `Persistence Foundation v1` is complete when a reviewer
+can see a tested, provider-neutral contract boundary, a selected AWS adapter,
+least-privilege staging resources, and one safe end-to-end transaction →
+outbox → queue → duplicate-safe worker completion. The next platform layer is
+the separately planned scheduler/operational-availability slice. A continuous
+relay is not silently enabled here because its cadence, delivery-latency SLO,
+availability posture, and recurring Fargate cost are material target decisions
+that the present low-cost smoke proof does not define.
 
 ## The Terms Used In This Plan
 

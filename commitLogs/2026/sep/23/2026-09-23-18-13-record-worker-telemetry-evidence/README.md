@@ -192,6 +192,14 @@ go
 - Decision: Deploy the safe-failure observability repair before any replacement persistence request.
   Rationale: The scan-clean immutable image and reviewed five-resource change set prove the diagnostic repair is live; a replacement write is still a distinct state-changing action and remains approval-gated.
 
+
+- Decision: Close Persistence Foundation v1 through a bounded two-tranche programme.
+  Rationale: The first tranche proves one real staging transaction-to-outbox-to-worker path with no hidden retries or direct queue fixture. The second adds reusable logical-record lifecycle contracts without guessing product retention, legal-hold, data classification, or scheduler requirements.
+
+
+- Decision: Give the remediated acceptance one separately fixed replacement identity.
+  Rationale: The original request has proved non-committing, but using a different opaque identity means later evidence cannot be confused with an implicit replay of the failed stage. The guarded command accepts no caller-supplied identity and may execute only in the recorded post-remediation lifecycle state.
+
 ## Context Hygiene
 
 

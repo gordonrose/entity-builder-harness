@@ -18,7 +18,8 @@ from urllib import error, parse, request
 DEFAULT_PROFILE = "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"
 EXPECTED_ACCOUNT_ID = "337159794548"
 EXPECTED_STATUS = 202
-REQUEST_ID = "persistence-smoke-v1"
+INITIAL_REQUEST_ID = "persistence-smoke-v1"
+REMEDIATION_REPLACEMENT_REQUEST_ID = "persistence-smoke-remediation-v2"
 
 
 class PersistenceSmokeError(Exception):
@@ -30,13 +31,20 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Validate or run the bounded Kanbien staging persistence smoke.")
     parser.add_argument("--validate", action="store_true", help="Validate policy only; make no AWS or HTTP call.")
-    parser.add_argument("--execute", action="store_true", help="Perform the one fixed write after current-chat approval.")
+    parser.add_argument("--execute", action="store_true", help="Perform one governed fixed write after current-chat approval.")
+    parser.add_argument(
+        "--approve-replacement-after-remediation",
+        action="store_true",
+        help="Acknowledge the separately authorised single replacement write after the non-committing remediation.",
+    )
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE, help="Path to the Kanbien staging target profile.")
     parser.add_argument("--aws-cli", default="aws", help="AWS CLI executable for the declared secret lookup.")
     parser.add_argument("--timeout-seconds", type=int, default=10, help="Bound each live network call to 1-30 seconds.")
     arguments = parser.parse_args()
     if arguments.validate == arguments.execute:
         parser.error("choose exactly one of --validate or --execute")
+    if arguments.validate and arguments.approve_replacement_after_remediation:
+        parser.error("--approve-replacement-after-remediation is valid only with --execute")
     if not 1 <= arguments.timeout_seconds <= 30:
         parser.error("--timeout-seconds must be between 1 and 30")
     return arguments
@@ -245,13 +253,13 @@ def acquire_token(policy: dict[str, str], secret: str, timeout_seconds: int) -> 
     return token
 
 
-def request_acceptance(policy: dict[str, str], token: str, timeout_seconds: int) -> tuple[int, int]:
+def request_acceptance(policy: dict[str, str], token: str, timeout_seconds: int, request_id: str) -> tuple[int, int]:
     """Call exactly one fixed no-body acceptance route and retain only safe result facts."""
 
     acceptance_request = request.Request(
         f"https://{policy['hostname']}/smoke/work-items",
         method="POST",
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "X-Request-Id": REQUEST_ID},
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "X-Request-Id": request_id},
     )
     started = time.monotonic()
     try:
@@ -283,15 +291,21 @@ def main() -> int:
     if arguments.validate:
         emit("validated")
         return 0
-    if policy["status"] != "deployed-pending-write-proof":
-        raise PersistenceSmokeError("the persistence acceptance proof may run only after its reviewed service deployment")
+    if arguments.approve_replacement_after_remediation:
+        if policy["status"] != "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending":
+            raise PersistenceSmokeError("the replacement acceptance proof may run only after its reviewed remediation deployment")
+        request_id = REMEDIATION_REPLACEMENT_REQUEST_ID
+    else:
+        if policy["status"] != "deployed-pending-write-proof":
+            raise PersistenceSmokeError("the initial persistence acceptance proof may run only after its reviewed service deployment")
+        request_id = INITIAL_REQUEST_ID
     secret: str | None = None
     token: str | None = None
     try:
         verify_account(policy, arguments.aws_cli)
         secret = load_secret(policy, arguments.aws_cli)
         token = acquire_token(policy, secret, arguments.timeout_seconds)
-        status, duration_ms = request_acceptance(policy, token, arguments.timeout_seconds)
+        status, duration_ms = request_acceptance(policy, token, arguments.timeout_seconds, request_id)
     finally:
         secret = None
         token = None
