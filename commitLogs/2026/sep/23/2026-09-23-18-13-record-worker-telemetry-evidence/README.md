@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T20:09:42Z
-latest_commit_sha: 192aec44
-chat_duration: 96975s (01:02:56:15)
+latest_commit_at_utc: 2026-09-24T20:47:30Z
+latest_commit_sha: 18f276f6
+chat_duration: 99243s (01:03:34:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1113,6 +1113,17 @@ ADR needed: no
 
 Reason: This is target-specific lifecycle evidence and a test-fixture correction; it does not alter reusable persistence or authentication architecture.
 
+
+### 2026-09-24T20:47:30Z - Commit recorded
+
+Commit: `18f276f6`
+
+Message: docs(deploy): reconcile persistence write identity
+
+Summary: Recorded the pre-existing isolated staging write identity without a duplicate Cognito mutation; updated safe evidence and restored first-provisioning test isolation.
+
+ADR impact: No ADR: target-specific staging lifecycle evidence and test-fixture correction only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1190,6 +1201,13 @@ Reason: This is target-specific lifecycle evidence and a test-fixture correction
   Summary: Record the executed reviewed service rollout, verified immutable image and healthy public/protected-read path, plus the remaining write and delivery proof boundary.
   ADR impact: No ADR required; this is target-specific deployment evidence under the existing staged persistence architecture.
 
+
+- Commit: `18f276f6`
+  Time UTC: 2026-09-24T20:47:30Z
+  Message: docs(deploy): reconcile persistence write identity
+  Summary: Recorded the pre-existing isolated staging write identity without a duplicate Cognito mutation; updated safe evidence and restored first-provisioning test isolation.
+  ADR impact: No ADR: target-specific staging lifecycle evidence and test-fixture correction only.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1205,9 +1223,9 @@ Reason: This is target-specific lifecycle evidence and a test-fixture correction
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T20:09:42Z
-Latest commit SHA: 192aec44
-Chat duration: 96975s (01:02:56:15)
+Latest commit at UTC: 2026-09-24T20:47:30Z
+Latest commit SHA: 18f276f6
+Chat duration: 99243s (01:03:34:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
