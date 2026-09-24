@@ -2,6 +2,7 @@ import { deepEqual, equal } from "node:assert/strict";
 import { configError, type ConfigSchema } from "@kanbien/core/config";
 import type { Logger } from "@kanbien/core/logging";
 import { createInMemoryTracer, spanId, traceContext, traceId, type Metrics, type Tracer } from "@kanbien/core/monitoring";
+import { outboxEntryId } from "@kanbien/core/persistence";
 import type { QueueIdempotencyKey, QueueMessageType } from "@kanbien/core/queues";
 import { causationId } from "@kanbien/core/shared";
 import { tenantId, type TenantContext } from "@kanbien/core/tenancy";
@@ -24,6 +25,11 @@ import {
   createInMemoryPlatformWorkerIdempotencyStore,
   createPlatformWorkerShell,
 } from "../src/index";
+import {
+  createInMemoryPlatformProcessingStore,
+  platformPersistenceLeaseOwner,
+  type PlatformPersistenceObservation,
+} from "@kanbien/platform-persistence";
 
 async function main(): Promise<void> {
   const appId = platformAppId("smoke");
@@ -349,6 +355,222 @@ async function main(): Promise<void> {
   }
   equal(resilientResult.value.status, "succeeded");
   equal(resilientHandled, 1);
+
+  const durableJobName = platformJobName("smoke.durable");
+  const flakyDurableJobName = platformJobName("smoke.durable-flaky");
+  const terminalDurableJobName = platformJobName("smoke.durable-terminal");
+  const durableOwner = platformPersistenceLeaseOwner("worker.durable-a");
+  if (!durableJobName.ok || !flakyDurableJobName.ok || !terminalDurableJobName.ok || !durableOwner.ok) {
+    throw new Error("Expected valid durable worker test primitives.");
+  }
+
+  let durableHandled = 0;
+  let flakyDurableHandled = 0;
+  let terminalDurableHandled = 0;
+  const durableProcessingStore = createInMemoryPlatformProcessingStore();
+  const durableObservations: PlatformPersistenceObservation[] = [];
+  const durableApp = definePlatformApp({
+    id: appId.value,
+    name: "Durable outbox worker",
+    mount(registry) {
+      registry.registerJob({
+        name: durableJobName.value,
+        messageType: "smoke.durable" as QueueMessageType,
+        observability: { kind: "opt_out", reason: "non_user_workload_path", justification: "Fixture proves durable-outbox worker processing." },
+        validator: validatorForTest((value): value is { readonly outboxEntryId: string } =>
+          typeof value === "object"
+          && value !== null
+          && "outboxEntryId" in value
+          && typeof (value as { readonly outboxEntryId?: unknown }).outboxEntryId === "string"),
+        handler: { handle: () => { durableHandled += 1; } },
+      });
+      registry.registerJob({
+        name: flakyDurableJobName.value,
+        messageType: "smoke.durable-flaky" as QueueMessageType,
+        observability: { kind: "opt_out", reason: "non_user_workload_path", justification: "Fixture proves durable processing release before worker retry." },
+        validator: validatorForTest((value): value is { readonly outboxEntryId: string } =>
+          typeof value === "object"
+          && value !== null
+          && "outboxEntryId" in value
+          && typeof (value as { readonly outboxEntryId?: unknown }).outboxEntryId === "string"),
+        handler: {
+          handle: () => {
+            flakyDurableHandled += 1;
+            if (flakyDurableHandled === 1) throw new Error("First durable attempt fails.");
+          },
+        },
+      });
+      registry.registerJob({
+        name: terminalDurableJobName.value,
+        messageType: "smoke.durable-terminal" as QueueMessageType,
+        observability: { kind: "opt_out", reason: "non_user_workload_path", justification: "Fixture proves terminal durable failure before dead-lettering." },
+        validator: validatorForTest((value): value is { readonly outboxEntryId: string } =>
+          typeof value === "object"
+          && value !== null
+          && "outboxEntryId" in value
+          && typeof (value as { readonly outboxEntryId?: unknown }).outboxEntryId === "string"),
+        handler: { handle: () => { terminalDurableHandled += 1; throw new Error("Terminal durable failure."); } },
+      });
+    },
+  });
+  const durableShell = await createPlatformWorkerShell({
+    apps: [durableApp],
+    deps: createPlatformTestMountDeps(),
+    durableOutboxProcessing: {
+      processingStore: durableProcessingStore,
+      owner: durableOwner.value,
+      leaseDurationMs: 1_000,
+      observer: { record: (observation) => durableObservations.push(observation) },
+    },
+    maxAttempts: 2,
+    retryBackoffMs: () => 0,
+  });
+  equal(durableShell.ok, true);
+  if (!durableShell.ok) {
+    throw new Error("Expected durable worker shell to mount.");
+  }
+  equal((await durableShell.value.start()).ok, true);
+
+  const durableMessage = {
+    ...createPlatformTestQueueMessage({
+      id: "outbox-worker-1",
+      type: "smoke.durable" as QueueMessageType,
+      payload: { outboxEntryId: "outbox-worker-1" },
+    }),
+    idempotencyKey: "outbox-worker-1" as QueueIdempotencyKey,
+  };
+  equal(durableShell.value.enqueue(durableMessage).ok, true);
+  const durableSuccess = await durableShell.value.runNext();
+  equal(durableSuccess.ok, true);
+  if (!durableSuccess.ok || durableSuccess.value.status !== "succeeded") {
+    throw new Error("Expected a durable outbox delivery to succeed.");
+  }
+  equal(durableSuccess.value.idempotency, "durable-processed");
+  equal(durableHandled, 1);
+  const durableCompleted = await durableProcessingStore.get(outboxEntryId("outbox-worker-1"));
+  equal(durableCompleted?.state, "completed");
+  equal(durableCompleted?.completion?.outcome, "succeeded");
+
+  equal(durableShell.value.enqueue(durableMessage).ok, true);
+  const durableDuplicate = await durableShell.value.runNext();
+  equal(durableDuplicate.ok, true);
+  if (!durableDuplicate.ok || durableDuplicate.value.status !== "succeeded") {
+    throw new Error("Expected an already-completed durable delivery to be acknowledged safely.");
+  }
+  equal(durableDuplicate.value.idempotency, "durable-skipped");
+  equal(durableHandled, 1);
+
+  const flakyMessage = {
+    ...createPlatformTestQueueMessage({
+      id: "outbox-worker-2",
+      type: "smoke.durable-flaky" as QueueMessageType,
+      payload: { outboxEntryId: "outbox-worker-2" },
+    }),
+    idempotencyKey: "outbox-worker-2" as QueueIdempotencyKey,
+  };
+  equal(durableShell.value.enqueue(flakyMessage).ok, true);
+  const durableRetry = await durableShell.value.runNext();
+  equal(durableRetry.ok, true);
+  if (!durableRetry.ok || durableRetry.value.status !== "retry") {
+    throw new Error("Expected a failed durable handler to release its claim before retry.");
+  }
+  const releasedDurable = await durableProcessingStore.get(outboxEntryId("outbox-worker-2"));
+  equal(releasedDurable?.state, "retry-eligible");
+  equal(releasedDurable?.attempt, 1);
+  const flakySuccess = await durableShell.value.runNext();
+  equal(flakySuccess.ok, true);
+  if (!flakySuccess.ok || flakySuccess.value.status !== "succeeded") {
+    throw new Error("Expected the released durable processing claim to be reclaimable for retry.");
+  }
+  equal(flakySuccess.value.idempotency, "durable-processed");
+  equal(flakyDurableHandled, 2);
+  const flakyCompleted = await durableProcessingStore.get(outboxEntryId("outbox-worker-2"));
+  equal(flakyCompleted?.state, "completed");
+  equal(flakyCompleted?.attempt, 2);
+
+  const invalidDurableEnvelope = {
+    ...createPlatformTestQueueMessage({
+      id: "transport-generated-id",
+      type: "smoke.durable" as QueueMessageType,
+      payload: { outboxEntryId: "outbox-worker-invalid" },
+    }),
+    idempotencyKey: "outbox-worker-invalid" as QueueIdempotencyKey,
+  };
+  equal(durableShell.value.enqueue(invalidDurableEnvelope).ok, true);
+  const rejectedDurableEnvelope = await durableShell.value.runNext();
+  equal(rejectedDurableEnvelope.ok, true);
+  if (!rejectedDurableEnvelope.ok || rejectedDurableEnvelope.value.status !== "dead-lettered") {
+    throw new Error("Expected an unstable durable outbox envelope to be rejected.");
+  }
+  equal(rejectedDurableEnvelope.value.error.code, "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID");
+  deepEqual(durableObservations.map((observation) => ({
+    transition: observation.transition,
+    outcome: observation.outcome,
+    fields: Object.keys(observation).sort(),
+  })), [
+    { transition: "processing.claimed", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.completed", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.duplicate_succeeded", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.claimed", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.retry_released", outcome: "failed", fields: ["error", "outcome", "transition"] },
+    { transition: "processing.claimed", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.completed", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.envelope_rejected", outcome: "rejected", fields: ["error", "outcome", "transition"] },
+  ]);
+
+  const terminalProcessingStore = createInMemoryPlatformProcessingStore();
+  const terminalDurableObservations: PlatformPersistenceObservation[] = [];
+  const terminalDurableShell = await createPlatformWorkerShell({
+    apps: [durableApp],
+    deps: createPlatformTestMountDeps(),
+    durableOutboxProcessing: {
+      processingStore: terminalProcessingStore,
+      owner: durableOwner.value,
+      leaseDurationMs: 1_000,
+      observer: { record: (observation) => terminalDurableObservations.push(observation) },
+    },
+    maxAttempts: 1,
+  });
+  equal(terminalDurableShell.ok, true);
+  if (!terminalDurableShell.ok) {
+    throw new Error("Expected terminal durable worker shell to mount.");
+  }
+  equal((await terminalDurableShell.value.start()).ok, true);
+  const terminalMessage = {
+    ...createPlatformTestQueueMessage({
+      id: "outbox-worker-3",
+      type: "smoke.durable-terminal" as QueueMessageType,
+      payload: { outboxEntryId: "outbox-worker-3" },
+    }),
+    idempotencyKey: "outbox-worker-3" as QueueIdempotencyKey,
+  };
+  equal(terminalDurableShell.value.enqueue(terminalMessage).ok, true);
+  const terminalResult = await terminalDurableShell.value.runNext();
+  equal(terminalResult.ok, true);
+  if (!terminalResult.ok || terminalResult.value.status !== "dead-lettered") {
+    throw new Error("Expected terminal worker failure to finish durable processing before dead-lettering.");
+  }
+  equal(terminalDurableHandled, 1);
+  const terminalCompleted = await terminalProcessingStore.get(outboxEntryId("outbox-worker-3"));
+  equal(terminalCompleted?.state, "completed");
+  equal(terminalCompleted?.completion?.outcome, "terminal-failure");
+  equal(terminalDurableShell.value.enqueue(terminalMessage).ok, true);
+  const terminalDuplicate = await terminalDurableShell.value.runNext();
+  equal(terminalDuplicate.ok, true);
+  if (!terminalDuplicate.ok || terminalDuplicate.value.status !== "dead-lettered") {
+    throw new Error("Expected a terminal durable duplicate to preserve the dead-letter outcome.");
+  }
+  equal(terminalDuplicate.value.error.code, "PLATFORM_WORKER_DURABLE_PROCESSING_TERMINAL_FAILURE");
+  equal(terminalDurableHandled, 1);
+  deepEqual(terminalDurableObservations.map((observation) => ({
+    transition: observation.transition,
+    outcome: observation.outcome,
+    fields: Object.keys(observation).sort(),
+  })), [
+    { transition: "processing.claimed", outcome: "succeeded", fields: ["outcome", "transition"] },
+    { transition: "processing.terminal_failure_recorded", outcome: "failed", fields: ["error", "outcome", "transition"] },
+    { transition: "processing.duplicate_terminal_failure", outcome: "failed", fields: ["error", "outcome", "transition"] },
+  ]);
 }
 
 main()

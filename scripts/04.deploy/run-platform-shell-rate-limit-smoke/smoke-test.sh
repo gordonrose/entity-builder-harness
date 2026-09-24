@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.run-platform-shell-rate-limit-smoke.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -37,7 +37,7 @@ if npm run platform:shell:rate-limit-smoke -- --validate --execute >/dev/null 2>
   exit 1
 fi
 
-python3 - "$ROOT/scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.py" <<'PY'
+PYTHONDONTWRITEBYTECODE=1 python3 - "$ROOT/scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.py" <<'PY'
 import contextlib
 import importlib.util
 import io

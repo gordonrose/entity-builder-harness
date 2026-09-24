@@ -34,6 +34,7 @@ const coreModules = [
   "i18n",
   "logging",
   "monitoring",
+  "persistence",
   "queues",
   "shared",
   "tenancy",
@@ -62,6 +63,9 @@ writePackageShim("@kanbien/platform-health", {
 writePackageShim("@kanbien/platform-observability", {
   ".": join(runtimeRoot, "platform/observability/src/index.js"),
 });
+writePackageShim("@kanbien/platform-persistence", {
+  ".": join(runtimeRoot, "platform/persistence/src/index.js"),
+});
 writePackageShim("@kanbien/platform-runtime", {
   ".": join(runtimeRoot, "platform/runtime/src/index.js"),
 });
@@ -81,6 +85,9 @@ writePackageShim("@kanbien/platform-adapter-aws-auth-cognito", {
 });
 writePackageShim("@kanbien/platform-adapter-aws-observability-cloudwatch", {
   ".": join(runtimeRoot, "platform/adapters/aws/observability/cloudwatch/src/index.js"),
+});
+writePackageShim("@kanbien/platform-adapter-aws-persistence-dynamodb", {
+  ".": join(runtimeRoot, "platform/adapters/aws/persistence/dynamodb/src/index.js"),
 });
 writePackageShim("@kanbien/platform-adapter-aws-queue-sqs", {
   ".": join(runtimeRoot, "platform/adapters/aws/queue/sqs/src/index.js"),

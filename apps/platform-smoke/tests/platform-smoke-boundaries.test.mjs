@@ -13,7 +13,7 @@ const importSpecifierPatterns = [
   /\bexport\s+(?:type\s+)?[^"']*?\s+from\s+["']([^"']+)["']/g,
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
-const allowedSourceImportPattern = /^(?:@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-contracts))$/;
+const allowedSourceImportPattern = /^(?:@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-contracts|platform-persistence))$/;
 const forbiddenLayerImportPattern = /(?:^|\/)(?:platform\/(?:server|workers|runtime|testing|security)|products|infra)(?:\/|$)/;
 const forbiddenProviderWords = /\b(?:Cognito|DynamoDB|Lambda|Fargate|CloudWatch|S3|Kafka|Redis|Prisma)\b/;
 
@@ -45,6 +45,7 @@ const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 assert.equal(packageJson.name, "@kanbien/app-platform-smoke");
 assert.equal(packageJson.exports?.["."], "./src/index.ts", "root package export must point to src/index.ts");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-contracts"], "0.0.0", "app must depend on platform/contracts");
+assert.equal(packageJson.dependencies?.["@kanbien/platform-persistence"], "0.0.0", "app must depend on platform/persistence");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-server"], undefined, "app production dependencies must not include platform/server");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-workers"], undefined, "app production dependencies must not include platform/workers");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-testing"], undefined, "app production dependencies must not include platform/testing");
@@ -68,7 +69,7 @@ for (const file of sourceFiles) {
 
       assert.ok(
         allowedSourceImportPattern.test(specifier),
-        `${relative} may only import core contracts and platform/contracts, found ${specifier}`,
+        `${relative} may only import core contracts and provider-neutral platform contracts, found ${specifier}`,
       );
     }
   }

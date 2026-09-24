@@ -2,10 +2,12 @@ export {
   platformSmokeAppManifest,
   platformSmokeConfigKeys,
   platformSmokeReadPermission,
+  platformSmokeWorkItemCreatePermission,
   type PlatformSmokeAppManifest,
 } from "./app.manifest";
 export {
   platformSmokeApp,
+  createPlatformSmokeApp,
   platformSmokeAppId,
   platformSmokeConfigSchema,
   platformSmokeEchoObservabilityProfile,
@@ -17,7 +19,33 @@ export {
   platformSmokeRebuildObservabilityProfileName,
   platformSmokeRebuildValidator,
   platformSmokeRouteName,
+  platformSmokeWorkItemAcceptanceRouteName,
+  platformSmokeWorkItemAcceptanceValidator,
+  platformSmokeWorkItemAcceptanceObservabilityProfile,
+  platformSmokeWorkItemAcceptanceObservabilityProfileName,
+  platformSmokeWorkItemAcceptedJobMessageType,
+  platformSmokeWorkItemAcceptedJobName,
+  platformSmokeWorkItemAcceptedValidator,
+  platformSmokeWorkItemDeliveryObservabilityProfile,
+  platformSmokeWorkItemDeliveryObservabilityProfileName,
   type PlatformSmokeConfig,
+  type PlatformSmokeAppOptions,
   type PlatformSmokeJobMessage,
   type PlatformSmokeRebuildPayload,
+  type PlatformSmokeWorkItemAcceptedPayload,
 } from "./app.mount";
+export {
+  acceptPlatformSmokeWorkItem,
+  platformSmokeInitialWorkItemRevision,
+  platformSmokeWorkItemId,
+} from "./persistence/index";
+export type {
+  PlatformSmokeAcceptedWorkItemFacts,
+  PlatformSmokeAcceptWorkItemDependencies,
+  PlatformSmokeAcceptWorkItemInput,
+  PlatformSmokeWorkItem,
+  PlatformSmokeWorkItemId,
+  PlatformSmokeWorkItemPersistenceError,
+  PlatformSmokeWorkItemRepository,
+  PlatformSmokeWorkItemState,
+} from "./persistence/index";

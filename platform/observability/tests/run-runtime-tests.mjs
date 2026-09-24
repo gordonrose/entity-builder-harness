@@ -7,12 +7,22 @@ const testDirectory = join(runtimeRoot, "platform/observability/tests");
 const coreModules = [
   "logging",
   "monitoring",
+  "persistence",
+  "queues",
   "shared",
 ];
 
 writePackageShim("@kanbien/core", {
   ".": join(runtimeRoot, "packages/core/src/index.js"),
   ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
+});
+
+writePackageShim("@kanbien/platform-contracts", {
+  ".": join(runtimeRoot, "platform/contracts/src/index.js"),
+});
+
+writePackageShim("@kanbien/platform-persistence", {
+  ".": join(runtimeRoot, "platform/persistence/src/index.js"),
 });
 
 const testFiles = readdirSync(testDirectory)

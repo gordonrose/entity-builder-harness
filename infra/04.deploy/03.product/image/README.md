@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.image.readme
-version: 1
+version: 4
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -74,6 +74,22 @@ The worker never uses the Dockerfile's HTTP health check. Its ECS task
 definition overrides the command with the compiled worker target entrypoint,
 does not publish a port, and owns SQS polling, acknowledgement, release, and
 graceful shutdown at the target boundary.
+
+The same image also contains the compiled, target-specific one-pass relay
+entrypoint. The staging source now has a dedicated relay task definition that
+overrides the default command to run it, but it deliberately has no ECS service
+or scheduler. The entrypoint itself does not choose a long-running topology.
+It receives explicit target configuration and least-privilege DynamoDB/SQS
+access only when the reviewed CloudFormation change set is applied. The sealed
+payload verifier exercises only its safe configuration/startup path.
+
+The compiled-runtime payload verifier also calls the target persistence
+composer with a recording DynamoDB client. That source-only check verifies
+that the smoke work-item row, lineage fact, and outbox obligation become one
+intended transaction without falling back to TypeScript workspace sources. It
+also starts the compiled relay and durable-worker configuration paths with safe
+fixtures. It does not open an AWS connection or prove a real table, queue,
+relay task, or worker task.
 
 ## Still Blocked Before Deployment
 

@@ -16,6 +16,12 @@
       ],
       "@kanbien/core/*": [
         "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-persistence": [
+        "platform/persistence/src/index.ts"
       ]
     },
     "rootDir": "../..",

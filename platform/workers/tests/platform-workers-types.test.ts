@@ -12,6 +12,10 @@ import {
   type PlatformWorkerRunNextResult,
   type PlatformWorkerShell,
 } from "../src/index";
+import {
+  createInMemoryPlatformProcessingStore,
+  platformPersistenceLeaseOwner,
+} from "@kanbien/platform-persistence";
 
 const appId = platformAppId("smoke");
 if (!appId.ok) {
@@ -25,6 +29,11 @@ const app: PlatformApp = definePlatformApp({
 });
 
 const queue: PlatformWorkerQueue = createInMemoryPlatformWorkerQueue();
+const durableOwner = platformPersistenceLeaseOwner("worker.durable-a");
+if (!durableOwner.ok) {
+  throw new Error("Expected valid durable worker owner.");
+}
+const durableProcessingStore = createInMemoryPlatformProcessingStore();
 const message = createPlatformTestQueueMessage({
   type: "smoke.rebuild" as QueueMessageType,
   payload: { rebuild: true },
@@ -36,6 +45,11 @@ const shell: Promise<import("@kanbien/core/shared").Result<PlatformWorkerShell, 
   apps: [app],
   deps: createPlatformTestMountDeps(),
   queue,
+  durableOutboxProcessing: {
+    processingStore: durableProcessingStore,
+    owner: durableOwner.value,
+    leaseDurationMs: 1_000,
+  },
 });
 void shell;
 
@@ -54,3 +68,14 @@ queue.enqueue({ type: "smoke.rebuild" });
 
 // @ts-expect-error maxAttempts must be numeric.
 createPlatformWorkerShell({ apps: [app], deps: createPlatformTestMountDeps(), maxAttempts: "two" });
+
+createPlatformWorkerShell({
+  apps: [app],
+  deps: createPlatformTestMountDeps(),
+  durableOutboxProcessing: {
+    processingStore: durableProcessingStore,
+    owner: durableOwner.value,
+    // @ts-expect-error durable processing lease duration must be numeric.
+    leaseDurationMs: "one-second",
+  },
+});

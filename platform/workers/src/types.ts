@@ -3,6 +3,11 @@ import type { QueueMessage } from "@kanbien/core/queues";
 import type { ISODateTime, Result } from "@kanbien/core/shared";
 import type { PlatformApp, PlatformJobName, PlatformMountDeps } from "@kanbien/platform-contracts";
 import type { PlatformReadinessSummary } from "@kanbien/platform-health";
+import type {
+  PlatformPersistenceLeaseOwner,
+  PlatformPersistenceObserver,
+  PlatformProcessingStore,
+} from "@kanbien/platform-persistence";
 import type { PlatformRuntimeLifecycleController, PlatformRuntimeMountResult } from "@kanbien/platform-runtime";
 import type { PlatformWorkerError } from "./errors";
 
@@ -37,7 +42,20 @@ export interface PlatformWorkerIdempotencyStore {
 }
 
 export type PlatformWorkerRunStatus = "idle" | "succeeded" | "retry" | "dead-lettered";
-export type PlatformWorkerIdempotencyOutcome = "none" | "processed" | "skipped";
+export type PlatformWorkerIdempotencyOutcome =
+  | "none"
+  | "processed"
+  | "skipped"
+  | "durable-processed"
+  | "durable-skipped";
+
+/** Enables durable-outbox processing for one worker shell and its queue. */
+export interface PlatformWorkerDurableOutboxProcessingOptions {
+  readonly processingStore: PlatformProcessingStore;
+  readonly owner: PlatformPersistenceLeaseOwner;
+  readonly leaseDurationMs: number;
+  readonly observer?: PlatformPersistenceObserver;
+}
 
 export type PlatformWorkerRunNextResult =
   | { readonly status: "idle" }
@@ -70,6 +88,7 @@ export interface PlatformWorkerShellOptions {
   readonly deps: PlatformMountDeps;
   readonly queue?: PlatformWorkerQueue;
   readonly idempotency?: PlatformWorkerIdempotencyStore;
+  readonly durableOutboxProcessing?: PlatformWorkerDurableOutboxProcessingOptions;
   readonly tracer?: Tracer;
   readonly maxAttempts?: number;
   readonly retryBackoffMs?: (attempt: number) => number;

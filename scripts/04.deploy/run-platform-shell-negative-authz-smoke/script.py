@@ -81,6 +81,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
     route53 = mapping(mapping(profile.get("aws"), "aws").get("route53"), "aws.route53")
     auth = mapping(profile.get("auth"), "auth")
     negative = mapping(auth.get("negative_test_client"), "auth.negative_test_client")
+    persistence_write_client = mapping(auth.get("persistence_write_test_client"), "auth.persistence_write_test_client")
     resource_server = mapping(negative.get("resource_server"), "auth.negative_test_client.resource_server")
     token_validation = mapping(auth.get("token_validation"), "auth.token_validation")
     permissions = mapping(mapping(auth.get("permission_mapping"), "auth.permission_mapping").get("scope_permissions"), "auth.permission_mapping.scope_permissions")
@@ -121,8 +122,19 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         additional_client_ids = json.loads(required_string(non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS"), "config.non_secret_env.PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS"))
     except json.JSONDecodeError as exception:
         raise NegativeAuthzSmokeError("the additional Cognito client allowlist must be valid JSON") from exception
-    if additional_client_ids != [policy["client_id"]]:
-        raise NegativeAuthzSmokeError("the additional Cognito client allowlist must contain exactly the negative proof client")
+    persistence_status = persistence_write_client.get("status")
+    if persistence_status not in {
+        "pending-provisioning",
+        "provisioned-pending-service-deployment",
+        "deployed-pending-write-proof",
+        "deployed-and-write-proven",
+    }:
+        raise NegativeAuthzSmokeError("the persistence-write client must remain in a governed lifecycle state")
+    expected_client_ids = [policy["client_id"]]
+    if persistence_status in {"deployed-pending-write-proof", "deployed-and-write-proven"}:
+        expected_client_ids.append(required_string(persistence_write_client.get("client_id"), "auth.persistence_write_test_client.client_id"))
+    if additional_client_ids != expected_client_ids:
+        raise NegativeAuthzSmokeError("the additional Cognito client allowlist must contain exactly the deployed proof clients")
     if authorization_403.get("proof_command") != "npm run platform:shell:negative-authz-smoke" or authorization_403.get("safe_result") != "status-code-only-403":
         raise NegativeAuthzSmokeError("the readiness policy must retain the bounded negative authorization proof contract")
     return policy

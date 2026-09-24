@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 20
+  version: 37
   status: active
   layer: 05.education
   domain: education
@@ -8641,16 +8641,18 @@ performance. We need both to make the boundary trustworthy.
 
 ## 93. Next Lesson Queue
 
-1. Record the first clock-triggered temporary GitHub Actions synthetic run.
-   Its separate IAM role, source promotion, and manual first redacted `200`
-   result are complete. Treat its nominal four-hour cadence as best effort
-   boundary evidence, not telemetry-coverage proof or a customer SLO.
-2. Design the coverage signal and run a separately approved exporter-loss
-   rehearsal. Prove that a successful request plus missing telemetry becomes
-   insufficient SLO confidence and an operator signal.
-3. Complete the remaining bounded target exercises: real wrong-scope `403`,
-   limit-plus-one `429`, WAF/ALB routing inspection, alert receipt, rollback,
-   and cost-allocation/budget proof.
+0. Persistence continuation: source-define the Kanbien staging table, indexes,
+   encryption/recovery posture, and non-secret configuration are complete in
+   source. Next, compose the acceptance, relay, and worker path, then grant
+   each component only the access it uses.
+1. Add focused physical failure tests, especially a conditional-write
+   cancellation, before a real create-once result is treated as a precise
+   duplicate result.
+2. After separate AWS approval, prove the harmless state/lineage/outbox path,
+   relay, queue delivery, durable worker completion, and recovery in staging.
+3. Keep real product/entity persistence separate: its tenant rules, schema,
+   classification, migration, retention, and restore policy remain future
+   product work.
 
 ## 94. A Temporary Scheduler Is Not a Platform Scheduler
 
@@ -8893,6 +8895,1302 @@ between changing a record and sending a direct queue message can leave one
 without the other. The later outbox transaction exists precisely to preserve
 that obligation.
 
+## 98. Persistence Foundation: Facts, Coordination, and One Atomic Boundary
+
+### The problem we are solving
+
+Imagine a future capability accepts a request to create a harmless work item.
+It changes the work-item state and needs background work to happen afterwards.
+There are two dangerous half-successes:
+
+```text
+state saved              state not saved
+outbox missing           outbox message exists
+─────────────            ────────────────────
+work is silently lost    background work refers to a thing that never existed
+```
+
+The durable-outbox pattern prevents both outcomes. One **atomic transaction**
+makes the state change, its safe record-history fact, and an obligation for
+later background delivery succeed together or fail together. A relay and a
+worker then deal safely with the fact that queues can redeliver messages.
+
+### First, separate three jobs that can look like “persistence”
+
+| Layer | Question it answers | What we added locally | What it deliberately does not decide |
+| --- | --- | --- | --- |
+| Core persistence | “What stable facts must all providers understand?” | Versioned `OutboxEntry`, bounded `RecordChange`, transaction-aware repository option, errors, versions, pages, and repository vocabulary. | DynamoDB tables, SQS messages, product fields, or a cloud provider. |
+| Platform persistence | “How does durable delivery stay safe across retries and restarts?” | Pending/leased/published outbox state; processing claims; attempts; leases; fences; safe lineage ports; atomic-write port. | A business entity's schema, a tenant's retention policy, or an AWS SDK call. |
+| Future adapter and target | “How is that made real in this deployment?” | Nothing yet in this slice. | It must later choose and configure DynamoDB/SQS resources, IAM, encryption, alarms, and live proof. |
+
+This is the same ownership pattern used elsewhere in the repository: Core
+names stable nouns; Platform supplies reusable mechanics; an adapter translates
+those mechanics to a provider; target infrastructure supplies real resources
+and settings.
+
+### What Core now means by an outbox entry
+
+An `OutboxEntry` is deliberately a small, immutable promise:
+
+```text
+outbox ID
+stable subject reference ──> which durable work record this concerns
+versioned message type   ──> what a later consumer understands
+delivery-policy name     ──> which retry/timeout/DLQ rules apply
+created time and safe correlation/causation facts
+```
+
+It does **not** contain an arbitrary business payload, customer name,
+document, token, raw request body, or free-form object. The queue can carry
+the stable outbox identity; the worker retrieves the durable work record by
+its safe subject reference. That is both easier to evolve and less likely to
+turn the queue into an uncontrolled copy of business data.
+
+The companion `RecordChange` is not an audit event and not a full history-row
+copy. It records a stable record reference, revision, action (`created`,
+`updated`, `deleted`, or `restored`), direct cause, optional safe actor, and
+an allowlisted list of changed field names. It answers “which record revision
+changed because of what?” without storing before/after values.
+
+### The relay and worker have a small state machine
+
+The new provider-neutral platform package models the following state changes:
+
+```text
+outbox:      pending ──claim──> leased ──publish──> published
+                           │
+                           └── lease expires ──> a later claimant may reclaim
+
+processing:  unclaimed ──claim──> claimed ──complete──> completed
+                           │
+                           └── lease expires ──> a later worker may reclaim
+```
+
+Each claim gets two related numbers:
+
+| Fact | Meaning | Example |
+| --- | --- | --- |
+| Attempt | How many delivery/processing tries have occurred. | `2` means this is the second claim. |
+| Fence | Which claimant is currently allowed to complete the action. | Fence `2` supersedes fence `1`. |
+
+A **lease** is a temporary permission to do work. A **fence** is the
+monotonically increasing proof of which permission is current. If relay A has
+fence 1, pauses, and relay B claims the expired item with fence 2, relay A's
+later publish is rejected. We also enforce a subtler rule: a holder cannot
+complete after *its own lease expires*, even before anyone else takes over.
+Otherwise an abandoned process could still complete work outside the authority
+window it was granted.
+
+### The atomic-write seam: an honest promise, not a fake one
+
+The latest slice adds `PlatformPersistenceAtomicWriter`. It is a contract that
+a real provider adapter must implement. It gives the product code one scoped
+transaction handle:
+
+```text
+transaction scope
+    ├── transaction-aware product repository saves state
+    └── scope stages one validated lineage + outbox mutation
+                ↓
+adapter commits all three writes together, or commits none
+```
+
+The staged pair is checked before the adapter accepts it:
+
+- the outbox subject must be the same record as the lineage subject;
+- both facts must share the same direct cause;
+- declared tenant scopes and correlation IDs may not conflict.
+
+There is intentionally **no in-memory implementation** that claims to provide
+this atomicity. The Core in-memory repository now rejects a transaction handle
+with `PERSISTENCE_TRANSACTION_UNSUPPORTED`. That may seem less convenient,
+but it is a valuable safety rule: silently ignoring the transaction would let
+a local test look successful while writing product state outside the durable
+outbox boundary.
+
+### A concrete story
+
+Suppose a future import capability accepts `work-17` because request `r-4`
+asked for it.
+
+1. The product repository changes `work-17` to `accepted` using the scoped
+   transaction.
+2. It stages a record change saying revision 1 of `work-17` was created by
+   `r-4`.
+3. It stages an outbox entry for the same `work-17`, also caused by `r-4`.
+4. The real adapter either commits all three records or rolls all three back.
+5. Later, a relay leases the outbox item, sends a small identity/reference
+   message, and marks publication only if it still holds an unexpired fence.
+6. A worker claims that stable identity, records its terminal outcome before
+   acknowledging the queue, and a duplicate delivery recognises the completed
+   processing record.
+
+The important distinction is this: the initial transaction makes the
+**obligation** durable. It does not prove the queue received the message or
+that the worker finished. Those are later, independently recorded stages.
+
+### What is implemented, and what is not
+
+| Implemented locally in this chat worktree | Still planned before a real smoke proof |
+| --- | --- |
+| Semantic Core persistence files and source guides. | DynamoDB persistence adapter and transactional write construction. |
+| Immutable outbox and bounded record-lineage contracts. | DynamoDB table/index, encryption, TTL/backup, IAM, and alarms. |
+| In-memory outbox/processing/lineage state-machine proof. | DynamoDB persistence adapter and concrete queue sender/receiver composition. |
+| Provider-neutral relay composition with the existing Core queue-send port. | Durable processing-claim composition inside the worker lifecycle. |
+| Lease expiry and stale-fence rejection tests. | A harmless smoke capability using the atomic writer. |
+| Atomic-writer contract and transaction-aware repository seam. | Controlled staging proof, duplicate/recovery evidence, and cost review. |
+
+The source is tested locally, but it has not yet been committed or deployed.
+No AWS resource changed during this persistence work.
+
+### Misconception checks
+
+“We now have exactly-once processing.”
+
+No. We have the local contracts and state rules needed for duplicate-safe
+delivery. Queues may still deliver more than once. The real outcome becomes
+effectively once only when the adapter atomically records processing and the
+business state transition.
+
+“The in-memory test can prove a database transaction.”
+
+No. It can prove state-machine rules. It must not pretend to prove atomic
+durability, so it rejects a transaction-aware save.
+
+“The outbox is just another name for SQS.”
+
+No. The outbox is a durable database obligation. SQS is one possible later
+transport used by a relay after that obligation exists.
+
+### Study questions
+
+1. Why is rejecting an unsupported transaction safer than accepting it and
+   performing an ordinary in-memory save?
+
+   Because accepting it would make the caller believe state, lineage, and
+   outbox writes share a rollback boundary when they do not.
+
+2. Why does a fence not replace a lease-expiry check?
+
+   A fence protects against a later claimant. The expiry check protects the
+   interval before that later claimant exists, when the original process has
+   already lost its authority.
+
+3. Why is an outbox's stable record reference safer than a raw job payload for
+   this first platform foundation?
+
+   It lets the consumer retrieve current durable state and avoids creating a
+   second uncontrolled copy of business or sensitive data in a queue message.
+
+Planning triage: the implementation order, ownership boundaries, and future
+DynamoDB/SQS smoke proof are recorded in
+[`persistence-foundation-v1.md`](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+This teaching chunk adds no new policy beyond that plan; it records the local
+implementation and its explicit limits.
+
+## 99. The Outbox Relay: A Bridge, Not a Worker
+
+The next local slice adds the missing bridge between the durable outbox and a
+queue. It is deliberately small: the relay chooses one due outbox obligation,
+temporarily claims it, asks the queue to accept a minimal message, and only
+then records that publication succeeded.
+
+```text
+durable outbox entry
+        │ claim (lease + fence)
+        ▼
+relay ──send only { outboxEntryId }──> queue
+        │ queue accepts
+        ▼
+mark entry published using the same unexpired fence
+```
+
+The message does not carry a customer record, a document, a full job payload,
+or a provider-specific receipt. It carries the stable outbox ID. That ID is
+also the queue message ID and idempotency key, so a later worker has one
+durable identity to use when it looks up and claims the work.
+
+### Why the order matters
+
+If the relay marked the outbox as published **before** the queue accepted the
+message, a crash or send failure could lose work permanently. This implementation
+does the safer order:
+
+1. claim the pending entry;
+2. send the minimal envelope;
+3. only after acceptance, mark the entry published.
+
+There is an unavoidable opposite edge case: the queue can accept the message,
+then the relay can stop before it writes the published marker. On recovery the
+entry may be sent again. That is not a bug; it is why the worker must later
+claim and complete the same stable outbox identity before acknowledgement.
+
+### What happens when the queue is unavailable
+
+The relay does not invent its own retry loop, backoff, DLQ policy, telemetry,
+or shutdown behaviour. A queue-send failure leaves the outbox entry in its
+leased state. Once that lease expires, a later relay can reclaim it. The new
+local test proves that this recovery gets a new, higher fence and a second
+attempt number.
+
+This is an important separation:
+
+| Component | Responsibility | Does not do |
+| --- | --- | --- |
+| Outbox relay | Make the durable obligation visible to a queue. | Receive, retry, acknowledge, or dead-letter a job. |
+| Existing worker | Receive delivery, run the handler, retry/DLQ, trace, log, and shut down safely. | Decide whether an outbox promise was published. |
+| Future adapter | Preserve the stable outbox ID and causation across the concrete transport. | Replace the platform's portable contracts. |
+
+### Misconception check
+
+“A relay completing means the job completed.”
+
+No. A relay completing means only that the queue accepted a request to perform
+later work. The worker's durable processing claim and completion record are
+the separate proof that the work was handled safely.
+
+### Study question
+
+Why is a provider message ID not a safe replacement for `outboxEntryId`?
+
+Because the provider can redeliver the same logical work with a different
+delivery ID. The outbox ID survives retries and lets durable worker processing
+recognise that the work is the same obligation.
+
+Planning triage: the relay's current local scope and the remaining worker and
+transport composition are recorded in
+[`persistence-foundation-v1.md`](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+This lesson adds no new plan; it records the completed provider-neutral relay
+slice and its explicit non-goals.
+
+## 100. A Durable Worker: Claim, Run, Settle, Then Acknowledge
+
+The relay makes a durable obligation visible to a queue. The worker must now
+make sure that the obligation is not performed twice when the queue delivers a
+duplicate.
+
+The worker is given an **optional durable-outbox mode**. It is deliberately
+not enabled for every background job: a direct scheduled job may not have an
+outbox record at all. When enabled, it accepts only a message that identifies
+the same outbox obligation in all three places:
+
+```text
+queue message ID       = outbox-42
+idempotency key        = outbox-42
+payload.outboxEntryId  = outbox-42
+```
+
+If one differs, the worker rejects the delivery before the app handler runs.
+This is important because a transport provider can assign a new delivery ID on
+redelivery. That new provider ID must never quietly replace the stable
+`outboxEntryId` used by the persistence record.
+
+### The worker's safe paths
+
+```text
+arrival
+  │
+  ├── completed success ──> skip handler ──> succeed/ack
+  │
+  ├── completed terminal failure ──> skip handler ──> existing DLQ outcome
+  │
+  └── claim current fence
+          │
+          ├── handler succeeds ──> record completion ──> succeed/ack
+          │
+          ├── handler fails but may retry ──> release claim ──> existing retry path
+          │
+          └── final handler failure ──> record terminal failure ──> existing DLQ path
+```
+
+The word **release** matters. If a worker keeps its lease after a temporary
+failure, its next legitimate retry would find its own still-active claim and
+be blocked. Releasing preserves the previous attempt and fence as history,
+but makes the record immediately eligible for a new claim with a higher fence.
+
+There is a subtle but important distinction in the first two branches. A
+terminal-completion record means **do not execute the business effect again**;
+it does *not* mean **the message was successful**. Returning success there
+would acknowledge a later redelivery and bypass the provider's DLQ policy. The
+worker instead returns the same non-success, dead-letter outcome without
+calling the handler a second time.
+
+### What “acknowledge last” means
+
+The generic worker reports success only after durable processing records
+success. The target-specific queue loop already acknowledges only a successful
+worker result. Therefore this order holds:
+
+```text
+durable completion first
+queue acknowledgement second
+```
+
+If completion cannot be stored—for example, because the lease expired—the
+worker does not report success. The target loop releases the delivery, letting
+the queue redeliver it according to its own retry/DLQ policy.
+
+### An honest remaining limit
+
+This local worker composition proves the control-flow order. It does not yet
+prove that a real business state change and the durable completion marker share
+one physical database transaction. That stronger promise belongs to the later
+DynamoDB adapter and harmless smoke capability. Until then, the code is clear
+about the intended boundary rather than claiming exactly-once business effects.
+
+### Study question
+
+Why must a temporary handler failure release the current processing claim
+before the worker’s normal retry mechanism runs?
+
+## 101. Observing the Persistence Conveyor Belt Without Copying Its Cargo
+
+The outbox flow now has several small but important transitions. “The worker
+failed” is too vague to diagnose all of them. Did the relay fail to claim the
+outbox item? Did the queue accept it but the publication marker fail? Did the
+worker release a retry, or reach terminal failure?
+
+We give each of those an approved **transition name**. The transition name is
+like a label on the conveyor-belt station, not a photograph of the package:
+
+```text
+safe station label                         never copied into telemetry
+────────────────────────────────────────   ───────────────────────────────
+processing.retry_released                  outbox ID, invoice/customer data,
+outbox.publish_marker_failed               payload, tenant, queue receipt,
+processing.duplicate_terminal_failure      fence number, or raw error text
+```
+
+`platform/persistence` says only: “this named transition happened, with this
+bounded outcome.” It sends that fact through an optional observer port. It
+does not know whether the target uses CloudWatch, another provider, or no
+telemetry at all.
+
+`platform/observability` supplies the other half. It takes a registered
+profile and can make the same safe fact into:
+
+- a structured operational log, with an optional correlation reference;
+- a metric counter, using only low-cardinality profile fields; and
+- a small trace span, optionally linked to the enclosing worker trace.
+
+The metric uses a separate fixed name per transition, such as
+`platform.persistence.outbox.claimed.outcome`. We intentionally do **not** add
+an arbitrary `transition` label. Fixed names are easy to review in the target
+metric catalogue; arbitrary labels are a common route to costly,
+high-cardinality metrics.
+
+### Misconception check
+
+“If the observer knows an outbox entry exists, it needs the outbox ID in every
+metric to be useful.”
+
+No. Aggregate metrics answer “how often is publication-marker failure
+happening?” They should not become a database of individual work items. A safe
+correlation reference can help follow one authorised incident through logs, and
+existing trace context can connect spans, while durable persistence records
+remain the place to inspect the particular obligation.
+
+### Study question
+
+Why is a fixed metric name such as
+`platform.persistence.processing.retry_released.outcome` safer than one metric
+with a free-form `transition` label?
+
+Because otherwise the retry meets the first attempt's still-valid lease and
+cannot become the authorised claimant, even though it is the legitimate next
+attempt at the same work.
+
+Planning triage: the worker composition, release-for-retry state, and remaining
+adapter/operational-profile work are recorded in
+[`persistence-foundation-v1.md`](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+This lesson records the completed local composition; it does not create a new
+plan or claim an AWS deployment.
+
+## 102. A Storage Adapter: Keeping DynamoDB Details Out of the Application
+
+We now have a **DynamoDB persistence adapter**. An adapter is a translator at
+the edge of the platform. The app asks for things using the stable vocabulary
+it already understands—an outbox entry, a processing claim, a record change.
+The adapter translates those requests into DynamoDB-specific keys, index
+queries, condition expressions, and commands.
+
+```text
+app capability                 DynamoDB adapter                 DynamoDB table
+───────────────                ────────────────                 ──────────────
+"this work item changed"  ──>  encode safe lineage row      ──>  LINEAGE#...
+"send later"               ──>  encode durable obligation   ──>  OUTBOX#...
+"may I process this?"      ──>  condition + lease + fence    ──>  PROCESSING#...
+```
+
+The table contains several **logical record types**. That does not mean they
+are muddled together. Each has a recognisable key:
+
+- an outbox row has the stable outbox ID and a separate due-time index, so a
+  relay asks “what is eligible now?” without searching every row;
+- a processing row has that same stable ID, so an SQS redelivery finds the
+  existing claim instead of starting anonymous work again; and
+- a lineage row is ordered by a record's revision and can also be looked up by
+  its direct cause.
+
+The index query is a candidate list, not permission to act. DynamoDB secondary
+indexes may be slightly behind the primary table. The adapter therefore still
+uses the conditional claim as the final authority. If two relays see the same
+candidate, only one conditional write wins; the other reads the honest
+`lease-active` state.
+
+### What the transaction does—and does not—prove today
+
+The adapter can write the **platform-owned facts**—one lineage entry and one
+initial outbox obligation—in a DynamoDB transaction. Both appear, or neither
+does. That is useful, but it is not yet the full business promise:
+
+```text
+today:       lineage + outbox                         one transaction
+next slice:  smoke work-item state + lineage + outbox one transaction
+```
+
+Why not have Platform invent the missing work-item write? Because Platform
+does not know which fields the future entity has, what its valid states are,
+or how its version/lifecycle should work. Making a generic fake write would
+hide that responsibility and create a dangerous false sense of atomicity.
+
+### Misconception check
+
+“If we use DynamoDB, the app must know DynamoDB keys and condition syntax.”
+
+No. The adapter owns those implementation details. The smoke app will declare
+only its harmless work-item meaning and call the provider-neutral persistence
+seam. A later relational adapter could provide the same seam with a different
+physical design.
+
+### Study question
+
+Why is a due-index query not enough by itself to let a relay publish an outbox
+entry?
+
+Planning triage: this is Phase 3a of the existing
+[Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+The plan records that the smoke item's own transaction participant remains a
+Phase 4 requirement; no new plan is needed.
+
+## 103. An App Asks for One Transaction Without Knowing the Database
+
+The next persistence slice gives the smoke app one tiny piece of product
+meaning: a harmless work item can be accepted once. Its state is deliberately
+small:
+
+```text
+work item ID → accepted → revision 1
+```
+
+Accepting the item also requires two platform-owned facts:
+
+```text
+app meaning                 platform facts
+───────────                 ──────────────
+work item is accepted  +    record change: created
+                         +  outbox obligation: work-item accepted
+```
+
+The app does not save those things one after another on its own. Instead, it
+asks an injected `PlatformPersistenceAtomicWriter` for a transaction scope.
+It gives the scope's transaction to its own repository and stages the safe
+lineage/outbox facts through the same scope.
+
+```text
+accept capability
+   │
+   ├── repository.create(work item, transaction)
+   └── scope.stage(lineage + outbox)
+             │
+             ▼
+selected composition / adapter decides how one physical transaction works
+```
+
+This is an important separation. The app is allowed to know the business
+rule—"a work item is accepted once"—but it is not allowed to know a table
+name, DynamoDB key shape, conditional expression, SDK client, or IAM role.
+Those are implementation details chosen later by target composition.
+
+### What the local test proves
+
+The test uses a recording atomic writer. It proves that the repository sees
+the exact transaction scope supplied by the writer and that the staged facts
+refer to the same work item and direct cause. A second attempt returns a
+duplicate result before an outbox entry is staged.
+
+That is a valuable **contract proof**, but it is not yet a database proof. The
+recording writer does not store anything. The next slice must implement a
+transaction-aware DynamoDB work-item repository and compose its write into the
+same DynamoDB transaction as lineage and outbox.
+
+### Misconception check
+
+“The app uses a transaction port, so we have already proved three database
+writes are atomic.”
+
+No. We have proved the app asks for the right boundary and refuses to stage an
+outbox fact after a duplicate. The selected adapter must still prove that it
+can make all three writes succeed or fail together.
+
+### Study question
+
+Why is the work-item repository an app-owned port rather than a generic
+platform repository?
+
+Because only the app knows what a work item is, which states are valid, whether
+creation is idempotent, and which fields or lifecycle rules apply. Platform can
+provide the transaction coordination rule without inventing that product
+meaning.
+
+Planning triage: this completes the semantic request portion of Phase 4 in the
+[Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+The physical three-record transaction is explicitly still pending; no AWS
+resource or target configuration has changed.
+
+## 104. One Physical Transaction Needs a Participant, Not Just Good Intentions
+
+The previous lesson showed the application *asking* for a transaction. This
+lesson covers the next layer down: how the selected DynamoDB adapter prevents
+that request becoming three adjacent but independent writes.
+
+The adapter now provides an atomic writer with a very narrow conversation:
+
+```text
+target-composed repository          DynamoDB atomic writer
+──────────────────────────          ──────────────────────
+stage product-state write      ──>  hold it in one short-lived scope
+stage lineage + outbox facts   ──>  validate the shared platform mutation
+                                    │
+                                    ▼
+                           send one TransactWriteItems request
+```
+
+The adapter itself does **not** know what the product row means. It only knows
+that a target-composed repository has supplied exactly one valid DynamoDB
+transaction operation while the writer's scope is open. It then combines that
+operation with the two platform-owned writes:
+
+```text
+1. product-owned state row     (defined later by smoke composition)
+2. bounded lineage fact        (defined by Core)
+3. initial outbox obligation   (defined by Core)
+```
+
+All three are sent to DynamoDB as one transaction. If any conditional check or
+write fails, DynamoDB makes none of them visible.
+
+### Two useful safeguards
+
+- The adapter refuses to send anything without both kinds of contribution: a
+  product participant **and** a validated lineage/outbox mutation. This catches
+  a repository that accidentally uses the scope but forgets to stage required
+  durable delivery facts.
+- The staging function works only while the supplied transaction is open. A
+  repository cannot save the handle and use it later to smuggle an unrelated
+  write into a future request.
+
+The transaction does not allow an after-commit callback. A callback is local
+process memory: if the process dies after DynamoDB commits, its promised later
+work could disappear. The durable outbox is the reliable replacement—it stores
+the obligation with the state and lets a relay deliver it safely later.
+
+### Misconception check
+
+“The adapter now has a product-row write, so it knows how to store every
+future entity.”
+
+No. The adapter only knows the *shape of a DynamoDB transaction operation*.
+The still-pending smoke repository will define its one harmless work-item row.
+A future invoice, document, or medical record must define its own schema,
+lifecycle, classification, and repository rather than reuse a fake universal
+row.
+
+### Study question
+
+Why does the atomic writer reject a transaction that contains lineage and an
+outbox fact but no product participant?
+
+Because that would make the platform appear to have protected a state change
+when no state write participated at all. Refusing the incomplete transaction
+makes the missing responsibility visible before it reaches the database.
+
+Planning triage: this completes the reusable physical-coordination portion of
+Phase 3. The target-composed smoke repository remains the next Phase 4 slice;
+no AWS resource or deployment setting has changed.
+
+## 105. Composition Is Where a Product Row Finally Becomes Real
+
+The previous two lessons deliberately stopped short of defining a database row.
+That was not hesitation—it protected the architecture. The generic DynamoDB
+adapter can coordinate a transaction, but it cannot honestly decide what a
+work item, invoice, or medical record means.
+
+The new Kanbien staging composition root supplies that missing product-specific
+piece. It chooses the adapter and defines one harmless smoke row:
+
+```text
+app acceptance capability
+        │ asks for a transaction
+        ▼
+target-composed smoke repository
+        │ supplies one SMOKE-WORK-ITEM write
+        ▼
+DynamoDB atomic writer
+        │ adds lineage and outbox writes
+        ▼
+one intended three-write DynamoDB transaction
+```
+
+### What each layer knows
+
+| Layer | It knows | It must not know |
+| --- | --- | --- |
+| Smoke app | A work item is accepted once. | DynamoDB table names, keys, SDK calls, or IAM. |
+| Generic Platform adapter | How to combine valid writes into a DynamoDB transaction. | What a smoke work item means. |
+| Kanbien target composition | The one harmless work-item row and the selected adapter. | Reusable application business rules for future entities. |
+
+The row is intentionally boring: an opaque work-item ID, the fixed
+`accepted` state, a first revision, and a timestamp. It contains no request
+body, user data, tenant data, document, prompt, or message payload.
+
+### What the new proof demonstrates
+
+The compiled platform-shell verifier creates the target composition with a
+recording DynamoDB client and invokes the app's acceptance capability. The
+recording client sees exactly one command with three writes:
+
+1. the product-owned smoke work-item row;
+2. the bounded record-change lineage fact; and
+3. the outbox obligation for later relay work.
+
+This is stronger than a unit test that merely checks whether three functions
+were called. It proves that the *compiled target wiring* can request the one
+atomic DynamoDB operation without quietly importing TypeScript source files at
+runtime.
+
+### What it does not prove
+
+It does not send anything to AWS. There is no staging table, selected target
+configuration, relay, worker result, or deployed recovery evidence yet.
+
+There is also an important distinction about duplicates. The target row has a
+create-once condition. In a real DynamoDB transaction that condition rejects a
+second physical write. The generic adapter safely returns a bounded store
+failure for a cancelled transaction today; it does not pretend it can always
+identify every cancellation as exactly “this work item already exists.” A
+focused failure test must settle that product-facing result before real code
+depends on it.
+
+### Misconception check
+
+“Because the target composition contains a DynamoDB row, all future apps can
+reuse it.”
+
+No. The point is the opposite: each future app supplies its own narrow row
+meaning at its own composition boundary. The reusable part is the transaction
+discipline, not a fake universal record shape.
+
+### Study question
+
+Why is the harmless row definition allowed in target composition rather than
+the generic DynamoDB adapter?
+
+Because it depends on both the selected provider and the smoke app's one
+business meaning. Putting it in the adapter would make the adapter secretly
+own product schemas; putting it in the app would make the app dependent on
+DynamoDB.
+
+Planning triage: this completes Phase 4b of the
+[Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+The next governed slice is Phase 5 target resource/configuration planning;
+no AWS resource changed.
+
+## 106. A Table Is a Protected Cabinet, Not an Active Feature
+
+We have now described the physical storage cabinet for the harmless smoke
+workflow. That does **not** mean the application is using it yet.
+
+The table has one primary lookup and two secondary lookup paths:
+
+```text
+primary key:          find one known record directly
+outbox due index:     find delivery obligations that are ready to relay
+lineage cause index:  find safe record changes caused by one direct event
+```
+
+The indexes exist because the relay and an investigation ask different
+questions. Reading every row to find work that is due would become slower and
+more expensive as the table grows. An index is like a separate card catalogue:
+it lets DynamoDB find the relevant category without inspecting every cabinet
+drawer.
+
+### Why the protection settings matter
+
+| Setting | What it protects against | What it does not promise |
+| --- | --- | --- |
+| On-demand billing | Paying for idle capacity on this tiny initial workload. | A fixed monthly cost. Requests and stored data still cost money. |
+| Server-side encryption | Reading storage media or backups without DynamoDB decrypting it. | Permission to read the table; IAM still decides that. |
+| Point-in-time recovery | Restoring a table to a recent moment after an operational mistake. | A tested application restore process or a product retention policy. |
+| Deletion protection and CloudFormation retain | Accidentally deleting the whole table through a stack operation. | Keeping every individual record forever. |
+| No DynamoDB TTL | Avoiding a false claim that background expiry is a governed deletion rule. | A future retention, legal-hold, restore, or privacy-erasure policy. |
+
+### The deliberate Phase 5a non-step: no IAM permission yet
+
+It might seem safer to grant the server and worker access now, while we know
+they will need it later. It is not. A permission should name a real actor and
+a real action. Today there is no mounted acceptance route, relay process, or
+worker lookup that uses this table. Granting access before those components
+exist would be unused authority.
+
+At that point, the source said three honest things at once:
+
+```text
+table design:             ready for review
+target configuration:     selected but not delivered to a task
+workload IAM access:      intentionally absent
+live AWS evidence:        absent
+```
+
+That was not a permanent prohibition. It was a rule about sequence. Phase 5b
+now has a real server component to justify one permission, so the staging
+source grants its task exactly `dynamodb:TransactWriteItems` against this one
+table. It still cannot read arbitrary rows, query an index, delete data, or
+administer DynamoDB. The relay and worker still receive no table access because
+they still do not exist as target-composed components.
+
+### Misconception check
+
+“The CloudFormation file defines a table, so there is now a database in
+staging.”
+
+No. CloudFormation source is a blueprint. A reviewed change set must still be
+created and explicitly approved before AWS is allowed to create or change
+anything. Until then, this is a tested design in the repository.
+
+### Study question
+
+Why do we create an `OutboxDueIndex` instead of letting the relay scan the
+whole table for pending entries?
+
+Because a scan grows with every record, including unrelated work-item and
+lineage records. The index makes “what is ready now?” a deliberate, bounded
+query while the conditional lease remains the final authority against races.
+
+Planning triage: this completes Phase 5a of the
+[Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+The next slice is component composition and narrowly justified IAM; Phase 5b
+now composes the server acceptance component, but no AWS resource changed.
+
+## 107. A Safe Write Endpoint Is a Thin Vertical Slice
+
+We now have a server-facing way to start the harmless workflow. It is not a
+general “write anything to DynamoDB” endpoint. It is one very specific promise:
+
+```text
+authorised caller
+      │ POST /smoke/work-items (no body)
+      ▼
+stable request ID ──> smoke work-item ID
+      │
+      ├── create work-item state
+      ├── append safe lineage fact
+      └── create outbox obligation
+                │
+                ▼
+          one DynamoDB transaction
+```
+
+### Why accept no body?
+
+For this proof we do not need a customer name, an invoice, a file, or even a
+human-readable task description. Allowing a body would create unnecessary
+input validation, classification, logging, and retention questions. The route
+therefore rejects every body, including `{}`. It gets its identity from the
+request ID generated by the server (or an accepted UUID-shaped request ID).
+
+That identity has two jobs:
+
+1. It is the new work-item ID.
+2. It is the **idempotency identity**: retrying the same request uses the same
+   create-once key instead of creating a second item.
+
+This is useful when a server times out after DynamoDB completes the transaction
+but before the client receives its response. The caller retries with the same
+request ID; it must not silently create duplicate later work.
+
+### Why a separate permission?
+
+The old smoke permission means “read a harmless response.” It would be too
+broad to let it create durable work as well. The new route requires:
+
+```text
+platform-smoke.persistence.work-item:create
+```
+
+The staging target maps that permission to a planned
+`platform-shell/smoke.write` identity scope. This mapping is source code only:
+the Cognito scope has deliberately not been created or issued yet. So the
+route is locally proved, but no person or client can use it in staging today.
+
+### Where each responsibility sits
+
+| Layer | Responsibility |
+| --- | --- |
+| Smoke app | Route meaning, no-body validation, request-ID idempotency, and safe `202` response. |
+| Product | Chooses whether the smoke app receives the optional persistence seam. |
+| Staging entrypoint | Selects DynamoDB and validates the target table/index configuration. |
+| CloudFormation IAM | Lets the server submit one atomic transaction to this table—nothing else. |
+| Cognito configuration | Still pending: issue the separately scoped controlled-write token. |
+
+### Misconception check
+
+“The server has DynamoDB permission, so it can now inspect or repair any
+persistence record.”
+
+No. `TransactWriteItems` is a single write operation. The server has no
+`GetItem`, `Query`, `Scan`, `UpdateItem`, or `DeleteItem` permission on the
+table. It can perform only the one carefully composed acceptance transaction.
+
+### Study question
+
+Why is returning `202 Accepted` more honest than `200 Completed`?
+
+Because the state and durable obligation were accepted, but the relay has not
+yet placed the message on SQS and the worker has not yet performed or recorded
+the later work.
+
+Planning triage: this completes the source-composed server half of Phase 4/5
+in the [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md).
+The target proof, Cognito write scope, relay, worker completion, and all AWS
+changes remain pending.
+
+## 108. A Named Delivery Policy Must Match Its Target Mapping
+
+We found a useful kind of architecture error: the named delivery policy said
+one thing, while the target configuration said another.
+
+```text
+Named policy: 30-second work + 120-second visibility + 5 deliveries
+Target source: 30-second visibility + 3 deliveries
+```
+
+That is called **configuration drift**. It does not mean either number is
+automatically unsafe. It means the system has two competing answers to the
+same operational question, so people can no longer reliably reason about
+retries and DLQ behaviour.
+
+### Which layer decides?
+
+The named policy owns the promise in plain language: this is short,
+idempotent, at-least-once work with a 30-second expected execution budget.
+The staging target translates that promise into SQS settings:
+
+| Policy question | Target mapping |
+| --- | --- |
+| How long can one attempt run before another worker may see it? | `VisibilityTimeout: 120` seconds. |
+| How many deliveries can SQS make before quarantine? | `maxReceiveCount: 5`. |
+| How long does ordinary work remain available? | Seven days. |
+| How long does a dead-letter record remain reviewable? | Fourteen days. |
+
+The extra 90 seconds of visibility is deliberate headroom. A 30-second normal
+execution budget is not a guarantee that cleanup, network delay, controlled
+logging, or a brief platform pause take zero time. It is still a bounded
+policy: a genuinely slow workload needs a different named delivery policy,
+not an endless visibility timeout.
+
+### What changed today?
+
+The repository’s target profile, CloudFormation queue definition, ECS worker
+environment, sealed-runtime fixture, and static infrastructure gate now agree
+on 120 seconds and five deliveries. AWS was not changed. A reviewed
+CloudFormation change set must compare those source values with the live queue
+before the target may claim the corrected behaviour.
+
+### Misconception check
+
+“Changing a CloudFormation file immediately changes the queue.”
+
+No. The file is a reviewed blueprint. AWS changes only when the approved
+change-set workflow applies that blueprint. Keeping source and live evidence
+separate prevents a local edit from being mistaken for operational proof.
+
+### Study question
+
+Why is a target-profile value not just a duplicate of a generic policy?
+
+Because the generic policy explains the desired behaviour, while the target
+profile proves how this one environment maps that behaviour to a specific
+provider’s settings, IAM, alarms, and rollback process.
+
+## 109. A Queue Delivery Is Not the Same Thing as the Work Item
+
+We added the missing producer half of the AWS SQS adapter. The important
+lesson is not the `SendMessage` API call. It is the identity boundary around
+that call.
+
+```text
+durable outbox entry
+    │ stable ID: outbox-1
+    │ direct cause: request-1
+    ▼
+Core queue envelope ──> SQS message body ──> temporary SQS delivery
+                                               │ MessageId: provider-delivery-1
+                                               │ ReceiptHandle: receipt-1
+                                               ▼
+                                      worker reconstructs outbox-1
+```
+
+### Why are there three identifiers?
+
+They answer different questions:
+
+| Value | Who owns it? | What is it for? |
+| --- | --- | --- |
+| `outbox-1` | Our persistence layer | The durable obligation and idempotency identity. |
+| `request-1` | The direct earlier action | Causation: what directly created the obligation. |
+| SQS `MessageId` / receipt handle | AWS SQS | One provider delivery and the temporary right to settle it. |
+
+SQS may deliver the same message more than once. Each delivery can have a new
+provider ID and receipt handle. If the worker treated either as the durable
+identity, the duplicate would look like brand-new work. Instead, the sender
+puts the Core envelope in the message body and the receiver recovers its ID,
+causation, correlation, trace context, and idempotency key from that body.
+
+### What does the sender do?
+
+The provider-neutral relay passes a Core `QueueMessage` to `Queue.send`.
+The SQS adapter validates the one SQS Standard-specific setting it accepts here
+(a delay from zero to 900 seconds), serialises the safe JSON envelope, and asks
+SQS to accept it. A provider failure returns a bounded `QUEUE_SEND_FAILED`
+result, not a raw AWS error. The relay can therefore leave the outbox item
+recoverable and retry it later.
+
+The adapter deliberately refuses a message group key: this target selected SQS
+**Standard**, which makes no ordering promise. Quietly accepting a FIFO-only
+feature would let configuration mistakes become data-flow surprises.
+
+### Misconception check
+
+“SQS assigns a message ID, so we do not need our own ID.”
+
+No. The SQS ID identifies one transport delivery. The outbox ID identifies the
+one durable piece of work across all transport deliveries, retries, worker
+restarts, and later investigations.
+
+### Study question
+
+Why is the receipt handle never written into an outbox or processing record?
+
+Because it is short-lived authority to acknowledge one current delivery. A
+later retry has a different handle, while the durable record must still refer
+to the same stable outbox item.
+
+Planning triage: the SQS sender/receiver adapter is now a locally verified
+source component. Target relay composition, least-privilege sender IAM,
+continuous dispatch, a live DynamoDB/SQS proof, and live Cognito write scope
+remain deliberately unclaimed.
+
+## 110. A Vertical Proof Connects the Stations Before AWS Is Involved
+
+We now have a local proof that joins the small persistence pieces together.
+It begins with the smoke app accepting one harmless work item, then follows
+the durable obligation through the relay and worker:
+
+```text
+app accepts one work item
+        │
+        ├── work-item state
+        ├── record-change fact
+        └── outbox fact: "platform-smoke.work-item.accepted"
+                         │
+                         ▼
+                    relay publishes
+                         │
+                         ▼
+                  Core queue envelope
+                         │
+                         ▼
+                 worker claims processing
+                         │
+                         ▼
+                 handler completes once
+                         │
+                         ▼
+              later duplicate is skipped
+```
+
+### The first integration mistake we found
+
+The outbox fact already said the future message type was
+`platform-smoke.work-item.accepted`, but the app had only registered the older
+`platform-smoke.rebuild` job. The individual pieces looked reasonable, yet a
+real worker would have received the new message and replied, “I do not have a
+job for that type.” Its normal safe response would be to dead-letter it.
+
+We fixed this by adding a harmless job registration for the exact outbox
+message type. This is a useful general rule:
+
+> A message type is a contract between the producer and consumer, not merely a
+> string in one file.
+
+The registry sees the complete set of registered jobs at startup. That is why
+it is the right place to reject a missing or mismatched handler before a live
+queue has to discover the mistake.
+
+### What the local proof proves
+
+The test uses small in-memory stores and the provider-neutral queue port. It
+proves that:
+
+- the app’s staged outbox fact produces the same job type the app registered;
+- the relay retains the stable outbox identity in the queue envelope;
+- the worker creates a durable completion record before it reports success;
+- an identical later delivery is `durable-skipped`, so the app handler is not
+  run a second time.
+
+This is more meaningful than four isolated unit tests. It proves the seams
+agree with one another.
+
+### What it does *not* prove
+
+In-memory proof is not a staging proof. We still have to give AWS a reviewed
+way to run the relay and worker:
+
+| Still needed | Why it matters |
+| --- | --- |
+| Relay task or scheduler | The one-pass relay knows how to relay once; it does not decide how often it should be invoked. |
+| Worker task configuration | The worker needs the selected table/index values and a lease shorter than the queue visibility timeout. |
+| Least-privilege IAM | The relay and worker each need only their own DynamoDB/SQS actions; the public server must not acquire those powers. |
+| Live controlled proof | Only a real table and queue can demonstrate physical conditional writes, delivery, redelivery, and recovery. |
+
+### Misconception check
+
+“The source contains a relay entrypoint, so the relay is running.”
+
+No. An entrypoint is an instruction for how a process would start. It becomes a
+running component only when target infrastructure gives it a task, selected
+configuration, permissions, a schedule or service topology, and an approved
+deployment.
+
+### Study question
+
+Why is the duplicate test more valuable than simply proving that one message
+was handled successfully?
+
+Because queues are normally at-least-once. A single successful delivery says
+nothing about the ordinary failure case where a worker completes the business
+effect but loses its acknowledgement. The duplicate test proves the stable
+outbox identity reaches durable processing, which is what prevents that later
+delivery from repeating the effect.
+
+Planning triage: the Persistence Foundation v1 plan and platform-runtime plan
+now record the completed local vertical proof and the remaining target task,
+IAM, scheduling, metric-catalogue, identity-scope, and live-evidence work.
+No AWS resource was changed.
+
+## 111. A Task Definition Is a Recipe, Not a Running Relay
+
+We have now written the source blueprint for the next staging proof. That is a
+meaningful step, but it is easy to overstate what it means.
+
+```text
+source definition in the repository
+              │
+              │ reviewed CloudFormation change set
+              ▼
+task definition registered in AWS
+              │
+              │ explicit ECS RunTask request
+              ▼
+one relay process runs one pass
+              │
+              ▼
+process exits
+```
+
+The first box is where we are. A task definition is a recipe: which compiled
+command to run, which role it receives, how much CPU/memory it may use, which
+non-secret configuration it receives, and where its safe operational logs go.
+It does not itself start a container.
+
+### Three deliberately different identities
+
+The same persistence workflow needs three processes, but they should not share
+one large set of permissions:
+
+| Process | May do | Must not do |
+| --- | --- | --- |
+| Public server | Atomically accept the harmless work-item state, lineage fact, and outbox obligation. | Read due outbox work, send a queue message, or settle worker delivery. |
+| Relay | Query the *due* outbox index, lease one outbox record, and send its safe envelope to the source queue. | Write product state, receive queue messages, or process a business effect. |
+| Worker | Receive/settle queue delivery and claim/complete durable processing state. | Search due work or create a new queue message. |
+
+This is called **least privilege**. If a future bug affects the worker, it
+cannot silently become a producer. If a public-server bug appears, it cannot
+scan outbox work or consume the queue.
+
+### Why query an index instead of scanning a table?
+
+The relay needs only outbox records that are due now. `OutboxDueIndex` is an
+organised lookup path for that question. A table scan would inspect unrelated
+work-item state, lineage, and processing records, cost more as the table
+grows, and demand unnecessarily broad access.
+
+### Safe transition telemetry
+
+The relay and worker now have a small shared catalogue of persistence events,
+such as `platform.persistence.outbox.published` or
+`platform.persistence.processing.completed`. The accompanying metric adds only
+the suffix `.outcome` and retains these labels:
+
+```text
+capability, action, execution_context, outcome, error_class
+```
+
+It must not place an outbox ID, queue URL, payload, tenant, lease owner,
+fence, or attempt number in a metric label. Those facts either identify a
+specific record or create unbounded metric-cardinality cost. A safe correlation
+reference may exist in a bounded log envelope when its separate profile allows
+it, but it does not belong in the metric series.
+
+### Misconception check
+
+“The repository now defines `RelayTaskDefinition`, so the relay is running in
+staging.”
+
+No. It only defines the recipe that a reviewed deployment *could* register.
+Nothing runs until the target change set is applied and an operator makes a
+separate one-shot `RunTask` request. There is intentionally no relay ECS
+service and no scheduler yet.
+
+### Study question
+
+Why does the first proof use a one-shot relay task instead of immediately
+running a relay forever?
+
+Because the first question is whether one harmless state change can be
+accepted, relayed, processed exactly once in effect, and observed safely. A
+continuous process creates separate availability, scheduling, recovery, and
+cost obligations. We should choose that operating model only after the narrow
+path is proven.
+
+Planning triage: the Persistence Foundation v1 plan, platform-runtime plan,
+staging readiness record, target profile, infrastructure guide, and static
+infrastructure gate now distinguish source-defined relay/worker deployment
+from live AWS proof. No AWS resource was changed.
+
+## 112. A Scope Is Also a Permission Boundary for Automation
+
+Before deploying the harmless write route, we inspected Cognito. The existing
+machine client can request only `platform-shell/smoke.read`. That is correct for
+the scheduled read-health check, but it cannot safely exercise a write route.
+
+It would be tempting to add `smoke.write` to the same client. We are not doing
+that. The read client’s secret is deliberately accessible to narrow automated
+read checks. Giving that client a write scope would mean that compromise or
+mistake in a read-check boundary could request a token that creates a work
+item.
+
+```text
+read scheduler ── read-only client ── platform-shell/smoke.read
+
+controlled persistence proof ── separate client ── platform-shell/smoke.write
+```
+
+The separate write client is still deliberately small: it receives one scope,
+its secret stays in its own target-owned secret, and the server accepts its
+client ID only after reviewed target configuration. This is an example of
+least privilege applying to automation identities, not only to AWS IAM roles.
+
+### Misconception check
+
+“Both clients call the same smoke application, so one client is simpler and
+therefore safer.”
+
+No. Simplicity has value, but combining read automation and write authority
+increases blast radius. Separate identities make the write path easier to
+disable, audit, and reason about without interrupting routine read evidence.
+
+### Study question
+
+Why is the client secret not enough by itself to control write authority?
+
+Because a secret identifies a client; it does not limit what scopes that client
+may request. Scope assignment is the separate authorization boundary. A
+write-capable secret must therefore be available to fewer workflows and used
+only by a fixed, reviewed command.
+
+Planning triage: the new Persistence v1 deployment plan records the live
+baseline, expected CloudFormation changes, separate write-client requirement,
+rollback, and proof sequence. No AWS resource was changed.
+
+## 113. A One-Shot Write Proof Needs Its Own Identity and Its Own Brake
+
+We have now put two small safety controls into the repository. They do not
+change AWS yet. They tell us exactly what a later approved AWS operation is
+allowed to do.
+
+```text
+source validation
+       │
+       ▼
+separate write-only client ── short-lived token ── POST /smoke/work-items
+       │                                                    │
+       │                                                    ▼
+       └──── service allowlist after reviewed deployment ── 202 Accepted
+                                                            │
+                                                            ▼
+                                                    mark proof complete
+                                                    and reject a rerun
+```
+
+The first command is a narrow **provisioner**. It has a fixed shopping list:
+one Cognito `smoke.write` scope, one confidential client, and one named secret.
+It refuses an arbitrary scope such as `admin`, an arbitrary client name, or an
+existing resource server that has drifted from the reviewed read-only starting
+state. If creating the secret fails after it created the client, it removes
+only what it created and restores the read-only scope.
+
+The second command is a narrow **proof runner**. It can neither receive a URL
+from a caller nor send a body. It obtains a short-lived write-only token and
+makes one fixed request to `POST /smoke/work-items`. Its request ID is fixed,
+so the application derives the same work-item identity every time. That gives
+us an important safety brake: after a successful proof we record a completed
+lifecycle state, and the command refuses to run again rather than treating a
+duplicate response as a fresh success.
+
+### Why is the secret recorded in the target profile but not passed to ECS?
+
+The target profile records the **secret reference**—its name, ARN, and safe
+delivery rule—so a reviewer can see which isolated proof identity is used. It
+does not contain the secret value. The delivery rule says it is for the bounded
+proof command only, not an environment variable in the public server, worker,
+or relay. The server needs the non-secret client ID in its allowlist to trust a
+token from that client; it never needs the client secret to verify a JWT.
+
+### Misconception check
+
+“A fixed request ID makes retries impossible.”
+
+No. Networks can still fail after the server accepts a request. The fixed ID
+makes the *application effect* create-once, so the same request can be
+recognised rather than creating another work item. The command’s lifecycle
+brake adds a separate operational rule: do not casually rerun the live proof.
+
+### Study question
+
+Why must the client be provisioned before the server allowlists its ID?
+
+Because Cognito generates the client ID. The server should trust an explicit
+real identifier, not a wildcard or guessed future value. Until the reviewed
+server revision includes that exact ID, a valid write token remains
+untrusted—and that is the intended fail-closed state.
+
+Planning triage: Persistence Foundation v1 and the staging Persistence v1
+deployment plan now own the client lifecycle and fixed proof command. The
+target profile and static infrastructure gate enforce the source policy. The
+new commands were locally tested only; no AWS resource or data changed.
+
 ## Repository Evidence
 
 - [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
@@ -8909,6 +10207,17 @@ that obligation.
 - [Platform observability public barrel](../../../platform/observability/src/index.ts)
 - [Core monitoring vocabulary](../../../packages/core/src/monitoring/index.ts)
 - [Platform worker source](../../../platform/workers/src/index.ts)
+- [Core persistence source guide](../../../packages/core/src/persistence/README.md)
+- [Core persistence public barrel](../../../packages/core/src/persistence/index.ts)
+- [Platform persistence source guide](../../../platform/persistence/README.md)
+- [Platform persistence public barrel](../../../platform/persistence/src/index.ts)
+- [AWS DynamoDB persistence adapter](../../../platform/adapters/aws/persistence/dynamodb/README.md)
+- [Kanbien target persistence composition](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts)
+- [Kanbien one-pass relay entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts)
+- [Kanbien durable worker entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts)
+- [Staging persistence table source](../../../infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/persistence.yml)
+- [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
+- [Current persistence session log](../../../commitLogs/2026/sep/23/2026-09-23-18-13-record-worker-telemetry-evidence/README.md)
 - [Smoke app mount](../../../apps/platform-smoke/src/app.mount.ts)
 - [Product harness foundation plan](../../../.agentic/03.product/plans/implementation/product-harness-foundation.md)
 - [Platform runtime implementation plan](../../../.agentic/03.product/plans/implementation/platform-runtime-implementation.md)
@@ -8940,6 +10249,37 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-24: Added the automation-identity scope lesson and a dedicated
+  persistence deployment plan. Read-only inspection confirmed the current
+  stacks are healthy, the persistence table is absent as expected, and the
+  deployed machine client is read-only. The plan recommends a separate
+  write-only client rather than widening synthetic-read authority; no AWS
+  resource changed.
+- 2026-09-24: Added the source-deployment-definition lesson. It explains why
+  an ECS task definition is only a recipe, separates server/relay/worker least
+  privilege, explains a due-record index, and records safe persistence metric
+  labels. The deployment plans/readiness records now name the required
+  reviewed change-set and one-shot live-proof sequence; no AWS resource
+  changed.
+- 2026-09-24: Added the local persistence vertical-proof lesson. It explains
+  the repaired outbox-message/job contract, acceptance-to-relay-to-worker
+  flow, durable duplicate skip, and the difference between a compiled
+  entrypoint and a deployed target process. The Persistence Foundation and
+  platform-runtime plans now record the remaining task/IAM/schedule/live-proof
+  work; no AWS resource changed.
+- 2026-09-23: Added the persistence-foundation chapter. It records the local
+  Core split, immutable outbox/lineage facts, provider-neutral delivery state
+  machines, lease/fence rules, and atomic-writer seam. It distinguishes this
+  uncommitted local work from the future DynamoDB/SQS smoke proof; no AWS
+  resource changed.
+- 2026-09-23: Added the outbox-relay continuation. It records the minimal
+  stable-ID queue envelope, safe claim/send/publish order, recovery after a
+  queue-send failure, and the remaining worker/transport composition. No AWS
+  resource changed.
+- 2026-09-23: Added the durable-worker continuation. It records the stable
+  three-part outbox identity, claim/release/complete ordering, duplicate skip,
+  terminal-failure recording, and the remaining transaction/adapter limit. No
+  AWS resource changed.
 - 2026-09-23: Added the source-defined staging worker extension: a
   provider-neutral worker process, SQS consumer adapter, zero-desired-count
   worker service/queue/DLQ/IAM source, guarded consumer rehearsal, and the

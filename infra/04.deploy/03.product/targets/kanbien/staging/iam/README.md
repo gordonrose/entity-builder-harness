@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: infra.access
@@ -14,6 +14,9 @@ portability:
   class: internal
   targets:
   - kanbien/staging
+used_by:
+- id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+  path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
 -->
 # Kanbien Staging IAM Source
 

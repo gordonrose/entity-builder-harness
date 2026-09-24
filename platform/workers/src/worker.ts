@@ -1,6 +1,12 @@
 import { noopTracer, type TraceSpan, type TraceSpanOutcome } from "@kanbien/core/monitoring";
+import { outboxEntryId, type OutboxEntryId } from "@kanbien/core/persistence";
 import type { QueueMessage } from "@kanbien/core/queues";
-import { causationId, correlationId, type Result } from "@kanbien/core/shared";
+import { causationId, correlationId, isoDateTimeFromDate, type Result } from "@kanbien/core/shared";
+import {
+  recordPlatformPersistenceObservation,
+  type PlatformPersistenceTransition,
+  type PlatformPersistenceTransitionOutcome,
+} from "@kanbien/platform-persistence";
 import { tenantContext } from "@kanbien/core/tenancy";
 import {
   platformProfileAllowsSignal,
@@ -35,6 +41,7 @@ import { workerError, workerFailure, type PlatformWorkerError } from "./errors";
 import { createInMemoryPlatformWorkerQueue, workerQueueNow } from "./queue";
 import type {
   PlatformWorkerQueueEntry,
+  PlatformWorkerDurableOutboxProcessingOptions,
   PlatformWorkerRunNextResult,
   PlatformWorkerShell,
   PlatformWorkerShellOptions,
@@ -58,6 +65,14 @@ export async function createPlatformWorkerShell(
   });
   if (!config.ok) {
     return workerFailure("PLATFORM_WORKER_CONFIG_INVALID", "Platform worker config validation failed before polling.", config.error.details, config.error);
+  }
+
+  if (options.durableOutboxProcessing !== undefined && (!Number.isInteger(options.durableOutboxProcessing.leaseDurationMs) || options.durableOutboxProcessing.leaseDurationMs <= 0)) {
+    return workerFailure(
+      "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+      "Durable outbox processing requires a positive lease duration.",
+      { phase: "configuration" },
+    );
   }
 
   const queue = options.queue ?? createInMemoryPlatformWorkerQueue({
@@ -109,7 +124,105 @@ export async function createPlatformWorkerShell(
       return { ok: true, value: deadLettered(entry, invalidPayload, job.name) };
     }
 
-    const idempotencyKey = entry.message.idempotencyKey === undefined ? undefined : String(entry.message.idempotencyKey);
+    const durableClaim = await claimDurableOutboxProcessing(options, entry.message);
+    if (!durableClaim.ok) {
+      recordDurablePersistenceObservation(
+        options,
+        entry.message,
+        traceSpan,
+        durableTransitionForClaimError(durableClaim.error),
+        durableOutcomeForClaimError(durableClaim.error),
+        durableClaim.error,
+      );
+      if (durableClaim.error.code === "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID") {
+        queue.deadLetter(entry, durableClaim.error);
+        recordWorkerObservation(options, entry, profile, startedAt, {
+          outcome: "rejected",
+          deliveryDisposition: "dead_lettered",
+          error: durableClaim.error,
+        });
+        endWorkerTrace(profile, traceSpan, {
+          outcome: "rejected",
+          deliveryDisposition: "dead_lettered",
+          error: durableClaim.error,
+        });
+        return { ok: true, value: deadLettered(entry, durableClaim.error, job.name) };
+      }
+
+      recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: durableClaim.error });
+      endWorkerTrace(profile, traceSpan, { outcome: "failed", error: durableClaim.error });
+      return durableClaim;
+    }
+
+    if (durableClaim.value.kind === "already-completed") {
+      if (durableClaim.value.outcome === "terminal-failure") {
+        const terminalFailure = workerError(
+          "PLATFORM_WORKER_DURABLE_PROCESSING_TERMINAL_FAILURE",
+          "Durable outbox processing previously reached a terminal failure.",
+        );
+        recordDurablePersistenceObservation(
+          options,
+          entry.message,
+          traceSpan,
+          "processing.duplicate_terminal_failure",
+          "failed",
+          terminalFailure,
+        );
+        queue.deadLetter(entry, terminalFailure);
+        recordWorkerObservation(options, entry, profile, startedAt, {
+          outcome: "failed",
+          deliveryDisposition: "dead_lettered",
+          error: terminalFailure,
+        });
+        endWorkerTrace(profile, traceSpan, {
+          outcome: "failed",
+          deliveryDisposition: "dead_lettered",
+          error: terminalFailure,
+        });
+        return { ok: true, value: deadLettered(entry, terminalFailure, job.name) };
+      }
+
+      recordDurablePersistenceObservation(
+        options,
+        entry.message,
+        traceSpan,
+        "processing.duplicate_succeeded",
+        "succeeded",
+      );
+
+      recordWorkerObservation(options, entry, profile, startedAt, {
+        outcome: "succeeded",
+        deliveryDisposition: "succeeded",
+      });
+      endWorkerTrace(profile, traceSpan, {
+        outcome: "succeeded",
+        deliveryDisposition: "succeeded",
+      });
+      return {
+        ok: true,
+        value: {
+          status: "succeeded",
+          jobName: job.name,
+          message: entry.message,
+          attempt: entry.attempt,
+          idempotency: "durable-skipped",
+        },
+      };
+    }
+
+    if (durableClaim.value.kind === "claimed") {
+      recordDurablePersistenceObservation(
+        options,
+        entry.message,
+        traceSpan,
+        "processing.claimed",
+        "succeeded",
+      );
+    }
+
+    const idempotencyKey = options.durableOutboxProcessing === undefined
+      ? (entry.message.idempotencyKey === undefined ? undefined : String(entry.message.idempotencyKey))
+      : undefined;
     if (idempotencyKey !== undefined && options.idempotency !== undefined) {
       try {
         if (await options.idempotency.hasProcessed(idempotencyKey)) {
@@ -160,6 +273,37 @@ export async function createPlatformWorkerShell(
       });
       await job.handler.handle(entry.message, context);
 
+      if (durableClaim.value.kind === "claimed") {
+        const completed = await options.durableOutboxProcessing!.processingStore.complete({
+          outboxEntryId: durableClaim.value.outboxEntryId,
+          fence: durableClaim.value.fence,
+          outcome: "succeeded",
+          completedAt: isoDateTimeFromDate(options.deps.clock.now()),
+        });
+        if (!completed.ok) {
+          const completionError = durableProcessingFailure("complete", completed.error);
+          recordDurablePersistenceObservation(
+            options,
+            entry.message,
+            traceSpan,
+            "processing.completion_failed",
+            "failed",
+            completionError,
+          );
+          recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: completionError, handlerStarted: true });
+          endWorkerTrace(profile, traceSpan, { outcome: "failed", error: completionError, handlerStarted: true });
+          return { ok: false, error: completionError };
+        }
+
+        recordDurablePersistenceObservation(
+          options,
+          entry.message,
+          traceSpan,
+          "processing.completed",
+          "succeeded",
+        );
+      }
+
       if (idempotencyKey !== undefined && options.idempotency !== undefined) {
         await options.idempotency.recordProcessed(idempotencyKey);
       }
@@ -181,7 +325,9 @@ export async function createPlatformWorkerShell(
           jobName: job.name,
           message: entry.message,
           attempt: entry.attempt,
-          idempotency: idempotencyKey === undefined ? "none" : "processed",
+          idempotency: durableClaim.value.kind === "claimed"
+            ? "durable-processed"
+            : (idempotencyKey === undefined ? "none" : "processed"),
         },
       };
     } catch (error) {
@@ -190,6 +336,38 @@ export async function createPlatformWorkerShell(
         messageType: String(entry.message.type),
         attempt: entry.attempt,
       }, error);
+
+      if (durableClaim.value.kind === "claimed") {
+        const settled = await settleFailedDurableOutboxProcessing({
+          processing: options.durableOutboxProcessing!,
+          outboxEntryId: durableClaim.value.outboxEntryId,
+          fence: durableClaim.value.fence,
+          terminal: entry.attempt >= maxAttempts,
+          now: options.deps.clock.now(),
+        });
+        if (!settled.ok) {
+          recordDurablePersistenceObservation(
+            options,
+            entry.message,
+            traceSpan,
+            "processing.settlement_failed",
+            "failed",
+            settled.error,
+          );
+          recordWorkerObservation(options, entry, profile, startedAt, { outcome: "failed", error: settled.error, handlerStarted: true });
+          endWorkerTrace(profile, traceSpan, { outcome: "failed", error: settled.error, handlerStarted: true });
+          return settled;
+        }
+
+        recordDurablePersistenceObservation(
+          options,
+          entry.message,
+          traceSpan,
+          entry.attempt >= maxAttempts ? "processing.terminal_failure_recorded" : "processing.retry_released",
+          "failed",
+          workerHandlerError,
+        );
+      }
 
       if (entry.attempt < maxAttempts) {
         const delayMs = retryBackoffMs(entry.attempt);
@@ -304,6 +482,213 @@ function validateJobPayload(job: PlatformJobRegistration, message: QueueMessage)
     jobName: String(job.name),
     messageType: String(message.type),
   });
+}
+
+type DurableOutboxClaim =
+  | { readonly kind: "not-configured" }
+  | {
+      readonly kind: "already-completed";
+      readonly outboxEntryId: OutboxEntryId;
+      readonly outcome: import("@kanbien/platform-persistence").PlatformProcessingOutcome;
+    }
+  | { readonly kind: "claimed"; readonly outboxEntryId: OutboxEntryId; readonly fence: import("@kanbien/platform-persistence").PlatformPersistenceFence };
+
+async function claimDurableOutboxProcessing(
+  options: PlatformWorkerShellOptions,
+  message: QueueMessage,
+): Promise<Result<DurableOutboxClaim, PlatformWorkerError>> {
+  const processing = options.durableOutboxProcessing;
+  if (processing === undefined) {
+    return { ok: true, value: { kind: "not-configured" } };
+  }
+
+  const identity = durableOutboxEntryId(message);
+  if (!identity.ok) {
+    return identity;
+  }
+
+  try {
+    const claim = await processing.processingStore.claim({
+      outboxEntryId: identity.value,
+      owner: processing.owner,
+      acquiredAt: isoDateTimeFromDate(options.deps.clock.now()),
+      leaseDurationMs: processing.leaseDurationMs,
+    });
+    if (!claim.ok) {
+      return { ok: false, error: durableProcessingFailure("claim", claim.error) };
+    }
+
+    if (claim.value.disposition === "already-completed") {
+      const outcome = claim.value.record.completion?.outcome;
+      if (outcome === undefined) {
+        return {
+          ok: false,
+          error: workerError(
+            "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+            "Completed durable outbox processing did not supply a completion outcome.",
+            { phase: "claim" },
+          ),
+        };
+      }
+      return { ok: true, value: { kind: "already-completed", outboxEntryId: identity.value, outcome } };
+    }
+
+    if (claim.value.disposition === "lease-active") {
+      return {
+        ok: false,
+        error: workerError(
+          "PLATFORM_WORKER_DURABLE_PROCESSING_BUSY",
+          "Durable outbox processing is already claimed by another worker.",
+          { phase: "claim" },
+        ),
+      };
+    }
+
+    const lease = claim.value.record.lease;
+    if (lease === undefined) {
+      return {
+        ok: false,
+        error: workerError(
+          "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+          "Durable outbox processing claim did not supply a lease.",
+          { phase: "claim" },
+        ),
+      };
+    }
+
+    return { ok: true, value: { kind: "claimed", outboxEntryId: identity.value, fence: lease.fence } };
+  } catch (error) {
+    return {
+      ok: false,
+      error: workerError(
+        "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+        "Durable outbox processing claim failed.",
+        { phase: "claim" },
+        error,
+      ),
+    };
+  }
+}
+
+function durableOutboxEntryId(message: QueueMessage): Result<OutboxEntryId, PlatformWorkerError> {
+  const payload = message.payload;
+  if (!isRecord(payload) || typeof payload.outboxEntryId !== "string" || payload.outboxEntryId.length === 0) {
+    return durableOutboxEnvelopeFailure();
+  }
+
+  const outboxId = payload.outboxEntryId;
+  if (String(message.id) !== outboxId || String(message.idempotencyKey ?? "") !== outboxId) {
+    return durableOutboxEnvelopeFailure();
+  }
+
+  return { ok: true, value: outboxEntryId(outboxId) };
+}
+
+function durableOutboxEnvelopeFailure(): Result<never, PlatformWorkerError> {
+  return {
+    ok: false,
+    error: workerError(
+      "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID",
+      "Durable outbox delivery must preserve one stable outbox identity.",
+    ),
+  };
+}
+
+function recordDurablePersistenceObservation( // Emit safe durable-processing transition evidence without making worker delivery depend on telemetry.
+  options: PlatformWorkerShellOptions, // Read the optional durable-outbox composition selected for this worker shell.
+  message: QueueMessage, // Read only the message's safe correlation and trace continuity references.
+  traceSpan: TraceSpan | undefined, // Reuse the enclosing worker span as a parent when tracing was enabled.
+  transition: PlatformPersistenceTransition, // Name the closed durable-processing transition that occurred.
+  outcome: PlatformPersistenceTransitionOutcome, // Preserve the bounded transition outcome.
+  error?: PlatformWorkerError, // Allow the observer to reduce a worker failure to its stable error classification.
+): void { // Keep telemetry strictly best effort through the persistence observer boundary.
+  recordPlatformPersistenceObservation(options.durableOutboxProcessing?.observer, { // Delegate to the provider-neutral no-throw persistence observation helper.
+    transition, // Preserve the stable transition identity.
+    outcome, // Preserve the bounded logical outcome.
+    ...(message.correlationId === undefined ? {} : { correlationId: message.correlationId }), // Carry correlation only for the observer's log envelope, never metric labels or trace attributes.
+    ...(traceSpan === undefined ? {} : { traceParent: traceSpan.context }), // Nest the transition span below the worker-delivery span when one exists.
+    ...(error === undefined ? {} : { error }), // Let the selected observer emit only a normalised error class.
+  }); // Finish the best-effort observation request.
+}
+
+function durableTransitionForClaimError( // Map one durable claim failure to the precise fixed transition that operators need to distinguish.
+  error: PlatformWorkerError, // Read the stable worker error code without inspecting error messages or payloads.
+): PlatformPersistenceTransition { // Return one closed persistence transition name.
+  if (error.code === "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID") { // Identify a malformed or unstable three-part outbox identity.
+    return "processing.envelope_rejected"; // Record the safe pre-handler rejection transition.
+  }
+
+  if (error.code === "PLATFORM_WORKER_DURABLE_PROCESSING_BUSY") { // Identify a delivery that encountered an active durable claim.
+    return "processing.lease_active"; // Record the legitimate coordination contention transition.
+  }
+
+  return "processing.claim_failed"; // Treat every remaining durable-store or internal failure as a failed claim.
+}
+
+function durableOutcomeForClaimError( // Map one durable claim failure into the bounded transition outcome vocabulary.
+  error: PlatformWorkerError, // Read the stable error code already produced by the worker boundary.
+): PlatformPersistenceTransitionOutcome { // Return a controlled observability outcome rather than a transport status.
+  if (
+    error.code === "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID"
+    || error.code === "PLATFORM_WORKER_DURABLE_PROCESSING_BUSY"
+  ) { // Treat invalid identity and active lease as controlled precondition rejections.
+    return "rejected"; // Keep these distinct from unexpected persistence failure.
+  }
+
+  return "failed"; // Treat all other durable claim failures as failed transitions.
+}
+
+async function settleFailedDurableOutboxProcessing(input: {
+  readonly processing: PlatformWorkerDurableOutboxProcessingOptions;
+  readonly outboxEntryId: OutboxEntryId;
+  readonly fence: import("@kanbien/platform-persistence").PlatformPersistenceFence;
+  readonly terminal: boolean;
+  readonly now: Date;
+}): Promise<Result<void, PlatformWorkerError>> {
+  try {
+    const settled = input.terminal
+      ? await input.processing.processingStore.complete({
+        outboxEntryId: input.outboxEntryId,
+        fence: input.fence,
+        outcome: "terminal-failure",
+        completedAt: isoDateTimeFromDate(input.now),
+      })
+      : await input.processing.processingStore.release({
+        outboxEntryId: input.outboxEntryId,
+        fence: input.fence,
+        releasedAt: isoDateTimeFromDate(input.now),
+      });
+    if (!settled.ok) {
+      return { ok: false, error: durableProcessingFailure(input.terminal ? "complete" : "release", settled.error) };
+    }
+    return { ok: true, value: undefined };
+  } catch (error) {
+    return {
+      ok: false,
+      error: workerError(
+        "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+        "Durable outbox processing settlement failed.",
+        { phase: input.terminal ? "complete" : "release" },
+        error,
+      ),
+    };
+  }
+}
+
+function durableProcessingFailure(
+  phase: "claim" | "complete" | "release",
+  error: { readonly code: string },
+): PlatformWorkerError {
+  return workerError(
+    "PLATFORM_WORKER_DURABLE_PROCESSING_FAILED",
+    "Durable outbox processing could not record its required state.",
+    { phase, persistenceCode: error.code },
+    error,
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function deadLettered(

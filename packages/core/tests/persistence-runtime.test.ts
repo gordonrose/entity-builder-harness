@@ -3,16 +3,28 @@ import {
   concurrencyToken,
   inMemoryRepository,
   inMemoryUnitOfWork,
+  outboxDeliveryPolicy,
+  outboxEntry,
+  outboxEntryId,
+  outboxMessageType,
+  outboxMessageVersion,
   page,
   pageRequest,
   pageTotal,
   pageTotals,
   persistenceError,
+  recordChange,
+  recordChangeFieldName,
+  recordChangeId,
+  recordId,
+  recordKind,
+  recordReference,
+  recordRevision,
   type ConcurrencyToken,
   type Transaction,
 } from "../src/persistence/index";
 import { diagnosticDescriptor } from "../src/diagnostics/index";
-import { entityId, isErr, isOk, type EntityId } from "../src/shared/index";
+import { causationId, entityId, isErr, isOk, isoDateTimeFromDate, type EntityId } from "../src/shared/index";
 
 type DealId = EntityId<"DealId">;
 
@@ -110,6 +122,63 @@ async function main(): Promise<void> {
   equal(explicitError.messageKey, "persistence.timeout");
   equal(explicitError.diagnostic?.retryable, true);
 
+  const recordedAt = isoDateTimeFromDate(new Date("2026-09-23T12:00:00.000Z"));
+  const messageType = outboxMessageType("platform-smoke.work.accepted");
+  const deliveryPolicy = outboxDeliveryPolicy("platform-short-idempotent-work.v1");
+  const messageVersion = outboxMessageVersion(2);
+  const lineageKind = recordKind("platform-smoke.work-item");
+  const lineageId = recordId("work-1");
+  const lineageRevision = recordRevision(1);
+  const stateField = recordChangeFieldName("state");
+  equal(isOk(messageType), true);
+  equal(isOk(deliveryPolicy), true);
+  equal(isOk(messageVersion), true);
+  if (!isOk(messageType) || !isOk(deliveryPolicy) || !isOk(messageVersion) || !isOk(lineageKind) || !isOk(lineageId) || !isOk(lineageRevision) || !isOk(stateField)) {
+    throw new Error("Expected valid durable-delivery facts.");
+  }
+  const durableEntry = outboxEntry({
+    id: outboxEntryId("outbox-1"),
+    subject: recordReference({ kind: lineageKind.value, id: lineageId.value }),
+    messageType: messageType.value,
+    messageVersion: messageVersion.value,
+    deliveryPolicy: deliveryPolicy.value,
+    createdAt: recordedAt,
+    causationId: causationId("request-1"),
+  });
+  equal(durableEntry.messageVersion, 2);
+  equal(durableEntry.messageType, "platform-smoke.work.accepted");
+  equal(isErr(outboxMessageType("Platform Smoke")), true);
+  equal(isErr(outboxDeliveryPolicy("no-space policy")), true);
+  equal(isErr(outboxMessageVersion(0)), true);
+
+  const lineage = recordChange({
+    id: recordChangeId("change-1"),
+    record: recordReference({ kind: lineageKind.value, id: lineageId.value }),
+    revision: lineageRevision.value,
+    action: "updated",
+    occurredAt: recordedAt,
+    causationId: causationId("request-1"),
+    changedFields: [stateField.value],
+  });
+  equal(isOk(lineage), true);
+  if (!isOk(lineage)) {
+    throw new Error("Expected valid record change.");
+  }
+  deepEqual(lineage.value.changedFields, ["state"]);
+  const duplicateFields = recordChange({
+    id: recordChangeId("change-2"),
+    record: recordReference({ kind: lineageKind.value, id: lineageId.value }),
+    revision: lineageRevision.value,
+    action: "updated",
+    occurredAt: recordedAt,
+    changedFields: [stateField.value, stateField.value],
+  });
+  equal(isErr(duplicateFields), true);
+  if (!isErr(duplicateFields)) {
+    throw new Error("Expected duplicate lineage fields to fail.");
+  }
+  equal(duplicateFields.error.code, "PERSISTENCE_INVALID_LINEAGE");
+
   const repository = inMemoryRepository<DealRecord, DealId>({
     getId: (deal) => deal.id,
     getConcurrencyToken: (deal) => deal.concurrencyToken,
@@ -173,6 +242,23 @@ async function main(): Promise<void> {
   equal(missing, null);
 
   const unitOfWork = inMemoryUnitOfWork();
+  const unsupportedTransactionalSave = await unitOfWork.run((transaction) =>
+    repository.save(
+      {
+        id: dealId,
+        name: "Transaction attempt",
+        concurrencyToken: thirdVersion,
+        tags: ["transaction"],
+      },
+      { transaction },
+    ),
+  );
+  equal(isErr(unsupportedTransactionalSave), true);
+  if (!isErr(unsupportedTransactionalSave)) {
+    throw new Error("Expected in-memory repository to reject a transaction handle.");
+  }
+  equal(unsupportedTransactionalSave.error.code, "PERSISTENCE_TRANSACTION_UNSUPPORTED");
+
   const events: string[] = [];
   const value = await unitOfWork.run((transaction) => {
     transaction.afterCommit(() => {

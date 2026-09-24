@@ -12,6 +12,7 @@ export interface PlatformSmokeAppManifest {
 }
 
 export const platformSmokeReadPermission = "platform-smoke.smoke:read" as Permission;
+export const platformSmokeWorkItemCreatePermission = "platform-smoke.persistence.work-item:create" as Permission;
 export const platformSmokeConfigKeys = ["PLATFORM_SMOKE_APP_NAME"] as const;
 
 export const platformSmokeAppManifest: PlatformSmokeAppManifest = {
@@ -19,8 +20,8 @@ export const platformSmokeAppManifest: PlatformSmokeAppManifest = {
   packageName: "@kanbien/app-platform-smoke",
   displayName: "Platform Smoke",
   routeBasePath: "/smoke",
-  permissions: [platformSmokeReadPermission],
-  jobs: ["platform-smoke.rebuild"],
+  permissions: [platformSmokeReadPermission, platformSmokeWorkItemCreatePermission],
+  jobs: ["platform-smoke.rebuild", "platform-smoke.work-item.accepted"],
   healthChecks: ["platform-smoke.readiness"],
   requiredConfig: platformSmokeConfigKeys,
 };

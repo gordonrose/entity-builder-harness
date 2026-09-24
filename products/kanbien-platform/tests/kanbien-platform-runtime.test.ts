@@ -5,6 +5,8 @@ import {
   platformSmokeAppManifest,
   platformSmokeJobMessageType,
   platformSmokeReadPermission,
+  platformSmokeWorkItemAcceptedJobMessageType,
+  platformSmokeWorkItemCreatePermission,
 } from "@kanbien/app-platform-smoke";
 import { createPlatformServerShell } from "@kanbien/platform-server";
 import {
@@ -29,8 +31,8 @@ async function main(): Promise<void> {
     packageName: "@kanbien/app-platform-smoke",
     mountModule: "@kanbien/app-platform-smoke",
     routeBasePath: "/smoke",
-    permissions: [platformSmokeReadPermission],
-    jobs: ["platform-smoke.rebuild"],
+    permissions: [platformSmokeReadPermission, platformSmokeWorkItemCreatePermission],
+    jobs: ["platform-smoke.rebuild", "platform-smoke.work-item.accepted"],
     healthChecks: ["platform-smoke.readiness"],
     requiredConfig: ["PLATFORM_SMOKE_APP_NAME"],
   });
@@ -83,6 +85,20 @@ async function main(): Promise<void> {
   equal(job.ok, true);
   if (!job.ok || job.value.status !== "succeeded") {
     throw new Error("Expected Kanbien Platform smoke job to succeed.");
+  }
+
+  equal(worker.value.enqueue({
+    ...createPlatformTestQueueMessage({
+      id: "kanbien-platform-work-item-1",
+      type: platformSmokeWorkItemAcceptedJobMessageType,
+      payload: { outboxEntryId: "kanbien-platform-work-item-1" },
+    }),
+    idempotencyKey: "kanbien-platform-work-item-1" as QueueIdempotencyKey,
+  }).ok, true);
+  const durableJob = await worker.value.runNext();
+  equal(durableJob.ok, true);
+  if (!durableJob.ok || durableJob.value.status !== "succeeded") {
+    throw new Error("Expected Kanbien Platform durable smoke work-item job to succeed.");
   }
 }
 

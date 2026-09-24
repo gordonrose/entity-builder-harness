@@ -14,6 +14,7 @@ const coreModules = [
   "i18n",
   "logging",
   "monitoring",
+  "persistence",
   "queues",
   "shared",
   "tenancy",
@@ -38,6 +39,9 @@ writePackageShim("@kanbien/platform-health", {
 });
 writePackageShim("@kanbien/platform-observability", {
   ".": join(runtimeRoot, "platform/observability/src/index.js"),
+});
+writePackageShim("@kanbien/platform-persistence", {
+  ".": join(runtimeRoot, "platform/persistence/src/index.js"),
 });
 writePackageShim("@kanbien/platform-runtime", {
   ".": join(runtimeRoot, "platform/runtime/src/index.js"),

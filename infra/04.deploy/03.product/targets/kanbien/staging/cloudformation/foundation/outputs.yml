@@ -16,6 +16,14 @@ Outputs:
     Value: !Ref PlatformShellWorkerOtelCollectorLogGroup
     Export:
       Name: !Sub ${AWS::StackName}-WorkerOtelCollectorLogGroupName
+  RelayLogGroupName:
+    Value: !Ref PlatformShellRelayLogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-RelayLogGroupName
+  RelayOtelCollectorLogGroupName:
+    Value: !Ref PlatformShellRelayOtelCollectorLogGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-RelayOtelCollectorLogGroupName
   OtelCollectorConfigurationParameterArn:
     Value: !GetAtt OtelCollectorConfigurationParameter.Arn
     Export:
@@ -28,6 +36,22 @@ Outputs:
     Value: !GetAtt RateLimitTable.Arn
     Export:
       Name: !Sub ${AWS::StackName}-RateLimitTableArn
+  PlatformPersistenceTableName:
+    Value: !Ref PlatformPersistenceTable
+    Export:
+      Name: !Sub ${AWS::StackName}-PlatformPersistenceTableName
+  PlatformPersistenceTableArn:
+    Value: !GetAtt PlatformPersistenceTable.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-PlatformPersistenceTableArn
+  PlatformPersistenceOutboxDueIndexName:
+    Value: OutboxDueIndex
+    Export:
+      Name: !Sub ${AWS::StackName}-PlatformPersistenceOutboxDueIndexName
+  PlatformPersistenceLineageCauseIndexName:
+    Value: LineageCauseIndex
+    Export:
+      Name: !Sub ${AWS::StackName}-PlatformPersistenceLineageCauseIndexName
   TaskExecutionRoleArn:
     Value: !GetAtt TaskExecutionRole.Arn
     Export:
@@ -40,6 +64,10 @@ Outputs:
     Value: !GetAtt WorkerTaskRole.Arn
     Export:
       Name: !Sub ${AWS::StackName}-WorkerTaskRoleArn
+  RelayTaskRoleArn:
+    Value: !GetAtt RelayTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelayTaskRoleArn
   ServiceDeploymentExecutionRoleArn:
     Value: !GetAtt ServiceDeploymentExecutionRole.Arn
     Export:
@@ -52,6 +80,10 @@ Outputs:
     Value: !Ref WorkerSecurityGroup
     Export:
       Name: !Sub ${AWS::StackName}-WorkerSecurityGroupId
+  RelaySecurityGroupId:
+    Value: !Ref RelaySecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-RelaySecurityGroupId
   WorkerQueueUrl:
     Value: !Ref WorkerQueue
     Export:

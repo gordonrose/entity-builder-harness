@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.verify-platform-shell-infrastructure.readme
-version: 10
+version: 12
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -34,6 +34,14 @@ task containers must stay secret-free and read-only. The check also requires
 an SQS-encrypted DLQ/redrive policy, the existing SNS destination's narrow
 Budgets publish policy, and the $25 `service=platform-shell` budget source.
 
+It also keeps the source-defined persistence table deliberately narrow: its
+primary and two index access paths must match the DynamoDB adapter, it must use
+on-demand billing, server-side encryption, deletion protection,
+point-in-time recovery, and retain-on-delete policies, and it must not claim
+TTL as a business-retention mechanism. The target profile must record that no
+ECS workload access exists until a server, relay, or worker composition is
+actually introduced.
+
 It verifies that the target declares the governed alert-policy standard,
 points to the link-only target catalogue, uses the declared severity
 vocabulary, and keeps every CloudFormation alarm aligned with its canonical
@@ -61,6 +69,14 @@ platform-smoke jobs 75 seconds apart, and returns the worker service to desired
 count zero. It establishes the fresh-counter metric observation too; it is not
 permission to activate a business queue producer or to treat direct SQS
 delivery as a durable outbox.
+
+The gate also invokes local checks for the separately scoped persistence-write
+client provisioner and the one-shot no-body acceptance smoke command. Those
+checks use no AWS credentials: they validate the source profile, compile the
+commands, and exercise only fake provider responses and a temporary deployed
+profile fixture. They ensure routine read automation remains read-only and
+that a real write proof cannot be invoked until its later target lifecycle
+state is explicitly recorded.
 
 Run it with:
 

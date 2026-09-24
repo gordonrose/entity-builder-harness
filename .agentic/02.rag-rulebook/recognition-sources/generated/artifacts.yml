@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 876
-  term_count: 1764
+  indexed_artifacts: 885
+  term_count: 1782
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7314,6 +7314,18 @@ terms:
   canonical_id: product.readme
   evidence_path: .agentic/03.product/README.md
   confidence_weight: 1
+- term: product.plan.persistence-foundation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.persistence-foundation-v1
+  evidence_path: .agentic/03.product/plans/implementation/persistence-foundation-v1.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/persistence-foundation-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.persistence-foundation-v1
+  evidence_path: .agentic/03.product/plans/implementation/persistence-foundation-v1.md
+  confidence_weight: 1
 - term: harness.architecture.plan.platform-runtime-implementation
   category: artifact-id
   match_type: exact
@@ -8574,6 +8586,18 @@ terms:
   canonical_id: aws.plan.kanbien-staging-platform-shell-observability-v1-closure
   evidence_path: docs/aws/kanbien-staging-platform-shell-observability-v1-closure-programme.md
   confidence_weight: 1
+- term: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
+  evidence_path: docs/aws/kanbien-staging-platform-shell-persistence-v1-deployment-plan.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-platform-shell-persistence-v1-deployment-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
+  evidence_path: docs/aws/kanbien-staging-platform-shell-persistence-v1-deployment-plan.md
+  confidence_weight: 1
 - term: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
   category: artifact-id
   match_type: exact
@@ -8742,6 +8766,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
   evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/iam/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.readme
   category: artifact-id
   match_type: exact
@@ -8861,6 +8897,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.provision-platform-shell-negative-authz-client.smoke-test
   evidence_path: scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.provision-platform-shell-persistence-write-client.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.provision-platform-shell-persistence-write-client.readme
+  evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/provision-platform-shell-persistence-write-client/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.provision-platform-shell-persistence-write-client.readme
+  evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/README.md
+  confidence_weight: 1
+- term: deploy.script.provision-platform-shell-persistence-write-client
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.provision-platform-shell-persistence-write-client
+  evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.provision-platform-shell-persistence-write-client
+  evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
+  confidence_weight: 1
+- term: deploy.script.provision-platform-shell-persistence-write-client.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.provision-platform-shell-persistence-write-client.smoke-test
+  evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.provision-platform-shell-persistence-write-client.smoke-test
+  evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.render-platform-shell-foundation-template.readme
   category: artifact-id
@@ -9029,6 +9101,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-negative-authz-smoke.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-smoke.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-smoke.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-smoke/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-smoke.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-smoke
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-smoke
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-smoke
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-smoke.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-smoke.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-smoke.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-rate-limit-smoke.readme
   category: artifact-id

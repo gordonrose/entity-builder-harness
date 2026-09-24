@@ -371,6 +371,11 @@ policies; platform can bind the port to a policy engine or provider.
 
 `persistence` defines provider-neutral contracts for loading and saving state:
 
+The [persistence source map](src/persistence/README.md) explains the
+responsibility of each source file. The supported consumer import remains
+`@kanbien/core/persistence`; the named files are internal organisation, not
+additional public subpath APIs.
+
 - `PageRequest`, `pageRequest`, `Page`, and `page` keep pagination shape
   consistent without choosing a database cursor format.
 - `PageTotal`, `PageTotals`, `pageTotal`, and `pageTotals` provide optional

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 22
+#   version: 28
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -39,6 +39,8 @@ bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
@@ -239,6 +241,7 @@ failures = []
 
 auth_policy = target_profile.get("auth", {})
 negative_test_client = auth_policy.get("negative_test_client", {}) if isinstance(auth_policy, dict) else {}
+persistence_write_test_client = auth_policy.get("persistence_write_test_client", {}) if isinstance(auth_policy, dict) else {}
 expected_negative_test_client = {
     "name": "platform-shell-staging-negative-authz-client",
     "type": "confidential",
@@ -282,10 +285,7 @@ else:
         fail("target profile negative authorization secret ARN must remain target-scoped when provisioned")
     if status != "pending-provisioning" and isinstance(client_id, str) and isinstance(secret_arn, str):
         config = target_profile.get("config", {})
-        non_secret_env = config.get("non_secret_env", {}) if isinstance(config, dict) else {}
         secret_refs = config.get("secret_refs", {}) if isinstance(config, dict) else {}
-        if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps([client_id], separators=(",", ":")):
-            fail("target profile must allowlist exactly the provisioned negative authorization client")
         if secret_refs.get("cognito_negative_authz_client_secret") != {
             "name": "kanbien/staging/platform-shell/cognito-negative-authz-client",
             "arn": secret_arn,
@@ -320,19 +320,101 @@ else:
         if negative_test_client.get("authorization_proof") != expected_proof:
             fail("target profile must retain the safe successful negative authorization proof")
 
+expected_persistence_write_test_client = {
+    "name": "platform-shell-staging-persistence-write-client",
+    "type": "confidential",
+    "grant_type": "client_credentials",
+    "access_token_validity_minutes": 5,
+    "token_revocation": "enabled",
+    "prevent_user_existence_errors": "enabled",
+    "resource_server": {
+        "identifier": "platform-shell",
+        "name": "Platform Shell",
+        "scope_name": "smoke.write",
+        "scope": "platform-shell/smoke.write",
+        "permission_mapping": "platform-smoke.persistence.work-item:create",
+    },
+    "secret": {
+        "name": "kanbien/staging/platform-shell/cognito-persistence-write-client",
+        "delivery": "bounded-persistence-smoke-only-not-ecs-task-environment",
+        "value_format": "opaque-raw-string",
+    },
+}
+if not isinstance(persistence_write_test_client, dict):
+    fail("target profile must declare the governed persistence write client policy")
+else:
+    for key, expected in expected_persistence_write_test_client.items():
+        if persistence_write_test_client.get(key) != expected:
+            fail(f"target profile persistence write client must retain {key}")
+    persistence_status = persistence_write_test_client.get("status")
+    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "deployed-and-write-proven"}:
+        fail("target profile persistence write client must use a governed lifecycle status")
+    persistence_client_id = persistence_write_test_client.get("client_id")
+    persistence_secret_arn = persistence_write_test_client.get("secret_arn")
+    if persistence_status == "pending-provisioning":
+        if persistence_client_id is not None or persistence_secret_arn is not None:
+            fail("target profile must not record persistence write client references before provisioning")
+    else:
+        if not isinstance(persistence_client_id, str) or not persistence_client_id:
+            fail("target profile persistence write client ID must be a non-empty string after provisioning")
+        if not isinstance(persistence_secret_arn, str) or not persistence_secret_arn.startswith("arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-"):
+            fail("target profile persistence write secret ARN must remain target-scoped when provisioned")
+
+    resource_server = auth_policy.get("resource_server", {})
+    permission_mapping = auth_policy.get("permission_mapping", {})
+    expected_scopes = [
+        {"name": "smoke.read", "maps_to_permission": "platform-smoke.smoke:read"},
+        {"name": "smoke.write", "maps_to_permission": "platform-smoke.persistence.work-item:create"},
+    ]
+    if resource_server != {"identifier": "platform-shell", "scopes": expected_scopes}:
+        fail("target profile resource server must retain the reviewed read and persistence-write scope declarations")
+    if permission_mapping.get("scope_permissions") != {
+        "platform-shell/smoke.read": ["platform-smoke.smoke:read"],
+        "platform-shell/smoke.write": ["platform-smoke.persistence.work-item:create"],
+    }:
+        fail("target profile must map only the reviewed read and persistence-write scopes to app permissions")
+
+    config = target_profile.get("config", {})
+    non_secret_env = config.get("non_secret_env", {}) if isinstance(config, dict) else {}
+    secret_refs = config.get("secret_refs", {}) if isinstance(config, dict) else {}
+    expected_client_allowlist = [negative_test_client.get("client_id")]
+    if persistence_status == "pending-provisioning":
+        if "cognito_persistence_write_client_secret" in secret_refs:
+            fail("target profile must not record a persistence-write secret reference before provisioning")
+    else:
+        expected_persistence_secret_ref = {
+            "name": "kanbien/staging/platform-shell/cognito-persistence-write-client",
+            "arn": persistence_secret_arn,
+            "delivery": "bounded-persistence-smoke-only-not-ecs-task-environment",
+            "value_format": "opaque-raw-string",
+        }
+        if secret_refs.get("cognito_persistence_write_client_secret") != expected_persistence_secret_ref:
+            fail("target profile must retain the bounded persistence-write secret reference after provisioning")
+    if persistence_status in {"deployed-pending-write-proof", "deployed-and-write-proven"}:
+        expected_client_allowlist.append(persistence_client_id)
+    if not all(isinstance(client_id, str) and client_id for client_id in expected_client_allowlist):
+        fail("target profile must retain all deployed proof-client identifiers")
+    if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps(expected_client_allowlist, separators=(",", ":")):
+        fail("target profile must allowlist exactly the proof clients deployed to the service")
+
 expected_foundation_resources = {
     "PlatformShellLogGroup",
     "PlatformShellOtelCollectorLogGroup",
     "PlatformShellWorkerLogGroup",
     "PlatformShellWorkerOtelCollectorLogGroup",
+    "PlatformShellRelayLogGroup",
+    "PlatformShellRelayOtelCollectorLogGroup",
     "OtelCollectorConfigurationParameter",
     "RateLimitTable",
+    "PlatformPersistenceTable",
     "TaskExecutionRole",
     "TaskRole",
     "WorkerTaskRole",
+    "RelayTaskRole",
     "ServiceDeploymentExecutionRole",
     "ServiceSecurityGroup",
     "WorkerSecurityGroup",
+    "RelaySecurityGroup",
     "WorkerQueue",
     "WorkerDeadLetterQueue",
     "WorkerQueueTransportPolicy",
@@ -371,15 +453,23 @@ expected_foundation_outputs = {
     "OtelCollectorLogGroupName",
     "WorkerLogGroupName",
     "WorkerOtelCollectorLogGroupName",
+    "RelayLogGroupName",
+    "RelayOtelCollectorLogGroupName",
     "OtelCollectorConfigurationParameterArn",
     "RateLimitTableName",
     "RateLimitTableArn",
+    "PlatformPersistenceTableName",
+    "PlatformPersistenceTableArn",
+    "PlatformPersistenceOutboxDueIndexName",
+    "PlatformPersistenceLineageCauseIndexName",
     "TaskExecutionRoleArn",
     "TaskRoleArn",
     "WorkerTaskRoleArn",
+    "RelayTaskRoleArn",
     "ServiceDeploymentExecutionRoleArn",
     "ServiceSecurityGroupId",
     "WorkerSecurityGroupId",
+    "RelaySecurityGroupId",
     "WorkerQueueUrl",
     "WorkerQueueArn",
     "WorkerDeadLetterQueueUrl",
@@ -396,6 +486,7 @@ expected_service_resources = {
     "Service",
     "WorkerTaskDefinition",
     "WorkerService",
+    "RelayTaskDefinition",
     "EcsRunningCountAlarm",
     "EcsHighCpuAlarm",
     "EcsHighMemoryAlarm",
@@ -423,6 +514,103 @@ if rate_table.get("TimeToLiveSpecification") != {"AttributeName": "expiresAt", "
 if rate_table.get("SSESpecification", {}).get("SSEEnabled") is not True:
     fail("RateLimitTable must enable server-side encryption")
 
+persistence_table_resource = resource(foundation, "PlatformPersistenceTable")
+if persistence_table_resource.get("DeletionPolicy") != "Retain" or persistence_table_resource.get("UpdateReplacePolicy") != "Retain":
+    fail("PlatformPersistenceTable must retain data on stack deletion or replacement")
+persistence_table = properties(foundation, "PlatformPersistenceTable", "AWS::DynamoDB::Table")
+if persistence_table.get("TableName") != "kanbien-staging-platform-shell-persistence":
+    fail("PlatformPersistenceTable must retain the reviewed staging table name")
+if persistence_table.get("BillingMode") != "PAY_PER_REQUEST" or persistence_table.get("TableClass") != "STANDARD":
+    fail("PlatformPersistenceTable must use on-demand standard-class billing for the bounded initial target")
+if persistence_table.get("DeletionProtectionEnabled") is not True:
+    fail("PlatformPersistenceTable must enable deletion protection")
+if persistence_table.get("SSESpecification") != {"SSEEnabled": True}:
+    fail("PlatformPersistenceTable must enable the reviewed DynamoDB server-side encryption")
+if persistence_table.get("PointInTimeRecoverySpecification") != {"PointInTimeRecoveryEnabled": True}:
+    fail("PlatformPersistenceTable must enable point-in-time recovery")
+if "TimeToLiveSpecification" in persistence_table:
+    fail("PlatformPersistenceTable must not claim DynamoDB TTL as a retention policy")
+if persistence_table.get("AttributeDefinitions") != [
+    {"AttributeName": "PK", "AttributeType": "S"},
+    {"AttributeName": "SK", "AttributeType": "S"},
+    {"AttributeName": "DueKey", "AttributeType": "S"},
+    {"AttributeName": "DueSort", "AttributeType": "S"},
+    {"AttributeName": "CauseKey", "AttributeType": "S"},
+    {"AttributeName": "CauseSort", "AttributeType": "S"},
+]:
+    fail("PlatformPersistenceTable must declare only the adapter-required primary and index attributes")
+if persistence_table.get("KeySchema") != [
+    {"AttributeName": "PK", "KeyType": "HASH"},
+    {"AttributeName": "SK", "KeyType": "RANGE"},
+]:
+    fail("PlatformPersistenceTable must retain the adapter-private PK/SK primary key")
+if persistence_table.get("GlobalSecondaryIndexes") != [
+    {
+        "IndexName": "OutboxDueIndex",
+        "KeySchema": [
+            {"AttributeName": "DueKey", "KeyType": "HASH"},
+            {"AttributeName": "DueSort", "KeyType": "RANGE"},
+        ],
+        "Projection": {"ProjectionType": "ALL"},
+    },
+    {
+        "IndexName": "LineageCauseIndex",
+        "KeySchema": [
+            {"AttributeName": "CauseKey", "KeyType": "HASH"},
+            {"AttributeName": "CauseSort", "KeyType": "RANGE"},
+        ],
+        "Projection": {"ProjectionType": "ALL"},
+    },
+]:
+    fail("PlatformPersistenceTable must retain the reviewed due and direct-cause indexes")
+expected_persistence_tags = [
+    {"Key": "service", "Value": "platform-shell"},
+    {"Key": "component", "Value": "persistence-smoke"},
+    {"Key": "environment", "Value": "staging"},
+    {"Key": "data-classification", "Value": "operational-safe-identifiers"},
+    {"Key": "managed-by", "Value": "cloudformation"},
+]
+if persistence_table.get("Tags") != expected_persistence_tags:
+    fail("PlatformPersistenceTable must retain the reviewed ownership and data-classification tags")
+
+expected_persistence_profile = {
+    "smoke_transactional_outbox": {
+        "status": "acceptance-relay-worker-task-source-composed-not-deployed",
+        "provider": "aws-dynamodb",
+        "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
+        "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
+        "region": "eu-west-1",
+        "table": {
+            "resource": "PlatformPersistenceTable",
+            "name": "kanbien-staging-platform-shell-persistence",
+            "output_name": "PlatformPersistenceTableName",
+        },
+        "indexes": {
+            "outbox_due": {"name": "OutboxDueIndex", "output_name": "PlatformPersistenceOutboxDueIndexName"},
+            "lineage_cause": {"name": "LineageCauseIndex", "output_name": "PlatformPersistenceLineageCauseIndexName"},
+        },
+        "protection": {
+            "billing_mode": "PAY_PER_REQUEST",
+            "encryption": "dynamodb-server-side-encryption",
+            "point_in_time_recovery": "enabled",
+            "deletion_protection": "enabled",
+            "cloudformation_deletion_policy": "retain",
+            "ttl": "deliberately-not-configured-not-a-retention-policy",
+        },
+        "activation": {
+            "server_acceptance": "source-composed-not-deployed",
+            "outbox_relay": "source-composed-one-pass-task-definition-and-least-privilege-iam-not-deployed-or-scheduled",
+            "durable_worker_processing": "source-composed-worker-task-configuration-and-least-privilege-iam-not-deployed",
+            "iam": "source-defined-server-acceptance-relay-and-worker-processing-least-privilege-not-deployed",
+            "required_identity_scope": "platform-shell/smoke.write",
+            "identity_scope_status": "source-declared-not-configured",
+            "observability": "profile-registered-transition-catalogue-source-composed-slo-assignment-and-live-proof-pending",
+        },
+    },
+}
+if target_profile.get("persistence") != expected_persistence_profile:
+    fail("target profile must retain the reviewed persistence table and source-composed acceptance boundary")
+
 task_execution_policy = properties(foundation, "TaskExecutionRole", "AWS::IAM::Role").get("Policies", [])
 task_execution_configuration_statement = next(
     (
@@ -443,12 +631,15 @@ task_statements = [statement for policy in task_policy for statement in policy.g
 task_statements_by_sid = {statement.get("Sid"): statement for statement in task_statements}
 rate_limit_statement = task_statements_by_sid.get("UpdateOnlyThePlatformShellRateLimitTable")
 metric_delivery_statement = task_statements_by_sid.get("PublishOnlyCloudWatchMetricData")
+persistence_acceptance_statement = task_statements_by_sid.get("TransactWriteOnlyThePlatformSmokePersistenceTable")
 if rate_limit_statement is None or rate_limit_statement.get("Effect") != "Allow" or rate_limit_statement.get("Action") != ["dynamodb:UpdateItem"] or rate_limit_statement.get("Resource") != {"!GetAtt": "RateLimitTable.Arn"}:
     fail("TaskRole must retain only the reviewed DynamoDB rate-limit write statement")
+if persistence_acceptance_statement is None or persistence_acceptance_statement.get("Effect") != "Allow" or persistence_acceptance_statement.get("Action") != ["dynamodb:TransactWriteItems"] or persistence_acceptance_statement.get("Resource") != {"!GetAtt": "PlatformPersistenceTable.Arn"}:
+    fail("TaskRole must grant only the reviewed atomic acceptance write to the persistence table")
 if metric_delivery_statement is None or metric_delivery_statement.get("Effect") != "Allow" or metric_delivery_statement.get("Action") != ["cloudwatch:PutMetricData"] or metric_delivery_statement.get("Resource") != "*":
     fail("TaskRole must grant only the reviewed CloudWatch OTel metric-delivery action")
-if set(task_statements_by_sid) != {"UpdateOnlyThePlatformShellRateLimitTable", "PublishOnlyCloudWatchMetricData"}:
-    fail("TaskRole must contain exactly the reviewed rate-limit and metric-delivery statements")
+if set(task_statements_by_sid) != {"UpdateOnlyThePlatformShellRateLimitTable", "TransactWriteOnlyThePlatformSmokePersistenceTable", "PublishOnlyCloudWatchMetricData"}:
+    fail("TaskRole must contain exactly the reviewed rate-limit, persistence acceptance, and metric-delivery statements")
 
 worker_task_policy = properties(foundation, "WorkerTaskRole", "AWS::IAM::Role").get("Policies", [])
 worker_task_statements = [statement for policy in worker_task_policy for statement in policy.get("PolicyDocument", {}).get("Statement", [])]
@@ -459,21 +650,42 @@ if worker_delivery_statement is None or worker_delivery_statement.get("Effect") 
 worker_metric_statement = worker_task_statements_by_sid.get("PublishOnlyCloudWatchWorkerMetricData")
 if worker_metric_statement is None or worker_metric_statement.get("Effect") != "Allow" or worker_metric_statement.get("Action") != ["cloudwatch:PutMetricData"] or worker_metric_statement.get("Resource") != "*":
     fail("WorkerTaskRole must grant only the reviewed CloudWatch worker metric-delivery action")
-if set(worker_task_statements_by_sid) != {"ReceiveAndSettleOnlyThePlatformShellWorkerQueue", "PublishOnlyCloudWatchWorkerMetricData"}:
-    fail("WorkerTaskRole must contain exactly the reviewed queue-delivery and metric-delivery statements")
+worker_processing_statement = worker_task_statements_by_sid.get("ReadAndRecordOnlyThePlatformPersistenceProcessingState")
+if worker_processing_statement is None or worker_processing_statement.get("Effect") != "Allow" or set(worker_processing_statement.get("Action", [])) != {"dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"} or worker_processing_statement.get("Resource") != {"!GetAtt": "PlatformPersistenceTable.Arn"}:
+    fail("WorkerTaskRole must read and record only reviewed durable processing state")
+if set(worker_task_statements_by_sid) != {"ReceiveAndSettleOnlyThePlatformShellWorkerQueue", "ReadAndRecordOnlyThePlatformPersistenceProcessingState", "PublishOnlyCloudWatchWorkerMetricData"}:
+    fail("WorkerTaskRole must contain exactly the reviewed queue-delivery, processing-state, and metric-delivery statements")
+
+relay_task_policy = properties(foundation, "RelayTaskRole", "AWS::IAM::Role").get("Policies", [])
+relay_task_statements = [statement for policy in relay_task_policy for statement in policy.get("PolicyDocument", {}).get("Statement", [])]
+relay_task_statements_by_sid = {statement.get("Sid"): statement for statement in relay_task_statements}
+relay_due_query_statement = relay_task_statements_by_sid.get("QueryOnlyThePlatformPersistenceDueIndex")
+if relay_due_query_statement is None or relay_due_query_statement.get("Effect") != "Allow" or relay_due_query_statement.get("Action") != ["dynamodb:Query"] or relay_due_query_statement.get("Resource") != {"!Sub": "${PlatformPersistenceTable.Arn}/index/OutboxDueIndex"}:
+    fail("RelayTaskRole must query only the reviewed persistence due index")
+relay_outbox_state_statement = relay_task_statements_by_sid.get("ReadAndUpdateOnlyThePlatformPersistenceOutboxRecords")
+if relay_outbox_state_statement is None or relay_outbox_state_statement.get("Effect") != "Allow" or set(relay_outbox_state_statement.get("Action", [])) != {"dynamodb:GetItem", "dynamodb:UpdateItem"} or relay_outbox_state_statement.get("Resource") != {"!GetAtt": "PlatformPersistenceTable.Arn"}:
+    fail("RelayTaskRole must read and update only reviewed persistence outbox state")
+relay_queue_send_statement = relay_task_statements_by_sid.get("SendOnlyThePlatformShellWorkerQueue")
+if relay_queue_send_statement is None or relay_queue_send_statement.get("Effect") != "Allow" or relay_queue_send_statement.get("Action") != ["sqs:SendMessage"] or relay_queue_send_statement.get("Resource") != {"!GetAtt": "WorkerQueue.Arn"}:
+    fail("RelayTaskRole must send only to the reviewed worker source queue")
+relay_metric_statement = relay_task_statements_by_sid.get("PublishOnlyCloudWatchRelayMetricData")
+if relay_metric_statement is None or relay_metric_statement.get("Effect") != "Allow" or relay_metric_statement.get("Action") != ["cloudwatch:PutMetricData"] or relay_metric_statement.get("Resource") != "*":
+    fail("RelayTaskRole must grant only the reviewed CloudWatch relay metric-delivery action")
+if set(relay_task_statements_by_sid) != {"QueryOnlyThePlatformPersistenceDueIndex", "ReadAndUpdateOnlyThePlatformPersistenceOutboxRecords", "SendOnlyThePlatformShellWorkerQueue", "PublishOnlyCloudWatchRelayMetricData"}:
+    fail("RelayTaskRole must contain exactly the reviewed due-query, outbox, queue-send, and metric-delivery statements")
 
 for queue_name, expected_queue_name, expected_retention, expected_visibility in (
-    ("WorkerQueue", "kanbien-staging-platform-shell-worker", 345600, 30),
+    ("WorkerQueue", "kanbien-staging-platform-shell-worker", 345600, 120),
     ("WorkerDeadLetterQueue", "kanbien-staging-platform-shell-worker-dlq", 1209600, None),
 ):
     queue = properties(foundation, queue_name, "AWS::SQS::Queue")
     if queue.get("QueueName") != expected_queue_name or queue.get("MessageRetentionPeriod") != expected_retention or queue.get("ReceiveMessageWaitTimeSeconds") != 20 or queue.get("SqsManagedSseEnabled") is not True:
         fail(f"{queue_name} must retain the reviewed name, long-poll, retention, and SQS-managed encryption")
     if expected_visibility is not None and queue.get("VisibilityTimeout") != expected_visibility:
-        fail("WorkerQueue must retain the reviewed 30-second visibility timeout")
+        fail("WorkerQueue must retain the reviewed two-minute visibility timeout")
 
 worker_queue = properties(foundation, "WorkerQueue", "AWS::SQS::Queue")
-if worker_queue.get("MaximumMessageSize") != 262144 or worker_queue.get("DelaySeconds") != 0 or worker_queue.get("RedrivePolicy") != {"deadLetterTargetArn": {"!GetAtt": "WorkerDeadLetterQueue.Arn"}, "maxReceiveCount": 3}:
+if worker_queue.get("MaximumMessageSize") != 262144 or worker_queue.get("DelaySeconds") != 0 or worker_queue.get("RedrivePolicy") != {"deadLetterTargetArn": {"!GetAtt": "WorkerDeadLetterQueue.Arn"}, "maxReceiveCount": 5}:
     fail("WorkerQueue must retain the reviewed bounded payload and SQS redrive policy")
 
 for policy_name, queue_name in (("WorkerQueueTransportPolicy", "WorkerQueue"), ("WorkerDeadLetterQueueTransportPolicy", "WorkerDeadLetterQueue")):
@@ -495,8 +707,8 @@ service_deployment_role = properties(foundation, "ServiceDeploymentExecutionRole
 service_deployment_policy = service_deployment_role.get("Policies", [{}])[0].get("PolicyDocument", {}).get("Statement", [])
 if not contains_value(service_deployment_policy, "ecs:RegisterTaskDefinition"):
     fail("ServiceDeploymentExecutionRole must be able to register only the service task definition")
-if not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskExecutionRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "WorkerTaskRole.Arn"):
-    fail("ServiceDeploymentExecutionRole must pass only the reviewed platform-shell server and worker task roles")
+if not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskExecutionRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "WorkerTaskRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "RelayTaskRole.Arn"):
+    fail("ServiceDeploymentExecutionRole must pass only the reviewed platform-shell server, worker, and relay task roles")
 
 security_group = properties(foundation, "ServiceSecurityGroup", "AWS::EC2::SecurityGroup")
 for ingress in security_group.get("SecurityGroupIngress", []):
@@ -511,12 +723,23 @@ worker_security_group = properties(foundation, "WorkerSecurityGroup", "AWS::EC2:
 if worker_security_group.get("SecurityGroupIngress") not in (None, []):
     fail("WorkerSecurityGroup must accept no inbound network traffic")
 expected_worker_egress = [
-    {"Description": "TLS egress for ECR image pulls, CloudWatch Logs, SQS, and CloudWatch metric delivery.", "IpProtocol": "tcp", "FromPort": 443, "ToPort": 443, "CidrIp": "0.0.0.0/0"},
+    {"Description": "TLS egress for ECR image pulls, CloudWatch Logs, DynamoDB, SQS, and CloudWatch metric delivery.", "IpProtocol": "tcp", "FromPort": 443, "ToPort": 443, "CidrIp": "0.0.0.0/0"},
     {"Description": "UDP DNS only to the VPC resolver address range.", "IpProtocol": "udp", "FromPort": 53, "ToPort": 53, "CidrIp": {"!Ref": "VpcCidr"}},
     {"Description": "TCP DNS fallback only to the VPC resolver address range.", "IpProtocol": "tcp", "FromPort": 53, "ToPort": 53, "CidrIp": {"!Ref": "VpcCidr"}},
 ]
 if worker_security_group.get("SecurityGroupEgress") != expected_worker_egress:
     fail("WorkerSecurityGroup must retain only reviewed TLS and VPC DNS egress")
+
+relay_security_group = properties(foundation, "RelaySecurityGroup", "AWS::EC2::SecurityGroup")
+if relay_security_group.get("SecurityGroupIngress") not in (None, []):
+    fail("RelaySecurityGroup must accept no inbound network traffic")
+expected_relay_egress = [
+    {"Description": "TLS egress for ECR image pulls, CloudWatch Logs, DynamoDB, SQS, and CloudWatch metric delivery.", "IpProtocol": "tcp", "FromPort": 443, "ToPort": 443, "CidrIp": "0.0.0.0/0"},
+    {"Description": "UDP DNS only to the VPC resolver address range.", "IpProtocol": "udp", "FromPort": 53, "ToPort": 53, "CidrIp": {"!Ref": "VpcCidr"}},
+    {"Description": "TCP DNS fallback only to the VPC resolver address range.", "IpProtocol": "tcp", "FromPort": 53, "ToPort": 53, "CidrIp": {"!Ref": "VpcCidr"}},
+]
+if relay_security_group.get("SecurityGroupEgress") != expected_relay_egress:
+    fail("RelaySecurityGroup must retain only reviewed TLS and VPC DNS egress")
 
 target_group = properties(foundation, "TargetGroup", "AWS::ElasticLoadBalancingV2::TargetGroup")
 if target_group.get("TargetType") != "ip" or target_group.get("HealthCheckPath") != "/livez":
@@ -619,6 +842,12 @@ if worker_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-
 worker_collector_log_group = properties(foundation, "PlatformShellWorkerOtelCollectorLogGroup", "AWS::Logs::LogGroup")
 if worker_collector_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-worker-otel-collector" or worker_collector_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
     fail("PlatformShellWorkerOtelCollectorLogGroup must use the reviewed worker collector log destination and retention")
+relay_log_group = properties(foundation, "PlatformShellRelayLogGroup", "AWS::Logs::LogGroup")
+if relay_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-relay" or relay_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
+    fail("PlatformShellRelayLogGroup must use the reviewed relay log destination and retention")
+relay_collector_log_group = properties(foundation, "PlatformShellRelayOtelCollectorLogGroup", "AWS::Logs::LogGroup")
+if relay_collector_log_group.get("LogGroupName") != "/ecs/kanbien-staging-platform-shell-relay-otel-collector" or relay_collector_log_group.get("RetentionInDays") != {"!Ref": "LogRetentionDays"}:
+    fail("PlatformShellRelayOtelCollectorLogGroup must use the reviewed relay collector log destination and retention")
 collector_configuration_parameter = properties(foundation, "OtelCollectorConfigurationParameter", "AWS::SSM::Parameter")
 if collector_configuration_parameter.get("Name") != "/kanbien/staging/platform-shell/observability/collector-config" or collector_configuration_parameter.get("Type") != "String" or collector_configuration_parameter.get("Tier") != "Standard" or collector_configuration_parameter.get("DataType") != "text":
     fail("OtelCollectorConfigurationParameter must be the reviewed non-secret standard SSM String")
@@ -713,6 +942,7 @@ else:
         "delivery_environment_key": "AOT_CONFIG_CONTENT",
         "log_group_resource": "PlatformShellOtelCollectorLogGroup",
         "worker_log_group_resource": "PlatformShellWorkerOtelCollectorLogGroup",
+        "relay_log_group_resource": "PlatformShellRelayOtelCollectorLogGroup",
         "output_parameter_arn": "OtelCollectorConfigurationParameterArn",
     }:
         fail("target profile metrics must declare the reviewed target-owned collector configuration record")
@@ -734,12 +964,24 @@ else:
         "collector_dependency": "platform-shell-worker-depends-on-otel-collector-start",
     }:
         fail("target profile metrics must declare the reviewed worker and collector task capacity")
+    relay_metric_task = metric_delivery.get("relay_task")
+    if relay_metric_task != {
+        "cpu_units": 512,
+        "memory_mib": 1024,
+        "application_cpu_units": 384,
+        "application_memory_reservation_mib": 512,
+        "collector_dependency": "platform-shell-relay-depends-on-otel-collector-start",
+    }:
+        fail("target profile metrics must declare the reviewed relay and collector task capacity")
     metric_iam = metric_delivery.get("iam", {})
     if not isinstance(metric_iam, dict) or metric_iam.get("task_execution_role", {}).get("action") != "ssm:GetParameters" or metric_iam.get("task_execution_role", {}).get("resource") != "OtelCollectorConfigurationParameter" or metric_iam.get("task_role", {}).get("action") != "cloudwatch:PutMetricData" or metric_iam.get("task_role", {}).get("resource") != "*":
         fail("target profile metrics must declare its narrow SSM configuration and CloudWatch delivery IAM requirements")
     worker_metric_iam = metric_delivery.get("worker_iam", {})
     if not isinstance(worker_metric_iam, dict) or worker_metric_iam.get("task_execution_role", {}).get("action") != "ssm:GetParameters" or worker_metric_iam.get("task_execution_role", {}).get("resource") != "OtelCollectorConfigurationParameter" or worker_metric_iam.get("task_role", {}).get("action") != "cloudwatch:PutMetricData" or worker_metric_iam.get("task_role", {}).get("resource") != "*":
         fail("target profile metrics must declare narrow worker SSM configuration and CloudWatch delivery IAM requirements")
+    relay_metric_iam = metric_delivery.get("relay_iam", {})
+    if not isinstance(relay_metric_iam, dict) or relay_metric_iam.get("task_execution_role", {}).get("action") != "ssm:GetParameters" or relay_metric_iam.get("task_execution_role", {}).get("resource") != "OtelCollectorConfigurationParameter" or relay_metric_iam.get("task_role", {}).get("action") != "cloudwatch:PutMetricData" or relay_metric_iam.get("task_role", {}).get("resource") != "*":
+        fail("target profile metrics must declare narrow relay SSM configuration and CloudWatch delivery IAM requirements")
     export = metric_delivery.get("export", {})
     if not isinstance(export, dict) or export.get("eligible_slo_measurement_sampling") != "none":
         fail("target profile metrics must preserve every eligible initial SLO measurement")
@@ -766,6 +1008,10 @@ if worker_metric_coverage.get("live_proof") != {
     "retained_evidence": "safe-verdict-task-revision-and-bounded-count-duration-only-no-queue-message-or-provider-payload",
 }:
     fail("target profile worker metric-observation policy must retain its bounded live proof")
+persistence_transition_metric_delivery = observability.get("persistence_transition_metric_delivery")
+if not isinstance(persistence_transition_metric_delivery, dict) or persistence_transition_metric_delivery.get("status") != "source-composed-not-deployed" or persistence_transition_metric_delivery.get("runtime_targets") != ["worker", "relay"] or persistence_transition_metric_delivery.get("output_policy") != "approved-capability-action-execution-context-outcome-and-bounded-error-class-only":
+    fail("target profile must retain the source-only persistence transition metric-delivery policy")
+persistence_transition_metric_status = persistence_transition_metric_delivery.get("status") if isinstance(persistence_transition_metric_delivery, dict) else None
 metric_series_by_id = {}
 source_names = set()
 instrument_names = set()
@@ -779,12 +1025,10 @@ for series in metric_series:
         continue
     metric_series_by_id[series_id] = series
     runtime_target = series.get("runtime_target")
-    if runtime_target not in {"server", "worker"}:
-        fail(f"target metric series {series_id} must identify server or worker delivery ownership")
+    if runtime_target not in {"server", "worker", "relay"}:
+        fail(f"target metric series {series_id} must identify server, worker, or relay delivery ownership")
     elif runtime_target == "server" and series.get("status") != metric_delivery.get("status"):
         fail(f"target server metric series {series_id} must use its delivery catalogue status")
-    elif runtime_target == "worker" and series.get("status") != worker_metric_status:
-        fail(f"target worker metric series {series_id} must use the worker metric-observation evidence state")
     source = series.get("source", {})
     otel = series.get("otel", {})
     if not isinstance(source, dict) or not isinstance(otel, dict):
@@ -797,6 +1041,11 @@ for series in metric_series:
     if not isinstance(source_name, str) or not source_name.startswith("platform.") or source_name in source_names:
         fail(f"target metric series {series_id} must use a unique platform-owned source name")
     source_names.add(source_name)
+    if source_name.startswith("platform.persistence.") and runtime_target in {"worker", "relay"}:
+        if series.get("status") != persistence_transition_metric_status:
+            fail(f"target persistence metric series {series_id} must retain its source-only transition-delivery status")
+    elif runtime_target == "worker" and series.get("status") != worker_metric_status:
+        fail(f"target worker metric series {series_id} must use the worker metric-observation evidence state")
     if source_kind not in {"counter", "gauge", "histogram", "timer"}:
         fail(f"target metric series {series_id} must declare a supported Core metric kind")
     if not isinstance(source_unit, str) or not source_unit:
@@ -1243,6 +1492,7 @@ required_environment = {
     "PLATFORM_DEPLOYMENT_EXPOSURE": "public",
     "PLATFORM_AUTH_PROVIDER": "cognito",
     "PLATFORM_RATE_LIMIT_PROVIDER": "dynamodb",
+    "PLATFORM_PERSISTENCE_PROVIDER": "dynamodb",
     "PLATFORM_TRUSTED_INGRESS_MODE": "alb-security-group-only",
     "PLATFORM_HEALTH_LIVEZ_EXPOSURE": "public",
     "PLATFORM_HEALTH_READYZ_EXPOSURE": "authenticated",
@@ -1256,6 +1506,15 @@ for key, value in target_environment.items():
     if key == "PLATFORM_RATE_LIMIT_DYNAMODB_TABLE":
         if not contains_intrinsic(environment.get(key), "!Sub", "${FoundationStackName}-RateLimitTableName"):
             fail("platform-shell task must obtain the shared limiter table name from the foundation stack")
+    elif key == "PLATFORM_PERSISTENCE_DYNAMODB_TABLE":
+        if not contains_intrinsic(environment.get(key), "!Sub", "${FoundationStackName}-PlatformPersistenceTableName"):
+            fail("platform-shell task must obtain the persistence table name from the foundation stack")
+    elif key == "PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX":
+        if not contains_intrinsic(environment.get(key), "!Sub", "${FoundationStackName}-PlatformPersistenceOutboxDueIndexName"):
+            fail("platform-shell task must obtain the persistence due index from the foundation stack")
+    elif key == "PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX":
+        if not contains_intrinsic(environment.get(key), "!Sub", "${FoundationStackName}-PlatformPersistenceLineageCauseIndexName"):
+            fail("platform-shell task must obtain the persistence lineage index from the foundation stack")
     elif environment.get(key) != value:
         fail(f"service template must match target-profile non-secret value for {key}")
 
@@ -1313,8 +1572,16 @@ if not isinstance(worker_target_environment, dict):
     fail("target profile must declare worker non-secret deployment configuration")
 else:
     for key, value in worker_target_environment.items():
+        if key in {"PLATFORM_PERSISTENCE_DYNAMODB_TABLE", "PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX", "PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX"}:
+            continue
         if worker_environment.get(key) != value:
             fail(f"worker task must match target-profile worker non-secret value for {key}")
+if worker_environment.get("PLATFORM_PERSISTENCE_DYNAMODB_TABLE") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-PlatformPersistenceTableName"}}:
+    fail("worker task must obtain the persistence table name from the foundation stack")
+if worker_environment.get("PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-PlatformPersistenceOutboxDueIndexName"}}:
+    fail("worker task must obtain the persistence due index from the foundation stack")
+if worker_environment.get("PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-PlatformPersistenceLineageCauseIndexName"}}:
+    fail("worker task must obtain the persistence lineage index from the foundation stack")
 if worker_environment.get("PLATFORM_WORKER_SQS_QUEUE_URL") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerQueueUrl"}}:
     fail("worker task must obtain the source queue URL from the foundation stack")
 expected_worker_metric_series_environment = [
@@ -1341,6 +1608,59 @@ if worker_service.get("DeploymentConfiguration") != {"MinimumHealthyPercent": 0,
 worker_network = worker_service.get("NetworkConfiguration", {}).get("AwsvpcConfiguration", {})
 if worker_network.get("AssignPublicIp") != "ENABLED" or worker_network.get("SecurityGroups") != [{"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerSecurityGroupId"}}]:
     fail("WorkerService must use only the reviewed worker security group and controlled outbound network path")
+
+relay_task_definition = properties(service, "RelayTaskDefinition", "AWS::ECS::TaskDefinition")
+if relay_task_definition.get("Family") != "kanbien-staging-platform-shell-relay" or relay_task_definition.get("Cpu") != "512" or relay_task_definition.get("Memory") != "1024":
+    fail("RelayTaskDefinition must retain the reviewed one-pass relay family and sidecar-capable capacity")
+if relay_task_definition.get("ExecutionRoleArn") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-TaskExecutionRoleArn"}} or relay_task_definition.get("TaskRoleArn") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-RelayTaskRoleArn"}}:
+    fail("RelayTaskDefinition must use the reviewed execution and least-privilege relay task roles")
+relay_containers = {item.get("Name"): item for item in relay_task_definition.get("ContainerDefinitions", []) if isinstance(item, dict)}
+relay_container = relay_containers.get("platform-shell-relay", {})
+relay_collector = relay_containers.get("otel-collector", {})
+if relay_container.get("Image") != {"!Ref": "ImageUri"} or relay_container.get("Command") != [".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.js"] or relay_container.get("ReadonlyRootFilesystem") is not True or relay_container.get("Cpu") != 384 or relay_container.get("MemoryReservation") != 512 or relay_container.get("PortMappings") or relay_container.get("HealthCheck") or relay_container.get("Secrets"):
+    fail("platform-shell-relay must be a one-pass non-public read-only task without ports, health endpoint, or task secrets")
+if relay_container.get("DependsOn") != [{"ContainerName": "otel-collector", "Condition": "START"}]:
+    fail("platform-shell-relay must depend on the collector starting before it starts")
+if relay_collector.get("Image") != collector_container.get("Image") or relay_collector.get("ReadonlyRootFilesystem") is not True or relay_collector.get("Cpu") != 128 or relay_collector.get("MemoryReservation") != 256 or relay_collector.get("PortMappings"):
+    fail("relay collector must retain the reviewed immutable image, read-only filesystem, and bounded capacity")
+if relay_collector.get("Secrets") != [{"Name": "AOT_CONFIG_CONTENT", "ValueFrom": {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-OtelCollectorConfigurationParameterArn"}}}]:
+    fail("relay collector must read only the reviewed target configuration through ECS SSM value injection")
+relay_collector_options = relay_collector.get("LogConfiguration", {}).get("Options", {})
+if relay_collector.get("LogConfiguration", {}).get("LogDriver") != "awslogs" or relay_collector_options.get("awslogs-stream-prefix") != "relay-otel-collector" or relay_collector_options.get("awslogs-group") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-RelayOtelCollectorLogGroupName"}}:
+    fail("relay collector must use its separate reviewed relay collector log destination")
+relay_environment = {entry.get("Name"): entry.get("Value") for entry in relay_container.get("Environment", [])}
+relay_target_environment = target_profile.get("config", {}).get("relay_non_secret_env", {})
+if not isinstance(relay_target_environment, dict):
+    fail("target profile must declare relay non-secret deployment configuration")
+else:
+    for key, value in relay_target_environment.items():
+        if key in {"PLATFORM_PERSISTENCE_DYNAMODB_TABLE", "PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX", "PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX"}:
+            continue
+        if relay_environment.get(key) != value:
+            fail(f"relay task must match target-profile relay non-secret value for {key}")
+if relay_environment.get("PLATFORM_PERSISTENCE_DYNAMODB_TABLE") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-PlatformPersistenceTableName"}}:
+    fail("relay task must obtain the persistence table name from the foundation stack")
+if relay_environment.get("PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-PlatformPersistenceOutboxDueIndexName"}}:
+    fail("relay task must obtain the persistence due index from the foundation stack")
+if relay_environment.get("PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-PlatformPersistenceLineageCauseIndexName"}}:
+    fail("relay task must obtain the persistence lineage index from the foundation stack")
+if relay_environment.get("PLATFORM_RELAY_SQS_QUEUE_URL") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-WorkerQueueUrl"}}:
+    fail("relay task must obtain the source queue URL from the foundation stack")
+expected_relay_metric_series_environment = [
+    metric_series_environment(series)
+    for series in metric_series
+    if series.get("runtime_target") == "relay"
+]
+try:
+    actual_relay_metric_series_environment = json.loads(relay_environment.get("PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON", ""))
+except (TypeError, json.JSONDecodeError):
+    fail("relay task must provide valid JSON metric-series configuration")
+else:
+    if actual_relay_metric_series_environment != expected_relay_metric_series_environment:
+        fail("relay task metric-series JSON must be a mechanical projection of the reviewed target catalogue")
+relay_log_options = relay_container.get("LogConfiguration", {}).get("Options", {})
+if relay_container.get("LogConfiguration", {}).get("LogDriver") != "awslogs" or relay_log_options.get("awslogs-stream-prefix") != "platform-shell-relay" or relay_log_options.get("awslogs-group") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-RelayLogGroupName"}}:
+    fail("relay task must use its separate reviewed relay log destination")
 
 if rate_table.get("TableName") != target_profile.get("rate_limiting", {}).get("shared_adapter", {}).get("table_name"):
     fail("foundation rate-limit table name must match the target profile")

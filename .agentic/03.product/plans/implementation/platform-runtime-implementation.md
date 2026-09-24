@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 35
+version: 43
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -1259,6 +1259,15 @@ for one harmless platform-smoke transaction/outbox proof does not change that
 boundary: it selects a provider for an operational reference slice, not the
 future Entity Builder's database.
 
+The executable source-and-evidence sequence for that bounded reference slice
+is now [Persistence Foundation v1](persistence-foundation-v1.md). It must
+preserve the constraints in this section: reusable contracts and platform
+mechanics, a harmless DynamoDB/SQS smoke proof, no premature generic repository
+framework, and no conclusion that real Entity Builder records belong in
+DynamoDB. This runtime plan remains the owner of the enduring architecture
+rules; the focused plan owns ordered implementation, tests, deployment
+preparation, and evidence criteria.
+
 #### Bounded DynamoDB transactional-outbox smoke proof
 
 <!-- deterministic-check: allow reason="this is a bounded architecture decision; its data-classification and transaction requirements need future adapter and target tests, not a plan-prose script" -->
@@ -1855,19 +1864,28 @@ Entry criteria:
 
 ## First Slice Recommendation
 
-Current next slice: design the bounded platform-smoke DynamoDB
-transaction/outbox record model and durable idempotency/processing records.
-The provider-neutral worker shell, AWS SQS receive/acknowledge/release adapter,
-target worker composition, SQS Standard/DLQ infrastructure definition, and a
-zero-desired-count ECS worker service are now source-defined and locally
-verified. They do **not** create a producer, state/outbox transaction, relay,
-or durable processing/idempotency store. The staging worker remains disabled
-until its separately reviewed CloudFormation change set is applied; its first
-direct-SQS smoke proves consumer mechanics only, not an outbox.
+The source deployment definition is now complete for the bounded outbox path.
+The public server has only `TransactWriteItems` for harmless acceptance; the
+one-pass relay has only due-index query, outbox get/update, and queue send; and
+the worker has only queue receive/settlement and durable-processing get/put/
+update. The worker receives selected non-secret table/index configuration and
+a lease shorter than queue visibility. The relay has a separate, non-public
+ECS task definition with no service or scheduler. Its task definition is a
+recipe, not a running process. The target also declares separate network/log
+destinations and a safe persistence-transition metric catalogue. Static and
+sealed-runtime checks prove the source agrees; none of it has been applied to
+AWS.
 
-The production target is therefore server-first and worker-capable in two
-different senses: the infrastructure shape is ready for one controlled worker
-task, while the persistence boundary deliberately remains unimplemented. A
-future business workload must not use the worker for side effects until the
-generic durable-idempotency port and the selected persistence transaction are
-implemented and proved.
+The current next slice is therefore a governed live-proof plan, not more
+runtime implementation: re-inspect the target, review Foundation and service
+CloudFormation change sets, apply only after explicit current approval, then
+use the separately scoped source-defined Cognito write-client provisioner,
+deploy its exact generated ID through the service allowlist, accept one
+harmless work item with the fixed one-shot command, run the relay once with an
+explicitly approved `ecs run-task`, scale the worker from zero to one only for
+the bounded proof, inspect the durable result and safe telemetry, then return
+it to zero. A continuously running relay or
+scheduler remains a future availability/cost design decision. The existing
+direct-SQS worker rehearsal remains consumer evidence only, not an outbox
+proof. A business workload must not use this path for side effects until that
+controlled live durable-idempotency proof succeeds.

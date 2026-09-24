@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.production-reference-target-baseline
-version: 16
+version: 21
 status: draft
 layer: 03.product
 domain: platform-reference-target
@@ -312,7 +312,7 @@ provider or infrastructure choice is made.
 | Configuration and secrets | Versioned non-secret config, confidential value delivery, least-privilege access, rotation, no-secret logging. | Environment/config patterns and target references exist. | `requirements captured` | Secret provider/delivery design, target IAM/resource policy, rotation/recovery test, scan and audit evidence. |
 | Shared rate limiting and abuse defence | Consistent quota across replicas, route/principal policy, trusted address policy, safe failure decision. | `PlatformRateLimiter` contract and bounded in-memory limiter are tested. | `contract/local proof` | Shared-store adapter, target selection, network/credential design, failure policy, multi-replica proof. |
 | Operational observability | Structured redacted logs, metrics, traces where required, capability profiles, NFR/SLO measurement, collection/export, dashboards, alert ownership, retention/access controls. | The staging HTTP smoke path emits and query-proves the reviewed outcome and duration series. A target-owned coverage verifier and 28-day SLO evaluator have source and local proof; its read-only live result correctly remains `insufficient-confidence` below 100 observations. The separate OIDC role, scheduled workflow, exporter-loss rehearsal, dashboard, capability alarms, alert receipt, and cost proof remain pending. | `target configured` | Deploy and read back the coverage identity/workflow; prove normal and missing-metric verdicts, operator receipt, exporter-loss recovery, dashboard/runbook, capability alarm, retention/access, and the actual 28-day evidence clock. |
-| Smoke transactional state and publication proof | One harmless, non-business smoke work item and its bounded audit-evidence and outbox records must be written atomically, then made available to a later relay. This proves platform mechanics only; it stores no customer, tenant, personal, medical, or entity-builder data. | DynamoDB on-demand is selected as the first reference storage provider; SQS Standard with a DLQ is the selected initial relay transport. No persistence/outbox adapter, tables, relay, queue resources, or deployed proof exists yet. | `requirements captured` | Provider-neutral boundary, DynamoDB transaction adapter, SQS adapter, data-key/index design, target-owned configuration, encryption/IAM/backup/retention plan, negative/retry/idempotency tests, and target evidence. |
+| Smoke transactional state and publication proof | One harmless, non-business smoke work item and its bounded audit-evidence and outbox records must be written atomically, then made available to a later relay. This proves platform mechanics only; it stores no customer, tenant, personal, medical, or entity-builder data. | DynamoDB on-demand is selected as the first reference storage provider; SQS Standard with a DLQ is the selected initial relay transport. Provider-neutral boundaries, the DynamoDB adapter, and a Kanbien target composer are locally proven: a compiled recording-client check observes one product-state, lineage, and outbox transaction. Source now composes a dedicated-permission, no-payload acceptance route, server-only `TransactWriteItems` access, a separate write-only Cognito client policy, and a fixed no-body acceptance command; no resource, task definition, live Cognito scope/client, relay, worker completion, or target proof is deployed. | `source composed` | Execute the remaining Persistence Foundation v1 sequence: reviewed Cognito provision and client-allowlist deployment, change sets, one acceptance, relay/worker proof, and target evidence. |
 | Audit and security records | Durable, tamper-evident-enough record delivery, allowlisted facts, retention, access, export and review. | Record shape/normalisation direction exists; no durable sink. | `requirements captured` | Audit sink and integrity design, target resources, access/retention policy, verification and retrieval evidence. |
 | Entity persistence | Tenant-scoped durable data, migrations, encryption, transactions, backup/restore, access controls. | No selected product-data path. The DynamoDB smoke selection does not decide entity persistence. | `not assessed` | Bounded persistence contract/adapter/infra plan and restore proof before any entity data. |
 | Object/file storage | Profile images and documents, encryption, tenant isolation, lifecycle/retention, signed access, safe download. | Required by first release; no selected path. | `requirements captured` | Storage design, adapter/host delivery, isolation/retention/access proof. |
@@ -382,6 +382,12 @@ boundaries, observed cost, or operational evidence justify a different
 provider. A later relational adapter must be an additive, governed path with a
 data-migration and restore strategy; it must not quietly replace the smoke
 reference selection.
+
+The ordered delivery, test, target-source, and controlled live-evidence steps
+for this selection are defined in
+[`persistence-foundation-v1.md`](persistence-foundation-v1.md). That plan does
+not expand the selection into a default entity database or authorise an AWS
+change; it makes the bounded proof implementable and auditable.
 
 ### Bounded SQS smoke-delivery selection
 

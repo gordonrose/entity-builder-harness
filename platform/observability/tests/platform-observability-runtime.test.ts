@@ -3,12 +3,18 @@ import type { Logger, LogRecord } from "@kanbien/core/logging";
 import { createInMemoryTracer, type MetricPoint, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { correlationId, fixedClock } from "@kanbien/core/shared";
 import {
+  platformCapabilityName,
+  platformObservabilityProfileName,
+} from "@kanbien/platform-contracts";
+import {
   createPlatformSafeLogger,
+  createPlatformPersistenceTransitionObserver,
   endPlatformTraceSpan,
   elapsedMilliseconds,
   normalizePlatformError,
   normalizePlatformLogFields,
   platformErrorClass,
+  platformPersistenceTransitionProfile,
   platformTraceAttributes,
   platformTraceFields,
   recordPlatformHealthMetric,
@@ -162,6 +168,85 @@ async function main(): Promise<void> {
   writePlatformLog(unavailableLogger, { level: "info", message: "best-effort" });
   const unavailableMetrics: Metrics = { record: () => { throw new Error("metrics unavailable"); } };
   recordPlatformHealthMetric(unavailableMetrics, clock, { healthState: "ready" });
+
+  const persistenceProfileName = platformObservabilityProfileName("platform.persistence.outbox.relay");
+  const persistenceCapabilityName = platformCapabilityName("platform.persistence.outbox.relay");
+  if (!persistenceProfileName.ok || !persistenceCapabilityName.ok) {
+    throw new Error("Expected valid persistence observability identifiers.");
+  }
+  const persistenceProfile = platformPersistenceTransitionProfile({
+    name: persistenceProfileName.value,
+    capability: persistenceCapabilityName.value,
+  });
+  deepEqual(persistenceProfile.metricDimensionFieldNames, ["capability", "action", "execution_context", "outcome", "error_class"]);
+  const persistenceObserver = createPlatformPersistenceTransitionObserver({
+    profile: persistenceProfile,
+    executionContext: "worker",
+    logger,
+    metrics,
+    tracer,
+    clock,
+  });
+  equal(persistenceObserver.ok, true);
+  if (!persistenceObserver.ok) {
+    throw new Error("Expected a valid persistence transition observer.");
+  }
+  persistenceObserver.value.record({
+    transition: "outbox.claimed",
+    outcome: "succeeded",
+    correlationId: correlationId("corr-persistence-1"),
+  });
+  persistenceObserver.value.record({
+    transition: "processing.completion_failed",
+    outcome: "failed",
+    error: Object.assign(new Error("do not log this message"), { code: "PLATFORM_PERSISTENCE_STALE_FENCE" }),
+  });
+  equal(records[2]?.message, "platform.persistence.outbox.claimed");
+  equal(records[2]?.correlationId, "corr-persistence-1");
+  deepEqual(records[2]?.fields, {
+    capability: "platform.persistence.outbox.relay",
+    action: "execute",
+    execution_context: "worker",
+    outcome: "succeeded",
+  });
+  equal(records[3]?.message, "platform.persistence.processing.completion_failed");
+  deepEqual(records[3]?.fields, {
+    capability: "platform.persistence.outbox.relay",
+    action: "execute",
+    execution_context: "worker",
+    outcome: "failed",
+    error_class: "PLATFORM_PERSISTENCE_STALE_FENCE",
+  });
+  equal(points[3]?.name, "platform.persistence.outbox.claimed.outcome");
+  deepEqual(points[3]?.labels, {
+    capability: "platform.persistence.outbox.relay",
+    action: "execute",
+    execution_context: "worker",
+    outcome: "succeeded",
+  });
+  equal(points[4]?.name, "platform.persistence.processing.completion_failed.outcome");
+  deepEqual(points[4]?.labels, {
+    capability: "platform.persistence.outbox.relay",
+    action: "execute",
+    execution_context: "worker",
+    outcome: "failed",
+    error_class: "PLATFORM_PERSISTENCE_STALE_FENCE",
+  });
+  equal(tracer.spans()[1]?.name, "platform.persistence.outbox.claimed");
+  deepEqual(tracer.spans()[1]?.attributes, {
+    capability: "platform.persistence.outbox.relay",
+    action: "execute",
+    execution_context: "worker",
+    outcome: "succeeded",
+  });
+  equal(tracer.spans()[2]?.name, "platform.persistence.processing.completion_failed");
+  deepEqual(tracer.spans()[2]?.end?.attributes, {
+    capability: "platform.persistence.outbox.relay",
+    action: "execute",
+    execution_context: "worker",
+    outcome: "failed",
+    error_class: "PLATFORM_PERSISTENCE_STALE_FENCE",
+  });
 }
 
 main()

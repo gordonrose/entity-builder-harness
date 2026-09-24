@@ -1,4 +1,4 @@
-# Durable background delivery resources. The worker task consumes only WorkerQueue; SQS owns retry counting and redrive to the retained DLQ.
+# Durable background delivery resources. The worker task consumes only WorkerQueue; SQS owns retry counting and redrive to the retained DLQ. The selected short-work policy allows a 30-second execution budget inside a two-minute visibility window and five total deliveries before DLQ.
 Resources:
   WorkerDeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -31,11 +31,11 @@ Resources:
       MaximumMessageSize: 262144
       MessageRetentionPeriod: 345600
       ReceiveMessageWaitTimeSeconds: 20
-      VisibilityTimeout: 30
+      VisibilityTimeout: 120
       SqsManagedSseEnabled: true
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt WorkerDeadLetterQueue.Arn
-        maxReceiveCount: 3
+        maxReceiveCount: 5
       Tags:
         - Key: service
           Value: platform-shell

@@ -1,0 +1,51 @@
+# Dedicated bounded relay identity. It can inspect and claim due outbox work,
+# send one reviewed envelope to the source queue, and publish metrics. It cannot
+# receive work, settle deliveries, write product state, inspect lineage, or
+# administer either DynamoDB or SQS resource.
+Resources:
+  RelayTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-shell-relay-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: platform-shell-relay-outbox-delivery
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: QueryOnlyThePlatformPersistenceDueIndex
+                Effect: Allow
+                Action:
+                  - dynamodb:Query
+                Resource: !Sub ${PlatformPersistenceTable.Arn}/index/OutboxDueIndex
+              - Sid: ReadAndUpdateOnlyThePlatformPersistenceOutboxRecords
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt PlatformPersistenceTable.Arn
+              - Sid: SendOnlyThePlatformShellWorkerQueue
+                Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt WorkerQueue.Arn
+              - Sid: PublishOnlyCloudWatchRelayMetricData
+                Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relay
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

@@ -1,6 +1,8 @@
 import {
-  platformSmokeApp,
+  createPlatformSmokeApp,
   platformSmokeAppManifest,
+  platformSmokeWorkItemDeliveryObservabilityProfile,
+  type PlatformSmokeAppOptions,
 } from "@kanbien/app-platform-smoke";
 
 export interface KanbienPlatformProductApp {
@@ -21,6 +23,21 @@ export interface KanbienPlatformProductManifest {
   readonly apps: readonly KanbienPlatformProductApp[];
 }
 
+/**
+ * A deployment composition may supply app-facing dependencies without making
+ * the product aware of a cloud provider, target profile, or persistence SDK.
+ */
+export interface KanbienPlatformProductOptions {
+  readonly platformSmoke?: PlatformSmokeAppOptions;
+}
+
+/**
+ * Target composition selects this app-registered profile for the harmless
+ * outbox relay and durable worker transition evidence.
+ */
+export const kanbienPlatformSmokeWorkItemDeliveryObservabilityProfile =
+  platformSmokeWorkItemDeliveryObservabilityProfile;
+
 export const kanbienPlatformProductManifest: KanbienPlatformProductManifest = {
   productId: "kanbien-platform",
   displayName: "Kanbien Platform",
@@ -39,4 +56,8 @@ export const kanbienPlatformProductManifest: KanbienPlatformProductManifest = {
   ],
 };
 
-export const kanbienPlatformApps = [platformSmokeApp] as const;
+export function createKanbienPlatformApps(options: KanbienPlatformProductOptions = {}) {
+  return [createPlatformSmokeApp(options.platformSmoke)] as const;
+}
+
+export const kanbienPlatformApps = createKanbienPlatformApps();

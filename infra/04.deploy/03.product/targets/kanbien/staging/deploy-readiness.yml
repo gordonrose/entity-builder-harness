@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 39
+#   version: 40
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -480,6 +480,9 @@ runtime:
     worker_service_candidate: kanbien-staging-platform-shell-worker
     worker_initial_state: deployed-and-consumer-and-metric-proven-desired-count-zero
     worker_activation_condition: reviewed-worker-change-set-with-desired-count-zero-then-separately-approved-side-effect-free-direct-sqs-consumer-proof
+    relay_task_candidate: kanbien-staging-platform-shell-relay
+    relay_initial_state: source-defined-no-service-no-schedule-not-deployed
+    relay_activation_condition: reviewed-change-set-then-separately-approved-one-shot-ecs-run-task-for-harmless-outbox-proof
   server:
     health:
       liveness: /livez
@@ -498,6 +501,16 @@ runtime:
     queue_adapter: platform/adapters/aws/queue/sqs/
     delivery_boundary: direct-sqs-side-effect-free-smoke-consumer-not-a-persistence-outbox
     live_proof_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
+  relay:
+    status: source-defined-not-deployed
+    task_definition_family: kanbien-staging-platform-shell-relay
+    invocation_model: one-shot-ecs-run-task-only-no-service-or-scheduler
+    access_boundary: due-index-query-outbox-claim-source-queue-send-and-safe-metrics-only
+    live_proof_prerequisites:
+      - reviewed-foundation-and-service-change-sets
+      - reviewed-cognito-write-scope
+      - explicit-current-approval-for-one-harmless-run-task
+      - bounded-worker-scale-up-and-return-to-zero
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
   apps:
