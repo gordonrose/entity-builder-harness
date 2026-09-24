@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 42
+#   version: 48
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -26,6 +26,10 @@
 #     path: scripts/04.deploy/provision-platform-shell-negative-authz-client/script.sh
 #   - id: deploy.script.run-platform-shell-negative-authz-smoke
 #     path: scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh
+#   - id: deploy.script.provision-platform-shell-persistence-write-client
+#     path: scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
+#   - id: deploy.script.run-platform-shell-persistence-smoke
+#     path: scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
 schema: deploy/platform-shell-target-profile/v1
 status: draft
 client:
@@ -215,6 +219,8 @@ runtime:
     worker_service: kanbien-staging-platform-shell-worker
     worker_initial_state: deployed-and-consumer-and-metric-proven-desired-count-zero
     worker_activation_condition: controlled-smoke-job-proves-the-platform-worker-delivery-path-before-a-business-workload-uses-it
+    relay_task_family: kanbien-staging-platform-shell-relay
+    relay_initial_state: source-defined-not-deployed-not-scheduled
   server:
     task_family: kanbien-staging-platform-shell
     service: kanbien-staging-platform-shell
@@ -238,8 +244,9 @@ runtime:
       dead_letter_queue: kanbien-staging-platform-shell-worker-dlq
       delivery_semantics: at-least-once
       long_poll_seconds: 20
-      visibility_timeout_seconds: 30
-      max_receive_count_before_dead_letter: 3
+      visibility_timeout_seconds: 120
+      max_receive_count_before_dead_letter: 5
+      source_policy_status: aligned-to-platform-short-idempotent-work-v1-live-application-pending
       acknowledge_after: provider-neutral-job-shell-reports-succeeded
       release_on: rejected-failed-missing-or-unavailable-job-delivery
       transport_encryption: sqs-managed-server-side-encryption
@@ -268,6 +275,7 @@ aws:
     alb: sg-08d590b0aee6e2e60
     service: pending
     worker: pending
+    relay: pending
   alb:
     arn: arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357
     reuse_existing: true
@@ -345,11 +353,31 @@ auth:
       duration_ms: 220
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
+  persistence_write_test_client:
+    status: pending-provisioning
+    name: platform-shell-staging-persistence-write-client
+    type: confidential
+    grant_type: client_credentials
+    access_token_validity_minutes: 5
+    token_revocation: enabled
+    prevent_user_existence_errors: enabled
+    resource_server:
+      identifier: platform-shell
+      name: Platform Shell
+      scope_name: smoke.write
+      scope: platform-shell/smoke.write
+      permission_mapping: platform-smoke.persistence.work-item:create
+    secret:
+      name: kanbien/staging/platform-shell/cognito-persistence-write-client
+      delivery: bounded-persistence-smoke-only-not-ecs-task-environment
+      value_format: opaque-raw-string
   resource_server:
     identifier: platform-shell
     scopes:
       - name: smoke.read
         maps_to_permission: platform-smoke.smoke:read
+      - name: smoke.write
+        maps_to_permission: platform-smoke.persistence.work-item:create
   token_validation:
     mode: jwt-jwks
     token_use: access
@@ -363,6 +391,8 @@ auth:
     scope_permissions:
       platform-shell/smoke.read:
         - platform-smoke.smoke:read
+      platform-shell/smoke.write:
+        - platform-smoke.persistence.work-item:create
     group_permissions: {}
     claim_permissions: {}
 cors:
@@ -419,6 +449,39 @@ rate_limiting:
     trusted_ingress_client_address_policy: required
     target_transport_limits: required
     edge_protection: required
+persistence:
+  smoke_transactional_outbox:
+    status: acceptance-relay-worker-task-source-composed-not-deployed
+    provider: aws-dynamodb
+    adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
+    composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
+    region: eu-west-1
+    table:
+      resource: PlatformPersistenceTable
+      name: kanbien-staging-platform-shell-persistence
+      output_name: PlatformPersistenceTableName
+    indexes:
+      outbox_due:
+        name: OutboxDueIndex
+        output_name: PlatformPersistenceOutboxDueIndexName
+      lineage_cause:
+        name: LineageCauseIndex
+        output_name: PlatformPersistenceLineageCauseIndexName
+    protection:
+      billing_mode: PAY_PER_REQUEST
+      encryption: dynamodb-server-side-encryption
+      point_in_time_recovery: enabled
+      deletion_protection: enabled
+      cloudformation_deletion_policy: retain
+      ttl: deliberately-not-configured-not-a-retention-policy
+    activation:
+      server_acceptance: source-composed-not-deployed
+      outbox_relay: source-composed-one-pass-task-definition-and-least-privilege-iam-not-deployed-or-scheduled
+      durable_worker_processing: source-composed-worker-task-configuration-and-least-privilege-iam-not-deployed
+      iam: source-defined-server-acceptance-relay-and-worker-processing-least-privilege-not-deployed
+      required_identity_scope: platform-shell/smoke.write
+      identity_scope_status: source-declared-not-configured
+      observability: profile-registered-transition-catalogue-source-composed-slo-assignment-and-live-proof-pending
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager
@@ -430,7 +493,7 @@ config:
     PLATFORM_AUTH_COGNITO_USER_POOL_ID: eu-west-1_EQaXioA1n
     PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: 4n7kuqstbvb97ur3btbur8afjt
     PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds"]'
-    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}'
+    PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}'
     PLATFORM_CORS_ALLOWLIST: https://staging.platform.kanbien.com
     PLATFORM_HEALTH_LIVEZ_EXPOSURE: public
     PLATFORM_HEALTH_READYZ_EXPOSURE: authenticated
@@ -439,6 +502,11 @@ config:
     PLATFORM_RATE_LIMIT_DYNAMODB_REGION: eu-west-1
     PLATFORM_RATE_LIMIT_LIMIT: "120"
     PLATFORM_RATE_LIMIT_WINDOW_MS: "60000"
+    PLATFORM_PERSISTENCE_PROVIDER: dynamodb
+    PLATFORM_PERSISTENCE_DYNAMODB_TABLE: kanbien-staging-platform-shell-persistence
+    PLATFORM_PERSISTENCE_DYNAMODB_REGION: eu-west-1
+    PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX: OutboxDueIndex
+    PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX: LineageCauseIndex
     PLATFORM_TRUSTED_INGRESS_MODE: alb-security-group-only
     PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES: "1048576"
     PLATFORM_SERVER_MAX_HEADER_BYTES: "16384"
@@ -462,13 +530,35 @@ config:
     PLATFORM_WORKER_QUEUE_PROVIDER: sqs
     PLATFORM_WORKER_SQS_REGION: eu-west-1
     PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS: "20"
-    PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS: "30"
+    PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS: "120"
     PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS: "1000"
+    PLATFORM_PERSISTENCE_PROVIDER: dynamodb
+    PLATFORM_PERSISTENCE_DYNAMODB_TABLE: kanbien-staging-platform-shell-persistence
+    PLATFORM_PERSISTENCE_DYNAMODB_REGION: eu-west-1
+    PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX: OutboxDueIndex
+    PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX: LineageCauseIndex
+    PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS: "90000"
     PLATFORM_SMOKE_APP_NAME: Kanbien Platform Smoke
     PLATFORM_OBSERVABILITY_METRICS_PROVIDER: cloudwatch-otel
     PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: http://127.0.0.1:4318/v1/metrics
     PLATFORM_OBSERVABILITY_METRICS_REGION: eu-west-1
     PLATFORM_OBSERVABILITY_SERVICE_NAME: kanbien-staging-platform-shell-worker
+    PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: staging
+    PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000"
+    PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000"
+  relay_non_secret_env:
+    PLATFORM_PERSISTENCE_PROVIDER: dynamodb
+    PLATFORM_PERSISTENCE_DYNAMODB_TABLE: kanbien-staging-platform-shell-persistence
+    PLATFORM_PERSISTENCE_DYNAMODB_REGION: eu-west-1
+    PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX: OutboxDueIndex
+    PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX: LineageCauseIndex
+    PLATFORM_RELAY_QUEUE_PROVIDER: sqs
+    PLATFORM_RELAY_SQS_REGION: eu-west-1
+    PLATFORM_RELAY_LEASE_DURATION_MS: "90000"
+    PLATFORM_OBSERVABILITY_METRICS_PROVIDER: cloudwatch-otel
+    PLATFORM_OBSERVABILITY_METRICS_ENDPOINT: http://127.0.0.1:4318/v1/metrics
+    PLATFORM_OBSERVABILITY_METRICS_REGION: eu-west-1
+    PLATFORM_OBSERVABILITY_SERVICE_NAME: kanbien-staging-platform-shell-relay
     PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT: staging
     PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS: "60000"
     PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS: "10000"
@@ -514,6 +604,7 @@ observability:
         delivery_environment_key: AOT_CONFIG_CONTENT
         log_group_resource: PlatformShellOtelCollectorLogGroup
         worker_log_group_resource: PlatformShellWorkerOtelCollectorLogGroup
+        relay_log_group_resource: PlatformShellRelayOtelCollectorLogGroup
         output_parameter_arn: OtelCollectorConfigurationParameterArn
       ownership: target-composition-and-service-iac
       required_before_enablement:
@@ -533,6 +624,12 @@ observability:
       application_cpu_units: 384
       application_memory_reservation_mib: 512
       collector_dependency: platform-shell-worker-depends-on-otel-collector-start
+    relay_task:
+      cpu_units: 512
+      memory_mib: 1024
+      application_cpu_units: 384
+      application_memory_reservation_mib: 512
+      collector_dependency: platform-shell-relay-depends-on-otel-collector-start
     iam:
       task_execution_role:
         action: ssm:GetParameters
@@ -544,6 +641,15 @@ observability:
         purpose: collector-sigv4-delivery-to-cloudwatch-otel-metrics-endpoint
         ecs_boundary_note: ECS task-role credentials are shared by all containers in a task, so this is not per-container IAM isolation. The adapter's fixed loopback endpoint and the reviewed task definition provide the current application-side restriction; a stronger future boundary needs a separate telemetry gateway or task.
     worker_iam:
+      task_execution_role:
+        action: ssm:GetParameters
+        resource: OtelCollectorConfigurationParameter
+        purpose: read-non-secret-collector-configuration-at-task-start
+      task_role:
+        action: cloudwatch:PutMetricData
+        resource: "*"
+        purpose: collector-sigv4-delivery-to-cloudwatch-otel-metrics-endpoint
+    relay_iam:
       task_execution_role:
         action: ssm:GetParameters
         resource: OtelCollectorConfigurationParameter
@@ -640,6 +746,13 @@ observability:
       result: observed
       worker_task_definition_revision: "1"
       retained_evidence: safe-verdict-task-revision-and-bounded-count-duration-only-no-queue-message-or-provider-payload
+  persistence_transition_metric_delivery:
+    status: source-composed-not-deployed
+    runtime_targets:
+      - worker
+      - relay
+    purpose: Profile-governed durable relay and processing transition metrics are source-composed but have no live target task evidence yet.
+    output_policy: approved-capability-action-execution-context-outcome-and-bounded-error-class-only
   slo_query:
     provider_documented_max_request_range_days: 7
     effective_max_increase_lookback_days: 1
@@ -793,6 +906,161 @@ observability:
           - 5000
           - 10000
           - 30000
+    - id: platform-persistence-outbox-delivery-lookup-failed
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay due-outbox lookup failures without exposing work identifiers.
+      source: { name: platform.persistence.outbox.delivery.lookup_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.delivery.lookup.failed.outcome, description: Durable relay due-outbox lookup failures by approved outcome. }
+      labels: &persistence_transition_labels
+        allowed_names: [capability, action, execution_context, outcome, error_class]
+        values_governed_by: platform-observability-profile-and-canonical-operational-vocabulary
+        prohibited_names: [tenant, principal, request_id, trace_id, outbox_entry_id, message_id, queue_url, payload, lease_owner, fence, attempt]
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-claim-failed
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay outbox-claim failures without exposing work identifiers.
+      source: { name: platform.persistence.outbox.claim_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.claim.failed.outcome, description: Durable relay outbox claim failures by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-claimed
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay outbox claims by approved outcome.
+      source: { name: platform.persistence.outbox.claimed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.claimed.outcome, description: Durable relay outbox claims by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-lease-active
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay contention observations by approved outcome.
+      source: { name: platform.persistence.outbox.lease_active.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.lease.active.outcome, description: Durable relay contention observations by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-queue-send-failed
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay queue-send failures by approved outcome.
+      source: { name: platform.persistence.outbox.queue_send_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.queue.send.failed.outcome, description: Durable relay queue-send failures by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-publish-marker-failed
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay publication-marker failures by approved outcome.
+      source: { name: platform.persistence.outbox.publish_marker_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.publish.marker.failed.outcome, description: Durable relay publication-marker failures by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-published
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay published outbox obligations by approved outcome.
+      source: { name: platform.persistence.outbox.published.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.published.outcome, description: Durable relay published outbox obligations by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-outbox-envelope-rejected
+      status: source-composed-not-deployed
+      runtime_target: relay
+      purpose: Count durable relay rejected queue-envelope constructions by approved outcome.
+      source: { name: platform.persistence.outbox.envelope_rejected.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.outbox.envelope.rejected.outcome, description: Durable relay rejected queue-envelope constructions by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-envelope-rejected
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker rejected processing envelopes by approved outcome.
+      source: { name: platform.persistence.processing.envelope_rejected.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.envelope.rejected.outcome, description: Durable worker rejected processing envelopes by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-claim-failed
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker processing-claim failures by approved outcome.
+      source: { name: platform.persistence.processing.claim_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.claim.failed.outcome, description: Durable worker processing claim failures by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-claimed
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker processing claims by approved outcome.
+      source: { name: platform.persistence.processing.claimed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.claimed.outcome, description: Durable worker processing claims by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-lease-active
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker processing contention observations by approved outcome.
+      source: { name: platform.persistence.processing.lease_active.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.lease.active.outcome, description: Durable worker processing contention observations by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-duplicate-succeeded
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count safely suppressed already-completed durable worker deliveries.
+      source: { name: platform.persistence.processing.duplicate_succeeded.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.duplicate.succeeded.outcome, description: Safely suppressed completed durable worker deliveries by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-duplicate-terminal-failure
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count safely suppressed terminal-failure durable worker deliveries.
+      source: { name: platform.persistence.processing.duplicate_terminal_failure.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.duplicate.terminal.failure.outcome, description: Safely suppressed terminal-failure durable worker deliveries by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-completed
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker completion markers by approved outcome.
+      source: { name: platform.persistence.processing.completed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.completed.outcome, description: Durable worker completion markers by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-completion-failed
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker completion-marker failures by approved outcome.
+      source: { name: platform.persistence.processing.completion_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.completion.failed.outcome, description: Durable worker completion-marker failures by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-retry-released
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker retry-release transitions by approved outcome.
+      source: { name: platform.persistence.processing.retry_released.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.retry.released.outcome, description: Durable worker retry-release transitions by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-terminal-failure-recorded
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker terminal-failure markers by approved outcome.
+      source: { name: platform.persistence.processing.terminal_failure_recorded.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.terminal.failure.recorded.outcome, description: Durable worker terminal-failure markers by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
+    - id: platform-persistence-processing-settlement-failed
+      status: source-composed-not-deployed
+      runtime_target: worker
+      purpose: Count durable worker processing-settlement failures by approved outcome.
+      source: { name: platform.persistence.processing.settlement_failed.outcome, kind: counter, unit: count }
+      otel: { instrument_name: kanbien.platform.persistence.processing.settlement.failed.outcome, description: Durable worker processing-settlement failures by approved outcome. }
+      labels: *persistence_transition_labels
+      cardinality_limit: 64
   slos:
     - id: platform-smoke-interactive-read-availability
       status: selected-not-evaluable

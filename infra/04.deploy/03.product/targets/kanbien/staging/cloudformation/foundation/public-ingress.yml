@@ -45,7 +45,7 @@ Resources:
       GroupName: kanbien-staging-platform-shell-worker
       VpcId: !Ref VpcId
       SecurityGroupEgress:
-        - Description: TLS egress for ECR image pulls, CloudWatch Logs, SQS, and CloudWatch metric delivery.
+        - Description: TLS egress for ECR image pulls, CloudWatch Logs, DynamoDB, SQS, and CloudWatch metric delivery.
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
@@ -67,6 +67,40 @@ Resources:
           Value: platform-shell
         - Key: component
           Value: worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelaySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: The platform-shell relay accepts no inbound traffic and may call only required TLS AWS and DNS endpoints.
+      GroupName: kanbien-staging-platform-shell-relay
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - Description: TLS egress for ECR image pulls, CloudWatch Logs, DynamoDB, SQS, and CloudWatch metric delivery.
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - Description: UDP DNS only to the VPC resolver address range.
+          IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VpcCidr
+        - Description: TCP DNS fallback only to the VPC resolver address range.
+          IpProtocol: tcp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: !Ref VpcCidr
+      Tags:
+        - Key: Name
+          Value: kanbien-staging-platform-shell-relay
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relay
         - Key: environment
           Value: staging
         - Key: managed-by

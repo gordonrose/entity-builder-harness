@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.platform-shell.deploy-blueprint
-#   version: 3
+#   version: 4
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -85,6 +85,11 @@ config:
       - PLATFORM_RATE_LIMIT_DYNAMODB_REGION
       - PLATFORM_RATE_LIMIT_LIMIT
       - PLATFORM_RATE_LIMIT_WINDOW_MS
+      - PLATFORM_PERSISTENCE_PROVIDER
+      - PLATFORM_PERSISTENCE_DYNAMODB_TABLE
+      - PLATFORM_PERSISTENCE_DYNAMODB_REGION
+      - PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX
+      - PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX
       - PLATFORM_TRUSTED_INGRESS_MODE
       - PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES
       - PLATFORM_SERVER_MAX_HEADER_BYTES
@@ -139,6 +144,7 @@ product:
       route_base_path: /smoke
       declared_permissions:
         - platform-smoke.smoke:read
+        - platform-smoke.persistence.work-item:create
       required_config:
         - PLATFORM_SMOKE_APP_NAME
 secrets:

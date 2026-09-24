@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation
-#   version: 3
+#   version: 5
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -31,8 +31,10 @@ fragments:
   - foundation/logging.yml
   - foundation/observability-metrics.yml
   - foundation/rate-limiting.yml
+  - foundation/persistence.yml
   - foundation/workload-iam.yml
   - foundation/worker-workload-iam.yml
+  - foundation/relay-workload-iam.yml
   - foundation/work-queues.yml
   - foundation/public-ingress.yml
   - foundation/public-tls.yml

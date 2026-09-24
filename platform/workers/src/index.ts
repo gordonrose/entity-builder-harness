@@ -7,6 +7,7 @@ export {
   createInMemoryPlatformWorkerQueue,
 } from "./queue";
 export type {
+  PlatformWorkerDurableOutboxProcessingOptions,
   PlatformWorkerDeadLetter,
   PlatformWorkerIdempotencyOutcome,
   PlatformWorkerIdempotencyStore,

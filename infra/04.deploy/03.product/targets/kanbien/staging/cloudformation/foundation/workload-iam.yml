@@ -52,6 +52,15 @@ Resources:
                 Action:
                   - dynamodb:UpdateItem
                 Resource: !GetAtt RateLimitTable.Arn
+        - PolicyName: platform-shell-persistence-acceptance
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: TransactWriteOnlyThePlatformSmokePersistenceTable
+                Effect: Allow
+                Action:
+                  - dynamodb:TransactWriteItems
+                Resource: !GetAtt PlatformPersistenceTable.Arn
         - PolicyName: platform-shell-otel-metric-delivery
           PolicyDocument:
             Version: "2012-10-17"
@@ -135,6 +144,7 @@ Resources:
                   - !GetAtt TaskExecutionRole.Arn
                   - !GetAtt TaskRole.Arn
                   - !GetAtt WorkerTaskRole.Arn
+                  - !GetAtt RelayTaskRole.Arn
                 Condition:
                   StringEquals:
                     iam:PassedToService: ecs-tasks.amazonaws.com

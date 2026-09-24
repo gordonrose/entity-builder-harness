@@ -15,6 +15,7 @@ external promise.
 | `logging.ts` | Safe Core-logger adaptation and structured runtime log writes. | It sends already-normalised facts to an injected logger; it does not select or configure a sink. |
 | `metrics.ts` | Metric recording plus request, job, health, and elapsed-time helpers. | Metric identity and low-cardinality labels stay separate from log-value normalisation and trace attributes. |
 | `tracing.ts` | Safe trace attributes plus safe start/end wrappers around the Core tracer port. | Runtime callers can create a provider-neutral span without an unavailable tracer breaking a request. |
+| `persistence.ts` | Profile-governed translation of a persistence transition fact into a fixed log name, metric series, and optional trace span. | Persistence decides only that a closed transition happened; this topic enforces which safe fields may become telemetry. |
 | `index.ts` | Approved public exports only. | Callers keep one stable import while internal source responsibilities remain easy to find. |
 
 ## Detailed guide to the files
@@ -82,6 +83,30 @@ around log redaction. The code still does not choose a propagation format,
 sampling policy, exporter, or storage provider; those need a later adapter,
 target configuration, and operating model.
 
+### `persistence.ts` — transition evidence without persistence data
+
+Persistence coordination needs more than generic “the job failed” evidence. An
+operator may need to distinguish “the relay could not claim an outbox item”
+from “the queue accepted it but the published marker could not be stored,” or
+“the worker released a retry” from “it recorded a terminal failure.” This file
+translates the closed transition vocabulary owned by `platform/persistence`
+into profile-governed evidence.
+
+The observer never receives an outbox identifier, payload, subject record,
+tenant, queue receipt, fence, attempt, provider response, or raw error
+message. It emits a fixed event name such as
+`platform.persistence.outbox.claimed`, projects only profile-allowlisted
+capability/action/execution-context/outcome/error-class fields, and creates a
+separate fixed metric series rather than an unbounded `transition` label. A
+safe Core correlation reference can link log records, while an existing trace
+parent can link spans; neither becomes a metric label or trace attribute.
+
+`platformPersistenceTransitionProfile` is a safe default declaration shape;
+the owning app must still register it and target composition must approve the
+metric catalogue entries before a live target exports these signals. The
+observer is best effort: an unavailable logger, metrics sink, or tracer cannot
+alter an already-completed persistence transition.
+
 ### `index.ts` — the one public doorway
 
 `index.ts` is the package barrel: the deliberate list of supported types and
@@ -94,10 +119,10 @@ easy for maintainers to scan.
 `normalization.ts` is foundational. `logging.ts` and `tracing.ts` use it;
 `metrics.ts` is independent and relies directly on Core metric and clock
 contracts. Profile declaration and field projection deliberately live in
-`platform/contracts`: this package receives only the already-approved fields
-from a runtime module. Finally, `index.ts` exports the supported public
-surface. Internal relative imports stay inside this package, while external
-source imports are limited to public Core modules.
+`platform/contracts`. `persistence.ts` depends on those profile contracts and
+the no-payload event port from `platform/persistence`, but neither package
+imports a cloud provider. Finally, `index.ts` exports the supported public
+surface.
 
 ## What this split does not change
 

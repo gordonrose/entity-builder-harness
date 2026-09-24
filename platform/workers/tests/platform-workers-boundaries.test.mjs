@@ -13,7 +13,7 @@ const importSpecifierPatterns = [
   /\bexport\s+(?:type\s+)?[^"']*?\s+from\s+["']([^"']+)["']/g,
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
-const allowedSourceImportPattern = /^@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-config|platform-contracts|platform-health|platform-observability|platform-runtime)$/;
+const allowedSourceImportPattern = /^@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-config|platform-contracts|platform-health|platform-observability|platform-persistence|platform-runtime)$/;
 const forbiddenProviderWords = /\b(?:S3|Kafka|Redis|Prisma|DynamoDB|CloudWatch|BullMQ|SQS|EventBridge)\b/;
 
 async function walk(dir) {
@@ -53,6 +53,7 @@ assert.equal(packageJson.name, "@kanbien/platform-workers");
 assert.equal(packageJson.exports?.["."], "./src/index.ts", "root package export must point to src/index.ts");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-runtime"], "0.0.0", "platform/workers must depend on platform/runtime");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-observability"], "0.0.0", "platform/workers must depend on platform/observability");
+assert.equal(packageJson.dependencies?.["@kanbien/platform-persistence"], "0.0.0", "platform/workers must depend on platform/persistence for optional durable-outbox coordination");
 assert.equal(
   packageJson.dependencies?.["@kanbien/platform-testing"],
   undefined,

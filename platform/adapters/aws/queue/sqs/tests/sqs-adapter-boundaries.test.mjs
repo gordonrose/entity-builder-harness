@@ -7,7 +7,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const srcRoot = path.join(packageRoot, "src");
 const packageJsonPath = path.join(packageRoot, "package.json");
 const repositoryRoot = path.resolve(packageRoot, "../../../../..");
-const allowedSourceImportPattern = /^(?:@aws-sdk\/client-sqs|@kanbien\/core)$/;
+const allowedSourceImportPattern = /^(?:\.{1,2}\/[^"']+|@aws-sdk\/client-sqs|@kanbien\/core)$/;
 
 async function walk(dir) {
   const entries = await readdir(dir);
@@ -37,4 +37,4 @@ for (const file of sourceFiles) {
   }
 }
 
-console.log("AWS SQS worker adapter boundary check passed for " + sourceFiles.length + " source file(s).");
+console.log("AWS SQS queue adapter boundary check passed for " + sourceFiles.length + " source file(s).");

@@ -32,6 +32,9 @@
       "@kanbien/platform-observability": [
         "platform/observability/src/index.ts"
       ],
+      "@kanbien/platform-persistence": [
+        "platform/persistence/src/index.ts"
+      ],
       "@kanbien/platform-runtime": [
         "platform/runtime/src/index.ts"
       ],
@@ -46,6 +49,9 @@
       ],
       "@kanbien/platform-workers": [
         "platform/workers/src/index.ts"
+      ],
+      "@kanbien/platform-adapter-aws-persistence-dynamodb": [
+        "platform/adapters/aws/persistence/dynamodb/src/index.ts"
       ]
     },
     "rootDir": "../..",

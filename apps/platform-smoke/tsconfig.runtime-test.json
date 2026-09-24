@@ -29,6 +29,9 @@
       "@kanbien/platform-observability": [
         "platform/observability/src/index.ts"
       ],
+      "@kanbien/platform-persistence": [
+        "platform/persistence/src/index.ts"
+      ],
       "@kanbien/platform-runtime": [
         "platform/runtime/src/index.ts"
       ],
@@ -53,6 +56,15 @@
   "include": [
     "src/**/*.ts",
     "tests/*-runtime.test.ts",
-    "../../platform/**/*.ts"
+    "../../platform/config/src/**/*.ts",
+    "../../platform/contracts/src/**/*.ts",
+    "../../platform/health/src/**/*.ts",
+    "../../platform/observability/src/**/*.ts",
+    "../../platform/persistence/src/**/*.ts",
+    "../../platform/runtime/src/**/*.ts",
+    "../../platform/security/src/**/*.ts",
+    "../../platform/server/src/**/*.ts",
+    "../../platform/testing/src/**/*.ts",
+    "../../platform/workers/src/**/*.ts"
   ]
 }

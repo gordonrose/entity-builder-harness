@@ -1,4 +1,4 @@
-# Dedicated worker task identity. It cannot call DynamoDB rate limiting, Cognito, or the public server's resources.
+# Dedicated worker task identity. It cannot call DynamoDB rate limiting, Cognito, the public server, or the relay's due-query and queue-send paths.
 Resources:
   WorkerTaskRole:
     Type: AWS::IAM::Role
@@ -24,6 +24,13 @@ Resources:
                   - sqs:GetQueueAttributes
                   - sqs:ReceiveMessage
                 Resource: !GetAtt WorkerQueue.Arn
+              - Sid: ReadAndRecordOnlyThePlatformPersistenceProcessingState
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource: !GetAtt PlatformPersistenceTable.Arn
               - Sid: PublishOnlyCloudWatchWorkerMetricData
                 Effect: Allow
                 Action:

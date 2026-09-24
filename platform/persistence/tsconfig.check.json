@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "noEmit": true,
+    "baseUrl": "../..",
+    "paths": {
+      "@kanbien/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@kanbien/core/*": [
+        "packages/core/src/*/index.ts"
+      ]
+    },
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}

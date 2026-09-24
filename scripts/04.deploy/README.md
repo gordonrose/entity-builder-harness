@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 8
+version: 9
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -47,6 +47,14 @@ Current commands:
 - `run-platform-shell-negative-authz-smoke/`: locally validates, or after
   post-deployment inspection and explicit current-chat approval performs the
   one fixed valid-token, unmapped-scope staging request that must return `403`.
+- `provision-platform-shell-persistence-write-client/`: locally validates, or
+  with explicit current-chat approval adds the one reviewed `smoke.write`
+  scope, separate confidential machine client, and target-owned secret used
+  only by the bounded persistence proof.
+- `run-platform-shell-persistence-smoke/`: locally validates, or after the
+  reviewed target deployment and explicit current-chat approval makes exactly
+  one fixed no-body work-item acceptance request with the separate write-only
+  identity. It emits only a safe verdict, status, and duration.
 - `run-platform-shell-rate-limit-smoke/`: locally validates, or after current
   approval waits for a fresh fixed window, performs at most the configured
   liveness rate-limit plus one sequential public request, and records

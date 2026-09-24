@@ -1,0 +1,61 @@
+# Dedicated bounded durable-delivery state. It stores only smoke work-item state, safe lineage, outbox, and processing coordination records.
+Resources:
+  PlatformPersistenceTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: kanbien-staging-platform-shell-persistence
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: DueKey
+          AttributeType: S
+        - AttributeName: DueSort
+          AttributeType: S
+        - AttributeName: CauseKey
+          AttributeType: S
+        - AttributeName: CauseSort
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: OutboxDueIndex
+          KeySchema:
+            - AttributeName: DueKey
+              KeyType: HASH
+            - AttributeName: DueSort
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: LineageCauseIndex
+          KeySchema:
+            - AttributeName: CauseKey
+              KeyType: HASH
+            - AttributeName: CauseSort
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: persistence-smoke
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-safe-identifiers
+        - Key: managed-by
+          Value: cloudformation

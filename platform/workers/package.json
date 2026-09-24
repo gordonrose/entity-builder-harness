@@ -16,6 +16,7 @@
     "@kanbien/platform-contracts": "0.0.0",
     "@kanbien/platform-health": "0.0.0",
     "@kanbien/platform-observability": "0.0.0",
+    "@kanbien/platform-persistence": "0.0.0",
     "@kanbien/platform-runtime": "0.0.0"
   },
   "devDependencies": {

@@ -48,3 +48,37 @@ Resources:
           Value: staging
         - Key: managed-by
           Value: cloudformation
+
+  PlatformShellRelayLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /ecs/kanbien-staging-platform-shell-relay
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relay
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  PlatformShellRelayOtelCollectorLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: /ecs/kanbien-staging-platform-shell-relay-otel-collector
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relay-otel-collector
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

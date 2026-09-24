@@ -6,6 +6,7 @@ import {
   platformSmokeAppManifest,
   platformSmokeConfigSchema,
   platformSmokeJobMessageType,
+  platformSmokeWorkItemAcceptedJobMessageType,
   platformSmokeReadPermission,
   type PlatformSmokeConfig,
 } from "../src/index";
@@ -18,6 +19,9 @@ void configSchema;
 
 const messageType: QueueMessageType = platformSmokeJobMessageType;
 void messageType;
+
+const durableMessageType: QueueMessageType = platformSmokeWorkItemAcceptedJobMessageType;
+void durableMessageType;
 
 const permission: string = platformSmokeReadPermission;
 void permission;

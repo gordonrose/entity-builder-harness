@@ -35,3 +35,9 @@ export type {
   PlatformTraceFieldsInput,
   PlatformTraceSpanInput,
 } from "./tracing";
+
+export {
+  createPlatformPersistenceTransitionObserver,
+  platformPersistenceTransitionProfile,
+} from "./persistence";
+export type { PlatformPersistenceTransitionObserverOptions } from "./persistence";

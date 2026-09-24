@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.readme
-version: 1
+version: 4
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -24,6 +24,27 @@ This deploy track contains product-layer deployment implementation artifacts.
 The first artifact is the provider-neutral platform shell image boundary. It
 packages the local platform server entrypoint so the shell can be built and
 smoke-tested before AWS deployment readiness.
+
+`entrypoints/kanbien-platform-persistence.ts` is the first target-specific
+persistence composition root. It selects the DynamoDB persistence adapter and
+defines the harmless platform-smoke work-item row without making the smoke app
+or generic Platform modules provider-specific. The compiled image verifier
+exercises this composition with a recording client and proves one intended
+three-write transaction locally. It does not select live staging values,
+contact AWS, or make a staging persistence capability ready.
+
+The same composition root also assembles the selected DynamoDB outbox and
+processing stores for a target relay and worker. The target-specific
+`kanbien-platform-relay.main.ts` entrypoint performs one bounded relay pass;
+the worker entrypoint opts into durable processing only when its target
+configuration supplies the selected persistence values and a lease shorter
+than SQS visibility. The local smoke test proves acceptance -> relay -> queue
+envelope -> durable completion -> duplicate skip. The staging CloudFormation
+source now defines separate least-privilege relay and worker identities, task
+configuration, non-public networking, logs, and persistence-transition metric
+catalogue. The relay is a task definition only—there is no service, schedule,
+or live AWS proof until a reviewed change set and a separately approved
+one-shot run occur.
 
 The first AWS planning runtime family is recorded in
 `aws-runtime-family.decision.yml`: ECS Fargate. That decision is planning-only

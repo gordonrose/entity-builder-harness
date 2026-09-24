@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.service
-#   version: 4
+#   version: 7
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -111,7 +111,7 @@ Resources:
             - Name: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS
               Value: '["15po9eg4hgknb2pi2d1bdfhdds"]'
             - Name: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
-              Value: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}'
+              Value: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}'
             - Name: PLATFORM_CORS_ALLOWLIST
               Value: https://staging.platform.kanbien.com
             - Name: PLATFORM_HEALTH_LIVEZ_EXPOSURE
@@ -129,6 +129,19 @@ Resources:
               Value: "120"
             - Name: PLATFORM_RATE_LIMIT_WINDOW_MS
               Value: "60000"
+            - Name: PLATFORM_PERSISTENCE_PROVIDER
+              Value: dynamodb
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_TABLE
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceTableName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceOutboxDueIndexName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceLineageCauseIndexName
             - Name: PLATFORM_TRUSTED_INGRESS_MODE
               Value: alb-security-group-only
             - Name: PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES
@@ -298,9 +311,24 @@ Resources:
             - Name: PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS
               Value: "20"
             - Name: PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS
-              Value: "30"
+              Value: "120"
             - Name: PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS
               Value: "1000"
+            - Name: PLATFORM_PERSISTENCE_PROVIDER
+              Value: dynamodb
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_TABLE
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceTableName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceOutboxDueIndexName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceLineageCauseIndexName
+            - Name: PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS
+              Value: "90000"
             - Name: PLATFORM_SMOKE_APP_NAME
               Value: Kanbien Platform Smoke
             - Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER
@@ -318,7 +346,7 @@ Resources:
             - Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS
               Value: "10000"
             - Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON
-              Value: '[{"sourceName":"platform.worker.job.delivery","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.worker.job.delivery","description":"Completed platform-smoke worker job deliveries by approved outcome.","allowedLabelNames":["capability","action","execution_context","job_delivery_disposition","outcome","error_class"],"cardinalityLimit":512},{"sourceName":"platform.worker.job.execution_latency","sourceKind":"timer","sourceUnit":"ms","instrumentName":"kanbien.platform.worker.job.execution.duration","description":"Platform-smoke worker job execution latency in milliseconds.","allowedLabelNames":["capability","action","execution_context","job_delivery_disposition","outcome","error_class"],"cardinalityLimit":512,"histogramBucketBoundaries":[50,100,200,300,500,750,1000,2500,5000,10000,30000]}]'
+              Value: '[{"sourceName":"platform.worker.job.delivery","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.worker.job.delivery","description":"Completed platform-smoke worker job deliveries by approved outcome.","allowedLabelNames":["capability","action","execution_context","job_delivery_disposition","outcome","error_class"],"cardinalityLimit":512},{"sourceName":"platform.worker.job.execution_latency","sourceKind":"timer","sourceUnit":"ms","instrumentName":"kanbien.platform.worker.job.execution.duration","description":"Platform-smoke worker job execution latency in milliseconds.","allowedLabelNames":["capability","action","execution_context","job_delivery_disposition","outcome","error_class"],"cardinalityLimit":512,"histogramBucketBoundaries":[50,100,200,300,500,750,1000,2500,5000,10000,30000]},{"sourceName":"platform.persistence.processing.envelope_rejected.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.envelope.rejected.outcome","description":"Durable worker rejected processing envelopes by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.claim_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.claim.failed.outcome","description":"Durable worker processing claim failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.claimed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.claimed.outcome","description":"Durable worker processing claims by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.lease_active.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.lease.active.outcome","description":"Durable worker processing contention observations by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.duplicate_succeeded.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.duplicate.succeeded.outcome","description":"Safely suppressed completed durable worker deliveries by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.duplicate_terminal_failure.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.duplicate.terminal.failure.outcome","description":"Safely suppressed terminal-failure durable worker deliveries by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.completed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.completed.outcome","description":"Durable worker completion markers by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.completion_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.completion.failed.outcome","description":"Durable worker completion-marker failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.retry_released.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.retry.released.outcome","description":"Durable worker retry-release transitions by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.terminal_failure_recorded.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.terminal.failure.recorded.outcome","description":"Durable worker terminal-failure markers by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.processing.settlement_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.processing.settlement.failed.outcome","description":"Durable worker processing-settlement failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64}]'
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -389,6 +417,116 @@ Resources:
           Value: platform-shell
         - Key: component
           Value: worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  # No ECS service owns this task definition. A governed run-task command starts
+  # one relay pass for the harmless persistence proof, then the task exits.
+  RelayTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-shell-relay
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelayTaskRoleArn
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: platform-shell-relay
+          Image: !Ref ImageUri
+          Command:
+            - .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.js
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          DependsOn:
+            - ContainerName: otel-collector
+              Condition: START
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: PLATFORM_PERSISTENCE_PROVIDER
+              Value: dynamodb
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_TABLE
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceTableName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceOutboxDueIndexName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceLineageCauseIndexName
+            - Name: PLATFORM_RELAY_QUEUE_PROVIDER
+              Value: sqs
+            - Name: PLATFORM_RELAY_SQS_QUEUE_URL
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-WorkerQueueUrl
+            - Name: PLATFORM_RELAY_SQS_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_RELAY_LEASE_DURATION_MS
+              Value: "90000"
+            - Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER
+              Value: cloudwatch-otel
+            - Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT
+              Value: http://127.0.0.1:4318/v1/metrics
+            - Name: PLATFORM_OBSERVABILITY_METRICS_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_OBSERVABILITY_SERVICE_NAME
+              Value: kanbien-staging-platform-shell-relay
+            - Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT
+              Value: staging
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS
+              Value: "60000"
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS
+              Value: "10000"
+            - Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON
+              Value: '[{"sourceName":"platform.persistence.outbox.delivery.lookup_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.delivery.lookup.failed.outcome","description":"Durable relay due-outbox lookup failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.claim_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.claim.failed.outcome","description":"Durable relay outbox claim failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.claimed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.claimed.outcome","description":"Durable relay outbox claims by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.lease_active.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.lease.active.outcome","description":"Durable relay contention observations by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.queue_send_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.queue.send.failed.outcome","description":"Durable relay queue-send failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.publish_marker_failed.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.publish.marker.failed.outcome","description":"Durable relay publication-marker failures by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.published.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.published.outcome","description":"Durable relay published outbox obligations by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64},{"sourceName":"platform.persistence.outbox.envelope_rejected.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.persistence.outbox.envelope.rejected.outcome","description":"Durable relay rejected queue-envelope constructions by approved outcome.","allowedLabelNames":["capability","action","execution_context","outcome","error_class"],"cardinalityLimit":64}]'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: platform-shell-relay
+        - Name: otel-collector
+          Image: public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 128
+          MemoryReservation: 256
+          StopTimeout: 30
+          Environment:
+            - Name: AWS_REGION
+              Value: eu-west-1
+          Secrets:
+            - Name: AOT_CONFIG_CONTENT
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-OtelCollectorConfigurationParameterArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayOtelCollectorLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: relay-otel-collector
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relay
         - Key: environment
           Value: staging
         - Key: managed-by
@@ -496,3 +634,5 @@ Outputs:
     Value: !Ref WorkerService
   WorkerTaskDefinitionArn:
     Value: !Ref WorkerTaskDefinition
+  RelayTaskDefinitionArn:
+    Value: !Ref RelayTaskDefinition

@@ -1,7 +1,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v2
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-server
-//   version: 1
+//   version: 2
 //   status: active
 //   layer: 04.deploy
 //   domain: infra.ci-cd
@@ -18,11 +18,14 @@
 //     path: infra/04.deploy/03.product/image/Dockerfile
 
 import {
-  kanbienPlatformApps,
+  createKanbienPlatformApps,
   kanbienPlatformProductManifest,
 } from "@kanbien/product-kanbien-platform";
 import { createCognitoJwtBearerAuthenticationHookFromEnv } from "@kanbien/platform-adapter-aws-auth-cognito";
 import type { CloudWatchOtelMetricsRuntime } from "@kanbien/platform-adapter-aws-observability-cloudwatch";
+import {
+  createAwsSdkDynamoDbPersistenceCommandClient,
+} from "@kanbien/platform-adapter-aws-persistence-dynamodb";
 import { createDynamoDbFixedWindowPlatformRateLimiterFromEnv } from "@kanbien/platform-adapter-aws-security-dynamodb-rate-limiter";
 import { createAlbTrustedClientAddressResolver } from "@kanbien/platform-adapter-aws-runtime-ecs-fargate";
 import {
@@ -33,11 +36,16 @@ import {
 import { startPlatformServerProcess, type PlatformServerProcess } from "@kanbien/platform-server/main";
 import type { PlatformRateLimiter } from "@kanbien/platform-security";
 import { observabilityFromTargetEnvironment } from "./kanbien-platform-observability";
+import {
+  createKanbienPlatformSmokePersistence,
+  dynamoDbPersistenceConfigurationFromTargetEnvironment,
+} from "./kanbien-platform-persistence";
 
 interface TargetRuntimeConfiguration {
   readonly rateLimiter?: PlatformRateLimiter;
   readonly clientAddressResolver?: PlatformClientAddressResolver;
   readonly transport?: PlatformServerTransportOptions;
+  readonly productOptions?: Parameters<typeof createKanbienPlatformApps>[0];
 }
 
 interface TargetRuntimeConfigurationError {
@@ -72,7 +80,7 @@ export async function runKanbienPlatformServerMain(): Promise<void> {
   }
 
   const started = await startPlatformServerProcess({
-    apps: kanbienPlatformApps,
+    apps: createKanbienPlatformApps(runtime.value.productOptions),
     configKeys: productConfigKeys(),
     ...(authentication.value === undefined ? {} : { auth: authentication.value }),
     ...(runtime.value.rateLimiter === undefined ? {} : { rateLimiter: runtime.value.rateLimiter }),
@@ -155,12 +163,51 @@ function runtimeConfigurationFromTargetEnvironment(
     return transport;
   }
 
+  const productOptions = productOptionsFromTargetEnvironment(env, isPublic);
+  if (!productOptions.ok) {
+    return productOptions;
+  }
+
   return {
     ok: true,
     value: {
       ...(rateLimiter.value === undefined ? {} : { rateLimiter: rateLimiter.value }),
       ...(clientAddressResolver.value === undefined ? {} : { clientAddressResolver: clientAddressResolver.value }),
       ...(transport.value === undefined ? {} : { transport: transport.value }),
+      ...(productOptions.value === undefined ? {} : { productOptions: productOptions.value }),
+    },
+  };
+}
+
+function productOptionsFromTargetEnvironment(
+  env: NodeJS.ProcessEnv,
+  isPublic: boolean,
+): { readonly ok: true; readonly value: Parameters<typeof createKanbienPlatformApps>[0] | undefined } | { readonly ok: false; readonly error: TargetRuntimeConfigurationError } {
+  const provider = env["PLATFORM_PERSISTENCE_PROVIDER"];
+  if (provider === undefined || provider.length === 0) {
+    return isPublic
+      ? targetRuntimeConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "Public staging requires the selected persistence provider for its controlled acceptance capability.")
+      : { ok: true, value: undefined };
+  }
+  if (provider !== "dynamodb") {
+    return targetRuntimeConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "Unsupported persistence provider.");
+  }
+
+  const configuration = dynamoDbPersistenceConfigurationFromTargetEnvironment(env);
+  if (!configuration.ok) {
+    return targetRuntimeConfigurationError(configuration.error.details.path, configuration.error.details.reason);
+  }
+
+  const persistence = createKanbienPlatformSmokePersistence({
+    client: createAwsSdkDynamoDbPersistenceCommandClient(configuration.value),
+    configuration: configuration.value,
+  });
+  return {
+    ok: true,
+    value: {
+      platformSmoke: {
+        workItemAcceptance: persistence,
+      },
     },
   };
 }

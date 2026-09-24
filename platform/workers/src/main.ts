@@ -4,7 +4,7 @@ import { noopMetrics, type Metrics, type Tracer } from "@kanbien/core/monitoring
 import { systemClock, type Result } from "@kanbien/core/shared";
 import { fixedFeatureFlagReader, type PlatformApp, type PlatformMountDeps } from "@kanbien/platform-contracts";
 import type { PlatformWorkerError } from "./errors";
-import type { PlatformWorkerShell } from "./types";
+import type { PlatformWorkerDurableOutboxProcessingOptions, PlatformWorkerShell } from "./types";
 import { createPlatformWorkerShell } from "./worker";
 
 export interface PlatformWorkerProcessOptions {
@@ -14,6 +14,7 @@ export interface PlatformWorkerProcessOptions {
   readonly logger?: Logger;
   readonly tracer?: Tracer;
   readonly metrics?: Metrics;
+  readonly durableOutboxProcessing?: PlatformWorkerDurableOutboxProcessingOptions;
   readonly maxAttempts?: number;
   readonly retryBackoffMs?: (attempt: number) => number;
   readonly installSignalHandlers?: boolean;
@@ -32,6 +33,7 @@ export async function startPlatformWorkerProcess(
   const shell = await createPlatformWorkerShell({
     apps: options.apps ?? [],
     deps: createWorkerProcessMountDeps(env, logger, options.configKeys ?? [], options.metrics ?? noopMetrics),
+    ...(options.durableOutboxProcessing === undefined ? {} : { durableOutboxProcessing: options.durableOutboxProcessing }),
     ...(options.tracer === undefined ? {} : { tracer: options.tracer }),
     ...(options.maxAttempts === undefined ? {} : { maxAttempts: options.maxAttempts }),
     ...(options.retryBackoffMs === undefined ? {} : { retryBackoffMs: options.retryBackoffMs }),

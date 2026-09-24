@@ -2,24 +2,36 @@ import {
   concurrencyToken,
   inMemoryRepository,
   inMemoryUnitOfWork,
+  outboxDeliveryPolicy,
+  outboxEntry,
+  outboxEntryId,
+  outboxMessageType,
   page,
   pageRequest,
   pageTotal,
   pageTotals,
   persistenceError,
+  recordChange,
+  recordChangeId,
+  recordId,
+  recordKind,
+  recordReference,
+  recordRevision,
   type ConcurrencyToken,
   type Page,
   type PageRequest,
   type PageTotal,
   type PageTotals,
+  type OutboxEntry,
   type PersistenceError,
   type PersistenceErrorCode,
   type Repository,
+  type RecordChange,
   type SaveOptions,
   type Transaction,
   type UnitOfWork,
 } from "../src/persistence/index";
-import { entityId, isOk, type EntityId, type Result } from "../src/shared/index";
+import { entityId, isOk, isoDateTimeFromDate, type EntityId, type Result } from "../src/shared/index";
 
 type DealId = EntityId<"DealId">;
 
@@ -58,6 +70,31 @@ const repository: Repository<DealRecord, DealId> = inMemoryRepository({
   getConcurrencyToken: (deal) => deal.concurrencyToken,
 });
 const unitOfWork: UnitOfWork = inMemoryUnitOfWork();
+const recordedAt = isoDateTimeFromDate(new Date("2026-09-23T12:00:00.000Z"));
+const messageTypeResult = outboxMessageType("platform-smoke.work.accepted");
+const deliveryPolicyResult = outboxDeliveryPolicy("platform-short-idempotent-work.v1");
+const lineageKindResult = recordKind("platform-smoke.work-item");
+const lineageIdResult = recordId("work-1");
+const lineageRevisionResult = recordRevision(1);
+
+if (!isOk(messageTypeResult) || !isOk(deliveryPolicyResult) || !isOk(lineageKindResult) || !isOk(lineageIdResult) || !isOk(lineageRevisionResult)) {
+  throw new Error("Expected valid durable-delivery fixtures.");
+}
+
+const durableEntry: OutboxEntry = outboxEntry({
+  id: outboxEntryId("outbox-1"),
+  subject: recordReference({ kind: lineageKindResult.value, id: lineageIdResult.value }),
+  messageType: messageTypeResult.value,
+  deliveryPolicy: deliveryPolicyResult.value,
+  createdAt: recordedAt,
+});
+const lineage: Result<RecordChange, PersistenceError> = recordChange({
+  id: recordChangeId("change-1"),
+  record: recordReference({ kind: lineageKindResult.value, id: lineageIdResult.value }),
+  revision: lineageRevisionResult.value,
+  action: "created",
+  occurredAt: recordedAt,
+});
 
 if (isOk(requestResult)) {
   const pageSize: number = requestResult.value.limit;
@@ -71,6 +108,8 @@ void firstPage;
 void pageWithTotals;
 void repository;
 void unitOfWork;
+void durableEntry;
+void lineage;
 
 unitOfWork.run((transaction: Transaction) => {
   transaction.afterCommit(() => undefined);
@@ -106,3 +145,13 @@ const invalidSave: Repository<DealRecord, DealId>["save"] = async () => ({
   error: { code: "DATABASE_LOCKED", defaultMessage: "Database locked." },
 });
 void invalidSave;
+
+// @ts-expect-error outbox entries intentionally carry routing facts rather than a raw payload.
+const invalidOutboxEntry: OutboxEntry = { ...durableEntry, payload: { email: "private@example.test" } };
+void invalidOutboxEntry;
+
+if (isOk(lineage)) {
+  // @ts-expect-error record changes intentionally exclude unrestricted historical metadata.
+  const invalidLineage: RecordChange = { ...lineage.value, metadata: { before: "private" } };
+  void invalidLineage;
+}

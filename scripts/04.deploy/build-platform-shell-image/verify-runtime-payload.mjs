@@ -2,7 +2,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v2
 //   id: deploy.script.build-platform-shell-image.verify-runtime-payload
-//   version: 1
+//   version: 5
 //   status: active
 //   layer: 04.deploy
 //   domain: infra.ci-cd
@@ -24,12 +24,14 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const runtimeRoot = join(repositoryRoot, ".cache", "platform-shell-image-build");
 const serverEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-server.main.js");
 const workerEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-worker.main.js");
+const relayEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-relay.main.js");
+const persistenceCompositionEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-persistence.js");
 const workspacePackageScope = join(repositoryRoot, "node_modules", "@kanbien");
 const hiddenWorkspaceRoot = mkdtempSync(join(tmpdir(), "platform-shell-runtime-payload-"));
 const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
@@ -37,8 +39,11 @@ const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
 const requiredPayloadFiles = [
   serverEntrypoint,
   workerEntrypoint,
+  relayEntrypoint,
+  persistenceCompositionEntrypoint,
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-auth-cognito", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-observability-cloudwatch", "index.js"),
+  join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-persistence-dynamodb", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-queue-sqs", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-runtime-ecs-fargate", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-security-dynamodb-rate-limiter", "index.js"),
@@ -57,6 +62,8 @@ if (!existsSync(workspacePackageScope)) {
 renameSync(workspacePackageScope, hiddenWorkspaceScope);
 
 try {
+  await verifyCompiledPersistenceComposition();
+
   const serverResult = spawnSync(process.execPath, [serverEntrypoint], {
     cwd: repositoryRoot,
     env: {
@@ -70,7 +77,7 @@ try {
       PLATFORM_AUTH_COGNITO_USER_POOL_ID: "eu-west-1_EQaXioA1n",
       PLATFORM_AUTH_COGNITO_APP_CLIENT_ID: "4n7kuqstbvb97ur3btbur8afjt",
       PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS: '["15po9eg4hgknb2pi2d1bdfhdds"]',
-      PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"]}',
+      PLATFORM_AUTHZ_SCOPE_PERMISSIONS: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}',
       PLATFORM_CORS_ALLOWLIST: "https://staging.platform.kanbien.com",
       PLATFORM_HEALTH_LIVEZ_EXPOSURE: "public",
       PLATFORM_HEALTH_READYZ_EXPOSURE: "authenticated",
@@ -79,6 +86,11 @@ try {
       PLATFORM_RATE_LIMIT_DYNAMODB_REGION: "eu-west-1",
       PLATFORM_RATE_LIMIT_LIMIT: "120",
       PLATFORM_RATE_LIMIT_WINDOW_MS: "60000",
+      PLATFORM_PERSISTENCE_PROVIDER: "dynamodb",
+      PLATFORM_PERSISTENCE_DYNAMODB_TABLE: "kanbien-staging-platform-shell-persistence",
+      PLATFORM_PERSISTENCE_DYNAMODB_REGION: "eu-west-1",
+      PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX: "OutboxDueIndex",
+      PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX: "LineageCauseIndex",
       PLATFORM_TRUSTED_INGRESS_MODE: "alb-security-group-only",
       PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES: "1048576",
       PLATFORM_SERVER_MAX_HEADER_BYTES: "16384",
@@ -137,8 +149,15 @@ try {
       PLATFORM_WORKER_SQS_QUEUE_URL: "https://sqs.eu-west-1.amazonaws.com/123456789012/kanbien-staging-platform-shell-worker",
       PLATFORM_WORKER_SQS_REGION: "eu-west-1",
       PLATFORM_WORKER_SQS_WAIT_TIME_SECONDS: "20",
-      PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS: "30",
+      PLATFORM_WORKER_SQS_VISIBILITY_TIMEOUT_SECONDS: "120",
       PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS: "1000",
+      PLATFORM_PERSISTENCE_PROVIDER: "dynamodb",
+      PLATFORM_PERSISTENCE_DYNAMODB_TABLE: "kanbien-staging-platform-shell-persistence",
+      PLATFORM_PERSISTENCE_DYNAMODB_REGION: "eu-west-1",
+      PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX: "OutboxDueIndex",
+      PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX: "LineageCauseIndex",
+      PLATFORM_PERSISTENCE_WORKER_LEASE_DURATION_MS: "90000",
+      HOSTNAME: "worker-runtime-payload",
       PLATFORM_SMOKE_APP_NAME: "Kanbien Platform Smoke",
       PLATFORM_SOURCE_COMMIT_SHA: "runtime-payload-test",
       PLATFORM_OBSERVABILITY_METRICS_PROVIDER: "cloudwatch-otel",
@@ -176,9 +195,79 @@ try {
   if (workerResult.status !== 0) {
     throw new Error(`Compiled platform shell worker runtime failed with exit code ${String(workerResult.status)}.`);
   }
+
+  const relayResult = spawnSync(process.execPath, [relayEntrypoint], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      PLATFORM_RELAY_EXIT_AFTER_START: "1",
+      PLATFORM_PERSISTENCE_PROVIDER: "dynamodb",
+      PLATFORM_PERSISTENCE_DYNAMODB_TABLE: "kanbien-staging-platform-shell-persistence",
+      PLATFORM_PERSISTENCE_DYNAMODB_REGION: "eu-west-1",
+      PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX: "OutboxDueIndex",
+      PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX: "LineageCauseIndex",
+      PLATFORM_RELAY_QUEUE_PROVIDER: "sqs",
+      PLATFORM_RELAY_SQS_QUEUE_URL: "https://sqs.eu-west-1.amazonaws.com/123456789012/kanbien-staging-platform-shell-worker",
+      PLATFORM_RELAY_SQS_REGION: "eu-west-1",
+      PLATFORM_RELAY_LEASE_DURATION_MS: "90000",
+      HOSTNAME: "relay-runtime-payload",
+    },
+    stdio: "inherit",
+  });
+
+  if (relayResult.status !== 0) {
+    throw new Error(`Compiled platform shell relay runtime failed with exit code ${String(relayResult.status)}.`);
+  }
 } finally {
   renameSync(hiddenWorkspaceScope, workspacePackageScope);
   rmSync(hiddenWorkspaceRoot, { force: true, recursive: true });
 }
 
 console.log("Platform shell compiled runtime payload check passed.");
+
+async function verifyCompiledPersistenceComposition() {
+  const persistenceModule = await import(pathToFileURL(persistenceCompositionEntrypoint).href);
+  const smokeModule = await import(pathToFileURL(join(runtimeRoot, "apps", "platform-smoke", "src", "index.js")).href);
+  const sharedModule = await import(pathToFileURL(join(runtimeRoot, "packages", "core", "src", "shared", "index.js")).href);
+  const commands = [];
+  const persistence = persistenceModule.createKanbienPlatformSmokePersistence({
+    client: {
+      send: async (command) => {
+        commands.push(command);
+        return {};
+      },
+    },
+    configuration: {
+      region: "eu-west-1",
+      tableName: "platform-shell-persistence-proof",
+      outboxDueIndexName: "due-index",
+      lineageCauseIndexName: "cause-index",
+    },
+  });
+  const workItemId = smokeModule.platformSmokeWorkItemId("compiled-persistence-proof");
+  if (!workItemId.ok) {
+    throw new Error("Compiled persistence proof could not construct a work-item identity.");
+  }
+  const result = await smokeModule.acceptPlatformSmokeWorkItem({
+    id: workItemId.value,
+    acceptedAt: sharedModule.isoDateTimeFromDate(new Date("2026-09-24T12:00:00.000Z")),
+    causationId: sharedModule.causationId("compiled-persistence-proof"),
+  }, persistence);
+  if (!result.ok) {
+    throw new Error(`Compiled persistence proof failed: ${result.error.code}.`);
+  }
+  if (commands.length !== 1) {
+    throw new Error("Compiled persistence proof must submit exactly one DynamoDB request.");
+  }
+  const transactItems = commands[0]?.input?.TransactItems;
+  if (!Array.isArray(transactItems) || transactItems.length !== 3) {
+    throw new Error("Compiled persistence proof must submit work-item, lineage, and outbox writes together.");
+  }
+  if (
+    transactItems[0]?.Put?.Item?.recordType?.S !== "platform-smoke-work-item"
+    || transactItems[1]?.Put?.Item?.recordType?.S !== "lineage"
+    || transactItems[2]?.Put?.Item?.recordType?.S !== "outbox"
+  ) {
+    throw new Error("Compiled persistence proof must preserve the reviewed three-write record order.");
+  }
+}

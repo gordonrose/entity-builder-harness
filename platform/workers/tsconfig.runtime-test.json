@@ -29,6 +29,9 @@
       "@kanbien/platform-observability": [
         "platform/observability/src/index.ts"
       ],
+      "@kanbien/platform-persistence": [
+        "platform/persistence/src/index.ts"
+      ],
       "@kanbien/platform-runtime": [
         "platform/runtime/src/index.ts"
       ],
