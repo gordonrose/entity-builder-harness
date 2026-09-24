@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T19:53:52Z
-latest_commit_sha: f86986d3
-chat_duration: 96025s (01:02:40:25)
+latest_commit_at_utc: 2026-09-24T19:56:48Z
+latest_commit_sha: e802876a
+chat_duration: 96201s (01:02:43:21)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -56,6 +56,10 @@ go
 
 - Raised: The persistence image-publication workflow failed before AWS access because the server runtime-test compiler could not resolve the new platform-persistence workspace package.
   Resolution: Added the existing-style workspace source path mapping to the server runtime-test configuration; the full server, compiled image-runtime, and platform-shell infrastructure checks now pass.
+
+
+- Raised: The governed pre-commit process left two untracked source-provenance smoke-test fixtures.
+  Resolution: Confirmed both filenames and timestamps matched the check-source-material-coverage smoke test, removed only those disposable untracked fixtures, and left all tracked task evidence intact.
 
 ## Decisions Made
 
@@ -1011,6 +1015,24 @@ ADR needed: no
 
 Reason: This applies the established staged ECS deployment policy to a target-specific change set; it introduces no new platform architecture decision.
 
+
+### 2026-09-24T19:56:48Z - Commit recorded
+
+Commit: `e802876a`
+
+Message: docs(deploy): record persistence service change review
+
+Summary: Record the inspected available service change set, expected ECS revision-only changes, preserved dormant worker state, and explicit non-execution boundary.
+
+ADR impact: No ADR required; the record applies the established staged deployment approach to this target-specific change set.
+
+
+### 2026-09-24T19:57:07Z - Issue
+
+Raised: The governed pre-commit process left two untracked source-provenance smoke-test fixtures.
+
+Resolution: Confirmed both filenames and timestamps matched the check-source-material-coverage smoke test, removed only those disposable untracked fixtures, and left all tracked task evidence intact.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1074,6 +1096,13 @@ Reason: This applies the established staged ECS deployment policy to a target-sp
   Summary: Record the executed additive Foundation deployment, protected table and relay boundaries, deliberately pending service activation, and static profile enforcement.
   ADR impact: No ADR required; this records target-specific deployment evidence and does not change persistence architecture or platform contracts.
 
+
+- Commit: `e802876a`
+  Time UTC: 2026-09-24T19:56:48Z
+  Message: docs(deploy): record persistence service change review
+  Summary: Record the inspected available service change set, expected ECS revision-only changes, preserved dormant worker state, and explicit non-execution boundary.
+  ADR impact: No ADR required; the record applies the established staged deployment approach to this target-specific change set.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1089,9 +1118,9 @@ Reason: This applies the established staged ECS deployment policy to a target-sp
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T19:53:52Z
-Latest commit SHA: f86986d3
-Chat duration: 96025s (01:02:40:25)
+Latest commit at UTC: 2026-09-24T19:56:48Z
+Latest commit SHA: e802876a
+Chat duration: 96201s (01:02:43:21)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
