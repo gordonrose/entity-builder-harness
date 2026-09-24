@@ -1383,10 +1383,10 @@ updates may need only the latter.
 When one transaction changes state and must make that change visible through an
 event or queue message, the record change and outbox entry must share the same
 atomic boundary. Apps own their schemas, field classifications, action meaning,
-and deletion/retention policy; Core may later own reusable database-neutral
-contracts; platform implements the approved persistence/outbox adapter; and
-infra provisions the protected store, encryption, backups, residency, and
-access controls.
+and deletion/retention policy; Core owns the reusable database-neutral
+transaction, lineage, outbox, and logical-lifecycle contracts; platform
+implements the approved persistence/outbox adapter; and infra provisions the
+protected store, encryption, backups, residency, and access controls.
 
 Acceptance for the future persistence slice:
 
@@ -1864,7 +1864,8 @@ Entry criteria:
 
 ## First Slice Recommendation
 
-The source deployment definition is now complete for the bounded outbox path.
+The source deployment definition is complete for the bounded outbox path, and
+its Foundation/service resources are deployed to the staging reference target.
 The public server has only `TransactWriteItems` for harmless acceptance; the
 one-pass relay has only due-index query, outbox get/update, and queue send; and
 the worker has only queue receive/settlement and durable-processing get/put/
@@ -1873,19 +1874,20 @@ a lease shorter than queue visibility. The relay has a separate, non-public
 ECS task definition with no service or scheduler. Its task definition is a
 recipe, not a running process. The target also declares separate network/log
 destinations and a safe persistence-transition metric catalogue. Static and
-sealed-runtime checks prove the source agrees; none of it has been applied to
-AWS.
+sealed-runtime checks prove the source agrees. The staged table, least-privilege
+roles, dormant relay task definition, and zero-desired worker are live; that
+does not itself prove an accepted transaction reaches the worker.
 
-The current next slice is therefore a governed live-proof plan, not more
-runtime implementation: re-inspect the target, review Foundation and service
-CloudFormation change sets, apply only after explicit current approval, then
-use the separately scoped source-defined Cognito write-client provisioner,
-deploy its exact generated ID through the service allowlist, accept one
-harmless work item with the fixed one-shot command, run the relay once with an
-explicitly approved `ecs run-task`, scale the worker from zero to one only for
-the bounded proof, inspect the durable result and safe telemetry, then return
-it to zero. A continuously running relay or
-scheduler remains a future availability/cost design decision. The existing
-direct-SQS worker rehearsal remains consumer evidence only, not an outbox
-proof. A business workload must not use this path for side effects until that
-controlled live durable-idempotency proof succeeds.
+The first no-body acceptance and its separately authorised replacement both
+returned non-committing `503` responses. After the replacement, aggregate-only
+checks found no record or queue state, while the healthy server had no matching
+structured request observation. The controlled live proof is therefore stopped
+before relay and worker execution. The next slice is a separately reviewed
+pre-server/ingress diagnosis; it must establish the cause without creating a
+third write. Only then may a new bounded authority consider acceptance, one
+relay task, one temporary worker scale-up, and aggregate durable-delivery
+evidence. A continuously running relay or scheduler remains a future
+availability/cost design decision. The existing direct-SQS worker rehearsal
+remains consumer evidence only, not an outbox proof. A business workload must
+not use this path for side effects until that controlled live
+durable-idempotency proof succeeds.

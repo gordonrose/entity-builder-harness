@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 8
-status: draft
+version: 9
+status: active
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -187,10 +187,10 @@ serialized into the HTTP response and may not carry provider messages,
 payloads, identifiers, or credentials. Its local contract and server-runtime
 proofs pass.
 
-No second acceptance request was permitted by that proof stage. The remediation
-deployment and healthy-server verification are recorded below; fresh explicit
-approval is still required for exactly one replacement harmless acceptance
-request before any relay or worker action.
+No second acceptance request was permitted by that original proof stage. The
+remediation deployment and healthy-server verification are recorded below. A
+later, separately authorised replacement is also recorded below; it did not
+permit relay or worker action because it failed without a commit.
 
 ## Safe-failure remediation deployment evidence — 2026-09-24
 
@@ -211,9 +211,24 @@ the five existing alarms were `OK`.
 
 This deployment makes the private response error classification observable to
 the approved route profile. It does not retry the prior acceptance or prove
-outbox delivery. The next step remains one freshly approved replacement
-no-body acceptance request; relay and worker actions remain forbidden until
-that request commits successfully.
+outbox delivery. The one separately approved replacement request is recorded
+below; relay and worker actions remain forbidden unless acceptance commits
+successfully.
+
+## Replacement acceptance stop evidence — 2026-09-24
+
+The single separately authorised, fixed-identity replacement no-body request
+returned `503` in 148 milliseconds. Aggregate-only inspection then found zero
+committed persistence records, empty source and dead-letter queues, a healthy
+public server at `1/1`, and the worker at `0/0`.
+
+The remediated server revision was confirmed active and healthy, but its
+structured application record did not contain a matching request observation.
+This narrows the next investigation to a possible pre-server or ingress path;
+it does not establish a provider cause and it is not a reason to make a third
+write attempt. No relay task was run and no worker was scaled. The next live
+step is a separately reviewed ingress diagnosis followed, only if warranted,
+by new bounded execution authority.
 
 ## Desired source-defined change
 

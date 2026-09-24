@@ -46,6 +46,13 @@ unambiguous even though the original attempt was proved non-committing. Relay
 and worker actions remain prohibited until the replacement has succeeded and
 its safe evidence is recorded.
 
+If that replacement also fails, the profile moves to
+`write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending`.
+Both execution forms are then refused. This is intentional: the command has
+no “try again” mode. A reviewer must first diagnose the possible pre-server or
+ingress path, record the result, and grant new bounded authority before any
+future write, relay, or worker action can occur.
+
 It accepts no caller-supplied client ID, secret, scope, route, body, or request
 ID. It requests only `platform-shell/smoke.write`, reads only the separately
 declared secret, and emits only a verdict, HTTP status, and rounded duration.

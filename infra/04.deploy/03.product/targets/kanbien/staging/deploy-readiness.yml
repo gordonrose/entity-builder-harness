@@ -555,7 +555,7 @@ runtime:
         source_and_dead_letter_queues: empty
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
     write_identity:
-      status: write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending
+      status: write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending
       scope: platform-shell/smoke.write
       client_boundary: separate-confidential-client-credentials-only
       secret_boundary: target-owned-bounded-smoke-only-not-ecs
@@ -583,7 +583,16 @@ runtime:
         image_scan: zero-critical-zero-high
         change_set_review: three-task-definition-revisions-and-two-in-place-service-references-only
         post_deployment: service-update-complete-server-one-running-one-healthy-target-livez-and-protected-read-200-worker-zero-queues-empty-five-alarms-ok
-    next_boundary: obtain-fresh-explicit-approval-for-one-replacement-no-body-acceptance-before-relay-or-worker-proof
+      replacement_acceptance_attempt:
+        executed_on_utc: "2026-09-24"
+        status: failed-non-committing
+        http_status: 503
+        duration_ms: 148
+        aggregate_commit_result: not-committed
+        server_observation: no-matching-structured-request-observed
+        post_attempt_state: server-one-running-one-worker-zero-queues-empty
+        follow_up: diagnose-possible-pre-server-or-ingress-path-before-any-additional-write-relay-or-worker-action
+    next_boundary: separately-review-possible-pre-server-or-ingress-diagnosis-before-any-new-write-relay-or-worker-proof
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts

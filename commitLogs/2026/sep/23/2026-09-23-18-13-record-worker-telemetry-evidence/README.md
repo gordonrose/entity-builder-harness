@@ -40,6 +40,9 @@ go
 
 ## Issues Raised
 
+- Raised: The one separately approved replacement persistence acceptance also returned `503` after the safe error-class remediation was live.
+  Resolution: Aggregate-only checks proved zero committed persistence records, empty source/DLQ queues, healthy server `1/1`, and worker `0/0`. The active server had no matching structured request observation. Relay and worker work stopped; no third write was attempted.
+
 
 
 - Raised: Staging source still recorded the worker boundary as planned after its successful final replay
@@ -74,6 +77,16 @@ go
   Resolution: Aggregate-only evidence proved no atomic commit; table/index, task configuration, and atomic-write permission were healthy, while CloudTrail had no data event. Relay and worker actions were not run. Added a profile-governed response error-class seam and locked further acceptance execution pending remediation deployment and fresh approval.
 
 ## Decisions Made
+
+- Decision: Treat the missing replacement server observation as a pre-server/ingress diagnostic candidate, not as proof of a storage-provider failure.
+  Rationale: The healthy remediated server revision and zero aggregate persistence/queue state rule out a committed delivery path, but cannot identify the failed component without a corresponding application observation. A separate diagnosis must precede any new write authority.
+
+
+- Decision: Complete the reusable logical-record lifecycle contract without selecting a universal retention or purge implementation.
+  Rationale: Core can safely make active/deleted state, restore windows, policy references, legal-hold-aware eligibility, and bounded lineage vocabulary reusable. Actual physical purge, data classification, legal retention, tenant authority, and provider implementation remain product/target decisions.
+
+- Decision: No new ADR is required for the lifecycle contract or the live-proof stop.
+  Rationale: Both implement and record the already approved Persistence Foundation v1 architecture: Core owns portable lifecycle vocabulary, while a failed live stage must stop before unrelated queue work. The focused plan, target evidence, deployment plan, and static verifier are the appropriate decision/evidence owners.
 
 
 
@@ -201,6 +214,13 @@ go
   Rationale: The original request has proved non-committing, but using a different opaque identity means later evidence cannot be confused with an implicit replay of the failed stage. The guarded command accepts no caller-supplied identity and may execute only in the recorded post-remediation lifecycle state.
 
 ## Context Hygiene
+
+- Summary: Retain only safe replacement-acceptance facts: `503` in 148 ms, no aggregate committed record, empty queues, server `1/1`, worker `0/0`, and no matching structured server-request observation.
+  Durable evidence: Durable evidence is constrained in the staging target profile, readiness record, persistence plans, static target verifier, handbook, and this session log. Do not retain tokens, credentials, headers, bodies, request identity, record contents, queue messages, task identifiers, raw logs, or provider responses.
+
+
+- Summary: Retain the source-only Core lifecycle contract: logical deletion retains a policy reference and recovery boundary; restoration, legal hold, and purge eligibility are explicit; physical deletion remains unimplemented by design.
+  Durable evidence: Durable evidence is in the Core lifecycle source, Core runtime/type tests, Core persistence README, Persistence Foundation v1 plan, platform-runtime plan, handbook, and this session log. No customer data, database rows, or AWS mutation exists for this contract slice.
 
 
 
@@ -1400,7 +1420,7 @@ ADR impact: No ADR required; this clarifies and implements the existing staged p
 
 ADR needed: no
 ADR path: 
-Reason: This records target-specific staging deployment evidence and corrects an inspection query; no reusable platform architecture changed.
+Reason: The logical-lifecycle contract and the live-proof safety stop implement the existing Persistence Foundation v1 architecture; the focused implementation plan, target evidence, deployment plan, and static verifier own this bounded decision and evidence.
 
 ## Session Metrics
 

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 37
+  version: 38
   status: active
   layer: 05.education
   domain: education
@@ -59,6 +59,7 @@ that structure. Repository links are the current evidence.
 18. [Tenant and authority: request versus queued job](#18-tenant-and-authority-request-versus-queued-job)
 19. [Platform adapters: translating providers without spreading them everywhere](#19-platform-adapters-translating-providers-without-spreading-them-everywhere)
 20. [Next lesson queue](#20-next-lesson-queue)
+116. [Logical deletion is a repair state, not a retention policy](#116-logical-deletion-is-a-repair-state-not-a-retention-policy)
 
 ## 1. Layers and Ownership
 
@@ -10280,6 +10281,97 @@ Because it is a new state-changing request. The original one-shot allowance
 was consumed and did not commit. Treating a replacement as automatic would
 hide a new business action behind a diagnostic repair. The safe rule is: deploy
 and verify the repair first; then authorize one exact replacement request.
+
+## 116. Logical Deletion Is a Repair State, Not a Retention Policy
+
+When someone presses “delete”, it is tempting to picture this:
+
+```text
+record exists  ──delete──>  record disappears forever
+```
+
+That is sometimes the right result, but it is not safe as a universal default.
+An authorised user can make a mistake, a request can be applied to the wrong
+record, and another process may still need to understand that the relationship
+used to exist. The reusable Core contract therefore starts with a smaller,
+reversible fact:
+
+```text
+active record  ──logical delete──>  deleted record
+                                      │
+                                      ├── within recovery window: may restore
+                                      └── after recovery window: evaluate a
+                                          separately governed purge decision
+```
+
+The `RecordLifecycle` stored beside a product row says either `active` or
+`deleted`. A deleted state carries the deletion time, the exact restoration
+deadline, and a reference to the retention policy that governed that deletion.
+The reference is a reviewed name such as `customer.invoice-retention.v1`; it
+is not a hard-coded number copied into every feature.
+
+### What does “eligible for purge” mean?
+
+It does **not** mean “delete now”. The Core helper can return a clear reason:
+
+| Result | Meaning |
+| --- | --- |
+| `not-deleted` | This is an active record, so purge is not the question. |
+| `within-recovery-window` | Keep it recoverable for now. |
+| `retention-not-met` | The owning policy says it must be kept longer. |
+| `legal-hold` | A legal or investigation hold forbids removal. |
+| `eligible` | A separately authorised product purge/anonymisation process may now be considered. |
+
+That final result deliberately does not issue a database delete. Choosing the
+actual process requires product data classification, tenant authority,
+jurisdiction, erasure requirements, legal holds, backup behaviour, and a
+safe provider implementation. Those decisions differ too much to hide inside
+a generic helper.
+
+### How does history fit in?
+
+Current lifecycle state answers “is this row active now?” History answers
+“what change happened to which revision?” They are related but distinct.
+
+```text
+current row:       state = deleted
+lineage entry:     action = deleted, revision = 7, cause = event-42
+```
+
+Restoring the row similarly creates a bounded `restored` lineage action. The
+lineage record contains safe references and allowlisted field names, never a
+full copy of the record before and after the change. This is why the existing
+`RecordChange` vocabulary contains `created`, `updated`, `deleted`, and
+`restored` rather than creating a separate, less protected deletion log.
+
+### Misconception check
+
+“Logical deletion lets us retain every record forever.”
+
+No. It only provides a short repair phase. Retention expiry, privacy erasure,
+and legal hold are still binding product policies. A provider TTL is not a
+substitute: it can remove data on a provider schedule, but cannot decide
+whether a recovery window, legal hold, or authorised erasure process permits
+that removal.
+
+### Current proof status
+
+The reusable lifecycle contract and its tests are complete locally. The live
+transaction-to-outbox proof is not complete: the one separately approved
+replacement request returned a safe `503`, committed no record, left both
+queues empty, and had no matching structured server-request observation. The
+relay and worker were therefore correctly not started. The next step is a
+separate pre-server/ingress diagnosis, not another unreviewed write attempt.
+
+### Study question
+
+Why is `eligible` a decision rather than a command that physically removes a
+record?
+
+Because the generic lifecycle layer can know that its recovery and policy
+conditions are satisfied, but it cannot know whether the product's legal,
+tenant, classification, backup, and erasure obligations have been performed
+by an authorised purge process.
 
 ## Repository Evidence
 

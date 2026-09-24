@@ -347,7 +347,7 @@ else:
         if persistence_write_test_client.get(key) != expected:
             fail(f"target profile persistence write client must retain {key}")
     persistence_status = persistence_write_test_client.get("status")
-    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "deployed-and-write-proven"}:
+    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "deployed-and-write-proven"}:
         fail("target profile persistence write client must use a governed lifecycle status")
     persistence_client_id = persistence_write_test_client.get("client_id")
     persistence_secret_arn = persistence_write_test_client.get("secret_arn")
@@ -390,13 +390,13 @@ else:
         }
         if secret_refs.get("cognito_persistence_write_client_secret") != expected_persistence_secret_ref:
             fail("target profile must retain the bounded persistence-write secret reference after provisioning")
-    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "deployed-and-write-proven"}:
+    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "deployed-and-write-proven"}:
         expected_client_allowlist.append(persistence_client_id)
     if not all(isinstance(client_id, str) and client_id for client_id in expected_client_allowlist):
         fail("target profile must retain all deployed proof-client identifiers")
     if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps(expected_client_allowlist, separators=(",", ":")):
         fail("target profile must allowlist exactly the proof clients deployed to the service")
-    if persistence_status in {"write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending"}:
+    if persistence_status in {"write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"}:
         expected_failed_acceptance = {
             "executed_on_utc": "2026-09-24",
             "status": "failed-non-committing",
@@ -412,7 +412,7 @@ else:
             },
             "follow_up": "deploy-profile-governed-error-class-remediation-before-fresh-approved-replacement-acceptance",
         }
-        if persistence_status == "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending":
+        if persistence_status in {"write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"}:
             expected_failed_acceptance["follow_up"] = "fresh-explicit-approval-required-for-one-replacement-acceptance-after-remediation-deployment"
             expected_remediation_deployment = {
                 "executed_on_utc": "2026-09-24",
@@ -435,8 +435,21 @@ else:
             }
         if persistence_write_test_client.get("acceptance_attempt") != expected_failed_acceptance:
             fail("target profile must retain only the safe non-committing acceptance diagnostic evidence")
-        if persistence_status == "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending" and persistence_write_test_client.get("remediation_deployment") != expected_remediation_deployment:
+        if persistence_status in {"write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"} and persistence_write_test_client.get("remediation_deployment") != expected_remediation_deployment:
             fail("target profile must retain only the safe deployed remediation evidence")
+        if persistence_status == "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending":
+            expected_replacement_acceptance = {
+                "executed_on_utc": "2026-09-24",
+                "status": "failed-non-committing",
+                "http_status": 503,
+                "duration_ms": 148,
+                "aggregate_commit_result": "not-committed",
+                "server_observation": "no-matching-structured-request-observed",
+                "post_attempt_state": "server-one-running-one-worker-zero-queues-empty",
+                "follow_up": "diagnose-possible-pre-server-or-ingress-path-before-any-additional-write-relay-or-worker-action",
+            }
+            if persistence_write_test_client.get("replacement_acceptance_attempt") != expected_replacement_acceptance:
+                fail("target profile must retain only safe replacement-acceptance stop evidence")
 
 expected_foundation_resources = {
     "PlatformShellLogGroup",
@@ -616,7 +629,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending",
+        "status": "foundation-and-service-deployed-replacement-write-proof-failed-non-committing-pre-server-diagnosis-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -686,17 +699,17 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "fresh-explicit-approval-required-for-replacement-write-proof-after-remediation-deployment",
-            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-additional-persistence-write",
+            "next_execution_guard": "diagnose-possible-pre-server-or-ingress-path-before-any-new-write-proof-authority",
+            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-third-persistence-write",
         },
         "activation": {
-            "server_acceptance": "write-proof-failed-non-committing-profile-governed-error-class-remediation-deployed-fresh-approval-pending",
-            "outbox_relay": "relay-task-definition-deployed-not-scheduled-or-run",
-            "durable_worker_processing": "worker-task-definition-deployed-worker-remains-zero-live-delivery-pending",
+            "server_acceptance": "replacement-write-proof-failed-non-committing-no-matching-server-request-observed",
+            "outbox_relay": "prohibited-no-committed-outbox-obligation",
+            "durable_worker_processing": "prohibited-no-relay-created-delivery-worker-remains-zero",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-replacement-write-proof-requires-fresh-approval",
-            "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-response-error-class-remediation-deployed",
+            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-no-third-write-permitted",
+            "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-replacement-request-missing-from-server-observation",
         },
     },
 }
