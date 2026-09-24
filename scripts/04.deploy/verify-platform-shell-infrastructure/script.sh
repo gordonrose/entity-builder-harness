@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 31
+#   version: 32
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -649,12 +649,12 @@ expected_persistence_profile = {
             "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write",
         },
         "activation": {
-            "server_acceptance": "service-deployed-protected-read-and-health-verified-write-identity-provisioned-untrusted",
+            "server_acceptance": "server-allowlist-deployed-and-health-verified-write-proof-pending",
             "outbox_relay": "relay-task-definition-deployed-not-scheduled-or-run",
             "durable_worker_processing": "worker-task-definition-deployed-worker-remains-zero-live-delivery-pending",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-untrusted-by-server-pending-allowlist-deployment",
+            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-write-proof-pending",
             "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-write-and-delivery-proof-pending",
         },
     },

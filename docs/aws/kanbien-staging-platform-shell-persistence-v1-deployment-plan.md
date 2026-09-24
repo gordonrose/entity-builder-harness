@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 6
+version: 7
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -149,6 +149,21 @@ client. Consequently, no write token has been used, no work-item request has
 been sent, and no table, queue, relay, or worker action has occurred in this
 stage. The next step is a reviewed server configuration deployment that adds
 only this already-provisioned client identifier to that allowlist.
+
+## Write-client allowlist deployment evidence — 2026-09-24
+
+The reviewed staging service change set contained exactly two expected
+changes: a normal replacement of the public server task-definition revision
+for its container environment, and an in-place update of the existing server
+service to reference that revision. It did not include a worker, relay, queue,
+Cognito, DNS, routing, alert, or secret-value change.
+
+After execution, the service stack reached `UPDATE_COMPLETE`; the server was
+desired/running `1/1` with a completed rollout, its target was healthy, and
+public liveness returned `200`. The worker remained `0/0` and both queues
+remained empty. The deployed server now trusts exactly the pre-existing
+negative-test client and the isolated persistence-write client. No token was
+requested and no work-item write was sent in this deployment stage.
 
 ## Desired source-defined change
 

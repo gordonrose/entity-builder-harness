@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 25
+version: 26
 status: active
 layer: 03.product
 domain: persistence
@@ -226,9 +226,13 @@ prompt, transcript, credential, token, or raw request data.
   retains only safe references and confirms that the server does not yet trust
   the client. No secret value or token was read, and no persistence write,
   relay run, or worker scale-up occurred.
-- **Still pending:** reviewed deployment of the server’s exact write-client
-  allowlist and the remaining live AWS proof remain pending. The first live
-  sequence must then use one harmless accepted work item, one explicitly
+- **2026-09-24 — Write-client allowlist deployment complete:** the reviewed
+  two-resource server change set replaced only its task-definition revision
+  and updated the existing server service without replacement. It completed
+  healthy while the worker stayed at zero and both queues stayed empty. The
+  isolated client is now trusted only by the exact server allowlist; no token
+  or write was requested during deployment.
+- **Still pending:** one harmless accepted work item, one explicitly
   approved `RunTask` relay pass (not a schedule), and one bounded worker
   service scale-up before returning the worker to zero. A continuous relay
   service or scheduler is still a separate design decision. The
