@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T20:47:30Z
-latest_commit_sha: 18f276f6
-chat_duration: 99243s (01:03:34:03)
+latest_commit_at_utc: 2026-09-24T21:08:29Z
+latest_commit_sha: a3053bff
+chat_duration: 100502s (01:03:55:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1164,6 +1164,17 @@ ADR needed: no
 
 Reason: This records target-specific staging deployment evidence and corrects an inspection query; no reusable platform architecture changed.
 
+
+### 2026-09-24T21:08:29Z - Commit recorded
+
+Commit: `a3053bff`
+
+Message: docs(deploy): record persistence write allowlist rollout
+
+Summary: Recorded the reviewed two-resource in-place server allowlist rollout, its healthy post-deployment state, and the corrected CloudFormation change-set inspection.
+
+ADR impact: No ADR: target-specific deployment evidence and inspection correction only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1248,6 +1259,13 @@ Reason: This records target-specific staging deployment evidence and corrects an
   Summary: Recorded the pre-existing isolated staging write identity without a duplicate Cognito mutation; updated safe evidence and restored first-provisioning test isolation.
   ADR impact: No ADR: target-specific staging lifecycle evidence and test-fixture correction only.
 
+
+- Commit: `a3053bff`
+  Time UTC: 2026-09-24T21:08:29Z
+  Message: docs(deploy): record persistence write allowlist rollout
+  Summary: Recorded the reviewed two-resource in-place server allowlist rollout, its healthy post-deployment state, and the corrected CloudFormation change-set inspection.
+  ADR impact: No ADR: target-specific deployment evidence and inspection correction only.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1263,9 +1281,9 @@ Reason: This records target-specific staging deployment evidence and corrects an
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T20:47:30Z
-Latest commit SHA: 18f276f6
-Chat duration: 99243s (01:03:34:03)
+Latest commit at UTC: 2026-09-24T21:08:29Z
+Latest commit SHA: a3053bff
+Chat duration: 100502s (01:03:55:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
