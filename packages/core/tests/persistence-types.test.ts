@@ -2,6 +2,8 @@ import {
   concurrencyToken,
   inMemoryRepository,
   inMemoryUnitOfWork,
+  activeRecordLifecycle,
+  logicallyDeleteRecord,
   outboxDeliveryPolicy,
   outboxEntry,
   outboxEntryId,
@@ -17,6 +19,8 @@ import {
   recordKind,
   recordReference,
   recordRevision,
+  recordLifecyclePolicy,
+  recordRetentionPolicyReference,
   type ConcurrencyToken,
   type Page,
   type PageRequest,
@@ -44,6 +48,24 @@ interface DealRecord {
 const dealId = entityId<"DealId">("deal-123");
 const version = concurrencyToken("deal-123:v1");
 const acceptedCode: PersistenceErrorCode = "PERSISTENCE_CONFLICT";
+const lifecycleRetentionReference = recordRetentionPolicyReference("deal.retention.v1");
+if (!isOk(lifecycleRetentionReference)) {
+  throw new Error("Expected a valid lifecycle retention-policy fixture.");
+}
+const lifecyclePolicy = recordLifecyclePolicy({
+  recoveryWindowMs: 60_000,
+  retentionPolicy: lifecycleRetentionReference.value,
+  legalHoldCheckRequired: true,
+});
+if (!isOk(lifecyclePolicy)) {
+  throw new Error("Expected a valid lifecycle policy fixture.");
+}
+const logicalDeletion = logicallyDeleteRecord({
+  current: activeRecordLifecycle(),
+  deletedAt: isoDateTimeFromDate(new Date("2026-09-23T12:00:00.000Z")),
+  policy: lifecyclePolicy.value,
+});
+void logicalDeletion;
 const acceptedError: PersistenceError = persistenceError({
   code: acceptedCode,
   defaultMessage: "The stored entity changed before it could be saved.",
@@ -125,6 +147,9 @@ void invalidToken;
 
 // @ts-expect-error persistence error codes are constrained.
 persistenceError({ code: "DATABASE_LOCKED", defaultMessage: "Database locked." });
+
+// @ts-expect-error a lifecycle policy must require a legal-hold check before purge eligibility can be considered.
+recordLifecyclePolicy({ recoveryWindowMs: 60_000, retentionPolicy: lifecycleRetentionReference.value, legalHoldCheckRequired: false });
 
 // @ts-expect-error page request limit is required.
 pageRequest({ cursor: "cursor-1" });

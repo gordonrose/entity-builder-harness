@@ -11,6 +11,23 @@ export type { Repository, SaveOptions } from "./repository";
 
 export type { Transaction, UnitOfWork } from "./transactions";
 
+export {
+  activeRecordLifecycle,
+  isRecordLifecycleActive,
+  logicallyDeleteRecord,
+  recordLifecyclePolicy,
+  recordPurgeEligibility,
+  recordRetentionPolicyReference,
+  restoreLogicallyDeletedRecord,
+} from "./lifecycle";
+export type {
+  RecordLifecycle,
+  RecordLifecyclePolicy,
+  RecordLifecycleState,
+  RecordPurgeEligibility,
+  RecordRetentionPolicyReference,
+} from "./lifecycle";
+
 export { inMemoryRepository, inMemoryUnitOfWork } from "./in-memory";
 export type { InMemoryRepositoryOptions } from "./in-memory";
 

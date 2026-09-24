@@ -390,6 +390,14 @@ additional public subpath APIs.
   entity by id.
 - `UnitOfWork`, `Transaction`, and `afterCommit` define transaction boundaries
   and post-commit side effects without choosing a database.
+- `RecordLifecycle` and `RecordLifecyclePolicy` make repairable logical
+  deletion explicit: a deleted record retains its policy reference and recovery
+  boundary, while `recordPurgeEligibility` returns a decision rather than
+  physically deleting data. Product policy still chooses retention, legal-hold,
+  erasure, and purge implementation.
+- `RecordChange` and `OutboxEntry` are bounded durable facts for revision
+  lineage and later message delivery. Their payload/content remains app-owned;
+  Core never stores a full product record or raw message body in either fact.
 - `inMemoryRepository` and `inMemoryUnitOfWork` are pure helpers for tests and
   composed local flows.
 

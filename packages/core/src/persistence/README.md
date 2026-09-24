@@ -16,6 +16,7 @@ public import paths.
 | `pagination.ts` | Page requests, optional totals, page construction, and validation. | List/cursor semantics are separate from saving one record. |
 | `repository.ts` | The small `Repository` port, expected-version save option, and optional transaction handle. | Product repositories may add their own queries outside Core. |
 | `transactions.ts` | Explicit transaction and post-commit contracts. | It establishes atomicity without selecting a transaction manager. |
+| `lifecycle.ts` | Logical deletion, restoration-window, retention-reference, and purge-eligibility contracts. | It makes repairable deletion explicit without choosing a universal retention period or physically deleting data. |
 | `in-memory.ts` | Deterministic in-memory repository and unit-of-work helpers. | These support tests and local composition; they are not a durable store. |
 | `outbox.ts` | Versioned durable-delivery identity, subject reference, and routing facts. | It deliberately contains no raw message payload or mutable relay state. |
 | `lineage.ts` | Safe record-revision/change envelopes and allowlisted field names. | It records references and changed field names, never full before/after records or free-form metadata. |
@@ -37,3 +38,9 @@ public import paths.
 - A repository that is passed a `Transaction` must actually enlist in that
   transaction or reject the save. The in-memory repository rejects it because
   it cannot provide durable atomicity; silently ignoring it would be unsafe.
+- A product that adopts `lifecycle.ts` must put the lifecycle state beside its
+  own row, deliberately exclude deleted rows from normal reads, write a
+  `RecordChange` for create/update/delete/restore, and select an authorised
+  repository/retention/legal-hold path. The Core eligibility helper returns a
+  decision only; it never performs a physical purge or turns provider TTL into
+  a privacy promise.

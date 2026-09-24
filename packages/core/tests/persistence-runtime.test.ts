@@ -3,6 +3,8 @@ import {
   concurrencyToken,
   inMemoryRepository,
   inMemoryUnitOfWork,
+  isRecordLifecycleActive,
+  logicallyDeleteRecord,
   outboxDeliveryPolicy,
   outboxEntry,
   outboxEntryId,
@@ -20,6 +22,11 @@ import {
   recordKind,
   recordReference,
   recordRevision,
+  recordLifecyclePolicy,
+  recordPurgeEligibility,
+  recordRetentionPolicyReference,
+  restoreLogicallyDeletedRecord,
+  activeRecordLifecycle,
   type ConcurrencyToken,
   type Transaction,
 } from "../src/persistence/index";
@@ -123,6 +130,102 @@ async function main(): Promise<void> {
   equal(explicitError.diagnostic?.retryable, true);
 
   const recordedAt = isoDateTimeFromDate(new Date("2026-09-23T12:00:00.000Z"));
+  const retentionReference = recordRetentionPolicyReference("platform-smoke.work-item-retention.v1");
+  equal(isOk(retentionReference), true);
+  if (!isOk(retentionReference)) {
+    throw new Error("Expected a valid logical-record retention reference.");
+  }
+  const lifecyclePolicy = recordLifecyclePolicy({
+    recoveryWindowMs: 60_000,
+    retentionPolicy: retentionReference.value,
+    legalHoldCheckRequired: true,
+  });
+  equal(isOk(lifecyclePolicy), true);
+  if (!isOk(lifecyclePolicy)) {
+    throw new Error("Expected a valid logical-record lifecycle policy.");
+  }
+  const deletedLifecycle = logicallyDeleteRecord({
+    current: activeRecordLifecycle(),
+    deletedAt: recordedAt,
+    policy: lifecyclePolicy.value,
+  });
+  equal(isOk(deletedLifecycle), true);
+  if (!isOk(deletedLifecycle)) {
+    throw new Error("Expected logical deletion to succeed for an active record.");
+  }
+  equal(isRecordLifecycleActive(deletedLifecycle.value), false);
+  equal(deletedLifecycle.value.state, "deleted");
+  if (deletedLifecycle.value.state !== "deleted") {
+    throw new Error("Expected logical deletion to retain deletion facts.");
+  }
+  equal(deletedLifecycle.value.retentionPolicy, retentionReference.value);
+  const repeatedDeletion = logicallyDeleteRecord({
+    current: deletedLifecycle.value,
+    deletedAt: recordedAt,
+    policy: lifecyclePolicy.value,
+  });
+  equal(isErr(repeatedDeletion), true);
+  if (!isErr(repeatedDeletion)) {
+    throw new Error("Expected repeated logical deletion to fail.");
+  }
+  equal(repeatedDeletion.error.code, "PERSISTENCE_INVALID_RECORD_LIFECYCLE");
+  equal(recordPurgeEligibility({
+    current: deletedLifecycle.value,
+    asOf: isoDateTimeFromDate(new Date("2026-09-23T12:00:30.000Z")),
+    retentionSatisfied: true,
+    legalHold: false,
+  }), "within-recovery-window");
+  equal(recordPurgeEligibility({
+    current: deletedLifecycle.value,
+    asOf: isoDateTimeFromDate(new Date("2026-09-23T12:01:01.000Z")),
+    retentionSatisfied: true,
+    legalHold: true,
+  }), "legal-hold");
+  equal(recordPurgeEligibility({
+    current: deletedLifecycle.value,
+    asOf: isoDateTimeFromDate(new Date("2026-09-23T12:01:01.000Z")),
+    retentionSatisfied: false,
+    legalHold: false,
+  }), "retention-not-met");
+  equal(recordPurgeEligibility({
+    current: deletedLifecycle.value,
+    asOf: isoDateTimeFromDate(new Date("2026-09-23T12:01:01.000Z")),
+    retentionSatisfied: true,
+    legalHold: false,
+  }), "eligible");
+  const restoredLifecycle = restoreLogicallyDeletedRecord({
+    current: deletedLifecycle.value,
+    restoredAt: isoDateTimeFromDate(new Date("2026-09-23T12:00:59.000Z")),
+  });
+  equal(isOk(restoredLifecycle), true);
+  if (!isOk(restoredLifecycle)) {
+    throw new Error("Expected restoration inside the recovery window to succeed.");
+  }
+  equal(isRecordLifecycleActive(restoredLifecycle.value), true);
+  const expiredRestore = restoreLogicallyDeletedRecord({
+    current: deletedLifecycle.value,
+    restoredAt: isoDateTimeFromDate(new Date("2026-09-23T12:01:01.000Z")),
+  });
+  equal(isErr(expiredRestore), true);
+  if (!isErr(expiredRestore)) {
+    throw new Error("Expected restoration after the recovery window to fail.");
+  }
+  equal(expiredRestore.error.code, "PERSISTENCE_RESTORE_WINDOW_EXPIRED");
+  const restoreActive = restoreLogicallyDeletedRecord({
+    current: activeRecordLifecycle(),
+    restoredAt: recordedAt,
+  });
+  equal(isErr(restoreActive), true);
+  if (!isErr(restoreActive)) {
+    throw new Error("Expected restoration of an active record to fail.");
+  }
+  equal(restoreActive.error.code, "PERSISTENCE_RECORD_NOT_DELETED");
+  equal(recordPurgeEligibility({
+    current: activeRecordLifecycle(),
+    asOf: recordedAt,
+    retentionSatisfied: true,
+    legalHold: false,
+  }), "not-deleted");
   const messageType = outboxMessageType("platform-smoke.work.accepted");
   const deliveryPolicy = outboxDeliveryPolicy("platform-short-idempotent-work.v1");
   const messageVersion = outboxMessageVersion(2);
@@ -178,6 +281,29 @@ async function main(): Promise<void> {
     throw new Error("Expected duplicate lineage fields to fail.");
   }
   equal(duplicateFields.error.code, "PERSISTENCE_INVALID_LINEAGE");
+  const deletedLineage = recordChange({
+    id: recordChangeId("change-3"),
+    record: recordReference({ kind: lineageKind.value, id: lineageId.value }),
+    revision: lineageRevision.value,
+    action: "deleted",
+    occurredAt: recordedAt,
+    changedFields: [stateField.value],
+  });
+  const restoredLineage = recordChange({
+    id: recordChangeId("change-4"),
+    record: recordReference({ kind: lineageKind.value, id: lineageId.value }),
+    revision: lineageRevision.value,
+    action: "restored",
+    occurredAt: recordedAt,
+    changedFields: [stateField.value],
+  });
+  equal(isOk(deletedLineage), true);
+  equal(isOk(restoredLineage), true);
+  if (!isOk(deletedLineage) || !isOk(restoredLineage)) {
+    throw new Error("Expected deletion and restoration to use the bounded lineage vocabulary.");
+  }
+  equal(deletedLineage.value.action, "deleted");
+  equal(restoredLineage.value.action, "restored");
 
   const repository = inMemoryRepository<DealRecord, DealId>({
     getId: (deal) => deal.id,

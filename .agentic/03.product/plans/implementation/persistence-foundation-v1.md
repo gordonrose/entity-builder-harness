@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 27
+version: 28
 status: active
 layer: 03.product
 domain: persistence
@@ -72,6 +72,13 @@ prompt, transcript, credential, token, or raw request data.
   outbox routing facts and a bounded record-change lineage envelope. Runtime
   and type tests prove their validation rules, while Core's boundary test
   confirms that provider vocabulary has not leaked in.
+- **2026-09-24 — Phase 1c complete:** Core now provides a database-neutral
+  logical-record lifecycle contract. It retains a reviewed retention-policy
+  reference with a deletion marker and recovery boundary, can determine
+  legal-hold-aware purge eligibility without deleting anything, and has closed
+  restore and validation errors. Core runtime/type checks prove deletion,
+  restoration, stale restoration rejection, and the existing bounded
+  `deleted`/`restored` lineage actions.
 - **2026-09-23 — Phase 2a complete:** `platform/persistence` now provides
   provider-neutral in-memory outbox, processing, and lineage ports. Its
   deterministic tests prove pending-to-leased-to-published transitions,
@@ -252,16 +259,15 @@ prompt, transcript, credential, token, or raw request data.
   is healthy with a protected-read `200`; the worker remains at zero and both
   queues remain empty. This proves the remediation is live, not that the
   earlier failed write or later outbox stages succeeded.
-- **Still pending:** one harmless accepted work item, one explicitly
-  approved `RunTask` relay pass (not a schedule), and one bounded worker
-  service scale-up before returning the worker to zero. A continuous relay
-  service or scheduler is still a separate design decision. The
-  recording-client and in-memory proofs establish control flow and command
-  shape, not that a real
-  DynamoDB table or SQS queue accepts them. A physical conditional-write
-  conflict is currently reported as a bounded store failure, not claimed as a
-  product-specific duplicate result. No AWS resource was changed by these
-  local phases.
+- **2026-09-24 — Replacement acceptance stopped safely:** the one separately
+  authorised replacement no-body request returned `503` in 148 milliseconds.
+  Aggregate-only postconditions proved no record committed, both queues stayed
+  empty, the server remained `1/1`, and the worker remained `0/0`. The
+  remediated server revision was healthy, but no matching structured server
+  request was observed. This is a bounded pre-server/ingress diagnostic
+  candidate, not a conclusion about a provider failure. The live programme
+  therefore stops before relay or worker action; a third write would be an
+  unapproved new state change.
 
 ### Durable-delivery contract boundary
 
@@ -275,9 +281,9 @@ The next implementation slice uses the following ownership split:
   coordination mechanics, not portable product facts.
 - A future adapter persists both contract families atomically where required.
   The smoke app supplies the work-item meaning and stable idempotency identity.
-- Logical deletion and restoration remain a lifecycle-policy seam rather than
-  a generic Core implementation until a real entity declares its recovery,
-  retention, legal-hold, and field-classification rules.
+- Core owns the generic lifecycle state machine, not a universal lifecycle
+  policy. Every real entity still declares its own recovery, retention,
+  legal-hold, field-classification, and authorised purge rules.
 
 ## What “Robust” Means Here
 
@@ -332,6 +338,14 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
+**Current result — stopped safely.** The one permitted replacement acceptance
+returned `503` in 148 milliseconds. A safe aggregate inspection found zero
+committed records, empty source and dead-letter queues, a healthy `1/1` server,
+and a `0/0` worker. Because no matching structured server-request record was
+observed, the next work is a separate pre-server/ingress diagnosis—not another
+write. Steps 3–5 are prohibited until that diagnosis is reviewed and a new,
+bounded execution authority exists.
+
 ### Tranche 2 — reusable persistent-record foundation
 
 Tranche 2 completes the reusable **contract** required before a future feature
@@ -355,9 +369,16 @@ can choose its own repository and data model:
    deliberately does **not** select a universal retention period or physically
    purge customer data.
 
+**Current result — complete locally.** The Core lifecycle contract records a
+policy reference in the deleted state, distinguishes active/deleted rows,
+calculates the restoration boundary, makes legal hold an explicit input to
+purge eligibility, and exposes no physical-delete operation. Its runtime and
+type tests cover the lifecycle transitions and demonstrate that deletion and
+restoration use the pre-existing bounded `RecordChange` vocabulary.
+
 ### Explicit boundary after both tranches
 
-After these tranches, `Persistence Foundation v1` is complete when a reviewer
+After both tranches succeed, `Persistence Foundation v1` is complete when a reviewer
 can see a tested, provider-neutral contract boundary, a selected AWS adapter,
 least-privilege staging resources, and one safe end-to-end transaction →
 outbox → queue → duplicate-safe worker completion. The next platform layer is
@@ -365,6 +386,12 @@ the separately planned scheduler/operational-availability slice. A continuous
 relay is not silently enabled here because its cadence, delivery-latency SLO,
 availability posture, and recurring Fargate cost are material target decisions
 that the present low-cost smoke proof does not define.
+
+At present, the **reusable foundation is complete locally**, but the **live
+reference proof remains incomplete** because Tranche 1 stopped at its required
+safety gate. No plan text or readiness record may call the persistence solution
+fully production-proven until the separate ingress diagnosis closes and one
+newly authorised acceptance-to-worker path passes.
 
 ## The Terms Used In This Plan
 
