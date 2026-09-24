@@ -10191,6 +10191,66 @@ deployment plan now own the client lifecycle and fixed proof command. The
 target profile and static infrastructure gate enforce the source policy. The
 new commands were locally tested only; no AWS resource or data changed.
 
+## 114. A Safe Failure Needs a Private Category, Not a Public Explanation
+
+The first controlled persistence acceptance reached the public server but
+returned `503`. A safe aggregate check established that its atomic transaction
+did **not** commit, so there was no outbox item to relay and no reason to start
+the worker. That stop was successful safety behaviour: the later stages did
+not guess that a write had happened.
+
+The useful diagnosis then became limited. The route had reduced its internal
+persistence error to a client-safe `503`, but it had not carried the stable
+error category into the route's observability profile. The table, required
+indexes, task configuration, and task-role permission were all healthy. The
+AWS audit trail did not retain this DynamoDB data-plane event. We therefore
+knew the write had not committed, but not whether DynamoDB rejected its shape
+or the adapter met another provider-side error.
+
+The repair is a deliberately tiny internal lane:
+
+```text
+route gets a stable application error code
+             │
+             ├── HTTP response: 503 + safe public status
+             │
+             └── observability.errorClass: stable internal category
+                                      │
+                                      ▼
+                         approved log / metric / trace profile
+```
+
+`observability.errorClass` is never serialized into the response. It exists so
+the server can place one reviewed, low-cardinality category in the signal
+profiles already declared for that capability. It may be a code such as
+`PLATFORM_PERSISTENCE_WRITE_ATOMIC_FAILED`; it must never be a stack trace,
+provider message, request body, identifier, token, or customer value.
+
+### Misconception check
+
+“To diagnose a `503`, return the database exception to the client.”
+
+No. That can expose infrastructure details and potentially sensitive data. The
+client needs the outcome and a safe retry/next-step contract. Operators need a
+bounded class in private telemetry. Those are different audiences, so they get
+different facts.
+
+### Study question
+
+Why was the relay forbidden after the `503` even though the database itself
+was healthy?
+
+Because a relay acts on a committed outbox obligation, not on a request that
+was merely attempted. The aggregate proof showed no committed transaction, so
+there was nothing legitimate to publish. Starting a worker would test a
+different system path and could falsely make the failed acceptance look like a
+successful delivery.
+
+Planning triage: the contracts/server remediation is locally proven. It still
+needs a reviewed server deployment and fresh approval for one replacement
+acceptance request. The previous request is permanently recorded as failed and
+non-committing; it is not silently retried.
+
 ## Repository Evidence
 
 - [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
@@ -10249,6 +10309,12 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-24: Added the safe-failure observability lesson. The first bounded
+  staging write returned 503 and was proved non-committing with aggregate-only
+  evidence; relay and worker execution did not occur. The new route-response
+  observability class preserves a bounded internal failure category without
+  exposing it to clients. A reviewed remediation deployment and new approval
+  remain required before another write attempt.
 - 2026-09-24: Added the automation-identity scope lesson and a dedicated
   persistence deployment plan. Read-only inspection confirmed the current
   stacks are healthy, the persistence table is absent as expected, and the

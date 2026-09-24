@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T21:08:29Z
-latest_commit_sha: a3053bff
-chat_duration: 100502s (01:03:55:02)
+latest_commit_at_utc: 2026-09-24T21:49:03Z
+latest_commit_sha: 3d167db7
+chat_duration: 102936s (01:04:35:36)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -68,6 +68,10 @@ go
 
 - Raised: The first change-set inspection queried a non-existent CloudFormation Resource field and falsely reported zero changes.
   Resolution: Re-inspected the correct ResourceChange field; it showed exactly the expected public service in-place update and server task-definition revision. No false drift remains.
+
+
+- Raised: The one controlled persistence acceptance returned 503 without an observable normalized failure class.
+  Resolution: Aggregate-only evidence proved no atomic commit; table/index, task configuration, and atomic-write permission were healthy, while CloudTrail had no data event. Relay and worker actions were not run. Added a profile-governed response error-class seam and locked further acceptance execution pending remediation deployment and fresh approval.
 
 ## Decisions Made
 
@@ -180,6 +184,10 @@ go
 - Decision: Verify CloudFormation change sets through ResourceChange summaries, not an empty projection.
   Rationale: A syntactically valid but wrong JMESPath field can silently produce an empty result. The corrected inspection now proves both the candidate template and its two expected resource actions.
 
+
+- Decision: Preserve a stable route failure class outside the HTTP response.
+  Rationale: Clients need a safe status and body, while approved operational signals need a bounded category. `PlatformResponse.observability.errorClass` lets the server project only that class through the route profile without exposing provider messages or raw error data.
+
 ## Context Hygiene
 
 
@@ -238,6 +246,10 @@ go
 
 - Summary: Retain only the safe Stage 1 facts: reviewed write scope exists, one isolated confidential client and target-owned secret reference exist, and the server still does not trust that client.
   Durable evidence: Durable evidence is constrained to the target profile, readiness record, Persistence v1 plans, local policy tests, and this session log. Do not retain secret values, tokens, raw Cognito output, request data, task identifiers, or queue content.
+
+
+- Summary: Retain the failed controlled acceptance only as status 503, rounded latency 229 ms, aggregate non-commit, healthy configuration/index/permission classifications, and absent audit data event.
+  Durable evidence: The target profile, readiness record, deployment and implementation plans, contract/runtime tests, handbook, and this session log retain no token, secret, request/response body, record, queue message, task identifier, raw log, or raw provider response. The relay was not run and the worker stayed at zero.
 
 
 - Summary: Retain the safe allowlist deployment result: two reviewed changes, service stack update complete, server one running and healthy, worker zero, queues empty, public liveness 200, and exact two-client allowlist active.
@@ -1175,6 +1187,45 @@ Summary: Recorded the reviewed two-resource in-place server allowlist rollout, i
 
 ADR impact: No ADR: target-specific deployment evidence and inspection correction only.
 
+
+### 2026-09-24T21:36:08Z - Issue
+
+Raised: The one controlled persistence acceptance returned 503 without an observable normalized failure class.
+
+Resolution: Aggregate-only evidence proved no atomic commit; table/index, task configuration, and atomic-write permission were healthy, while CloudTrail had no data event. Relay and worker actions were not run. Added a profile-governed response error-class seam and locked further acceptance execution pending remediation deployment and fresh approval.
+
+
+### 2026-09-24T21:36:08Z - Decision
+
+Decision: Preserve a stable route failure class outside the HTTP response.
+
+Rationale: Clients need a safe status and body, while approved operational signals need a bounded category. `PlatformResponse.observability.errorClass` lets the server project only that class through the route profile without exposing provider messages or raw error data.
+
+
+### 2026-09-24T21:36:08Z - Context hygiene
+
+Summary: Retain the failed controlled acceptance only as status 503, rounded latency 229 ms, aggregate non-commit, healthy configuration/index/permission classifications, and absent audit data event.
+
+Durable evidence: The target profile, readiness record, deployment and implementation plans, contract/runtime tests, handbook, and this session log retain no token, secret, request/response body, record, queue message, task identifier, raw log, or raw provider response. The relay was not run and the worker stayed at zero.
+
+
+### 2026-09-24T21:36:08Z - ADR disposition
+
+ADR needed: no
+
+Reason: The response-observability seam is a small contract extension implementing the existing profile-governed observability boundary; it does not change provider, persistence, or product architecture.
+
+
+### 2026-09-24T21:49:03Z - Commit recorded
+
+Commit: `3d167db7`
+
+Message: fix(observability): preserve safe route failure classes
+
+Summary: Added a private, profile-governed route failure classification seam; recorded the safe non-committing persistence acceptance and lifecycle guard; verified contracts, server telemetry, target policy, and deploy scripts.
+
+ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1266,6 +1317,13 @@ ADR impact: No ADR: target-specific deployment evidence and inspection correctio
   Summary: Recorded the reviewed two-resource in-place server allowlist rollout, its healthy post-deployment state, and the corrected CloudFormation change-set inspection.
   ADR impact: No ADR: target-specific deployment evidence and inspection correction only.
 
+
+- Commit: `3d167db7`
+  Time UTC: 2026-09-24T21:49:03Z
+  Message: fix(observability): preserve safe route failure classes
+  Summary: Added a private, profile-governed route failure classification seam; recorded the safe non-committing persistence acceptance and lifecycle guard; verified contracts, server telemetry, target policy, and deploy scripts.
+  ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1281,9 +1339,9 @@ Reason: This records target-specific staging deployment evidence and corrects an
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T21:08:29Z
-Latest commit SHA: a3053bff
-Chat duration: 100502s (01:03:55:02)
+Latest commit at UTC: 2026-09-24T21:49:03Z
+Latest commit SHA: 3d167db7
+Chat duration: 102936s (01:04:35:36)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

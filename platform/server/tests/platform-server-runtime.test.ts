@@ -33,13 +33,14 @@ async function main(): Promise<void> {
   const appId = platformAppId("smoke");
   const routeName = platformRouteName("smoke.echo");
   const publicRouteName = platformRouteName("smoke.public");
+  const failedRouteName = platformRouteName("smoke.operation-failed");
   const slowRouteName = platformRouteName("smoke.slow");
   const optOutRouteName = platformRouteName("smoke.opt-out");
   const tenantRouteName = platformRouteName("smoke.tenant");
   const resourceRouteName = platformRouteName("smoke.resource");
   const observabilityProfileName = platformObservabilityProfileName("smoke.request");
   const capabilityName = platformCapabilityName("smoke.request");
-  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !slowRouteName.ok || !optOutRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok || !observabilityProfileName.ok || !capabilityName.ok) {
+  if (!appId.ok || !routeName.ok || !publicRouteName.ok || !failedRouteName.ok || !slowRouteName.ok || !optOutRouteName.ok || !tenantRouteName.ok || !resourceRouteName.ok || !observabilityProfileName.ok || !capabilityName.ok) {
     throw new Error("Expected valid server test primitives.");
   }
 
@@ -128,6 +129,20 @@ async function main(): Promise<void> {
               },
             };
           },
+        },
+      });
+      registry.registerRoute({
+        name: failedRouteName.value,
+        method: "POST",
+        path: "/operation-failed",
+        auth: { kind: "public" },
+        observability: testObservability,
+        handler: {
+          handle: () => ({
+            status: 503,
+            body: { status: "not-accepted" },
+            observability: { errorClass: "SMOKE_OPERATION_NOT_ACCEPTED" },
+          }),
         },
       });
       registry.registerRoute({
@@ -355,6 +370,32 @@ async function main(): Promise<void> {
   });
   equal(publicRouteWithCredentials.status, 200);
   equal(publicRoutePrincipal, undefined);
+
+  const reportedFailure = await shell.value.handle({ method: "POST", path: "/operation-failed" });
+  equal(reportedFailure.status, 503);
+  equal("observability" in reportedFailure, false);
+  const reportedFailureLog = logger.records().find((record) =>
+    record.message === "platform.server.request"
+      && record.fields?.["http_status_code"] === 503
+      && record.fields?.["error_class"] === "SMOKE_OPERATION_NOT_ACCEPTED");
+  deepEqual(reportedFailureLog?.fields, {
+    capability: "smoke.request",
+    action: "execute",
+    execution_context: "server",
+    http_method: "POST",
+    http_status_code: 503,
+    outcome: "failed",
+    error_class: "SMOKE_OPERATION_NOT_ACCEPTED",
+  });
+  equal(metrics.points().some((point) =>
+    point.name === "platform.server.request.outcome"
+      && point.labels?.["http_status_code"] === 503
+      && point.labels?.["error_class"] === "SMOKE_OPERATION_NOT_ACCEPTED"), true);
+  const reportedFailureTrace = tracer.spans().find((span) =>
+    span.name === "platform.server.request"
+      && span.end?.attributes?.["http_status_code"] === 503
+      && span.end.attributes["error_class"] === "SMOKE_OPERATION_NOT_ACCEPTED");
+  equal(reportedFailureTrace?.end?.attributes?.["error_class"], "SMOKE_OPERATION_NOT_ACCEPTED");
 
   const denied = await shell.value.handle({
     method: "POST",

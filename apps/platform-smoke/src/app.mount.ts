@@ -290,6 +290,7 @@ function registerPlatformSmokeWorkItemAcceptance(
           return {
             status: accepted.error.code === "PERSISTENCE_DUPLICATE" ? 409 : 503,
             body: { status: "not-accepted" as const },
+            observability: { errorClass: accepted.error.code },
           };
         }
         return {

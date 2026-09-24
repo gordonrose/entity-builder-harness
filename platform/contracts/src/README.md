@@ -150,6 +150,23 @@ const route: PlatformRouteRegistration = { // Declare one route for later platfo
 void route; // Mark the illustrative declaration as used.
 ```
 
+When a handler deliberately returns a safe business failure such as `409` or
+`503`, it may also attach `response.observability.errorClass`. This is not an
+HTTP response field: the server projects its stable class only through the
+route's approved log, metric, and trace profile. The value must be a reviewed,
+app-owned code—not an exception message, provider response, customer value,
+request value, token, or identifier. That lets operators distinguish a known
+failure category without teaching clients internal details.
+
+```ts
+const failedResponse = { // Create an application result that remains safe for an HTTP client.
+  status: 503, // Tell the client only that this operation is currently unavailable.
+  body: { status: "not-accepted" }, // Return a minimal product-safe outcome without an internal reason.
+  observability: { errorClass: "BILLING_INVOICE_EXPORT_UNAVAILABLE" }, // Give the server one stable internal class for the profile-governed signals.
+}; // Keep telemetry metadata separate from the serialized HTTP body.
+void failedResponse; // Mark the illustrative response as used.
+```
+
 ### `jobs.ts` — what a background job may declare
 
 This file mirrors the route idea for background work. A job has a checked job

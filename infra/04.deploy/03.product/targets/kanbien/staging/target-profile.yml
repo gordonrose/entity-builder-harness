@@ -354,7 +354,7 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: deployed-pending-write-proof
+    status: write-proof-failed-non-committing-remediation-pending
     name: platform-shell-staging-persistence-write-client
     client_id: 38bhngfddbgu7c41b01crllh46
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
@@ -391,6 +391,19 @@ auth:
         public_liveness: http-200
         worker: desired-zero-running-zero-rollout-complete
         source_and_dead_letter_queues: empty
+    acceptance_attempt:
+      executed_on_utc: "2026-09-24"
+      status: failed-non-committing
+      http_status: 503
+      duration_ms: 229
+      aggregate_commit_result: not-committed
+      pre_remediation_error_class: unavailable
+      read_only_diagnosis:
+        task_configuration: complete
+        persistence_table: active-required-indexes-present
+        atomic_transaction_permission: allowed
+        audit_trail_data_event: unavailable
+      follow_up: deploy-profile-governed-error-class-remediation-before-fresh-approved-replacement-acceptance
   resource_server:
     identifier: platform-shell
     scopes:
@@ -471,7 +484,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   smoke_transactional_outbox:
-    status: foundation-and-service-deployed-write-and-delivery-proof-pending
+    status: foundation-and-service-deployed-write-proof-failed-non-committing-remediation-pending
     provider: aws-dynamodb
     adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
     composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
@@ -538,16 +551,16 @@ persistence:
         worker: desired-zero-running-zero-rollout-complete
         relay_running_task_count: zero
         source_and_dead_letter_queues: empty
-      next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
-      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write
+      next_execution_guard: separately-reviewed-remediation-deployment-and-fresh-explicit-approval-required-for-replacement-write-proof
+      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-additional-persistence-write
     activation:
-      server_acceptance: server-allowlist-deployed-and-health-verified-write-proof-pending
+      server_acceptance: write-proof-failed-non-committing-profile-governed-error-class-remediation-pending
       outbox_relay: relay-task-definition-deployed-not-scheduled-or-run
       durable_worker_processing: worker-task-definition-deployed-worker-remains-zero-live-delivery-pending
       iam: foundation-deployed-server-relay-and-worker-least-privilege-verified
       required_identity_scope: platform-shell/smoke.write
-      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-write-proof-pending
-      observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-write-and-delivery-proof-pending
+      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-replacement-write-proof-requires-fresh-approval
+      observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-response-error-class-remediation-pending
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager

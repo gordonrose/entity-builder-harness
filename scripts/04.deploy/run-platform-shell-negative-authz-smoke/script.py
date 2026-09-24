@@ -127,11 +127,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         "pending-provisioning",
         "provisioned-pending-service-deployment",
         "deployed-pending-write-proof",
+        "write-proof-failed-non-committing-remediation-pending",
         "deployed-and-write-proven",
     }:
         raise NegativeAuthzSmokeError("the persistence-write client must remain in a governed lifecycle state")
     expected_client_ids = [policy["client_id"]]
-    if persistence_status in {"deployed-pending-write-proof", "deployed-and-write-proven"}:
+    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "deployed-and-write-proven"}:
         expected_client_ids.append(required_string(persistence_write_client.get("client_id"), "auth.persistence_write_test_client.client_id"))
     if additional_client_ids != expected_client_ids:
         raise NegativeAuthzSmokeError("the additional Cognito client allowlist must contain exactly the deployed proof clients")

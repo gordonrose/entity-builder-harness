@@ -110,6 +110,7 @@ export type {
   PlatformResourceAuthorizationResolution,
   PlatformResourceNotFoundDisclosure,
   PlatformResponse,
+  PlatformResponseObservability,
   PlatformRouteHandler,
   PlatformRouteRegistration,
   PlatformTenantRequirement,
