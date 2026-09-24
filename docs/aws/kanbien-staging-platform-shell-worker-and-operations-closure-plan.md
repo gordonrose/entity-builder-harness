@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
-version: 7
+version: 8
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -169,8 +169,10 @@ stop reason in readiness evidence and seek a new review.
 
 - 28-day HTTP SLO evidence and its minimum eligible-observation count: time,
   not additional synthetic traffic, is the honest remaining requirement.
-- a durable DynamoDB (or other selected persistence) transaction, outbox relay,
-  idempotency claim, lease/fence, and worker processing record;
+- the source-defined DynamoDB transaction, outbox relay, idempotency claim,
+  lease/fence, and worker processing record. Its separate reviewed deployment
+  and bounded proof are governed by the
+  [Persistence v1 deployment plan](kanbien-staging-platform-shell-persistence-v1-deployment-plan.md);
 - reusable platform scheduler and worker-operation interfaces;
 - worker SLOs, dashboard, capability alarms, and a long-term trace exporter.
 
