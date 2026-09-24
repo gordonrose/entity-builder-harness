@@ -65,4 +65,19 @@ if [[ "$fixture_result" != '{"persistence_smoke":"validated"}' ]]; then
   exit 1
 fi
 
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --approve-replacement-after-remediation >/dev/null 2>&1; then
+  echo "ERROR: persistence smoke replacement guard must be unavailable in validation mode" >&2
+  exit 1
+fi
+
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute >/dev/null 2>&1; then
+  echo "ERROR: initial persistence smoke execution must not run against the recorded remediation-pending lifecycle" >&2
+  exit 1
+fi
+
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --approve-replacement-after-remediation --target-profile "$fixture" >/dev/null 2>&1; then
+  echo "ERROR: replacement persistence smoke execution must require the recorded remediation lifecycle" >&2
+  exit 1
+fi
+
 echo "Persistence smoke local validation passed."

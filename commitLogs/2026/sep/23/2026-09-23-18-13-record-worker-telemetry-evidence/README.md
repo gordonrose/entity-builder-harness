@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T22:04:36Z
-latest_commit_sha: b7d5639c
-chat_duration: 103869s (01:04:51:09)
+latest_commit_at_utc: 2026-09-24T22:15:31Z
+latest_commit_sha: 524426f0b45e1e839e1d0b8e745e7f9f0ffef97d
+chat_duration: 104524s (01:05:02:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -191,6 +191,14 @@ go
 
 - Decision: Deploy the safe-failure observability repair before any replacement persistence request.
   Rationale: The scan-clean immutable image and reviewed five-resource change set prove the diagnostic repair is live; a replacement write is still a distinct state-changing action and remains approval-gated.
+
+
+- Decision: Close Persistence Foundation v1 through a bounded two-tranche programme.
+  Rationale: The first tranche proves one real staging transaction-to-outbox-to-worker path with no hidden retries or direct queue fixture. The second adds reusable logical-record lifecycle contracts without guessing product retention, legal-hold, data classification, or scheduler requirements.
+
+
+- Decision: Give the remediated acceptance one separately fixed replacement identity.
+  Rationale: The original request has proved non-committing, but using a different opaque identity means later evidence cannot be confused with an implicit replay of the failed stage. The guarded command accepts no caller-supplied identity and may execute only in the recorded post-remediation lifecycle state.
 
 ## Context Hygiene
 
@@ -1259,6 +1267,17 @@ Summary: Recorded the scan-clean immutable remediation image, reviewed revision-
 
 ADR impact: No ADR: target-specific staging evidence and lifecycle-state clarification within the existing proof boundary.
 
+
+### 2026-09-24T22:15:31Z - Commit recorded
+
+Commit: `524426f0b45e1e839e1d0b8e745e7f9f0ffef97d`
+
+Message: feat(persistence): govern two-tranche closure
+
+Summary: Define the bounded live delivery proof and reusable lifecycle foundation; add a one-time replacement acceptance guard after the proved non-committing attempt.
+
+ADR impact: No ADR required; this clarifies and implements the existing staged proof and persistence-foundation boundaries.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1364,6 +1383,13 @@ ADR impact: No ADR: target-specific staging evidence and lifecycle-state clarifi
   Summary: Recorded the scan-clean immutable remediation image, reviewed revision-only service change set, healthy rollout, bounded read proof, and the deployed-remediation/fresh-approval lifecycle state.
   ADR impact: No ADR: target-specific staging evidence and lifecycle-state clarification within the existing proof boundary.
 
+
+- Commit: `524426f0b45e1e839e1d0b8e745e7f9f0ffef97d`
+  Time UTC: 2026-09-24T22:15:31Z
+  Message: feat(persistence): govern two-tranche closure
+  Summary: Define the bounded live delivery proof and reusable lifecycle foundation; add a one-time replacement acceptance guard after the proved non-committing attempt.
+  ADR impact: No ADR required; this clarifies and implements the existing staged proof and persistence-foundation boundaries.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1379,9 +1405,9 @@ Reason: This records target-specific staging deployment evidence and corrects an
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T22:04:36Z
-Latest commit SHA: b7d5639c
-Chat duration: 103869s (01:04:51:09)
+Latest commit at UTC: 2026-09-24T22:15:31Z
+Latest commit SHA: 524426f0b45e1e839e1d0b8e745e7f9f0ffef97d
+Chat duration: 104524s (01:05:02:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -379,3 +379,24 @@ telemetry delivery, and worker return to zero.
 It is not a declaration that every future Entity Builder feature uses DynamoDB
 or SQS, nor that this staging target has a continuously operating outbox
 service.
+
+## 2026-09-24 two-tranche completion execution
+
+The earlier failed acceptance is a safely recorded non-commit. A later attempt
+must not be an implicit retry. The reviewed completion sequence is therefore:
+
+1. Execute the one newly authorised replacement acceptance with its separate
+   fixed request identity and explicit runner guard.
+2. If and only if that succeeds, commit its safe evidence and use the
+   profile-governed relay runner for one Fargate `RunTask` pass.
+3. If and only if the relay succeeds, commit its safe evidence and use the
+   persistence-worker runner for the one relay-produced delivery. That runner
+   always returns the worker to zero and never creates a direct queue fixture.
+4. Query only aggregate table/queue/service/metric outcomes and record the
+   first live-proof result. No task ID, table item, queue envelope, response
+   body, header, token, secret, or provider payload belongs in the repository.
+
+The source-level second tranche then adds generic logical-lifecycle contracts
+and adoption documentation. It is intentionally separate from the smoke
+target: no target-wide retention duration, legal-hold decision, physical purge,
+or scheduler is inferred for future product data.

@@ -28,19 +28,23 @@ owned write-only machine client, then make exactly one no-body request:
 POST https://staging.platform.kanbien.com/smoke/work-items
 ```
 
-The fixed `X-Request-Id` makes the work item deterministic. The command is
-therefore deliberately one-shot: it runs only while the target profile is in
-`deployed-pending-write-proof`. After a successful result, the retained proof
-record changes state and a second invocation is rejected rather than relying
-on a duplicate response as evidence.
+The initial fixed `X-Request-Id` makes the work item deterministic. The command
+is therefore deliberately one-shot: it runs only while the target profile is
+in `deployed-pending-write-proof`. After a successful result, the retained
+proof record changes state and a second invocation is rejected rather than
+relying on a duplicate response as evidence.
 
 If the one permitted request fails, the profile first moves to
 `write-proof-failed-non-committing-remediation-pending`. Validation still
 works in that state, but execution is refused. After the remediation is
 deployed and its server health is verified, the profile moves to
 `write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending`.
-Execution remains refused: a replacement request needs fresh explicit approval,
-and relay and worker actions remain prohibited.
+Execution remains refused unless a later user authorises exactly one
+replacement and the operator supplies the explicit replacement guard. That
+replacement uses a different fixed opaque request identity, so its result is
+unambiguous even though the original attempt was proved non-committing. Relay
+and worker actions remain prohibited until the replacement has succeeded and
+its safe evidence is recorded.
 
 It accepts no caller-supplied client ID, secret, scope, route, body, or request
 ID. It requests only `platform-shell/smoke.write`, reads only the separately
@@ -60,6 +64,16 @@ requires the governed AWS workflow and explicit current-chat approval:
 ```bash
 npm run platform:shell:persistence-smoke -- --execute
 ```
+
+After a documented non-committing failure, deployed remediation, and fresh
+current-chat approval, the only permitted replacement form is:
+
+```bash
+npm run platform:shell:persistence-smoke -- --execute --approve-replacement-after-remediation
+```
+
+The guard is not a general retry switch. It is accepted only for the one
+recorded lifecycle state and it never accepts a caller-supplied request ID.
 
 The command does not start the relay or worker. Those remain separately
 bounded proof stages in the persistence deployment plan.
