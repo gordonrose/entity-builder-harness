@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T19:56:48Z
-latest_commit_sha: e802876a
-chat_duration: 96201s (01:02:43:21)
+latest_commit_at_utc: 2026-09-24T20:09:42Z
+latest_commit_sha: 192aec44
+chat_duration: 96975s (01:02:56:15)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -160,6 +160,10 @@ go
 - Decision: Treat ECS task-definition replacement as a revision, not a service replacement
   Rationale: The reviewed service change set replaces only task-definition revisions because their container definitions change. The existing public and worker ECS services are modified only to point at those revisions, retain their identities, and remain subject to a separately approved execution gate.
 
+
+- Decision: Treat service deployment verification as distinct from persistence delivery proof
+  Rationale: A healthy rolling server update and successful protected read prove the deployed revision is operational. They cannot prove the unconfigured write identity, acceptance transaction, relay publication, or duplicate-safe worker completion.
+
 ## Context Hygiene
 
 
@@ -210,6 +214,10 @@ go
 
 - Summary: Retain the safe service change-set review: five expected actions, available and unexecuted; no shared-boundary, routing, identity, or permission-scope drift; server remains one running task and worker remains zero.
   Durable evidence: Durable evidence is in the staging target profile, readiness manifest, Persistence v1 deployment plan, Persistence Foundation plan, infrastructure verifier, and this session log. Do not retain change-set identifiers, task identifiers, raw CloudFormation output, credentials, payloads, or table/queue contents.
+
+
+- Summary: Retain only safe service-deployment evidence: stack update complete, immutable image verified, healthy target, public liveness and protected-read success, worker zero, relay zero, and empty queues.
+  Durable evidence: Durable evidence is in the target profile, readiness manifest, Persistence v1 deployment and implementation plans, infrastructure verifier, and this session log. Do not retain task/deployment identifiers, tokens, secret values, headers, bodies, raw provider output, record contents, or queue messages.
 
 ## Activity Log
 
@@ -1033,6 +1041,38 @@ Raised: The governed pre-commit process left two untracked source-provenance smo
 
 Resolution: Confirmed both filenames and timestamps matched the check-source-material-coverage smoke test, removed only those disposable untracked fixtures, and left all tracked task evidence intact.
 
+
+### 2026-09-24T20:08:56Z - Decision
+
+Decision: Treat service deployment verification as distinct from persistence delivery proof
+
+Rationale: A healthy rolling server update and successful protected read prove the deployed revision is operational. They cannot prove the unconfigured write identity, acceptance transaction, relay publication, or duplicate-safe worker completion.
+
+
+### 2026-09-24T20:08:56Z - Context hygiene
+
+Summary: Retain only safe service-deployment evidence: stack update complete, immutable image verified, healthy target, public liveness and protected-read success, worker zero, relay zero, and empty queues.
+
+Durable evidence: Durable evidence is in the target profile, readiness manifest, Persistence v1 deployment and implementation plans, infrastructure verifier, and this session log. Do not retain task/deployment identifiers, tokens, secret values, headers, bodies, raw provider output, record contents, or queue messages.
+
+
+### 2026-09-24T20:08:57Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is execution evidence for the existing staged deployment architecture; it does not change a platform boundary, persistence contract, or architecture decision.
+
+
+### 2026-09-24T20:09:42Z - Commit recorded
+
+Commit: `192aec44`
+
+Message: docs(deploy): record persistence service rollout
+
+Summary: Record the executed reviewed service rollout, verified immutable image and healthy public/protected-read path, plus the remaining write and delivery proof boundary.
+
+ADR impact: No ADR required; this is target-specific deployment evidence under the existing staged persistence architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1103,6 +1143,13 @@ Resolution: Confirmed both filenames and timestamps matched the check-source-mat
   Summary: Record the inspected available service change set, expected ECS revision-only changes, preserved dormant worker state, and explicit non-execution boundary.
   ADR impact: No ADR required; the record applies the established staged deployment approach to this target-specific change set.
 
+
+- Commit: `192aec44`
+  Time UTC: 2026-09-24T20:09:42Z
+  Message: docs(deploy): record persistence service rollout
+  Summary: Record the executed reviewed service rollout, verified immutable image and healthy public/protected-read path, plus the remaining write and delivery proof boundary.
+  ADR impact: No ADR required; this is target-specific deployment evidence under the existing staged persistence architecture.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1113,14 +1160,14 @@ Resolution: Confirmed both filenames and timestamps matched the check-source-mat
 
 ADR needed: no
 ADR path: 
-Reason: This applies the established staged ECS deployment policy to a target-specific change set; it introduces no new platform architecture decision.
+Reason: This is execution evidence for the existing staged deployment architecture; it does not change a platform boundary, persistence contract, or architecture decision.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T19:56:48Z
-Latest commit SHA: e802876a
-Chat duration: 96201s (01:02:43:21)
+Latest commit at UTC: 2026-09-24T20:09:42Z
+Latest commit SHA: 192aec44
+Chat duration: 96975s (01:02:56:15)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

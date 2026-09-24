@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 42
+#   version: 43
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -481,7 +481,7 @@ runtime:
     worker_initial_state: deployed-and-consumer-and-metric-proven-desired-count-zero
     worker_activation_condition: reviewed-worker-change-set-with-desired-count-zero-then-separately-approved-side-effect-free-direct-sqs-consumer-proof
     relay_task_candidate: kanbien-staging-platform-shell-relay
-    relay_initial_state: source-defined-no-service-no-schedule-not-deployed
+    relay_initial_state: task-definition-deployed-no-service-no-schedule-not-run
     relay_activation_condition: reviewed-change-set-then-separately-approved-one-shot-ecs-run-task-for-harmless-outbox-proof
   server:
     health:
@@ -489,20 +489,20 @@ runtime:
       readiness: /readyz
       alb_health_check_path: /livez
     container_port: 3000
-    task_definition: deployed-by-workflow-34123406369
+    task_definition: deployed-by-reviewed-persistence-service-change-2026-09-24
     service: kanbien-staging-platform-shell
   worker:
     status: deployed-and-controlled-consumer-and-metric-proven
     task_definition_family: kanbien-staging-platform-shell-worker
     service_name: kanbien-staging-platform-shell-worker
     desired_count_initial: 0
-    task_definition: deployed-revision-1
+    task_definition: deployed-by-reviewed-persistence-service-change-worker-remains-zero
     service: deployed-desired-zero
     queue_adapter: platform/adapters/aws/queue/sqs/
     delivery_boundary: direct-sqs-side-effect-free-smoke-consumer-not-a-persistence-outbox
     live_proof_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
   relay:
-    status: foundation-deployed-service-change-set-reviewed-not-executed
+    status: task-definition-deployed-not-scheduled-or-run
     task_definition_family: kanbien-staging-platform-shell-relay
     invocation_model: one-shot-ecs-run-task-only-no-service-or-scheduler
     access_boundary: due-index-query-outbox-claim-source-queue-send-and-safe-metrics-only
@@ -534,7 +534,7 @@ runtime:
       source_and_dead_letter_queues: empty
       worker_visibility_timeout_seconds: 120
     service_change_set_review:
-      status: reviewed-available-not-executed
+      status: executed-and-post-deployment-verified
       reviewed_on_utc: "2026-09-24"
       resource_change_count: 5
       relay_task_definition: add-dormant-one-shot-task-definition-only
@@ -542,11 +542,19 @@ runtime:
       public_server_task_definition: normal-ecs-revision-replacement-container-definitions-only
       worker_service: task-definition-reference-update-only-no-service-replacement
       worker_task_definition: normal-ecs-revision-replacement-container-definitions-only
-      post_review_runtime_state:
-        public_server: desired-one-running-one
-        worker: desired-zero-running-zero
-      execution_guard: explicit-current-approval-required-before-service-rollout
-    next_boundary: execute-reviewed-service-change-set-only-no-relay-run-worker-scale-or-write-scope-change
+      executed_on_utc: "2026-09-24"
+      post_execution_verification:
+        service_stack: UPDATE_COMPLETE
+        public_server: desired-one-running-one-rollout-complete
+        public_target_health: healthy
+        public_liveness: http-200
+        protected_read_smoke: http-200-safe-redacted-result
+        active_image: immutable-persistence-capable-digest-verified
+        worker: desired-zero-running-zero-rollout-complete
+        relay_running_task_count: zero
+        source_and_dead_letter_queues: empty
+      next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
+    next_boundary: separately-approved-write-scope-client-and-one-harmless-acceptance-before-relay-or-worker-proof
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
