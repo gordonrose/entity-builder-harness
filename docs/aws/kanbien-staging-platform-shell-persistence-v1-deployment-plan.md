@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 7
+version: 8
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -187,10 +187,33 @@ serialized into the HTTP response and may not carry provider messages,
 payloads, identifiers, or credentials. Its local contract and server-runtime
 proofs pass.
 
-No second acceptance request is permitted by this proof stage. The next live
-action requires a separately reviewed image deployment of that remediation,
-healthy server verification, and fresh explicit approval for exactly one
-replacement harmless acceptance request before any relay or worker action.
+No second acceptance request was permitted by that proof stage. The remediation
+deployment and healthy-server verification are recorded below; fresh explicit
+approval is still required for exactly one replacement harmless acceptance
+request before any relay or worker action.
+
+## Safe-failure remediation deployment evidence — 2026-09-24
+
+The remediation image publication from `main` completed successfully through
+the existing GitHub workflow. Its immutable digest was
+`sha256:dd8f8e6d4a6131eea2a9d40954ed6b1cf8d20fc1734c109e7658631b578067fc`;
+the image scan reported zero critical and zero high findings, and the workflow
+completed SBOM and provenance attestations.
+
+The reviewed service change set contained exactly three normal ECS
+task-definition revisions (server, worker, and dormant relay) and two in-place
+service task-definition references (server and worker). It contained no IAM,
+Cognito, queue, storage, routing, DNS, WAF, alarm, or alert-destination change.
+After execution, the service stack was `UPDATE_COMPLETE`; the public server
+was `1/1` and healthy, public liveness and the bounded protected-read smoke
+both returned `200`, the worker remained `0/0`, both queues were empty, and
+the five existing alarms were `OK`.
+
+This deployment makes the private response error classification observable to
+the approved route profile. It does not retry the prior acceptance or prove
+outbox delivery. The next step remains one freshly approved replacement
+no-body acceptance request; relay and worker actions remain forbidden until
+that request commits successfully.
 
 ## Desired source-defined change
 

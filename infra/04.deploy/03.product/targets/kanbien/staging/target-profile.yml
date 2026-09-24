@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 54
+#   version: 55
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -354,7 +354,7 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: write-proof-failed-non-committing-remediation-pending
+    status: write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending
     name: platform-shell-staging-persistence-write-client
     client_id: 38bhngfddbgu7c41b01crllh46
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
@@ -403,7 +403,24 @@ auth:
         persistence_table: active-required-indexes-present
         atomic_transaction_permission: allowed
         audit_trail_data_event: unavailable
-      follow_up: deploy-profile-governed-error-class-remediation-before-fresh-approved-replacement-acceptance
+      follow_up: fresh-explicit-approval-required-for-one-replacement-acceptance-after-remediation-deployment
+    remediation_deployment:
+      executed_on_utc: "2026-09-24"
+      source_commit_sha: af07a79f4be3285b423770476e1e4b97256bafb4
+      github_workflow_run_id: "36064013450"
+      image_digest: sha256:dd8f8e6d4a6131eea2a9d40954ed6b1cf8d20fc1734c109e7658631b578067fc
+      image_scan: zero-critical-zero-high
+      change_set_review: three-task-definition-revisions-and-two-in-place-service-references-only
+      post_deployment_verification:
+        service_stack: UPDATE_COMPLETE
+        public_server: desired-one-running-one-rollout-complete
+        public_target_health: healthy
+        public_liveness: http-200
+        protected_read_smoke: http-200-safe-redacted-result
+        worker: desired-zero-running-zero-rollout-complete
+        source_and_dead_letter_queues: empty
+        alarms: five-ok
+      evidence_hygiene: safe-image-and-aggregate-runtime-facts-only-no-task-identifiers-secrets-tokens-headers-bodies-or-provider-payloads
   resource_server:
     identifier: platform-shell
     scopes:
@@ -484,7 +501,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   smoke_transactional_outbox:
-    status: foundation-and-service-deployed-write-proof-failed-non-committing-remediation-pending
+    status: foundation-and-service-deployed-write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending
     provider: aws-dynamodb
     adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
     composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
@@ -551,16 +568,16 @@ persistence:
         worker: desired-zero-running-zero-rollout-complete
         relay_running_task_count: zero
         source_and_dead_letter_queues: empty
-      next_execution_guard: separately-reviewed-remediation-deployment-and-fresh-explicit-approval-required-for-replacement-write-proof
+      next_execution_guard: fresh-explicit-approval-required-for-replacement-write-proof-after-remediation-deployment
       execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-additional-persistence-write
     activation:
-      server_acceptance: write-proof-failed-non-committing-profile-governed-error-class-remediation-pending
+      server_acceptance: write-proof-failed-non-committing-profile-governed-error-class-remediation-deployed-fresh-approval-pending
       outbox_relay: relay-task-definition-deployed-not-scheduled-or-run
       durable_worker_processing: worker-task-definition-deployed-worker-remains-zero-live-delivery-pending
       iam: foundation-deployed-server-relay-and-worker-least-privilege-verified
       required_identity_scope: platform-shell/smoke.write
       identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-replacement-write-proof-requires-fresh-approval
-      observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-response-error-class-remediation-pending
+      observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-response-error-class-remediation-deployed
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager

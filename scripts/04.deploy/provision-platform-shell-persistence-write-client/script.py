@@ -128,7 +128,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         "platform-shell/smoke.write": ["platform-smoke.persistence.work-item:create"],
     }:
         raise PersistenceWriteProvisionError("the target profile must map exactly the reviewed read and write scopes")
-    if policy["status"] not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "deployed-and-write-proven"}:
+    if policy["status"] not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "deployed-and-write-proven"}:
         raise PersistenceWriteProvisionError("the persistence-write client is not in a governed lifecycle state")
     if policy["status"] == "pending-provisioning":
         if "client_id" in client or "secret_arn" in client:

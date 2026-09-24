@@ -10246,10 +10246,40 @@ there was nothing legitimate to publish. Starting a worker would test a
 different system path and could falsely make the failed acceptance look like a
 successful delivery.
 
-Planning triage: the contracts/server remediation is locally proven. It still
-needs a reviewed server deployment and fresh approval for one replacement
-acceptance request. The previous request is permanently recorded as failed and
-non-committing; it is not silently retried.
+Planning triage: the contracts/server remediation is locally proven and now
+deployed to the reviewed staging server. Fresh approval for one replacement
+acceptance request is still required. The previous request is permanently
+recorded as failed and non-committing; it is not silently retried.
+
+## 115. Deploying a Diagnosis Repair Is Not Retrying the Business Action
+
+The error-class repair was deployed after the failed write. That deployment
+gave the public server new code so a *future* safe failure can be classified in
+private telemetry. It did not re-send the earlier request, create a database
+record, add an outbox item, or start a worker.
+
+```text
+failed write ──> no committed state ──> deploy diagnostic repair
+                                           │
+                                           └── proves only that future failures
+                                               can be classified safely
+```
+
+This distinction matters because a deployment proves the application is
+running its new version. A persistence proof proves that one particular
+transaction committed. They need different evidence. After the deployment we
+verified a healthy server, a protected-read `200`, a zero-count worker, empty
+queues, and healthy alarms—but none of those facts turns the old `503` into a
+successful write.
+
+### Study question
+
+Why does the next write need fresh approval when the repair is now deployed?
+
+Because it is a new state-changing request. The original one-shot allowance
+was consumed and did not commit. Treating a replacement as automatic would
+hide a new business action behind a diagnostic repair. The safe rule is: deploy
+and verify the repair first; then authorize one exact replacement request.
 
 ## Repository Evidence
 
@@ -10315,6 +10345,10 @@ After each completed learning chunk:
   observability class preserves a bounded internal failure category without
   exposing it to clients. A reviewed remediation deployment and new approval
   remain required before another write attempt.
+- 2026-09-24: Added the diagnostic-repair deployment lesson. The scan-clean
+  image with the private failure-class seam was deployed and verified through
+  a normal server rollout, but no replacement write, relay, or worker action
+  occurred. A new explicit one-request approval remains the next boundary.
 - 2026-09-24: Added the automation-identity scope lesson and a dedicated
   persistence deployment plan. Read-only inspection confirmed the current
   stacks are healthy, the persistence table is absent as expected, and the

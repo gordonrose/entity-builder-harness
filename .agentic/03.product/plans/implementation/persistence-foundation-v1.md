@@ -243,8 +243,15 @@ prompt, transcript, credential, token, or raw request data.
   response without preserving its stable error class for its observability
   profile. `PlatformResponse.observability.errorClass` now provides that
   profile-governed, non-transport remediation and is covered by contract and
-  server runtime tests. It is pending a separately reviewed deployment and a
-  fresh approval for one replacement acceptance request.
+  server runtime tests. The separately reviewed remediation deployment is
+  complete; one fresh approval for a replacement acceptance request remains
+  required.
+- **2026-09-24 — Safe-failure remediation deployment complete:** the
+  scan-clean, attested immutable image containing the private error-class seam
+  was deployed through a reviewed five-resource service change set. The server
+  is healthy with a protected-read `200`; the worker remains at zero and both
+  queues remain empty. This proves the remediation is live, not that the
+  earlier failed write or later outbox stages succeeded.
 - **Still pending:** one harmless accepted work item, one explicitly
   approved `RunTask` relay pass (not a schedule), and one bounded worker
   service scale-up before returning the worker to zero. A continuous relay

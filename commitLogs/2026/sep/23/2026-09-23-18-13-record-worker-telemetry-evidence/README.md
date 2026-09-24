@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T21:49:03Z
-latest_commit_sha: 3d167db7
-chat_duration: 102936s (01:04:35:36)
+latest_commit_at_utc: 2026-09-24T22:04:36Z
+latest_commit_sha: b7d5639c
+chat_duration: 103869s (01:04:51:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -188,6 +188,10 @@ go
 - Decision: Preserve a stable route failure class outside the HTTP response.
   Rationale: Clients need a safe status and body, while approved operational signals need a bounded category. `PlatformResponse.observability.errorClass` lets the server project only that class through the route profile without exposing provider messages or raw error data.
 
+
+- Decision: Deploy the safe-failure observability repair before any replacement persistence request.
+  Rationale: The scan-clean immutable image and reviewed five-resource change set prove the diagnostic repair is live; a replacement write is still a distinct state-changing action and remains approval-gated.
+
 ## Context Hygiene
 
 
@@ -254,6 +258,10 @@ go
 
 - Summary: Retain the safe allowlist deployment result: two reviewed changes, service stack update complete, server one running and healthy, worker zero, queues empty, public liveness 200, and exact two-client allowlist active.
   Durable evidence: Durable evidence is restricted to the target profile, readiness manifest, deployment and implementation plans, static gate, and session log. Do not retain task identifiers, raw change-set data, tokens, secret values, headers, bodies, record contents, or queue messages.
+
+
+- Summary: Retain only safe remediation deployment evidence: scan-clean immutable image, reviewed revision-only change set, healthy server and target, protected-read and liveness 200, worker zero, queues empty, five alarms OK.
+  Durable evidence: The staging target profile, readiness manifest, deployment plan, handbook, and this session log retain the approved safe facts. Do not retain task identifiers, tokens, secret values, headers, bodies, queue messages, or provider payloads.
 
 ## Activity Log
 
@@ -1226,6 +1234,31 @@ Summary: Added a private, profile-governed route failure classification seam; re
 
 ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
 
+
+### 2026-09-24T22:02:25Z - Decision
+
+Decision: Deploy the safe-failure observability repair before any replacement persistence request.
+
+Rationale: The scan-clean immutable image and reviewed five-resource change set prove the diagnostic repair is live; a replacement write is still a distinct state-changing action and remains approval-gated.
+
+
+### 2026-09-24T22:02:25Z - Context hygiene
+
+Summary: Retain only safe remediation deployment evidence: scan-clean immutable image, reviewed revision-only change set, healthy server and target, protected-read and liveness 200, worker zero, queues empty, five alarms OK.
+
+Durable evidence: The staging target profile, readiness manifest, deployment plan, handbook, and this session log retain the approved safe facts. Do not retain task identifiers, tokens, secret values, headers, bodies, queue messages, or provider payloads.
+
+
+### 2026-09-24T22:04:36Z - Commit recorded
+
+Commit: `b7d5639c`
+
+Message: docs(deploy): record safe-failure remediation rollout
+
+Summary: Recorded the scan-clean immutable remediation image, reviewed revision-only service change set, healthy rollout, bounded read proof, and the deployed-remediation/fresh-approval lifecycle state.
+
+ADR impact: No ADR: target-specific staging evidence and lifecycle-state clarification within the existing proof boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1324,6 +1357,13 @@ ADR impact: No ADR: implements the existing safe observability and staged-proof 
   Summary: Added a private, profile-governed route failure classification seam; recorded the safe non-committing persistence acceptance and lifecycle guard; verified contracts, server telemetry, target policy, and deploy scripts.
   ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
 
+
+- Commit: `b7d5639c`
+  Time UTC: 2026-09-24T22:04:36Z
+  Message: docs(deploy): record safe-failure remediation rollout
+  Summary: Recorded the scan-clean immutable remediation image, reviewed revision-only service change set, healthy rollout, bounded read proof, and the deployed-remediation/fresh-approval lifecycle state.
+  ADR impact: No ADR: target-specific staging evidence and lifecycle-state clarification within the existing proof boundary.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1339,9 +1379,9 @@ Reason: This records target-specific staging deployment evidence and corrects an
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T21:49:03Z
-Latest commit SHA: 3d167db7
-Chat duration: 102936s (01:04:35:36)
+Latest commit at UTC: 2026-09-24T22:04:36Z
+Latest commit SHA: b7d5639c
+Chat duration: 103869s (01:04:51:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
