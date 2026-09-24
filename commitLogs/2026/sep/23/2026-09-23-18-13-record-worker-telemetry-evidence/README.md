@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T16:24:15Z
-latest_commit_sha: 3e7ad782
-chat_duration: 83448s (00:23:10:48)
+latest_commit_at_utc: 2026-09-24T19:36:55Z
+latest_commit_sha: be06e419
+chat_duration: 95008s (01:02:23:28)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -52,6 +52,10 @@ go
 
 - Raised: The budget summary API reported no embedded notification list although source defined four budget alerts
   Resolution: The dedicated notification inventory confirmed the live actual 50/80/100% and forecast 100% rules, each with an SNS subscriber. The reviewed Foundation change set had no changes, so no stack update was executed. The earlier apparent drift was an API-shape misunderstanding, not a missing-alert configuration.
+
+
+- Raised: The persistence image-publication workflow failed before AWS access because the server runtime-test compiler could not resolve the new platform-persistence workspace package.
+  Resolution: Added the existing-style workspace source path mapping to the server runtime-test configuration; the full server, compiled image-runtime, and platform-shell infrastructure checks now pass.
 
 ## Decisions Made
 
@@ -140,6 +144,10 @@ go
 - Decision: Define the persistence table before granting workload access
   Rationale: The table and its adapter-required indexes can be reviewed independently. A server, relay, or worker receives DynamoDB permission only when its actual composed operation exists, preventing unused authority from becoming a premature capability.
 
+
+- Decision: Keep server runtime-test workspace aliases explicit for every platform package reachable through transitive runtime imports.
+  Rationale: Runtime tests compile the source graph under legacy Node10 resolution for CommonJS execution, so explicit aliases prevent package-export resolution from varying between local and GitHub environments.
+
 ## Context Hygiene
 
 
@@ -178,6 +186,10 @@ go
 
 - Summary: Retain the source-only staging table design: two declared adapter-required indexes, encryption, on-demand billing, point-in-time recovery, and deletion safeguards; no workload permission or live resource exists.
   Durable evidence: Durable evidence is in the focused CloudFormation source, target profile, static infrastructure gate, Persistence Foundation plan, and handbook lesson 106. Do not retain raw change-set data, provider responses, account values, or physical table content. No AWS resource was contacted or changed.
+
+
+- Summary: The chat branch was cleanly refreshed from local main through a governed preflight with no conflicts; the image workflow failed before AWS credentials/ECR due to one missing test alias and is now locally validated.
+  Durable evidence: Retain the safe failed-run identifier and test outcome in the session record; do not retain tokens, AWS responses, image values, queue details, or build logs.
 
 ## Activity Log
 
@@ -891,6 +903,45 @@ Summary: Record the Persistence Foundation v1 plan, staging deployment sequence,
 
 ADR impact: No ADR required; this documents and indexes the implementation under the existing persistence architecture decisions.
 
+
+### 2026-09-24T19:36:10Z - Issue
+
+Raised: The persistence image-publication workflow failed before AWS access because the server runtime-test compiler could not resolve the new platform-persistence workspace package.
+
+Resolution: Added the existing-style workspace source path mapping to the server runtime-test configuration; the full server, compiled image-runtime, and platform-shell infrastructure checks now pass.
+
+
+### 2026-09-24T19:36:10Z - Decision
+
+Decision: Keep server runtime-test workspace aliases explicit for every platform package reachable through transitive runtime imports.
+
+Rationale: Runtime tests compile the source graph under legacy Node10 resolution for CommonJS execution, so explicit aliases prevent package-export resolution from varying between local and GitHub environments.
+
+
+### 2026-09-24T19:36:11Z - Context hygiene
+
+Summary: The chat branch was cleanly refreshed from local main through a governed preflight with no conflicts; the image workflow failed before AWS credentials/ECR due to one missing test alias and is now locally validated.
+
+Durable evidence: Retain the safe failed-run identifier and test outcome in the session record; do not retain tokens, AWS responses, image values, queue details, or build logs.
+
+
+### 2026-09-24T19:36:11Z - ADR disposition
+
+ADR needed: no
+
+Reason: The change aligns an existing TypeScript test-alias pattern and does not alter platform boundaries, persistence semantics, or deployment architecture.
+
+
+### 2026-09-24T19:36:55Z - Commit recorded
+
+Commit: `be06e419`
+
+Message: fix(platform): resolve persistence runtime test alias
+
+Summary: Add the missing platform-persistence workspace alias to the server runtime-test compiler and verify the full server, compiled-runtime, and infrastructure checks.
+
+ADR impact: No ADR required; this aligns the existing runtime-test alias convention without changing platform architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -940,6 +991,13 @@ ADR impact: No ADR required; this documents and indexes the implementation under
   Summary: Record the Persistence Foundation v1 plan, staging deployment sequence, teaching handbook lessons, target readiness alignment, and complete source evidence index.
   ADR impact: No ADR required; this documents and indexes the implementation under the existing persistence architecture decisions.
 
+
+- Commit: `be06e419`
+  Time UTC: 2026-09-24T19:36:55Z
+  Message: fix(platform): resolve persistence runtime test alias
+  Summary: Add the missing platform-persistence workspace alias to the server runtime-test compiler and verify the full server, compiled-runtime, and infrastructure checks.
+  ADR impact: No ADR required; this aligns the existing runtime-test alias convention without changing platform architecture.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -949,15 +1007,15 @@ ADR impact: No ADR required; this documents and indexes the implementation under
 ## ADR Disposition
 
 ADR needed: no
-ADR path:
-Reason: This records target-specific staging proof evidence and a source-only scanability refactor; it does not change platform architecture, live AWS permissions, budget policy, or persistence semantics.
+ADR path: 
+Reason: The change aligns an existing TypeScript test-alias pattern and does not alter platform boundaries, persistence semantics, or deployment architecture.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T16:24:15Z
-Latest commit SHA: 3e7ad782
-Chat duration: 83448s (00:23:10:48)
+Latest commit at UTC: 2026-09-24T19:36:55Z
+Latest commit SHA: be06e419
+Chat duration: 95008s (01:02:23:28)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
