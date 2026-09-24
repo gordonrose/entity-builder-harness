@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T19:56:48Z
-latest_commit_sha: e802876a
-chat_duration: 96201s (01:02:43:21)
+latest_commit_at_utc: 2026-09-24T20:09:42Z
+latest_commit_sha: 192aec44
+chat_duration: 96975s (01:02:56:15)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1062,6 +1062,17 @@ ADR needed: no
 
 Reason: This is execution evidence for the existing staged deployment architecture; it does not change a platform boundary, persistence contract, or architecture decision.
 
+
+### 2026-09-24T20:09:42Z - Commit recorded
+
+Commit: `192aec44`
+
+Message: docs(deploy): record persistence service rollout
+
+Summary: Record the executed reviewed service rollout, verified immutable image and healthy public/protected-read path, plus the remaining write and delivery proof boundary.
+
+ADR impact: No ADR required; this is target-specific deployment evidence under the existing staged persistence architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1132,6 +1143,13 @@ Reason: This is execution evidence for the existing staged deployment architectu
   Summary: Record the inspected available service change set, expected ECS revision-only changes, preserved dormant worker state, and explicit non-execution boundary.
   ADR impact: No ADR required; the record applies the established staged deployment approach to this target-specific change set.
 
+
+- Commit: `192aec44`
+  Time UTC: 2026-09-24T20:09:42Z
+  Message: docs(deploy): record persistence service rollout
+  Summary: Record the executed reviewed service rollout, verified immutable image and healthy public/protected-read path, plus the remaining write and delivery proof boundary.
+  ADR impact: No ADR required; this is target-specific deployment evidence under the existing staged persistence architecture.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1147,9 +1165,9 @@ Reason: This is execution evidence for the existing staged deployment architectu
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T19:56:48Z
-Latest commit SHA: e802876a
-Chat duration: 96201s (01:02:43:21)
+Latest commit at UTC: 2026-09-24T20:09:42Z
+Latest commit SHA: 192aec44
+Chat duration: 96975s (01:02:56:15)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
