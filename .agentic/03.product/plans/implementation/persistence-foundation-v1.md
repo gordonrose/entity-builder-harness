@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 21
+version: 22
 status: active
 layer: 03.product
 domain: persistence
@@ -197,9 +197,17 @@ prompt, transcript, credential, token, or raw request data.
   AWS responses and a temporary post-deployment target fixture. No Cognito
   resource, secret, server deployment, or persistence write was changed in
   AWS.
-- **Still pending:** a reviewed CloudFormation/service change that supplies
-  the source-defined table, roles, task definitions, logging, and network
-  groups; reviewed execution of the Cognito write-scope/client change; and all live AWS proof
+- **2026-09-24 — Foundation deployment complete:** a reviewed additive
+  Foundation change set created the DynamoDB persistence table, required
+  indexes, relay identity/log/network boundary, and narrowly scoped server,
+  worker, relay, and deployment-role permissions. Post-deployment inspection
+  verified table protections, no relay ingress, preserved queue configuration,
+  and public-server/zero-worker steady state. It did not register a new
+  service task definition, run a relay task, scale a worker, change Cognito,
+  or write a persistence item.
+- **Still pending:** a reviewed CloudFormation **service** change that supplies
+  the source-defined task definitions; reviewed execution of the Cognito
+  write-scope/client change; and all live AWS proof
   remain pending. The first live sequence must use an inspected CloudFormation
   change set, then one harmless accepted work item, one explicitly approved
   `RunTask` relay pass (not a schedule), and one bounded worker service
